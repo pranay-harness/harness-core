@@ -325,6 +325,8 @@ public class ConfigServiceImpl implements ConfigService {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
     notNullCheck("Configuration File", savedConfigFile);
 
+    checkDuplicateNames(savedConfigFile, inputConfigFile);
+
     if (savedConfigFile.getEntityType() == SERVICE
         && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {
       updateRelativeFilePathForServiceAndAllOverrideFiles(savedConfigFile, inputConfigFile.getRelativeFilePath());
@@ -421,6 +423,20 @@ public class ConfigServiceImpl implements ConfigService {
     UpdateOperations<ConfigFile> updateOperations =
         wingsPersistence.createUpdateOperations(ConfigFile.class).set("relativeFilePath", resolvedFilePath);
     wingsPersistence.update(query, updateOperations);
+  }
+
+  /**
+   * Checks for duplicate names by searching for an existing config file with the same name and different ID
+   *
+   * @param savedConfigFile
+   * @param inputConfigFile
+   */
+  private void checkDuplicateNames(ConfigFile savedConfigFile, ConfigFile inputConfigFile) {
+    ConfigFile existingConfigFile = get(savedConfigFile.getAppId(), savedConfigFile.getEntityId(),
+        savedConfigFile.getEntityType(), inputConfigFile.getRelativeFilePath());
+    if (existingConfigFile != null && !existingConfigFile.getUuid().equals(inputConfigFile.getUuid())) {
+      throw new InvalidRequestException("Duplicate name " + existingConfigFile.getRelativeFilePath());
+    }
   }
 
   /* (non-Javadoc)

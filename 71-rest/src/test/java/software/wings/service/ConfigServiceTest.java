@@ -5,10 +5,12 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -33,7 +35,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
@@ -418,5 +422,46 @@ public class ConfigServiceTest extends WingsBaseTest {
     EntityVersion entityVersion = entityVersionService.newEntityVersion(
         APP_ID, EntityType.ENVIRONMENT, ENTITY_ID, PARENT, EntityVersion.ChangeType.CREATED, "Data");
     assertThat(entityVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateWithDuplicateName() {
+    ConfigFile configFile = createConfigFile("PATH", UUIDGenerator.generateUuid());
+    ConfigFile existingConfigFile = createConfigFile("PATH", UUIDGenerator.generateUuid());
+
+    when(query.get()).thenReturn(existingConfigFile);
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, configFile.getUuid())).thenReturn(configFile);
+    BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
+    configService.update(configFile, boundedInputStream);
+
+    assertThatThrownBy(() -> configService.update(configFile, boundedInputStream))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate name PATH");
+  }
+
+  private ConfigFile createConfigFile(String relativeFilePath, String uuid) {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE)
+                                .entityId(TEMPLATE_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath(relativeFilePath)
+                                .encrypted(true)
+                                .build();
+    configFile.setAccountId(ACCOUNT_ID);
+    configFile.setAppId(APP_ID);
+    configFile.setUuid(uuid);
+    configFile.setFileUuid("GFS_FILE_ID");
+    configFile.setFileName(FILE_NAME);
+    configFile.setChecksum("CHECKSUM");
+    configFile.setSize(12);
+    configFile.setEncryptedFileId("ENC_ID");
+    configFile.setName("Name00");
+
+    return configFile;
   }
 }
