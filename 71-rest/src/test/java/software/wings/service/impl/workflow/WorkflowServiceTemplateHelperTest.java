@@ -1,7 +1,10 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -10,19 +13,28 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.Variable;
+import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.template.Template;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StepType;
 import software.wings.sm.states.HelmDeployState.HelmDeployStateKeys;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
-  @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
+  @Inject @InjectMocks private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
+  @Mock private TemplateService templateService;
 
   @Test
   @Owner(developers = YOGESH)
@@ -166,5 +178,32 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
         .isEqualTo("release-prod");
     assertThat(newPhaseStep.getSteps().get(1).getProperties().get(HelmDeployStateKeys.helmReleaseNamePrefix))
         .isEqualTo("new-release-prod");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSetTemplateVariablesGivenByUser() {
+    Variable var1 = VariableBuilder.aVariable().name("variable").value("from-yaml").build();
+    Variable var2 = VariableBuilder.aVariable().name("variable").value("from-template").build();
+    PhaseStep newPhaseStep = PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "Pre deployment")
+                                 .addStep(GraphNode.builder()
+                                              .name("test")
+                                              .type(StepType.SHELL_SCRIPT.toString())
+                                              .templateUuid("uuid")
+                                              .templateVersion("latest")
+                                              .templateVariables(Collections.singletonList(var1))
+                                              .build())
+                                 .build();
+
+    Template template = Template.builder().build();
+    GraphNode graphNode = GraphNode.builder().templateVariables(Collections.singletonList(var2)).build();
+    when(templateService.get(anyString(), anyString())).thenReturn(template);
+    when(templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW)).thenReturn(graphNode);
+
+    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(newPhaseStep, null, true);
+    assertThat(newPhaseStep.getSteps()).isNotNull();
+    assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables()).isNotNull();
+    assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables().get(0).getValue()).isEqualTo("from-yaml");
   }
 }
