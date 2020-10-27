@@ -42,10 +42,10 @@ public class VMPricingServiceImpl implements VMPricingService {
 
   @Override
   public VMComputePricingInfo getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
-    VMComputePricingInfo vmComputePricingInfo = getVMPricingInfoFromCache(instanceType, region, cloudProvider);
-    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest").contains(instanceType)) {
+    if (ImmutableSet.of("switzerlandnorth", "switzerlandwest", "germanywestcentral").contains(region)) {
       region = "uksouth";
     }
+    VMComputePricingInfo vmComputePricingInfo = getVMPricingInfoFromCache(instanceType, region, cloudProvider);
     if (null != vmComputePricingInfo) {
       return vmComputePricingInfo;
     } else if (ImmutableSet.of("n2-standard-16").contains(instanceType)) {
