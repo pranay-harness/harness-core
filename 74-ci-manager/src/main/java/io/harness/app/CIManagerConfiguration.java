@@ -43,6 +43,8 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   private LogServiceConfig logServiceConfig;
 
   private String managerServiceSecret;
+  private String jwtAuthSecret;
+  private boolean enableAuth;
   private String managerTarget;
   private String managerAuthority;
 
