@@ -23,7 +23,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
     boolean useEncryptedAccessKey = awsConfig.isUseEncryptedAccessKey();
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
-                    .accessKey(useEncryptedAccessKey ? null : String.valueOf(awsConfig.getAccessKey()))
+                    .accessKey(getAccessKey(awsConfig))
                     .accessKeySecretId(useEncryptedAccessKey ? getEncryptedValue(awsConfig, "accessKey", true) : null)
                     .secretKey(secretValueYamlRef)
                     .type(awsConfig.getType())
@@ -34,6 +34,13 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
+  }
+
+  private String getAccessKey(AwsConfig awsConfig) {
+    if (awsConfig.getAccessKey() == null || awsConfig.isUseEncryptedAccessKey()) {
+      return null;
+    }
+    return String.valueOf(awsConfig.getAccessKey());
   }
 
   @Override
