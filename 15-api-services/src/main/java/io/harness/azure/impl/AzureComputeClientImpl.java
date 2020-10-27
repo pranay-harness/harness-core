@@ -447,7 +447,10 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     logger.debug("Start de-attaching virtual machine scale set with name {}, from backendPools: {}",
         virtualMachineScaleSet.name(), backendPools);
     return backendPools[0].equals("*")
-        ? virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends().apply()
+        ? virtualMachineScaleSet.update()
+              .withoutPrimaryInternetFacingLoadBalancer()
+              .withoutPrimaryInternetFacingLoadBalancerBackends()
+              .apply()
         : virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends(backendPools).apply();
   }
 

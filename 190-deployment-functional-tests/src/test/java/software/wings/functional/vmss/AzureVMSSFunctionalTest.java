@@ -7,6 +7,8 @@ import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_M
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.AZURE_VMSS_BASIC_TEST;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.AZURE_VMSS_BLUE_GREEN_TEST;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
 import static java.util.Arrays.asList;
@@ -42,6 +44,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
@@ -52,13 +55,11 @@ import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -79,7 +80,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
-  public static final String SERVICE_NAME = "Azure_VMSS_Service";
+  public static final String BASIC_DEPLOYMENT_SERVICE_NAME = "Azure_VMSS_Service_Basic";
+  public static final String BLUE_GREEN_DEPLOYMENT_SERVICE_NAME = "Azure_VMSS_Service_Blue_Green";
   public static final int CUSTOM_DESIRED_VM_INSTANCES = 1;
   public static final int CUSTOM_MIN_VM_INSTANCES = 1;
 
@@ -120,10 +122,10 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = {ANIL, IVAN})
   @Category(CDFunctionalTests.class)
   public void testVMSSBasicWorkflow() {
-    Service service = getService(SERVICE_NAME);
+    Service service = getService(BASIC_DEPLOYMENT_SERVICE_NAME);
     String accountId = service.getAccountId();
 
-    InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(InfrastructureType.AZURE_VMSS);
+    InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(AZURE_VMSS_BASIC_TEST);
     resetCache(accountId);
 
     Workflow workflow = generateBasicWorkflow(service, infrastructureDefinition);
@@ -141,12 +143,11 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
   @Test(timeout = TIMEOUT)
   @Owner(developers = {ANIL, IVAN})
   @Category(CDFunctionalTests.class)
-  @Ignore("still under progress. once complete will enable it")
   public void testVMSSBlueGreenWorkflow() {
-    Service service = getService(SERVICE_NAME);
+    Service service = getService(BLUE_GREEN_DEPLOYMENT_SERVICE_NAME);
     String accountId = service.getAccountId();
 
-    InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(InfrastructureType.AZURE_VMSS);
+    InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(AZURE_VMSS_BLUE_GREEN_TEST);
     resetCache(accountId);
 
     Workflow workflow = generateBlueGreenWorkflow(service, infrastructureDefinition);
@@ -173,9 +174,9 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
   }
 
   @NotNull
-  private InfrastructureDefinition getInfrastructureDefinition(String infrastructurePredifinedType) {
+  private InfrastructureDefinition getInfrastructureDefinition(InfrastructureDefinitions infraType) {
     InfrastructureDefinition infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, infrastructurePredifinedType, bearerToken);
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, infraType);
     assertThat(infrastructureDefinition).isNotNull();
     return infrastructureDefinition;
   }

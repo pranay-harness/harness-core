@@ -12,7 +12,8 @@ import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD
 import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASE_SCALE_SET_NAME;
-import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
@@ -24,7 +25,6 @@ import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
-import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PDC;
@@ -129,8 +129,6 @@ public class InfrastructureDefinitionGenerator {
         return ensureAwsLambda(seed, owners, bearerToken);
       case PCF_INFRASTRUCTURE:
         return ensurePcf(seed, owners, bearerToken);
-      case AZURE_VMSS:
-        return ensureAzureVMSS(seed, owners);
       case PDC:
         return ensurePDC(seed, owners, "PDC");
       default:
@@ -182,7 +180,9 @@ public class InfrastructureDefinitionGenerator {
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
     AWS_WINRM_DOWNLOAD,
-    AWS_SSH_FUNCTIONAL_TEST_NAS
+    AWS_SSH_FUNCTIONAL_TEST_NAS,
+    AZURE_VMSS_BASIC_TEST,
+    AZURE_VMSS_BLUE_GREEN_TEST
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -226,6 +226,10 @@ public class InfrastructureDefinitionGenerator {
         return ensurePipelineRbacProdK8sTest(seed, owners);
       case AWS_WINRM_DOWNLOAD:
         return ensureAwsWinrmDownloadTest(seed, owners);
+      case AZURE_VMSS_BASIC_TEST:
+        return ensureAzureVMSSBasic(seed, owners);
+      case AZURE_VMSS_BLUE_GREEN_TEST:
+        return ensureAzureVMSSBlueGreen(seed, owners);
       default:
         unhandled(infraType);
     }
@@ -866,7 +870,15 @@ public class InfrastructureDefinitionGenerator {
     return ensureAwsAmi(seed, owners, "AMI-BASE-ASG-TODOLIST", "aws-ami-lt-infradef");
   }
 
-  private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners) {
+  private InfrastructureDefinition ensureAzureVMSSBasic(Seed seed, Owners owners) {
+    return ensureAzureVMSS(seed, owners, AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureVMSSBlueGreen(Seed seed, Owners owners) {
+    return ensureAzureVMSS(seed, owners, AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners, String infraDefName) {
     Environment environment = ensureEnv(seed, owners);
 
     final SettingAttribute azureCloudProvider =
@@ -887,17 +899,15 @@ public class InfrastructureDefinitionGenerator {
             .build();
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
-                                                            .name(AZURE_VMSS_INFRA_DEFINITION_NAME)
+                                                            .name(infraDefName)
                                                             .cloudProviderType(CloudProviderType.AZURE)
                                                             .deploymentType(DeploymentType.AZURE_VMSS)
                                                             .appId(environment.getAppId())
                                                             .envId(environment.getUuid())
                                                             .infrastructure(azureVMSSInfra)
                                                             .build();
-    return GeneratorUtils.suppressDuplicateException(
-        ()
-            -> infrastructureDefinitionService.save(infrastructureDefinition, false),
-        () -> exists(infrastructureDefinition));
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
   private InfrastructureDefinition ensureAwsAmi(
