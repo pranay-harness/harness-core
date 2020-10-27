@@ -8,5 +8,5 @@ import org.mockito.junit.MockitoRule;
 public abstract class SMCoreTestBase extends CategoryTest implements MockableTestMixin {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule public SMCoreRule orchestrationRule = new SMCoreRule(lifecycleRule.getClosingFactory());
+  @Rule public SMCoreRule smCoreRule = new SMCoreRule(lifecycleRule.getClosingFactory());
 }

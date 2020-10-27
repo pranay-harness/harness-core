@@ -13,11 +13,18 @@ java_library(
     exports = [
         "//22-rbac-core:module",
         "//22-secret-manager-client:module",
+        "@maven//:com_amazonaws_aws_java_sdk_core",
+        "@maven//:com_amazonaws_aws_java_sdk_kms",
+        "@maven//:com_amazonaws_aws_java_sdk_secretsmanager",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_github_ben_manes_caffeine_caffeine",
         "@maven//:com_github_reinert_jjschema",
+        "@maven//:com_google_api_gax",
+        "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
+        "@maven//:com_google_auth_google_auth_library_oauth2_http",
+        "@maven//:com_google_cloud_google_cloud_kms",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
@@ -58,6 +65,8 @@ java_library(
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
     ],
 )
 

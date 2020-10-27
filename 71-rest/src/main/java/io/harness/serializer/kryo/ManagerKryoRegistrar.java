@@ -13,7 +13,6 @@ import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
-import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
@@ -1465,7 +1464,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GCSHelmRepoConfig.class, 7176);
     kryo.register(K8sTrafficSplitTaskParameters.class, 7181);
     kryo.register(K8sTrafficSplitResponse.class, 7182);
-    kryo.register(AWSSecretsManagerException.class, 7184);
     kryo.register(Tag.class, 7185);
     kryo.register(K8sApplyTaskParameters.class, 7186);
     kryo.register(K8sApplyResponse.class, 7187);

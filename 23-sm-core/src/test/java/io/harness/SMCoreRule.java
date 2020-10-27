@@ -1,5 +1,7 @@
 package io.harness;
 
+import static org.mockito.Mockito.mock;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -9,6 +11,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.encryptors.CustomEncryptor;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -34,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mockito.Mockito;
 import org.mongodb.morphia.converters.TypeConverter;
 
 import java.io.Closeable;
@@ -86,23 +91,68 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(SecretManagerConfigService.class).toInstance(Mockito.mock(SecretManagerConfigService.class));
+        bind(SecretManagerConfigService.class).toInstance(mock(SecretManagerConfigService.class));
         binder()
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER.getName()))
-            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+            .toInstance(mock(SecretSetupUsageBuilder.class));
         binder()
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER.getName()))
-            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+            .toInstance(mock(SecretSetupUsageBuilder.class));
         binder()
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER.getName()))
-            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+            .toInstance(mock(SecretSetupUsageBuilder.class));
         binder()
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
-            .toInstance(Mockito.mock(SecretSetupUsageBuilder.class));
+            .toInstance(mock(SecretSetupUsageBuilder.class));
+
+        binder()
+            .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+            .toInstance(mock(VaultEncryptor.class));
+
+        binder()
+            .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.AWS_VAULT_ENCRYPTOR.getName()))
+            .toInstance(mock(VaultEncryptor.class));
+
+        binder()
+            .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+            .toInstance(mock(VaultEncryptor.class));
+
+        binder()
+            .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
+            .toInstance(mock(VaultEncryptor.class));
+
+        binder()
+            .bind(KmsEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
+            .toInstance(mock(KmsEncryptor.class));
+
+        binder()
+            .bind(KmsEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
+            .toInstance(mock(KmsEncryptor.class));
+
+        binder()
+            .bind(KmsEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+            .toInstance(mock(KmsEncryptor.class));
+
+        binder()
+            .bind(KmsEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.GLOBAL_KMS_ENCRYPTOR.getName()))
+            .toInstance(mock(KmsEncryptor.class));
+
+        binder()
+            .bind(CustomEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
+            .toInstance(mock(CustomEncryptor.class));
       }
     });
     modules.add(new VersionModule());
