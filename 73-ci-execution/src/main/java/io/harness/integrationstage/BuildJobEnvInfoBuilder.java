@@ -183,6 +183,9 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+    if (!isEmpty(runStepInfo.getEnvironment())) {
+      stepEnvVars.putAll(runStepInfo.getEnvironment());
+    }
     stepEnvVars.put(HOME_VARIABLE, workingDir);
 
     Map<String, String> volumeToMountPath = new HashMap<>();

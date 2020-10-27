@@ -17,6 +17,7 @@ import software.wings.jersey.JsonViews;
 
 import java.beans.ConstructorProperties;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -43,9 +44,8 @@ public class RunStepInfo implements CIStepInfo {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
   @NotNull private List<String> command;
-  private List<String> envVariables;
-  private String envVarsOutput;
   private List<String> output;
+  private Map<String, String> environment;
 
   @NotNull private String image;
   private String connector;
@@ -55,8 +55,8 @@ public class RunStepInfo implements CIStepInfo {
   @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "envVariables",
       "envVarsOutput", "output", "image", "connector", "environment", "resources"})
   public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      List<String> command, List<String> envVariables, String envVarsOutput, List<String> output, String image,
-      String connector, ContainerResource resources) {
+      List<String> command, Map<String, String> environment, List<String> output, String image, String connector,
+      ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
@@ -64,8 +64,7 @@ public class RunStepInfo implements CIStepInfo {
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.command = command;
-    this.envVariables = envVariables;
-    this.envVarsOutput = envVarsOutput;
+    this.environment = environment;
     this.output = output;
     this.image = image;
     this.connector = connector;
