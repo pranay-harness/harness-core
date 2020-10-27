@@ -697,6 +697,30 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     testSaveProvisionerWithExistingNameInNewApp(provisionerService);
   }
 
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testTrimInfrastructureProvisionerVariables() {
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
+    NameValuePair var1 = NameValuePair.builder().name("var1").build();
+    NameValuePair varWithNoTrailingSpaces = NameValuePair.builder().name("var2").build();
+    NameValuePair varWithEmptyString = NameValuePair.builder().name(StringUtils.EMPTY).build();
+    NameValuePair varWithTrailingSpaces = NameValuePair.builder().name("var2    ").build();
+    NameValuePair varWithLeadinggSpaces = NameValuePair.builder().name(" var2 ").build();
+    NameValuePair varWithOnlySpaces = NameValuePair.builder().name("  ").build();
+
+    provisioner.setVariables(Arrays.asList(var1, varWithTrailingSpaces, varWithLeadinggSpaces, varWithOnlySpaces));
+    infrastructureProvisionerServiceImpl.trimInfrastructureProvisionerVariables(provisioner);
+
+    assertThat(provisioner.getVariables())
+        .contains(var1, varWithNoTrailingSpaces, varWithNoTrailingSpaces, varWithEmptyString);
+
+    // empty variable list
+    provisioner.setVariables(emptyList());
+    infrastructureProvisionerServiceImpl.trimInfrastructureProvisionerVariables(provisioner);
+    assertThat(provisioner.getVariables()).isEqualTo(emptyList());
+  }
+
   private void testUpdateProvisionerWithExistingName(InfrastructureProvisionerServiceImpl provisionerService) {
     InfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
                                                 .appId(APP_ID)
