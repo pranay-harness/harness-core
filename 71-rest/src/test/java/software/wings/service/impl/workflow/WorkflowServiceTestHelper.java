@@ -1158,7 +1158,7 @@ public class WorkflowServiceTestHelper {
     assertThat(updatedPreStep.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
-        .contains("https://harness.io?q=${artifact.name}");
+        .contains("https://google.com");
     assertThat(updatedPreStep.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
@@ -1235,7 +1235,7 @@ public class WorkflowServiceTestHelper {
     assertThat(updatedPhaseNode.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)
-        .contains("https://harness.io?q=${artifact.name}");
+        .contains("https://google.com");
     assertThat(updatedPhaseNode.getTemplateVariables())
         .isNotEmpty()
         .extracting(Variable::getValue)

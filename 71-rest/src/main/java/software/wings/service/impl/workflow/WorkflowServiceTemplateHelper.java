@@ -149,36 +149,11 @@ public class WorkflowServiceTemplateHelper {
     if (phaseStep != null && phaseStep.getSteps() != null) {
       compareOldNewProperties(oldPhaseStep, phaseStep, fromYaml);
       phaseStep.getSteps().stream().filter(step -> step.getTemplateUuid() != null).forEach((GraphNode step) -> {
-        GraphNode oldTemplateStep = null;
-        if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
-          oldTemplateStep = oldPhaseStep.getSteps()
-                                .stream()
-                                .filter(fromYaml ? graphNode
-                                    -> step.getTemplateUuid().equals(graphNode.getTemplateUuid())
-                                        && step.getName().equals(graphNode.getName())
-                                                 : graphNode
-                                    -> step.getTemplateUuid().equals(graphNode.getTemplateUuid())
-                                        && step.getId().equals(graphNode.getId()))
-                                .findFirst()
-                                .orElse(null);
-        }
-        boolean versionChanged = false;
-        List<Variable> oldTemplateVariables = null;
-        if (oldTemplateStep != null) {
-          if (step.getTemplateVersion() != null && oldTemplateStep.getTemplateVersion() != null
-              && !step.getTemplateVersion().equals(oldTemplateStep.getTemplateVersion())) {
-            versionChanged = true;
-          }
-          oldTemplateVariables = oldTemplateStep.getTemplateVariables();
-        }
-        if (versionChanged || oldTemplateStep == null) {
-          Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
-          notNullCheck("Template does not exist", template, USER);
-          GraphNode templateStep =
-              (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
-          step.setTemplateVariables(
-              templateHelper.overrideVariables(templateStep.getTemplateVariables(), oldTemplateVariables));
-        }
+        Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
+        notNullCheck("Template does not exist", template, USER);
+        GraphNode templateStep = (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
+        step.setTemplateVariables(
+            templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
       });
     }
   }
