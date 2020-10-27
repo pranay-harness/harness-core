@@ -4,6 +4,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
@@ -26,4 +27,6 @@ public interface VerificationJobInstanceService {
   void addResultsToDeploymentResultSummary(
       String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
   DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(List<String> verificationJobInstanceIds);
+  List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
+      String accountId, String projectIdentifier, String orgIdentifier, String serviceIdentifier);
 }

@@ -33,6 +33,7 @@ public abstract class VerificationJobDTO {
     verificationJob.setDataSources(dataSources);
     verificationJob.setProjectIdentifier(projectIdentifier);
     verificationJob.setOrgIdentifier(orgIdentifier);
+    verificationJob.setType(getType());
   }
 
   @JsonIgnore public abstract VerificationJob getVerificationJob();

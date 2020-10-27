@@ -7,6 +7,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -43,6 +45,14 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
+  public static final String VERIFICATION_JOB_TYPE_KEY =
+      String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.type);
+  public static String PROJECT_IDENTIFIER_KEY =
+      String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.projectIdentifier);
+  public static String ORG_IDENTIFIER_KEY =
+      String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.orgIdentifier);
+  public static String SERVICE_IDENTIFIER_KEY = String.format("%s.%s.%s", VerificationJobInstanceKeys.resolvedJob,
+      VerificationJobKeys.serviceIdentifier, RuntimeParameterKeys.value);
   @Id private String uuid;
   @NotNull @FdIndex private String accountId;
   private long createdAt;

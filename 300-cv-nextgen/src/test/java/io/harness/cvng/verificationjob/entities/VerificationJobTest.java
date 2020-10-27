@@ -51,6 +51,7 @@ public class VerificationJobTest extends CategoryTest {
     testFieldForNotNull(VerificationJobKeys.envIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
+    testFieldForNotNull(VerificationJobKeys.type);
     createVerificationJob().validate();
   }
 

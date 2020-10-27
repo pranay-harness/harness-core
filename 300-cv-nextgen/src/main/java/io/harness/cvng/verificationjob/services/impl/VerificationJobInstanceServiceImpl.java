@@ -41,6 +41,7 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
+import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -54,7 +55,9 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Clock;
@@ -258,6 +261,28 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
         .postDeploymentSummary(deploymentPopoverSummary(postDeploymentVerificationJobInstances))
         .build();
+  }
+
+  @Override
+  public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
+      String accountId, String projectIdentifier, String orgIdentifier, String serviceIdentifier) {
+    List<VerificationJobInstance> verificationJobInstances =
+        hPersistence.createQuery(VerificationJobInstance.class)
+            .filter(VerificationJobInstanceKeys.accountId, accountId)
+            .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
+            .filter(VerificationJobInstance.PROJECT_IDENTIFIER_KEY, projectIdentifier)
+            .filter(VerificationJobInstance.ORG_IDENTIFIER_KEY, orgIdentifier)
+            .filter(VerificationJobInstance.SERVICE_IDENTIFIER_KEY, serviceIdentifier)
+            .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
+            .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
+            .asList(new FindOptions().limit(5));
+    return verificationJobInstances.stream()
+        .map(verificationJobInstance
+            -> TestVerificationBaselineExecutionDTO.builder()
+                   .verificationJobInstanceId(verificationJobInstance.getUuid())
+                   .createdAt(verificationJobInstance.getCreatedAt())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private List<VerificationJobInstance> getPostDeploymentVerificationJobInstances(
