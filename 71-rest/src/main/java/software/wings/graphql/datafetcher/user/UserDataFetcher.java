@@ -30,7 +30,8 @@ public class UserDataFetcher extends AbstractObjectDataFetcher<QLUser, QLUserQue
   public QLUser fetch(QLUserQueryParameters qlQuery, String accountId) {
     User user = null;
     if (qlQuery.getId() != null) {
-      user = persistence.get(User.class, qlQuery.getId());
+      user =
+          persistence.createQuery(User.class).filter("_id", qlQuery.getId()).filter(UserKeys.accounts, accountId).get();
     }
     if (qlQuery.getName() != null) {
       try (HIterator<User> iterator = new HIterator<>(persistence.createQuery(User.class)
