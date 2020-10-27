@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
@@ -64,6 +65,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   /**
    * Integration test for getAllMetricNames
    * This API should return the names of all the metrics listed in the YAML

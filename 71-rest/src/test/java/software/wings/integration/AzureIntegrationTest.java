@@ -57,6 +57,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void azureAuthenticationTest() {
     AzureConfig config = getAzureConfig();
     azureHelperService.validateAzureAccountCredential(config, Collections.emptyList());
@@ -65,6 +66,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -75,6 +77,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -92,6 +95,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -108,6 +112,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -124,6 +129,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -181,6 +187,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
@@ -206,6 +213,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = PUNEET, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();
     List<AzureKubernetesCluster> clusters =

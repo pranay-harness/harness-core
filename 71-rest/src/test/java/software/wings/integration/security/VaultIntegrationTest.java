@@ -13,6 +13,7 @@ import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -93,6 +94,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_LocalEncryption_shouldSucceed() {
     String secretValue = "TestSecret";
     EncryptedData encryptedData =
@@ -111,6 +113,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_VaultOperations_accountLocalEncryptionEnabled_shouldFail() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -144,6 +147,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testListVaultSecretEngines() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -195,6 +199,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateVaultEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -210,6 +215,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCreateUpdateDeleteVaultConfig_shouldSucceed() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -234,6 +240,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_updateVaultBasePath_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -255,6 +262,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateVaultSecretTextName_shouldNotAlterSecretValue() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -270,6 +278,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_createNewDefaultVault_shouldUnsetPreviousDefaultVaultConfig() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -306,6 +315,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_UpdateSecretTextWithValue_VaultWithBasePath_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath);
@@ -318,6 +328,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_UpdateSecretTextWithValue_VaultWithBasePath2_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfigWithBasePath2);
@@ -330,6 +341,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_UpdateSecretTextWithValue_shouldSucceed() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -342,6 +354,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_WithInvalidPath_shouldFail() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -362,6 +375,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_UpdateSecretText_WithInvalidPath_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -394,6 +408,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_withInvalidPathReference_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
     VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -417,6 +432,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_WithValidPath_shouldSucceed() {
     testCreateSecretText(vaultConfig);
   }
@@ -424,6 +440,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_importSecrets_fromCSV_shouldSucceed() {
     importSecretTextsFromCsv("./encryption/secrets.csv");
     verifySecretTextExists("secret1");
@@ -433,6 +450,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_listSettingAttributes_shoudlSucceed() throws IllegalAccessException {
     List<SettingAttribute> settingAttributes = listSettingAttributes();
     for (SettingAttribute settingAttribute : settingAttributes) {
@@ -453,6 +471,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath);
   }
@@ -460,6 +479,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_vaultWithBasePath2_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath2);
   }

@@ -16,6 +16,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,6 +58,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()
                                     .fileName("dummy.txt")
@@ -75,6 +77,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
     assertThatExceptionOfType(IllegalArgumentException.class)
@@ -89,6 +92,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSaveBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -105,6 +109,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldUpdateEntityId() throws Exception {
     final BaseFile baseFile = new BaseFile();
     baseFile.setName("dummy.txt");
@@ -124,6 +129,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
     assertThatExceptionOfType(IllegalArgumentException.class)

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -24,6 +25,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = AMAN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
     String argument = "userName=admin@harness.io";
     String url = getLoginTypeResponseUri(getLoginTypeURI, argument);
@@ -36,7 +38,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = AMAN)
   @Category(DeprecatedIntegrationTests.class)
-
+  @Ignore("skipping the integration test")
   public void testLoginTypeResponseForNonExistentUserShouldReturnUserPassWord() {
     String nonExistingUserArgument = "userName=random@xyz";
     String url = getLoginTypeResponseUri(getLoginTypeURI, nonExistingUserArgument);

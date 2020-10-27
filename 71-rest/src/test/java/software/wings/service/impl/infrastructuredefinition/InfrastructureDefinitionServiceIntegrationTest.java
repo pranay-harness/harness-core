@@ -13,6 +13,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -71,6 +72,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testListNamesByProvisionerId() {
     InfrastructureDefinition id1 = InfrastructureDefinition.builder()
                                        .appId(app1.getUuid())
@@ -96,6 +98,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testListNamesByConnectionAttr() {
     final String connectionAttr1 = "private-key-1";
     final String connectionAttr2 = "private-key-2";
@@ -130,6 +133,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testListNamesByComputeProviderId() {
     InfrastructureDefinitionBuilder infrastructureDefinitionBuilder =
         InfrastructureDefinition.builder().appId(app1.getUuid()).envId(app1_env1.getUuid());

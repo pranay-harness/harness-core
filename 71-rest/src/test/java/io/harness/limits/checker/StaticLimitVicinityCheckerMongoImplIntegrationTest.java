@@ -11,6 +11,7 @@ import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
@@ -31,6 +32,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCrossed() {
     String key = "some-key-" + NAMESPACE + ":" + ActionType.DEPLOY;
     Counter counter = new Counter(key, 10);

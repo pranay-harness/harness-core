@@ -18,6 +18,7 @@ import lombok.experimental.NonFinal;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
@@ -78,6 +79,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -98,6 +100,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testVicinity() throws Exception {
     int maxReq = 10;
     int durationInMillis = 5000;
@@ -117,6 +120,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;
     int durationInMillis = 5000;

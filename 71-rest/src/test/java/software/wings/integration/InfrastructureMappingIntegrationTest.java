@@ -93,6 +93,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build();
     wingsPersistence.save(hostConnectionAttr);

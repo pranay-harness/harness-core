@@ -15,6 +15,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -49,6 +50,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSaveApiCallLogs() throws Exception {
     int numOfApiCallLogs = 12;
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();

@@ -14,6 +14,7 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
@@ -50,6 +51,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(cl.getAccountId(), CREATE_APPLICATION, cl.getLimit());
@@ -65,6 +67,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(10));
@@ -86,6 +89,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpsertForRateLimits() {
     String accountId = SOME_ACCOUNT_ID;
 

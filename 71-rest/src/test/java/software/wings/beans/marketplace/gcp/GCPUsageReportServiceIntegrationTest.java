@@ -10,6 +10,7 @@ import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
@@ -49,6 +50,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCreateGCPUsageReport() {
     val gcpUsageReport = getSampleGCPUsageReport();
     val id = persistence.save(gcpUsageReport);
@@ -66,6 +68,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testLastGCPUsageReportTime() {
     val gcpUsageReport = getSampleGCPUsageReport();
     val id = persistence.save(gcpUsageReport);

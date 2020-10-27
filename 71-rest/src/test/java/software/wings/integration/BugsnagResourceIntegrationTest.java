@@ -20,6 +20,7 @@ import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.BugsnagConfig;
@@ -79,6 +80,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetBugsnagApplications() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
         + "/applications"
@@ -98,6 +100,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetBugsnagOrganizations() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
         + "/orgs"
@@ -116,6 +119,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGetLogRecords() {
     BugsnagSetupTestData testNodedata = getBugsnagSampledata();
     WebTarget target =

@@ -10,6 +10,7 @@ import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
@@ -47,6 +48,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSerialization() {
     val snapshot = getSampleSnapshot();
 

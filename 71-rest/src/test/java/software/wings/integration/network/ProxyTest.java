@@ -71,6 +71,7 @@ public class ProxyTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
     Request request1 = new Request.Builder().url(targetUrl).build();

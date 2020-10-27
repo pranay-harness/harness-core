@@ -10,6 +10,7 @@ import io.harness.rule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
@@ -61,6 +62,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = HITESH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testGCPUsageReport() {
     val currentTime = Instant.now();
     val startTime = currentTime.truncatedTo(ChronoUnit.MINUTES);

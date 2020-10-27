@@ -14,6 +14,7 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -367,6 +368,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitPrometheus() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(prometheusCVServiceConfiguration.getUuid())
@@ -388,6 +390,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitNewRelic() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(newRelicCVServiceConfiguration.getUuid())
@@ -408,6 +411,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitAPM() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(apmcvServiceConfiguration.getUuid())
@@ -427,6 +431,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitAppD() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(appDynamicsCVServiceConfiguration.getUuid())
@@ -447,6 +452,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitDatadog() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(datadogCVServiceConfiguration.getUuid())
@@ -467,6 +473,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitDynaTrace_withMetricNameFilter() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(dynaTraceCVServiceConfiguration.getUuid())
@@ -485,6 +492,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitDynaTrace() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(dynaTraceCVServiceConfiguration.getUuid())
@@ -505,6 +513,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testTimeSeriesUnitCloudWatch() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
                                   .cvConfigId(cloudWatchCVServiceConfiguration.getUuid())

@@ -16,6 +16,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -148,6 +149,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = SRIRAM)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getRecords() throws Exception {
     saveExecutions();
     long now = System.currentTimeMillis();
@@ -188,6 +190,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = SRIRAM)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAllCVDeploymentRecords() {
     // Setup
     long now = System.currentTimeMillis();
@@ -230,6 +233,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAllDeploymentRecords() {
     // Setup
     long now = System.currentTimeMillis();
@@ -272,6 +276,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAllDeploymentRecordsWFWithoutServiceIds() {
     // Setup
     long now = System.currentTimeMillis();
@@ -319,6 +324,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAllCVRecordsHarnessAccount() {
     saveExecutions();
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)).thenReturn(true);
@@ -350,6 +356,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getAllCVRecordsNonHarnessAccount() {
     saveExecutions();
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, "badAccount")).thenReturn(false);

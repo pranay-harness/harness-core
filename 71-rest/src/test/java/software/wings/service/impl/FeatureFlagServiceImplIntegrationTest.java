@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.FeatureFlag;
@@ -23,6 +24,7 @@ public class FeatureFlagServiceImplIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testEnableAccount() {
     shouldEnableWhenFeatureFlagNotAlreadyPresent();
     shouldEnableWhenSomeAccountsPresent();

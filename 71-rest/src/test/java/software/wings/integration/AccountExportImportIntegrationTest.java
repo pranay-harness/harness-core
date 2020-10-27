@@ -12,6 +12,7 @@ import io.harness.rule.Owner;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
@@ -55,6 +56,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
     assertThat(exportedAccountData).isNotNull();
