@@ -1,6 +1,7 @@
 package io.harness.delegate.task.http;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
+import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -26,6 +27,6 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url, QUERY));
   }
 }
