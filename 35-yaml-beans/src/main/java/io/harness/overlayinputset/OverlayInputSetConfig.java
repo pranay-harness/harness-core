@@ -4,14 +4,15 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
-public class OverlayInputSet implements OverlayInputSetWrapper {
+public class OverlayInputSetConfig implements OverlayInputSetWrapper {
   String identifier;
   String name;
   String description;
   List<String> inputSetReferences;
 
-  // add tags
+  Map<String, String> tags;
 }

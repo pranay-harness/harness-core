@@ -7,7 +7,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
@@ -40,11 +40,11 @@ public class EnvironmentResourceTest extends CategoryTest {
   EnvironmentRequestDTO environmentRequestDTO;
   EnvironmentResponseDTO environmentResponseDTO;
   Environment environmentEntity;
-  List<Tag> tags;
+  List<NGTag> tags;
 
   @Before
   public void setUp() {
-    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build());
+    tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build());
     MockitoAnnotations.initMocks(this);
     environmentResource = new EnvironmentResource(environmentService);
     environmentRequestDTO = EnvironmentRequestDTO.builder()

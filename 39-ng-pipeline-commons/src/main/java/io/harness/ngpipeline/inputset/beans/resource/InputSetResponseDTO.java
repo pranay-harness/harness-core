@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Map;
+
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -24,7 +26,7 @@ public class InputSetResponseDTO {
   String inputSetYaml;
   String name;
   String description;
-  // Add tags
+  Map<String, String> tags;
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   InputSetErrorWrapperDTO inputSetErrorWrapper;

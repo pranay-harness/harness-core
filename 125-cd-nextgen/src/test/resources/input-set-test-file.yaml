@@ -2,6 +2,8 @@ inputSet:
   identifier: identifier
   name: input set name
   description: input set description
+  tags:
+    company: harness
   pipeline:
     identifier: pipeline_identifier
     stages:

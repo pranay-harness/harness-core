@@ -1,14 +1,14 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
-import io.harness.yaml.core.Tag;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -46,7 +46,7 @@ public class PipelineExecutionSummary implements PersistentEntity {
   private Long startedAt;
   private Long endedAt;
   private ExecutionTriggerInfo triggerInfo;
-  private List<Tag> tags;
+  private List<NGTag> tags;
   private ExecutionErrorInfo errorInfo;
   @Builder.Default private List<StageExecutionSummary> stageExecutionSummarySummaryElements = new ArrayList<>();
   @Builder.Default private List<String> stageIdentifiers = new ArrayList<>();

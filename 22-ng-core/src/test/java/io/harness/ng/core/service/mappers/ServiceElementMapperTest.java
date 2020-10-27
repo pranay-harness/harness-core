@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -24,11 +24,11 @@ public class ServiceElementMapperTest extends CategoryTest {
   ServiceResponseDTO serviceResponseDTO;
   ServiceEntity responseServiceEntity;
   ServiceEntity requestServiceEntity;
-  List<Tag> tags;
+  List<NGTag> tags;
 
   @Before
   public void setUp() {
-    tags = Arrays.asList(Tag.builder().key("k1").value("v1").build(), Tag.builder().key("k2").value("v2").build());
+    tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build(), NGTag.builder().key("k2").value("v2").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")
                             .orgIdentifier("ORG_ID")

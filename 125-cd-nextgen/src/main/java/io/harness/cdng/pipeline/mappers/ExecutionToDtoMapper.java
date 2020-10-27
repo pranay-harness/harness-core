@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.mappers;
 
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
@@ -35,7 +36,7 @@ public class ExecutionToDtoMapper {
         .stageTypes(pipelineExecutionSummary.getStageTypes())
         .startedAt(pipelineExecutionSummary.getStartedAt())
         .executionStatus(pipelineExecutionSummary.getExecutionStatus())
-        .tags(pipelineExecutionSummary.getTags())
+        .tags(TagMapper.convertToMap(pipelineExecutionSummary.getTags()))
         .deploymentId("DeploymentIdPlaceHolder")
         .triggerInfo(pipelineExecutionSummary.getTriggerInfo())
         .failedStagesCount(getCountForGivenStatus(

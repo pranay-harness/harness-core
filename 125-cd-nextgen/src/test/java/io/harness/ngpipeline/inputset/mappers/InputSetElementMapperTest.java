@@ -8,6 +8,8 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.NGTag;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.ngpipeline.inputset.beans.resource.InputSetErrorResponseDTO;
@@ -30,7 +32,9 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class InputSetElementMapperTest extends CategoryTest {
@@ -58,10 +62,13 @@ public class InputSetElementMapperTest extends CategoryTest {
   private final String DESCRIPTION = "input set description";
   private String cdInputSetYaml;
   private String overlayInputSetYaml;
+  private List<NGTag> tags;
 
   @Before
   public void setUp() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
+
+    tags = Collections.singletonList(NGTag.builder().key("company").value("harness").build());
 
     String inputSetFileName = "input-set-test-file.yaml";
     cdInputSetYaml =
@@ -82,6 +89,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                               .pipelineIdentifier(PIPELINE_IDENTIFIER)
                               .inputSetYaml(cdInputSetYaml)
                               .isErrorResponse(false)
+                              .tags(TagMapper.convertToMap(tags))
                               .build();
 
     overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
@@ -94,6 +102,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .overlayInputSetYaml(overlayInputSetYaml)
                                      .isErrorResponse(false)
+                                     .tags(TagMapper.convertToMap(tags))
                                      .build();
 
     cdInputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -102,6 +111,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                                        .description(DESCRIPTION)
                                        .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                        .inputSetType(InputSetEntityType.INPUT_SET)
+                                       .tags(TagMapper.convertToMap(tags))
                                        .build();
 
     overlayInputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -110,6 +120,7 @@ public class InputSetElementMapperTest extends CategoryTest {
                                             .description(DESCRIPTION)
                                             .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                             .inputSetType(InputSetEntityType.OVERLAY_INPUT_SET)
+                                            .tags(TagMapper.convertToMap(tags))
                                             .build();
 
     requestMergeInputResponse = MergeInputSetResponse.builder()
@@ -158,6 +169,7 @@ public class InputSetElementMapperTest extends CategoryTest {
     baseInputSetEntity.setDescription(DESCRIPTION);
     baseInputSetEntity.setInputSetType(type);
     baseInputSetEntity.setInputSetYaml(yaml);
+    baseInputSetEntity.setTags(tags);
   }
 
   @Test

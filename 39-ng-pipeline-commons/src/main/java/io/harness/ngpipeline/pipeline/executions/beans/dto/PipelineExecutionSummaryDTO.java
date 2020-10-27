@@ -4,11 +4,11 @@ import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.pipeline.executions.NGStageType;
-import io.harness.yaml.core.Tag;
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -20,7 +20,7 @@ public class PipelineExecutionSummaryDTO {
   ExecutionStatus executionStatus;
   Long startedAt;
   Long endedAt;
-  List<Tag> tags;
+  Map<String, String> tags;
   List<StageExecutionSummaryDTO> stageExecutionSummaryElements;
   String errorMsg;
   List<String> stageIdentifiers;

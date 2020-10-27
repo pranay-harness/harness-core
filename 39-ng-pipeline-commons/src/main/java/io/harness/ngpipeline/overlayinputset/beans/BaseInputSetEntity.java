@@ -7,9 +7,11 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -20,6 +22,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Data
 @FieldNameConstants(innerTypeName = "BaseInputSetEntityKeys")
@@ -45,7 +48,7 @@ public abstract class BaseInputSetEntity implements PersistentEntity {
   @EntityName String name;
   @Size(max = 1024) String description;
 
-  // Add Tags
+  @Singular @Size(max = 128) List<NGTag> tags;
 
   @NotEmpty String inputSetYaml;
   @NotEmpty InputSetEntityType inputSetType;

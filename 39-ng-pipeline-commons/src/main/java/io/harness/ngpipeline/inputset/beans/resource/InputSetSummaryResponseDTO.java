@@ -7,6 +7,8 @@ import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Map;
+
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -18,5 +20,5 @@ public class InputSetSummaryResponseDTO {
   String pipelineIdentifier;
   String description;
   InputSetEntityType inputSetType;
-  // add tags when needed
+  Map<String, String> tags;
 }

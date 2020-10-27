@@ -1,21 +1,17 @@
 package io.harness.ngpipeline.inputset.mappers;
 
-import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
-import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
-import io.harness.ngpipeline.inputset.beans.resource.InputSetErrorDTO;
-import io.harness.ngpipeline.inputset.beans.resource.InputSetErrorResponseDTO;
-import io.harness.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTO;
-import io.harness.ngpipeline.inputset.beans.resource.InputSetResponseDTO;
-import io.harness.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTO;
-import io.harness.ngpipeline.inputset.beans.resource.MergeInputSetResponseDTO;
-import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
+import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.ngpipeline.inputset.beans.resource.*;
+import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
-import io.harness.overlayinputset.OverlayInputSet;
+import io.harness.overlayinputset.OverlayInputSetConfig;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.JsonPipelineUtils;
@@ -34,17 +30,7 @@ public class InputSetElementMapper {
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
     try {
       InputSetConfig inputSet = YamlPipelineUtils.read(yaml, InputSetConfig.class);
-      InputSetEntity inputSetEntity = InputSetEntity.builder().inputSetConfig(inputSet).build();
-      inputSetEntity.setAccountId(accountId);
-      inputSetEntity.setOrgIdentifier(orgIdentifier);
-      inputSetEntity.setProjectIdentifier(projectIdentifier);
-      inputSetEntity.setPipelineIdentifier(pipelineIdentifier);
-      inputSetEntity.setIdentifier(inputSet.getIdentifier());
-      inputSetEntity.setName(inputSet.getName());
-      inputSetEntity.setDescription(inputSet.getDescription());
-      inputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
-      inputSetEntity.setInputSetYaml(yaml);
-      return inputSetEntity;
+      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
@@ -57,28 +43,33 @@ public class InputSetElementMapper {
       if (!inputSet.getIdentifier().equals(inputSetIdentifier)) {
         throw new InvalidRequestException("Input set identifier in yaml is invalid");
       }
-      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
   }
 
+  private InputSetEntity toInputSetEntity(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String yaml, InputSetConfig inputSet) {
+    InputSetEntity inputSetEntity = InputSetEntity.builder().inputSetConfig(inputSet).build();
+    inputSetEntity.setAccountId(accountId);
+    inputSetEntity.setOrgIdentifier(orgIdentifier);
+    inputSetEntity.setProjectIdentifier(projectIdentifier);
+    inputSetEntity.setPipelineIdentifier(pipelineIdentifier);
+    inputSetEntity.setIdentifier(inputSet.getIdentifier());
+    inputSetEntity.setName(inputSet.getName());
+    inputSetEntity.setDescription(inputSet.getDescription());
+    inputSetEntity.setInputSetType(InputSetEntityType.INPUT_SET);
+    inputSetEntity.setInputSetYaml(yaml);
+    inputSetEntity.setTags(TagMapper.convertToList(inputSet.getTags()));
+    return inputSetEntity;
+  }
+
   public OverlayInputSetEntity toOverlayInputSetEntity(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
     try {
-      OverlayInputSet inputSet = YamlPipelineUtils.read(yaml, OverlayInputSet.class);
-      OverlayInputSetEntity overlayInputSetEntity =
-          OverlayInputSetEntity.builder().inputSetReferences(inputSet.getInputSetReferences()).build();
-      overlayInputSetEntity.setAccountId(accountId);
-      overlayInputSetEntity.setOrgIdentifier(orgIdentifier);
-      overlayInputSetEntity.setProjectIdentifier(projectIdentifier);
-      overlayInputSetEntity.setPipelineIdentifier(pipelineIdentifier);
-      overlayInputSetEntity.setIdentifier(inputSet.getIdentifier());
-      overlayInputSetEntity.setName(inputSet.getName());
-      overlayInputSetEntity.setDescription(inputSet.getDescription());
-      overlayInputSetEntity.setInputSetType(InputSetEntityType.OVERLAY_INPUT_SET);
-      overlayInputSetEntity.setInputSetYaml(yaml);
-      return overlayInputSetEntity;
+      OverlayInputSetConfig inputSet = YamlPipelineUtils.read(yaml, OverlayInputSetConfig.class);
+      return toOverlayInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
@@ -87,18 +78,35 @@ public class InputSetElementMapper {
   public OverlayInputSetEntity toOverlayInputSetEntityWithIdentifier(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String inputSetIdentifier, String yaml) {
     try {
-      OverlayInputSet inputSet = YamlPipelineUtils.read(yaml, OverlayInputSet.class);
+      OverlayInputSetConfig inputSet = YamlPipelineUtils.read(yaml, OverlayInputSetConfig.class);
       if (!inputSet.getIdentifier().equals(inputSetIdentifier)) {
         throw new InvalidRequestException("Input set identifier in yaml is invalid");
       }
-      return toOverlayInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+      return toOverlayInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
   }
 
+  private OverlayInputSetEntity toOverlayInputSetEntity(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String yaml, OverlayInputSetConfig inputSet) {
+    OverlayInputSetEntity overlayInputSetEntity =
+        OverlayInputSetEntity.builder().inputSetReferences(inputSet.getInputSetReferences()).build();
+    overlayInputSetEntity.setAccountId(accountId);
+    overlayInputSetEntity.setOrgIdentifier(orgIdentifier);
+    overlayInputSetEntity.setProjectIdentifier(projectIdentifier);
+    overlayInputSetEntity.setPipelineIdentifier(pipelineIdentifier);
+    overlayInputSetEntity.setIdentifier(inputSet.getIdentifier());
+    overlayInputSetEntity.setName(inputSet.getName());
+    overlayInputSetEntity.setDescription(inputSet.getDescription());
+    overlayInputSetEntity.setInputSetType(InputSetEntityType.OVERLAY_INPUT_SET);
+    overlayInputSetEntity.setInputSetYaml(yaml);
+    overlayInputSetEntity.setTags(TagMapper.convertToList(inputSet.getTags()));
+    return overlayInputSetEntity;
+  }
+
   public InputSetResponseDTO writeInputSetResponseDTO(
-      BaseInputSetEntity cdInputSetEntity, MergeInputSetResponse mergeResponse) {
+      BaseInputSetEntity inputSetEntity, MergeInputSetResponse mergeResponse) {
     InputSetErrorWrapperDTO inputSetErrorWrapperDTO;
     boolean isErrorResponse;
     if (mergeResponse == null) {
@@ -109,14 +117,15 @@ public class InputSetElementMapper {
       isErrorResponse = true;
     }
     return InputSetResponseDTO.builder()
-        .accountId(cdInputSetEntity.getAccountId())
-        .orgIdentifier(cdInputSetEntity.getOrgIdentifier())
-        .projectIdentifier(cdInputSetEntity.getProjectIdentifier())
-        .pipelineIdentifier(cdInputSetEntity.getPipelineIdentifier())
-        .identifier(cdInputSetEntity.getIdentifier())
-        .inputSetYaml(cdInputSetEntity.getInputSetYaml())
-        .name(cdInputSetEntity.getName())
-        .description(cdInputSetEntity.getDescription())
+        .accountId(inputSetEntity.getAccountId())
+        .orgIdentifier(inputSetEntity.getOrgIdentifier())
+        .projectIdentifier(inputSetEntity.getProjectIdentifier())
+        .pipelineIdentifier(inputSetEntity.getPipelineIdentifier())
+        .identifier(inputSetEntity.getIdentifier())
+        .inputSetYaml(inputSetEntity.getInputSetYaml())
+        .name(inputSetEntity.getName())
+        .description(inputSetEntity.getDescription())
+        .tags(TagMapper.convertToMap(inputSetEntity.getTags()))
         .isErrorResponse(isErrorResponse)
         .inputSetErrorWrapper(inputSetErrorWrapperDTO)
         .build();
@@ -135,6 +144,7 @@ public class InputSetElementMapper {
         .overlayInputSetYaml(overlayInputSetEntity.getInputSetYaml())
         .name(overlayInputSetEntity.getName())
         .description(overlayInputSetEntity.getDescription())
+        .tags(TagMapper.convertToMap(overlayInputSetEntity.getTags()))
         .inputSetReferences(references)
         .isErrorResponse(isErrorResponse)
         .invalidInputSetReferences(invalidIdentifiers)
@@ -147,6 +157,7 @@ public class InputSetElementMapper {
         .name(baseInputSetEntity.getName())
         .pipelineIdentifier(baseInputSetEntity.getPipelineIdentifier())
         .description(baseInputSetEntity.getDescription())
+        .tags(TagMapper.convertToMap(baseInputSetEntity.getTags()))
         .inputSetType(baseInputSetEntity.getInputSetType())
         .build();
   }

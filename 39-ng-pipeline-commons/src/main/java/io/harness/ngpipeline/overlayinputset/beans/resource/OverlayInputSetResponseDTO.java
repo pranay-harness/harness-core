@@ -28,7 +28,7 @@ public class OverlayInputSetResponseDTO {
   String description;
   List<String> inputSetReferences;
   String overlayInputSetYaml;
-  // Add Tags
+  Map<String, String> tags;
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   Map<String, String> invalidInputSetReferences;

@@ -10,6 +10,8 @@ import com.google.common.io.Resources;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.common.beans.NGTag;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.ngpipeline.inputset.beans.resource.InputSetListType;
@@ -80,12 +82,14 @@ public class InputSetResourceTest extends CategoryTest {
   private String overlayInputSetYaml;
   private String pipelineYaml;
   private NgPipeline ngPipeline;
+  private List<NGTag> tags;
 
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = getClass().getClassLoader();
 
+    tags = Collections.singletonList(NGTag.builder().key("company").value("harness").build());
     String inputSetFileName = "input-set-test-file.yaml";
     cdInputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFileName)), StandardCharsets.UTF_8);
@@ -106,6 +110,7 @@ public class InputSetResourceTest extends CategoryTest {
                                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                 .inputSetYaml(cdInputSetYaml)
                                 .isErrorResponse(false)
+                                .tags(TagMapper.convertToMap(tags))
                                 .build();
 
     overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
@@ -117,6 +122,7 @@ public class InputSetResourceTest extends CategoryTest {
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .overlayInputSetYaml(overlayInputSetYaml)
                                      .isErrorResponse(false)
+                                     .tags(TagMapper.convertToMap(tags))
                                      .build();
 
     inputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -124,6 +130,7 @@ public class InputSetResourceTest extends CategoryTest {
                                      .name(IDENTIFIER)
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .inputSetType(InputSetEntityType.INPUT_SET)
+                                     .tags(TagMapper.convertToMap(tags))
                                      .build();
 
     inputSetEntity = InputSetEntity.builder().build();
@@ -146,6 +153,7 @@ public class InputSetResourceTest extends CategoryTest {
     baseInputSetEntity.setName(IDENTIFIER);
     baseInputSetEntity.setInputSetType(type);
     baseInputSetEntity.setInputSetYaml(yaml);
+    baseInputSetEntity.setTags(tags);
   }
 
   @Test

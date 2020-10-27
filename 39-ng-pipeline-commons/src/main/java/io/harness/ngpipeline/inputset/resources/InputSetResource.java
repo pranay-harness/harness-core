@@ -24,7 +24,7 @@ import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntit
 import io.harness.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import io.harness.overlayinputset.OverlayInputSet;
+import io.harness.overlayinputset.OverlayInputSetConfig;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.*;
 import lombok.AccessLevel;
@@ -121,8 +121,8 @@ public class InputSetResource {
   @POST
   @Path("overlay")
   @ApiImplicitParams({
-    @ApiImplicitParam(dataTypeClass = OverlayInputSet.class, dataType = "io.harness.overlayinputset.OverlayInputSet",
-        paramType = "body")
+    @ApiImplicitParam(dataTypeClass = OverlayInputSetConfig.class,
+        dataType = "io.harness.overlayinputset.OverlayInputSetConfig", paramType = "body")
   })
   @ApiOperation(value = "Create an Overlay InputSet For Pipeline", nickname = "createOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO>
@@ -176,8 +176,8 @@ public class InputSetResource {
   @PUT
   @Path("overlay/{inputSetIdentifier}")
   @ApiImplicitParams({
-    @ApiImplicitParam(dataTypeClass = OverlayInputSet.class, dataType = "io.harness.overlayinputset.OverlayInputSet",
-        paramType = "body")
+    @ApiImplicitParam(dataTypeClass = OverlayInputSetConfig.class,
+        dataType = "io.harness.overlayinputset.OverlayInputSetConfig", paramType = "body")
   })
   @ApiOperation(value = "Update an Overlay InputSet by identifier", nickname = "updateOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO>

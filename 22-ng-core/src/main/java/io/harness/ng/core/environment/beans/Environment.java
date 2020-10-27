@@ -6,7 +6,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -24,7 +24,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
@@ -52,7 +51,7 @@ public class Environment implements PersistentEntity {
   @EntityName private String name;
   @Size(max = 1024) String description;
   @NotEmpty private EnvironmentType type;
-  @Wither @Singular @Size(max = 128) private List<Tag> tags;
+  @Wither @Singular @Size(max = 128) private List<NGTag> tags;
 
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;

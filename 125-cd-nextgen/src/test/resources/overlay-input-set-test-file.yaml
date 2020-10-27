@@ -2,6 +2,8 @@ overlayInputSet:
   name: input set name
   identifier: identifier
   description: input set description
+  tags:
+    company: harness
   inputSetReferences:
     - inputSet1
     - inputSet2

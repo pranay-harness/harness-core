@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 @Data
 @Builder
@@ -21,5 +22,5 @@ public class InputSetConfig implements BaseInputSetConfig {
   String description;
   @NotNull NgPipeline pipeline;
 
-  // Add tags
+  Map<String, String> tags;
 }
