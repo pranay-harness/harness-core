@@ -586,7 +586,7 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
-  private String getAuditHeaderIdFromGlobalContext() throws InvalidActivityException {
+  public String getAuditHeaderIdFromGlobalContext() throws InvalidActivityException {
     GlobalContextData globalContextData;
     try {
       globalContextData = GlobalContextManager.get(AUDIT_ID);

@@ -1205,7 +1205,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
@@ -1218,7 +1218,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @ExternalFacingApiAuth
   public RestResponse<FileOperationStatus> upsertYAMLEntity(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlFilePath") @NotEmpty String yamlFilePath, @FormDataParam("yamlContent") String yamlContent) {
@@ -1229,7 +1229,7 @@ public class YamlResource {
   @Path("delete-entities")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {

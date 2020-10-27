@@ -72,6 +72,7 @@ import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.security.UserThreadLocal.userGuard;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -110,6 +111,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.audit.AuditHeader;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.User;
@@ -118,6 +120,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidYamlNameException;
 import software.wings.exception.YamlProcessingException;
@@ -127,6 +130,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
@@ -212,6 +216,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private GitSyncService gitSyncService;
   @Inject private YamlHelper yamlHelper;
   @Inject YamlSuccessfulChangeService yamlSuccessfulChangeService;
+  @Inject private AuditHelper auditHelper;
+  @Inject private AuditService auditService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -928,24 +934,31 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   @Override
-  public YamlOperationResponse upsertYAMLFilesAsZip(final String accountId, final InputStream fileInputStream)
-      throws IOException {
+  public YamlOperationResponse upsertYAMLFilesAsZip(final String accountId, final InputStream fileInputStream) {
     try {
-      Future<YamlOperationResponse> future =
-          Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("upsert-yamls-as-zip").build())
-              .submit(() -> {
-                try {
-                  List changeList = getChangesForZipFile(accountId, fileInputStream, null);
-                  List<ChangeContext> processedChangeList = processChangeSet(changeList);
-                  return prepareSuccessfulYAMLOperationResponse(processedChangeList, changeList);
-                } catch (YamlProcessingException ex) {
-                  logger.warn(
-                      String.format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
-                  return prepareFailedYAMLOperationResponse(
-                      ex.getMessage(), ex.getFailedYamlFileChangeMap(), ex.getChangeContextList(), ex.getChangeList());
-                }
-              });
-      return future.get(30, TimeUnit.SECONDS);
+      final String auditHeaderIdFromGlobalContext = auditService.getAuditHeaderIdFromGlobalContext();
+      if (!Strings.isNullOrEmpty(auditHeaderIdFromGlobalContext)) {
+        final AuditHeader currentAuditHeader = wingsPersistence.get(AuditHeader.class, auditHeaderIdFromGlobalContext);
+        if (currentAuditHeader != null) {
+          Future<YamlOperationResponse> future =
+              Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("upsert-yamls-as-zip").build())
+                  .submit(() -> {
+                    try {
+                      auditHelper.setAuditContext(currentAuditHeader);
+                      List changeList = getChangesForZipFile(accountId, fileInputStream, null);
+                      List<ChangeContext> processedChangeList = processChangeSet(changeList);
+                      return prepareSuccessfulYAMLOperationResponse(processedChangeList, changeList);
+                    } catch (YamlProcessingException ex) {
+                      logger.warn(String.format(
+                          "Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
+                      return prepareFailedYAMLOperationResponse(ex.getMessage(), ex.getFailedYamlFileChangeMap(),
+                          ex.getChangeContextList(), ex.getChangeList());
+                    }
+                  });
+          return future.get(30, TimeUnit.SECONDS);
+        }
+      }
+      return null;
     } catch (Exception ex) {
       logger.warn(String.format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
       return YamlOperationResponse.builder()

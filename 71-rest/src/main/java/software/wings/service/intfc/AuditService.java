@@ -13,6 +13,7 @@ import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 
 import java.io.InputStream;
 import java.util.List;
+import javax.activity.InvalidActivityException;
 
 /**
  * HttpAuditService.
@@ -91,4 +92,6 @@ public interface AuditService extends EntityCrudOperationObserver {
   <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type);
 
   PageResponse<AuditHeader> listUsingFilter(String accountId, String filter, String limit, String offset);
+
+  String getAuditHeaderIdFromGlobalContext() throws InvalidActivityException;
 }
