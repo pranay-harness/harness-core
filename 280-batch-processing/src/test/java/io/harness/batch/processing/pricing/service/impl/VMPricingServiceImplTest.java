@@ -61,6 +61,26 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void testGetComputeVMPricingInfoAzure() throws IOException {
+    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    when(pricingInfoCall.execute()).thenReturn(createPricingResponse());
+    when(banzaiPricingClient.getPricingInfo(CloudProvider.AZURE.getCloudProviderName(), COMPUTE_SERVICE, "uksouth"))
+        .thenReturn(pricingInfoCall);
+    VMComputePricingInfo computeVMPricingInfo =
+        vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, "germanywestcentral", CloudProvider.AZURE);
+    assertThat(computeVMPricingInfo).isNotNull();
+    assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(DEFAULT_INSTANCE_CPU);
+    assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(DEFAULT_INSTANCE_MEMORY);
+    assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(DEFAULT_INSTANCE_PRICE);
+    assertThat(computeVMPricingInfo.getType()).isEqualTo(DEFAULT_INSTANCE_FAMILY);
+    VMComputePricingInfo computeVMPricingInfoCached =
+        vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, "germanywestcentral", CloudProvider.AZURE);
+    assertThat(computeVMPricingInfoCached).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void testGetCustomComputeVMPricingInfo() throws IOException {
     VMComputePricingInfo computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo("n2-standard-16", REGION, CloudProvider.GCP);
