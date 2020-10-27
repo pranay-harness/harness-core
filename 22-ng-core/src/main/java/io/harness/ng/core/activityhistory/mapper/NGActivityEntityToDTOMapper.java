@@ -2,7 +2,6 @@ package io.harness.ng.core.activityhistory.mapper;
 
 import com.google.inject.Singleton;
 
-import io.harness.EntityType;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
@@ -38,7 +37,10 @@ public class NGActivityEntityToDTOMapper {
       case ENTITY_USAGE:
         EntityUsageActivityDetail entityUsageActivity = (EntityUsageActivityDetail) activity;
         EntityDetail referredByEntity = entityUsageActivity.getReferredByEntity();
-        return EntityUsageActivityDetailDTO.builder().referredByEntity(referredByEntity).build();
+        return EntityUsageActivityDetailDTO.builder()
+            .referredByEntity(referredByEntity)
+            .activityStatusMessage(((EntityUsageActivityDetail) activity).getActivityStatusMessage())
+            .build();
       case ENTITY_UPDATE:
       case ENTITY_CREATION:
         return null;

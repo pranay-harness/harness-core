@@ -1,8 +1,6 @@
 package io.harness.ng.core.activityhistory.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.ModuleType;
-import io.harness.common.EntityReference;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -11,7 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
@@ -33,4 +33,6 @@ public class NGActivity implements PersistentEntity, NGAccountAccess {
   @NotNull long activityTime;
   String description;
   String errorMessage;
+  @CreatedDate Long createdAt;
+  @LastModifiedDate Long lastModifiedAt;
 }

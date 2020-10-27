@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.activityhistory.ActivityHistoryTestHelper;
+import io.harness.ng.core.activityhistory.NGActivityStatus;
+import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.rule.Owner;
@@ -24,14 +26,46 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
   public void listAllActivityOfAAccountLevelEntity() {
     String accountIdentifier = "accountIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
-      NGActivityDTO activityHistory =
-          ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null, referredEntityIdentifier);
+      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
+          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
-    NGActivityListDTO activityHistories =
-        activityHistoryService.list(0, 20, accountIdentifier, null, null, referredEntityIdentifier, 0L, 100L);
+    NGActivityListDTO activityHistories = activityHistoryService.list(
+        0, 20, accountIdentifier, null, null, referredEntityIdentifier, startTime, startTime + 100L, null);
     assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void listAllActivity() {
+    String accountIdentifier = "accountIdentifier";
+    String referredEntityIdentifier = "referredEntityIdentifier";
+    long startTime = System.currentTimeMillis();
+    for (int i = 0; i < 10; i++) {
+      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
+          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
+      activityHistoryService.save(activityHistory);
+    }
+
+    for (int i = 0; i < 6; i++) {
+      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
+          referredEntityIdentifier, NGActivityStatus.FAILED, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
+      activityHistoryService.save(activityHistory);
+    }
+
+    for (int i = 0; i < 4; i++) {
+      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
+          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
+      activityHistoryService.save(activityHistory);
+    }
+
+    NGActivityListDTO activityHistories = activityHistoryService.list(
+        0, 20, accountIdentifier, null, null, referredEntityIdentifier, startTime, startTime + 100L, null);
+    assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
+    assertThat(activityHistories.getConnectivityCheckSummary().getFailureCount()).isEqualTo(6);
   }
 
   @Test
@@ -41,13 +75,15 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
-      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(
-          accountIdentifier, orgIdentifier, null, referredEntityIdentifier);
+      NGActivityDTO activityHistory =
+          ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, orgIdentifier, null,
+              referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
-    NGActivityListDTO activityHistories =
-        activityHistoryService.list(0, 20, accountIdentifier, orgIdentifier, null, referredEntityIdentifier, 0L, 100L);
+    NGActivityListDTO activityHistories = activityHistoryService.list(
+        0, 20, accountIdentifier, orgIdentifier, null, referredEntityIdentifier, startTime, startTime + 100L, null);
     assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
   }
 
@@ -59,13 +95,15 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
-      NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(
-          accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
+      NGActivityDTO activityHistory =
+          ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, orgIdentifier, projectIdentifier,
+              referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
-    NGActivityListDTO activityHistories = activityHistoryService.list(
-        0, 20, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, 0L, 100L);
+    NGActivityListDTO activityHistories = activityHistoryService.list(0, 20, accountIdentifier, orgIdentifier,
+        projectIdentifier, referredEntityIdentifier, startTime, startTime + 100L, null);
     assertThat(activityHistories.getActivityHistoriesForEntityUsage().size()).isEqualTo(10);
   }
 
@@ -78,7 +116,8 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
     String projectIdentifier = "projectIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
     NGActivityDTO savedActivityHistory = activityHistoryService.save(ActivityHistoryTestHelper.createActivityHistoryDTO(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
+        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, NGActivityStatus.SUCCESS,
+        System.currentTimeMillis(), NGActivityType.ENTITY_USAGE));
     assertThat(savedActivityHistory).isNotNull();
   }
 }

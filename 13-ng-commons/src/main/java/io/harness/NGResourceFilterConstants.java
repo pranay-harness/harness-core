@@ -12,6 +12,7 @@ public class NGResourceFilterConstants {
   public static final String SIZE_KEY = "pageSize";
   public static final String SORT_KEY = "sortOrders";
   public static final String CASE_INSENSITIVE_MONGO_OPTIONS = "i";
-  public static final String START = "start";
-  public static final String END = "end";
+  public static final String START = "startTime";
+  public static final String END = "endTime";
+  public static final String STATUS = "status";
 }

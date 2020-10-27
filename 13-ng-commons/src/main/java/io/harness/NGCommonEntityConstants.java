@@ -14,4 +14,6 @@ public class NGCommonEntityConstants {
   public static final String DELETED_KEY = "deleted";
   public static final String PIPELINE_KEY = "pipelineIdentifier";
   public static final String INPUT_SET_IDENTIFIER_KEY = "inputSetIdentifier";
+  public static final String STATUS = "status";
+  public static final String MONGODB_ID = "_id";
 }
