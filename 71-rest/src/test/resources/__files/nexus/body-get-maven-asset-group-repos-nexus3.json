@@ -1,6 +1,6 @@
 {
   "items" : [ {
-    "downloadUrl" : "http://localhost:8881/nexus/repository/maven-internal-test/mygroup/myartifact/1.0/myartifact-1.0.war",
+    "downloadUrl" : "http://localhost:8881/nexus/repository/maven-internal-test/com/mygroup/myartifact/1.0/myartifact-1.0.war",
     "path" : "mygroup/myartifact/1.0/myartifact-1.0.war",
     "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjFkYzQxOWYyMGZmNDY4ZjU",
     "repository" : "maven-internal-test",

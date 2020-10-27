@@ -1315,12 +1315,13 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForMavenNexus3xForGroupRepos2() {
     // This is to test if group repo name is a substring of member repo name
-    List<BuildDetails> buildDetails =
-        nexusService.getVersions(nexusThreeConfig, null, "maven-internal", "mygroup", "myartifact", null, null, true);
+    List<BuildDetails> buildDetails = nexusService.getVersions(
+        nexusThreeConfig, null, "maven-internal", "com.mygroup", "myartifact", null, null, true);
     assertThat(buildDetails).hasSize(1);
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo("http://localhost:8881/nexus/repository/maven-internal/mygroup/myartifact/1.0/myartifact-1.0.war");
+        .isEqualTo(
+            "http://localhost:8881/nexus/repository/maven-internal/com/mygroup/myartifact/1.0/myartifact-1.0.war");
   }
 
   @Test

@@ -17,7 +17,6 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.utils.Strings;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -435,21 +434,10 @@ public class NexusThreeServiceImpl {
 
               if (isNotEmpty(component.getAssets())) {
                 Asset asset = component.getAssets().get(0);
-                String artifactUrl = asset.getDownloadUrl();
-                if (supportForNexusGroupReposEnabled && !artifactUrl.contains(repositoryName)) {
-                  String arr[] = artifactUrl.split("/");
-                  // Extract the repo id in the url. URL is like {repoId}/{packagename}/{version}
-                  // Eg. repository/nuget-hosted-group-repo/NuGet.Sample.Package/1.0.0.0
-                  if (asset.getFormat().equals("nuget")) {
-                    arr[arr.length - 3] = repositoryName;
-                  }
-                  // Extract the repo id in the url. URL is like {repoId}/{packagename}/-/{filename}
-                  // Eg. repository/harness-npm-group/npm-app1/-/npm-app1-1.0.0.tgz
-                  else if (asset.getFormat().equals("npm")) {
-                    arr[arr.length - 4] = repositoryName;
-                  }
-                  artifactUrl = Strings.join("/", arr);
-
+                if (supportForNexusGroupReposEnabled && !asset.getRepository().equals(repositoryName)) {
+                  // For nuget, Eg. repository/nuget-hosted-group-repo/NuGet.Sample.Package/1.0.0.0
+                  // For npm,  Eg. repository/harness-npm-group/npm-app1/-/npm-app1-1.0.0.tgz
+                  String artifactUrl = asset.getDownloadUrl().replace(asset.getRepository(), repositoryName);
                   // Update the asset with modified URL
                   asset.setDownloadUrl(artifactUrl);
                 }
@@ -786,30 +774,15 @@ public class NexusThreeServiceImpl {
           if (isNotEmpty(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
-              String artifactUrl;
               versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
               // get artifact urls for each version
               Response<Nexus3AssetResponse> versionResponse = getNexus3MavenAssets(
                   nexusConfig, version, groupId, artifactName, repoId, extension, classifier, nexusThreeRestClient);
-              List<ArtifactFileMetadata> artifactFileMetadata = getDownloadUrlsForMaven(versionResponse);
+              List<ArtifactFileMetadata> artifactFileMetadata =
+                  getDownloadUrlsForMaven(versionResponse, repoId, supportForNexusGroupReposEnabled);
 
               if (isNotEmpty(artifactFileMetadata)) {
-                artifactUrl = artifactFileMetadata.get(0).getUrl();
-                // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
-                // Replacing the repository name in url with group repo name if the repotype is group
-                // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
-                if (supportForNexusGroupReposEnabled) {
-                  String arr[] = artifactUrl.split("/");
-                  // Extract the repo id in the url. URL is like {repoId}/{groupId}/{artifactId}/{version}/{filename}
-                  if (!arr[arr.length - 5].equalsIgnoreCase(repoId)) {
-                    arr[arr.length - 5] = repoId;
-                    artifactUrl = Strings.join("/", arr);
-                  }
-                }
-                // Update artifactFileMetadata
-                artifactFileMetadata.get(0).setUrl(artifactUrl);
-
-                versionToArtifactUrls.put(version, artifactUrl);
+                versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
               }
               versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
             }
@@ -829,7 +802,8 @@ public class NexusThreeServiceImpl {
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
-  private List<ArtifactFileMetadata> getDownloadUrlsForMaven(Response<Nexus3AssetResponse> response) {
+  private List<ArtifactFileMetadata> getDownloadUrlsForMaven(
+      Response<Nexus3AssetResponse> response, String repoId, boolean supportForNexusGroupReposEnabled) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
     if (isSuccessful(response)) {
       if (response.body() != null && isNotEmpty(response.body().getItems())) {
@@ -839,6 +813,12 @@ public class NexusThreeServiceImpl {
           if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5")
               || artifactFileName.endsWith("sha1")) {
             continue;
+          }
+          // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
+          // Replacing the repository name in url with group repo name if the repotype is group
+          // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
+          if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
+            url = url.replace(item.getRepository(), repoId);
           }
           artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
         }
