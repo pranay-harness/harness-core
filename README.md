@@ -14,9 +14,11 @@ NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommen
 
 Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
 
-3. Install maven
+3. Install maven and bazel:
 ```
 brew install maven
+brew install bazelisk
+
 ```
 
 4. Install npm (used for front-end)
@@ -29,6 +31,8 @@ brew install npm
 ulimit -u 8192
 export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
 ```
+
+Do not add the first line on MacOS Catalina
 
 6. Update /etc/hosts to reflect your hostname
 ```
@@ -50,24 +54,6 @@ buf check lint
 ```
 
 8. Bazel install
-```
-curl -LO https://github.com/bazelbuild/bazel/releases/download/3.5.0/bazel-3.5.0-installer-darwin-x86_64.sh
-chmod +x bazel-3.5.0-installer-darwin-x86_64.sh
-./bazel-3.5.0-installer-darwin-x86_64.sh --user
-```
-```
-open .bash_profile
-```
-Paste the following line in .bash_profile
-```
-export PATH="$PATH:$HOME/bin"
-```
-
-Close the terminal and verify it.
-```
-bazel --version
-```
-
 Create a file `.bazelrc` in your portal repo root with the following content
 ```
 import bazelrc.local
@@ -79,7 +65,9 @@ import bazelrc.local
 build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
-#####9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory) and add following lines in your `~/.bashrc` file
+If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
+
+9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory) and add following lines in your `~/.bashrc` file
 ```
 export JFROG_USERNAME=<username-here>
 export JFROG_PASSWORD=<password-here>
@@ -144,6 +132,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 3. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
+    `bazel build :all`
 
 4. If Global Search is not required:
 
@@ -246,7 +235,7 @@ helper shell scripts:
 
 ### IntelliJ Setup
 
-1. Install IntelliJ community edition 2020.1
+1. Install IntelliJ community edition 2020.1.4
 2. Import `portal` as maven project
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
@@ -280,6 +269,8 @@ helper shell scripts:
 
 8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
 
+9. Install bazel project plugin from the IntelliJ marketplace
+
 
 ### Run from IntelliJ
 
@@ -289,7 +280,9 @@ Run configurations for the different applications are already checked into the r
 
 ### Show current git branch in command prompt
 
-Add the following to your `~/.bash_profile` to display the current git branch in the command prompt:
+If you are using zsh (which is default on MacOS Catalina and later), basic git integration comes out of the box.
+
+If you are using bash, add the following to your `~/.bash_profile` to display the current git branch in the command prompt:
 
 ```
 parse_git_branch() {
@@ -358,6 +351,8 @@ Jetbrains has GoLand editor but its not free. If we continue using intelliJ for 
 * So recommendation is to use VsCode(free) which is better than intelliJ for Go development.
 * Once you install VsCode, open and install the plugin  `Microsoft Go`
 * Note: If your autocomplete is not working, disable `gopls`
+
+Alternately, gopls has a langserver implementation which hooks up cleanly to IntelliJ as LSP client.
 
 ## Documentation
 This page contains the most common commands and recommendations, for more details go to [bazel homepage](https://docs.bazel.build/versions/master/getting-started.html).
