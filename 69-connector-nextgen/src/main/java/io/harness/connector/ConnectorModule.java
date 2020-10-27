@@ -1,49 +1,37 @@
 package io.harness.connector;
 
-import static jdk.nashorn.internal.objects.NativeFunction.bind;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
-import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.artifactorymapper.ArtifactoryDTOToEntity;
 import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
 import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
-import io.harness.connector.mappers.docker.DockerConnectorSummaryMapper;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
-import io.harness.connector.mappers.gcpmappers.GcpConnectorSummaryMapper;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
 import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
-import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsConnectorSummaryDTOMapper;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsDTOToEntity;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsEntityToDTO;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalConnectorSummaryDTOMapper;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalDTOToEntity;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalEntityToDTO;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultConnectorSummaryDTOMapper;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultDTOToEntity;
-import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.GcpKmsEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.LocalEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.VaultDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
 import io.harness.connector.mappers.jira.JiraDTOToEntity;
 import io.harness.connector.mappers.jira.JiraEntityToDTO;
-import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
 import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
-import io.harness.connector.mappers.splunkconnectormapper.SplunkConnectorSummaryMapper;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorActivityService;
@@ -60,9 +48,7 @@ import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SplunkConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.ng.core.NGCoreModule;
 import io.harness.persistence.HPersistence;
-import io.harness.version.VersionModule;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
@@ -122,25 +108,6 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusEntityToDTO.class);
-
-    MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
-        MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
-        .to(KubernetesConfigSummaryMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConfigSummaryMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.VAULT.getDisplayName())
-        .to(VaultConnectorSummaryDTOMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GCP_KMS.getDisplayName())
-        .to(GcpKmsConnectorSummaryDTOMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.LOCAL.getDisplayName())
-        .to(LocalConnectorSummaryDTOMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
-        .to(AppDynamicsConnectorSummaryMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName())
-        .to(SplunkConnectorSummaryMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName())
-        .to(DockerConnectorSummaryMapper.class);
-    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GCP.getDisplayName()).to(GcpConnectorSummaryMapper.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

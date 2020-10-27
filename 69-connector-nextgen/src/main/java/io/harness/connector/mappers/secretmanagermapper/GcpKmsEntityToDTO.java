@@ -1,4 +1,4 @@
-package io.harness.connector.mappers.gitconnectormapper.secretmanagermapper;
+package io.harness.connector.mappers.secretmanagermapper;
 
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
