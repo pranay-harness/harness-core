@@ -15,7 +15,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
-import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -108,7 +107,7 @@ public class ConnectorResourceTest extends CategoryTest {
     String projectIdentifier = "projectIdentifier";
     String searchTerm = "searchTerm";
     final Page<ConnectorResponseDTO> page =
-        PageTestUtils.getPage(Arrays.asList(ConnectorSummaryDTO.builder().build()), 1);
+        PageTestUtils.getPage(Arrays.asList(ConnectorResponseDTO.builder().build()), 1);
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
              KUBERNETES_CLUSTER, CLOUD_PROVIDER))
         .thenReturn(page);
