@@ -159,6 +159,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
     infrastructureProvisioner.setAccountId(accountId);
+    trimInfrastructureProvisionerVariables(infrastructureProvisioner);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
@@ -254,6 +255,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     populateDerivedFields(infrastructureProvisioner);
 
     infrastructureProvisioner.setAccountId(appService.getAccountIdByAppId(infrastructureProvisioner.getAppId()));
+    trimInfrastructureProvisionerVariables(infrastructureProvisioner);
 
     validateProvisioner(infrastructureProvisioner);
 
@@ -269,6 +271,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         infrastructureProvisioner.isSyncFromGit(), isRename);
 
     return updatedInfraProvisioner;
+  }
+
+  public void trimInfrastructureProvisionerVariables(InfrastructureProvisioner infrastructureProvisioner) {
+    if (isEmpty(infrastructureProvisioner.getVariables())) {
+      return;
+    }
+    infrastructureProvisioner.getVariables().forEach(var -> var.setName(var.getName().trim()));
   }
 
   @Override
