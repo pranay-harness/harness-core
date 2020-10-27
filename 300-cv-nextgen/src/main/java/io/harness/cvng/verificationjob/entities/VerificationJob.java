@@ -23,7 +23,6 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -39,7 +38,6 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @FieldNameConstants(innerTypeName = "VerificationJobKeys")
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobs")
@@ -47,6 +45,9 @@ import javax.validation.constraints.NotNull;
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public VerificationJob() {
+    this.type = getType();
+  }
   @Id private String uuid;
   private String identifier;
   private String jobName;
@@ -54,6 +55,7 @@ public abstract class VerificationJob
   private long lastUpdatedAt;
   private String projectIdentifier;
   private String orgIdentifier;
+  private VerificationJobType type;
   @NotNull @FdIndex private String accountId;
   @NotNull private RuntimeParameter serviceIdentifier;
   @NotNull private RuntimeParameter envIdentifier;
@@ -78,6 +80,7 @@ public abstract class VerificationJob
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
           "Minimum allowed duration is 5 mins. Current value(mins): %s", getDuration().toMinutes());
     }
+    Preconditions.checkNotNull(type, generateErrorMessageFromParam(VerificationJobKeys.type));
     this.validateParams();
   }
 
@@ -171,6 +174,7 @@ public abstract class VerificationJob
 
   public abstract boolean collectHostData();
 
+  @FieldNameConstants(innerTypeName = "RuntimeParameterKeys")
   @Data
   @Builder
   public static class RuntimeParameter {
