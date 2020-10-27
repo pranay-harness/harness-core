@@ -29,6 +29,7 @@ public class TimeSeriesCanaryLearningEngineTask extends LearningEngineTask {
   @Value
   @Builder
   public static class DeploymentVerificationTaskInfo {
+    private long deploymentStartTime;
     private Set<String> oldVersionHosts;
     private Set<String> newVersionHosts;
     private Integer newHostsTrafficSplitPercentage;
