@@ -4,16 +4,19 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
@@ -27,6 +30,9 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
@@ -91,6 +97,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreateStateMachine_forServiceGuard() {
     when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    when(verificationTaskService.isServiceGuardId(anyString())).thenReturn(true);
     AnalysisInput inputs = AnalysisInput.builder()
                                .verificationTaskId(verificationTaskId)
                                .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
@@ -113,7 +120,8 @@ public class StateMachineServiceTest extends CvNextGenTest {
                         .cvConfigId(cvConfigId)
                         .build());
     when(verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId))
-        .thenReturn(VerificationJobInstance.builder().build());
+        .thenReturn(
+            VerificationJobInstance.builder().resolvedJob(newCanaryVerificationJobDTO().getVerificationJob()).build());
 
     AnalysisInput inputs = AnalysisInput.builder()
                                .verificationTaskId(verificationTaskId)
@@ -221,6 +229,8 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testExecuteStateMachine_currentlyRunning() {
     when(timeSeriesAnalysisState.getExecutionStatus()).thenReturn(AnalysisStatus.RUNNING);
+    timeSeriesAnalysisState.setStatus(AnalysisStatus.RUNNING);
+    when(timeSeriesAnalysisState.handleRunning()).thenReturn(timeSeriesAnalysisState);
 
     stateMachineService.executeStateMachine(cvConfigId);
   }
@@ -398,5 +408,20 @@ public class StateMachineServiceTest extends CvNextGenTest {
     stateMachine.setCurrentState(timeSeriesAnalysisState);
     stateMachine.setStatus(status);
     return stateMachine;
+  }
+
+  private VerificationJobDTO newCanaryVerificationJobDTO() {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setIdentifier(generateUuid());
+    canaryVerificationJobDTO.setJobName(generateUuid());
+    canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
+    canaryVerificationJobDTO.setServiceIdentifier("service");
+    canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
+    canaryVerificationJobDTO.setProjectIdentifier(generateUuid());
+    canaryVerificationJobDTO.setEnvIdentifier("env");
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
+    canaryVerificationJobDTO.setDuration("15m");
+    return canaryVerificationJobDTO;
   }
 }

@@ -1,0 +1,269 @@
+package io.harness.cvng.dashboard.services.impl;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import com.google.inject.Inject;
+
+import io.harness.CvNextGenTest;
+import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
+import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
+import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.persistence.HPersistence;
+import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+
+public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
+  @Mock private CVConfigService cvConfigService;
+  @Mock private ActivityService activityService;
+  @Mock private VerificationJobInstanceService verificationJobInstanceService;
+  @Mock private VerificationTaskService verificationTaskService;
+
+  @Inject private HealthVerificationHeatMapService heatMapService;
+
+  private String projectIdentifier;
+  private String serviceIdentifier;
+  private String envIdentifier;
+  private String accountId;
+  private String verificationTaskId;
+  private String verificationJobInstanceId;
+  private String activityId;
+  private String cvConfigId;
+  private long startTime = 1603780200000l;
+  private CVConfig cvConfig;
+
+  @Inject private HPersistence hPersistence;
+
+  @Before
+  public void setup() throws Exception {
+    verificationTaskId = generateUuid();
+    envIdentifier = generateUuid();
+    serviceIdentifier = generateUuid();
+    accountId = generateUuid();
+    projectIdentifier = generateUuid();
+    verificationJobInstanceId = generateUuid();
+    activityId = generateUuid();
+    cvConfigId = generateUuid();
+
+    MockitoAnnotations.initMocks(this);
+
+    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
+    FieldUtils.writeField(heatMapService, "verificationTaskService", verificationTaskService, true);
+    FieldUtils.writeField(heatMapService, "verificationJobInstanceService", verificationJobInstanceService, true);
+    FieldUtils.writeField(heatMapService, "activityService", activityService, true);
+
+    when(verificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
+    when(cvConfigService.get(cvConfigId)).thenReturn(getAppDCVConfig());
+    when(activityService.get(activityId)).thenReturn(getActivity());
+    when(verificationTaskService.get(verificationTaskId))
+        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId).build());
+    when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId)).thenReturn(getActivity());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore_create() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(2);
+
+    HealthVerificationHeatMap heatMap = heatMaps.get(0);
+    validateHeatMaps(heatMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
+    validateHeatMaps(activityLevelMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore_createAndUpdate() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(
+        verificationTaskId, 1.0, endTime.minus(Duration.ofMinutes(5)), HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(verificationTaskId, 0.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(2);
+
+    HealthVerificationHeatMap heatMap = heatMaps.get(0);
+    validateHeatMaps(heatMap, 0.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
+    validateHeatMaps(activityLevelMap, 0.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore_createPreAndPostActivity() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(4);
+
+    HealthVerificationHeatMap heatMap = heatMaps.get(0);
+    validateHeatMaps(heatMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
+    validateHeatMaps(activityLevelMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap postHeatMap = heatMaps.get(2);
+    validateHeatMaps(postHeatMap, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap postActivityLevelMap = heatMaps.get(3);
+    validateHeatMaps(postActivityLevelMap, 0.0, endTime.plus(Duration.ofMinutes(15)),
+        HealthVerificationPeriod.POST_ACTIVITY, HealthVerificationHeatMap.AggregationLevel.ACTIVITY,
+        CVMonitoringCategory.PERFORMANCE);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore_createMultipleCategory() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    CVConfig cvConfig = getAppDCVConfig();
+    cvConfig.setCategory(CVMonitoringCategory.ERRORS);
+    when(verificationTaskService.getCVConfigId(verificationTaskId + "-2")).thenReturn(cvConfigId);
+    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    when(activityService.get(activityId)).thenReturn(getActivity());
+    when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
+    when(verificationTaskService.get(verificationTaskId + "-2"))
+        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId + "-2").build());
+    heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(4);
+
+    HealthVerificationHeatMap heatMap = heatMaps.get(0);
+    validateHeatMaps(heatMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
+    validateHeatMaps(activityLevelMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap errorsHeatmap = heatMaps.get(2);
+    validateHeatMaps(errorsHeatmap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.ERRORS);
+
+    HealthVerificationHeatMap errorsActivityLevel = heatMaps.get(3);
+    validateHeatMaps(errorsActivityLevel, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.ERRORS);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateRiskScore_createMultipleConfigsSameCategory() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 0.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    CVConfig cvConfig = getSplunkConfig();
+    when(verificationTaskService.getCVConfigId(verificationTaskId + "-2")).thenReturn(cvConfigId + "-2");
+    when(cvConfigService.get(cvConfigId + "-2")).thenReturn(cvConfig);
+    when(activityService.get(activityId)).thenReturn(getActivity());
+    when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
+    when(verificationTaskService.get(verificationTaskId + "-2"))
+        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId + "-2").build());
+    heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(3);
+
+    HealthVerificationHeatMap heatMap = heatMaps.get(0);
+    validateHeatMaps(heatMap, 0.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
+    validateHeatMaps(activityLevelMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+
+    HealthVerificationHeatMap errorsHeatmap = heatMaps.get(2);
+    validateHeatMaps(errorsHeatmap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
+        HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+  }
+
+  private void validateHeatMaps(HealthVerificationHeatMap heatMap, Double riskScore, Instant endTime,
+      HealthVerificationPeriod healthVerificationPeriod, AggregationLevel aggregationLevel,
+      CVMonitoringCategory category) {
+    assertThat(heatMap.getRiskScore()).isEqualTo(riskScore);
+    assertThat(heatMap.getCategory()).isEqualTo(category);
+    assertThat(heatMap.getAggregationLevel()).isEqualTo(aggregationLevel);
+    assertThat(heatMap.getActivityId()).isEqualTo(activityId);
+    assertThat(heatMap.getServiceIdentifier()).isEqualTo(serviceIdentifier);
+    assertThat(heatMap.getEnvIdentifier()).isEqualTo(envIdentifier);
+    assertThat(heatMap.getHealthVerificationPeriod()).isEqualTo(healthVerificationPeriod);
+    assertThat(heatMap.getEndTime()).isEqualTo(endTime);
+  }
+
+  private CVConfig getAppDCVConfig() {
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setEnvIdentifier(envIdentifier);
+    cvConfig.setServiceIdentifier(serviceIdentifier);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setUuid(cvConfigId);
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    return cvConfig;
+  }
+
+  private CVConfig getSplunkConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setEnvIdentifier(envIdentifier);
+    cvConfig.setServiceIdentifier(serviceIdentifier);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setUuid(cvConfigId + "-2");
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    return cvConfig;
+  }
+
+  private Activity getActivity() {
+    KubernetesActivity activity = KubernetesActivity.builder().build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    activity.setUuid(activityId);
+    activity.setActivityStartTime(Instant.ofEpochMilli(startTime));
+    return activity;
+  }
+}

@@ -89,6 +89,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
+      case IGNORED:
         orchestrateNewAnalysisStateMachine(orchestrator);
         break;
       case RUNNING:

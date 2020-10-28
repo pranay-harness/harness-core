@@ -49,6 +49,7 @@ public class LogAnalysisDTO {
         .score(score)
         .verificationTaskId(verificationTaskId)
         .logAnalysisResults(logAnalysisResults)
+        .overallRisk(score)
         .build();
   }
 }

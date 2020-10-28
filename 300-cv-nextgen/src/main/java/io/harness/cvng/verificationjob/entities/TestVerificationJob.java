@@ -60,13 +60,22 @@ public class TestVerificationJob extends VerificationJob {
   }
 
   @Override
+  public boolean shouldDoDataCollection() {
+    return true;
+  }
+  @Override
   protected void validateParams() {
     Preconditions.checkNotNull(sensitivity, generateErrorMessageFromParam(TestVerificationJobKeys.sensitivity));
   }
 
   @Override
-  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
+  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
     return Optional.empty();
+  }
+
+  @Override
+  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   @Override

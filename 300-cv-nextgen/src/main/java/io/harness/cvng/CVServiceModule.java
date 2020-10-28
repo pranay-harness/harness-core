@@ -15,6 +15,7 @@ import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.HealthVerificationService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
@@ -24,6 +25,7 @@ import io.harness.cvng.analysis.services.impl.AnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.HealthVerificationServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
@@ -67,10 +69,12 @@ import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
+import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.dashboard.services.impl.AnomalyServiceImpl;
+import io.harness.cvng.dashboard.services.impl.HealthVerificationHeatMapServiceImpl;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
 import io.harness.cvng.dashboard.services.impl.LogDashboardServiceImpl;
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
@@ -178,7 +182,10 @@ public class CVServiceModule extends AbstractModule {
       bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
       bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
       bind(DeploymentAnalysisService.class).to(DeploymentAnalysisServiceImpl.class);
+      bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
+      bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
       bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

@@ -55,6 +55,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.Sort;
 
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -276,7 +277,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   private String preDeploymentDataUrl(
       AnalysisInput input, VerificationJobInstance verificationJobInstance, VerificationJob verificationJob) {
     Optional<TimeRange> preDeploymentTimeRange =
-        verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
+        verificationJob.getPreActivityTimeRange(verificationJobInstance.getDeploymentStartTime());
     Preconditions.checkState(preDeploymentTimeRange.isPresent(),
         "Pre-deployment time range is empty for canary analysis task. This should not happen");
     URIBuilder uriBuilder = new URIBuilder();
@@ -433,7 +434,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     if (cvConfig != null) {
-      double risk = analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
+      double risk = getOverallRisk(analysis);
       heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
           cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
           cvConfig.getCategory(), startTime, risk);
@@ -441,6 +442,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
       timeSeriesService.updateRiskScores(cvConfigId, riskSummary);
     }
+  }
+
+  private double getOverallRisk(ServiceGuardTimeSeriesAnalysisDTO analysis) {
+    return analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
   }
 
   private void handleAnomalyOpenOrClose(String accountId, String cvConfigId, Instant startTime, Instant endTime,
@@ -522,6 +527,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .analysisStartTime(startTime)
         .analysisEndTime(endTime)
         .transactionMetricRiskList(metricRiskList)
+        .overallRisk(getOverallRisk(analysisDTO))
         .build();
   }
   private TimeSeriesCumulativeSums buildCumulativeSums(
@@ -577,5 +583,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
         .build();
+  }
+
+  @Override
+  public TimeSeriesRiskSummary getLatestTimeSeriesRiskSummary(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(TimeSeriesRiskSummary.class, excludeAuthority)
+        .filter(TimeSeriesRiskSummaryKeys.verificationTaskId, verificationTaskId)
+        .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+        .greaterThanOrEq(startTime)
+        .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+        .lessThan(endTime)
+        .order(Sort.descending(TimeSeriesRiskSummaryKeys.analysisEndTime))
+        .get();
   }
 }

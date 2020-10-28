@@ -34,6 +34,7 @@ public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   @NotEmpty @FdIndex private Instant analysisStartTime;
   @NotEmpty @FdIndex private Instant analysisEndTime;
   private List<TransactionMetricRisk> transactionMetricRiskList;
+  private double overallRisk;
 
   public List<TransactionMetricRisk> getTransactionMetricRiskList() {
     if (transactionMetricRiskList == null) {

@@ -24,7 +24,7 @@ public class DeploymentActivityPopoverResultDTO {
   @Builder
   public static class VerificationResult {
     String jobName;
-    DeploymentVerificationStatus status;
+    ActivityVerificationStatus status;
     Double riskScore;
     Long remainingTimeMs;
     int progressPercentage;

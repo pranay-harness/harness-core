@@ -52,6 +52,11 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
+  public boolean shouldDoDataCollection() {
+    return true;
+  }
+
+  @Override
   public VerificationJobDTO getVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
     canaryVerificationJobDTO.setSensitivity(this.sensitivity.string());
@@ -70,9 +75,14 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
-  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
+  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
     return Optional.of(
         TimeRange.builder().startTime(deploymentStartTime.minus(getDuration())).endTime(deploymentStartTime).build());
+  }
+
+  @Override
+  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   @Override

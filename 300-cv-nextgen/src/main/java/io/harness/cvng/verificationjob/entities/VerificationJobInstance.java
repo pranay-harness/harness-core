@@ -65,11 +65,20 @@ public class VerificationJobInstance
   @FdIndex private Long dataCollectionTaskIteration;
   @FdIndex private Long analysisOrchestrationIteration;
   @FdIndex private Long deletePerpetualTaskIteration;
+
+  // TODO: Refactor and Split into separate job instances
+
+  // this stuff is only required for deployment verification
   private Duration dataCollectionDelay;
   private List<String> perpetualTaskIds;
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
+
+  // this stuff is only required for health verification
+  private Instant preActivityVerificationStartTime;
+  private Instant postActivityVerificationStartTime;
+
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;

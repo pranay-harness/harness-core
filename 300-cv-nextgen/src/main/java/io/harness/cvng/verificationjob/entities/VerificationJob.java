@@ -66,6 +66,8 @@ public abstract class VerificationJob
 
   public abstract VerificationJobType getType();
   public abstract VerificationJobDTO getVerificationJobDTO();
+  public abstract boolean shouldDoDataCollection();
+
   public void validate() {
     Preconditions.checkNotNull(accountId, generateErrorMessageFromParam(VerificationJobKeys.accountId));
     Preconditions.checkNotNull(identifier, generateErrorMessageFromParam(VerificationJobKeys.identifier));
@@ -86,7 +88,9 @@ public abstract class VerificationJob
   }
 
   protected abstract void validateParams();
-  public abstract Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime);
+  // TODO: Should this time range be configurable ?
+  public abstract Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime);
+  public abstract Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime);
   public abstract List<TimeRange> getDataCollectionTimeRanges(Instant startTime);
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);

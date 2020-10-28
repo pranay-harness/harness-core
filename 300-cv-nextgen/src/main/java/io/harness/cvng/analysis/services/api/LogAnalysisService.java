@@ -28,6 +28,10 @@ public interface LogAnalysisService {
       String verificationTaskId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime);
   void saveAnalysis(String learningEngineTaskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO);
   void logDeploymentVerificationProgress(AnalysisInput inputs, AnalysisStatus finalStatus);
+
+  LogAnalysisResult getLatestAnalysisForVerificationTaskId(
+      String verificationTaskId, Instant startTime, Instant endTime);
+
   List<LogAnalysisResult> getTopLogAnalysisResults(
       List<String> verificationTaskIds, Instant startTime, Instant endTime);
 }
