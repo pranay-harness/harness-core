@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.validation.Validator.notNullCheck;
+import static software.wings.beans.VMSSAuthType.PASSWORD;
 import static software.wings.beans.VMSSAuthType.SSH_PUBLIC_KEY;
 import static software.wings.infra.AzureVMSSInfra.Yaml;
 
@@ -22,12 +23,21 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
   public Yaml toYaml(AzureVMSSInfra bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     notNullCheck("Cloud provider is NULL", cloudProvider);
+    notNullCheck("Subscription id is NULL", bean.getSubscriptionId());
+    notNullCheck("Resource group name is NULL", bean.getResourceGroupName());
+    notNullCheck("Base scale set name is NULL", bean.getBaseVMSSName());
 
     String hostConnectionAttributeName = null;
     if (SSH_PUBLIC_KEY == bean.getVmssAuthType()) {
       SettingAttribute attribute = settingsService.get(bean.getHostConnectionAttrs());
       notNullCheck("Public Key is NULL", attribute);
       hostConnectionAttributeName = attribute.getName();
+    }
+
+    String passwordSecretTextName = null;
+    if (PASSWORD == bean.getVmssAuthType()) {
+      passwordSecretTextName = bean.getPasswordSecretTextName();
+      notNullCheck("Password Secret Text Name is NULL", passwordSecretTextName);
     }
 
     return Yaml.builder()
@@ -56,12 +66,21 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck("Cloud Provider is NULL", cloudProvider);
+    notNullCheck("Subscription Id is NULL", yaml.getSubscriptionId());
+    notNullCheck("Resource Group Name is NULL", yaml.getResourceGroupName());
+    notNullCheck("Base Scale Set Name is NULL", yaml.getBaseVMSSName());
 
     String hostConnectionAttributeId = null;
     if (SSH_PUBLIC_KEY == yaml.getVmssAuthType()) {
       SettingAttribute attribute = settingsService.getSettingAttributeByName(accountId, yaml.getHostConnectionAttrs());
       notNullCheck("Public Key is NULL", attribute);
       hostConnectionAttributeId = attribute.getUuid();
+    }
+
+    String passwordSecretTextName = null;
+    if (PASSWORD == yaml.getVmssAuthType()) {
+      passwordSecretTextName = yaml.getPasswordSecretTextName();
+      notNullCheck("Password Secret Text Name is NULL", passwordSecretTextName);
     }
 
     bean.setCloudProviderId(cloudProvider.getUuid());
