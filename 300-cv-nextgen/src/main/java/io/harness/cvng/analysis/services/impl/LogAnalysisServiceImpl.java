@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.MONGO_QUERY_TIMEOUT_SEC;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.ANALYSIS_RISK_RESULTS_LIMIT;
 import static io.harness.cvng.analysis.CVAnalysisConstants.DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
@@ -55,10 +56,13 @@ import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Sort;
 
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -219,9 +223,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     CVConfig cvConfig =
         cvConfigService.get(verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId()));
 
-    heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig, cvConfig.getCategory(),
-        learningEngineTask.getAnalysisStartTime(), analysisBody.getScore());
+    heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
+        cvConfig.getCategory(), learningEngineTask.getAnalysisStartTime(), analysisBody.getScore());
   }
 
   @Override
@@ -256,6 +260,22 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .build();
     verificationJobInstanceService.logProgress(
         verificationTaskService.getVerificationJobInstanceId(inputs.getVerificationTaskId()), progressLog);
+  }
+
+  @Override
+  public List<LogAnalysisResult> getTopLogAnalysisResults(
+      List<String> verificationTaskIds, Instant startTime, Instant endTime) {
+    List<LogAnalysisResult> logAnalysisResults = hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
+                                                     .field(LogAnalysisResultKeys.verificationTaskId)
+                                                     .in(verificationTaskIds)
+                                                     .field(LogAnalysisResultKeys.analysisEndTime)
+                                                     .greaterThanOrEq(startTime)
+                                                     .field(LogAnalysisResultKeys.analysisEndTime)
+                                                     .lessThan(endTime)
+                                                     .order(Sort.descending(LogAnalysisResultKeys.score))
+                                                     .asList(new FindOptions().limit(ANALYSIS_RISK_RESULTS_LIMIT));
+    Collections.sort(logAnalysisResults, Comparator.comparingDouble(LogAnalysisResult::getScore));
+    return logAnalysisResults;
   }
 
   private String createDeploymentAnalysisSaveUrl(String taskId) {

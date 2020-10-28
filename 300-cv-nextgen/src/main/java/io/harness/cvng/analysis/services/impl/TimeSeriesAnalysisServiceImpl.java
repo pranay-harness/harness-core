@@ -1,10 +1,12 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.ANALYSIS_RISK_RESULTS_LIMIT;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SAVE_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -26,6 +28,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TimeSeriesCumu
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TimeSeriesRiskSummaryKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
@@ -49,7 +52,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
@@ -61,12 +63,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
@@ -77,7 +81,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private CVConfigService cvConfigService;
   @Inject private AnomalyService anomalyService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
@@ -386,6 +389,29 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
+  public List<TransactionMetricRisk> getTopTimeSeriesTransactionMetricRisk(
+      List<String> verificationTaskIds, Instant startTime, Instant endTime) {
+    List<TimeSeriesRiskSummary> timeSeriesRiskSummaries =
+        hPersistence.createQuery(TimeSeriesRiskSummary.class, excludeAuthority)
+            .field(TimeSeriesRiskSummaryKeys.verificationTaskId)
+            .in(verificationTaskIds)
+            .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+            .greaterThanOrEq(startTime)
+            .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+            .lessThan(endTime)
+            .order(TimeSeriesRiskSummaryKeys.analysisEndTime)
+            .asList();
+    List<TransactionMetricRisk> transactionMetricRisks =
+        timeSeriesRiskSummaries.stream()
+            .map(timeSeriesRiskSummary -> timeSeriesRiskSummary.getTransactionMetricRiskList())
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
+    Collections.sort(transactionMetricRisks, Comparator.comparingInt(TransactionMetricRisk::getMetricRisk));
+    return transactionMetricRisks.subList(
+        Math.max(0, transactionMetricRisks.size() - ANALYSIS_RISK_RESULTS_LIMIT), transactionMetricRisks.size());
+  }
+
+  @Override
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
@@ -408,9 +434,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     if (cvConfig != null) {
       double risk = analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
-      heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-          cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig, cvConfig.getCategory(), startTime,
-          risk);
+      heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+          cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
+          cvConfig.getCategory(), startTime, risk);
 
       handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
       timeSeriesService.updateRiskScores(cvConfigId, riskSummary);

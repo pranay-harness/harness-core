@@ -13,6 +13,7 @@ import java.util.Set;
 public class DeploymentActivityResultDTO {
   String deploymentTag;
   String serviceName;
+  String serviceIdentifier;
   Set<String> environments;
   DeploymentResultSummary deploymentResultSummary;
 

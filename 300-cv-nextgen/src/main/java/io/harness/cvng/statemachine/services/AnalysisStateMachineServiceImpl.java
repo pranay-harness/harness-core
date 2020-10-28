@@ -64,7 +64,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     if (executingStateMachine != null) {
       if (executingStateMachine.getStatus() != AnalysisStatus.SUCCESS) {
         throw new AnalysisStateMachineException(
-            "There can be only one statemachine execution at a time for cvConfig: " + verificationTaskId);
+            "There can be only one statemachine execution at a time for verificationTaskId: " + verificationTaskId);
       }
     }
     stateMachine.setVerificationTaskId(verificationTaskId);

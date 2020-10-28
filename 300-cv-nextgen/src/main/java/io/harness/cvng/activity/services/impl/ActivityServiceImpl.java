@@ -89,6 +89,7 @@ public class ActivityServiceImpl implements ActivityService {
       // TODO: do we need to implement caching?
       String serviceName = getServiceNameFromActivity(firstActivity);
       deploymentActivityVerificationResultDTO.setServiceName(serviceName);
+      deploymentActivityVerificationResultDTO.setServiceIdentifier(firstActivity.getServiceIdentifier());
       results.add(deploymentActivityVerificationResultDTO);
     });
 
