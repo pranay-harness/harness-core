@@ -12,16 +12,13 @@ import io.harness.serializer.kryo.ManagerKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
-import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
-import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.DelegateServiceBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
 import io.harness.serializer.morphia.EventMorphiaRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
-import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
@@ -35,6 +32,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
@@ -43,12 +41,9 @@ public class ManagerRegistrars {
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
-          .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
-          .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
-          .add(YamlKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)
@@ -59,6 +54,7 @@ public class ManagerRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
           .add(OrchestrationStepsMorphiaRegistrar.class)
           .add(ManagerMorphiaRegistrar.class)
           .add(LimitsMorphiaRegistrar.class)
@@ -70,8 +66,6 @@ public class ManagerRegistrars {
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(DelegateServiceBeansMorphiaRegistrar.class)
-          .add(NGCoreMorphiaClassesRegistrar.class)
-          .add(ConnectorMorphiaClassesRegistrar.class)
           .add(EventMorphiaRegistrar.class)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
@@ -80,6 +74,7 @@ public class ManagerRegistrars {
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(CvNextGenCommonsRegistrars.aliasRegistrars)
           .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
           .addAll(PersistenceRegistrars.aliasRegistrars)
           .addAll(TimeoutEngineRegistrars.aliasRegistrars)
@@ -88,7 +83,6 @@ public class ManagerRegistrars {
           .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
           .add(WingsAliasRegistrar.class)
           .build();
 

@@ -62,9 +62,9 @@ public class GitChangeSetProcessorTest extends CategoryTest {
     final EntityType connector = EntityType.CONNECTORS;
     final EntityType pipelines = EntityType.PIPELINES;
     final String entityIdentifier = "id";
-    final String filePathConnector = rootPath + PATH_DELIMITER + connector.getEntityDisplayName() + PATH_DELIMITER
+    final String filePathConnector = rootPath + PATH_DELIMITER + connector.getYamlName() + PATH_DELIMITER
         + entityIdentifier + EXTENSION_SEPARATOR + YAML_EXTENSION;
-    final String filePathPipeline = rootPath1 + PATH_DELIMITER + pipelines.getEntityDisplayName() + PATH_DELIMITER
+    final String filePathPipeline = rootPath1 + PATH_DELIMITER + pipelines.getYamlName() + PATH_DELIMITER
         + entityIdentifier + EXTENSION_SEPARATOR + YAML_EXTENSION;
     final String filePathUnknown = rootPath1 + PATH_DELIMITER + "random" + PATH_DELIMITER + entityIdentifier
         + EXTENSION_SEPARATOR + YAML_EXTENSION;
@@ -118,15 +118,14 @@ public class GitChangeSetProcessorTest extends CategoryTest {
                                        .changeFromAnotherCommit(false)
                                        .syncFromGit(true)
                                        .build();
-    GitFileChange gitFileChange3 =
-        GitFileChange.builder()
-            .filePath("filePath/" + EntityType.CONNECTORS.getEntityDisplayName() + "/abc.yaml")
-            .accountId(accountId)
-            .processingCommitId(commitId)
-            .commitId(commitId)
-            .changeFromAnotherCommit(false)
-            .syncFromGit(true)
-            .build();
+    GitFileChange gitFileChange3 = GitFileChange.builder()
+                                       .filePath("filePath/" + EntityType.CONNECTORS.getYamlName() + "/abc.yaml")
+                                       .accountId(accountId)
+                                       .processingCommitId(commitId)
+                                       .commitId(commitId)
+                                       .changeFromAnotherCommit(false)
+                                       .syncFromGit(true)
+                                       .build();
 
     DiffResult diffResult =
         DiffResult.builder()

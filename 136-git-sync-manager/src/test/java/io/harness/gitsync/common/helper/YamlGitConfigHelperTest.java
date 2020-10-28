@@ -37,9 +37,9 @@ public class YamlGitConfigHelperTest extends CategoryTest {
     final EntityType connector = EntityType.CONNECTORS;
     final EntityType pipelines = EntityType.PIPELINES;
     final String entityIdentifier = "id";
-    final String filePathConnector = rootPath + PATH_DELIMITER + connector.getEntityDisplayName() + PATH_DELIMITER
+    final String filePathConnector = rootPath + PATH_DELIMITER + connector.getYamlName() + PATH_DELIMITER
         + entityIdentifier + EXTENSION_SEPARATOR + YAML_EXTENSION;
-    final String filePathPipeline = rootPath1 + PATH_DELIMITER + pipelines.getEntityDisplayName() + PATH_DELIMITER
+    final String filePathPipeline = rootPath1 + PATH_DELIMITER + pipelines.getYamlName() + PATH_DELIMITER
         + entityIdentifier + EXTENSION_SEPARATOR + YAML_EXTENSION;
     final List<GitFileChange> gitFileChanges = Arrays.asList(GitFileChange.builder().filePath(filePathPipeline).build(),
         GitFileChange.builder().filePath(filePathConnector).build());

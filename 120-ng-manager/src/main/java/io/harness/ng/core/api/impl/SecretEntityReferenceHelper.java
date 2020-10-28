@@ -1,7 +1,6 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
-import static io.harness.ng.core.RestCallToNGManagerClientUtils.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +14,7 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.utils.RestCallToNGManagerClientUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class SecretEntityReferenceHelper {
     EntitySetupUsageDTO entityReferenceDTO =
         entityReferenceHelper.createEntityReference(encryptedDataDTO.getAccount(), secretManagerDetails, secretDetails);
     try {
-      execute(entitySetupUsageClient.save(entityReferenceDTO));
+      RestCallToNGManagerClientUtils.execute(entitySetupUsageClient.save(entityReferenceDTO));
     } catch (Exception ex) {
       logger.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not created when the secret [{}] was created from the secret manager [{}]",
@@ -67,8 +67,8 @@ public class SecretEntityReferenceHelper {
         encryptedDataDTO.getOrg(), encryptedDataDTO.getProject(), encryptedDataDTO.getIdentifier());
     boolean entityReferenceDeleted = false;
     try {
-      entityReferenceDeleted =
-          execute(entitySetupUsageClient.deleteAllReferredByEntityRecords(encryptedDataDTO.getAccount(), secretFQN));
+      entityReferenceDeleted = RestCallToNGManagerClientUtils.execute(
+          entitySetupUsageClient.deleteAllReferredByEntityRecords(encryptedDataDTO.getAccount(), secretFQN));
     } catch (Exception ex) {
       logger.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",

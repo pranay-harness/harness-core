@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.TypeAlias;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "OverlayInputSetEntityKeys")
 @Entity(value = "inputSetsNG", noClassnameStored = true)
 @Document("inputSetsNG")

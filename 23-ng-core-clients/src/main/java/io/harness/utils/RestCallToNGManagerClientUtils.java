@@ -1,4 +1,4 @@
-package io.harness.ng.core;
+package io.harness.utils;
 
 import com.google.inject.Singleton;
 

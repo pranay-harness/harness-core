@@ -22,9 +22,8 @@ import retrofit2.http.Query;
  *    accountIdentifier/orgIdentifier/projectIdentifier/pipelineIdentifier/identifier
  */
 public interface EntitySetupUsageClient {
-  static final String REFERRED_ENTITY_FQN = "referredEntityFQN";
-  static final String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
-  static final String ENTITY_FQN = "entityFQN";
+  String REFERRED_ENTITY_FQN = "referredEntityFQN";
+  String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
   String INTERNAL_ENTITY_REFERENCE_API = "entitySetupUsage/internal";
 
   @GET(INTERNAL_ENTITY_REFERENCE_API)

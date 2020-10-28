@@ -60,6 +60,7 @@ java_library(
         "@maven//:io_grpc_grpc_api",
         "@maven//:io_prometheus_simpleclient",
         "@maven//:io_prometheus_simpleclient_dropwizard",
+        "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_javacrumbs_json_unit_json_unit_fluent",

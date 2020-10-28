@@ -3,12 +3,19 @@ package io.harness.ngpipeline.inputset.services.impl;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
+import io.harness.common.EntityReferenceHelper;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.resource.InputSetListType;
 import io.harness.ngpipeline.inputset.mappers.InputSetElementMapper;
@@ -17,19 +24,34 @@ import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.joor.Reflect;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import retrofit2.Call;
+import retrofit2.Response;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class InputSetEntityServiceImplTest extends CDNGBaseTest {
+  @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject InputSetEntityServiceImpl inputSetEntityService;
+
+  @Before
+  public void setUp() {
+    Reflect.on(inputSetEntityService).set("entitySetupUsageClient", entitySetupUsageClient);
+  }
 
   @Test
   @Owner(developers = NAMAN)
@@ -97,6 +119,18 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     updatedInputSetEntity.setAccountId(ACCOUNT_ID);
 
     // Delete
+    Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
+    try {
+      when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
+    } catch (IOException ex) {
+      logger.info("Encountered exception ", ex);
+    }
+    doReturn(request)
+        .when(entitySetupUsageClient)
+        .listAllEntityUsage(0, 10, ACCOUNT_ID,
+            EntityReferenceHelper.createFQN(
+                Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
+            "");
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
     assertThat(delete).isTrue();
@@ -164,6 +198,19 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     updatedOverlayInputSetEntity.setAccountId(ACCOUNT_ID);
 
     // Delete
+    Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
+    try {
+      when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
+    } catch (IOException ex) {
+      logger.info("Encountered exception ", ex);
+    }
+    doReturn(request)
+        .when(entitySetupUsageClient)
+        .listAllEntityUsage(0, 10, ACCOUNT_ID,
+            EntityReferenceHelper.createFQN(
+                Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
+            "");
+
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
     assertThat(delete).isTrue();

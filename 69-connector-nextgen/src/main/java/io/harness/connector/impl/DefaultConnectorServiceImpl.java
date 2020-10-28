@@ -1,14 +1,8 @@
 package io.harness.connector.impl;
 
-import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
-import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
-import static io.harness.ng.core.RestCallToNGManagerClientUtils.execute;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorFilterHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -24,7 +18,6 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -43,6 +36,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
+import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -52,7 +51,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorFilterHelper connectorFilterHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
   EntitySetupUsageClient entitySetupUsageClient;
-  EntitySetupUsageHelper entitySetupUsageHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -146,10 +144,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
-    boolean isEntityReferenced = false;
-    String referredEntityFQN =
-        FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(connector.getAccountIdentifier(),
-            connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+    boolean isEntityReferenced;
+    IdentifierRef identifierRef = IdentifierRef.builder()
+                                      .accountIdentifier(connector.getAccountIdentifier())
+                                      .orgIdentifier(connector.getOrgIdentifier())
+                                      .projectIdentifier(connector.getProjectIdentifier())
+                                      .identifier(connector.getIdentifier())
+                                      .build();
+    String referredEntityFQN = identifierRef.getFullyQualifiedName();
     try {
       isEntityReferenced =
           execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(), referredEntityFQN));
