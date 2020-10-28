@@ -28,7 +28,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.EnvironmentService;
@@ -48,7 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class YamlIntegrationTest extends BaseIntegrationTest {
+public class YamlIntegrationTest extends IntegrationTestBase {
   private Application application;
   private Service service;
   private YamlGitConfig yamlGitConfig;

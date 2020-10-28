@@ -45,7 +45,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import java.util.UUID;
 
 @SetupScheduler
-public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
+public class ConfigVariableIntegrationTest extends IntegrationTestBase {
   @Inject @InjectMocks private AppService appService;
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;

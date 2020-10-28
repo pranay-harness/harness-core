@@ -28,7 +28,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsIntegrationTestConstants;
 
@@ -44,7 +44,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response.Status;
 
 @Slf4j
-public class AppResourceIntegrationTest extends BaseIntegrationTest {
+public class AppResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private WingsPersistence persistence;
   @Inject private InitializeAppCounters initializeAppCounters;

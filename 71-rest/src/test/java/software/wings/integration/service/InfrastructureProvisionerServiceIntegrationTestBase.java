@@ -3,12 +3,12 @@ package software.wings.integration.service;
 import com.google.inject.Inject;
 
 import org.mockito.InjectMocks;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 
 @Integration
-public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegrationTest {
+public class InfrastructureProvisionerServiceIntegrationTestBase extends IntegrationTestBase {
   @Inject @InjectMocks private InfrastructureProvisionerService infrastructureProvisionerService;
 
   //  @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;

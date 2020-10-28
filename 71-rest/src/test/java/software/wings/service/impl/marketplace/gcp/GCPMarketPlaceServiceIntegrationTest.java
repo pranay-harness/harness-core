@@ -20,7 +20,7 @@ import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
 import java.time.Instant;
@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
+public class GCPMarketPlaceServiceIntegrationTest extends IntegrationTestBase {
   @Inject private GCPUsageReportServiceImpl gcpUsageReportService;
   @Inject private GCPMarketPlaceServiceImpl gcpMarketPlaceService;
   @Inject private InstanceStatServiceImpl statService;

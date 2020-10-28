@@ -14,9 +14,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
-public class InitInfraProvisionerCountersIntegrationTest extends BaseIntegrationTest {
+public class InitInfraProvisionerCountersIntegrationTest extends IntegrationTestBase {
   @Inject private InitInfraProvisionerCounters initInfraProvisionerCounters;
 
   @Before

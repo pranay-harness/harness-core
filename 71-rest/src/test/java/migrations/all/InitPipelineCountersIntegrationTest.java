@@ -10,12 +10,13 @@ import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Pipeline;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
-public class InitPipelineCountersIntegrationTest extends BaseIntegrationTest {
+public class InitPipelineCountersIntegrationTest extends IntegrationTestBase {
   @Inject private InitPipelineCounters initPipelineCounters;
 
   @Before
@@ -27,6 +28,7 @@ public class InitPipelineCountersIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMigrate() {
     long pipelineCount = wingsPersistence.createQuery(Pipeline.class).count();
     if (pipelineCount == 0) {

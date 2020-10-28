@@ -24,7 +24,7 @@ import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -45,7 +45,7 @@ import javax.ws.rs.core.GenericType;
  *
  */
 @Slf4j
-public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
+public class StatsCollectorImplIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
   @Inject private StatsCollectorImpl statsCollector;
   @Inject private InstanceStatService statService;

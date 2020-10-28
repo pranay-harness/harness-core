@@ -30,7 +30,7 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 6/14/18.
  */
-public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
+public class ThirdPartyApiCallLogsIntegrationTest extends IntegrationTestBase {
   private String stateExecutionId;
   private String appId;
   private String delegateId;

@@ -15,13 +15,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceIntegrationTest;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 
 import java.time.Instant;
 
-public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
+public class GCPUsageReportServiceIntegrationTest extends IntegrationTestBase {
   @Inject private GCPUsageReportServiceImpl gcpUsageReportService;
   @Inject private WingsPersistence persistence;
   private boolean indexesEnsured;

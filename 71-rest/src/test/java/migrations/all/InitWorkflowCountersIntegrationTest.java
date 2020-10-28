@@ -12,18 +12,19 @@ import io.harness.limits.Counter;
 import io.harness.limits.counter.service.CounterService;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Workflow;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
+public class InitWorkflowCountersIntegrationTest extends IntegrationTestBase {
   @Inject private InitWorkflowCounters initWorkflowCounters;
   @Inject private AppService appService;
   @Inject private CounterService counterService;
@@ -37,6 +38,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();
     if (totalWorkflows == 0) {

@@ -18,16 +18,16 @@ This test class is making calls to WinRM. The purpose is to do directed testing 
 This is not to be run as an automated test[hence the @Ignore].
  */
 @Slf4j
-public abstract class WinRmToolIntegrationTest extends CategoryTest {
+public abstract class WinRmToolIntegrationTestBase extends CategoryTest {
   private static void setUp() {}
 
   public static void main(String[] args) {
-    logger.info("WinRmToolIntegrationTest: Start.");
+    logger.info("WinRmToolIntegrationTestBase: Start.");
     // test2();
     logger.info(getEndpoint("localhost", 80, true));
     logger.info(psWrappedCommand("echo hello\r\ndir"));
 
-    logger.info("WinRmToolIntegrationTest: Done.");
+    logger.info("WinRmToolIntegrationTestBase: Done.");
   }
 
   private static String localhost = "https://localhost:5986/wsman";

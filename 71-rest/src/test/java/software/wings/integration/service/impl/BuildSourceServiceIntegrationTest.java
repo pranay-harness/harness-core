@@ -63,7 +63,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -83,7 +83,7 @@ import java.util.Map;
 import java.util.Set;
 
 @RunWith(Parameterized.class)
-public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
+public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
   @Parameter(0) public SettingVariableTypes type;
   @Parameter(1) public ArtifactStreamType streamType;
   @Parameter(2) public String repositoryType;
@@ -491,6 +491,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void getLabels() {
     switch (type) {
       case JENKINS:

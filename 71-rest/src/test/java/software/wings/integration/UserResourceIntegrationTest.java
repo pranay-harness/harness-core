@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 /**
  * Integration test class for UserResource class.
  */
-public class UserResourceIntegrationTest extends BaseIntegrationTest {
+public class UserResourceIntegrationTest extends IntegrationTestBase {
   final String getLoginTypeURI = "/users/logintype";
 
   @Test

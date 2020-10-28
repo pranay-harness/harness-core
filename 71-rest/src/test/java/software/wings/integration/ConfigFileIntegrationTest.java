@@ -32,6 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,7 +68,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 @SetupScheduler
-public class ConfigFileIntegrationTest extends BaseIntegrationTest {
+public class ConfigFileIntegrationTest extends IntegrationTestBase {
   private static final String INPUT_TEXT = "Input Text";
   @Inject private ConfigService configService;
   @Inject @InjectMocks private AppService appService;
@@ -116,6 +117,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSaveServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
@@ -133,6 +135,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldUpdateServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
     appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
@@ -163,6 +166,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldOverrideSimpleConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
     configFile.setAppId(service.getAppId());
@@ -199,6 +203,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldEnvironmentOverrideServiceConfigFile() throws IOException {
     // Entity is SERVICE
     configFile.setAppId(service.getAppId());
@@ -249,6 +254,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldOverrideEncryptedConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
     configFile.setEncrypted(true);
@@ -293,6 +299,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");

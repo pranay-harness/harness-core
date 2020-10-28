@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 6/8/17.
  */
 @Slf4j
-public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
+public class DelegateRegistrationIntegrationTest extends IntegrationTestBase {
   @Test
   @Owner(developers = ANUBHAW)
   @Repeat(times = 5, successes = 1)

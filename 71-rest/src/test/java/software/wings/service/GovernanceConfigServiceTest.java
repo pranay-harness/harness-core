@@ -34,7 +34,7 @@ import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.features.GovernanceFeature;
 import software.wings.features.api.PremiumFeature;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.licensing.LicenseService;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.resources.stats.model.WeeklyRange;
@@ -51,7 +51,7 @@ import java.util.Collections;
  *
  * @author rktummala
  */
-public class GovernanceConfigServiceTest extends BaseIntegrationTest {
+public class GovernanceConfigServiceTest extends IntegrationTestBase {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
   @Inject @InjectMocks private GovernanceConfigService governanceConfigService;

@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsTestConstants;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
-public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTest {
+public class LimitConfigurationResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationServiceMongo limits;
 
   @Override

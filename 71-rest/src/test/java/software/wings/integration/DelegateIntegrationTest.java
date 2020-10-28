@@ -35,7 +35,7 @@ import java.util.concurrent.TimeoutException;
  * Created by anubhaw on 6/21/17.
  */
 @Slf4j
-public class DelegateIntegrationTest extends BaseIntegrationTest {
+public class DelegateIntegrationTest extends IntegrationTestBase {
   @Override
   @Before
   public void setUp() throws Exception {

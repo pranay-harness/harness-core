@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Created by rsingh on 9/21/18.
  */
-public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
+public class VaultIntegrationTest extends SecretManagementIntegrationTestBase {
   private static final String VAULT_URL_1 = "http://127.0.0.1:8200";
   private static final String VAULT_URL_2 = "http://127.0.0.1:8300";
   private static final String VAULT_BASE_PATH = "/foo/bar";
@@ -487,6 +487,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_vaultWithBasePath3_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath3);
   }

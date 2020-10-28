@@ -19,13 +19,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SplunkConfig;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class SplunkIntegrationTest extends BaseIntegrationTest {
+public class SplunkIntegrationTest extends IntegrationTestBase {
   private static final String SPLUNK_CLOUD_URL = "https://api-prd-p-429h4vj2lsng.cloud.splunk.com:8089";
   @Inject SplunkDelegateService splunkDelegateService; // = new SplunkDelegateServiceImpl();
   @Inject private ScmSecret scmSecret;

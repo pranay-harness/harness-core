@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import software.wings.app.MainConfiguration;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import javax.validation.Validator;
 
 @Slf4j
 @RunWith(JUnit4.class)
-public class GrpcServiceConfigurationModuleTest extends BaseIntegrationTest {
+public class GrpcServiceConfigurationModuleTest extends IntegrationTestBase {
   final ObjectMapper objectMapper = Jackson.newObjectMapper();
   final Validator validator = Validators.newValidator();
   final YamlConfigurationFactory<MainConfiguration> factory =
