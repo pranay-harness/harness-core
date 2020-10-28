@@ -9,8 +9,12 @@ import io.harness.encryption.SecretRefData;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import net.rcarz.jiraclient.*;
+import net.rcarz.jiraclient.Field;
+import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentCreate;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.TimeTracking;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -165,6 +169,52 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
 
     assertThat(capturedFields).containsExactlyInAnyOrder(Field.TIME_TRACKING, "someCustomField", "otherCustomField");
     assertThat(capturedValues.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetTimeTrackingPropertiesOnTicketUpdate() {
+    Issue.FluentUpdate fluentUpdate = mock(Issue.FluentUpdate.class);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put(ORIGINAL_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "1d 2h"));
+    customFields.put(REMAINING_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "4h"));
+
+    JiraTaskNGParameters parameters = JiraTaskNGParameters.builder().customFields(customFields).build();
+
+    jiraTaskNGHandler.setCustomFieldsOnUpdate(parameters, fluentUpdate);
+    Mockito.verify(fluentUpdate).field(fieldArgumentCaptor.capture(), timeTrackingArgumentCaptor.capture());
+
+    String capturedField = fieldArgumentCaptor.getValue();
+    TimeTracking capturedTimeTracking = timeTrackingArgumentCaptor.getValue();
+
+    assertThat(capturedField).isEqualTo(Field.TIME_TRACKING);
+    assertThat(capturedTimeTracking.getOriginalEstimate())
+        .isEqualTo(customFields.get("TimeTracking:OriginalEstimate").getFieldValue());
+    assertThat(capturedTimeTracking.getRemainingEstimate())
+        .isEqualTo(customFields.get("TimeTracking:RemainingEstimate").getFieldValue());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetAllCustomFieldsOnTicketUpdate() {
+    Issue.FluentUpdate fluentUpdate = mock(Issue.FluentUpdate.class);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put(ORIGINAL_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "1d 2h"));
+    customFields.put(REMAINING_ESTIMATE, new JiraCustomFieldValue(Field.TIME_TRACKING, "4h"));
+    customFields.put("someCustomField", new JiraCustomFieldValue("multiselect", "first,second"));
+
+    JiraTaskNGParameters parameters = JiraTaskNGParameters.builder().customFields(customFields).build();
+
+    jiraTaskNGHandler.setCustomFieldsOnUpdate(parameters, fluentUpdate);
+    Mockito.verify(fluentUpdate, Mockito.times(2)).field(fieldArgumentCaptor.capture(), valuesArgumentCaptor.capture());
+
+    List<String> capturedFields = fieldArgumentCaptor.getAllValues();
+    List<Object> capturedValues = valuesArgumentCaptor.getAllValues();
+
+    assertThat(capturedFields).containsExactlyInAnyOrder(Field.TIME_TRACKING, "someCustomField");
+    assertThat(capturedValues.size()).isEqualTo(2);
   }
 
   private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {

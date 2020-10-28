@@ -12,6 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
+import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -155,6 +156,25 @@ public class JiraResourceServiceTest extends CategoryTest {
                            -> jiraResourceService.createTicket(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
                                CreateJiraTicketRequest.builder().build()))
         .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestUpdateTicket() {
+    final String issueKey = "CDNG-0000";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(
+            JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).issueKey(issueKey).build());
+
+    String response = jiraResourceService.updateTicket(
+        identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, UpdateJiraTicketRequest.builder().build());
+    assertThat(response).isEqualTo(issueKey);
   }
 
   private ConnectorResponseDTO getConnector() {
