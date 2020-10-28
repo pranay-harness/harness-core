@@ -54,7 +54,9 @@ public class ConnectorUtils {
     Map<String, ConnectorDetails> connectorDetailsMap = new HashMap<>();
     if (isNotEmpty(connectorNameSet)) {
       for (String connectorIdentifier : connectorNameSet) {
-        connectorDetailsMap.put(connectorIdentifier, getConnectorDetails(ngAccess, connectorIdentifier));
+        ConnectorDetails connectorDetails = getConnectorDetails(ngAccess, connectorIdentifier);
+        connectorDetailsMap.put(
+            connectorDetails.getConnectorDTO().getConnectorInfo().getIdentifier(), connectorDetails);
       }
     }
 
