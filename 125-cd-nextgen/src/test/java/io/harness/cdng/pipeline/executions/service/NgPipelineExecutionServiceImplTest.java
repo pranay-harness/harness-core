@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.service;
+package io.harness.cdng.pipeline.executions.service;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -22,7 +22,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
-import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -37,6 +36,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
@@ -97,16 +97,24 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateStatusForGivenStageNode() {
     NodeExecution nodeExecution =
-        NodeExecution.builder().node(PlanNode.builder().group(StepOutcomeGroup.STAGE.name()).build()).build();
+        NodeExecution.builder()
+            .node(PlanNode.builder().uuid("planNodeId").group(StepOutcomeGroup.STAGE.name()).build())
+            .build();
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
     doReturn(pipelineExecutionSummary)
         .when(ngPipelineExecutionService)
         .getByPlanExecutionId(ACCOUNT_ID, ORG_ID, PROJECT_ID, PLAN_EXECUTION_ID);
 
+    PipelineExecutionHelper.StageIndex stageIndex = PipelineExecutionHelper.StageIndex.builder().build();
+    doReturn(stageIndex).when(pipelineExecutionHelper).findStageIndexByPlanNodeId(emptyList(), "planNodeId");
+    CDStageExecutionSummary stageExecutionSummary = CDStageExecutionSummary.builder().build();
+    doReturn(stageExecutionSummary).when(pipelineExecutionHelper).getCDStageExecutionSummary(nodeExecution);
+
     ngPipelineExecutionService.updateStatusForGivenNode(
         ACCOUNT_ID, ORG_ID, PROJECT_ID, PLAN_EXECUTION_ID, nodeExecution);
 
-    verify(pipelineExecutionHelper).updateStageExecutionStatus(pipelineExecutionSummary, nodeExecution);
+    verify(pipelineExecutionHelper).getCDStageExecutionSummary(nodeExecution);
+    verify(pipelineExecutionRepository).findAndUpdate(PLAN_EXECUTION_ID, stageExecutionSummary, stageIndex);
   }
 
   @Test

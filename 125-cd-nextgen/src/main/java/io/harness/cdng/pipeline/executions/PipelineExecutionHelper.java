@@ -24,6 +24,8 @@ import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
+import lombok.Builder;
+import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,28 +81,21 @@ public class PipelineExecutionHelper {
     return ParallelStageExecutionSummary.builder().stageExecutionSummaries(stageExecutionSummaries).build();
   }
 
-  public void updateStageExecutionStatus(
-      PipelineExecutionSummary pipelineExecutionSummary, NodeExecution nodeExecution) {
-    CDStageExecutionSummary cdStageExecutionSummary = findStageExecutionSummaryByPlanNodeId(
-        pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), nodeExecution.getNode().getUuid());
-    if (cdStageExecutionSummary == null) {
-      return;
-    }
+  public CDStageExecutionSummary getCDStageExecutionSummary(NodeExecution nodeExecution) {
+    CDStageExecutionSummary cdStageExecutionSummary = CDStageExecutionSummary.builder().build();
     ExecutionStatus executionStatus = getExecutionStatus(nodeExecution.getStatus());
     cdStageExecutionSummary.setExecutionStatus(executionStatus);
-    if (cdStageExecutionSummary.getNodeExecutionId() == null) {
-      cdStageExecutionSummary.setNodeExecutionId(nodeExecution.getUuid());
-    }
+    cdStageExecutionSummary.setNodeExecutionId(nodeExecution.getUuid());
+
+    cdStageExecutionSummary.setStartedAt(nodeExecution.getStartTs());
     if (ExecutionStatus.isTerminal(executionStatus)) {
       cdStageExecutionSummary.setEndedAt(nodeExecution.getEndTs());
       if (nodeExecution.getFailureInfo() != null) {
         cdStageExecutionSummary.setErrorInfo(
-
             ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
       }
-    } else {
-      cdStageExecutionSummary.setStartedAt(nodeExecution.getStartTs());
     }
+    return cdStageExecutionSummary;
   }
 
   public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
@@ -145,8 +140,12 @@ public class PipelineExecutionHelper {
       if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
         ParallelStageExecutionSummary parallelStageExecutionSummary =
             (ParallelStageExecutionSummary) stageExecutionSummary;
-        return findStageExecutionSummaryByNodeExecutionId(
+        CDStageExecutionSummary matchingCDStageExecutionSummary = findStageExecutionSummaryByNodeExecutionId(
             parallelStageExecutionSummary.getStageExecutionSummaries(), nodeExecutionId);
+
+        if (matchingCDStageExecutionSummary != null) {
+          return matchingCDStageExecutionSummary;
+        }
       } else if (stageExecutionSummary instanceof CDStageExecutionSummary
           && ((CDStageExecutionSummary) stageExecutionSummary).getNodeExecutionId().equals(nodeExecutionId)) {
         return (CDStageExecutionSummary) stageExecutionSummary;
@@ -155,19 +154,31 @@ public class PipelineExecutionHelper {
     return null;
   }
 
-  public CDStageExecutionSummary findStageExecutionSummaryByPlanNodeId(
-      List<StageExecutionSummary> stageExecutionSummaries, String planNodeId) {
+  public StageIndex findStageIndexByPlanNodeId(List<StageExecutionSummary> stageExecutionSummaries, String planNodeId) {
+    int index = 0;
     for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
       if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
         ParallelStageExecutionSummary parallelStageExecutionSummary =
             (ParallelStageExecutionSummary) stageExecutionSummary;
-        return findStageExecutionSummaryByPlanNodeId(
-            parallelStageExecutionSummary.getStageExecutionSummaries(), planNodeId);
+        StageIndex stageIndex =
+            findStageIndexByPlanNodeId(parallelStageExecutionSummary.getStageExecutionSummaries(), planNodeId);
+
+        if (stageIndex != null) {
+          return StageIndex.builder().firstLevelIndex(index).secondLevelIndex(stageIndex.firstLevelIndex).build();
+        }
       } else if (stageExecutionSummary instanceof CDStageExecutionSummary
           && ((CDStageExecutionSummary) stageExecutionSummary).getPlanNodeId().equals(planNodeId)) {
-        return (CDStageExecutionSummary) stageExecutionSummary;
+        return StageIndex.builder().firstLevelIndex(index).build();
       }
+      index++;
     }
     return null;
+  }
+
+  @Value
+  @Builder
+  public static class StageIndex {
+    @Builder.Default int firstLevelIndex = -1;
+    @Builder.Default int secondLevelIndex = -1;
   }
 }
