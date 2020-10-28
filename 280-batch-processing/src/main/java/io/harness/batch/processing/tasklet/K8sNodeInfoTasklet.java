@@ -27,6 +27,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -147,7 +148,8 @@ public class K8sNodeInfoTasklet implements Tasklet {
         .clusterName(nodeInfo.getClusterName())
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
-        .instanceState(InstanceState.INITIALIZING)
+        .instanceState(InstanceState.RUNNING)
+        .usageStartTime(HTimestamps.toInstant(nodeInfo.getCreationTime()))
         .resource(totalResource)
         .allocatableResource(allocatableResource)
         .labels(encodeDotsInKey(labelsMap))

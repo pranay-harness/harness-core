@@ -3,7 +3,6 @@ package io.harness.perpetualtask.k8s.watch;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_EXPANSION;
-import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_STOP;
 import static java.util.Optional.ofNullable;
 
@@ -85,8 +84,6 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
       logger.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.ADDED);
 
       publishPVInfo(persistentVolume);
-      publishPVEvent(persistentVolume,
-          HTimestamps.fromMillis(persistentVolume.getMetadata().getCreationTimestamp().getMillis()), EVENT_TYPE_START);
 
       publishedPVs.add(persistentVolume.getMetadata().getUid());
     } catch (Exception ex) {

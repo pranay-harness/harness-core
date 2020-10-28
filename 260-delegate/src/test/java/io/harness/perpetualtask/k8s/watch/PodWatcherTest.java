@@ -181,11 +181,10 @@ public class PodWatcherTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldPublishPodScheduledAndPodInfo() throws Exception {
     podWatcher.eventReceived(scheduledPod());
-    verify(eventPublisher, times(2))
+    verify(eventPublisher, times(1))
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
-    assertThat(captor.getAllValues()).hasSize(2);
+    assertThat(captor.getAllValues()).hasSize(1);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
-    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
@@ -197,7 +196,7 @@ public class PodWatcherTest extends CategoryTest {
 
     verify(eventPublisher, atLeastOnce())
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
-    assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
@@ -213,10 +212,9 @@ public class PodWatcherTest extends CategoryTest {
     verify(eventPublisher, atLeastOnce())
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     List<Message> publishedMessages = captor.getAllValues();
-    assertThat(publishedMessages).hasSize(3);
+    assertThat(publishedMessages).hasSize(2);
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
-    assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
-    assertThat(publishedMessages.get(2)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 

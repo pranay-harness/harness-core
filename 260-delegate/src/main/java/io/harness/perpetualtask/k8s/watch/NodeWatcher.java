@@ -1,7 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 import static java.util.Optional.ofNullable;
 
@@ -95,7 +94,6 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
       logger.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
       publishNodeInfo(node);
-      publishNodeStartedEvent(node);
     } catch (Exception ex) {
       logger.error(ERROR_PUBLISH_MSG, EventType.ADDED, ex);
     }
@@ -106,25 +104,10 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
     try {
       logger.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.DELETED);
 
-      publishNodeInfo(node);
       publishNodeStoppedEvent(node);
     } catch (Exception ex) {
       logger.error(ERROR_PUBLISH_MSG, EventType.DELETED.name(), ex);
     }
-  }
-
-  public void publishNodeStartedEvent(V1Node node) {
-    final Timestamp timestamp = HTimestamps.fromMillis(node.getMetadata().getCreationTimestamp().getMillis());
-
-    NodeEvent nodeStartedEvent = NodeEvent.newBuilder(nodeEventPrototype)
-                                     .setNodeUid(node.getMetadata().getUid())
-                                     .setNodeName(node.getMetadata().getName())
-                                     .setType(EVENT_TYPE_START)
-                                     .setTimestamp(timestamp)
-                                     .build();
-
-    logger.debug("Publishing event: {}", nodeStartedEvent);
-    eventPublisher.publishMessage(nodeStartedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
   }
 
   public void publishNodeStoppedEvent(V1Node node) {

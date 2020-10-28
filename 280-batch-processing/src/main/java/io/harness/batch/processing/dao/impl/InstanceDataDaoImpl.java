@@ -143,7 +143,8 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
               .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType())
               .set(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
               .set(InstanceDataKeys.clusterName, instanceInfo.getClusterName())
-              .set(InstanceDataKeys.instanceState, instanceInfo.getInstanceState());
+              .set(InstanceDataKeys.instanceState, instanceInfo.getInstanceState())
+              .set(InstanceDataKeys.usageStartTime, instanceInfo.getUsageStartTime());
 
       if (!isNull(instanceInfo.getResource())) {
         updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());

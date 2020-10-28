@@ -9,6 +9,7 @@ import io.harness.ccm.commons.beans.StorageResource;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ public class InstanceInfo {
   String cloudProviderInstanceId;
   InstanceType instanceType;
   InstanceState instanceState;
+  Instant usageStartTime;
   Resource resource;
   Resource resourceLimit;
   Resource allocatableResource;

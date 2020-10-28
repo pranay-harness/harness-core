@@ -2,7 +2,6 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 import static java.util.Optional.ofNullable;
@@ -163,14 +162,6 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
-      final Timestamp timestamp = HTimestamps.fromMillis(podScheduledCondition.getLastTransitionTime().getMillis());
-      PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
-                              .setPodUid(uid)
-                              .setType(EVENT_TYPE_SCHEDULED)
-                              .setTimestamp(timestamp)
-                              .build();
-      logMessage(podEvent);
-      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedPods.add(uid);
     }
 
