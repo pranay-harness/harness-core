@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -36,6 +37,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.states.CIDelegateTaskExecutor;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
+import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -44,7 +46,9 @@ import software.wings.service.impl.ci.CIServiceAuthSecretKeyImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -94,6 +98,16 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
+
+    // Keeping it to 1 thread to start with. Assuming executor service is used only to
+    // serve health checks. If it's being used for other tasks also, max pool size should be increased.
+    bind(ExecutorService.class)
+        .toInstance(ThreadPool.create(1, 1, 5, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("default-ci-executor-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
+
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
