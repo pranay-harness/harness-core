@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -10,6 +11,8 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.alert.AlertData;
 import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +29,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Data
 @Builder
@@ -41,7 +45,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
   private String infraMappingId;
   private TaskGroup taskGroup;
   private TaskType taskType;
-  private List<String> selectors;
+  private List<ExecutionCapability> executionCapabilities;
 
   @Override
   public boolean matches(AlertData alertData) {
@@ -51,10 +55,10 @@ public class NoEligibleDelegatesAlert implements AlertData {
         && taskType == otherAlertData.getTaskType() && StringUtils.equals(appId, otherAlertData.getAppId())
         && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId())
-        && ((isEmpty(selectors) && isEmpty(otherAlertData.getSelectors()))
-               || (isNotEmpty(selectors) && isNotEmpty(otherAlertData.getSelectors())
-                      && selectors.containsAll(otherAlertData.getSelectors())
-                      && otherAlertData.getSelectors().containsAll(selectors)));
+        && ((isEmpty(executionCapabilities) && isEmpty(otherAlertData.getExecutionCapabilities()))
+               || (isNotEmpty(executionCapabilities) && isNotEmpty(otherAlertData.getExecutionCapabilities())
+                      && executionCapabilities.containsAll(otherAlertData.getExecutionCapabilities())
+                      && otherAlertData.getExecutionCapabilities().containsAll(executionCapabilities)));
   }
 
   @Override
@@ -77,8 +81,18 @@ public class NoEligibleDelegatesAlert implements AlertData {
         title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
       }
     }
-    if (isNotEmpty(selectors)) {
-      title.append(" with selectors ").append(selectors);
+    if (isNotEmpty(executionCapabilities)) {
+      List<SelectorCapability> selectorCapabilities = executionCapabilities.stream()
+                                                          .filter(c -> c instanceof SelectorCapability)
+                                                          .map(c -> (SelectorCapability) c)
+                                                          .collect(toList());
+
+      for (SelectorCapability selectorCapability : selectorCapabilities) {
+        Set<String> selectors = selectorCapability.getSelectors();
+        String selectorOrigin = selectorCapability.getSelectorOrigin();
+        title.append(" with selectors: ").append(selectors).append(", with origin: ").append(selectorOrigin);
+      }
+      return title.toString();
     }
     return title.toString();
   }
@@ -101,6 +115,6 @@ public class NoEligibleDelegatesAlert implements AlertData {
     return "NoEligibleDelegatesAlert{"
         + "accountId='" + accountId + '\'' + ", appId='" + appId + '\'' + ", envId='" + envId + '\''
         + ", infraMappingId='" + infraMappingId + '\'' + ", taskGroup=" + taskGroup + ", taskType=" + taskType
-        + ", selectors=" + selectors + '}';
+        + ", selectors=" + executionCapabilities + '}';
   }
 }

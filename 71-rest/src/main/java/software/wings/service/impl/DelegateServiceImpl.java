@@ -2297,6 +2297,9 @@ public class DelegateServiceImpl implements DelegateService {
     } else if (eligibleDelegates.isEmpty()) {
       logger.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
 
+      List<ExecutionCapability> selectorCapabilities =
+          task.getExecutionCapabilities().stream().filter(c -> c instanceof SelectorCapability).collect(toList());
+
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
           NoEligibleDelegatesAlert.builder()
               .accountId(task.getAccountId())
@@ -2305,7 +2308,7 @@ public class DelegateServiceImpl implements DelegateService {
               .infraMappingId(task.getInfrastructureMappingId())
               .taskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
               .taskType(TaskType.valueOf(task.getData().getTaskType()))
-              .selectors(assignDelegateService.extractSelectors(task))
+              .executionCapabilities(selectorCapabilities)
               .build());
     }
 
