@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.services.container.ContainerScopes;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +17,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
@@ -180,6 +183,9 @@ public class GcbServiceImpl implements GcbService {
 
   @VisibleForTesting
   String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+    if (gcpConfig.isUseDelegate()) {
+      return getAccessTokenUsingK8sWorkloadIdentity();
+    }
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
 
     if (gc.refreshToken()) {
@@ -191,9 +197,41 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
+  private String getAccessTokenUsingK8sWorkloadIdentity() {
+    try {
+      GoogleCredentials gc = GoogleCredentials.getApplicationDefault();
+      if (gc.createScopedRequired()) {
+        gc = gc.createScoped(ContainerScopes.CLOUD_PLATFORM);
+      }
+      return String.join(" ", "Bearer", gc.refreshAccessToken().getTokenValue());
+    } catch (IOException e) {
+      logger.error("Failed to get default credentials", e);
+      throw new GcbClientException("Failed to retrieve GCP access token");
+    }
+  }
+
   private String getProjectId(GcpConfig gcpConfig) {
-    return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
-        .get("project_id");
+    if (gcpConfig.isUseDelegate()) {
+      return getClusterProjectId();
+    } else {
+      return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
+          .get("project_id");
+    }
+  }
+
+  private String getClusterProjectId() {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+                          .header("Metadata-Flavor", "Google")
+                          .url("http://metadata.google.internal/computeMetadata/v1/project/project-id")
+                          .build();
+    try {
+      okhttp3.Response response = client.newCall(request).execute();
+      return response.body().string();
+    } catch (IOException | NullPointerException e) {
+      logger.error("Failed to get projectId due to: ", e);
+      throw new GcbClientException("Can not retrieve project-id from from cluster meta");
+    }
   }
 
   private String extractErrorMessage(Response<?> response) {

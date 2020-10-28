@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 public class GcbTaskParams implements ExecutionCapabilityDemander {
-  public enum GcbTaskType { START, POLL, CANCEL }
+  public enum GcbTaskType { START, POLL, CANCEL, FETCH_TRIGGERS }
 
   @Nullable private String appId;
   @Nullable private String unitName;
