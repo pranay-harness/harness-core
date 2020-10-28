@@ -981,17 +981,17 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping(null, "sometxnName",
         "sometxnname", "somemetricjsonpath", "hostpath", "hostregex", "timestamppath", "formattimestamp");
 
-    MetricCollectionInfo metricCollectionInfo =
-        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
-            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+    MetricCollectionInfo metricCollectionInfo = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri", null, "bodycollection ${start_time} ${end_time}", APMVerificationState.ResponseType.JSON,
+        responseMapping, APMVerificationState.Method.POST);
 
     APMVerificationState.ResponseMapping responseMapping2 =
         new APMVerificationState.ResponseMapping(null, "differentJsonPath", "sometxnname", "somemetricjsonpath",
             "hostpath", "hostregex", "timestamppath", "formattimestamp");
 
-    MetricCollectionInfo metricCollectionInfo2 =
-        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
-            APMVerificationState.ResponseType.JSON, responseMapping2, APMVerificationState.Method.POST);
+    MetricCollectionInfo metricCollectionInfo2 = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri ${start_time} ${end_time}", null, "bodycollection", APMVerificationState.ResponseType.JSON,
+        responseMapping2, APMVerificationState.Method.POST);
 
     metricCollectionInfos.add(metricCollectionInfo);
     metricCollectionInfos.add(metricCollectionInfo2);
@@ -1395,8 +1395,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
             "series[*].pointlist[*].[1]", null, null, "series[*].pointlist[*].[0]", null);
 
     MetricCollectionInfo metricCollectionInfo = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
-        "dummyuri", null, "{\"bodycollection\":\"body\"}", APMVerificationState.ResponseType.JSON, responseMapping,
-        APMVerificationState.Method.POST);
+        "dummyuri ${start_time} ${end_time}", null, "{\"bodycollection\":\"body\"}",
+        APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
 
     metricCollectionInfos.add(metricCollectionInfo);
     apmcvServiceConfiguration.setMetricCollectionInfos(metricCollectionInfos);
@@ -1410,13 +1410,13 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     APMVerificationState.ResponseMapping responseMapping = new APMVerificationState.ResponseMapping("sometxnName", null,
         "sometxnname", "somemetricjsonpath", "hostpath", "hostregex", "timestamppath", "formattimestamp");
 
-    MetricCollectionInfo metricCollectionInfo =
-        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
-            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+    MetricCollectionInfo metricCollectionInfo = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri ${start_time} ${end_time}", null, "bodycollection", APMVerificationState.ResponseType.JSON,
+        responseMapping, APMVerificationState.Method.POST);
 
-    MetricCollectionInfo metricCollectionInfo2 =
-        new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag", "dummyuri", null, "bodycollection",
-            APMVerificationState.ResponseType.JSON, responseMapping, APMVerificationState.Method.POST);
+    MetricCollectionInfo metricCollectionInfo2 = new MetricCollectionInfo("metricName", MetricType.INFRA, "randomtag",
+        "dummyuri ${start_time} ${end_time}", null, "bodycollection", APMVerificationState.ResponseType.JSON,
+        responseMapping, APMVerificationState.Method.POST);
 
     metricCollectionInfos.add(metricCollectionInfo);
     metricCollectionInfos.add(metricCollectionInfo2);
