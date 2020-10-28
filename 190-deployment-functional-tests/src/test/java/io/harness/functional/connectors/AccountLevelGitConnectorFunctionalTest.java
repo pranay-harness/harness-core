@@ -19,6 +19,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.utils.HelmHelper;
 import io.harness.functional.utils.K8SUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
@@ -35,7 +36,6 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.ServiceVariablesUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
@@ -88,6 +88,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
   @Inject private WorkflowService workflowService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ArtifactStreamManager artifactStreamManager;
+  @Inject private HelmHelper helmHelper;
 
   private final Randomizer.Seed seed = new Randomizer.Seed(0);
   private OwnerManager.Owners owners;
@@ -126,6 +127,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     resetCache(getAccount().getUuid());
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
+    logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -147,13 +149,13 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
 
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
+    logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
-  @Ignore("There is no clear reason why this test is failing on jenkins. Will investigate it later")
   public void testHelmUsingAccountLevelGitConnector() {
     Service service = createHelmService("helm-account-level-git");
     updateApplicationManifest(createServiceManifest(service, "charts/basic", StoreType.HelmSourceRepo));
@@ -163,12 +165,11 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     InfrastructureDefinition infraDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, GCP_HELM);
 
-    Workflow workflow = createBasicWorkflow(getName("helm", "wf"), service, infraDefinition);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
-    setupHelmWorkflow(workflow);
+    Workflow workflow = helmHelper.createHelmWorkflow(seed, owners, getName("helm", "wf"), service, infraDefinition);
 
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
+    logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -278,32 +279,6 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     executionArgs.setArtifacts(Collections.singletonList(artifact));
 
     return executionArgs;
-  }
-
-  private void setupHelmWorkflow(Workflow workflow) {
-    BasicOrchestrationWorkflow orchestrationWorkflow = (BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
-    GraphNode helmDeployStep = workflowPhase.getPhaseSteps().get(0).getSteps().get(0);
-    Map<String, Object> properties = helmDeployStep.getProperties();
-    properties.put("helmReleaseNamePrefix", "${service.name}-${infra.helm.shortId}");
-    helmDeployStep.setProperties(properties);
-    // Starting with v3, helm doesn't manage anymore namespace. This script will create namespace if it's missing
-    // (create-namespace alternative is available starting with 3.2)
-    GraphNode createNamespaceStep =
-        GraphNode.builder()
-            .name("Create namespace")
-            .type("SHELL_SCRIPT")
-            .properties(ImmutableMap.of("scriptType", "BASH", "scriptString",
-                "export KUBECONFIG=${HARNESS_KUBE_CONFIG_PATH}\nkubectl get namespace ${infra.kubernetes.namespace} || kubectl create namespace ${infra.kubernetes.namespace}",
-                "executeOnDelegate", true, "timeoutMillis", 60000))
-            .build();
-    if (workflowPhase.getPhaseSteps().get(0).getSteps().size() > 1) {
-      workflowPhase.getPhaseSteps().get(0).getSteps().set(0, createNamespaceStep);
-    } else {
-      workflowPhase.getPhaseSteps().get(0).getSteps().add(0, createNamespaceStep);
-    }
-
-    workflowService.updateWorkflow(workflow, false);
   }
 
   private void setupPcfWorkflow(Workflow workflow) {

@@ -539,6 +539,10 @@ public class ServiceGenerator {
       builder.createdBy(owners.obtainUser());
     }
 
+    if (service != null && service.getHelmVersion() != null) {
+      builder.helmVersion(service.getHelmVersion());
+    }
+
     final Service finalService = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(
