@@ -32,6 +32,7 @@ import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -209,6 +210,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
+    registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
     registerQueueListeners(injector);
@@ -264,6 +266,12 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("CI Service", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private static void addGuiceValidationModule(List<Module> modules) {
