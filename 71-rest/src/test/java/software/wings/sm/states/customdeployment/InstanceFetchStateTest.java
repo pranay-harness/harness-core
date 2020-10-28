@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -17,12 +18,18 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,8 +38,10 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
+import io.harness.deployment.InstanceDetails;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
@@ -45,32 +54,41 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InfraMappingElement.Custom;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.CustomInfrastructureMapping;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionContext;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -85,6 +103,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ExpressionEvaluator expressionEvaluator;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private ServiceTemplateService mockServiceTemplateService;
+  @Mock private ServiceTemplateHelper serviceTemplateHelper;
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
@@ -98,6 +118,19 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     final CustomInfrastructureMapping infraMapping = CustomInfrastructureMapping.builder().build();
     infraMapping.setCustomDeploymentTemplateId(TEMPLATE_ID);
     infraMapping.setDeploymentTypeTemplateVersion("1");
+
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+
+    Key<ServiceTemplate> serviceTemplateKey = new Key<>(ServiceTemplate.class, "collection", "id");
+    doReturn(singletonList(serviceTemplateKey))
+        .when(mockServiceTemplateService)
+        .getTemplateRefKeysByService(anyString(), anyString(), anyString());
+    final PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
+    doReturn(phaseElement).when(context).getContextElement(any(), any());
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
+    doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
 
     doReturn(ACCOUNT_ID).when(context).getAccountId();
     doReturn(APP_ID).when(context).getAppId();
@@ -150,19 +183,23 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             .build();
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    final DelegateTask expected = DelegateTask.builder()
-                                      .accountId(ACCOUNT_ID)
-                                      .description("Fetch Instances")
-                                      .waitId(ACTIVITY_ID)
-                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                      .tags(Arrays.asList("tag1", "tag2"))
-                                      .data(TaskData.builder()
-                                                .async(true)
-                                                .parameters(new Object[] {expectedTaskParams})
-                                                .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
-                                                .timeout(5 * 60 * 1000)
-                                                .build())
-                                      .build();
+    final DelegateTask expected =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .description("Fetch Instances")
+            .waitId(ACTIVITY_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .tags(Arrays.asList("tag1", "tag2"))
+            .data(TaskData.builder()
+                      .async(true)
+                      .parameters(new Object[] {expectedTaskParams})
+                      .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
+                      .timeout(5 * 60 * 1000)
+                      .build())
+            .build();
     verify(delegateService).queueTask(captor.capture());
     verify(expressionEvaluator, times(1)).substitute(anyString(), anyMap());
 
@@ -546,5 +583,37 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             -> InstanceMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
                 executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper))
         .hasMessage("No results for path: $['name']");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSetServiceElement() {
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    instanceElements.add(anInstanceElement().uuid("uuid1").hostName("1.1").build());
+    instanceElements.add(anInstanceElement().uuid("uuid2").hostName("2.2").build());
+    ServiceElement serviceElement = ServiceElement.builder().build();
+    state.setServiceElement(instanceElements, serviceElement, "serviceTemplateId");
+    List<ServiceTemplateElement> serviceTemplateElements =
+        instanceElements.stream()
+            .map(instanceElement -> instanceElement.getServiceTemplateElement())
+            .collect(Collectors.toList());
+    assertThat(serviceTemplateElements).doesNotContainNull();
+    assertThat(serviceTemplateElements.stream().map(element -> element.getUuid()).collect(Collectors.toList()))
+        .contains("serviceTemplateId", "serviceTemplateId");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSetServiceElementId() {
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+    instanceDetails.add(InstanceDetails.builder().hostName("host1").build());
+    instanceDetails.add(InstanceDetails.builder().hostName("host2").build());
+    state.setServiceTemplateId(instanceDetails, "serviceTemplateId");
+    assertThat(instanceDetails.stream().map(details -> details.getServiceTemplateId()).collect(Collectors.toList()))
+        .doesNotContainNull();
+    assertThat(instanceDetails.stream().map(details -> details.getServiceTemplateId()).collect(Collectors.toList()))
+        .contains("serviceTemplateId", "serviceTemplateId");
   }
 }
