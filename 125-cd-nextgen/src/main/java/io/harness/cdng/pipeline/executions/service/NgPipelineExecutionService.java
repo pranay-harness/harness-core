@@ -30,7 +30,7 @@ public interface NgPipelineExecutionService {
   PipelineExecutionSummary getByPlanExecutionId(
       String accountId, String orgId, String projectId, String planExecutionId);
 
-  PipelineExecutionSummary updateStatusForGivenNode(
+  void updateStatusForGivenNode(
       String accountId, String orgId, String projectId, String planExecutionId, NodeExecution nodeExecution);
 
   PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,

@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
+import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
@@ -20,6 +21,7 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
@@ -188,16 +190,25 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   }
 
   @Override
-  public PipelineExecutionSummary updateStatusForGivenNode(
+  public void updateStatusForGivenNode(
       String accountId, String orgId, String projectId, String planExecutionId, NodeExecution nodeExecution) {
-    PipelineExecutionSummary pipelineExecutionSummary =
-        getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
     if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())) {
-      pipelineExecutionHelper.updateStageExecutionStatus(pipelineExecutionSummary, nodeExecution);
+      PipelineExecutionSummary pipelineExecutionSummary =
+          getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
+      StageIndex stageIndex = pipelineExecutionHelper.findStageIndexByPlanNodeId(
+          pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), nodeExecution.getNode().getUuid());
+      if (stageIndex == null) {
+        throw new UnexpectedException("No Stage Found for plan node Id: " + nodeExecution.getNode().getUuid());
+      }
+      CDStageExecutionSummary cdStageExecutionSummary =
+          pipelineExecutionHelper.getCDStageExecutionSummary(nodeExecution);
+      pipelineExecutionRepository.findAndUpdate(planExecutionId, cdStageExecutionSummary, stageIndex);
     } else if (nodeExecution.getNode().getGroup().equals(StepOutcomeGroup.PIPELINE.name())) {
+      PipelineExecutionSummary pipelineExecutionSummary =
+          getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
       pipelineExecutionHelper.updatePipelineExecutionStatus(pipelineExecutionSummary, nodeExecution);
+      pipelineExecutionRepository.save(pipelineExecutionSummary);
     }
-    return pipelineExecutionRepository.save(pipelineExecutionSummary);
   }
 
   @Override

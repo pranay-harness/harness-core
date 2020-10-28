@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.executions;
 
 import static io.harness.cdng.pipeline.DeploymentStage.DEPLOYMENT_STAGE_TYPE;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -23,11 +24,14 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.state.io.FailureInfo;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import org.apache.groovy.util.Maps;
@@ -36,6 +40,8 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
@@ -130,26 +136,30 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   }
 
   @Test
-  @Owner(developers = SAHIL)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
-  public void testUpdateStageExecutionStatus() {
-    CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
-                                                   .planNodeId("node1")
-                                                   .serviceIdentifier("serviceIdentifier")
-                                                   .serviceDefinitionType("Kubernetes")
-                                                   .envIdentifier("envIdentifier")
-                                                   .stageIdentifier("testIdentifier")
-                                                   .executionStatus(ExecutionStatus.NOT_STARTED)
-                                                   .build();
-    PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
-    pipelineExecutionSummary.addStageExecutionSummaryElement(executionSummary);
+  public void testGetCDStageExecutionSummary() {
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid("id")
+                                      .status(Status.FAILED)
+                                      .failureInfo(FailureInfo.builder().errorMessage("invalid").build())
+                                      .startTs(123L)
+                                      .endTs(124L)
+                                      .build();
 
-    pipelineExecutionHelper.updateStageExecutionStatus(pipelineExecutionSummary,
-        NodeExecution.builder().node(PlanNode.builder().uuid("node1").build()).status(Status.ERRORED).build());
-    assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().size()).isEqualTo(1);
-    assertThat(((CDStageExecutionSummary) pipelineExecutionSummary.getStageExecutionSummarySummaryElements().get(0))
-                   .getExecutionStatus())
-        .isEqualTo(ExecutionStatus.FAILED);
+    CDStageExecutionSummary expectedExecutionSummary =
+        CDStageExecutionSummary.builder()
+            .nodeExecutionId("id")
+            .executionStatus(ExecutionStatus.FAILED)
+            .startedAt(123L)
+            .endedAt(124L)
+            .errorInfo(ExecutionErrorInfo.builder().message("invalid").build())
+            .build();
+
+    CDStageExecutionSummary actualStageExecutionSummary =
+        pipelineExecutionHelper.getCDStageExecutionSummary(nodeExecution);
+
+    assertThat(actualStageExecutionSummary).isEqualTo(expectedExecutionSummary);
   }
 
   @Test
@@ -181,5 +191,82 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     ServiceExecutionSummary.ArtifactsSummary result = pipelineExecutionHelper.mapArtifactsOutcomeToSummary(
         ServiceOutcome.builder().artifacts(artifactsOutcome).build());
     assertThat(result).isEqualTo(artifactsSummary);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testFindStageExecutionSummaryByNodeExecutionId() {
+    // Serial
+    CDStageExecutionSummary stageExecutionSummary1 = CDStageExecutionSummary.builder().nodeExecutionId("node1").build();
+    CDStageExecutionSummary stageExecutionSummary2 = CDStageExecutionSummary.builder().nodeExecutionId("node2").build();
+    CDStageExecutionSummary stageExecutionSummary3 = CDStageExecutionSummary.builder().nodeExecutionId("node3").build();
+    CDStageExecutionSummary stageExecutionSummary4 = CDStageExecutionSummary.builder().nodeExecutionId("node4").build();
+
+    List<StageExecutionSummary> stageExecutionSummaryList =
+        Arrays.asList(stageExecutionSummary1, stageExecutionSummary2, stageExecutionSummary3, stageExecutionSummary4);
+
+    CDStageExecutionSummary foundStageExecutionSummary =
+        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(stageExecutionSummaryList, "node2");
+    assertThat(foundStageExecutionSummary).isEqualTo(stageExecutionSummary2);
+
+    foundStageExecutionSummary =
+        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(stageExecutionSummaryList, "invalid");
+    assertThat(foundStageExecutionSummary).isEqualTo(null);
+
+    // Parallel
+    ParallelStageExecutionSummary parallelStageExecutionSummary =
+        ParallelStageExecutionSummary.builder()
+            .stageExecutionSummaries(Arrays.asList(stageExecutionSummary2, stageExecutionSummary3))
+            .build();
+
+    stageExecutionSummaryList =
+        Arrays.asList(stageExecutionSummary1, parallelStageExecutionSummary, stageExecutionSummary4);
+
+    foundStageExecutionSummary =
+        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(stageExecutionSummaryList, "node2");
+    assertThat(foundStageExecutionSummary).isEqualTo(stageExecutionSummary2);
+
+    foundStageExecutionSummary =
+        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(stageExecutionSummaryList, "invalid");
+    assertThat(foundStageExecutionSummary).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testFindStageIndexByPlanNodeId() {
+    // Serial
+    CDStageExecutionSummary stageExecutionSummary1 = CDStageExecutionSummary.builder().planNodeId("planNode1").build();
+    CDStageExecutionSummary stageExecutionSummary2 = CDStageExecutionSummary.builder().planNodeId("planNode2").build();
+    CDStageExecutionSummary stageExecutionSummary3 = CDStageExecutionSummary.builder().planNodeId("planNode3").build();
+    CDStageExecutionSummary stageExecutionSummary4 = CDStageExecutionSummary.builder().planNodeId("planNode4").build();
+
+    List<StageExecutionSummary> stageExecutionSummaryList =
+        Arrays.asList(stageExecutionSummary1, stageExecutionSummary2, stageExecutionSummary3, stageExecutionSummary4);
+
+    PipelineExecutionHelper.StageIndex stageIndex =
+        pipelineExecutionHelper.findStageIndexByPlanNodeId(stageExecutionSummaryList, "planNode2");
+    assertThat(stageIndex)
+        .isEqualTo(PipelineExecutionHelper.StageIndex.builder().firstLevelIndex(1).secondLevelIndex(-1).build());
+
+    stageIndex = pipelineExecutionHelper.findStageIndexByPlanNodeId(stageExecutionSummaryList, "invalid");
+    assertThat(stageIndex).isEqualTo(null);
+
+    // Parallel
+    ParallelStageExecutionSummary parallelStageExecutionSummary =
+        ParallelStageExecutionSummary.builder()
+            .stageExecutionSummaries(Arrays.asList(stageExecutionSummary2, stageExecutionSummary3))
+            .build();
+
+    stageExecutionSummaryList =
+        Arrays.asList(stageExecutionSummary1, parallelStageExecutionSummary, stageExecutionSummary4);
+
+    stageIndex = pipelineExecutionHelper.findStageIndexByPlanNodeId(stageExecutionSummaryList, "planNode2");
+    assertThat(stageIndex)
+        .isEqualTo(PipelineExecutionHelper.StageIndex.builder().firstLevelIndex(1).secondLevelIndex(0).build());
+
+    stageIndex = pipelineExecutionHelper.findStageIndexByPlanNodeId(stageExecutionSummaryList, "invalid");
+    assertThat(stageIndex).isEqualTo(null);
   }
 }
