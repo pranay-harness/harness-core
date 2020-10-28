@@ -33,7 +33,7 @@ import java.util.Set;
       @JsonSubTypes.Type(value = AzureKubernetesService.class, name = AZURE_KUBERNETES),
       @JsonSubTypes.Type(value = AzureInstanceInfrastructure.class, name = AZURE_SSH),
       @JsonSubTypes.Type(value = AzureVMSSInfra.class, name = AZURE_VMSS),
-      @JsonSubTypes.Type(value = AzureVMSSInfra.class, name = AZURE_WEBAPP),
+      @JsonSubTypes.Type(value = AzureWebAppInfra.class, name = AZURE_WEBAPP),
       @JsonSubTypes.Type(value = CodeDeployInfrastructure.class, name = CODE_DEPLOY),
       @JsonSubTypes.Type(value = DirectKubernetesInfrastructure.class, name = DIRECT_KUBERNETES),
       @JsonSubTypes.Type(value = GoogleKubernetesEngine.class, name = GCP_KUBERNETES_ENGINE),

@@ -103,6 +103,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -407,6 +408,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infraMapping instanceof AzureVMSSInfrastructureMapping) {
       validateAzureVMSSInfraMapping((AzureVMSSInfrastructureMapping) infraMapping);
+    }
+
+    if (infraMapping instanceof AzureWebAppInfrastructureMapping) {
+      validateAzureWebAppInfraMapping((AzureWebAppInfrastructureMapping) infraMapping);
     }
   }
 
@@ -1232,6 +1237,28 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (isEmpty(infrastructureMapping.getHostConnectionAttrs())) {
         throw new InvalidRequestException("SSH Public Key should not be empty");
       }
+    }
+  }
+
+  @VisibleForTesting
+  void validateAzureWebAppInfraMapping(AzureWebAppInfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("SettingAttribute", settingAttribute, USER);
+
+    if (isEmpty(infrastructureMapping.getSubscriptionId())) {
+      throw new InvalidRequestException("Subscription Id should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getResourceGroup())) {
+      throw new InvalidRequestException("Subscription Id should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getDeploymentSlot())) {
+      throw new InvalidRequestException("Deployment slot should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getWebApp())) {
+      throw new InvalidRequestException("Web app name should not be empty");
     }
   }
 
