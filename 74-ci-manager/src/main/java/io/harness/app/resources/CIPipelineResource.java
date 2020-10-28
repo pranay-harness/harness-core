@@ -52,7 +52,7 @@ public class CIPipelineResource {
 
       // TODO create manual execution source
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
-      ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, 1L);
+      ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, buildNumber.getBuildNumber());
     } catch (Exception e) {
       logger.error("Failed to run input pipeline ", e);
     }
