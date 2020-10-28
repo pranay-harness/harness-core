@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.api;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
+import java.util.List;
 import java.util.Set;
 
 public interface VerificationTaskService {
@@ -14,6 +15,7 @@ public interface VerificationTaskService {
   String getVerificationTaskId(String cvConfigId, String verificationJobInstanceId);
   Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId);
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
+  List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds);
   boolean isServiceGuardId(String verificationTaskId);
   void removeCVConfigMappings(String cvConfigId);
 

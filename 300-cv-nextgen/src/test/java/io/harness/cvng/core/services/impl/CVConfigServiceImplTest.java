@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -390,6 +391,16 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
       assertThat(serviceResponseDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
       assertThat(serviceResponseDTO.getAccountId()).isEqualTo(accountId);
     }
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetAvailableCategories() {
+    CVConfig cvConfig = createCVConfig();
+    save(cvConfig);
+    Set<CVMonitoringCategory> categories =
+        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier);
+    assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
   }
 
   private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {

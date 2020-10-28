@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -22,11 +24,13 @@ import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
+import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
@@ -42,6 +46,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
@@ -70,6 +75,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -339,6 +345,46 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
+  private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO(
+      List<String> metricNames, List<Double> scores) {
+    Map<String, Double> overallMetricScores = new HashMap<>();
+    overallMetricScores.put("Errors per Minute", 0.872);
+    overallMetricScores.put("Average Response Time", 0.212);
+    overallMetricScores.put("Calls Per Minute", 0.0);
+    Map<String, Map<String, ServiceGuardTxnMetricAnalysisDataDTO>> txnMetricMap = new HashMap<>();
+    String txn = "txn";
+    txnMetricMap.put(txn, new HashMap<>());
+    for (int i = 0; i < metricNames.size(); i++) {
+      String metric = metricNames.get(i);
+      Map<String, ServiceGuardTxnMetricAnalysisDataDTO> metricMap = txnMetricMap.get(txn);
+      ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
+          ServiceGuardTxnMetricAnalysisDataDTO.builder()
+              .isKeyTransaction(false)
+              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+              .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
+              .anomalousPatterns(Arrays.asList(TimeSeriesAnomalies.builder()
+                                                   .transactionName(txn)
+                                                   .metricName(metric)
+                                                   .testData(Arrays.asList(0.1, 0.2, 0.3, 0.4))
+                                                   .anomalousTimestamps(Arrays.asList(12345l, 12346l, 12347l))
+                                                   .build()))
+              .lastSeenTime(0)
+              .metricType(TimeSeriesMetricType.ERROR)
+              .risk(1)
+              .score(scores.get(i))
+              .build();
+      metricMap.put(metric, txnMetricData);
+    }
+
+    return ServiceGuardTimeSeriesAnalysisDTO.builder()
+        .verificationTaskId(verificationTaskId)
+        .analysisStartTime(Instant.now().minus(10, ChronoUnit.MINUTES))
+        .analysisEndTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+        .overallMetricScores(overallMetricScores)
+        .txnMetricAnalysisData(txnMetricMap)
+        .build();
+  }
+
   private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums() {
     Map<String, Double> overallMetricScores = new HashMap<>();
     overallMetricScores.put("Errors per Minute", 0.872);
@@ -444,6 +490,47 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
   private DeploymentTimeSeriesAnalysisDTO buildDeploymentVerificationDTO() {
     return DeploymentTimeSeriesAnalysisDTO.builder().build();
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetTopTimeSeriesTransactionMetricRisk_validOrder() throws IllegalAccessException {
+    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", mock(HeatMapService.class), true);
+    ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
+    Instant start = instant.minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    task.setAnalysisStartTime(start);
+    task.setAnalysisEndTime(end);
+
+    learningEngineTaskService.createLearningEngineTask(task);
+    String metricNames[] = {"metric1", "metric2", "metric3", "metrics4"};
+    Double scores[] = {.1, .2, .3, .4};
+    for (int i = 0; i < 2; i++) {
+      timeSeriesAnalysisService.saveAnalysis(
+          task.getUuid(), buildServiceGuardMetricAnalysisDTO(Arrays.asList(metricNames), Arrays.asList(scores)));
+    }
+    List<TransactionMetricRisk> transactionMetricRisks =
+        timeSeriesAnalysisService.getTopTimeSeriesTransactionMetricRisk(Collections.singletonList(verificationTaskId),
+            end.minus(Duration.ofMinutes(10)), end.plus(Duration.ofMinutes(1)));
+    assertThat(transactionMetricRisks).hasSize(3);
+
+    for (int i = 0; i < 3; i++) {
+      assertThat(transactionMetricRisks.get(i).getMetricName()).isEqualTo(metricNames[i + 1]);
+      assertThat(transactionMetricRisks.get(i).getTransactionName()).isEqualTo("txn");
+      assertThat(transactionMetricRisks.get(i).getMetricScore()).isEqualTo(scores[i + 1], offset(.0001));
+    }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetTopTimeSeriesTransactionMetricRisk_empty() {
+    assertThat(
+        timeSeriesAnalysisService.getTopTimeSeriesTransactionMetricRisk(Collections.singletonList(generateUuid()),
+            instant.minus(Duration.ofMinutes(10)), instant.plus(Duration.ofMinutes(1))))
+        .isEmpty();
   }
 
   private List<TimeSeriesAnomalies> buildAnomList() {
@@ -590,5 +677,13 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
     return verificationJobInstance;
+  }
+  private void fillCommon(LearningEngineTask learningEngineTask, LearningEngineTaskType analysisType) {
+    learningEngineTask.setTaskStatus(LearningEngineTask.ExecutionStatus.QUEUED);
+    learningEngineTask.setVerificationTaskId(verificationTaskId);
+    learningEngineTask.setAnalysisType(analysisType);
+    learningEngineTask.setFailureUrl("failure-url");
+    learningEngineTask.setAnalysisStartTime(instant.minus(Duration.ofMinutes(10)));
+    learningEngineTask.setAnalysisEndTime(instant);
   }
 }

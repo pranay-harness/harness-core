@@ -9,6 +9,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
+import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -36,14 +37,14 @@ public class HeatMapResource {
   @ExceptionMetered
   @ApiOperation(value = "get heatmap for a time range", nickname = "getHeatMap")
   public RestResponse<Map<CVMonitoringCategory, SortedSet<HeatMapDTO>>> getHeatMap(
-      @QueryParam("accountId") @NotNull final String accountId,
+      @QueryParam("accountId") @NotNull final String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
       @QueryParam("serviceIdentifier") final String serviceIdentifier,
       @QueryParam("envIdentifier") final String envIdentifier,
       @QueryParam("startTimeMs") @NotNull final Long startTimeMs,
       @QueryParam("endTimeMs") @NotNull final Long endTimeMs) {
-    return new RestResponse<>(heatMapService.getHeatMap(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
-        Instant.ofEpochMilli(startTimeMs), Instant.ofEpochMilli(endTimeMs)));
+    return new RestResponse<>(heatMapService.getHeatMap(accountId, orgIdentifier, projectIdentifier, serviceIdentifier,
+        envIdentifier, Instant.ofEpochMilli(startTimeMs), Instant.ofEpochMilli(endTimeMs)));
   }
 
   @GET
@@ -58,6 +59,21 @@ public class HeatMapResource {
       @QueryParam("envIdentifier") final String envIdentifier) {
     return new RestResponse<>(heatMapService.getCategoryRiskScores(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier));
+  }
+
+  @GET
+  @Path("/risk-summary-popover")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get current risk summary", nickname = "get-risk-summary-popover")
+  public RestResponse<RiskSummaryPopoverDTO> getRiskSummaryPopover(
+      @QueryParam("accountId") @NotNull final String accountId,
+      @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
+      @NotNull @QueryParam("endTime") long endTime, @QueryParam("serviceIdentifier") final String serviceIdentifier,
+      @QueryParam("category") CVMonitoringCategory category) {
+    return new RestResponse<>(heatMapService.getRiskSummaryPopover(
+        accountId, orgIdentifier, projectIdentifier, Instant.ofEpochMilli(endTime), serviceIdentifier, category));
   }
 
   @GET

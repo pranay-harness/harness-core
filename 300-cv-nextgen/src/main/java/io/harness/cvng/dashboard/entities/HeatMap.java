@@ -48,6 +48,7 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
   private String serviceIdentifier;
   private String envIdentifier;
   private String projectIdentifier;
+  private String orgIdentifier;
   @FdIndex private CVMonitoringCategory category;
   private HeatMapResolution heatMapResolution;
   @FdIndex private Instant heatMapBucketStartTime;

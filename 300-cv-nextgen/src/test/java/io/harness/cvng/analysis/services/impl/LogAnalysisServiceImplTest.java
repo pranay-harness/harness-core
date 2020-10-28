@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 
@@ -255,14 +256,14 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisResult result = LogAnalysisResult.builder()
                                    .verificationTaskId(verificationTaskId)
-                                   .logAnalysisResults(getResults(1234l, 23456l))
+                                   .logAnalysisResults(getAnalysisResults(1234l, 23456l))
                                    .analysisStartTime(start)
                                    .analysisEndTime(end)
                                    .build();
     hPersistence.save(result);
     LogAnalysisResult result2 = LogAnalysisResult.builder()
                                     .verificationTaskId(verificationTaskId)
-                                    .logAnalysisResults(getResults(1234l, 23456l))
+                                    .logAnalysisResults(getAnalysisResults(1234l, 23456l))
                                     .analysisStartTime(end)
                                     .analysisEndTime(end.plus(5, ChronoUnit.MINUTES))
                                     .build();
@@ -282,14 +283,14 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisResult result = LogAnalysisResult.builder()
                                    .verificationTaskId(cvConfigId)
-                                   .logAnalysisResults(getResults(1235l))
+                                   .logAnalysisResults(getAnalysisResults(1235l))
                                    .analysisStartTime(start)
                                    .analysisEndTime(end)
                                    .build();
     hPersistence.save(result);
     LogAnalysisResult result2 = LogAnalysisResult.builder()
                                     .verificationTaskId(cvConfigId)
-                                    .logAnalysisResults(getResults(1234l, 23456l))
+                                    .logAnalysisResults(getAnalysisResults(1234l, 23456l))
                                     .analysisStartTime(start)
                                     .analysisEndTime(end)
                                     .build();
@@ -362,6 +363,38 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
         .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + verificationTaskId
             + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
   }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetTopLogAnalysisResults_emptyResults() {
+    assertThat(logAnalysisService.getTopLogAnalysisResults(
+                   Collections.singletonList(generateUuid()), instant.minus(Duration.ofMinutes(15)), instant))
+        .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetTopLogAnalysisResults_validResults() {
+    ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
+    Instant start = instant.minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    task.setAnalysisStartTime(start);
+    task.setAnalysisEndTime(end);
+    learningEngineTaskService.createLearningEngineTask(task);
+    for (int i = 0; i < 5; i++) {
+      logAnalysisService.saveAnalysis(task.getUuid(), createAnalysisDTO(end, .1 * i));
+    }
+    List<LogAnalysisResult> logAnalysisResults =
+        logAnalysisService.getTopLogAnalysisResults(Collections.singletonList(verificationTaskId),
+            end.minus(Duration.ofMinutes(5)), end.plus(Duration.ofMinutes(10)));
+    assertThat(logAnalysisResults).hasSize(3);
+    for (int i = 0; i < 3; i++) {
+      assertThat(logAnalysisResults.get(i).getScore()).isEqualTo((i + 2) * .1, offset(.00001));
+    }
+  }
 
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
@@ -384,16 +417,21 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   }
   //
   private LogAnalysisDTO createAnalysisDTO(Instant endTime) {
+    return createAnalysisDTO(endTime, 0.2);
+  }
+
+  private LogAnalysisDTO createAnalysisDTO(Instant endTime, double score) {
     List<LogAnalysisCluster> clusters = buildAnalysisClusters(1234l, 23456l);
-    LogAnalysisResult result = LogAnalysisResult.builder().logAnalysisResults(getResults(12345l, 23456l)).build();
+    LogAnalysisResult result =
+        LogAnalysisResult.builder().logAnalysisResults(getAnalysisResults(12345l, 23456l)).build();
     return LogAnalysisDTO.builder()
-        .verificationTaskId(cvConfigId)
+        .score(score)
+        .verificationTaskId(verificationTaskId)
         .logClusters(clusters)
         .logAnalysisResults(result.getLogAnalysisResults())
         .analysisMinute(endTime.getEpochSecond() / 60)
         .build();
   }
-
   private DeploymentLogAnalysisDTO createDeploymentAnalysisDTO() {
     return DeploymentLogAnalysisDTO.builder()
         .clusters(Collections.singletonList(DeploymentLogAnalysisDTO.Cluster.builder().label(1).text("text").build()))
@@ -404,7 +442,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
                            .build())
         .build();
   }
-  private List<AnalysisResult> getResults(long... labels) {
+  private List<AnalysisResult> getAnalysisResults(long... labels) {
     List<AnalysisResult> results = new ArrayList<>();
     for (int i = 0; i < labels.length; i++) {
       AnalysisResult analysisResult =
@@ -461,8 +499,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     learningEngineTask.setVerificationTaskId(verificationTaskId);
     learningEngineTask.setAnalysisType(analysisType);
     learningEngineTask.setFailureUrl("failure-url");
-    learningEngineTask.setAnalysisStartTime(Instant.now().minus(Duration.ofMinutes(10)));
-    learningEngineTask.setAnalysisEndTime(Instant.now());
+    learningEngineTask.setAnalysisStartTime(instant.minus(Duration.ofMinutes(10)));
+    learningEngineTask.setAnalysisEndTime(instant);
   }
 
   private VerificationJob newTestVerificationJob() {

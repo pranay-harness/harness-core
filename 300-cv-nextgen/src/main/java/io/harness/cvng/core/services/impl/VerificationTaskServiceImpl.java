@@ -14,6 +14,7 @@ import io.harness.persistence.HPersistence;
 
 import java.time.Clock;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,6 +97,21 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     Preconditions.checkNotNull(
         result, "VerificationTask mapping does not exist for cvConfigId %s. Please check cvConfigId", cvConfigId);
     return result.getUuid();
+  }
+
+  @Override
+  public List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.accountId, accountId)
+        .field(VerificationTaskKeys.cvConfigId)
+        .in(cvConfigIds)
+        .field(VerificationTaskKeys.verificationJobInstanceId)
+        .doesNotExist()
+        .project(VerificationTaskKeys.uuid, true)
+        .asList()
+        .stream()
+        .map(VerificationTask::getUuid)
+        .collect(Collectors.toList());
   }
 
   @Override

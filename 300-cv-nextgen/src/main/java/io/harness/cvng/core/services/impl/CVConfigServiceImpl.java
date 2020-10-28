@@ -207,11 +207,13 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier) {
+  public Set<CVMonitoringCategory> getAvailableCategories(
+      String accountId, String orgIdentifier, String projectIdentifier) {
     BasicDBObject cvConfigQuery = new BasicDBObject();
     List<BasicDBObject> conditions = new ArrayList<>();
     conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
     conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
+    conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
     cvConfigQuery.put("$and", conditions);
 
     Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
@@ -262,5 +264,16 @@ public class CVConfigServiceImpl implements CVConfigService {
     EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getEnvIdentifier(),
         cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
     return EnvironmentType.Production.equals(environment.getType());
+  }
+
+  @Override
+  public List<CVConfig> getCVConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+    return hPersistence.createQuery(CVConfig.class)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+        .asList();
   }
 }

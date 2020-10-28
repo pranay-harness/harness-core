@@ -8,6 +8,7 @@ import lombok.Value;
 public class DeploymentActivityVerificationResultDTO {
   String tag;
   String serviceName;
+  String serviceIdentifier;
   DeploymentSummary preProductionDeploymentSummary;
   DeploymentSummary productionDeploymentSummary;
   DeploymentSummary postDeploymentSummary;

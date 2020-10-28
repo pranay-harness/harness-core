@@ -5,6 +5,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
+import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,11 +14,11 @@ import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
 
 public interface HeatMapService {
-  void updateRiskScore(@NotNull String accountId, @NotNull String projectIdentifier, @NotNull String serviceIdentifier,
-      @NotNull String envIdentifier, @NotNull CVConfig cvConfig, @NotNull CVMonitoringCategory category,
-      @NotNull Instant timeStamp, double riskScore);
+  void updateRiskScore(@NotNull String accountId, @NotNull String orgIdentifier, @NotNull String projectIdentifier,
+      @NotNull String serviceIdentifier, @NotNull String envIdentifier, @NotNull CVConfig cvConfig,
+      @NotNull CVMonitoringCategory category, @NotNull Instant timeStamp, double riskScore);
 
-  Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(@NotNull String accountId,
+  Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier, @NotNull Instant startTime,
       @NotNull Instant endTime);
 
@@ -26,4 +27,7 @@ public interface HeatMapService {
 
   List<EnvServiceRiskDTO> getEnvServiceRiskScores(
       @NotNull String accountId, @NotNull String orgIdentifier, @NotNull String projectIdentifier);
+
+  RiskSummaryPopoverDTO getRiskSummaryPopover(String accountId, String orgIdentifier, String projectIdentifier,
+      Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
 }

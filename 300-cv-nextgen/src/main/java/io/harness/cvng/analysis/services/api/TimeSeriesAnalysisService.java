@@ -6,6 +6,7 @@ import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -30,4 +31,6 @@ public interface TimeSeriesAnalysisService {
   List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(String verificationTaskId, Instant startTime, Instant endTime);
   void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis);
   void saveAnalysis(String taskId, DeploymentTimeSeriesAnalysisDTO analysis);
+  List<TransactionMetricRisk> getTopTimeSeriesTransactionMetricRisk(
+      List<String> verificationTaskIds, Instant startTime, Instant endTime);
 }
