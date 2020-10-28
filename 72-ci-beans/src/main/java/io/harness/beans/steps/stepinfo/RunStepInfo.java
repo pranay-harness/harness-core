@@ -52,10 +52,10 @@ public class RunStepInfo implements CIStepInfo {
   private ContainerResource resources;
   @Builder
 
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "envVariables",
-      "envVarsOutput", "output", "image", "connector", "environment", "resources"})
+  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "output",
+      "environment", "image", "connector", "resources"})
   public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      List<String> command, Map<String, String> environment, List<String> output, String image, String connector,
+      List<String> command, List<String> output, Map<String, String> environment, String image, String connector,
       ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
