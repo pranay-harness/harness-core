@@ -127,7 +127,7 @@ public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
     assertThat(instanceData.getTotalResource()).isEqualTo(resource());
     assertThat(instanceData.getLabels()).isEqualTo(label());
     assertThat(instanceData.getNamespaceLabels()).isEqualTo(NAMESPACE_LABELS);
-    assertThat(instanceData.getUsageStartTime()).isNull();
+    assertThat(instanceData.getUsageStartTime().toEpochMilli()).isEqualTo(START_INSTANT.toEpochMilli());
     assertThat(instanceData.getCloudProviderInstanceId()).isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     InstanceData duplicateInstanceData = instanceDataDao.upsert(instanceInfo());
     assertThat(duplicateInstanceData).isNotNull();
@@ -211,7 +211,8 @@ public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
         .settingId(CLOUD_PROVIDER_ID)
         .clusterId(CLUSTER_ID)
         .clusterName(CLUSTER_NAME)
-        .instanceState(InstanceState.INITIALIZING)
+        .instanceState(InstanceState.RUNNING)
+        .usageStartTime(START_INSTANT)
         .harnessServiceInfo(harnessServiceInfo())
         .resource(resource())
         .allocatableResource(resource())

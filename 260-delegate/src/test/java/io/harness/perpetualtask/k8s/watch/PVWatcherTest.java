@@ -129,14 +129,12 @@ public class PVWatcherTest extends CategoryTest {
   public void shouldPublishOnAdd() throws Exception {
     pvWatcher.onAdd(samplePV);
 
-    verify(eventPublisher, times(2))
+    verify(eventPublisher, times(1))
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
 
     WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + samplePV.getSpec().getStorageClassName() + ".*")));
 
     assertThat(captor.getAllValues().get(0)).isEqualTo(pvInfo);
-    assertThat(captor.getAllValues().get(1))
-        .isEqualTo(PVEvent.newBuilder(pvEvent).setEventType(PVEvent.EventType.EVENT_TYPE_START).build());
   }
 
   @Test

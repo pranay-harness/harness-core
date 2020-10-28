@@ -32,6 +32,7 @@ import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTas
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.perpetualtask.k8s.watch.NodeWatcher;
+import io.harness.perpetualtask.k8s.watch.PVWatcher;
 import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
 import io.harness.perpetualtask.manifest.ManifestCollectionTaskParams;
@@ -75,6 +76,7 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)
+                .implement(PVWatcher.class, PVWatcher.class)
                 .build(WatcherFactory.class));
   }
 

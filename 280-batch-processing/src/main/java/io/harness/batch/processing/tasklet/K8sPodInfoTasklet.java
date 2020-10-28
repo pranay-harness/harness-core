@@ -26,6 +26,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -192,7 +193,8 @@ public class K8sPodInfoTasklet implements Tasklet {
         .clusterName(podInfo.getClusterName())
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
-        .instanceState(InstanceState.INITIALIZING)
+        .instanceState(InstanceState.RUNNING)
+        .usageStartTime(HTimestamps.toInstant(podInfo.getCreationTimestamp()))
         .resource(resource)
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)

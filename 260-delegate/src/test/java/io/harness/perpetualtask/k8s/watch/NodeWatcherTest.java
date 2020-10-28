@@ -321,25 +321,6 @@ public class NodeWatcherTest extends CategoryTest {
     });
   }
 
-  @Test
-  @Owner(developers = UTSAV)
-  @Category(UnitTests.class)
-  public void shouldPublishNodeStartedEvent() {
-    V1Node node = createNewNode();
-    nodeWatcher.publishNodeStartedEvent(node);
-
-    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-    verify(eventPublisher, times(1))
-        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
-    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
-      assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
-      assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
-      assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
-      assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
-    });
-  }
-
   private V1Node createNewNode() {
     return createNewNodeWithoutMeta().metadata(
         createNewMetadata().resourceVersion(START_RV).creationTimestamp(TIMESTAMP));
