@@ -230,6 +230,32 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
         return;
       }
 
+      if (!metricCollectionInfo.getCollectionUrl().contains("${host}")) {
+        if (isEmpty(metricCollectionInfo.getCollectionBody())
+            || !metricCollectionInfo.getCollectionBody().contains("${host}")) {
+          invalidFields.put("collectionUrl", "MetricCollection URL or body should contain ${host}");
+        }
+      }
+      if (!metricCollectionInfo.getCollectionUrl().contains("${start_time}")
+          && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
+        if (isEmpty(metricCollectionInfo.getCollectionBody())
+            || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
+                   && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
+          invalidFields.put(
+              "collectionUrl", "MetricCollection URL or body should contain ${start_time} or ${start_time_seconds}");
+        }
+      }
+
+      if (!metricCollectionInfo.getCollectionUrl().contains("${end_time}")
+          && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
+        if (isEmpty(metricCollectionInfo.getCollectionBody())
+            || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
+                   && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
+          invalidFields.put(
+              "collectionUrl", "MetricCollection URL or body should contain ${end_time} or ${end_time_seconds}");
+        }
+      }
+
       if (metricCollectionInfo.getResponseMapping() == null) {
         invalidFields.put("responseMapping",
             "Valid JSON Mappings for the response have not been provided for " + metricCollectionInfo.getMetricName());

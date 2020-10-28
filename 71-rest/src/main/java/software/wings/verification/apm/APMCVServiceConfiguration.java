@@ -76,6 +76,27 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     if (isEmpty(metricCollectionInfos) || isAllThroughput()) {
       return false;
     }
+
+    for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
+      if (!metricCollectionInfo.getCollectionUrl().contains("${start_time}")
+          && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
+        if (isEmpty(metricCollectionInfo.getCollectionBody())
+            || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
+                   && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
+          return false;
+        }
+      }
+
+      if (!metricCollectionInfo.getCollectionUrl().contains("${end_time}")
+          && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
+        if (isEmpty(metricCollectionInfo.getCollectionBody())
+            || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
+                   && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
+          return false;
+        }
+      }
+    }
+
     return validateErrorOrResponseTime();
   }
 

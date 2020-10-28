@@ -182,8 +182,10 @@ public class APMVerificationStateTest extends APMStateVerificationTestBase {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMapping() {
-    MetricCollectionInfo info =
-        MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL ${host} ${start_time} ${end_time}")
+                                    .metricName("name")
+                                    .build();
     apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
     Map<String, String> invalidFields = apmVerificationState.validateFields();
     assertThat(invalidFields.size() == 1).isTrue();
@@ -193,9 +195,53 @@ public class APMVerificationStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testValidateFields_noHost() {
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL ${start_time} ${end_time}")
+                                    .metricName("name")
+                                    .build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+
+    assertThat(invalidFields.size() == 1).isTrue();
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("collectionUrl");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateFields_noTimePlaceholders() {
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL ${host}  ${end_time}")
+                                    .metricName("name")
+                                    .build();
+    ResponseMapping mapping = ResponseMapping.builder()
+                                  .metricValueJsonPath("metricValue")
+                                  .timestampJsonPath("timestamp")
+                                  .txnNameFieldValue("txnName")
+                                  .build();
+    info.setResponseMapping(mapping);
+    apmVerificationState.setMetricCollectionInfos(Arrays.asList(info));
+    Map<String, String> invalidFields = apmVerificationState.validateFields();
+
+    assertThat(invalidFields.size() == 1).isTrue();
+    assertThat(invalidFields.keySet().iterator().next()).isEqualTo("collectionUrl");
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingMetricValue() {
-    MetricCollectionInfo info =
-        MetricCollectionInfo.builder().collectionUrl("This is a sample URL").metricName("name").build();
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL ${host} ${start_time} ${end_time}")
+                                    .metricName("name")
+                                    .build();
     ResponseMapping mapping =
         ResponseMapping.builder().metricValueJsonPath("metricValue").timestampJsonPath("timestamp").build();
     info.setResponseMapping(mapping);
@@ -209,8 +255,10 @@ public class APMVerificationStateTest extends APMStateVerificationTestBase {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingHostName() {
-    MetricCollectionInfo info =
-        MetricCollectionInfo.builder().collectionUrl("This is a sample URL ${host}").metricName("name").build();
+    MetricCollectionInfo info = MetricCollectionInfo.builder()
+                                    .collectionUrl("This is a sample URL ${host} ${start_time} ${end_time}")
+                                    .metricName("name")
+                                    .build();
     ResponseMapping mapping = ResponseMapping.builder()
                                   .metricValueJsonPath("metricValue")
                                   .timestampJsonPath("timestamp")
@@ -228,11 +276,12 @@ public class APMVerificationStateTest extends APMStateVerificationTestBase {
   public void testHostAndBaseline() {
     String metricName = generateUuid();
 
-    MetricCollectionInfo info = MetricCollectionInfo.builder()
-                                    .collectionUrl("This is a sample URL " + VERIFICATION_HOST_PLACEHOLDER)
-                                    .baselineCollectionUrl("some baseline url")
-                                    .metricName(metricName)
-                                    .build();
+    MetricCollectionInfo info =
+        MetricCollectionInfo.builder()
+            .collectionUrl("${host} ${start_time} ${end_time} This is a sample URL " + VERIFICATION_HOST_PLACEHOLDER)
+            .baselineCollectionUrl("some baseline url")
+            .metricName(metricName)
+            .build();
     ResponseMapping mapping = ResponseMapping.builder()
                                   .metricValueJsonPath("metricValue")
                                   .timestampJsonPath("timestamp")
