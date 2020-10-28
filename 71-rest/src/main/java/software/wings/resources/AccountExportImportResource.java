@@ -364,8 +364,12 @@ public class AccountExportImportResource {
         // Only KMS type of encrypted records have file content saved in File serivce/GridFS, which need to be exported.
         EncryptionType encryptionType =
             EncryptionType.valueOf(encryptedDataElement.getAsJsonObject().get("encryptionType").getAsString());
-        SettingVariableTypes settingVariableType =
-            SettingVariableTypes.valueOf(encryptedDataElement.getAsJsonObject().get("type").getAsString());
+
+        JsonElement type = encryptedDataElement.getAsJsonObject().get("type");
+        if (type == null || type.isJsonNull()) {
+          continue;
+        }
+        SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(type.getAsString());
         if (encryptionType == EncryptionType.KMS && settingVariableType == SettingVariableTypes.CONFIG_FILE) {
           String fileId = encryptedDataElement.getAsJsonObject().get("encryptedValue").getAsString();
           ObjectId objectId = getObjectIdFromFileId(fileId);
@@ -381,7 +385,7 @@ public class AccountExportImportResource {
     List<String> configFilesRecords = mongoExportImport.exportRecords(inIdsFilter, COLLECTION_CONFIG_FILES);
     exportToStream(zipOutputStream, fileOutputStream, configFilesRecords, COLLECTION_CONFIG_FILES);
 
-    // 4. Export all 'configs.files' records in the configFileIds list.
+    // 4. Export all 'configs.chunks' records in the configFileIds list.
     DBObject inFilesIdFilter = new BasicDBObject("files_id", new BasicDBObject("$in", configFileIds));
     List<String> configChunkRecords = mongoExportImport.exportRecords(inFilesIdFilter, COLLECTION_CONFIG_CHUNKS);
     exportToStream(zipOutputStream, fileOutputStream, configChunkRecords, COLLECTION_CONFIG_CHUNKS);
