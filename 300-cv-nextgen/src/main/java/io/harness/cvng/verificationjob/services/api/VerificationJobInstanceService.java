@@ -28,5 +28,7 @@ public interface VerificationJobInstanceService {
       String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary);
   DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(List<String> verificationJobInstanceIds);
   List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
-      String accountId, String projectIdentifier, String orgIdentifier, String serviceIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
+  Optional<String> getLastSuccessfulTestVerificationJobExecutionId(
+      String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
 }

@@ -9,6 +9,7 @@ import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -79,5 +80,15 @@ public class TestVerificationJob extends VerificationJob {
   @Override
   public boolean collectHostData() {
     return false;
+  }
+  @Override
+  public VerificationJob resolveAdditionsFields(VerificationJobInstanceService verificationJobInstanceService) {
+    if (baselineVerificationJobInstanceId == null) {
+      baselineVerificationJobInstanceId = verificationJobInstanceService
+                                              .getLastSuccessfulTestVerificationJobExecutionId(getAccountId(),
+                                                  getOrgIdentifier(), getProjectIdentifier(), getIdentifier())
+                                              .orElse(null);
+    }
+    return this;
   }
 }

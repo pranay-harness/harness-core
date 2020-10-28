@@ -247,18 +247,18 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   }
 
   private VerificationJob createVerificationJob() {
-    CanaryVerificationJob testVerificationJob = new CanaryVerificationJob();
-    testVerificationJob.setAccountId(accountId);
-    testVerificationJob.setIdentifier("identifier");
-    testVerificationJob.setJobName(generateUuid());
-    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
-    testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJob.setServiceIdentifier(generateUuid(), false);
-    testVerificationJob.setEnvIdentifier(generateUuid(), false);
-    testVerificationJob.setDuration(Duration.ofMinutes(5));
-    testVerificationJob.setProjectIdentifier(generateUuid());
-    testVerificationJob.setOrgIdentifier(generateUuid());
-    return testVerificationJob;
+    CanaryVerificationJob verificationJob = new CanaryVerificationJob();
+    verificationJob.setAccountId(accountId);
+    verificationJob.setIdentifier("identifier");
+    verificationJob.setJobName(generateUuid());
+    verificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    verificationJob.setSensitivity(Sensitivity.MEDIUM);
+    verificationJob.setServiceIdentifier(generateUuid(), false);
+    verificationJob.setEnvIdentifier(generateUuid(), false);
+    verificationJob.setDuration(Duration.ofMinutes(5));
+    verificationJob.setProjectIdentifier(generateUuid());
+    verificationJob.setOrgIdentifier(generateUuid());
+    return verificationJob;
   }
 
   @Test

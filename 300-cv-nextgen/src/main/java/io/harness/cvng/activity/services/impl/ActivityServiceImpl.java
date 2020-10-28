@@ -259,8 +259,10 @@ public class ActivityServiceImpl implements ActivityService {
       VerificationJob verificationJob =
           verificationJobService.getVerificationJob(activity.getAccountIdentifier(), jobIdentifier);
       Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
-      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
-          activity, verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues()));
+      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(activity,
+          verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues())
+              .resolveAdditionsFields(verificationJobInstanceService));
+
       switch (activity.getType()) {
         case DEPLOYMENT:
           DeploymentActivity deploymentActivity = (DeploymentActivity) activity;

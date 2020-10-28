@@ -23,9 +23,10 @@ public class VerificationJobInstanceResource {
   @Path("/baseline-executions")
   @ApiOperation(value = "list of last 5 successful baseline executions", nickname = "listBaselineExecutions")
   public RestResponse<List<TestVerificationBaselineExecutionDTO>> baselineExecutions(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("serviceIdentifier") String serviceIdentifier) {
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("verificationJobIdentifier") String verificationJobIdentifier) {
     return new RestResponse<>(verificationJobInstanceService.getTestJobBaselineExecutions(
-        accountId, projectIdentifier, orgIdentifier, serviceIdentifier));
+        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier));
   }
 }

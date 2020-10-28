@@ -262,20 +262,24 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .postDeploymentSummary(deploymentPopoverSummary(postDeploymentVerificationJobInstances))
         .build();
   }
-
   @Override
   public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
-      String accountId, String projectIdentifier, String orgIdentifier, String serviceIdentifier) {
+      String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier) {
+    return getTestJobBaselineExecutions(accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier, 5);
+  }
+
+  public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
+      String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier, int limit) {
     List<VerificationJobInstance> verificationJobInstances =
         hPersistence.createQuery(VerificationJobInstance.class)
             .filter(VerificationJobInstanceKeys.accountId, accountId)
             .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
             .filter(VerificationJobInstance.PROJECT_IDENTIFIER_KEY, projectIdentifier)
             .filter(VerificationJobInstance.ORG_IDENTIFIER_KEY, orgIdentifier)
-            .filter(VerificationJobInstance.SERVICE_IDENTIFIER_KEY, serviceIdentifier)
+            .filter(VerificationJobInstance.VERIFICATION_JOB_IDENTIFIER_KEY, verificationJobIdentifier)
             .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
             .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
-            .asList(new FindOptions().limit(5));
+            .asList(new FindOptions().limit(limit));
     return verificationJobInstances.stream()
         .map(verificationJobInstance
             -> TestVerificationBaselineExecutionDTO.builder()
@@ -283,6 +287,18 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                    .createdAt(verificationJobInstance.getCreatedAt())
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public Optional<String> getLastSuccessfulTestVerificationJobExecutionId(
+      String accountId, String projectIdentifier, String orgIdentifier, String verificationJobIdentifier) {
+    List<TestVerificationBaselineExecutionDTO> testVerificationBaselineExecutionDTOs =
+        getTestJobBaselineExecutions(accountId, projectIdentifier, orgIdentifier, verificationJobIdentifier, 1);
+    if (testVerificationBaselineExecutionDTOs.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(testVerificationBaselineExecutionDTOs.get(0).getVerificationJobInstanceId());
+    }
   }
 
   private List<VerificationJobInstance> getPostDeploymentVerificationJobInstances(
