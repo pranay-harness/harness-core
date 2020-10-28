@@ -20,6 +20,7 @@ public class InfraDefinitionGeneratorConstants {
   public static final String AZURE_VMSS_BASE_SCALE_SET_NAME = "baseFunTestScaleSet";
   public static final String AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME = "Azure_VMSS_Basic_InfraDef";
   public static final String AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME = "Azure_VMSS_Blue_Green_InfraDef";
+  public static final String AZURE_VMSS_API_INFRA_DEFINITION_NAME = "Azure_VMSS_API_InfraDef";
   public static final String AZURE_VMSS_SUBSCRIPTION_QA_NAME = "Harness-QA";
   public static final String AZURE_VMSS_BASE_SCALE_SET_LOAD_BALANCER_NAME = "baseFunTestScaleSetLoadBalancer";
   public static final String AZURE_VMSS_BLUE_GREEN_BALANCER_NAME = "blueGreenStandardLoadBalancer";
