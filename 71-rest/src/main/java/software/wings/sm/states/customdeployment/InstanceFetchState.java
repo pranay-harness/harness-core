@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogHelper.color;
@@ -25,6 +26,7 @@ import com.jayway.jsonpath.InvalidJsonException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
+import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -45,10 +47,13 @@ import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
@@ -57,6 +62,7 @@ import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.LogColor;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.FetchInstancesCommandUnit;
@@ -64,9 +70,11 @@ import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParamete
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -76,6 +84,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostProperties;
 import software.wings.sm.states.utils.StateTimeoutUtils;
@@ -104,6 +113,8 @@ public class InstanceFetchState extends State {
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private LogService logService;
   @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
 
   @Getter @Setter @DefaultValue("10") String stateTimeoutInMinutes;
   @Getter @Setter private List<String> tags;
@@ -151,6 +162,9 @@ public class InstanceFetchState extends State {
     final String infraMappingId = context.fetchInfraMappingId();
     final InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
     final InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams.getEnvId();
 
     final CustomDeploymentTypeTemplate deploymentTypeTemplate = customDeploymentTypeService.fetchDeploymentTemplate(
         accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
@@ -191,6 +205,9 @@ public class InstanceFetchState extends State {
                                     .description("Fetch Instances")
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
                                     .tags(getRenderedTags(context))
                                     .data(TaskData.builder()
                                               .async(true)
@@ -275,6 +292,11 @@ public class InstanceFetchState extends State {
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) responseEntry.getValue();
 
     final InstanceFetchStateExecutionData stateExecutionData = context.getStateExecutionData();
+    final PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(context.getAppId(), serviceId, null).get(0);
+
     final ManagerExecutionLogCallback logCallback =
         buildLogcallBack(context.getAppId(), stateExecutionData.getActivityId(), MAP_INSTANCES);
     stateExecutionData.setStatus(executionData.getExecutionStatus());
@@ -293,8 +315,12 @@ public class InstanceFetchState extends State {
       try {
         instanceElements = InstanceMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
             stateExecutionData.getHostObjectArrayPath(), output, instanceElementMapper);
+        setServiceElement(instanceElements, phaseElement.getServiceElement(), serviceTemplateKey.getId().toString());
+
         instanceDetails = InstanceMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
             stateExecutionData.getHostObjectArrayPath(), output, instanceDetailsMapper);
+        setServiceTemplateId(instanceDetails, serviceTemplateKey.getId().toString());
+
         validateInstanceElements(instanceElements, output, stateExecutionData, logCallback);
       } catch (Exception ex) {
         logCallback.saveExecutionLog(
@@ -324,6 +350,17 @@ public class InstanceFetchState extends State {
         .contextElement(instanceElementListParam)
         .notifyElement(instanceElementListParam)
         .build();
+  }
+
+  public void setServiceTemplateId(List<InstanceDetails> instanceDetails, String serviceTemplateId) {
+    instanceDetails.forEach(details -> details.setServiceTemplateId(serviceTemplateId));
+  }
+
+  public void setServiceElement(
+      List<InstanceElement> instanceElements, ServiceElement serviceElement, String serviceTemplateId) {
+    instanceElements.forEach(instanceElement
+        -> instanceElement.setServiceTemplateElement(
+            aServiceTemplateElement().withUuid(serviceTemplateId).withServiceElement(serviceElement).build()));
   }
 
   private void validateInstanceElements(List<InstanceElement> instanceElements, String output,

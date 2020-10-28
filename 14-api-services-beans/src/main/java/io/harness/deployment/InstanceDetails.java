@@ -16,7 +16,7 @@ public class InstanceDetails {
   @NonFinal @Setter private boolean newInstance;
   private Map<String, Object> properties;
   private String serviceTemplateName;
-  private String serviceTemplateId;
+  @NonFinal @Setter private String serviceTemplateId;
   private String serviceName;
   private String serviceId;
   private PCF pcf;
