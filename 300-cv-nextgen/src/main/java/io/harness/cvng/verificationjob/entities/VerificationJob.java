@@ -14,6 +14,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -149,6 +150,10 @@ public abstract class VerificationJob
   }
 
   public abstract void resolveJobParams(Map<String, String> runtimeParameters);
+  public VerificationJob resolveAdditionsFields(VerificationJobInstanceService verificationJobInstanceService) {
+    // no-op by default. Designed to override.
+    return this;
+  }
 
   public VerificationJob resolveVerificationJob(Map<String, String> runtimeParameters) {
     if (isNotEmpty(runtimeParameters)) {

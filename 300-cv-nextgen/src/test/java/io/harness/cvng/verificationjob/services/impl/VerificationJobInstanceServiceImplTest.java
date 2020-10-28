@@ -560,7 +560,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetTestJobBaselineExecutions_noOldInstanceExist() {
     assertThat(verificationJobInstanceService.getTestJobBaselineExecutions(
-                   accountId, projectIdentifier, orgIdentifier, generateUuid()))
+                   accountId, orgIdentifier, projectIdentifier, generateUuid()))
         .isEmpty();
   }
 
@@ -568,18 +568,21 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetTestJobBaselineExecutions_multipleOldSuccessfulInstances() {
+    String verificationJobIdentifier = generateUuid();
     List<ExecutionStatus> executionStatuses =
         Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS, ExecutionStatus.FAILED, ExecutionStatus.SUCCESS);
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     for (ExecutionStatus executionStatus : executionStatuses) {
       verificationJobInstances.add(
-          createVerificationJobInstance(generateUuid(), generateUuid(), executionStatus, TEST));
+          createVerificationJobInstance(verificationJobIdentifier, generateUuid(), executionStatus, TEST));
     }
     verificationJobInstances.add(
-        createVerificationJobInstance(generateUuid(), generateUuid(), ExecutionStatus.SUCCESS, CANARY));
+        createVerificationJobInstance(verificationJobIdentifier, generateUuid(), ExecutionStatus.SUCCESS, CANARY));
+    verificationJobInstances.add(
+        createVerificationJobInstance(generateUuid(), generateUuid(), ExecutionStatus.SUCCESS, TEST));
     List<TestVerificationBaselineExecutionDTO> testVerificationBaselineExecutionDTOS =
         verificationJobInstanceService.getTestJobBaselineExecutions(
-            accountId, projectIdentifier, orgIdentifier, serviceIdentifier);
+            accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier);
     assertThat(testVerificationBaselineExecutionDTOS).hasSize(2);
     assertThat(testVerificationBaselineExecutionDTOS.get(0))
         .isEqualTo(TestVerificationBaselineExecutionDTO.builder()
@@ -591,6 +594,37 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                        .verificationJobInstanceId(verificationJobInstances.get(3).getUuid())
                        .createdAt(verificationJobInstances.get(3).getCreatedAt())
                        .build());
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLastSuccessfulTestVerificationJobExecutionId_doesNotExist() {
+    assertThat(verificationJobInstanceService.getLastSuccessfulTestVerificationJobExecutionId(
+                   accountId, orgIdentifier, projectIdentifier, generateUuid()))
+        .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLastSuccessfulTestVerificationJobExecutionId_lastSuccessfulTestVerificationJobInstance() {
+    String verificationJobIdentifier = generateUuid();
+    List<ExecutionStatus> executionStatuses =
+        Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS, ExecutionStatus.FAILED);
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    for (ExecutionStatus executionStatus : executionStatuses) {
+      verificationJobInstances.add(
+          createVerificationJobInstance(verificationJobIdentifier, generateUuid(), executionStatus, TEST));
+    }
+    verificationJobInstances.add(
+        createVerificationJobInstance(verificationJobIdentifier, generateUuid(), ExecutionStatus.SUCCESS, CANARY));
+    verificationJobInstances.add(
+        createVerificationJobInstance(generateUuid(), generateUuid(), ExecutionStatus.SUCCESS, TEST));
+    assertThat(verificationJobInstanceService
+                   .getLastSuccessfulTestVerificationJobExecutionId(
+                       accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier)
+                   .get())
+        .isEqualTo(verificationJobInstances.get(1).getUuid());
   }
 
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {
