@@ -190,6 +190,8 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.serializer.KryoRegistrar;
 import org.eclipse.jgit.api.GitCommand;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
@@ -384,5 +386,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(JiraConnectionTaskParams.class, 19370);
     kryo.register(JiraTestConnectionTaskNGResponse.class, 19371);
     kryo.register(ConnectorType.class, 19372);
+    kryo.register(JSONArray.class, 19373);
+    kryo.register(JSONObject.class, 19374);
   }
 }

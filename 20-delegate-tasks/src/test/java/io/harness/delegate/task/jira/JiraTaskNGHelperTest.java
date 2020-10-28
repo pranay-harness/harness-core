@@ -13,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
+
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -61,6 +63,29 @@ public class JiraTaskNGHelperTest {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     when(jiraTaskNGHandler.createTicket(jiraTaskNGParameters)).thenReturn(mockedResponse);
+
+    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
+
+    assertThat(jiraTaskResponse).isNotNull();
+    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetJiraTaskResponseUpdateTicket() {
+    final String issueId = "issueID";
+    final String issueType = "Bug";
+    JiraTaskNGResponse mockedResponse =
+        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
+                                                    .jiraAction(JiraAction.UPDATE_TICKET)
+                                                    .updateIssueIds(Collections.singletonList(issueId))
+                                                    .issueType(issueType)
+                                                    .build();
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(jiraTaskNGHandler.updateTicket(jiraTaskNGParameters)).thenReturn(mockedResponse);
 
     JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
 

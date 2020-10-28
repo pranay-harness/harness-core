@@ -13,6 +13,7 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConverter;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
+import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -92,10 +93,41 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilder()
+    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromCreate()
                                               .apply(request)
                                               .accountId(jiraConnectorRef.getAccountIdentifier())
                                               .jiraAction(JiraAction.CREATE_TICKET)
+                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
+                                              .jiraConnectorDTO(connector)
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
+    }
+    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
+    if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
+      throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    return jiraTaskResponse.getIssueKey();
+  }
+
+  @Override
+  public String updateTicket(
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, UpdateJiraTicketRequest request) {
+    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+
+    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromUpdate()
+                                              .apply(request)
+                                              .accountId(jiraConnectorRef.getAccountIdentifier())
+                                              .jiraAction(JiraAction.UPDATE_TICKET)
                                               .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
                                               .jiraConnectorDTO(connector)
                                               .build();

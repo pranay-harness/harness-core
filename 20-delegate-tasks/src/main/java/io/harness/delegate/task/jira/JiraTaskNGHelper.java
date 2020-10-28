@@ -27,6 +27,9 @@ public class JiraTaskNGHelper {
       case CREATE_TICKET:
         responseData = jiraTaskNGHandler.createTicket(taskParameters);
         break;
+      case UPDATE_TICKET:
+        responseData = jiraTaskNGHandler.updateTicket(taskParameters);
+        break;
       default:
         logger.error("No corresponding Docker artifact task type [{}]", taskParameters.toString());
         return JiraTaskNGResponse.builder()
