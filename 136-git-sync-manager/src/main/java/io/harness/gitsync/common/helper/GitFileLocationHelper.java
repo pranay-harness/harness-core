@@ -28,6 +28,6 @@ public class GitFileLocationHelper {
   public static EntityType getEntityType(String filePath) {
     final String pathWithoutIdentifier = filePath.substring(0, filePath.lastIndexOf(PATH_DELIMITER));
     final String stringType = pathWithoutIdentifier.substring(pathWithoutIdentifier.lastIndexOf(PATH_DELIMITER) + 1);
-    return EntityType.getEntityDisplayName(stringType);
+    return EntityType.getEntityFromYamlType(stringType);
   }
 }

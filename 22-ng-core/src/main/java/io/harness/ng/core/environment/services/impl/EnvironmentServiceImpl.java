@@ -8,8 +8,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.client.result.UpdateResult;
+import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.respositories.spring.EnvironmentRepository;
@@ -21,8 +27,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -31,6 +40,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class EnvironmentServiceImpl implements EnvironmentService {
   private final EnvironmentRepository environmentRepository;
+  private final EntitySetupUsageService entitySetupUsageService;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Environment [%s] under Project[%s], Organization [%s] already exists";
 
@@ -115,6 +125,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                                   .projectIdentifier(projectIdentifier)
                                   .identifier(environmentIdentifier)
                                   .build();
+    checkThatEnvironmentIsNotReferredByOthers(environment);
     Criteria criteria = getEnvironmentEqualityCriteria(environment, false);
     UpdateResult updateResult = environmentRepository.delete(criteria);
     if (!updateResult.wasAcknowledged()) {
@@ -123,6 +134,34 @@ public class EnvironmentServiceImpl implements EnvironmentService {
               environmentIdentifier, projectIdentifier, orgIdentifier));
     }
     return true;
+  }
+
+  private void checkThatEnvironmentIsNotReferredByOthers(Environment environment) {
+    List<EntityDetail> referredByEntities;
+    IdentifierRef identifierRef = IdentifierRef.builder()
+                                      .accountIdentifier(environment.getAccountId())
+                                      .orgIdentifier(environment.getOrgIdentifier())
+                                      .projectIdentifier(environment.getProjectIdentifier())
+                                      .identifier(environment.getIdentifier())
+                                      .build();
+    try {
+      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = entitySetupUsageService.listAllEntityUsage(
+          0, 10, environment.getAccountId(), identifierRef.getFullyQualifiedName(), "");
+      referredByEntities = entitySetupUsageDTOS.stream()
+                               .map(EntitySetupUsageDTO::getReferredByEntity)
+                               .collect(Collectors.toCollection(LinkedList::new));
+    } catch (Exception ex) {
+      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+          environment.getIdentifier(), ex);
+      throw new UnexpectedException(
+          "Error while deleting the Environment as was not able to check entity reference records.");
+    }
+    if (EmptyPredicate.isNotEmpty(referredByEntities)) {
+      throw new InvalidRequestException(
+          String.format("Could not delete the Environment %s as it is referenced by other entities - "
+                  + referredByEntities.toString(),
+              environment.getIdentifier()));
+    }
   }
 
   void validatePresenceOfRequiredFields(Object... fields) {

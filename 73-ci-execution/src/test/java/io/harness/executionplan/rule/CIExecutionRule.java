@@ -14,6 +14,8 @@ import com.google.inject.TypeLiteral;
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -60,6 +62,8 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
     modules.add(new CIExecutionTestModule());
+    modules.add(new EntitySetupUsageClientModule(
+        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

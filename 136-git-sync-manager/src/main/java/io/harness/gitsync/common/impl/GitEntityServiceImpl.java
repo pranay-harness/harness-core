@@ -78,7 +78,7 @@ public class GitEntityServiceImpl implements GitEntityService {
       String projectId, String orgId, String accountId, Scope scope, EntityType entityTypes) {
     return getCriteriaWithScopeMatch(projectId, orgId, accountId, scope)
         .and(GitFileLocationKeys.entityType)
-        .is(entityTypes.getEntityDisplayName());
+        .is(entityTypes.getYamlName());
   }
 
   @NotNull
@@ -98,7 +98,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .branch(entity.getBranch())
         .entityIdentifier(entity.getEntityIdentifier())
         .entityName(entity.getEntityName())
-        .entityType(EntityType.getEntityDisplayName(entity.getEntityType()))
+        .entityType(EntityType.getEntityFromYamlType(entity.getEntityType()))
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
@@ -169,7 +169,7 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   private long countByType(String projectId, String orgId, String accountId, Scope scope, EntityType entityType) {
     return gitFileLocationRepository.countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
-        projectId, orgId, accountId, scope, entityType.getEntityDisplayName());
+        projectId, orgId, accountId, scope, entityType.getYamlName());
   }
 
   private Page<GitFileLocation> gitSyncEntityDTOPageByType(

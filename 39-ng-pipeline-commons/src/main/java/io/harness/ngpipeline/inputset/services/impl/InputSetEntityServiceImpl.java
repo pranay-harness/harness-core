@@ -1,14 +1,18 @@
 package io.harness.ngpipeline.inputset.services.impl;
 
-import static io.harness.exception.WingsException.USER_SRE;
-
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import io.harness.beans.InputSetReference;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
@@ -22,16 +26,18 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class InputSetEntityServiceImpl implements InputSetEntityService {
   private final InputSetRepository inputSetRepository;
+  private final EntitySetupUsageClient entitySetupUsageClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] already exists";
@@ -97,6 +103,8 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String inputSetIdentifier) {
+    checkThatTheInputSetIsNotUsedByOthers(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier);
     Criteria criteria = getInputSetEqualityCriteria(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, false);
     UpdateResult updateResult = inputSetRepository.delete(criteria);
@@ -132,6 +140,36 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
       throw new InvalidRequestException(
           String.format("InputSets under Project[%s], Organization [%s] for Pipeline [%s] couldn't be deleted.",
               projectIdentifier, orgIdentifier, pipelineIdentifier));
+    }
+  }
+
+  @VisibleForTesting
+  void checkThatTheInputSetIsNotUsedByOthers(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String inputSetIdentifier) {
+    List<EntityDetail> referredByEntities;
+    InputSetReference inputSetReference = InputSetReference.builder()
+                                              .accountIdentifier(accountId)
+                                              .orgIdentifier(orgIdentifier)
+                                              .projectIdentifier(projectIdentifier)
+                                              .pipelineIdentifier(pipelineIdentifier)
+                                              .identifier(inputSetIdentifier)
+                                              .build();
+    try {
+      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = execute(
+          entitySetupUsageClient.listAllEntityUsage(0, 10, accountId, inputSetReference.getFullyQualifiedName(), ""));
+      referredByEntities = entitySetupUsageDTOS.stream()
+                               .map(EntitySetupUsageDTO::getReferredByEntity)
+                               .collect(Collectors.toCollection(LinkedList::new));
+    } catch (Exception ex) {
+      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+          inputSetIdentifier, ex);
+      throw new UnexpectedException(
+          "Error while deleting the input set as was not able to check entity reference records.");
+    }
+    if (EmptyPredicate.isNotEmpty(referredByEntities)) {
+      throw new InvalidRequestException(String.format(
+          "Could not delete the Input Set %s as it is referenced by other entities - " + referredByEntities.toString(),
+          inputSetIdentifier));
     }
   }
 

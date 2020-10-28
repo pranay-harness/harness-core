@@ -19,6 +19,7 @@ import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
@@ -112,6 +113,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .toInstance(Mockito.mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})
             .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }

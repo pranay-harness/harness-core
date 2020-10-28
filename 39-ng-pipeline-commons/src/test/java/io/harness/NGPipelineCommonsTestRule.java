@@ -8,6 +8,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -53,6 +55,8 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(KryoModule.getInstance());
+    modules.add(new EntitySetupUsageClientModule(
+        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

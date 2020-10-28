@@ -43,9 +43,9 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
     final String repo = "repo";
     final String branch = "branch";
     final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getEntityDisplayName();
+    final String pipeline = EntityType.PIPELINES.getYamlName();
     final String id = "id";
-    final String connector = EntityType.CONNECTORS.getEntityDisplayName();
+    final String connector = EntityType.CONNECTORS.getYamlName();
     final String id1 = "id1";
     final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
     final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
@@ -79,9 +79,9 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
     final String repo = "repo";
     final String branch = "branch";
     final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getEntityDisplayName();
+    final String pipeline = EntityType.PIPELINES.getYamlName();
     final String id = "id";
-    final String connector = EntityType.CONNECTORS.getEntityDisplayName();
+    final String connector = EntityType.CONNECTORS.getYamlName();
     final String id1 = "id1";
     final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
     final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);

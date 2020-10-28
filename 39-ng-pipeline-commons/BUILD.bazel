@@ -13,6 +13,7 @@ java_library(
     exports = [
         "//19-delegate-tasks-beans:module",
         "//22-ng-project-n-orgs:module",
+        "//23-ng-core-clients:module",
         "//33-orchestration-visualization:module",
         "//35-yaml-beans:module",
         "@maven//:com_esotericsoftware_kryo",

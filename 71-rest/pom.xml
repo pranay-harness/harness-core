@@ -791,11 +791,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>38-execution-plan</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>450-ce-views</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -812,11 +807,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>69-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
