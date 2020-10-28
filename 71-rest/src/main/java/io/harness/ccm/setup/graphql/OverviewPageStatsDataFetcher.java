@@ -3,7 +3,6 @@ package io.harness.ccm.setup.graphql;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.persistence.HQuery.excludeValidate;
-import static software.wings.graphql.datafetcher.DataFetcherUtils.SAMPLE_ACCOUNT_ID;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValueList;
@@ -97,12 +96,21 @@ public class OverviewPageStatsDataFetcher
       isApplicationDataPresent = true;
     }
 
-    if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0
-        || (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)
-               && utils.isAnyClusterDataPresent(SAMPLE_ACCOUNT_ID))) {
+    boolean isCeEnabledCloudProviderPresent = getCEEnabledCloudProvider(accountId);
+
+    if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0) {
       isClusterDataPresent = true;
+    } else if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
+      logger.info("Sample data generation enabled for accountId:{}", accountId);
+      if (utils.isSampleClusterDataPresent()) {
+        isClusterDataPresent = true;
+        isCeEnabledCloudProviderPresent = true;
+        logger.info("sample data is present");
+      }
     }
-    overviewStatsDataBuilder.clusterDataPresent(isClusterDataPresent).applicationDataPresent(isApplicationDataPresent);
+    overviewStatsDataBuilder.clusterDataPresent(isClusterDataPresent)
+        .applicationDataPresent(isApplicationDataPresent)
+        .ceEnabledClusterPresent(isCeEnabledCloudProviderPresent);
 
     // AWS, GCP Data Present
     String dataSetId = String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
@@ -130,7 +138,7 @@ public class OverviewPageStatsDataFetcher
       Thread.currentThread().interrupt();
     }
 
-    return overviewStatsDataBuilder.ceEnabledClusterPresent(getCEEnabledCloudProvider(accountId)).build();
+    return overviewStatsDataBuilder.build();
   }
 
   void modifyOverviewStatsBuilder(FieldValueList row, QLCEOverviewStatsDataBuilder overviewStatsDataBuilder) {

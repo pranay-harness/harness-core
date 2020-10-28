@@ -72,7 +72,7 @@ public class DataFetcherUtils {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject protected FeatureFlagService featureFlagService;
   private final LoadingCache<String, Boolean> isClusterDataPresentCache =
-      Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build(this ::isAnyClusterDataPresent);
+      Caffeine.newBuilder().expireAfterAccess(15, TimeUnit.SECONDS).build(this ::isAnyClusterDataPresent);
 
   public static String SAMPLE_ACCOUNT_ID =
       "Sy3KVuK1SZy2Z7OLhbKlNg"; // Sy3KVuK1SZy2Z7OLhbKlNg belongs to "harness-demo" in Free Cluster
@@ -86,12 +86,12 @@ public class DataFetcherUtils {
 
   public String fetchSampleAccountIdIfNoClusterData(@NotNull String accountId) {
     if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
-      logger.debug("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
+      logger.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
       if (Boolean.FALSE.equals(isClusterDataPresentCache.get(accountId))) {
         return SAMPLE_ACCOUNT_ID;
       }
     }
-    logger.debug("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
+    logger.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
     return accountId;
   }
 
@@ -99,8 +99,12 @@ public class DataFetcherUtils {
     String clusterQuery = String.format(queryTemplate, accountId);
     String clusterDailyQuery = String.format(queryTemplateDaily, accountId);
     boolean isPresent = getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0;
-    logger.debug("Clusterdata for accountId:{} is present {}", accountId, isPresent);
+    logger.info("Clusterdata for accountId:{} is present {}", accountId, isPresent);
     return isPresent;
+  }
+
+  public boolean isSampleClusterDataPresent() {
+    return isAnyClusterDataPresent(SAMPLE_ACCOUNT_ID);
   }
 
   private Integer getCount(String query, String accountId) {
