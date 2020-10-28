@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -22,6 +24,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +39,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -42,7 +47,6 @@ import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcb.GcbService;
-import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -61,6 +65,7 @@ import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
+import software.wings.sm.states.GcbState;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
@@ -71,7 +76,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -98,6 +102,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private GcbService gcbService;
+  @Inject private DelegateServiceImpl delegateService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -713,9 +718,20 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    return gcbService.getAllTriggers(gcpConfig, encryptedDataDetails)
-        .stream()
-        .map(GcbTrigger::getName)
-        .collect(Collectors.toList());
+    GcbState.GcbDelegateResponse delegateResponseData = delegateService.executeTask(
+        DelegateTask.builder()
+            .accountId(gcpConfig.getAccountId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(GCB.name())
+                      .parameters(new Object[] {GcbTaskParams.builder()
+                                                    .gcpConfig(gcpConfig)
+                                                    .encryptedDataDetails(encryptedDataDetails)
+                                                    .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
+                                                    .build()})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build());
+    return delegateResponseData.getTriggers();
   }
 }

@@ -27,6 +27,8 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -56,6 +58,7 @@ import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
@@ -83,6 +86,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
+import software.wings.sm.states.GcbState;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
@@ -111,6 +115,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock AmazonS3BuildService amazonS3BuildService;
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
+  @Mock DelegateServiceImpl delegateService;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
@@ -1152,15 +1157,19 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnListOfTriggerNames() {
+    GcbState.GcbDelegateResponse delegateResponse =
+        new GcbState.GcbDelegateResponse(ExecutionStatus.NEW, null, GcbTaskParams.builder().build(), null, false);
+    delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
     GcbTrigger gcbTrigger = new GcbTrigger();
     gcbTrigger.setId(TRIGGER_ID);
     gcbTrigger.setName(TRIGGER_NAME);
     List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
-    GcpConfig gcpConfig = GcpConfig.builder().build();
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);

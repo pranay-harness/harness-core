@@ -384,6 +384,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     @NotNull private final GcbTaskParams params;
     @Nullable private DelegateMetaInfo delegateMetaInfo;
     @Nullable private final String errorMsg;
+    @Nullable private List<String> triggers;
     private final boolean interrupted;
 
     @NotNull

@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.hazelcast.core.RuntimeInterruptedException;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -37,6 +38,7 @@ import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcb.models.RepoSource.RepoSourceBuilder;
 import software.wings.service.intfc.security.EncryptionService;
@@ -47,10 +49,12 @@ import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/14/16.
@@ -82,6 +86,8 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   public GcbDelegateResponse run(GcbTaskParams params) {
     try {
       switch (params.getType()) {
+        case FETCH_TRIGGERS:
+          return fetchTriggers(params);
         case START:
           return startGcbBuild(params);
         case POLL:
@@ -95,6 +101,16 @@ public class GcbTask extends AbstractDelegateRunnableTask {
       logger.warn("GCB task failed due to: ", e);
       return failedGcbTaskResponse(params, e.getMessage());
     }
+  }
+
+  private GcbDelegateResponse fetchTriggers(GcbTaskParams params) {
+    GcbDelegateResponse response = new GcbDelegateResponse(ExecutionStatus.NEW, null, params, null, false);
+    List<String> allTriggers = gcbService.getAllTriggers(params.getGcpConfig(), params.getEncryptedDataDetails())
+                                   .stream()
+                                   .map(GcbTrigger::getName)
+                                   .collect(Collectors.toList());
+    response.setTriggers(allTriggers);
+    return response;
   }
 
   protected GcbDelegateResponse pollGcbBuild(final @NotNull GcbTaskParams params) {
