@@ -11,14 +11,14 @@ import io.harness.rule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegrationTest {
+public class WorkflowExecutionServiceImplIntegrationTest extends IntegrationTestBase {
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;
 
   @Test

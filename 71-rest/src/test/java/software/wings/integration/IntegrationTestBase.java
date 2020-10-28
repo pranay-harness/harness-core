@@ -99,7 +99,7 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 4/24/17.
  */
 @Slf4j
-public abstract class BaseIntegrationTest extends WingsBaseTest implements WingsIntegrationTestConstants {
+public abstract class IntegrationTestBase extends WingsBaseTest implements WingsIntegrationTestConstants {
   protected static Client client;
 
   @Inject protected WingsPersistence wingsPersistence;
@@ -157,7 +157,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     jacksonProvider.setMapper(objectMapper);
 
     // To log HTTP Request/Response for debugging purpose.
-    java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(BaseIntegrationTest.class.getName());
+    java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(IntegrationTestBase.class.getName());
     Feature loggingFeature = new LoggingFeature(julLogger, Level.ALL, null, null);
 
     client = ClientBuilder.newBuilder()

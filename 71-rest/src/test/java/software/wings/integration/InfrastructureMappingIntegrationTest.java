@@ -60,7 +60,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 1/16/17.
  */
-public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
+public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Inject @InjectMocks private AppService appService;

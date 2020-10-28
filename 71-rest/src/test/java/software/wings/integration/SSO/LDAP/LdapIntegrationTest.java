@@ -35,7 +35,7 @@ import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.resources.SSOResource.LDAPTestAuthenticationRequest;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.intfc.SSOService;
@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
  * Integration test for Ldap.
  */
 @Slf4j
-public class LdapIntegrationTest extends BaseIntegrationTest implements WingsIntegrationTestConstants {
+public class LdapIntegrationTest extends IntegrationTestBase implements WingsIntegrationTestConstants {
   @Inject private SSOService ssoService;
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;

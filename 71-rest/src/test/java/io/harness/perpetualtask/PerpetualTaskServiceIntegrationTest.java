@@ -17,14 +17,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
+public class PerpetualTaskServiceIntegrationTest extends IntegrationTestBase {
   private final long HEARTBEAT_MILLIS = Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli();
 
   @Inject private PerpetualTaskService perpetualTaskService;

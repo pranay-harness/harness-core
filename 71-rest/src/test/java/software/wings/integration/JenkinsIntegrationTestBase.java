@@ -3,7 +3,7 @@ package software.wings.integration;
 /**
  * Created by rsingh on 6/26/17.
  */
-public class JenkinsIntegrationTest extends BaseIntegrationTest {
+public class JenkinsIntegrationTestBase extends IntegrationTestBase {
   //  @Inject private JenkinsBuildService jenkinsBuildService;
   //  @Inject SettingGenerator settingGenerator;
   //  @Inject private ScmSecret scmSecret;

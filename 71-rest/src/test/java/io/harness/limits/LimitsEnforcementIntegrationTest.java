@@ -24,12 +24,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
 import java.util.concurrent.TimeUnit;
 
-public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
+public class LimitsEnforcementIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence dao;
   @Inject private LimitConfigurationService limitConfigSvc;
   @Inject private LimitCheckerFactory limitCheckerFactory;

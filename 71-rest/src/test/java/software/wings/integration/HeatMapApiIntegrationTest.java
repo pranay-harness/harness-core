@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
  * 22/Oct/2018
  */
 @Slf4j
-public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
+public class HeatMapApiIntegrationTest extends IntegrationTestBase {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject WingsPersistence wingsPersistence;

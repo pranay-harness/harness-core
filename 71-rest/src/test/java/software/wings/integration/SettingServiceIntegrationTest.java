@@ -36,7 +36,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-public class SettingServiceIntegrationTest extends BaseIntegrationTest {
+public class SettingServiceIntegrationTest extends IntegrationTestBase {
   @Inject private ScmSecret scmSecret;
 
   String JENKINS_URL = "https://jenkins.wings.software";

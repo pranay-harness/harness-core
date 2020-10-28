@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
-public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrationTest {
+public class ContinuousVerificationDashboardIntegrationTest extends IntegrationTestBase {
   @Inject ContinuousVerificationService continuousVerificationService;
   @Inject UserService userService;
   @Inject AuthService authService;

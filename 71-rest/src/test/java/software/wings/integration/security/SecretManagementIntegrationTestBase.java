@@ -26,7 +26,7 @@ import org.junit.Before;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * @author marklu on 10/1/19
  */
-public abstract class BaseSecretManagementIntegrationTest extends BaseIntegrationTest {
+public abstract class SecretManagementIntegrationTestBase extends IntegrationTestBase {
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
 

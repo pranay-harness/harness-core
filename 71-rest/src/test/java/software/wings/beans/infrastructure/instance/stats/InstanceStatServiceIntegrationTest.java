@@ -18,7 +18,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
+public class InstanceStatServiceIntegrationTest extends IntegrationTestBase {
   @Inject private InstanceStatServiceImpl statService;
   @Inject private WingsPersistence persistence;
 

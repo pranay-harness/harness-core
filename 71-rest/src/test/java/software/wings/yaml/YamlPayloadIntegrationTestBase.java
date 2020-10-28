@@ -1,12 +1,12 @@
 package software.wings.yaml;
 
 import org.junit.Before;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
 /**
  * Created by bsollish on 8/10/17.
  */
-public class YamlPayloadIntegrationTest extends BaseIntegrationTest {
+public class YamlPayloadIntegrationTestBase extends IntegrationTestBase {
   private final long TIME_IN_MS = System.currentTimeMillis();
   private final String TEST_NAME_POST = "TestAppPOST_" + TIME_IN_MS;
   private final String TEST_DESCRIPTION_POST = "stuffPOST";

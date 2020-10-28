@@ -9,6 +9,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -19,7 +20,7 @@ import java.io.IOException;
 /**
  * @author marklu on 10/1/19
  */
-public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
+public class KmsIntegrationTest extends SecretManagementIntegrationTestBase {
   private KmsConfig globalKmsDefault;
   private KmsConfig globalKmsBackup;
 
@@ -52,6 +53,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateKmsSecretText_withBackupGlobalKMS_shouldSucceed() {
     String backupGlobalKmsConfigId = createGlobalKmsConfig(globalKmsBackup);
 
@@ -76,6 +78,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
@@ -93,6 +96,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
@@ -110,6 +114,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);

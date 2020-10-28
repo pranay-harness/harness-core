@@ -16,9 +16,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
-public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseIntegrationTest {
+public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends IntegrationTestBase {
   private static final String NAMESPACE = StaticLimitVicinityCheckerMongoImplIntegrationTest.class.getSimpleName();
 
   @Inject private WingsPersistence persistence;

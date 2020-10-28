@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author marklu on 10/16/18
  */
-public class SecretManagerIntegrationTest extends BaseIntegrationTest {
+public class SecretManagerIntegrationTest extends IntegrationTestBase {
   @Override
   @Before
   public void setUp() {

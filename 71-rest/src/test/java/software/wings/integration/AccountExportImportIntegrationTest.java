@@ -39,7 +39,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * @author marklu on 10/25/18
  */
-public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
+public class AccountExportImportIntegrationTest extends IntegrationTestBase {
   private String accountId;
 
   @Override
@@ -82,6 +82,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testImportQEAccountDataFromZipFile() {
     String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
     String qaHarnessAccountName = "QEAccount";
@@ -116,6 +117,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
         exportSpecificAccountData(accountId, Application.class.getAnnotation(Entity.class).value());
@@ -140,6 +142,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSpecificExport_noEntityTypes_shouldFail() {
     assertThatExceptionOfType(Exception.class).isThrownBy(() -> {
       WebTarget target =

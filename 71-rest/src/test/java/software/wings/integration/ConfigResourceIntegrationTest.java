@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType;
  * @author marklu on 2019-01-23
  */
 
-public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
+public class ConfigResourceIntegrationTest extends IntegrationTestBase {
   private static final String TEST_APPLICATION = "Test Application";
   private static final String TEST_SERVICE = "Test Service";
   private static final String TEST_ENVIRONMENT = "Test Environment";

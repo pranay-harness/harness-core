@@ -12,13 +12,13 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
-public class CVConfigurationServiceTest extends BaseIntegrationTest {
+public class CVConfigurationServiceTest extends IntegrationTestBase {
   @Inject CVConfigurationService cvConfigurationService;
 
   private String envId;

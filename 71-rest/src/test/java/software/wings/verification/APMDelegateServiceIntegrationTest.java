@@ -7,11 +7,12 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.APMDelegateServiceImpl;
 import software.wings.sm.states.APMVerificationState.Method;
@@ -20,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
+public class APMDelegateServiceIntegrationTest extends IntegrationTestBase {
   APMDelegateService apmDelegateService;
   String apiKey;
   String appKey;
@@ -40,6 +41,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testValidateConnectorHappyCase() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     options.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -58,6 +60,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testValidateConnectorHappyCaseNoCollectionMethod() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     options.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -75,6 +78,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testValidateConnectorHappyCaseDatadogConfig() {
     DatadogConfig ddConfig =
         DatadogConfig.builder()
@@ -94,6 +98,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testValidateConnectorHappyCasePost() {
     APMValidateCollectorConfig config =
         APMValidateCollectorConfig.builder()

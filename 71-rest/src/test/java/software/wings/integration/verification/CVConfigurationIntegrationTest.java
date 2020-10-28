@@ -58,7 +58,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
@@ -120,7 +120,7 @@ import javax.ws.rs.core.GenericType;
  * 05/Oct/2018
  */
 @Slf4j
-public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
+public class CVConfigurationIntegrationTest extends IntegrationTestBase {
   @Rule public ExpectedException thrown = ExpectedException.none();
   private String appId, envId, serviceId, appDynamicsApplicationId;
   List<InstanaTagFilter> instanaTagFilters;
@@ -434,6 +434,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSaveConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -445,6 +446,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testNewRelicConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -517,6 +519,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testAppDynamicsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -549,6 +552,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testInstanaConfiguration_create() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -587,6 +591,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testInstanaConfiguration_update() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -627,6 +632,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testAPMCVConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -678,6 +684,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testDatadogConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -736,6 +743,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testPrometheusConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + PROMETHEUS;
     logger.info("POST " + url);
@@ -764,6 +772,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testDynaTraceConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -793,6 +802,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testCloudWatchConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -824,6 +834,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testCloudWatchConfigurationNoMetricsShouldFail() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -845,6 +856,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithoutAnyMetric() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -883,6 +895,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithOnlyLamdaMetrics() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -919,6 +932,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testElkConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1022,6 +1036,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testBugSnagConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1099,6 +1114,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = PRANJAL, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testStackdriverConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1168,6 +1184,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testSplunkConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SPLUNKV2;
     logger.info("POST " + url);
@@ -1263,6 +1280,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testLogsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1355,6 +1373,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testLogsConfigurationValidUntil() throws InterruptedException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1401,6 +1420,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU, intermittent = true)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testListConfig() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1528,6 +1548,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testLogsConfigurationResetBaseline() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1707,6 +1728,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testLogsConfigurationUpdateAlert() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
@@ -1865,6 +1887,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCustomThresholdsCrud() throws UnsupportedEncodingException {
     String txnName = URLEncoder.encode("some valid txn / with slash", StandardCharsets.UTF_8.name());
     String metricName = "some valid metric / with slash";

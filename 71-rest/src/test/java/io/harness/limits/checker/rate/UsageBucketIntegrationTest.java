@@ -14,12 +14,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
 import java.util.Arrays;
 
-public class UsageBucketIntegrationTest extends BaseIntegrationTest {
+public class UsageBucketIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
 
   private boolean indexesEnsured;

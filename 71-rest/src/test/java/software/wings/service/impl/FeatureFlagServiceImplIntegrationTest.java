@@ -13,10 +13,10 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.beans.FeatureName;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.FeatureFlagService;
 
-public class FeatureFlagServiceImplIntegrationTest extends BaseIntegrationTest {
+public class FeatureFlagServiceImplIntegrationTest extends IntegrationTestBase {
   private static final String ACCOUNT_ID1 = "ACCOUNT_ID1";
   private static final String ACCOUNT_ID2 = "ACCOUNT_ID2";
   @Inject FeatureFlagService featureFlagService;

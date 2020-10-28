@@ -97,7 +97,7 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
@@ -152,7 +152,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
   }
 
   protected boolean isIntegrationTest(Object target) {
-    return target instanceof BaseIntegrationTest;
+    return target instanceof IntegrationTestBase;
   }
 
   /**

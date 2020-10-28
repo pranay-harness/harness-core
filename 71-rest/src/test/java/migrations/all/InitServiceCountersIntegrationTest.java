@@ -10,12 +10,13 @@ import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.rule.Owner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Service;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
-public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
+public class InitServiceCountersIntegrationTest extends IntegrationTestBase {
   @Inject private InitServiceCounters initServiceCounters;
 
   @Before
@@ -27,6 +28,7 @@ public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = ANKIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testMigrate() {
     long serviceCount = wingsPersistence.createQuery(Service.class).count();
     if (serviceCount == 0) {

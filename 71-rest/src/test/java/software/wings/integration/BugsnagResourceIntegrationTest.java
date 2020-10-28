@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by Pranjal on 04/09/2019
  */
-public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
+public class BugsnagResourceIntegrationTest extends IntegrationTestBase {
   private String settingId;
   private String appId;
   private String workflowId;

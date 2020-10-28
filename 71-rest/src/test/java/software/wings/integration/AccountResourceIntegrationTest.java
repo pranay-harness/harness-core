@@ -15,6 +15,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +37,7 @@ import javax.ws.rs.core.Response.Status;
  * @author marklu on 2018-12-26
  */
 @Slf4j
-public class AccountResourceIntegrationTest extends BaseIntegrationTest {
+public class AccountResourceIntegrationTest extends IntegrationTestBase {
   @Override
   @Before
   public void setUp() {
@@ -48,6 +49,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testAccountMigration() {
     disableAccount(accountId, true);
 
@@ -86,6 +88,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAMA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
     account.setLicenseInfo(getLicenseInfo());
@@ -120,6 +123,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(developers = RAMA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void shouldEnableAndDisableCloudCost() {
     long timeMillis = System.currentTimeMillis();
     String randomString = "" + timeMillis;

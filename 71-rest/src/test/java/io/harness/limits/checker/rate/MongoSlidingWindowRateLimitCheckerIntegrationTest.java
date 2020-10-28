@@ -22,7 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseIntegrationTest {
+public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
 
   private boolean indexesEnsured;

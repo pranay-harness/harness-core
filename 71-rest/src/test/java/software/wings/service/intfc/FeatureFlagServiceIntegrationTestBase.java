@@ -11,12 +11,12 @@
 // import software.wings.beans.FeatureFlag;
 // import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 // import software.wings.beans.FeatureName;
-// import software.wings.integration.BaseIntegrationTest;
+// import software.wings.integration.IntegrationTestBase;
 // import software.wings.utils.WingsTestConstants;
 //
 // import java.util.Collections;
 //
-// public class FeatureFlagServiceIntegrationTest extends BaseIntegrationTest {
+// public class FeatureFlagServiceIntegrationTest extends IntegrationTestBase {
 //  @Inject FeatureFlagService featureFlagService;
 //
 //  @Test

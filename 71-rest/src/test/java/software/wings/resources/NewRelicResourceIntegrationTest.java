@@ -13,7 +13,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.sm.states.NewRelicState;
@@ -30,7 +30,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
 @Slf4j
-public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
+public class NewRelicResourceIntegrationTest extends IntegrationTestBase {
   private NewRelicState.Metric requestsPerMinuteMetric;
   @Override
   @Before

@@ -13,7 +13,7 @@ import io.harness.serializer.JsonUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
 import software.wings.service.impl.analysis.TimeSeriesKeyTransactions.TimeSeriesKeyTransactionsKeys;
 
@@ -22,7 +22,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
-public class TimeSeriesResourceIntegrationTest extends BaseIntegrationTest {
+public class TimeSeriesResourceIntegrationTest extends IntegrationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(DeprecatedIntegrationTests.class)

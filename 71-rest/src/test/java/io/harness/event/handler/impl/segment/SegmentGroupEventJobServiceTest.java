@@ -12,7 +12,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 
@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.Collections;
 
-public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
+public class SegmentGroupEventJobServiceTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
   @Inject private SegmentGroupEventJobServiceImpl segmentGroupEventJobService;
 

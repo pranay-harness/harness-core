@@ -29,7 +29,7 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureB
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBuilder;
 import software.wings.infra.PhysicalInfra;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrationTest {
+public class InfrastructureDefinitionServiceIntegrationTest extends IntegrationTestBase {
   @InjectMocks @Inject private AppService appService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private EnvironmentService environmentService;

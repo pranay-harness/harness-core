@@ -17,7 +17,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest {
+public class MongoStaticLimitCheckerIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
 
   private static final String NAMESPACE = MongoStaticLimitCheckerIntegrationTest.class.getSimpleName();

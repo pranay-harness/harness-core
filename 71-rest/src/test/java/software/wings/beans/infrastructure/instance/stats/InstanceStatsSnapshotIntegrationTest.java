@@ -17,13 +17,13 @@ import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestBase;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
+public class InstanceStatsSnapshotIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
   private boolean indexesEnsured;
 
