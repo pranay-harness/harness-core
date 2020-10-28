@@ -21,6 +21,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
+import static software.wings.beans.InfrastructureType.AZURE_WEBAPP;
 import static software.wings.beans.InfrastructureType.CUSTOM_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
@@ -70,6 +71,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrast
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureWebAppInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CustomInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
@@ -306,6 +308,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA_WINRM)
         .to(PhysicalInfraWinrmYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AZURE_VMSS).to(AzureVMSSInfraYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AZURE_WEBAPP).to(AzureWebAppInfraYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(CUSTOM_INFRASTRUCTURE)
         .to(CustomInfrastructureYamlHandler.class);
 

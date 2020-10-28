@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -35,6 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -367,6 +369,41 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
 
     assertThat(sgList.size()).isEqualTo(1);
     assertThat(sgList.get(0)).isEqualTo(sgId);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAzureWebAppInfraMapping() {
+    doReturn(aSettingAttribute().build()).when(settingsService).get(anyString());
+    final AzureWebAppInfrastructureMapping infrastructureMapping = AzureWebAppInfrastructureMapping.builder()
+                                                                       .subscriptionId("SubsId")
+                                                                       .resourceGroup("ResName")
+                                                                       .deploymentSlot("Stage")
+                                                                       .webApp("Web App")
+                                                                       .build();
+
+    infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping);
+
+    infrastructureMapping.setSubscriptionId("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setSubscriptionId("SubsId");
+
+    infrastructureMapping.setResourceGroup("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setResourceGroup("ResName");
+
+    infrastructureMapping.setDeploymentSlot("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setDeploymentSlot("Stage");
+
+    infrastructureMapping.setWebApp("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setWebApp("Web App");
   }
 
   @Test

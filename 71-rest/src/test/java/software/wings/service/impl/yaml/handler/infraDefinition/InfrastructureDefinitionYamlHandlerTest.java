@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -52,6 +53,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrast
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureWebAppInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CustomInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
@@ -100,6 +102,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
   @InjectMocks @Inject private PhysicalInfraYamlHandler physicalInfraYamlHandler;
   @InjectMocks @Inject private PhysicalInfraWinrmYamlHandler physicalInfraWinrmYamlHandler;
   @InjectMocks @Inject private AzureVMSSInfraYamlHandler azureVMSSInfraYamlHandler;
+  @InjectMocks @Inject private AzureWebAppInfraYamlHandler azureWebAppInfraYamlHandler;
   @InjectMocks @Inject private CustomInfrastructureYamlHandler customInfrastructureYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
@@ -112,6 +115,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
     private static final String AWS_ECS = "aws_ecs.yaml";
     private static final String AWS_AMI = "aws_ami.yaml";
     private static final String AZURE_VMSS = "azure_vmss.yaml";
+    private static final String AZURE_WEBAPP = "azure_webapp.yaml";
     private static final String AWS_ECS_PROVISIONER = "aws_ecs_provisioner.yaml";
     private static final String AWS_LAMBDA = "aws_lambda.yaml";
     private static final String AWS_LAMBDA_PROVISIONER = "aws_lambda_provisioner.yaml";
@@ -283,6 +287,15 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
     doReturn(awsAmiInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(
         validYamlInfraStructureFiles.AWS_AMI, InfrastructureType.AWS_AMI, DeploymentType.AMI, CloudProviderType.AWS);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testCRUDAndGet_AzureWebApp() throws IOException {
+    doReturn(azureWebAppInfraYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.AZURE_WEBAPP, InfrastructureType.AZURE_WEBAPP, DeploymentType.AZURE_WEBAPP,
+        CloudProviderType.AZURE);
   }
 
   @Test
