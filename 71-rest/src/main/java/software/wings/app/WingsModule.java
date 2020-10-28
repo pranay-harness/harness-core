@@ -96,6 +96,8 @@ import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.lock.PersistentLocker;
+import io.harness.logstreaming.LogStreamingServiceClientFactory;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
@@ -1226,6 +1228,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
+    bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
   }
 
   private void bindFeatures() {

@@ -27,6 +27,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
@@ -119,6 +120,9 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
+    configuration.setLogStreamingServiceConfig(
+        LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();

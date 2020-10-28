@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -100,6 +101,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private SettingsService settingsService;
+
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -116,6 +118,19 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .version(VERSION)
         .status(Status.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRetrieveLogStreamingAccountToken() {
+    String accountId = generateUuid();
+
+    try {
+      delegateService.retrieveLogStreamingAccountToken(accountId);
+    } catch (Exception ex) {
+      fail("Unexpected failure while retrieving streaming log token");
+    }
   }
 
   @Test

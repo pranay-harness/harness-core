@@ -36,6 +36,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.redis.RedisConfig;
@@ -160,6 +161,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
+  @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

@@ -44,6 +44,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
@@ -311,6 +312,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
+    configuration.setLogStreamingServiceConfig(
+        LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);

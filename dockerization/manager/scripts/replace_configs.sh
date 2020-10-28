@@ -687,3 +687,11 @@ fi
 if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_SECRET" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingSecret "$COMMAND_LIBRARY_PUBLISHING_SECRET"
 fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
+fi
