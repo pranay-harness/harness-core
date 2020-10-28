@@ -62,6 +62,8 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
@@ -419,5 +421,22 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     } else {
       return instanceService.getInstanceCount(appId, infraMappingId);
     }
+  }
+
+  protected List<Instance> getActiveInstancesConditional(String appId, String serviceId, String infraMappingId) {
+    Awaitility.await()
+        .atMost(3, TimeUnit.MINUTES)
+        .pollInterval(5, TimeUnit.SECONDS)
+        .until(() -> getActiveInstances(appId, serviceId, infraMappingId).size() > 0);
+    return getActiveInstances(appId, serviceId, infraMappingId);
+  }
+
+  private List<Instance> getActiveInstances(String appId, String serviceId, String infraMappingId) {
+    return wingsPersistence.createQuery(Instance.class)
+        .filter(InstanceKeys.appId, appId)
+        .filter(InstanceKeys.infraMappingId, infraMappingId)
+        .filter(InstanceKeys.serviceId, serviceId)
+        .filter(InstanceKeys.isDeleted, Boolean.FALSE)
+        .asList();
   }
 }
