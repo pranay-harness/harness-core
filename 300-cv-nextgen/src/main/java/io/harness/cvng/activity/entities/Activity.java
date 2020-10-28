@@ -10,6 +10,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -63,6 +64,8 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   public abstract ActivityType getType();
 
   public abstract void fromDTO(ActivityDTO activityDTO);
+
+  public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
 
   public void addCommonFileds(ActivityDTO activityDTO) {
     setAccountIdentifier(activityDTO.getAccountIdentifier());

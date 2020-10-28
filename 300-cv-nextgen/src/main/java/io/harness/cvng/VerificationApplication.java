@@ -52,8 +52,8 @@ import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrches
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
-import io.harness.cvng.verificationjob.jobs.CreateDeploymentDataCollectionTaskHandler;
 import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
+import io.harness.cvng.verificationjob.jobs.ProcessQueuedVerificationJobInstanceHandler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
@@ -356,8 +356,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("verification-job-instance-data-collection-iterator").build());
-    CreateDeploymentDataCollectionTaskHandler handler =
-        injector.getInstance(CreateDeploymentDataCollectionTaskHandler.class);
+    ProcessQueuedVerificationJobInstanceHandler handler =
+        injector.getInstance(ProcessQueuedVerificationJobInstanceHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()

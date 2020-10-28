@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
@@ -16,6 +17,7 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ActivityVerificationState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.entities.CanaryTimeSeriesAnalysisState;
@@ -62,15 +64,21 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
     AnalysisStateMachine executingStateMachine = getExecutingStateMachine(verificationTaskId);
     if (executingStateMachine != null) {
-      if (executingStateMachine.getStatus() != AnalysisStatus.SUCCESS) {
+      if (executingStateMachine.getStatus() != AnalysisStatus.SUCCESS
+          && executingStateMachine.getStatus() != AnalysisStatus.IGNORED) {
         throw new AnalysisStateMachineException(
             "There can be only one statemachine execution at a time for verificationTaskId: " + verificationTaskId);
       }
     }
-    stateMachine.setVerificationTaskId(verificationTaskId);
-    stateMachine.setStatus(AnalysisStatus.RUNNING);
-    injector.injectMembers(stateMachine.getCurrentState());
-    stateMachine.getCurrentState().execute();
+    Optional<AnalysisStateMachine> ignoredStatemachine = ignoreOldStatemachine(stateMachine);
+    if (ignoredStatemachine.isPresent()) {
+      stateMachine = ignoredStatemachine.get();
+    } else {
+      stateMachine.setVerificationTaskId(verificationTaskId);
+      stateMachine.setStatus(AnalysisStatus.RUNNING);
+      injector.injectMembers(stateMachine.getCurrentState());
+      stateMachine.getCurrentState().execute();
+    }
     hPersistence.save(stateMachine);
   }
 
@@ -91,6 +99,19 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     } else {
       executeStateMachine(analysisStateMachine);
     }
+  }
+
+  private Optional<AnalysisStateMachine> ignoreOldStatemachine(AnalysisStateMachine analysisStateMachine) {
+    Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
+    if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
+        && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
+      logger.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
+          analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
+          analysisStateMachine.getAnalysisEndTime());
+      analysisStateMachine.setStatus(AnalysisStatus.IGNORED);
+      return Optional.of(analysisStateMachine);
+    }
+    return Optional.empty();
   }
 
   @Override
@@ -120,7 +141,8 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         logger.info("Analysis is currently RUNNING for {} and analysis range {} to {}. We will return.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
-        return;
+        nextState = currentState.handleRunning();
+        break;
       case TRANSITION:
         logger.info(
             "Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will call handleTransition.",
@@ -226,9 +248,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
                                             .status(AnalysisStatus.CREATED)
                                             .build();
 
-    CVConfig cvConfig = cvConfigService.get(inputForAnalysis.getVerificationTaskId());
-
-    if (cvConfig != null) {
+    if (verificationTaskService.isServiceGuardId(inputForAnalysis.getVerificationTaskId())) {
+      String cvConfigId = verificationTaskService.getCVConfigId(inputForAnalysis.getVerificationTaskId());
+      CVConfig cvConfig = cvConfigService.get(cvConfigId);
       VerificationType verificationType = cvConfig.getVerificationType();
       AnalysisState firstState = null;
       switch (verificationType) {
@@ -252,33 +274,55 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
-      // TODO: find right place for these conditions
-      switch (cvConfigForDeployment.getVerificationType()) {
-        case TIME_SERIES:
-          if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.TEST) {
-            TestTimeSeriesAnalysisState testTimeSeriesAnalysisState = TestTimeSeriesAnalysisState.builder().build();
-            testTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-            testTimeSeriesAnalysisState.setInputs(inputForAnalysis);
-            stateMachine.setCurrentState(testTimeSeriesAnalysisState);
-          } else {
-            CanaryTimeSeriesAnalysisState canaryTimeSeriesAnalysisState =
-                CanaryTimeSeriesAnalysisState.builder().build();
-            canaryTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-            canaryTimeSeriesAnalysisState.setInputs(inputForAnalysis);
-            stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
-          }
-          break;
-        case LOG:
-          AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, verificationJobInstance);
-          analysisState.setStatus(AnalysisStatus.CREATED);
-          analysisState.setInputs(inputForAnalysis);
-          stateMachine.setCurrentState(analysisState);
-          break;
-        default:
-          throw new IllegalStateException("Invalid verificationType");
+
+      if (VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
+        createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
+      } else {
+        createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
       }
     }
     return stateMachine;
+  }
+
+  private void createHealthAnalysisState(AnalysisStateMachine stateMachine, AnalysisInput inputForAnalysis,
+      VerificationJobInstance verificationJobInstance, CVConfig cvConfigForDeployment) {
+    ActivityVerificationState healthAnalysisState = ActivityVerificationState.builder().build();
+    healthAnalysisState.setInputs(inputForAnalysis);
+    healthAnalysisState.setHealthVerificationPeriod(HealthVerificationPeriod.PRE_ACTIVITY);
+    healthAnalysisState.setDuration(verificationJobInstance.getResolvedJob().getDuration());
+    healthAnalysisState.setPreActivityVerificationStartTime(
+        verificationJobInstance.getPreActivityVerificationStartTime());
+    healthAnalysisState.setPostActivityVerificationStartTime(
+        verificationJobInstance.getPostActivityVerificationStartTime());
+    healthAnalysisState.setStatus(AnalysisStatus.CREATED);
+    stateMachine.setCurrentState(healthAnalysisState);
+  }
+
+  private void createDeploymentAnalysisState(AnalysisStateMachine stateMachine, AnalysisInput inputForAnalysis,
+      VerificationJobInstance verificationJobInstance, CVConfig cvConfigForDeployment) {
+    switch (cvConfigForDeployment.getVerificationType()) {
+      case TIME_SERIES:
+        if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.TEST) {
+          TestTimeSeriesAnalysisState testTimeSeriesAnalysisState = TestTimeSeriesAnalysisState.builder().build();
+          testTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+          testTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+          stateMachine.setCurrentState(testTimeSeriesAnalysisState);
+        } else {
+          CanaryTimeSeriesAnalysisState canaryTimeSeriesAnalysisState = CanaryTimeSeriesAnalysisState.builder().build();
+          canaryTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+          canaryTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+          stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
+        }
+        break;
+      case LOG:
+        AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, verificationJobInstance);
+        analysisState.setStatus(AnalysisStatus.CREATED);
+        analysisState.setInputs(inputForAnalysis);
+        stateMachine.setCurrentState(analysisState);
+        break;
+      default:
+        throw new IllegalStateException("Invalid verificationType");
+    }
   }
 
   private AnalysisState createDeploymentLogState(

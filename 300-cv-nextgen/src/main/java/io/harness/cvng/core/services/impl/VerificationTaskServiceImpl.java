@@ -24,6 +24,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String create(String accountId, String cvConfigId) {
+    // TODO: Change to new generated uuid in a separate PR since it needs more validation.
     VerificationTask verificationTask =
         VerificationTask.builder().uuid(cvConfigId).accountId(accountId).cvConfigId(cvConfigId).build();
     hPersistence.save(verificationTask);

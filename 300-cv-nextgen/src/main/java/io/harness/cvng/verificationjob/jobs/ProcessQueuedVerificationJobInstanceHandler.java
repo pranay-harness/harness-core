@@ -10,10 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class CreateDeploymentDataCollectionTaskHandler implements Handler<VerificationJobInstance> {
+public class ProcessQueuedVerificationJobInstanceHandler implements Handler<VerificationJobInstance> {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Override
   public void handle(VerificationJobInstance entity) {
-    verificationJobInstanceService.createDataCollectionTasks(entity);
+    verificationJobInstanceService.processVerificationJobInstance(entity);
   }
 }

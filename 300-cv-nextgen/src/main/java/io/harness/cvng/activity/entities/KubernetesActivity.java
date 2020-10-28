@@ -20,14 +20,9 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesActivity extends Activity {
+public class KubernetesActivity extends InfrastructureActivity {
   private String clusterName;
   private String activityDescription;
-
-  @Override
-  public ActivityType getType() {
-    return ActivityType.INFRASTRUCTURE;
-  }
 
   @Override
   public void fromDTO(ActivityDTO activityDTO) {

@@ -32,11 +32,23 @@ public class HealthVerificationJob extends VerificationJob {
   }
 
   @Override
+  public boolean shouldDoDataCollection() {
+    return false;
+  }
+
+  @Override
   protected void validateParams() {}
 
   @Override
-  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
-    throw new UnsupportedOperationException("Not implemented");
+  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
+    return Optional.of(
+        TimeRange.builder().startTime(deploymentStartTime.minus(getDuration())).endTime(deploymentStartTime).build());
+  }
+
+  @Override
+  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
+    return Optional.of(
+        TimeRange.builder().endTime(deploymentStartTime.plus(getDuration())).startTime(deploymentStartTime).build());
   }
 
   @Override

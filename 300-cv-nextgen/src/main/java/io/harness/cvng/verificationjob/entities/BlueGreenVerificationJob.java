@@ -41,6 +41,11 @@ public class BlueGreenVerificationJob extends VerificationJob {
   }
 
   @Override
+  public boolean shouldDoDataCollection() {
+    return true;
+  }
+
+  @Override
   protected void validateParams() {
     checkNotNull(sensitivity, generateErrorMessageFromParam(BlueGreenVerificationJobKeys.sensitivity));
     Optional.ofNullable(trafficSplitPercentage)
@@ -50,7 +55,12 @@ public class BlueGreenVerificationJob extends VerificationJob {
   }
 
   @Override
-  public Optional<TimeRange> getPreDeploymentTimeRange(Instant deploymentStartTime) {
+  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
+  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

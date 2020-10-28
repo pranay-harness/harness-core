@@ -2,6 +2,7 @@ package io.harness.cvng.activity.entities;
 
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
@@ -18,6 +19,9 @@ public class CustomActivity extends Activity {
     setType(ActivityType.CUSTOM);
     addCommonFileds(activityDTO);
   }
+
+  @Override
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {}
 
   @Override
   public void validateActivityParams() {}

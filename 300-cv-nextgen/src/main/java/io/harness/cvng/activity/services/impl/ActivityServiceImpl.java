@@ -21,6 +21,7 @@ import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -52,8 +53,23 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private NextGenService nextGenService;
+
+  @Override
+  public Activity get(String activityId) {
+    Preconditions.checkNotNull(activityId, "ActivityID should not be null");
+    return hPersistence.get(Activity.class, activityId);
+  }
+
+  @Override
+  public Activity getByVerificationJobInstanceId(String verificationJobInstanceId) {
+    return hPersistence.createQuery(Activity.class, excludeAuthority)
+        .field(ActivityKeys.verificationJobInstanceIds)
+        .contains(verificationJobInstanceId)
+        .get();
+  }
 
   @Override
   public void register(String accountId, String webhookToken, ActivityDTO activityDTO) {
@@ -62,11 +78,10 @@ public class ActivityServiceImpl implements ActivityService {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
-    if (activity.getType().equals(ActivityType.DEPLOYMENT)) {
-      // TODO: Remove this "if" when we have support for all types of verification trigger from activity.
-      activity.setVerificationJobInstanceIds(createVerificationJobInstances(activity));
-    }
+    activity.setVerificationJobInstanceIds(createVerificationJobInstances(activity));
     hPersistence.save(activity);
+    logger.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
+        activity.getProjectIdentifier(), activity.getOrgIdentifier());
   }
 
   public String createActivity(Activity activity) {
@@ -259,24 +274,11 @@ public class ActivityServiceImpl implements ActivityService {
       VerificationJob verificationJob =
           verificationJobService.getVerificationJob(activity.getAccountIdentifier(), jobIdentifier);
       Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
-      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(activity,
-          verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues())
-              .resolveAdditionsFields(verificationJobInstanceService));
 
-      switch (activity.getType()) {
-        case DEPLOYMENT:
-          DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
-          verificationJobInstance.setOldVersionHosts(deploymentActivity.getOldVersionHosts());
-          verificationJobInstance.setNewVersionHosts(deploymentActivity.getNewVersionHosts());
-          verificationJobInstance.setNewHostsTrafficSplitPercentage(
-              deploymentActivity.getNewHostsTrafficSplitPercentage());
-          verificationJobInstance.setStartTime(deploymentActivity.getVerificationStartTime());
-          verificationJobInstance.setDataCollectionDelay(deploymentActivity.getDataCollectionDelay());
-          break;
-        default:
-          logger.info("We currently support verification triggers only for canary deployment activity");
-          return;
-      }
+      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues()));
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
+
       jobInstancesToCreate.add(verificationJobInstance);
     });
     return verificationJobInstanceService.create(jobInstancesToCreate);

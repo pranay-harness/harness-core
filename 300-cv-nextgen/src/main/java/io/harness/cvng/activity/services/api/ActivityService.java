@@ -9,6 +9,8 @@ import io.harness.cvng.beans.ActivityDTO;
 import java.util.List;
 
 public interface ActivityService {
+  Activity get(String activityId);
+  Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
   void register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(

@@ -40,7 +40,11 @@ public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAt
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String accountId;
+
+  private double overallRisk;
+
   private double score;
+
   private List<AnalysisResult> logAnalysisResults;
 
   @Data

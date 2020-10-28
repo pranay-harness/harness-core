@@ -11,6 +11,7 @@ import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,6 +56,15 @@ public class DeploymentActivity extends Activity {
     setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
     setType(ActivityType.DEPLOYMENT);
     addCommonFileds(activityDTO);
+  }
+
+  @Override
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {
+    verificationJobInstance.setOldVersionHosts(this.getOldVersionHosts());
+    verificationJobInstance.setNewVersionHosts(this.getNewVersionHosts());
+    verificationJobInstance.setNewHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
+    verificationJobInstance.setStartTime(this.getVerificationStartTime());
+    verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
   }
 
   @Override

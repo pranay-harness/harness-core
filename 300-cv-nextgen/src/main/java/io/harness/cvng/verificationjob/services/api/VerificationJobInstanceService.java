@@ -19,6 +19,7 @@ public interface VerificationJobInstanceService {
   VerificationJobInstanceDTO get(String verificationTaskId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
   VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
+  void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
   void logProgress(String verificationJobInstanceId, ProgressLog progressLog);
   void deletePerpetualTasks(VerificationJobInstance entity);

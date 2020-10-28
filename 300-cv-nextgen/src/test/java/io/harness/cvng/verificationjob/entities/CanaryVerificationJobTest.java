@@ -57,7 +57,7 @@ public class CanaryVerificationJobTest extends CategoryTest {
   public void testGetPreDeploymentTimeRange() {
     CanaryVerificationJob canaryVerificationJob = createCanaryVerificationJob();
     Instant deploymentStartTime = Instant.now();
-    Optional<TimeRange> timeRange = canaryVerificationJob.getPreDeploymentTimeRange(deploymentStartTime);
+    Optional<TimeRange> timeRange = canaryVerificationJob.getPreActivityTimeRange(deploymentStartTime);
     assertThat(timeRange.isPresent()).isTrue();
     assertThat(Duration.between(timeRange.get().getStartTime(), timeRange.get().getEndTime()).toMinutes())
         .isEqualTo(canaryVerificationJob.getDuration().toMinutes());

@@ -27,7 +27,7 @@ public class DeploymentActivityResultDTO {
     String environmentName;
     String jobName;
     String verificationJobInstanceId;
-    DeploymentVerificationStatus status;
+    ActivityVerificationStatus status;
     AdditionalInfo additionalInfo;
   }
 
