@@ -20,6 +20,7 @@ public class DelegateTaskPackage {
   private String accountId;
   private String delegateTaskId;
   private String delegateId;
+  private String logStreamingToken;
 
   private TaskData data;
 

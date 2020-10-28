@@ -44,6 +44,7 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.lock.DistributedLockImplementation;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
@@ -277,6 +278,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
+    configuration.setLogStreamingServiceConfig(
+        LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
     MarketPlaceConfig marketPlaceConfig =
         MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();

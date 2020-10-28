@@ -140,8 +140,10 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.logging.Misc;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
+import io.harness.network.SafeHttpCall;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -353,6 +355,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateGrpcConfig delegateGrpcConfig;
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
   @Inject private SettingsService settingsService;
+  @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -380,6 +383,17 @@ public class DelegateServiceImpl implements DelegateService {
           });
 
   private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this ::fetchTaskCount, 1, TimeUnit.MINUTES);
+
+  private LoadingCache<String, String> logStreamingAccountTokenCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, String>() {
+            @Override
+            public String load(String accountId) {
+              return retrieveLogStreamingAccountToken(accountId);
+            }
+          });
 
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
@@ -2589,6 +2603,19 @@ public class DelegateServiceImpl implements DelegateService {
                                                                   .data(delegateTask.getData())
                                                                   .executionCapabilities(executionCapabilityList);
 
+      if (featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
+        try {
+          String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
+
+          if (isNotBlank(logStreamingAccountToken)) {
+            delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
+          }
+        } catch (ExecutionException e) {
+          logger.warn(
+              "Unable to retrieve the log streaming service account token, while preparing delegate task package");
+        }
+      }
+
       if (delegateTask.getData().getParameters() == null || delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
         return delegateTaskPackageBuilder.build();
@@ -3645,4 +3672,15 @@ public class DelegateServiceImpl implements DelegateService {
                                       .build());
   }
   //------ END: DelegateFeature Specific methods
+
+  @VisibleForTesting
+  protected String retrieveLogStreamingAccountToken(String accountId) {
+    try {
+      return SafeHttpCall.executeWithExceptions(logStreamingServiceRestClient.retrieveAccountToken(
+          mainConfiguration.getLogStreamingServiceConfig().getServiceToken(), accountId));
+    } catch (Exception ex) {
+      logger.error("Unable to retrieve log streaming authentication token", ex);
+      return null;
+    }
+  }
 }
