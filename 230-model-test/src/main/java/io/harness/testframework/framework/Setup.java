@@ -32,10 +32,12 @@ public class Setup {
   public static RequestSpecification email() {
     return given().spec(rqProvider.useEmailSpec());
   }
-
   public static RequestSpecification mailinator() {
     String secret = instScmSecret.decryptToString(new SecretName("mailinator_paid_api_key"));
     return given().spec(rqProvider.useMailinatorSpec(secret));
+  }
+  public static RequestSpecification ci() {
+    return given().spec(rqProvider.useCISpec());
   }
 
   public static RequestSpecification mock() {

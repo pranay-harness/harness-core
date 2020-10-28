@@ -15,6 +15,13 @@ public class RequestSpecProvider {
     return createRequestSpec(host, port, basePath);
   }
 
+  public RequestSpecification useCISpec() {
+    String host = System.getProperty("server.host", "https://localhost");
+    String basePath = System.getProperty("server.base", "");
+    String port = System.getProperty("server.port", "7171");
+    return createRequestSpec(host, port, basePath);
+  }
+
   public RequestSpecification useDefaultSpecForCommandLibraryService() {
     String host = System.getProperty("commandlibrary.server.host", "https://localhost");
     String basePath = System.getProperty("commandlibrary.server.base", "/command-library-service");
