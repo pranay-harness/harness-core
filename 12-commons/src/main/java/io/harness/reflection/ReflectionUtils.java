@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.lang.String.format;
 
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.expression.ExpressionReflectionUtils;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -75,11 +76,25 @@ public class ReflectionUtils {
               if (object instanceof List) {
                 List objectList = (List) object;
                 for (int i = 0; i < objectList.size(); i++) {
-                  objectList.set(i, functor.update(annotation, (String) objectList.get(i)));
+                  Object o1 = objectList.get(i);
+                  if (o1 instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
+                    updateAnnotatedField(cls, o1, functor);
+                  } else {
+                    objectList.set(i, functor.update(annotation, (String) o1));
+                  }
                 }
               } else if (object instanceof Map) {
                 Map objectMap = (Map) object;
-                objectMap.replaceAll((k, v) -> functor.update(annotation, (String) v));
+                objectMap.replaceAll((k, v) -> {
+                  if (v instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
+                    updateAnnotatedField(cls, v, functor);
+                    return v;
+                  } else {
+                    return functor.update(annotation, (String) v);
+                  }
+                });
+              } else if (object instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
+                updateAnnotatedField(cls, object, functor);
               } else {
                 String value = functor.update(annotation, (String) object);
                 f.set(o, value);

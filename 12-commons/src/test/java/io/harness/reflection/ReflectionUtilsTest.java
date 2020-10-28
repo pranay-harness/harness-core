@@ -1,19 +1,24 @@
 package io.harness.reflection;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.rule.Owner;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -24,6 +29,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +44,27 @@ public class ReflectionUtilsTest extends CategoryTest {
     public String inheritField;
     @DummyAnnotation public String annotatedField;
     @DummyAnnotation public List<String> annotatedListField;
+    @DummyAnnotation public NestedAnnotationClass annotatedNestedField;
+    public NestedAnnotationClass nestedField;
+    @DummyAnnotation public NonNestedClass annotatedNonNestedField;
+    @DummyAnnotation public List<NestedAnnotationClass> annotatedNestedListField;
+    @DummyAnnotation public Map<String, NestedAnnotationClass> annotatedNestedMapField;
+  }
+
+  public static class NonNestedClass {
+    private String field;
+    @DummyAnnotation private String annotatedField;
+    @DummyAnnotation private List<String> annotatedListField;
+    @DummyAnnotation private Map<String, String> annotatedMapField;
+  }
+
+  @EqualsAndHashCode
+  @Builder
+  public static class NestedAnnotationClass implements ExpressionReflectionUtils.NestedAnnotationResolver {
+    private String field;
+    @DummyAnnotation private String annotatedField;
+    @DummyAnnotation private List<String> annotatedListField;
+    @DummyAnnotation private Map<String, String> annotatedMapField;
   }
 
   private static class AccessorsBase {
@@ -120,7 +147,7 @@ public class ReflectionUtilsTest extends CategoryTest {
                    .stream()
                    .filter(f -> f.getName().contains("ield"))
                    .count())
-        .isEqualTo(5);
+        .isEqualTo(10);
   }
 
   @Test
@@ -128,7 +155,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
-        .hasSize(4);
+        .hasSize(9);
   }
 
   @Test
@@ -152,6 +179,85 @@ public class ReflectionUtilsTest extends CategoryTest {
     dummy.annotatedListField = a;
     ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, (annotation, value) -> value + " hello world");
     assertThat(dummy.annotatedListField).isEqualTo(ImmutableList.of("one hello world", "two hello world"));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testUpdateNestedField() {
+    Field dummy = Field.builder().build();
+    dummy.annotatedNestedField = NestedAnnotationClass.builder().build();
+    NestedAnnotationClass annotatedNestedField = dummy.annotatedNestedField;
+
+    annotatedNestedField.field = "one";
+    annotatedNestedField.annotatedField = "two";
+
+    annotatedNestedField.annotatedListField = new ArrayList<>();
+    annotatedNestedField.annotatedListField.add("three");
+    annotatedNestedField.annotatedListField.add("four");
+
+    annotatedNestedField.annotatedMapField = new HashMap<>();
+    annotatedNestedField.annotatedMapField.put("key1", "five");
+    annotatedNestedField.annotatedMapField.put("key2", "six");
+
+    dummy.nestedField = NestedAnnotationClass.builder().build();
+    NestedAnnotationClass nestedField = dummy.nestedField;
+
+    nestedField.field = "seven";
+    nestedField.annotatedField = "eight";
+
+    ReflectionUtils.Functor<DummyAnnotation> dummyAnnotationFunctor = (annotation, value) -> value + "!";
+    ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, dummyAnnotationFunctor);
+    assertThat(annotatedNestedField.field).isEqualTo("one");
+    assertThat(annotatedNestedField.annotatedField).isEqualTo("two!");
+    assertThat(annotatedNestedField.annotatedListField).isEqualTo(ImmutableList.of("three!", "four!"));
+    assertThat(annotatedNestedField.annotatedMapField).isEqualTo(ImmutableMap.of("key1", "five!", "key2", "six!"));
+    assertThat(nestedField.field).isEqualTo("seven");
+    assertThat(nestedField.annotatedField).isEqualTo("eight");
+
+    dummy.annotatedNonNestedField = new NonNestedClass();
+    dummy.annotatedNonNestedField.annotatedField = "nine";
+    assertThatExceptionOfType(ClassCastException.class)
+        .isThrownBy(() -> ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, dummyAnnotationFunctor));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testUpdateNestedFieldList() {
+    Field dummy = Field.builder().build();
+    NestedAnnotationClass obj1 = NestedAnnotationClass.builder().field("one").annotatedField("two").build();
+    NestedAnnotationClass obj2 = NestedAnnotationClass.builder().field("three").annotatedField("four").build();
+    dummy.annotatedNestedListField = new ArrayList<>();
+    dummy.annotatedNestedListField.add(obj1);
+    dummy.annotatedNestedListField.add(obj2);
+
+    ReflectionUtils.Functor<DummyAnnotation> dummyAnnotationFunctor = (annotation, value) -> value + "!";
+    ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, dummyAnnotationFunctor);
+
+    assertThat(dummy.annotatedNestedListField)
+        .isEqualTo(ImmutableList.of(NestedAnnotationClass.builder().field("one").annotatedField("two!").build(),
+            NestedAnnotationClass.builder().field("three").annotatedField("four!").build()));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testUpdateNestedFieldMap() {
+    Field dummy = Field.builder().build();
+    NestedAnnotationClass obj1 = NestedAnnotationClass.builder().field("one").annotatedField("two").build();
+    NestedAnnotationClass obj2 = NestedAnnotationClass.builder().field("three").annotatedField("four").build();
+    dummy.annotatedNestedMapField = new HashMap<>();
+    dummy.annotatedNestedMapField.put("key1", obj1);
+    dummy.annotatedNestedMapField.put("key2", obj2);
+
+    ReflectionUtils.Functor<DummyAnnotation> dummyAnnotationFunctor = (annotation, value) -> value + "!";
+    ReflectionUtils.updateAnnotatedField(DummyAnnotation.class, dummy, dummyAnnotationFunctor);
+
+    assertThat(dummy.annotatedNestedMapField.get("key1"))
+        .isEqualTo(NestedAnnotationClass.builder().field("one").annotatedField("two!").build());
+    assertThat(dummy.annotatedNestedMapField.get("key2"))
+        .isEqualTo(NestedAnnotationClass.builder().field("three").annotatedField("four!").build());
   }
 
   @Test
