@@ -1,6 +1,7 @@
 package software.wings.functional.vmss;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.AZURE_VMSS_API_TEST;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID;
@@ -13,7 +14,6 @@ import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.A
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.rule.OwnerRule.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 
 import com.google.inject.Inject;
 
@@ -63,8 +63,7 @@ public class AzureVMSSAPIFunctionalTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, AZURE_VMSS, bearerToken);
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(seed, owners, AZURE_VMSS_API_TEST);
     assertThat(infrastructureDefinition).isNotNull();
 
     azureCloudProvider = settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);

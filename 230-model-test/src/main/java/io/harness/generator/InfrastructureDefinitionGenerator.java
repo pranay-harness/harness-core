@@ -11,6 +11,7 @@ import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTE
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_API_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASE_SCALE_SET_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME;
@@ -182,7 +183,8 @@ public class InfrastructureDefinitionGenerator {
     AWS_WINRM_DOWNLOAD,
     AWS_SSH_FUNCTIONAL_TEST_NAS,
     AZURE_VMSS_BASIC_TEST,
-    AZURE_VMSS_BLUE_GREEN_TEST
+    AZURE_VMSS_BLUE_GREEN_TEST,
+    AZURE_VMSS_API_TEST
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -227,9 +229,11 @@ public class InfrastructureDefinitionGenerator {
       case AWS_WINRM_DOWNLOAD:
         return ensureAwsWinrmDownloadTest(seed, owners);
       case AZURE_VMSS_BASIC_TEST:
-        return ensureAzureVMSSBasic(seed, owners);
+        return ensureAzureVMSSBasicTest(seed, owners);
       case AZURE_VMSS_BLUE_GREEN_TEST:
-        return ensureAzureVMSSBlueGreen(seed, owners);
+        return ensureAzureVMSSBlueGreenTest(seed, owners);
+      case AZURE_VMSS_API_TEST:
+        return ensureAzureVMSSAPITest(seed, owners);
       default:
         unhandled(infraType);
     }
@@ -870,12 +874,16 @@ public class InfrastructureDefinitionGenerator {
     return ensureAwsAmi(seed, owners, "AMI-BASE-ASG-TODOLIST", "aws-ami-lt-infradef");
   }
 
-  private InfrastructureDefinition ensureAzureVMSSBasic(Seed seed, Owners owners) {
+  private InfrastructureDefinition ensureAzureVMSSBasicTest(Seed seed, Owners owners) {
     return ensureAzureVMSS(seed, owners, AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME);
   }
 
-  private InfrastructureDefinition ensureAzureVMSSBlueGreen(Seed seed, Owners owners) {
+  private InfrastructureDefinition ensureAzureVMSSBlueGreenTest(Seed seed, Owners owners) {
     return ensureAzureVMSS(seed, owners, AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureVMSSAPITest(Seed seed, Owners owners) {
+    return ensureAzureVMSS(seed, owners, AZURE_VMSS_API_INFRA_DEFINITION_NAME);
   }
 
   private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners, String infraDefName) {
