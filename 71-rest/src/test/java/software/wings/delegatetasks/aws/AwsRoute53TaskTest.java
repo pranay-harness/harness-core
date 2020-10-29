@@ -14,7 +14,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,11 +65,11 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
     verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
   }
 
-  @Test(expected = WingsException.class)
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testRunWithWingsException() {
-    doThrow(new WingsException("Error msg"))
+    doThrow(new InvalidRequestException("Error msg"))
         .when(mockAwsRoute53HelperServiceDelegate)
         .listHostedZones(any(), anyList(), anyString());
 

@@ -22,6 +22,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -88,9 +89,10 @@ public class AwsLambdaVerificationTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
   }
 
   @Test

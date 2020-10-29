@@ -23,6 +23,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstance
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Before;
@@ -94,7 +95,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTes
   public void getValidationTask() {
     DelegateTask delegateTask = client.getValidationTask(getPerpetualTaskClientContext(), ACCOUNT_ID);
 
-    assertThat(delegateTask.getAppId()).isEqualTo(GLOBAL_APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(GLOBAL_APP_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.SPOTINST_COMMAND_TASK.name());
     assertThat(delegateTask.getData().getParameters()).isNotEmpty();

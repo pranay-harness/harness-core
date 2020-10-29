@@ -19,7 +19,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,11 +99,11 @@ public class AwsEcsTaskTest extends WingsBaseTest {
         .isThrownBy(() -> task.run(awsEcsListClusterServicesRequest));
   }
 
-  @Test(expected = WingsException.class)
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testRunWithWingsException() {
-    doThrow(new WingsException("Error msg"))
+    doThrow(new InvalidRequestException("Error msg"))
         .when(mockEcsHelperServiceDelegate)
         .listServicesForCluster(any(), any(), anyString(), anyString());
     AwsEcsListClusterServicesRequest awsEcsListClusterServicesRequest =
@@ -112,6 +111,7 @@ public class AwsEcsTaskTest extends WingsBaseTest {
 
     AwsResponse awsResponse = task.run(awsEcsListClusterServicesRequest);
 
-    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> task.run(awsEcsListClusterServicesRequest));
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> task.run(awsEcsListClusterServicesRequest));
   }
 }

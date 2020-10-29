@@ -23,6 +23,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -196,7 +197,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     assertThat(actualCollectionInfo).isEqualTo(expectedCollectionInfo);
     assertThat(task.getAccountId()).isEqualTo(accountId);
     assertThat(task.getStatus()).isEqualTo(Status.QUEUED);
-    assertThat(task.getAppId()).isEqualTo(appId);
+    assertThat(task.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(appId);
     Map<Long,
         LinkedHashMap<String,
             LinkedHashMap<String,

@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
@@ -87,7 +87,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCatchExceptionInUpdateResourceConstraint() {
     resourceConstraintInstance.setState(State.ACTIVE.name());
-    doThrow(new WingsException("error"))
+    doThrow(new InvalidRequestException("error"))
         .when(mockResourceConstraintService)
         .updateActiveConstraintForInstance(resourceConstraintInstance);
     resourceConstraintBackupHandler.handle(resourceConstraintInstance);

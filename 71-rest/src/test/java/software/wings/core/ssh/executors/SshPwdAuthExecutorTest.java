@@ -12,7 +12,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -163,7 +163,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should return success for successful command execution.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   // Too unstable to keep even with repeats
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
@@ -258,7 +258,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null)))).isEqualTo(SUCCESS);
 
-    assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
+    assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameTextualContentAs(file).canRead().canWrite();
   }
 
   /**
@@ -288,7 +288,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt")))).isEqualTo(SUCCESS);
 
-    assertThat(new File(sshRoot.getRoot(), "text1.txt")).hasSameContentAs(file).canRead().canWrite();
+    assertThat(new File(sshRoot.getRoot(), "text1.txt")).hasSameTextualContentAs(file).canRead().canWrite();
   }
 
   /**
@@ -309,6 +309,6 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     assertThat(executor.copyFiles("/tmp/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
 
-    assertThat(new File(sshRoot.getRoot(), file.getName())).hasSameContentAs(file).canRead().canWrite();
+    assertThat(new File(sshRoot.getRoot(), file.getName())).hasSameTextualContentAs(file).canRead().canWrite();
   }
 }

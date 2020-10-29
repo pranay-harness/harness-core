@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,12 +47,12 @@ public class EcsBGRollbackRoute53DNSWeightStateTest extends WingsBaseTest {
     assertThat(state.getTimeoutMillis(mockContext)).isEqualTo(10);
   }
 
-  @Test(expected = WingsException.class)
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testExecuteWingsExceptionThrown() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    doThrow(new WingsException("test"))
+    doThrow(new InvalidRequestException("test"))
         .when((EcsBGUpdateRoute53DNSWeightState) state)
         .executeInternal(mockContext, true);
     state.execute(mockContext);

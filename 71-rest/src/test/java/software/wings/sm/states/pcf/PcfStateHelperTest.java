@@ -59,6 +59,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -358,10 +359,11 @@ public class PcfStateHelperTest extends WingsBaseTest {
     DelegateTask delegateTask = pcfStateHelper.getDelegateTask(pcfDelegateTaskCreationData);
 
     assertThat(delegateTask).isNotNull();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
     assertThat(delegateTask.getWaitId()).isEqualTo(waitId);
     assertThat(delegateTask.getData().isAsync()).isTrue();
 

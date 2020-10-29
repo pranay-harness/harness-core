@@ -13,7 +13,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SET
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,12 +37,12 @@ public class AwsAmiRollbackSwitchRoutesStateTest extends WingsBaseTest {
     verify(state).executeInternal(any(), anyBoolean());
   }
 
-  @Test(expected = WingsException.class)
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
-  public void testExecuteWithWingsException() throws InterruptedException {
+  public void testExecuteWithWingsException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    doThrow(new WingsException("Error msg"))
+    doThrow(new InvalidRequestException("Error msg"))
         .when(awsAmiServiceHelper)
         .getSetupElementFromSweepingOutput(mockContext, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     state.execute(mockContext);
@@ -52,7 +51,7 @@ public class AwsAmiRollbackSwitchRoutesStateTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
-  public void testExecuteWithInvalidRequestException() throws InterruptedException {
+  public void testExecuteWithInvalidRequestException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     doThrow(new RuntimeException("Error msg"))
         .when(awsAmiServiceHelper)

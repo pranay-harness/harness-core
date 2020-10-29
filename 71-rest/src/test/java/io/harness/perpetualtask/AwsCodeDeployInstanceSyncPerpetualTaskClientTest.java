@@ -31,6 +31,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -116,7 +117,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseT
     verify(secretManager, times(1)).getEncryptionDetails(any(EncryptableSetting.class));
 
     assertThat(validationTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(validationTask.getAppId()).isEqualTo(GLOBAL_APP_ID);
+    assertThat(validationTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(GLOBAL_APP_ID);
     assertThat(validationTask.getData().isAsync()).isFalse();
     assertThat(validationTask.getData().getParameters()).isNotEmpty();
     assertThat(validationTask.getData().getParameters()[0]).isInstanceOf(AwsEc2ListInstancesRequest.class);

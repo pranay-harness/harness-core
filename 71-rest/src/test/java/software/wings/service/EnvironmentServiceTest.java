@@ -447,7 +447,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjectsSomeFailed() {
-    doThrow(new WingsException("Forced exception")).when(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+    doThrow(new InvalidRequestException("Forced exception"))
+        .when(serviceTemplateService)
+        .pruneByEnvironment(APP_ID, ENV_ID);
 
     assertThatThrownBy(() -> environmentService.pruneDescendingEntities(APP_ID, ENV_ID));
 

@@ -59,6 +59,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.BoundedInputStream;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -300,9 +301,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     DelegateTask createdTask = taskCaptor.getValue();
     verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
 
-    assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
-    assertThat(createdTask.getAppId()).isEqualTo(APP_ID);
+    assertThat(createdTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(createdTask.getData().getParameters()).isNotEmpty();
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
@@ -342,9 +342,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     DelegateTask createdTask = taskCaptor.getValue();
 
     verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
-    assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
-    assertThat(createdTask.getAppId()).isEqualTo(APP_ID);
+    assertThat(createdTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(createdTask.getData().getParameters()).isNotEmpty();
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
@@ -396,9 +395,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     DelegateTask createdTask = taskCaptor.getValue();
     verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
 
-    assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
-    assertThat(createdTask.getAppId()).isEqualTo(APP_ID);
+    assertThat(createdTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(createdTask.getData().getParameters()).isNotEmpty();
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
@@ -434,9 +432,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     DelegateTask createdTask = taskCaptor.getValue();
     verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
 
-    assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
-    assertThat(createdTask.getAppId()).isEqualTo(APP_ID);
+    assertThat(createdTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(createdTask.getData().getParameters()).isNotEmpty();
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
