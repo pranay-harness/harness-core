@@ -38,7 +38,7 @@ public class CIPipelineCRUDFunctionalTest extends CategoryTest {
 
   @Test
   @Owner(developers = ALEKSANDAR)
-  @Category(FunctionalTests.class)
+  @Category({FunctionalTests.class})
   public void shouldTestCRUDPipelineFlow() throws IOException {
     String pipelineTemplate = IOUtils.toString(
         CIPipelineCRUDFunctionalTest.class.getResourceAsStream("pipeline.yml"), StandardCharsets.UTF_8);

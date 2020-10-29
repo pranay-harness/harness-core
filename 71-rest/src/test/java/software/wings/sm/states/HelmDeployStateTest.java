@@ -501,6 +501,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(delegateTask.getSetupAbstractions()).containsKey(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD))
         .isEqualTo(SERVICE_TEMPLATE_ID);
+    assertThat(delegateTask.getSetupAbstractions()).containsKey(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(300000);
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);

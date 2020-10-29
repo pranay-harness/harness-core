@@ -732,6 +732,7 @@ public class HelmDeployState extends State {
     final Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
+    String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
 
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
@@ -905,6 +906,7 @@ public class HelmDeployState extends State {
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
                 serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, artifactStreamId)
             .data(TaskData.builder()
                       .async(true)
                       .taskType(HELM_COMMAND_TASK.name())
