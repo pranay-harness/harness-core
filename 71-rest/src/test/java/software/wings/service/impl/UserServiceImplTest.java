@@ -60,7 +60,7 @@ public class UserServiceImplTest extends WingsBaseTest {
     userServiceImpl.trialSignup(userInvite);
     // Verifying that the mail is sent and event is published when a new user sign ups for trial
     Mockito.verify(accountService, times(1)).validateAccount(any(Account.class));
-    Mockito.verify(signupService, times(1)).sendTrialSignupVerificationEmail(any(), any());
+    Mockito.verify(signupService, times(1)).sendEmail(any(), any(), any());
     Mockito.verify(eventPublishHelper, times(1)).publishTrialUserSignupEvent(any(), any(), any());
   }
 
