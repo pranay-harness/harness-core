@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.ClusteredLog;
@@ -176,7 +177,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     assertThat(tasks.size()).isEqualTo(1);
     LogClusterLearningEngineTask logCanaryAnalysisLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
     assertThat(logCanaryAnalysisLearningEngineTask.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/log-cluster/test-data?verificationTaskId=" + verificationTaskId
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/test-data?verificationTaskId=" + verificationTaskId
             + "&startTime=1595845740000&endTime=1595847540000&clusterLevel=L2");
     assertThat(logCanaryAnalysisLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
@@ -211,8 +212,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     assertThat(tasks.size()).isEqualTo(1);
     LogClusterLearningEngineTask testLogClusterLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
     assertThat(testLogClusterLearningEngineTask.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/log-cluster/l1-test-verification-test-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846760000&endTime=1595847540000");
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/l1-test-verification-test-data?verificationTaskId="
+            + verificationTaskId + "&startTime=1595846760000&endTime=1595847540000");
     assertThat(testLogClusterLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
   @Test

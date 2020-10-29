@@ -64,9 +64,7 @@ public class CVNGAppStartupTest extends CvNextGenTest {
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
-        client.target(String.format("http://localhost:%d/cv-nextgen/swagger.json", SUPPORT.getLocalPort()))
-            .request()
-            .get();
+        client.target(String.format("http://localhost:%d/cv/api/swagger.json", SUPPORT.getLocalPort())).request().get();
     assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
     response.close();
   }

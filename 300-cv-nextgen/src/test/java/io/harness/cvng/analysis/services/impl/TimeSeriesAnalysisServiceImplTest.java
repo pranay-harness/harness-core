@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
@@ -480,11 +481,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
     assertThat(task.getControlDataUrl()).isNull();
     assertThat(task.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846766390&endTime=1595847306390");
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/timeseries-analysis/time-series-data?verificationTaskId="
+            + verificationTaskId + "&startTime=1595846766390&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
-        .isEqualTo("/cv-nextgen/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
-            + verificationTaskId);
+        .isEqualTo(CVConstants.SERVICE_BASE_URL
+            + "/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId=" + verificationTaskId);
     assertThat(task.getDataLength()).isEqualTo(9);
     assertThat(task.getTolerance()).isEqualTo(2);
   }

@@ -3,7 +3,7 @@ package io.harness.cvng;
 import java.time.Duration;
 
 public interface CVConstants {
-  String SERVICE_BASE_URL = "/cv-nextgen";
+  String SERVICE_BASE_URL = "/cv/api";
   Duration VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION = Duration.ofDays(30);
   /**
    * This should be set in findOption for the queries that are potentially working with large data.
