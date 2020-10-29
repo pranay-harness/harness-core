@@ -14,6 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GcpMarketplaceException;
 import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
@@ -25,12 +26,15 @@ import software.wings.service.intfc.AccountService;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GcpMarketplaceMessageReceiver implements MessageReceiver {
+  private static final String PRODUCT_NAME_FIELD = "productExternalName";
+
   private final WingsPersistence wingsPersistence;
   private final AccountService accountService;
   private final GcpProcurementService gcpProcurementService;
@@ -59,6 +63,8 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
 
     if (ack) {
       consumer.ack();
+    } else {
+      consumer.nack();
     }
   }
 
@@ -88,6 +94,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
   }
 
   public boolean processAccount(ProcurementPubsubMessage.AccountMessage accountMessage) throws IOException {
+    // we are expecting and processing only DELETE_ACCOUNT message
     String gcpAccountId = accountMessage.getId();
     GCPMarketplaceCustomer gcpMarketplaceCustomer = getCustomer(gcpAccountId);
     Account account = gcpProcurementService.getAccount(gcpAccountId);
@@ -171,11 +178,12 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
         .get();
   }
 
-  private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) throws IOException {
+  private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
     GCPMarketplaceProductBuilder product = GCPMarketplaceProduct.builder();
-    String productName = gcpProcurementService.getProductNameFromEntitlement(entitlement.getName());
+    String productName = (String) entitlement.get(PRODUCT_NAME_FIELD);
     product.product(productName);
     product.plan(entitlement.getPlan());
+    product.quoteId((String) entitlement.get("quoteExternalName"));
     product.startTime(Instant.parse(entitlement.getCreateTime()));
     String usageReportingId = entitlement.getUsageReportingId();
     if (StringUtils.isNotBlank(usageReportingId)) {
@@ -189,6 +197,10 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     } else {
       getGcpProductHandler(productName).handleNewSubscription(customer.getHarnessAccountId(), entitlement.getPlan());
     }
+
+    if (null == customer.getProducts()) {
+      customer.setProducts(new ArrayList<>());
+    }
     customer.getProducts().add(product.build());
     wingsPersistence.save(customer);
   }
@@ -198,23 +210,25 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
   }
 
   private Optional<GCPMarketplaceProduct> getProduct(GCPMarketplaceCustomer customer, String productName) {
+    if (CollectionUtils.isEmpty(customer.getProducts())) {
+      return Optional.empty();
+    }
     for (GCPMarketplaceProduct subscribedProduct : customer.getProducts()) {
       if (subscribedProduct.getProduct().equals(productName)) {
         return Optional.of(subscribedProduct);
       }
     }
-
     return Optional.empty();
   }
 
-  private void cancelCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) throws IOException {
-    String productName = gcpProcurementService.getProductNameFromEntitlement(entitlement.getName());
+  private void cancelCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
+    String productName = (String) entitlement.get(PRODUCT_NAME_FIELD);
     getGcpProductHandler(productName).handleSubscriptionCancellation(customer.getHarnessAccountId());
 
     Optional<GCPMarketplaceProduct> productToCancel = getProduct(customer, productName);
     productToCancel.ifPresent(gcpMarketplaceProduct -> customer.getProducts().remove(gcpMarketplaceProduct));
 
-    if (customer.getProducts().isEmpty()) {
+    if (CollectionUtils.isEmpty(customer.getProducts())) {
       // deactivate Harness account if there is no active products left
       accountService.updateAccountStatus(customer.getHarnessAccountId(), AccountStatus.INACTIVE);
     }

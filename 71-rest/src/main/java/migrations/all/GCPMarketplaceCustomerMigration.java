@@ -73,7 +73,8 @@ public class GCPMarketplaceCustomerMigration implements Migration {
         Entitlement entitlement = activeEntitlement.get();
         products.add(GCPMarketplaceProduct.builder()
                          .plan(entitlement.getPlan())
-                         .product(gcpProcurementService.getProductNameFromEntitlement(entitlement.getName()))
+                         .product((String) entitlement.get("productExternalName"))
+                         .quoteId((String) entitlement.get("quoteExternalName"))
                          .startTime(Instant.parse(entitlement.getCreateTime()))
                          .usageReportingId(entitlement.getUsageReportingId())
                          .build());

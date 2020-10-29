@@ -14,6 +14,7 @@ import java.time.Instant;
 public class GCPMarketplaceProduct {
   String product;
   String plan;
+  String quoteId;
   String usageReportingId;
   Instant startTime;
   Instant lastUsageReportTime;
