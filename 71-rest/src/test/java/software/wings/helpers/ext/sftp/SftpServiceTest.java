@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.sftp;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -50,7 +50,7 @@ public class SftpServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt", "dir1/b.txt"));

@@ -1220,7 +1220,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
-    assertThat(captor.getValue().getInfrastructureMappingId()).isEqualTo(null);
+    assertThat(captor.getValue().getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(null);
 
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(null);
     try {

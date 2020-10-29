@@ -15,7 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.NotImplementedException;
@@ -77,7 +77,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
   public void testRunObjectsFailure() {
     EcsCommandTaskHandler mockEcsCommandTaskHandler = mock(EcsCommandTaskHandler.class);
     doReturn(mockEcsCommandTaskHandler).when(commandTaskTypeToTaskHandlerMap).get(any());
-    doThrow(new WingsException("exeception")).when(mockEcsCommandTaskHandler).executeTask(any(), any());
+    doThrow(new InvalidRequestException("exeception")).when(mockEcsCommandTaskHandler).executeTask(any(), any());
 
     Object[] inputParams = new Object[2];
     inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP);

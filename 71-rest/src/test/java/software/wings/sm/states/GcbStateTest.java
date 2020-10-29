@@ -43,6 +43,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Rule;
@@ -267,8 +268,9 @@ public class GcbStateTest extends CategoryTest {
     DelegateTask delegateTask = delegateTaskCaptor.getValue();
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo("infrastructureId");
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo("infrastructureId");
     assertThat(delegateTask.getData())
         .isEqualTo(TaskData.builder()
                        .async(true)

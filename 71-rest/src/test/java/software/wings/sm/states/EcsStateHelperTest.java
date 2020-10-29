@@ -56,6 +56,7 @@ import io.harness.ecs.EcsContainerDetails;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -484,10 +485,11 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof EcsServiceSetupRequest).isTrue();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
   }
 
   @Test
@@ -577,10 +579,11 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof EcsServiceDeployRequest).isTrue();
-    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
-    assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
-    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
   }
 
   @Test
