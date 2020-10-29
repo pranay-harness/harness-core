@@ -2,6 +2,7 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -320,6 +321,36 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   }
 
   @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testAddProfileShouldValidateScopes() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Map<String, ScopingValues> grpcScopingEntities = new HashMap<>();
+
+    DelegateProfileGrpc delegateProfileGrpc =
+        DelegateProfileGrpc.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(accountId).build())
+            .setProfileId(ProfileId.newBuilder().setId(profileId).build())
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setPrimary(true)
+            .setApprovalRequired(true)
+            .setStartupScript(STARTUP_SCRIPT)
+            .addAllSelectors(Arrays.asList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
+            .addAllScopingRules(Arrays.asList(ProfileScopingRule.newBuilder()
+                                                  .setDescription(SCOPING_RULE_DESCRIPTION)
+                                                  .putAllScopingEntities(grpcScopingEntities)
+                                                  .build()))
+            .build();
+
+    assertThatThrownBy(() -> delegateProfileServiceGrpcClient.addProfile(delegateProfileGrpc))
+        .isInstanceOf(DelegateServiceDriverException.class)
+        .hasMessage("Scoping rule should have at least one scoping value set!");
+  }
+
+  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testUpdateProfile() {
@@ -346,6 +377,36 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     // Test profile updated
     DelegateProfileGrpc savedDelegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfile(delegateProfileGrpc);
     assertThat(savedDelegateProfileGrpc).isEqualTo(delegateProfileGrpc);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testUpdateProfileShouldValidateScopes() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Map<String, ScopingValues> grpcScopingEntities = new HashMap<>();
+
+    DelegateProfileGrpc delegateProfileGrpc =
+        DelegateProfileGrpc.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(accountId).build())
+            .setProfileId(ProfileId.newBuilder().setId(profileId).build())
+            .setName(NAME)
+            .setDescription(DESCRIPTION)
+            .setPrimary(true)
+            .setApprovalRequired(true)
+            .setStartupScript(STARTUP_SCRIPT)
+            .addAllSelectors(Arrays.asList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
+            .addAllScopingRules(Arrays.asList(ProfileScopingRule.newBuilder()
+                                                  .setDescription(SCOPING_RULE_DESCRIPTION)
+                                                  .putAllScopingEntities(grpcScopingEntities)
+                                                  .build()))
+            .build();
+
+    assertThatThrownBy(() -> delegateProfileServiceGrpcClient.updateProfile(delegateProfileGrpc))
+        .isInstanceOf(DelegateServiceDriverException.class)
+        .hasMessage("Scoping rule should have at least one scoping value set!");
   }
 
   @Test
@@ -458,5 +519,26 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
         AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(), null);
 
     assertThat(delegateProfileGrpc).isNull();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testUpdateScopingRulesShouldValidateScopes() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Map<String, ScopingValues> grpcScopingEntities = new HashMap<>();
+
+    assertThatThrownBy(
+        ()
+            -> delegateProfileServiceGrpcClient.updateProfileScopingRules(
+                AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(),
+                Arrays.asList(ProfileScopingRule.newBuilder()
+                                  .setDescription(SCOPING_RULE_DESCRIPTION)
+                                  .putAllScopingEntities(grpcScopingEntities)
+                                  .build())))
+        .isInstanceOf(DelegateServiceDriverException.class)
+        .hasMessage("Scoping rule should have at least one scoping value set!");
   }
 }

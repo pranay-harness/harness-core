@@ -2,14 +2,13 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -23,6 +22,7 @@ import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ScopingValues;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
@@ -35,7 +35,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateProfileManagerServiceImpl;
 
 import java.util.Arrays;
@@ -52,7 +51,6 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @InjectMocks private DelegateProfileManagerServiceImpl delegateProfileManagerService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  @Inject private WingsPersistence wingsPersistence;
 
   @Test
   @Owner(developers = OwnerRule.SANJA)
@@ -156,6 +154,23 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
+  public void shouldValidateScopesWhenUpdatingProfile() {
+    DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .name("test")
+                                               .description("description")
+                                               .startupScript("startupScript")
+                                               .build();
+    ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
+    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    assertThatThrownBy(() -> delegateProfileManagerService.update(profileDetail))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Scoping rule needs to have application id set!");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SANJA)
+  @Category(UnitTests.class)
   public void shouldAdd() {
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(ScopingRuleDetailsKeys.applicationId, ScopingValues.newBuilder().addValue("appId").build());
@@ -196,14 +211,34 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.SANJA)
   @Category(UnitTests.class)
+  public void shouldValidateScopesWhenAddingProfile() {
+    DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .name("test")
+                                               .description("description")
+                                               .startupScript("startupScript")
+                                               .build();
+    ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
+    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    assertThatThrownBy(() -> delegateProfileManagerService.add(profileDetail))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Scoping rule needs to have application id set!");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SANJA)
+  @Category(UnitTests.class)
   public void shouldUpdateScopingRules() {
     DelegateProfileGrpc delegateProfileGrpc = DelegateProfileGrpc.newBuilder()
                                                   .setAccountId(AccountId.newBuilder().setId(generateUuid()).build())
                                                   .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
                                                   .build();
 
-    ScopingRuleDetails scopingRuleDetail =
-        ScopingRuleDetails.builder().description("test").environmentIds(new HashSet<>(asList("PROD"))).build();
+    ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder()
+                                               .description("test")
+                                               .applicationId("appId")
+                                               .environmentIds(new HashSet<>(asList("PROD")))
+                                               .build();
 
     when(delegateProfileServiceGrpcClient.updateProfileScopingRules(
              any(AccountId.class), any(ProfileId.class), anyList()))
@@ -221,6 +256,24 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
         .isEqualTo(delegateProfileGrpc.getProfileId().getId());
     Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
         .isEqualTo(delegateProfileGrpc.getAccountId().getId());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SANJA)
+  @Category(UnitTests.class)
+  public void shouldValidateScopesWhenUpdatingScopingRule() {
+    DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .name("test")
+                                               .description("description")
+                                               .startupScript("startupScript")
+                                               .build();
+    ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
+    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    assertThatThrownBy(
+        () -> delegateProfileManagerService.updateScopingRules(ACCOUNT_ID, generateUuid(), asList(scopingRuleDetail)))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Scoping rule needs to have application id set!");
   }
 
   @Test

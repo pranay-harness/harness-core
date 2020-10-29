@@ -1,5 +1,7 @@
 package io.harness.grpc;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,6 +20,7 @@ import io.harness.delegateprofile.ListProfilesResponse;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
+import io.harness.delegateprofile.ScopingValues;
 import io.harness.delegateprofile.UpdateProfileRequest;
 import io.harness.delegateprofile.UpdateProfileResponse;
 import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
@@ -69,6 +72,7 @@ public class DelegateProfileServiceGrpcClient {
 
   public DelegateProfileGrpc addProfile(DelegateProfileGrpc delegateProfileGrpc) {
     try {
+      validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       AddProfileResponse addProfileResponse = delegateProfileServiceBlockingStub.addProfile(
           AddProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
 
@@ -80,6 +84,7 @@ public class DelegateProfileServiceGrpcClient {
 
   public DelegateProfileGrpc updateProfile(DelegateProfileGrpc delegateProfileGrpc) {
     try {
+      validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       UpdateProfileResponse updateProfileResponse = delegateProfileServiceBlockingStub.updateProfile(
           UpdateProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
 
@@ -133,6 +138,7 @@ public class DelegateProfileServiceGrpcClient {
       if (scopingRules == null) {
         scopingRules = Collections.emptyList();
       }
+      validateScopingRules(scopingRules);
 
       UpdateProfileScopingRulesResponse updateProfileScopingRulesResponse =
           delegateProfileServiceBlockingStub.updateProfileScopingRules(UpdateProfileScopingRulesRequest.newBuilder()
@@ -149,6 +155,26 @@ public class DelegateProfileServiceGrpcClient {
 
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while updating profile scoping rules.", ex);
+    }
+  }
+
+  private void validateScopingRules(List<ProfileScopingRule> scopingRules) {
+    if (isEmpty(scopingRules)) {
+      return;
+    }
+    for (ProfileScopingRule scopingRule : scopingRules) {
+      boolean hasAtLeastOneScopingValue = false;
+      if (scopingRule.getScopingEntitiesMap() != null && scopingRule.getScopingEntitiesMap().keySet().size() > 0) {
+        for (String entityKey : scopingRule.getScopingEntitiesMap().keySet()) {
+          ScopingValues values = scopingRule.getScopingEntitiesMap().get(entityKey);
+          if (values != null && values.getValueCount() > 0) {
+            hasAtLeastOneScopingValue = true;
+          }
+        }
+      }
+      if (!hasAtLeastOneScopingValue) {
+        throw new DelegateServiceDriverException("Scoping rule should have at least one scoping value set!");
+      }
     }
   }
 }

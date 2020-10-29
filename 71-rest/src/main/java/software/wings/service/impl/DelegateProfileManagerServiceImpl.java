@@ -23,6 +23,7 @@ import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails update(DelegateProfileDetails delegateProfile) {
+    validateScopingRules(delegateProfile.getScopingRules());
     DelegateProfileGrpc updateDelegateProfileGrpc =
         delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
 
@@ -83,6 +85,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   @Override
   public DelegateProfileDetails updateScopingRules(
       String accountId, String delegateProfileId, List<ScopingRuleDetails> scopingRules) {
+    validateScopingRules(scopingRules);
     List<ProfileScopingRule> grpcScopingRules = convert(scopingRules);
 
     DelegateProfileGrpc delegateProfileGrpc =
@@ -113,6 +116,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails add(DelegateProfileDetails delegateProfile) {
+    validateScopingRules(delegateProfile.getScopingRules());
     DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(convert(delegateProfile));
 
     if (delegateProfileGrpc == null) {
@@ -332,5 +336,16 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     return new HashSet<>(scopingValues.getValueList());
+  }
+
+  private void validateScopingRules(List<ScopingRuleDetails> scopingRules) {
+    if (isEmpty(scopingRules)) {
+      return;
+    }
+    for (ScopingRuleDetails scopingRule : scopingRules) {
+      if (isEmpty(scopingRule.getApplicationId())) {
+        throw new InvalidArgumentsException("Scoping rule needs to have application id set!");
+      }
+    }
   }
 }
