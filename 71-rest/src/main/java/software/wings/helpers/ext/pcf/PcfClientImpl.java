@@ -44,6 +44,7 @@ import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Utils;
+import io.harness.network.Http;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +83,7 @@ import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
+import org.cloudfoundry.reactor.ProxyConfiguration;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
@@ -129,6 +131,7 @@ import java.util.stream.Collectors;
 public class PcfClientImpl implements PcfClient {
   public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
+  public static final String PCF_PROXY_PROPERTY = "https_proxy";
 
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
@@ -621,8 +624,8 @@ public class PcfClientImpl implements PcfClient {
 
   @VisibleForTesting
   Map<String, String> getAppAutoscalarEnvMapForCustomPlugin(PcfAppAutoscalarRequestData appAutoscalarRequestData) {
-    Map<String, String> environmentMapForPcfExecutor =
-        getEnvironmentMapForPcfExecutor(appAutoscalarRequestData.getConfigPathVar());
+    Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
+        appAutoscalarRequestData.getPcfRequestConfig().getEndpointUrl(), appAutoscalarRequestData.getConfigPathVar());
     // set CUSTOM_PLUGIN_HOME, NEEDED FOR AUTO-SCALAR PLUIN
     environmentMapForPcfExecutor.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
     return environmentMapForPcfExecutor;
@@ -747,7 +750,8 @@ public class PcfClientImpl implements PcfClient {
 
   @VisibleForTesting
   Map<String, String> getEnvironmentMapForPcfPush(PcfCreateApplicationRequestData requestData) {
-    Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar());
+    Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
+        requestData.getPcfRequestConfig().getEndpointUrl(), requestData.getConfigPathVar());
     ArtifactStreamAttributes artifactStreamAttributes = requestData.getSetupRequest().getArtifactStreamAttributes();
     if (artifactStreamAttributes.isDockerBasedDeployment()) {
       char[] password = getPassword(artifactStreamAttributes);
@@ -800,17 +804,35 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @VisibleForTesting
-  Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {
-    return getEnvironmentMapForPcfExecutor(configPathVar, null);
+  Map<String, String> getEnvironmentMapForPcfExecutor(String endpointUrl, String configPathVar) {
+    return getEnvironmentMapForPcfExecutor(endpointUrl, configPathVar, null);
   }
 
-  private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar, String pluginHomeAbsPath) {
+  private Map<String, String> getEnvironmentMapForPcfExecutor(
+      String endpointUrl, String configPathVar, String pluginHomeAbsPath) {
     final Map<String, String> map = new HashMap<>();
     map.put(CF_HOME, configPathVar);
     if (isNotEmpty(pluginHomeAbsPath)) {
       map.put(CF_PLUGIN_HOME, pluginHomeAbsPath);
     }
+    addProxyPropertyIfRequired(endpointUrl, map);
     return map;
+  }
+
+  private void addProxyPropertyIfRequired(String endpointUrl, Map<String, String> map) {
+    String proxyHostName = Http.getProxyHostName();
+    if (!Http.shouldUseNonProxy(endpointUrl) && isNotEmpty(proxyHostName)) {
+      String authDetails = "";
+      if (Http.getProxyPassword() != null && Http.getProxyUserName() != null) {
+        authDetails = String.format("%s:%s@", Http.getProxyUserName(), Http.getProxyPassword());
+      }
+      String portProperty = Http.getProxyPort();
+      String portDetails = "";
+      if (!portProperty.equals("80")) {
+        portDetails = String.format(":%s", Http.getProxyPort());
+      }
+      map.put(PCF_PROXY_PROPERTY, Http.getProxyScheme() + "://" + authDetails + proxyHostName + portDetails);
+    }
   }
 
   int executeCommand(String command, Map<String, String> env, ExecutionLogCallback logCallback)
@@ -843,7 +865,7 @@ public class PcfClientImpl implements PcfClient {
 
     String command;
     int exitValue;
-    Map<String, String> env = getEnvironmentMapForPcfExecutor(configPathVar);
+    Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(), configPathVar);
 
     command = format("cf api %s --skip-ssl-validation", pcfRequestConfig.getEndpointUrl());
     exitValue = executeCommand(command, env, executionLogCallback);
@@ -1380,8 +1402,8 @@ public class PcfClientImpl implements PcfClient {
                 .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
                 .command(BIN_BASH, "-c", pcfRunPluginScriptRequestData.getFinalScriptString())
                 .readOutput(true)
-                .environment(
-                    getEnvironmentMapForPcfExecutor(pcfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome))
+                .environment(getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(),
+                    pcfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome))
                 .redirectOutput(new LogOutputStream() {
                   @Override
                   protected void processLine(String line) {
@@ -1440,7 +1462,8 @@ public class PcfClientImpl implements PcfClient {
         .command(
             BIN_BASH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, pcfRequestConfig.getApplicationName()))
         .readOutput(true)
-        .environment(getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath()))
+        .environment(
+            getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(), pcfRequestConfig.getCfHomeDirPath()))
         .redirectOutput(new LogOutputStream() {
           @Override
           protected void processLine(String line) {
@@ -1555,7 +1578,8 @@ public class PcfClientImpl implements PcfClient {
       if (isNotEmpty(routes)) {
         int exitcode;
         String command;
-        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        Map<String, String> env =
+            getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(), pcfRequestConfig.getCfHomeDirPath());
         for (String route : routes) {
           logCallback.saveExecutionLog(format("Extracting info from route: [%s]", route));
           PcfRouteInfo info = extractRouteInfoFromPath(domainNames, route);
@@ -1608,7 +1632,8 @@ public class PcfClientImpl implements PcfClient {
       if (isNotEmpty(envVars)) {
         int exitcode;
         String command;
-        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        Map<String, String> env =
+            getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(), pcfRequestConfig.getCfHomeDirPath());
         logCallback.saveExecutionLog(color(
             "\n # Set Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White, Bold));
         for (Map.Entry<String, Object> entry : envVars.entrySet()) {
@@ -1664,7 +1689,8 @@ public class PcfClientImpl implements PcfClient {
       if (isNotEmpty(varNames)) {
         int exitcode;
         String command;
-        Map<String, String> env = getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath());
+        Map<String, String> env =
+            getEnvironmentMapForPcfExecutor(pcfRequestConfig.getEndpointUrl(), pcfRequestConfig.getCfHomeDirPath());
         logCallback.saveExecutionLog(color(
             "\n # Unset Environment Variables for Application: " + pcfRequestConfig.getApplicationName(), White, Bold));
         for (String var : varNames) {
@@ -1884,10 +1910,12 @@ public class PcfClientImpl implements PcfClient {
   ConnectionContext getConnectionContext(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
-      DefaultConnectionContext.Builder builder = DefaultConnectionContext.builder()
-                                                     .apiHost(pcfRequestConfig.getEndpointUrl())
-                                                     .skipSslValidation(true)
-                                                     .connectTimeout(Duration.ofMinutes(timeout));
+      DefaultConnectionContext.Builder builder =
+          DefaultConnectionContext.builder()
+              .apiHost(pcfRequestConfig.getEndpointUrl())
+              .skipSslValidation(true)
+              .connectTimeout(Duration.ofMinutes(timeout))
+              .proxyConfiguration(getProxyConfiguration(pcfRequestConfig.getEndpointUrl()));
       if (pcfRequestConfig.isLimitPcfThreads()) {
         builder.threadPoolSize(1);
       } else {
@@ -1897,6 +1925,26 @@ public class PcfClientImpl implements PcfClient {
     } catch (Exception t) {
       throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }
+  }
+
+  private Optional<ProxyConfiguration> getProxyConfiguration(String url) {
+    String proxyHostName = Http.getProxyHostName();
+    if (Http.shouldUseNonProxy(url) || isEmpty(proxyHostName)) {
+      return Optional.empty();
+    }
+
+    Optional<Integer> port = Optional.empty();
+    String proxyPort = Http.getProxyPort();
+    if (isNotEmpty(proxyPort)) {
+      port = Optional.of(Integer.parseInt(proxyPort));
+    }
+
+    return Optional.of(ProxyConfiguration.builder()
+                           .host(proxyHostName)
+                           .port(port)
+                           .password(Optional.ofNullable(Http.getProxyUserName()))
+                           .username(Optional.ofNullable(Http.getProxyPassword()))
+                           .build());
   }
 
   private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {

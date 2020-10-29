@@ -17,6 +17,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -136,6 +137,7 @@ public class PivotalClientTest extends WingsBaseTest {
     when(operations.applications()).thenReturn(applications);
     when(operations.routes()).thenReturn(routes);
     doReturn(wrapper).when(client).getCloudFoundryOperationsWrapper(any());
+    clearProperties();
   }
 
   @Test
@@ -927,7 +929,10 @@ public class PivotalClientTest extends WingsBaseTest {
   public void testGetAppAutoscalarEnvMapForCustomPlugin() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
-        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+        PcfAppAutoscalarRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .configPathVar(PATH)
+            .build());
 
     assertThat(appAutoscalarEnvMapForCustomPlugin.size()).isEqualTo(2);
     assertThat(appAutoscalarEnvMapForCustomPlugin.get(CF_HOME)).isEqualTo(PATH);
@@ -939,7 +944,10 @@ public class PivotalClientTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateProccessExecutorForPcfTask() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
-        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+        PcfAppAutoscalarRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .configPathVar(PATH)
+            .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
@@ -956,7 +964,10 @@ public class PivotalClientTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
-        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+        PcfAppAutoscalarRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .configPathVar(PATH)
+            .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
@@ -1141,7 +1152,7 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(0).when(client).executeCommand(anyString(), any(), any());
     Map<String, String> env = new HashMap<>();
     env.put("CF_HOME", "CF_HOME");
-    doReturn(env).when(client).getEnvironmentMapForPcfExecutor(anyString());
+    doReturn(env).when(client).getEnvironmentMapForPcfExecutor(anyString(), anyString());
     PcfRequestConfig config = PcfRequestConfig.builder()
                                   .endpointUrl("api.pivotal.io")
                                   .userName("user")
@@ -1381,7 +1392,10 @@ public class PivotalClientTest extends WingsBaseTest {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
     artifactStreamAttributes.setServerSetting(serverSetting);
     PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder().build();
-    PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder().build();
+    PcfCreateApplicationRequestData requestData =
+        PcfCreateApplicationRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .build();
     pcfCommandSetupRequest.setArtifactStreamAttributes(artifactStreamAttributes);
     requestData.setSetupRequest(pcfCommandSetupRequest);
 
@@ -1435,7 +1449,7 @@ public class PivotalClientTest extends WingsBaseTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testgetAllDomainsForSpace() throws Exception {
+  public void testGetAllDomainsForSpace() throws Exception {
     when(client.getCloudFoundryOperationsWrapper(getPcfRequestConfig()).getCloudFoundryOperations().domains())
         .thenReturn(domains);
 
@@ -1643,5 +1657,66 @@ public class PivotalClientTest extends WingsBaseTest {
     method.invoke(client, pcfRequestConfig, builder);
     ApplicationManifest applicationManifest = builder.build();
     assertThat(applicationManifest.getRoutes()).isEqualTo(routesList);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetEnvironmentMapForPcfExecutorWithNoProxyPort() {
+    PcfClientImpl client = spy(new PcfClientImpl());
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "80");
+    Map<String, String> environmentProperties = client.getEnvironmentMapForPcfExecutor("app.host.io", "test");
+    assertThat(environmentProperties.size()).isEqualTo(2);
+    assertThat(environmentProperties.get("https_proxy")).isEqualTo("http://testProxyHost");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetEnvironmentMapForPcfExecutorWithProxyPort() {
+    PcfClientImpl client = spy(new PcfClientImpl());
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "8080");
+    Map<String, String> environmentProperties = client.getEnvironmentMapForPcfExecutor("app.host.io", "test");
+    assertThat(environmentProperties.size()).isEqualTo(2);
+    assertThat(environmentProperties.get("https_proxy")).isEqualTo("http://testProxyHost:8080");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetEnvironmentMapForPcfExecutorWithAuthDetail() {
+    PcfClientImpl client = spy(new PcfClientImpl());
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "8080");
+    System.setProperty("http.proxyUser", "username");
+    System.setProperty("http.proxyPassword", "password");
+    Map<String, String> environmentProperties = client.getEnvironmentMapForPcfExecutor("app.host.io", "test");
+    assertThat(environmentProperties.size()).isEqualTo(2);
+    assertThat(environmentProperties.get("https_proxy")).isEqualTo("http://username:password@testProxyHost:8080");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetEnvironmentMapForNoProxyHost() {
+    PcfClientImpl client = spy(new PcfClientImpl());
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "8080");
+    System.setProperty("http.proxyUser", "username");
+    System.setProperty("http.proxyPassword", "password");
+    System.setProperty("http.nonProxyHosts", "*.host.io");
+    Map<String, String> environmentProperties = client.getEnvironmentMapForPcfExecutor("app.host.io", "test");
+    assertThat(environmentProperties.size()).isEqualTo(1);
+    assertThat(environmentProperties.get("https_proxy")).isNull();
+  }
+
+  private void clearProperties() {
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+    System.clearProperty("http.proxyUser");
+    System.clearProperty("http.proxyPassword");
+    System.clearProperty("http.nonProxyHosts");
   }
 }
