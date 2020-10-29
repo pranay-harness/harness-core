@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -18,6 +17,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -56,7 +56,7 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
-        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
