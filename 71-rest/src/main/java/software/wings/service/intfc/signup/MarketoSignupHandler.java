@@ -42,7 +42,7 @@ public class MarketoSignupHandler implements SignupHandler {
       userInvite.setUuid(inviteId);
 
       // Send an email invitation for the trial user to finish up the sign-up with asking password.
-      signupService.sendMarketoSignupVerificationEmail(userInvite);
+      signupService.sendPasswordSetupMailForSignup(userInvite);
       eventPublishHelper.publishTrialUserSignupEvent(
           emailAddress, userInvite.getName(), inviteId, userInvite.getCompanyName());
     } else if (userInviteInDB.isCompleted()) {
@@ -56,7 +56,7 @@ public class MarketoSignupHandler implements SignupHandler {
         return false;
       }
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
-      signupService.sendMarketoSignupVerificationEmail(userInvite);
+      signupService.sendPasswordSetupMailForSignup(userInvite);
     }
     return true;
   }
