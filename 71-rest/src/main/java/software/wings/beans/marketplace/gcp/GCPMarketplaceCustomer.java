@@ -27,7 +27,7 @@ public final class GCPMarketplaceCustomer implements PersistentEntity, UuidAware
 
   private final String gcpAccountId;
   private final String harnessAccountId;
-  private final List<GCPMarketplaceProduct> products;
+  private List<GCPMarketplaceProduct> products;
 
   private long createdAt;
   private long lastUpdatedAt;

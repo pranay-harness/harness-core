@@ -3,7 +3,6 @@ package io.harness.marketplace.gcp.procurement;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.GenericJson;
 import com.google.cloudcommerceprocurement.v1.CloudCommercePartnerProcurementService;
 import com.google.cloudcommerceprocurement.v1.model.Account;
 import com.google.cloudcommerceprocurement.v1.model.ApproveAccountRequest;
@@ -36,7 +35,6 @@ public class GcpProcurementService {
   private static final String ACCOUNT_NAME_PATTERN = "providers/{}/accounts/{}";
   private static final String ENTITLEMENT_NAME_PATTERN = "providers/{}/entitlements/{}";
   private static final String PROVIDER_NAME_PATTERN = "providers/{}";
-  private static final String PRODUCT_NAME_FIELD = "productExternalName";
 
   @Inject private static ProcurementAPIClientBuilder procurementAPIClientBuilder = new ProcurementAPIClientBuilder();
 
@@ -68,6 +66,7 @@ public class GcpProcurementService {
         MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
     ApproveEntitlementRequest request = new ApproveEntitlementRequest();
     getProcurementService().providers().entitlements().approve(entitlementName, request).execute();
+    logger.info("Entitlement approved. Entitlement ID: {}", id);
   }
 
   public void approveEntitlementPlanChange(String id, String newPlan) throws IOException {
@@ -76,7 +75,8 @@ public class GcpProcurementService {
     ApproveEntitlementPlanChangeRequest request = new ApproveEntitlementPlanChangeRequest();
     request.setPendingPlanName(newPlan);
 
-    getProcurementService().providers().entitlements().approvePlanChange(entitlementName, request);
+    getProcurementService().providers().entitlements().approvePlanChange(entitlementName, request).execute();
+    logger.info("EntitlementPlanChangeRequest approved. Entitlement ID: {}", id);
   }
 
   public List<Entitlement> listEntitlementsForGcpAccountId(String gcpAccountId) {
@@ -134,23 +134,11 @@ public class GcpProcurementService {
     }
   }
 
-  public String getProductNameFromEntitlement(String entitlementName) throws IOException {
-    try {
-      GenericJson response = getProcurementService().providers().entitlements().get(entitlementName).execute();
-      return (String) response.get(PRODUCT_NAME_FIELD);
-    } catch (GoogleJsonResponseException e) {
-      if (e.getDetails().getCode() == 404) {
-        return null;
-      }
-      throw e;
-    }
-  }
-
   private String getEntitlementName(String id) {
     return MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
   }
 
   public static String getAccountId(String name) {
-    return name.substring(name.lastIndexOf("//") + 1);
+    return name.substring(name.lastIndexOf("/") + 1);
   }
 }
