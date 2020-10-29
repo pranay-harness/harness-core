@@ -16,10 +16,12 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -27,21 +29,25 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.ServiceClassLocator;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.CustomBuildService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
+import java.util.function.Function;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArtifactRepositoryServiceImplTest extends CategoryTest {
-  private ArtifactRepositoryServiceImpl artifactRepositoryService;
-
   private ServiceClassLocator serviceClassLocator = new ServiceClassLocator();
   @Mock private Injector injector;
   @Mock private CustomBuildService customBuildService;
   @Mock private JenkinsBuildService jenkinsBuildService;
   @Mock private DockerBuildService dockerBuildService;
+  @Mock private EncryptionService encryptionService;
+
+  @InjectMocks private ArtifactRepositoryServiceImpl artifactRepositoryService;
 
   private static final String APP_ID = "APP_ID";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -52,6 +58,7 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
     when(injector.getInstance(Key.get(CustomBuildService.class))).thenReturn(customBuildService);
     when(injector.getInstance(Key.get(JenkinsBuildService.class))).thenReturn(jenkinsBuildService);
     when(injector.getInstance(Key.get(DockerBuildService.class))).thenReturn(dockerBuildService);
+    FieldUtils.writeField(artifactRepositoryService, "encryptionService", encryptionService, true);
   }
 
   @Test
@@ -72,11 +79,13 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
                                                       .isCollection(true)
                                                       .build();
 
+    when(encryptionService.decrypt(null, null, true)).thenReturn(null);
     when(dockerBuildService.getBuilds(APP_ID, artifactStreamAttributes, null, null))
         .thenReturn(asList(BuildDetails.Builder.aBuildDetails().withNumber("alpine").build()));
 
     final BuildSourceExecutionResponse buildSourceExecutionResponse =
-        artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
+        artifactRepositoryService.publishCollectedArtifacts(
+            buildSourceParameters, getArtifactsPublishedCached(buildSourceParameters));
     assertThat(buildSourceExecutionResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(buildSourceExecutionResponse.getBuildSourceResponse()).isNotNull();
     assertThat(buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails())
@@ -102,12 +111,13 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
                                                       .limit(-1)
                                                       .isCollection(true)
                                                       .build();
-
+    when(encryptionService.decrypt(null, null, true)).thenReturn(null);
     when(dockerBuildService.getBuilds(APP_ID, artifactStreamAttributes, null, null))
         .thenThrow(new InvalidArtifactServerException("Invalid Docker Registry credentials", USER));
 
     final BuildSourceExecutionResponse buildSourceExecutionResponse =
-        artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
+        artifactRepositoryService.publishCollectedArtifacts(
+            buildSourceParameters, getArtifactsPublishedCached(buildSourceParameters));
 
     assertThat(buildSourceExecutionResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
     assertThat(buildSourceExecutionResponse.getErrorMessage()).isNotEmpty();
@@ -129,10 +139,11 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
                                                       .limit(-1)
                                                       .isCollection(true)
                                                       .build();
-
+    when(encryptionService.decrypt(null, null, true)).thenReturn(null);
     when(customBuildService.getBuilds(artifactStreamAttributes))
         .thenReturn(asList(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build()));
-    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(buildSourceParameters);
+    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(
+        buildSourceParameters, getArtifactsPublishedCached(buildSourceParameters));
     assertThat(buildDetails).isNotEmpty();
     assertThat(buildDetails).extracting(buildDetails1 -> buildDetails1.getNumber()).contains("1.0");
   }
@@ -152,10 +163,11 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
                                                       .limit(-1)
                                                       .isCollection(true)
                                                       .build();
-
+    when(encryptionService.decrypt(null, null, true)).thenReturn(null);
     when(dockerBuildService.getBuilds(APP_ID, artifactStreamAttributes, null, null))
         .thenReturn(asList(BuildDetails.Builder.aBuildDetails().withNumber("alpine").build()));
-    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(buildSourceParameters);
+    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(
+        buildSourceParameters, getArtifactsPublishedCached(buildSourceParameters));
     assertThat(buildDetails).isNotEmpty();
     assertThat(buildDetails).extracting(buildDetails1 -> buildDetails1.getNumber()).contains("alpine");
   }
@@ -179,8 +191,18 @@ public class ArtifactRepositoryServiceImplTest extends CategoryTest {
 
     when(jenkinsBuildService.getLastSuccessfulBuild(APP_ID, artifactStreamAttributes, null, null))
         .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
-    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(buildSourceParameters);
+    final List<BuildDetails> buildDetails = artifactRepositoryService.collectBuilds(
+        buildSourceParameters, getArtifactsPublishedCached(buildSourceParameters));
     assertThat(buildDetails).isNotEmpty();
     assertThat(buildDetails).extracting(buildDetails1 -> buildDetails1.getNumber()).contains("1.0");
+  }
+
+  private ArtifactsPublishedCache<BuildDetails> getArtifactsPublishedCached(
+      BuildSourceParameters buildSourceParameters) {
+    Function<BuildDetails, String> buildDetailsKeyFn = ArtifactCollectionUtils.getBuildDetailsKeyFn(
+        buildSourceParameters.getArtifactStreamType(), buildSourceParameters.getArtifactStreamAttributes());
+    boolean enableCleanup = ArtifactCollectionUtils.supportsCleanup(buildSourceParameters.getArtifactStreamType());
+    return new ArtifactsPublishedCache(
+        buildSourceParameters.getSavedBuildDetailsKeys(), buildDetailsKeyFn, enableCleanup);
   }
 }

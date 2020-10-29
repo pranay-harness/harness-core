@@ -87,7 +87,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
       BuildSourceParameters buildSourceParameters, ArtifactsPublishedCache<BuildDetails> currCache) {
     // Fetch new build details if there are no unpublished build details in the cache.
     final BuildSourceExecutionResponse buildSourceExecutionResponse =
-        artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
+        artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters, currCache);
 
     // Return early if the artifact collection is unsuccessful.
     if (buildSourceExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {

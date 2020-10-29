@@ -76,7 +76,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(runOnce(false).getResponseCode()).isEqualTo(org.eclipse.jetty.server.Response.SC_OK);
 
     // Artifact collection is done once as there are no unpublished build details initially.
-    verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class));
+    verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class), any());
 
     // Build details are published 3 time: 1 time for cleanup and then 2 times for collection because of batching.
     verify(managerClient, times(3))
@@ -91,7 +91,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(runOnce(true).getResponseCode()).isEqualTo(org.eclipse.jetty.server.Response.SC_OK);
 
     // Artifact collection is done once as there are no unpublished build details initially.
-    verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class));
+    verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class), any());
 
     // Build details are published 1 time: 1 time for cleanup and then exit early because of exception.
     verify(managerClient, times(1))
@@ -128,7 +128,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .buildSourceResponse(BuildSourceResponse.builder().buildDetails(builds).build())
             .build();
-    when(artifactRepositoryService.publishCollectedArtifacts(any(BuildSourceParameters.class)))
+    when(artifactRepositoryService.publishCollectedArtifacts(any(BuildSourceParameters.class), any()))
         .thenReturn(buildSourceExecutionResponse);
 
     PerpetualTaskExecutionParams params =

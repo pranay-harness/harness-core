@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.ArrayList;
@@ -57,6 +59,7 @@ public class ArtifactsPublishedCache<P> {
   Set<String> toBeDeletedArtifactKeys;
   Function<P, String> buildDetailsKeyFunction;
   boolean enableCleanup;
+  @NonFinal @Getter @Setter boolean fetchFromCache;
 
   public ArtifactsPublishedCache(
       Collection<String> publishedArtifactKeys, Function<P, String> buildDetailsKeyFunction, boolean enableCleanup) {
@@ -67,6 +70,7 @@ public class ArtifactsPublishedCache<P> {
     this.unpublishedBuildDetails = new ArrayList<>();
     this.buildDetailsKeyFunction = buildDetailsKeyFunction;
     this.enableCleanup = enableCleanup;
+    this.fetchFromCache = false;
   }
 
   /**
