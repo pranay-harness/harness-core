@@ -15,7 +15,6 @@ import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -24,6 +23,7 @@ import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -63,7 +63,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(mongoTypeModule(annotations));
     modules.add(new CIExecutionTestModule());
     modules.add(new EntitySetupUsageClientModule(
-        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

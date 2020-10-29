@@ -14,8 +14,6 @@ import io.harness.app.CIManagerServiceModule;
 import io.harness.app.SCMGrpcClientModule;
 import io.harness.app.ScmConnectionConfig;
 import io.harness.ci.beans.entities.LogServiceConfig;
-import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -24,6 +22,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.queue.QueueController;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
@@ -105,13 +104,13 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
                 LogServiceConfig.builder().baseUrl("http://localhost-inc:8079").globalToken("global-token").build())
             .scmConnectionConfig(ScmConnectionConfig.builder().url("localhost:8181").build())
             .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
+            .ngManagerClientConfig(ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build())
+            .ngManagerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
             .build();
 
     modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-    modules.add(new EntitySetupUsageClientModule(
-        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

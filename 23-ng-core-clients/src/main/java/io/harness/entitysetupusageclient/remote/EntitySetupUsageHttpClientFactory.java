@@ -7,11 +7,11 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import lombok.AccessLevel;
@@ -32,13 +32,13 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(DX)
 public class EntitySetupUsageHttpClientFactory implements Provider<EntitySetupUsageClient> {
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
-  private final NGManagerClientConfig ngManagerClientConfig;
+  private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
 
-  public EntitySetupUsageHttpClientFactory(NGManagerClientConfig ngManagerClientConfig, String serviceSecret,
+  public EntitySetupUsageHttpClientFactory(ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret,
       String clientId, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
     this.ngManagerClientConfig = ngManagerClientConfig;
     this.serviceSecret = serviceSecret;

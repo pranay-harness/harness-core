@@ -15,18 +15,17 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.NGCoreModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
@@ -76,7 +75,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
-        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

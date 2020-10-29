@@ -10,7 +10,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -83,7 +82,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new SecretManagementClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
     modules.add(new EntitySetupUsageClientModule(
-        NGManagerClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

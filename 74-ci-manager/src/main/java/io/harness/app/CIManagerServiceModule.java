@@ -23,6 +23,7 @@ import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.delegate.task.HDelegateTask;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.ManagerGrpcClientModule;
@@ -54,6 +55,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class CIManagerServiceModule extends AbstractModule {
   private final CIManagerConfiguration ciManagerConfiguration;
+  private static final String SERVICE_NAME = "ci-manager";
 
   public CIManagerServiceModule(CIManagerConfiguration ciManagerConfiguration) {
     this.ciManagerConfiguration = ciManagerConfiguration;
@@ -128,6 +130,8 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new SecretManagementClientModule(
         ciManagerConfiguration.getManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
+    install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), SERVICE_NAME));
     install(new ConnectorResourceClientModule(
         ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
     install(new SecretNGManagerClientModule(

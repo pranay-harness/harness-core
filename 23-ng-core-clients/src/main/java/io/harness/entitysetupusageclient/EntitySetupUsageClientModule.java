@@ -9,17 +9,18 @@ import com.google.inject.Scopes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageHttpClientFactory;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 @OwnedBy(DX)
 public class EntitySetupUsageClientModule extends AbstractModule {
-  private final NGManagerClientConfig ngManagerClientConfig;
+  private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
 
   public EntitySetupUsageClientModule(
-      NGManagerClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
     this.ngManagerClientConfig = ngManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;

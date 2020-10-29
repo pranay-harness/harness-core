@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.entitysetupusageclient.NGManagerClientConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
@@ -55,8 +54,8 @@ public class SecretManagementModuleTest extends CategoryTest {
   public void testSecretManagementModule() {
     ServiceHttpClientConfig secretManagerClientConfig =
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
-    NGManagerClientConfig ngManagerClientConfig =
-        NGManagerClientConfig.builder().baseUrl("http://localhost:3457").build();
+    ServiceHttpClientConfig ngManagerClientConfig =
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
