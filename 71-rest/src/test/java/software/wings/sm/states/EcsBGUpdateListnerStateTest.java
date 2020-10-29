@@ -210,9 +210,9 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     Map<String, ResponseData> delegateResponse = new HashMap<>();
     EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
     delegateResponse.put("test", ecsCommandExecutionResponse);
-    doThrow(new WingsException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
+    doThrow(new InvalidRequestException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
     state.handleAsyncResponse(mockContext, delegateResponse);
-    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
   }
 
   @Test(expected = InvalidRequestException.class)
