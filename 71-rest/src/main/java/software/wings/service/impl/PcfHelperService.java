@@ -2,6 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 
@@ -9,6 +12,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -50,10 +56,11 @@ public class PcfHelperService {
   @Inject private FeatureFlagService featureFlagService;
 
   public void validate(PcfConfig pcfConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    DelegateResponseData notifyResponseData = null;
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
 
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -71,7 +78,6 @@ public class PcfHelperService {
                         .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build());
-
     } catch (InterruptedException e) {
       pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
                                         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -79,6 +85,16 @@ public class PcfHelperService {
                                         .build();
     }
 
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      throw new InvalidRequestException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage(), USER);
+    } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
+      throw new InvalidRequestException(
+          getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()), USER);
+    } else if (!(notifyResponseData instanceof PcfCommandExecutionResponse)) {
+      throw new InvalidRequestException(
+          format("Unknown response from delegate: [%s]", notifyResponseData.getClass().getSimpleName()), USER);
+    }
+    pcfCommandExecutionResponse = (PcfCommandExecutionResponse) notifyResponseData;
     if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
       throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
