@@ -18,6 +18,7 @@ import software.wings.service.intfc.ownership.OwnedByService;
 import java.io.File;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/25/16.
@@ -111,7 +112,7 @@ public interface ConfigService extends OwnedByService, OwnedByHost {
    * @param entityType
    * @param configFileName
    */
-  void delete(@NotEmpty String appId, @NotEmpty String entityId, @NotEmpty EntityType entityType,
+  void delete(@NotEmpty String appId, @NotEmpty String entityId, @NotNull EntityType entityType,
       @NotEmpty String configFileName);
 
   /**

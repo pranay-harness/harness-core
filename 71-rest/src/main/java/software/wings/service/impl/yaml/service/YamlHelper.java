@@ -48,6 +48,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
@@ -116,6 +118,7 @@ public class YamlHelper {
   @Inject TemplateService templateService;
   @Inject TemplateFolderService templateFolderService;
   @Inject SecretManager secretManager;
+  @Inject ServiceTemplateService serviceTemplateService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -902,5 +905,19 @@ public class YamlHelper {
 
   public String getServiceNameFromServiceId(String appId, String serviceId) {
     return serviceResourceService.getName(appId, serviceId);
+  }
+
+  public String getServiceNameForFileOverride(String yamlFilePath) {
+    return extractParentEntityNameWithoutRegex(yamlFilePath, PATH_DELIMITER);
+  }
+
+  public String getServiceTemplateId(String appId, String envId, String serviceName) {
+    Service service = serviceResourceService.getServiceByName(appId, serviceName);
+    notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
+
+    ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, service.getUuid(), envId);
+    notNullCheck("Unable to locate a service template with the given service: " + serviceName + " and env: " + envId,
+        serviceTemplate);
+    return serviceTemplate.getUuid();
   }
 }

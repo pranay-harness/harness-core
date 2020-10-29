@@ -1,11 +1,11 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.inject.Inject;
@@ -16,7 +16,6 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.Key;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
@@ -64,8 +63,18 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
 
     OverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
-    configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
-        EntityType.ENVIRONMENT, targetFilePath);
+    String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
+    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+      configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
+          EntityType.ENVIRONMENT, targetFilePath);
+    } else {
+      Service service = yamlHelper.getServiceByName(optionalApplication.get().getAppId(), serviceName);
+      notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
+      String serviceTemplateId = yamlHelper.getServiceTemplateId(
+          optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(), service.getName());
+      configService.delete(
+          optionalApplication.get().getUuid(), serviceTemplateId, EntityType.SERVICE_TEMPLATE, targetFilePath);
+    }
   }
 
   @Override
@@ -167,22 +176,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         configFile.setEnvId(GLOBAL_ENV_ID);
         configFile.setTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID);
       } else {
-        Service service = serviceResourceService.getServiceByName(appId, serviceName);
-        if (service == null) {
-          throw new HarnessException("Unable to locate a service with the given name: " + serviceName);
-        }
-
-        List<Key<ServiceTemplate>> templateRefKeysByService =
-            serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
-        if (isEmpty(templateRefKeysByService)) {
-          throw new HarnessException("Unable to locate a service template for the given service: " + serviceName);
-        }
-
-        String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
-        if (isEmpty(serviceTemplateId)) {
-          throw new HarnessException(
-              "Unable to locate a service template with the given service: " + serviceName + " and env: " + envId);
-        }
+        String serviceTemplateId = yamlHelper.getServiceTemplateId(appId, envId, serviceName);
 
         configFile.setEntityId(serviceTemplateId);
         configFile.setTemplateId(serviceTemplateId);
