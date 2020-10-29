@@ -37,7 +37,8 @@ public class HeatMapResource {
   @ExceptionMetered
   @ApiOperation(value = "get heatmap for a time range", nickname = "getHeatMap")
   public RestResponse<Map<CVMonitoringCategory, SortedSet<HeatMapDTO>>> getHeatMap(
-      @QueryParam("accountId") @NotNull final String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("accountId") @NotNull final String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
       @QueryParam("serviceIdentifier") final String serviceIdentifier,
       @QueryParam("envIdentifier") final String envIdentifier,

@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
@@ -325,7 +326,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TEST_LOG_ANALYSIS.name());
     assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl()).isNull();
     assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + verificationTaskId
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId=" + verificationTaskId
             + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
   }
 
@@ -357,10 +358,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TEST_LOG_ANALYSIS.name());
     assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl())
-        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + baselineVerificationTaskId
-            + "&analysisStartTime=1595846771000&analysisEndTime=1595847671000");
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId="
+            + baselineVerificationTaskId + "&analysisStartTime=1595846771000&analysisEndTime=1595847671000");
     assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/log-analysis/test-data?verificationTaskId=" + verificationTaskId
+        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId=" + verificationTaskId
             + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
   }
   @Test
