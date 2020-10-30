@@ -55,6 +55,7 @@ import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -462,9 +463,47 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testScheduleTestVerificationTaskAnalysis() {
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(VerificationJobType.TEST);
-    cvConfigService.save(newCVConfig());
     String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+        verificationTaskService.getVerificationTaskId(cvConfigId, verificationJobInstance.getUuid());
+    cvConfigService.save(newCVConfig());
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(verificationTaskId)
+                              .startTime(instant.plus(10, ChronoUnit.MINUTES))
+                              .endTime(instant.plus(11, ChronoUnit.MINUTES))
+                              .build();
+    List<String> taskIds = timeSeriesAnalysisService.scheduleTestVerificationTaskAnalysis(input);
+    assertThat(taskIds.size()).isEqualTo(1);
+    TimeSeriesLoadTestLearningEngineTask task =
+        (TimeSeriesLoadTestLearningEngineTask) hPersistence.get(LearningEngineTask.class, taskIds.get(0));
+    assertThat(task).isNotNull();
+    assertThat(task.getVerificationTaskId()).isEqualTo(verificationTaskId);
+    assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
+    assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
+    assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
+    assertThat(task.getControlDataUrl())
+        .isEqualTo("/cv-nextgen/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
+            + "&startTime=1595846766390&endTime=1595847666390");
+    assertThat(task.getBaselineStartTime()).isEqualTo(1595846766390L);
+    assertThat(task.getTestDataUrl())
+        .isEqualTo("/cv-nextgen/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
+            + "&startTime=1595846766390&endTime=1595847306390");
+    assertThat(task.getMetricTemplateUrl())
+        .isEqualTo("/cv-nextgen/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
+            + verificationTaskId);
+    assertThat(task.getDataLength()).isEqualTo(9);
+    assertThat(task.getTolerance()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testScheduleTestVerificationTaskAnalysis_baselineRun() {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance(VerificationJobType.TEST);
+    ((TestVerificationJob) verificationJobInstance.getResolvedJob()).setBaselineVerificationJobInstanceId(null);
+    verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId =
+        verificationTaskService.getVerificationTaskId(cvConfigId, verificationJobInstance.getUuid());
+    cvConfigService.save(newCVConfig());
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(10, ChronoUnit.MINUTES))
@@ -480,6 +519,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
     assertThat(task.getControlDataUrl()).isNull();
+    assertThat(task.getBaselineStartTime()).isNull();
     assertThat(task.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/timeseries-analysis/time-series-data?verificationTaskId="
             + verificationTaskId + "&startTime=1595846766390&endTime=1595847306390");
@@ -489,6 +529,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(task.getDataLength()).isEqualTo(9);
     assertThat(task.getTolerance()).isEqualTo(2);
   }
+
   private DeploymentTimeSeriesAnalysisDTO buildDeploymentVerificationDTO() {
     return DeploymentTimeSeriesAnalysisDTO.builder().build();
   }
@@ -629,6 +670,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       testVerificationJob.setEnvIdentifier(generateUuid());
       testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
       testVerificationJob.setDuration("15m");
+      testVerificationJob.setBaselineVerificationJobInstanceId(generateUuid());
       return testVerificationJob;
     } else {
       CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
@@ -670,11 +712,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         VerificationJobInstance.builder()
             .accountId(accountId)
             .executionStatus(VerificationJobInstance.ExecutionStatus.QUEUED)
-            .verificationJobIdentifier(generateUuid())
+            .verificationJobIdentifier(verificationJob.getIdentifier())
             .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
             .resolvedJob(verificationJob)
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
             .build();
+    if (type == VerificationJobType.TEST) {
+      verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
+    }
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
     return verificationJobInstance;

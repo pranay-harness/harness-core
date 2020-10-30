@@ -139,6 +139,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                 (int) Duration.between(verificationJobInstance.getStartTime(), input.getStartTime()).toMinutes() + 1)
             .metricTemplateUrl(createMetricTemplateUrl(input))
             .tolerance(verificationJob.getSensitivity().getTolerance())
+            .baselineStartTime(baseline == null ? null : baseline.getStartTime().toEpochMilli())
             .build();
 
     timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());
