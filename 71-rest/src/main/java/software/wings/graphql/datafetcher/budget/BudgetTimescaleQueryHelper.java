@@ -12,11 +12,11 @@ import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataQueryMetadataBuilder;
@@ -44,7 +44,7 @@ import java.util.Set;
 @Slf4j
 public class BudgetTimescaleQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
-  @Inject private DataFetcherUtils utils;
+  @Inject private DataUtils utils;
   private BudgetAlertsTableSchema schema = new BudgetAlertsTableSchema();
   private BillingDataTableSchema billingDataTableSchema = new BillingDataTableSchema();
   private static final int MAX_RETRY = 3;
