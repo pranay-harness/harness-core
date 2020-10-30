@@ -154,6 +154,8 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
         primary.add(hostSummaryInfo);
       }
     });
+
+    primary.forEach(hostSummaryInfo -> hostSummaryInfo.setRiskScore(null));
     return CanaryDeploymentAdditionalInfo.builder().primary(primary).canary(canary).build();
   }
 
