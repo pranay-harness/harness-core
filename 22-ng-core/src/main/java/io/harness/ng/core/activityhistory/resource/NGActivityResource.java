@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
+import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
@@ -35,12 +36,14 @@ import javax.ws.rs.QueryParam;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class NGActivityResource {
   public static final String TIME_GROUP_TYPE = "timeGroupType";
+  public static final String INCLUDE_CONNECTIVITY_SUMMARY = "includeConnectivitySummary";
+  public static final String TIMEZONE = "timezone";
   NGActivityService activityHistoryService;
   EntityActivitySummaryService entityActivitySummaryService;
 
   @GET
   @ApiOperation(value = "Get Activities where this resource was used", nickname = "listActivities")
-  public ResponseDTO<NGActivityListDTO> list(
+  public ResponseDTO<Page<NGActivityDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -52,6 +55,20 @@ public class NGActivityResource {
       @QueryParam(NGCommonEntityConstants.STATUS) NGActivityStatus status) {
     return ResponseDTO.newResponse(activityHistoryService.list(page, size, accountIdentifier, orgIdentifier,
         projectIdentifier, referredEntityIdentifier, startTime, endTime, status));
+  }
+
+  @GET
+  @Path("/connectivityCheckSummary")
+  @ApiOperation(value = "Get ConnectivityCheck Summary", nickname = "getConnectivitySummary")
+  public ResponseDTO<ConnectivityCheckSummaryDTO> getConnectivitySummary(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime) {
+    return ResponseDTO.newResponse(activityHistoryService.getConnectivityCheckSummary(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, startTime, endTime));
   }
 
   @POST
