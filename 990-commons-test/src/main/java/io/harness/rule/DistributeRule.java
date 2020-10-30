@@ -33,9 +33,16 @@ public class DistributeRule implements TestRule {
     if (TOTAL_WORKERS == 0) {
       return 0;
     }
+    /*
+              extracting the name of the test file.
+              for example extracting
+              "ArtifactUtilitiesTest" from "shouldExtractNexusRegistryUrl(io.harness.artifact.ArtifactUtilitiesTest)"
+    */
+    int testNameLength = description.getDisplayName().length();
+    int indexOfLastDot = description.getDisplayName().lastIndexOf(".");
+    String testIdentifier = description.getDisplayName().substring(indexOfLastDot + 1, testNameLength - 1);
+    int hash = testIdentifier.hashCode();
 
-    final String identifier = description.getDisplayName();
-    int hash = identifier.hashCode();
     if (hash < 0) {
       hash = -(hash + 1);
     }
