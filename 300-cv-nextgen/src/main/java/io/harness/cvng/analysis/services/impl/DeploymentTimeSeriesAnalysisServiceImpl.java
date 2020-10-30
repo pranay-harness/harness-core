@@ -2,13 +2,17 @@ package io.harness.cvng.analysis.services.impl;
 
 import com.google.inject.Inject;
 
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfo;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis.DeploymentTimeSeriesAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -27,13 +31,16 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 
 public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSeriesAnalysisService {
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public void save(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
@@ -61,8 +68,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                                         .build();
 
     validateHostName(latestDeploymentTimeSeriesAnalysis.getHostSummaries(), hostName);
-
     Set<TransactionMetricInfo> transactionMetricInfoSet = new HashSet();
+    String connectorName = getConnectorName(latestDeploymentTimeSeriesAnalysis);
 
     latestDeploymentTimeSeriesAnalysis.getTransactionMetricSummaries()
         .stream()
@@ -71,6 +78,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
           TransactionMetricInfo transactionMetricInfo =
               TransactionMetricInfo.builder()
                   .transactionMetric(createTransactionMetric(transactionMetricHostData))
+                  .connectorName(connectorName)
                   .build();
           SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
           transactionMetricHostData.getHostData()
@@ -179,5 +187,14 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .in(verificationTaskIds)
         .order(Sort.descending(DeploymentTimeSeriesAnalysisKeys.startTime))
         .get();
+  }
+
+  @Nullable
+  private String getConnectorName(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
+    String cvConfigId = verificationTaskService.getCVConfigId(deploymentTimeSeriesAnalysis.getVerificationTaskId());
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenService.get(cvConfig.getAccountId(),
+        cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+    return connectorInfoDTO.isPresent() ? connectorInfoDTO.get().getName() : null;
   }
 }

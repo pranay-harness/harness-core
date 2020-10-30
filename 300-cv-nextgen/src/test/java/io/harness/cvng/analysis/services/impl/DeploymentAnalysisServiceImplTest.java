@@ -354,6 +354,9 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
     assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(3);
+    // verifies that primary nodes no longer contain riskScore
+    canaryDeploymentAdditionalInfo.getPrimary().forEach(
+        hostSummaryInfo -> assertThat(hostSummaryInfo.getRiskScore()).isNull());
     assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(3);
     assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNotNull();

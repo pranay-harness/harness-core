@@ -11,6 +11,7 @@ import java.util.SortedSet;
 @Builder
 public class TransactionMetricInfo {
   private TransactionMetric transactionMetric;
+  private String connectorName;
   private SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodes;
 
   @Value
