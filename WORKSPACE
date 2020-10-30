@@ -1555,7 +1555,6 @@ maven_install(
         "io.opencensus:opencensus-api:0.24.0",
         "io.opencensus:opencensus-contrib-http-util:0.24.0",
         "io.perfmark:perfmark-api:0.19.0",
-        "io.projectreactor.ipc:reactor-netty:0.7.6.RELEASE",
         "io.projectreactor.netty:reactor-netty:0.9.10.RELEASE",
         "io.projectreactor:reactor-core:3.3.8.RELEASE",
         "io.prometheus:simpleclient:0.5.0",
