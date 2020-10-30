@@ -1,5 +1,7 @@
 package io.harness.testframework.framework.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,7 +22,7 @@ import java.util.Set;
 
 public class SecretsUtils {
   public static boolean isVaultAvailable(List<VaultConfig> vaultList, String vaultName) {
-    if (vaultList == null || vaultList.size() == 0) {
+    if (isEmpty(vaultList)) {
       return false;
     }
     for (VaultConfig vaultConfig : vaultList) {
@@ -59,7 +61,7 @@ public class SecretsUtils {
   }
 
   public static boolean isSecretAvailable(List<EncryptedData> secretList, String secretName) {
-    if (secretList == null || secretList.size() == 0) {
+    if (isEmpty(secretList)) {
       return false;
     }
 

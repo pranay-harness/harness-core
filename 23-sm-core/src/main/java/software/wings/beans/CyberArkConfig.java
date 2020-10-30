@@ -6,8 +6,10 @@ import static io.harness.security.encryption.SecretManagerType.VAULT;
 
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -41,6 +43,8 @@ public class CyberArkConfig extends SecretManagerConfig {
   @Attributes(title = "CyberArk Url", required = true) private String cyberArkUrl;
 
   @Attributes(title = "App ID") private String appId;
+
+  @JsonIgnore @SchemaIgnore boolean isCertValidationRequired;
 
   @Attributes(title = "Client Certificate")
   @Encrypted(fieldName = "client_certificate")
@@ -85,5 +89,9 @@ public class CyberArkConfig extends SecretManagerConfig {
   @Override
   public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
+  }
+
+  public boolean isCertValidationRequired() {
+    return isCertValidationRequired;
   }
 }

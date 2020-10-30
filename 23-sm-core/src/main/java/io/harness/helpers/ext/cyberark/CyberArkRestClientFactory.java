@@ -64,7 +64,13 @@ public class CyberArkRestClientFactory {
   public static CyberArkRestClient create(CyberArkConfig cyberArkConfig) {
     OkHttpClient httpClient;
     if (EmptyPredicate.isEmpty(cyberArkConfig.getClientCertificate())) {
-      httpClient = getOkHttpClient(cyberArkConfig);
+      if (cyberArkConfig.isCertValidationRequired()) {
+        httpClient = Http.getSafeOkHttpClientBuilder(cyberArkConfig.getCyberArkUrl(), 10, 10)
+                         .addInterceptor(loggingInterceptor)
+                         .build();
+      } else {
+        httpClient = getOkHttpClient(cyberArkConfig);
+      }
     } else {
       httpClient = getOkHttpClientWithClientCertificate(cyberArkConfig);
     }

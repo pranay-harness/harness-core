@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.CyberArkConfig.CyberArkConfigKeys;
 import software.wings.beans.SyncTaskContext;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
@@ -48,6 +49,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   private static final String CLIENT_CERTIFICATE_NAME_SUFFIX = "_clientCertificate";
 
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private AccountService accountService;
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, CyberArkConfig cyberArkConfig) {
@@ -60,6 +62,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
                                               .appId(GLOBAL_APP_ID)
                                               .correlationId(data.getName())
                                               .build();
+        boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+        cyberArkConfig.setCertValidationRequired(isCertValidationRequired);
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .decrypt(data, cyberArkConfig);
       } catch (WingsException e) {
@@ -223,6 +227,8 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
                                           .appId(GLOBAL_APP_ID)
                                           .correlationId(cyberArkConfig.getUuid())
                                           .build();
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(cyberArkConfig.getAccountId());
+    cyberArkConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .validateCyberArkConfig(cyberArkConfig);
   }

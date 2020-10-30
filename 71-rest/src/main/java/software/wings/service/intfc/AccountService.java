@@ -165,6 +165,8 @@ public interface AccountService {
    */
   void setSubdomainUrl(Account account, SubdomainUrl subdomainUrl);
 
+  boolean isCertValidationRequired(String accountId);
+
   /**
    * Add subDomainUrl to the account
    */

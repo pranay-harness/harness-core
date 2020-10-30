@@ -27,12 +27,14 @@ public class PwnedPasswordChecker {
   private static final String BASE_API_URL = "https://api.pwnedpasswords.com/range/";
   private static final String RESPONSE_DELIMITER = ":";
   private static final int CONNECTION_TIMEOUT_SECONDS = 5;
+  private static final int READ_TIMEOUT_SECONDS = 5;
   private static final int SHA1_PASS_PREFIX_LENGTH = 5;
   private static final int MIN_OCCURENCES = 5;
   private static final int SHA1_LENGTH = 40;
 
   public PwnedPasswordChecker() {
-    this.httpClient = Http.getUnsafeOkHttpClient(BASE_API_URL, CONNECTION_TIMEOUT_SECONDS, CONNECTION_TIMEOUT_SECONDS);
+    this.httpClient =
+        Http.getSafeOkHttpClientBuilder(BASE_API_URL, CONNECTION_TIMEOUT_SECONDS, READ_TIMEOUT_SECONDS).build();
   }
 
   boolean checkIfPwned(char[] password) throws IOException {

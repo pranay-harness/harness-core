@@ -316,7 +316,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       }
 
       VaultSysAuthRestClient restClient =
-          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl()).create(VaultSysAuthRestClient.class);
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
+              .create(VaultSysAuthRestClient.class);
       Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
@@ -362,7 +363,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) {
     try {
       VaultSysAuthRestClient restClient =
-          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl()).create(VaultSysAuthRestClient.class);
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
+              .create(VaultSysAuthRestClient.class);
 
       VaultAppRoleLoginRequest loginRequest = VaultAppRoleLoginRequest.builder()
                                                   .roleId(vaultConfig.getAppRoleId())
