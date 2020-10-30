@@ -220,3 +220,7 @@ ngManagerAvailable: true
 grpcDelegateServiceClientConfig:
   target: localhost:9880
   authority: localhost
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

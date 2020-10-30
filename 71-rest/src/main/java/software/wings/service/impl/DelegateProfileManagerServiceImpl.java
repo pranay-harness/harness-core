@@ -16,7 +16,6 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.DelegateProfileDetails.DelegateProfileDetailsBuilder;
 import io.harness.delegate.beans.ScopingRuleDetails;
-import io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKeys;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
@@ -26,6 +25,7 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.DelegateProfileManagerService;
 
@@ -201,23 +201,23 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
 
     if (isNotBlank(scopingRule.getApplicationId())) {
-      scopingEntities.put(ScopingRuleDetailsKeys.applicationId,
-          ScopingValues.newBuilder().addValue(scopingRule.getApplicationId()).build());
+      scopingEntities.put(
+          Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue(scopingRule.getApplicationId()).build());
     }
 
     if (isNotBlank(scopingRule.getEnvironmentTypeId())) {
-      scopingEntities.put(ScopingRuleDetailsKeys.environmentTypeId,
+      scopingEntities.put(Cd1SetupFields.ENV_TYPE_FIELD,
           ScopingValues.newBuilder().addValue(scopingRule.getEnvironmentTypeId()).build());
     }
 
     if (isNotEmpty(scopingRule.getEnvironmentIds())) {
-      scopingEntities.put(ScopingRuleDetailsKeys.environmentIds,
-          ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
+      scopingEntities.put(
+          Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
     }
 
     if (isNotEmpty(scopingRule.getServiceIds())) {
-      scopingEntities.put(ScopingRuleDetailsKeys.serviceIds,
-          ScopingValues.newBuilder().addAllValue(scopingRule.getServiceIds()).build());
+      scopingEntities.put(
+          Cd1SetupFields.SERVICE_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getServiceIds()).build());
     }
 
     return scopingEntities;
@@ -249,13 +249,13 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
                   -> ScopingRuleDetails.builder()
                          .description(grpcScopingRule.getDescription())
                          .applicationId(extractScopingEntityId(
-                             grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.applicationId))
+                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.APP_ID_FIELD))
                          .environmentTypeId(extractScopingEntityId(
-                             grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.environmentTypeId))
+                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.ENV_TYPE_FIELD))
                          .environmentIds(extractScopingEntityIds(
-                             grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.environmentIds))
+                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.ENV_ID_FIELD))
                          .serviceIds(extractScopingEntityIds(
-                             grpcScopingRule.getScopingEntitiesMap(), ScopingRuleDetailsKeys.serviceIds))
+                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.SERVICE_ID_FIELD))
                          .build())
               .collect(Collectors.toList()));
     }
