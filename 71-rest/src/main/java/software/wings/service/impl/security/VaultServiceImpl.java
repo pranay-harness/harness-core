@@ -53,6 +53,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingVariableTypes;
@@ -79,6 +80,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private AccountService accountService;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -91,6 +93,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
   }
@@ -99,6 +103,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig) {
     // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
     int failedAttempts = 0;
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
@@ -107,6 +113,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
                                               .appId(GLOBAL_APP_ID)
                                               .correlationId(data.getName())
                                               .build();
+
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .decrypt(data, vaultConfig);
       } catch (WingsException e) {
@@ -164,8 +171,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         char[] decryptedSecretId = decryptVaultToken(encryptedSecretId);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
+      boolean isCertValidationRequired = vaultConfig.isCertValidationRequired();
+      vaultConfig.setCertValidationRequired(isCertValidationRequired);
     }
-
     return vaultConfig;
   }
 
@@ -175,6 +183,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .renewVaultToken(decryptedVaultConfig);
     wingsPersistence.updateField(
@@ -453,6 +463,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   private List<SecretEngineSummary> listSecretEnginesInternal(VaultConfig vaultConfig) {
     // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
     int failedAttempts = 0;
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(vaultConfig.getAccountId());
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
@@ -566,6 +578,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public void deleteSecret(String accountId, String path, VaultConfig vaultConfig) {
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .deleteVaultSecret(path, vaultConfig);
   }
@@ -577,6 +591,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
                                           .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(vaultConfig.getAccountId());
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .getVaultSecretChangeLogs(encryptedData, vaultConfig);
   }
@@ -604,6 +620,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) {
     int failedAttempts = 0;
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(vaultConfig.getAccountId());
+    vaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()

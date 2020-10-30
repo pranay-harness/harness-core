@@ -46,10 +46,13 @@ public class VaultRestClientFactory {
     loggingInterceptor.setLevel(Level.NONE);
   }
 
-  public static Retrofit getVaultRetrofit(String vaultUrl) {
-    OkHttpClient httpClient =
-        Http.getUnsafeOkHttpClientBuilder(vaultUrl, 10, 10).addInterceptor(loggingInterceptor).build();
-
+  public static Retrofit getVaultRetrofit(String vaultUrl, boolean isCertValidationRequired) {
+    OkHttpClient httpClient;
+    if (isCertValidationRequired) {
+      httpClient = Http.getSafeOkHttpClientBuilder(vaultUrl, 10, 10).addInterceptor(loggingInterceptor).build();
+    } else {
+      httpClient = Http.getUnsafeOkHttpClientBuilder(vaultUrl, 10, 10).addInterceptor(loggingInterceptor).build();
+    }
     return new Retrofit.Builder()
         .baseUrl(vaultUrl)
         .addConverterFactory(JacksonConverterFactory.create(objectMapper))
@@ -58,7 +61,7 @@ public class VaultRestClientFactory {
   }
 
   public static VaultRestClient create(final VaultConfig vaultConfig) {
-    final Retrofit retrofit = getVaultRetrofit(vaultConfig.getVaultUrl());
+    final Retrofit retrofit = getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired());
 
     int version = vaultConfig.getSecretEngineVersion();
     switch (version) {

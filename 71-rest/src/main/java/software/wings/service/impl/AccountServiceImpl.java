@@ -330,6 +330,18 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean isCertValidationRequired(String accountId) {
+    if (isEmpty(accountId)) {
+      return false;
+    }
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account == null) {
+      return false;
+    }
+    return featureFlagService.isEnabled(FeatureName.ENABLE_CERT_VALIDATION, accountId);
+  }
+
+  @Override
   public boolean updatePovFlag(String accountId, boolean isPov) {
     Account account = getFromCache(accountId);
     if (account == null) {

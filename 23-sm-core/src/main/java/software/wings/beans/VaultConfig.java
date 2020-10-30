@@ -86,6 +86,8 @@ public class VaultConfig extends SecretManagerConfig {
 
   private long renewedAt;
 
+  @JsonIgnore @SchemaIgnore boolean isCertValidationRequired;
+
   @JsonIgnore
   @SchemaIgnore
   @Override
@@ -161,5 +163,9 @@ public class VaultConfig extends SecretManagerConfig {
       ngVaultConfigDTO.setSecretId(getSecretId());
     }
     return ngVaultConfigDTO;
+  }
+
+  public boolean isCertValidationRequired() {
+    return isCertValidationRequired;
   }
 }

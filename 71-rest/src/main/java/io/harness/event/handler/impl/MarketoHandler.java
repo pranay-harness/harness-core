@@ -109,12 +109,12 @@ public class MarketoHandler implements EventHandler {
       retrofit = new Retrofit.Builder()
                      .baseUrl(marketoConfig.getUrl())
                      .addConverterFactory(JacksonConverterFactory.create())
-                     .client(Http.getUnsafeOkHttpClient(marketoConfig.getUrl()))
+                     .client(Http.getSafeOkHttpClientBuilder(marketoConfig.getUrl(), 15, 15).build())
                      .build();
     }
   }
 
-  public boolean isMarketoEnabled() {
+  private boolean isMarketoEnabled() {
     return marketoConfig.isEnabled();
   }
 
