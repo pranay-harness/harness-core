@@ -16,7 +16,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
-import io.harness.delegate.beans.ScopingRuleDetails.ScopingRuleDetailsKeys;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
@@ -27,6 +26,7 @@ import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,9 +105,9 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdate() {
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
-    scopingEntities.put(ScopingRuleDetailsKeys.applicationId, ScopingValues.newBuilder().addValue("appId").build());
-    scopingEntities.put(ScopingRuleDetailsKeys.environmentIds,
-        ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
+    scopingEntities.put(Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue("appId").build());
+    scopingEntities.put(
+        Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
 
     DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
                                                .accountId(ACCOUNT_ID)
@@ -173,9 +173,9 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAdd() {
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
-    scopingEntities.put(ScopingRuleDetailsKeys.applicationId, ScopingValues.newBuilder().addValue("appId").build());
-    scopingEntities.put(ScopingRuleDetailsKeys.environmentIds,
-        ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
+    scopingEntities.put(Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue("appId").build());
+    scopingEntities.put(
+        Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
 
     DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
                                                .accountId(ACCOUNT_ID)
