@@ -226,16 +226,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case STACK_DRIVER_LOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
-        if (stackdriverCVConfiguration.isLogsConfiguration()) {
-          stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
-          if (stackdriverCVConfiguration.isEnabled24x7()
-              && !cvValidationService.validateStackdriverQuery(accountId, appId,
-                     stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
-            throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
-                "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
-          }
+
+        stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
+        if (stackdriverCVConfiguration.isEnabled24x7()
+            && !cvValidationService.validateStackdriverQuery(accountId, appId,
+                   stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                   stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
+          throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
+              "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
         }
+
         break;
       case SPLUNKV2:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), SplunkCVConfiguration.class);
@@ -483,16 +483,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case STACK_DRIVER_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) updatedConfig;
-        if (stackdriverCVConfiguration.isLogsConfiguration()) {
-          updatedConfig.setStateType(STACK_DRIVER_LOG);
-          if (stackdriverCVConfiguration.isEnabled24x7()
-              && !cvValidationService.validateStackdriverQuery(accountId, appId,
-                     stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
-            throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
-                "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
-          }
+
+        updatedConfig.setStateType(STACK_DRIVER_LOG);
+        if (stackdriverCVConfiguration.isEnabled24x7()
+            && !cvValidationService.validateStackdriverQuery(accountId, appId,
+                   stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                   stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
+          throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
+              "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
         }
+
         break;
       case ELK:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);

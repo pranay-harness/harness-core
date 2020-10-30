@@ -2283,32 +2283,29 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) config;
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
-        if (stackdriverCVConfiguration.isLogsConfiguration()) {
-          StackDriverLogDataCollectionInfo stackDriverLogDataCollectionInfo =
-              StackDriverLogDataCollectionInfo.builder()
-                  .gcpConfig(gcpConfig)
-                  .accountId(config.getAccountId())
-                  .applicationId(config.getAppId())
-                  .logMessageField(stackdriverCVConfiguration.getMessageField())
-                  .stateExecutionId(stateExecutionId)
-                  .serviceId(config.getServiceId())
-                  .query(stackdriverCVConfiguration.getQuery())
-                  .startTime(startTime)
-                  .endTime(endTime)
-                  .hostnameField(stackdriverCVConfiguration.getHostnameField())
-                  .collectionTime((int) duration)
-                  .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-                  .cvConfigId(config.getUuid())
-                  .stateType(StateType.STACK_DRIVER_LOG)
-                  .encryptedDataDetails(
-                      secretManager.getEncryptionDetails(gcpConfig, stackdriverCVConfiguration.getAppId(), null))
-                  .build();
-          return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_LOG_DATA, config.getAccountId(),
-              config.getAppId(), waitId, new Object[] {stackDriverLogDataCollectionInfo}, config.getEnvId(),
-              config.getUuid(), stackDriverLogDataCollectionInfo.getStateExecutionId(), config.getStateType());
-        } else {
-          throw new IllegalArgumentException("Stackdriver timeseries not implemented yet");
-        }
+
+        StackDriverLogDataCollectionInfo stackDriverLogDataCollectionInfo =
+            StackDriverLogDataCollectionInfo.builder()
+                .gcpConfig(gcpConfig)
+                .accountId(config.getAccountId())
+                .applicationId(config.getAppId())
+                .logMessageField(stackdriverCVConfiguration.getMessageField())
+                .stateExecutionId(stateExecutionId)
+                .serviceId(config.getServiceId())
+                .query(stackdriverCVConfiguration.getQuery())
+                .startTime(startTime)
+                .endTime(endTime)
+                .hostnameField(stackdriverCVConfiguration.getHostnameField())
+                .collectionTime((int) duration)
+                .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                .cvConfigId(config.getUuid())
+                .stateType(StateType.STACK_DRIVER_LOG)
+                .encryptedDataDetails(
+                    secretManager.getEncryptionDetails(gcpConfig, stackdriverCVConfiguration.getAppId(), null))
+                .build();
+        return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
+            waitId, new Object[] {stackDriverLogDataCollectionInfo}, config.getEnvId(), config.getUuid(),
+            stackDriverLogDataCollectionInfo.getStateExecutionId(), config.getStateType());
 
       default:
         throw new IllegalStateException("Invalid state: " + config.getStateType());
