@@ -75,6 +75,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   private String accountId;
   private Instant instant;
   private String serviceIdentifier;
+  private String envIdentifier;
   private String deploymentTag;
 
   @Before
@@ -85,6 +86,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     orgIdentifier = generateUuid();
     accountId = generateUuid();
     serviceIdentifier = generateUuid();
+    envIdentifier = generateUuid();
     deploymentTag = "build#1";
     FieldUtils.writeField(activityService, "webhookService", mockWebhookService, true);
     FieldUtils.writeField(activityService, "verificationJobService", verificationJobService, true);
@@ -239,21 +241,6 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .isInstanceOf(NullPointerException.class);
 
     verify(verificationJobInstanceService, times(0)).create(anyList());
-  }
-
-  private VerificationJob createVerificationJob() {
-    CanaryVerificationJob verificationJob = new CanaryVerificationJob();
-    verificationJob.setAccountId(accountId);
-    verificationJob.setIdentifier("identifier");
-    verificationJob.setJobName(generateUuid());
-    verificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
-    verificationJob.setSensitivity(Sensitivity.MEDIUM);
-    verificationJob.setServiceIdentifier(generateUuid(), false);
-    verificationJob.setEnvIdentifier(generateUuid(), false);
-    verificationJob.setDuration(Duration.ofMinutes(5));
-    verificationJob.setProjectIdentifier(generateUuid());
-    verificationJob.setOrgIdentifier(generateUuid());
-    return verificationJob;
   }
 
   @Test
@@ -443,7 +430,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     activityDTO.setProjectIdentifier(projectIdentifier);
     activityDTO.setOrgIdentifier(orgIdentifier);
     activityDTO.setActivityStartTime(instant.toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
+    activityDTO.setEnvironmentIdentifier(envIdentifier);
     activityDTO.setName("Build 23 deploy");
     activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
     activityDTO.setServiceIdentifier(serviceIdentifier);
@@ -474,5 +461,20 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
     activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
     return activityDTO;
+  }
+
+  private VerificationJob createVerificationJob() {
+    CanaryVerificationJob testVerificationJob = new CanaryVerificationJob();
+    testVerificationJob.setAccountId(accountId);
+    testVerificationJob.setIdentifier("identifier");
+    testVerificationJob.setJobName(generateUuid());
+    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
+    testVerificationJob.setServiceIdentifier(generateUuid(), false);
+    testVerificationJob.setEnvIdentifier(generateUuid(), false);
+    testVerificationJob.setDuration(Duration.ofMinutes(5));
+    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(generateUuid());
+    return testVerificationJob;
   }
 }

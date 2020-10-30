@@ -17,6 +17,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -66,5 +67,22 @@ public class TimeseriesDashboardResource {
         orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
         endTimeMillis, page, size));
+  }
+
+  @GET
+  @Path("/{activityId}/metrics")
+  @ApiOperation(value = "get activity metrics for given activityId", nickname = "getActivityMetrics")
+  public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getActivityMetrics(
+      @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTimeMillis,
+      @NotNull @QueryParam("endTime") Long endTimeMillis, @QueryParam("anomalousOnly") boolean anomalousOnly,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
+      @NotNull @PathParam("activityId") String activityId) {
+    return new RestResponse(
+        timeSeriesDashboardService.getActivityMetrics(activityId, accountId, projectIdentifier, orgIdentifier,
+            environmentIdentifier, serviceIdentifier, startTimeMillis, endTimeMillis, anomalousOnly, page, size));
   }
 }

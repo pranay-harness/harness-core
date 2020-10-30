@@ -17,11 +17,9 @@ import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -53,8 +51,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
-  @Inject private VerificationTaskService verificationTaskService;
-  @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private NextGenService nextGenService;
 
   @Override

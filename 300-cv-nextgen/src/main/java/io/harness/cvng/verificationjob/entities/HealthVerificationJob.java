@@ -53,7 +53,7 @@ public class HealthVerificationJob extends VerificationJob {
 
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    return null;
+    return getTimeRangesForDuration(startTime);
   }
 
   @Override
