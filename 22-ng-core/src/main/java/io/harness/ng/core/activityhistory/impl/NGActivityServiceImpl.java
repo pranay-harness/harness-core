@@ -1,6 +1,7 @@
 package io.harness.ng.core.activityhistory.impl;
 
 import static io.harness.ng.core.activityhistory.NGActivityStatus.FAILED;
+import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 
@@ -13,7 +14,6 @@ import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO.ConnectivityCheckSummaryKeys;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
-import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.ng.core.activityhistory.entity.NGActivity;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.ng.core.activityhistory.mapper.NGActivityDTOToEntityMapper;
@@ -24,12 +24,16 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
@@ -43,35 +47,56 @@ public class NGActivityServiceImpl implements NGActivityService {
   private EntityActivityQueryCriteriaHelper entityActivityQueryCriteriaHelper;
   NGActivityEntityToDTOMapper activityEntityToDTOMapper;
   NGActivityDTOToEntityMapper activityDTOToEntityMapper;
+  private static final String IS_SUCCESSFUL_CONNECTIVITY_CHECK_ACTIVITY = "isSuccessfulConnectivityCheckField";
+  private static final String IS_FAILED_CONNECTIVITY_CHECK_ACTIVITY = "isFailedConnectivityCheckField";
 
   @Override
-  public NGActivityListDTO list(int page, int size, String accountIdentifier, String orgIdentifier,
+  public Page<NGActivityDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String referredEntityIdentifier, long start, long end, NGActivityStatus status) {
     List<NGActivityDTO> allActivitiesOtherThanConnectivityCheck = getAllActivitiesOtherThanConnectivityCheck(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end, status);
-    ConnectivityCheckSummaryDTO connectivityCheckSummary = getConnectivityCheckSummary(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end);
-    return NGActivityListDTO.builder()
-        .activityHistoriesForEntityUsage(allActivitiesOtherThanConnectivityCheck)
-        .connectivityCheckSummary(connectivityCheckSummary)
-        .build();
+    return new PageImpl<>(allActivitiesOtherThanConnectivityCheck);
   }
 
-  private ConnectivityCheckSummaryDTO getConnectivityCheckSummary(String accountIdentifier, String orgIdentifier,
+  @Override
+  public ConnectivityCheckSummaryDTO getConnectivityCheckSummary(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String referredEntityIdentifier, long start, long end) {
     Criteria connectivityCheckCriteria = createConnectivityCheckCriteria(
         accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end);
+    ProjectionOperation projectionOperation = getProjectionOperationForProjectingSuccessfulAndFailedChecks();
     MatchOperation matchStage = Aggregation.match(connectivityCheckCriteria);
-    GroupOperation groupByID = group().count().as(ConnectivityCheckSummaryKeys.failureCount);
-    Aggregation aggregation = Aggregation.newAggregation(matchStage, groupByID);
-    return activityRepository.aggregate(aggregation, ConnectivityCheckSummaryDTO.class).getUniqueMappedResult();
+    GroupOperation groupByID = group()
+                                   .sum(IS_SUCCESSFUL_CONNECTIVITY_CHECK_ACTIVITY)
+                                   .as(ConnectivityCheckSummaryKeys.successCount)
+                                   .sum(IS_FAILED_CONNECTIVITY_CHECK_ACTIVITY)
+                                   .as(ConnectivityCheckSummaryKeys.failureCount);
+    Aggregation aggregation = Aggregation.newAggregation(matchStage, projectionOperation, groupByID);
+    ConnectivityCheckSummaryDTO connectivityCheckSummaryDTO =
+        activityRepository.aggregate(aggregation, ConnectivityCheckSummaryDTO.class).getUniqueMappedResult();
+    if (connectivityCheckSummaryDTO != null) {
+      connectivityCheckSummaryDTO.setStartTime(start);
+      connectivityCheckSummaryDTO.setEndTime(end);
+    }
+    return connectivityCheckSummaryDTO;
+  }
+
+  private ProjectionOperation getProjectionOperationForProjectingSuccessfulAndFailedChecks() {
+    Criteria successFulActivityCriteria =
+        Criteria.where(ActivityHistoryEntityKeys.activityStatus).is(SUCCESS.toString());
+    Criteria failedActivityCriteria = Criteria.where(ActivityHistoryEntityKeys.activityStatus).is(FAILED.toString());
+
+    return Aggregation.project()
+        .and(ConditionalOperators.when(successFulActivityCriteria).then(1).otherwise(0))
+        .as(IS_SUCCESSFUL_CONNECTIVITY_CHECK_ACTIVITY)
+        .and(ConditionalOperators.Cond.when(failedActivityCriteria).then(1).otherwise(0))
+        .as(IS_FAILED_CONNECTIVITY_CHECK_ACTIVITY)
+        .andInclude(ActivityHistoryEntityKeys.activityTime);
   }
 
   private Criteria createConnectivityCheckCriteria(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String referredEntityIdentifier, long start, long end) {
     Criteria criteria = new Criteria();
     criteria.and(ActivityHistoryEntityKeys.type).is(String.valueOf(CONNECTIVITY_CHECK));
-    criteria.and(ActivityHistoryEntityKeys.activityStatus).is(String.valueOf(FAILED));
     entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
     entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, start, end);

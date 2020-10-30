@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class ActivityHistoryTestHelper {
-  public NGActivityDTO createActivityHistoryDTO(String accountIdentifier, String orgIdentifier,
+  public static NGActivityDTO createActivityHistoryDTO(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, NGActivityStatus status, long activityTime,
       NGActivityType activityType) {
     String identifier1 = "identifier1";
