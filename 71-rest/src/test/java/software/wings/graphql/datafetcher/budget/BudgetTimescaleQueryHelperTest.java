@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
+import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -22,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
-import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
@@ -45,7 +45,7 @@ import java.util.Collections;
 
 public class BudgetTimescaleQueryHelperTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
-  @Mock private DataFetcherUtils utils;
+  @Mock private DataUtils utils;
   @Inject @InjectMocks BudgetTimescaleQueryHelper queryHelper;
 
   @Mock Statement statement;
