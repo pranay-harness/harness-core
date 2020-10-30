@@ -57,6 +57,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     assertThat(createdService.getProjectIdentifier()).isEqualTo(serviceEntity.getProjectIdentifier());
     assertThat(createdService.getIdentifier()).isEqualTo(serviceEntity.getIdentifier());
     assertThat(createdService.getName()).isEqualTo(serviceEntity.getName());
+    assertThat(createdService.getVersion()).isEqualTo(0L);
 
     // Get operations
     Optional<ServiceEntity> getService =
@@ -80,6 +81,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     assertThat(updatedServiceResponse.getIdentifier()).isEqualTo(updateServiceRequest.getIdentifier());
     assertThat(updatedServiceResponse.getName()).isEqualTo(updateServiceRequest.getName());
     assertThat(updatedServiceResponse.getDescription()).isEqualTo(updateServiceRequest.getDescription());
+    assertThat(updatedServiceResponse.getVersion()).isEqualTo(1L);
 
     updateServiceRequest.setAccountId("NEW_ACCOUNT");
     assertThatThrownBy(() -> serviceEntityService.update(updateServiceRequest))
@@ -124,7 +126,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
         ServiceElementMapper.writeDTO(updatedServiceResponse), ServiceElementMapper.writeDTO(upsertService));
 
     // Delete operations
-    boolean delete = serviceEntityService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_SERVICE");
+    boolean delete = serviceEntityService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER", 1L);
     assertThat(delete).isTrue();
 
     Optional<ServiceEntity> deletedService =

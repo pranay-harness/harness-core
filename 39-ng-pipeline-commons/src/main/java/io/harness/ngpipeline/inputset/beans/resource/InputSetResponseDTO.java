@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.beans.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
@@ -30,4 +31,6 @@ public class InputSetResponseDTO {
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   InputSetErrorWrapperDTO inputSetErrorWrapper;
+
+  @JsonIgnore Long version;
 }

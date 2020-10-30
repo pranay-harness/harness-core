@@ -8,6 +8,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface InputSetRepositoryCustom {
   Page<BaseInputSetEntity> findAll(Criteria criteria, Pageable pageable);
-  UpdateResult update(Criteria criteria, BaseInputSetEntity baseInputSetEntity);
+  BaseInputSetEntity update(Criteria criteria, BaseInputSetEntity baseInputSetEntity);
   UpdateResult delete(Criteria criteria);
 }

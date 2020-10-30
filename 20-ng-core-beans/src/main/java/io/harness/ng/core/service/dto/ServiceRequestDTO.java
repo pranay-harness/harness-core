@@ -2,6 +2,7 @@ package io.harness.ng.core.service.dto;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -26,4 +27,6 @@ public class ServiceRequestDTO {
   @EntityName String name;
   String description;
   Map<String, String> tags;
+
+  @JsonIgnore Long version;
 }

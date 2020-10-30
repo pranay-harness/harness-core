@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.beans.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
@@ -21,4 +22,5 @@ public class InputSetSummaryResponseDTO {
   String description;
   InputSetEntityType inputSetType;
   Map<String, String> tags;
+  @JsonIgnore Long version;
 }

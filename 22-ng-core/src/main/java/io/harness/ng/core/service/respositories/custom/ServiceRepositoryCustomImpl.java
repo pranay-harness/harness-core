@@ -14,6 +14,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,21 +40,27 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
   }
 
   @Override
-  public UpdateResult upsert(Criteria criteria, ServiceEntity serviceEntity) {
+  public ServiceEntity upsert(Criteria criteria, ServiceEntity serviceEntity) {
     Query query = new Query(criteria);
     Update update = ServiceFilterHelper.getUpdateOperations(serviceEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed upserting Service; attempt: {}", "[Failed]: Failed upserting Service; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.upsert(query, update, ServiceEntity.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true).upsert(true), ServiceEntity.class));
   }
 
   @Override
-  public UpdateResult update(Criteria criteria, ServiceEntity serviceEntity) {
+  public ServiceEntity update(Criteria criteria, ServiceEntity serviceEntity) {
     Query query = new Query(criteria);
     Update update = ServiceFilterHelper.getUpdateOperations(serviceEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Service; attempt: {}", "[Failed]: Failed updating Service; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, update, ServiceEntity.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), ServiceEntity.class));
   }
 
   @Override

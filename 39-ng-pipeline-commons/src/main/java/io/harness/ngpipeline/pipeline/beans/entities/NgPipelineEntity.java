@@ -22,10 +22,7 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
@@ -63,6 +60,8 @@ public class NgPipelineEntity implements PersistentEntity, AccountAccess, UuidAw
   @EntityName String name;
   @Size(max = 1024) String description;
   @Singular @Size(max = 128) List<NGTag> tags;
+
+  @Version Long version;
 
   @Override
   public String getAccountId() {

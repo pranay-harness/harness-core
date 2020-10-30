@@ -50,6 +50,7 @@ public class ServiceResourceTest extends NgManagerTest {
                             .projectIdentifier("PROJECT_ID")
                             .name("Service")
                             .tags(singletonMap("k1", "v1"))
+                            .version(0L)
                             .build();
 
     serviceResponseDTO = ServiceResponseDTO.builder()
@@ -59,6 +60,7 @@ public class ServiceResourceTest extends NgManagerTest {
                              .projectIdentifier("PROJECT_ID")
                              .name("Service")
                              .tags(singletonMap("k1", "v1"))
+                             .version(0L)
                              .build();
     serviceEntity = ServiceEntity.builder()
                         .accountId("ACCOUNT_ID")
@@ -67,6 +69,7 @@ public class ServiceResourceTest extends NgManagerTest {
                         .projectIdentifier("PROJECT_ID")
                         .name("Service")
                         .tags(tags)
+                        .version(0L)
                         .build();
   }
 
@@ -103,9 +106,9 @@ public class ServiceResourceTest extends NgManagerTest {
     doReturn(true)
         .when(serviceEntityService)
         .delete("ACCOUNT_ID", serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(),
-            serviceRequestDTO.getIdentifier());
+            serviceRequestDTO.getIdentifier(), null);
 
-    Boolean data = serviceResource.delete("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
+    Boolean data = serviceResource.delete(null, "IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
     assertThat(data).isTrue();
   }
 
@@ -114,7 +117,8 @@ public class ServiceResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     doReturn(serviceEntity).when(serviceEntityService).update(serviceEntity);
-    ServiceResponseDTO response = serviceResource.update(serviceEntity.getAccountId(), serviceRequestDTO).getData();
+    ServiceResponseDTO response =
+        serviceResource.update("0", serviceEntity.getAccountId(), serviceRequestDTO).getData();
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(serviceResponseDTO);
   }
@@ -124,7 +128,8 @@ public class ServiceResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testUpsert() {
     doReturn(serviceEntity).when(serviceEntityService).upsert(serviceEntity);
-    ServiceResponseDTO response = serviceResource.upsert(serviceEntity.getAccountId(), serviceRequestDTO).getData();
+    ServiceResponseDTO response =
+        serviceResource.upsert("0", serviceEntity.getAccountId(), serviceRequestDTO).getData();
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(serviceResponseDTO);
   }

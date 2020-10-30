@@ -14,6 +14,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,12 +40,15 @@ public class InputSetRepositoryCustomImpl implements InputSetRepositoryCustom {
   }
 
   @Override
-  public UpdateResult update(Criteria criteria, BaseInputSetEntity baseInputSetEntity) {
+  public BaseInputSetEntity update(Criteria criteria, BaseInputSetEntity baseInputSetEntity) {
     Query query = new Query(criteria);
     Update update = InputSetFilterHelper.getUpdateOperations(baseInputSetEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Service; attempt: {}", "[Failed]: Failed updating Service; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, update, BaseInputSetEntity.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), BaseInputSetEntity.class));
   }
 
   @Override

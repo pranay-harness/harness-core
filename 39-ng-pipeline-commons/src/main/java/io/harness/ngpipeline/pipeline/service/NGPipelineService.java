@@ -20,7 +20,8 @@ public interface NGPipelineService {
 
   Page<NgPipelineEntity> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
   Map<String, String> getPipelineIdentifierToName(
       String accountId, String orgId, String projectId, @NotNull List<String> pipelineIdentifiers);

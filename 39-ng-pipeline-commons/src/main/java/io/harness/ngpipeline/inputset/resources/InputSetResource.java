@@ -43,6 +43,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
+import static java.lang.Long.parseLong;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 @Api("/inputSets")
 @Path("/inputSets")
@@ -72,7 +75,7 @@ public class InputSetResource {
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<BaseInputSetEntity> baseInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
-    return ResponseDTO.newResponse(
+    return ResponseDTO.newResponse(baseInputSetEntity.get().getVersion().toString(),
         baseInputSetEntity.map(entity -> InputSetElementMapper.writeInputSetResponseDTO(entity, null)).orElse(null));
   }
 
@@ -88,7 +91,7 @@ public class InputSetResource {
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<BaseInputSetEntity> overlayInputSetEntity = inputSetEntityService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
-    return ResponseDTO.newResponse(
+    return ResponseDTO.newResponse(overlayInputSetEntity.get().getVersion().toString(),
         overlayInputSetEntity.map(entity -> InputSetElementMapper.writeOverlayResponseDTO(entity, null)).orElse(null));
   }
 
@@ -115,7 +118,8 @@ public class InputSetResource {
     }
 
     BaseInputSetEntity createdEntity = inputSetEntityService.create(inputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeInputSetResponseDTO(createdEntity, null));
+    return ResponseDTO.newResponse(
+        createdEntity.getVersion().toString(), InputSetElementMapper.writeInputSetResponseDTO(createdEntity, null));
   }
 
   @POST
@@ -142,7 +146,8 @@ public class InputSetResource {
     }
 
     BaseInputSetEntity createdEntity = inputSetEntityService.create(overlayInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(createdEntity, null));
+    return ResponseDTO.newResponse(
+        createdEntity.getVersion().toString(), InputSetElementMapper.writeOverlayResponseDTO(createdEntity, null));
   }
 
   @PUT
@@ -153,7 +158,8 @@ public class InputSetResource {
   })
   @ApiOperation(value = "Update an InputSet by identifier", nickname = "updateInputSetForPipeline")
   public ResponseDTO<InputSetResponseDTO>
-  updateInputSet(@PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+  updateInputSet(@HeaderParam(IF_MATCH) String ifMatch,
+      @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
@@ -161,6 +167,7 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     InputSetEntity inputSetEntity = InputSetElementMapper.toInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+    inputSetEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
     inputSetEntity = inputSetMergeHelper.removeRuntimeInputs(inputSetEntity);
 
@@ -170,7 +177,8 @@ public class InputSetResource {
     }
 
     BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(inputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeInputSetResponseDTO(updatedInputSetEntity, null));
+    return ResponseDTO.newResponse(updatedInputSetEntity.getVersion().toString(),
+        InputSetElementMapper.writeInputSetResponseDTO(updatedInputSetEntity, null));
   }
 
   @PUT
@@ -181,7 +189,8 @@ public class InputSetResource {
   })
   @ApiOperation(value = "Update an Overlay InputSet by identifier", nickname = "updateOverlayInputSetForPipeline")
   public ResponseDTO<OverlayInputSetResponseDTO>
-  updateOverlayInputSet(@PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
+  updateOverlayInputSet(@HeaderParam(IF_MATCH) String ifMatch,
+      @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
@@ -189,6 +198,7 @@ public class InputSetResource {
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     OverlayInputSetEntity overlayInputSetEntity = InputSetElementMapper.toOverlayInputSetEntityWithIdentifier(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, yaml);
+    overlayInputSetEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
     Map<String, String> invalidIdentifiers =
         inputSetEntityValidationHelper.validateOverlayInputSetEntity(overlayInputSetEntity);
@@ -198,20 +208,21 @@ public class InputSetResource {
     }
 
     BaseInputSetEntity updatedInputSetEntity = inputSetEntityService.update(overlayInputSetEntity);
-    return ResponseDTO.newResponse(InputSetElementMapper.writeOverlayResponseDTO(updatedInputSetEntity, null));
+    return ResponseDTO.newResponse(updatedInputSetEntity.getVersion().toString(),
+        InputSetElementMapper.writeOverlayResponseDTO(updatedInputSetEntity, null));
   }
 
   @DELETE
   @Path("{inputSetIdentifier}")
   @ApiOperation(value = "Delete an inputSet by identifier", nickname = "deleteInputSetForPipeline")
-  public ResponseDTO<Boolean> delete(
+  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
       @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier) {
-    return ResponseDTO.newResponse(inputSetEntityService.delete(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier));
+    return ResponseDTO.newResponse(inputSetEntityService.delete(accountId, orgIdentifier, projectIdentifier,
+        pipelineIdentifier, inputSetIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @GET

@@ -32,7 +32,7 @@ public class InputSetElementMapper {
       InputSetConfig inputSet = YamlPipelineUtils.read(yaml, InputSetConfig.class);
       return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
-      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+      throw new InvalidRequestException("Cannot create inputSet entity because: " + e.getMessage());
     }
   }
 
@@ -45,7 +45,7 @@ public class InputSetElementMapper {
       }
       return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
-      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+      throw new InvalidRequestException("Cannot create inputSet entity because: " + e.getMessage());
     }
   }
 
@@ -71,7 +71,7 @@ public class InputSetElementMapper {
       OverlayInputSetConfig inputSet = YamlPipelineUtils.read(yaml, OverlayInputSetConfig.class);
       return toOverlayInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
-      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+      throw new InvalidRequestException("Cannot create inputSet entity because: " + e.getMessage());
     }
   }
 
@@ -84,7 +84,7 @@ public class InputSetElementMapper {
       }
       return toOverlayInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, inputSet);
     } catch (Exception e) {
-      throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
+      throw new InvalidRequestException("Cannot create inputSet entity because: " + e.getMessage());
     }
   }
 
@@ -128,6 +128,7 @@ public class InputSetElementMapper {
         .tags(TagMapper.convertToMap(inputSetEntity.getTags()))
         .isErrorResponse(isErrorResponse)
         .inputSetErrorWrapper(inputSetErrorWrapperDTO)
+        .version(inputSetEntity.getVersion())
         .build();
   }
 
@@ -148,6 +149,7 @@ public class InputSetElementMapper {
         .inputSetReferences(references)
         .isErrorResponse(isErrorResponse)
         .invalidInputSetReferences(invalidIdentifiers)
+        .version(overlayInputSetEntity.getVersion())
         .build();
   }
 
@@ -159,6 +161,7 @@ public class InputSetElementMapper {
         .description(baseInputSetEntity.getDescription())
         .tags(TagMapper.convertToMap(baseInputSetEntity.getTags()))
         .inputSetType(baseInputSetEntity.getInputSetType())
+        .version(baseInputSetEntity.getVersion())
         .build();
   }
 

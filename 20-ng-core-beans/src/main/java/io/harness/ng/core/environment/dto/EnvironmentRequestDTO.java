@@ -2,6 +2,7 @@ package io.harness.ng.core.environment.dto;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.validator.EntityIdentifier;
@@ -29,4 +30,5 @@ public class EnvironmentRequestDTO {
   @EntityName String name;
   String description;
   @ApiModelProperty(required = true) EnvironmentType type;
+  @JsonIgnore Long version;
 }

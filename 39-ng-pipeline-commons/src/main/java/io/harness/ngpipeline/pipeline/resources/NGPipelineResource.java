@@ -33,6 +33,10 @@ import javax.ws.rs.*;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.Long.parseLong;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
+
 @Api("pipelines")
 @Path("pipelines")
 @Produces({"application/json", "application/yaml"})
@@ -58,7 +62,8 @@ public class NGPipelineResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
     Optional<NgPipelineEntity> ngPipelineEntity = ngPipelineService.get(accountId, orgId, projectId, pipelineId, false);
-    return ResponseDTO.newResponse(ngPipelineEntity.map(PipelineDtoMapper::writePipelineDto).orElse(null));
+    return ResponseDTO.newResponse(ngPipelineEntity.get().getVersion().toString(),
+        ngPipelineEntity.map(PipelineDtoMapper::writePipelineDto).orElse(null));
   }
 
   @GET
@@ -71,7 +76,8 @@ public class NGPipelineResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     logger.info("Get pipeline");
     Optional<NgPipelineEntity> ngPipelineEntity = ngPipelineService.get(accountId, orgId, projectId, pipelineId, false);
-    return ResponseDTO.newResponse(ngPipelineEntity.map(PipelineDtoMapper::preparePipelineSummary).orElse(null));
+    return ResponseDTO.newResponse(ngPipelineEntity.get().getVersion().toString(),
+        ngPipelineEntity.map(PipelineDtoMapper::preparePipelineSummary).orElse(null));
   }
 
   @GET
@@ -115,7 +121,7 @@ public class NGPipelineResource {
     NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     NgPipelineEntity createdEntity = ngPipelineService.create(ngPipelineEntity);
 
-    return ResponseDTO.newResponse(createdEntity.getIdentifier());
+    return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
   }
 
   @PUT
@@ -126,7 +132,8 @@ public class NGPipelineResource {
   })
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
   public ResponseDTO<String>
-  updatePipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  updatePipeline(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
@@ -136,18 +143,21 @@ public class NGPipelineResource {
     if (!ngPipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
-    NgPipelineEntity createdEntity = ngPipelineService.update(ngPipelineEntity);
+    ngPipelineEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+    NgPipelineEntity updatedEntity = ngPipelineService.update(ngPipelineEntity);
 
-    return ResponseDTO.newResponse(createdEntity.getIdentifier());
+    return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
   }
 
   @DELETE
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Delete a pipeline", nickname = "softDeletePipeline")
-  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  public ResponseDTO<Boolean> deletePipeline(@HeaderParam(IF_MATCH) String ifMatch,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
-    return ResponseDTO.newResponse(ngPipelineService.delete(accountId, orgId, projectId, pipelineId));
+    return ResponseDTO.newResponse(ngPipelineService.delete(
+        accountId, orgId, projectId, pipelineId, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 }
