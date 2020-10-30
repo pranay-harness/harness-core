@@ -4,20 +4,23 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.persistence.HPersistence;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,9 +35,10 @@ import java.util.stream.Collectors;
 
 public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardService {
   @Inject private CVConfigService cvConfigService;
-  @Inject private HPersistence hPersistence;
   @Inject private TimeSeriesService timeSeriesService;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private ActivityService activityService;
 
   @Override
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
@@ -52,6 +56,26 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
         monitoringCategory, startTimeMillis, endTimeMillis, true, page, size);
   }
 
+  @Override
+  public PageResponse<TimeSeriesMetricDataDTO> getActivityMetrics(String activityId, String accountId,
+      String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
+      Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly, int page, int size) {
+    Activity activity = activityService.get(activityId);
+    List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
+    Set<String> verificationTaskIds =
+        verificationJobInstanceIds.stream()
+            .map(verificationJobInstanceId
+                -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+
+    List<String> cvConfigIds = verificationTaskIds.stream()
+                                   .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
+                                   .collect(Collectors.toList());
+    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, null,
+        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), anomalousOnly, page, size);
+  }
+
   private PageResponse<TimeSeriesMetricDataDTO> getMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly,
@@ -64,6 +88,14 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
         accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
+    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
+        monitoringCategory, startTime, endTime, anomalousOnly, page, size);
+  }
+
+  private PageResponse<TimeSeriesMetricDataDTO> getMetricData(List<String> cvConfigIds, String projectIdentifier,
+      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
+      CVMonitoringCategory monitoringCategory, Instant startTime, Instant endTime, boolean anomalousOnly, int page,
+      int size) {
     List<Callable<List<TimeSeriesRecord>>> recordsPerId = new ArrayList<>();
 
     cvConfigIds.forEach(cvConfigId -> {

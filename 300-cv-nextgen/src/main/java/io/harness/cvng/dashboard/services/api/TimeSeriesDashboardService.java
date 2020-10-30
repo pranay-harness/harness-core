@@ -11,4 +11,7 @@ public interface TimeSeriesDashboardService {
   PageResponse<TimeSeriesMetricDataDTO> getSortedAnomalousMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size);
+  PageResponse<TimeSeriesMetricDataDTO> getActivityMetrics(String activityId, String accountId,
+      String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
+      Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly, int page, int size);
 }
