@@ -59,7 +59,7 @@ public class SecretManagementModuleTest extends CategoryTest {
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
-    entityReferenceClientModule = new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "ng-manager");
+    entityReferenceClientModule = new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret);
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {

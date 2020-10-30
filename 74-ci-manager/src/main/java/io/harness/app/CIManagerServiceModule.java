@@ -55,7 +55,6 @@ import java.util.function.Supplier;
 @Slf4j
 public class CIManagerServiceModule extends AbstractModule {
   private final CIManagerConfiguration ciManagerConfiguration;
-  private static final String SERVICE_NAME = "ci-manager";
 
   public CIManagerServiceModule(CIManagerConfiguration ciManagerConfiguration) {
     this.ciManagerConfiguration = ciManagerConfiguration;
@@ -130,8 +129,8 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new SecretManagementClientModule(
         ciManagerConfiguration.getManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), SERVICE_NAME));
+    install(new EntitySetupUsageClientModule(
+        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
     install(new ConnectorResourceClientModule(
         ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
     install(new SecretNGManagerClientModule(

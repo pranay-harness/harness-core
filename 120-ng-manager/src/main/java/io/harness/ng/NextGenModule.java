@@ -162,8 +162,8 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
-    install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
-        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
+    install(new EntitySetupUsageClientModule(
+        this.appConfig.getNgManagerClientConfig(), this.appConfig.getNextGenConfig().getNgManagerServiceSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton

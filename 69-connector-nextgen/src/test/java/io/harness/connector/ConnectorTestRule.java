@@ -75,7 +75,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "ng-manager"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
