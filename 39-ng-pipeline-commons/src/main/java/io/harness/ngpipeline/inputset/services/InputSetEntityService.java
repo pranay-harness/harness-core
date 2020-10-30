@@ -20,7 +20,7 @@ public interface InputSetEntityService {
   Page<BaseInputSetEntity> list(Criteria criteria, Pageable pageable);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      String inputSetIdentifier);
+      String inputSetIdentifier, Long version);
   void deleteInputSetsOfPipeline(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 

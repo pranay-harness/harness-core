@@ -65,8 +65,11 @@ public class NGPipelineResourceTest extends CategoryTest {
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
     NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURL(), NgPipeline.class);
     ngPipelineResource = new NGPipelineResource(ngPipelineService, restQueryFilterParser);
-    ngPipelineResponseDTO =
-        NGPipelineResponseDTO.builder().ngPipeline(ngPipeline).executionsPlaceHolder(new ArrayList<>()).build();
+    ngPipelineResponseDTO = NGPipelineResponseDTO.builder()
+                                .ngPipeline(ngPipeline)
+                                .executionsPlaceHolder(new ArrayList<>())
+                                .version(0L)
+                                .build();
     ngPipelineEntity = NgPipelineEntity.builder()
                            .accountId(ACCOUNT_ID)
                            .projectIdentifier(PROJ_IDENTIFIER)
@@ -74,12 +77,14 @@ public class NGPipelineResourceTest extends CategoryTest {
                            .identifier(PIPELINE_IDENTIFIER)
                            .ngPipeline(ngPipeline)
                            .tags(tags)
+                           .version(0L)
                            .build();
     ngPipelineSummaryResponseDTO = NGPipelineSummaryResponseDTO.builder()
                                        .identifier(PIPELINE_IDENTIFIER)
                                        .name(PIPELINE_NAME)
                                        .numOfStages(1)
                                        .tags(TagMapper.convertToMap(tags))
+                                       .version(0L)
                                        .build();
   }
 

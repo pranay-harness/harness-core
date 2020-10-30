@@ -64,22 +64,16 @@ public class NGPipelineServiceImpl implements NGPipelineService {
 
   @Override
   public NgPipelineEntity update(NgPipelineEntity ngPipeline) {
-    try {
-      validatePresenceOfRequiredFields(ngPipeline.getAccountId(), ngPipeline.getOrgIdentifier(),
-          ngPipeline.getProjectIdentifier(), ngPipeline.getIdentifier());
-      Criteria criteria = getPipelineEqualityCriteria(ngPipeline, ngPipeline.getDeleted());
-      UpdateResult updateResult = ngPipelineRepository.update(criteria, ngPipeline);
-      if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-        throw new InvalidRequestException(
-            String.format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-                ngPipeline.getIdentifier(), ngPipeline.getProjectIdentifier(), ngPipeline.getOrgIdentifier()));
-      }
-      return ngPipeline;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, ngPipeline.getIdentifier(),
-                                            ngPipeline.getProjectIdentifier(), ngPipeline.getOrgIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(ngPipeline.getAccountId(), ngPipeline.getOrgIdentifier(),
+        ngPipeline.getProjectIdentifier(), ngPipeline.getIdentifier());
+    Criteria criteria = getPipelineEqualityCriteria(ngPipeline, ngPipeline.getDeleted());
+    NgPipelineEntity updateResult = ngPipelineRepository.update(criteria, ngPipeline);
+    if (updateResult == null) {
+      throw new InvalidRequestException(
+          String.format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+              ngPipeline.getIdentifier(), ngPipeline.getProjectIdentifier(), ngPipeline.getOrgIdentifier()));
     }
+    return updateResult;
   }
 
   @Override
@@ -88,14 +82,15 @@ public class NGPipelineServiceImpl implements NGPipelineService {
   }
 
   @Override
-  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+  public boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
     executorService.submit(() -> {
       inputSetEntityService.deleteInputSetsOfPipeline(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     });
     Criteria criteria =
-        getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+        getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
     UpdateResult updateResult = ngPipelineRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged()) {
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           String.format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
               projectIdentifier, orgIdentifier));
@@ -105,28 +100,35 @@ public class NGPipelineServiceImpl implements NGPipelineService {
 
   private Criteria getPipelineEqualityCriteria(@Valid NgPipelineEntity requestPipeline, boolean deleted) {
     return getPipelineEqualityCriteria(requestPipeline.getAccountId(), requestPipeline.getOrgIdentifier(),
-        requestPipeline.getProjectIdentifier(), requestPipeline.getIdentifier(), deleted);
+        requestPipeline.getProjectIdentifier(), requestPipeline.getIdentifier(), deleted, requestPipeline.getVersion());
   }
 
-  private Criteria getPipelineEqualityCriteria(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
-    Criteria criteria = getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier);
+  private Criteria getPipelineEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, boolean deleted, Long version) {
+    Criteria criteria = getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, version);
     return criteria.and(PipelineNGKeys.identifier).is(pipelineIdentifier).and(PipelineNGKeys.deleted).is(deleted);
   }
 
-  private Criteria getPipelineEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier) {
-    return Criteria.where(PipelineNGKeys.accountId)
-        .is(accountId)
-        .and(PipelineNGKeys.orgIdentifier)
-        .is(orgIdentifier)
-        .and(PipelineNGKeys.projectIdentifier)
-        .is(projectIdentifier);
+  private Criteria getPipelineEqualityCriteria(
+      String accountId, String orgIdentifier, String projectIdentifier, Long version) {
+    Criteria criteria = Criteria.where(PipelineNGKeys.accountId)
+                            .is(accountId)
+                            .and(PipelineNGKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(PipelineNGKeys.projectIdentifier)
+                            .is(projectIdentifier);
+
+    if (version != null) {
+      criteria.and(PipelineNGKeys.version).is(version);
+    }
+
+    return criteria;
   }
 
   @Override
   public Map<String, String> getPipelineIdentifierToName(
       String accountId, String orgId, String projectId, List<String> pipelineIdentifiers) {
-    Criteria criteria = getPipelineEqualityCriteria(accountId, orgId, projectId);
+    Criteria criteria = getPipelineEqualityCriteria(accountId, orgId, projectId, null);
     criteria.and(PipelineNGKeys.identifier).in(pipelineIdentifiers);
     return ngPipelineRepository
         .findAllWithCriteriaAndProjectOnFields(criteria,
@@ -155,7 +157,7 @@ public class NGPipelineServiceImpl implements NGPipelineService {
   public Page<NgPipelineEntity> listPipelines(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm) {
     criteria = criteria.and(PipelineNGKeys.deleted).is(false);
-    criteria = criteria.andOperator(getPipelineEqualityCriteria(accountId, orgId, projectId));
+    criteria = criteria.andOperator(getPipelineEqualityCriteria(accountId, orgId, projectId, null));
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));

@@ -70,44 +70,32 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
   @Override
   public ServiceEntity update(@Valid ServiceEntity requestService) {
-    try {
-      validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
-          requestService.getProjectIdentifier(), requestService.getIdentifier());
-      setName(requestService);
-      Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
-      UpdateResult updateResult = serviceRepository.update(criteria, requestService);
-      if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-        throw new InvalidRequestException(String.format(
-            "Service [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-            requestService.getIdentifier(), requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
-      }
-      return requestService;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, requestService.getIdentifier(),
-                                            requestService.getProjectIdentifier(), requestService.getOrgIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
+        requestService.getProjectIdentifier(), requestService.getIdentifier());
+    setName(requestService);
+    Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
+    ServiceEntity updatedResult = serviceRepository.update(criteria, requestService);
+    if (updatedResult == null) {
+      throw new InvalidRequestException(String.format(
+          "Service [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+          requestService.getIdentifier(), requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
     }
+    return updatedResult;
   }
 
   @Override
   public ServiceEntity upsert(@Valid ServiceEntity requestService) {
-    try {
-      validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
-          requestService.getProjectIdentifier(), requestService.getIdentifier());
-      setName(requestService);
-      Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
-      UpdateResult upsertResult = serviceRepository.upsert(criteria, requestService);
-      if (!upsertResult.wasAcknowledged()) {
-        throw new InvalidRequestException(String.format(
-            "Service [%s] under Project[%s], Organization [%s] couldn't be upserted or doesn't exist.",
-            requestService.getIdentifier(), requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
-      }
-      return requestService;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, requestService.getIdentifier(),
-                                            requestService.getProjectIdentifier(), requestService.getOrgIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
+        requestService.getProjectIdentifier(), requestService.getIdentifier());
+    setName(requestService);
+    Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
+    ServiceEntity result = serviceRepository.upsert(criteria, requestService);
+    if (result == null) {
+      throw new InvalidRequestException(String.format(
+          "Service [%s] under Project[%s], Organization [%s] couldn't be upserted.", requestService.getIdentifier(),
+          requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
     }
+    return result;
   }
 
   @Override
@@ -116,17 +104,19 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   @Override
-  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+  public boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version) {
     ServiceEntity serviceEntity = ServiceEntity.builder()
                                       .accountId(accountId)
                                       .orgIdentifier(orgIdentifier)
                                       .projectIdentifier(projectIdentifier)
                                       .identifier(serviceIdentifier)
+                                      .version(version)
                                       .build();
     checkThatServiceIsNotReferredByOthers(serviceEntity);
     Criteria criteria = getServiceEqualityCriteria(serviceEntity, false);
     UpdateResult updateResult = serviceRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged()) {
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           String.format("Service [%s] under Project[%s], Organization [%s] couldn't be deleted.", serviceIdentifier,
               projectIdentifier, orgIdentifier));
@@ -168,15 +158,19 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   private Criteria getServiceEqualityCriteria(@Valid ServiceEntity requestService, boolean deleted) {
-    return Criteria.where(ServiceEntityKeys.accountId)
-        .is(requestService.getAccountId())
-        .and(ServiceEntityKeys.orgIdentifier)
-        .is(requestService.getOrgIdentifier())
-        .and(ServiceEntityKeys.projectIdentifier)
-        .is(requestService.getProjectIdentifier())
-        .and(ServiceEntityKeys.identifier)
-        .is(requestService.getIdentifier())
-        .and(ServiceEntityKeys.deleted)
-        .is(deleted);
+    Criteria criteria = Criteria.where(ServiceEntityKeys.accountId)
+                            .is(requestService.getAccountId())
+                            .and(ServiceEntityKeys.orgIdentifier)
+                            .is(requestService.getOrgIdentifier())
+                            .and(ServiceEntityKeys.projectIdentifier)
+                            .is(requestService.getProjectIdentifier())
+                            .and(ServiceEntityKeys.identifier)
+                            .is(requestService.getIdentifier())
+                            .and(ServiceEntityKeys.deleted)
+                            .is(deleted);
+    if (requestService.getVersion() != null) {
+      criteria.and(ServiceEntityKeys.version).is(requestService.getVersion());
+    }
+    return criteria;
   }
 }

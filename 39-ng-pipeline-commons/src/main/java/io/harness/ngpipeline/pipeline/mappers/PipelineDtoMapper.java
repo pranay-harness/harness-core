@@ -41,6 +41,7 @@ public class PipelineDtoMapper {
         .ngPipeline(ngPipelineEntity.getNgPipeline())
         .yamlPipeline(ngPipelineEntity.getYamlPipeline())
         .executionsPlaceHolder(new ArrayList<>())
+        .version(ngPipelineEntity.getVersion())
         .build();
   }
 
@@ -53,6 +54,7 @@ public class PipelineDtoMapper {
         .numOfStages(getNumberOfStages(ngPipelineEntity.getNgPipeline()))
         .numOfErrors(getNumberOfErrorsLast10Days(ngPipelineEntity.getNgPipeline()))
         .deployments(getNumberOfDeployments(ngPipelineEntity.getNgPipeline()))
+        .version(ngPipelineEntity.getVersion())
         .build();
   }
 

@@ -21,5 +21,6 @@ public interface ServiceEntityService {
 
   Page<ServiceEntity> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version);
 }

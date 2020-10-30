@@ -73,26 +73,18 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
   @Override
   public BaseInputSetEntity update(BaseInputSetEntity baseInputSetEntity) {
-    try {
-      validatePresenceOfRequiredFields(baseInputSetEntity.getAccountId(), baseInputSetEntity.getOrgIdentifier(),
-          baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getPipelineIdentifier(),
-          baseInputSetEntity.getIdentifier());
-      Criteria criteria = getInputSetEqualityCriteria(baseInputSetEntity, baseInputSetEntity.getDeleted());
-      UpdateResult updateResult = inputSetRepository.update(criteria, baseInputSetEntity);
-      if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-        throw new InvalidRequestException(String.format(
-            "InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] couldn't be updated or doesn't exist.",
-            baseInputSetEntity.getIdentifier(), baseInputSetEntity.getProjectIdentifier(),
-            baseInputSetEntity.getOrgIdentifier(), baseInputSetEntity.getPipelineIdentifier()));
-      }
-      return baseInputSetEntity;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format(DUP_KEY_EXP_FORMAT_STRING, baseInputSetEntity.getIdentifier(),
-              baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getOrgIdentifier(),
-              baseInputSetEntity.getPipelineIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(baseInputSetEntity.getAccountId(), baseInputSetEntity.getOrgIdentifier(),
+        baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getPipelineIdentifier(),
+        baseInputSetEntity.getIdentifier());
+    Criteria criteria = getInputSetEqualityCriteria(baseInputSetEntity, baseInputSetEntity.getDeleted());
+    BaseInputSetEntity updateResult = inputSetRepository.update(criteria, baseInputSetEntity);
+    if (updateResult == null) {
+      throw new InvalidRequestException(
+          String.format("Input Set [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+              baseInputSetEntity.getIdentifier(), baseInputSetEntity.getProjectIdentifier(),
+              baseInputSetEntity.getOrgIdentifier()));
     }
+    return updateResult;
   }
 
   @Override
@@ -102,13 +94,13 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      String inputSetIdentifier) {
+      String inputSetIdentifier, Long version) {
     checkThatTheInputSetIsNotUsedByOthers(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier);
     Criteria criteria = getInputSetEqualityCriteria(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, false);
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, false, version);
     UpdateResult updateResult = inputSetRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged()) {
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           String.format("InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] couldn't be deleted.",
               inputSetIdentifier, projectIdentifier, orgIdentifier, pipelineIdentifier));
@@ -182,22 +174,27 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
   private Criteria getInputSetEqualityCriteria(@Valid BaseInputSetEntity requestInputSet, boolean deleted) {
     return getInputSetEqualityCriteria(requestInputSet.getAccountId(), requestInputSet.getOrgIdentifier(),
         requestInputSet.getProjectIdentifier(), requestInputSet.getPipelineIdentifier(),
-        requestInputSet.getIdentifier(), deleted);
+        requestInputSet.getIdentifier(), deleted, requestInputSet.getVersion());
   }
 
   private Criteria getInputSetEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String inputSetIdentifier, boolean deleted) {
-    return Criteria.where(BaseInputSetEntityKeys.accountId)
-        .is(accountId)
-        .and(BaseInputSetEntityKeys.orgIdentifier)
-        .is(orgIdentifier)
-        .and(BaseInputSetEntityKeys.projectIdentifier)
-        .is(projectIdentifier)
-        .and(BaseInputSetEntityKeys.pipelineIdentifier)
-        .is(pipelineIdentifier)
-        .and(BaseInputSetEntityKeys.identifier)
-        .is(inputSetIdentifier)
-        .and(BaseInputSetEntityKeys.deleted)
-        .is(deleted);
+      String pipelineIdentifier, String inputSetIdentifier, boolean deleted, Long version) {
+    Criteria criteria = Criteria.where(BaseInputSetEntityKeys.accountId)
+                            .is(accountId)
+                            .and(BaseInputSetEntityKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(BaseInputSetEntityKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(BaseInputSetEntityKeys.pipelineIdentifier)
+                            .is(pipelineIdentifier)
+                            .and(BaseInputSetEntityKeys.identifier)
+                            .is(inputSetIdentifier)
+                            .and(BaseInputSetEntityKeys.deleted)
+                            .is(deleted);
+
+    if (version != null) {
+      criteria.and(BaseInputSetEntityKeys.version).is(version);
+    }
+    return criteria;
   }
 }

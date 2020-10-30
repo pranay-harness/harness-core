@@ -88,6 +88,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(createdInputSet.getProjectIdentifier()).isEqualTo(inputSetEntity.getProjectIdentifier());
     assertThat(createdInputSet.getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
     assertThat(createdInputSet.getName()).isEqualTo(inputSetEntity.getName());
+    assertThat(createdInputSet.getVersion()).isEqualTo(0L);
 
     // Get
     Optional<BaseInputSetEntity> getInputSet =
@@ -111,6 +112,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(updatedInputSetResponse.getIdentifier()).isEqualTo(updatedInputSetEntity.getIdentifier());
     assertThat(updatedInputSetResponse.getName()).isEqualTo(updatedInputSetEntity.getName());
     assertThat(updatedInputSetResponse.getDescription()).isEqualTo(updatedInputSetEntity.getDescription());
+    assertThat(updatedInputSetResponse.getVersion()).isEqualTo(1L);
 
     // Update non existing entity
     updatedInputSetEntity.setAccountId("newAccountId");
@@ -132,7 +134,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
                 Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
             "");
     boolean delete =
-        inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
+        inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);
     assertThat(delete).isTrue();
 
     Optional<BaseInputSetEntity> deletedInputSet =
@@ -166,6 +168,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(createdInputSet.getProjectIdentifier()).isEqualTo(overlayInputSetEntity.getProjectIdentifier());
     assertThat(createdInputSet.getIdentifier()).isEqualTo(overlayInputSetEntity.getIdentifier());
     assertThat(createdInputSet.getName()).isEqualTo(overlayInputSetEntity.getName());
+    assertThat(createdInputSet.getVersion()).isEqualTo(0L);
 
     // Get
     Optional<BaseInputSetEntity> getInputSet =
@@ -190,6 +193,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     assertThat(updatedInputSetResponse.getIdentifier()).isEqualTo(updatedOverlayInputSetEntity.getIdentifier());
     assertThat(updatedInputSetResponse.getName()).isEqualTo(updatedOverlayInputSetEntity.getName());
     assertThat(updatedInputSetResponse.getDescription()).isEqualTo(updatedOverlayInputSetEntity.getDescription());
+    assertThat(updatedInputSetResponse.getVersion()).isEqualTo(1L);
 
     // Update non existing entity
     updatedOverlayInputSetEntity.setAccountId("newAccountId");
@@ -212,7 +216,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
             "");
 
     boolean delete =
-        inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
+        inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);
     assertThat(delete).isTrue();
 
     Optional<BaseInputSetEntity> deletedInputSet =

@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface NgPipelineRepositoryCustom {
   Page<NgPipelineEntity> findAll(Criteria criteria, Pageable pageable);
-  UpdateResult update(Criteria criteria, NgPipelineEntity ngPipelineEntity);
+  NgPipelineEntity update(Criteria criteria, NgPipelineEntity ngPipelineEntity);
   UpdateResult delete(Criteria criteria);
   List<NgPipelineEntity> findAllWithCriteriaAndProjectOnFields(
       Criteria criteria, @NotNull List<String> includedFields, @NotNull List<String> excludedFields);

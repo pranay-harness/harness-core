@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface EnvironmentRepositoryCustom {
   Page<Environment> findAll(Criteria criteria, Pageable pageable);
-  UpdateResult upsert(Criteria criteria, Environment environment);
-  UpdateResult update(Criteria criteria, Environment environment);
+  Environment upsert(Criteria criteria, Environment environment);
+  Environment update(Criteria criteria, Environment environment);
   UpdateResult delete(Criteria criteria);
 }

@@ -21,5 +21,6 @@ public interface EnvironmentService {
 
   Page<Environment> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier);
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier, Long version);
 }

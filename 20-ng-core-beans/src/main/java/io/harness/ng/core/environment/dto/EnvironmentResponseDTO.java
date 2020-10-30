@@ -1,5 +1,6 @@
 package io.harness.ng.core.environment.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import lombok.AccessLevel;
@@ -23,4 +24,5 @@ public class EnvironmentResponseDTO {
   EnvironmentType type;
   boolean deleted;
   Map<String, String> tags;
+  @JsonIgnore Long version;
 }

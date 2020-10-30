@@ -1,6 +1,9 @@
 package io.harness.ng.core.environment.resources;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
+import static java.lang.Long.parseLong;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import com.google.inject.Inject;
 
@@ -37,6 +40,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -66,7 +70,8 @@ public class EnvironmentResource {
       @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
     Optional<Environment> environment =
         environmentService.get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, deleted);
-    return ResponseDTO.newResponse(environment.map(EnvironmentMapper::writeDTO).orElse(null));
+    return ResponseDTO.newResponse(
+        environment.get().getVersion().toString(), environment.map(EnvironmentMapper::writeDTO).orElse(null));
   }
 
   @POST
@@ -75,36 +80,41 @@ public class EnvironmentResource {
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment environmentEntity = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment createdEnvironment = environmentService.create(environmentEntity);
-    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(createdEnvironment));
+    return ResponseDTO.newResponse(
+        createdEnvironment.getVersion().toString(), EnvironmentMapper.writeDTO(createdEnvironment));
   }
 
   @DELETE
   @Path("{environmentIdentifier}")
   @ApiOperation(value = "Delete en environment by identifier", nickname = "deleteEnvironment")
-  public ResponseDTO<Boolean> delete(@PathParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier) {
-    return ResponseDTO.newResponse(
-        environmentService.delete(accountId, orgIdentifier, projectIdentifier, environmentIdentifier));
+  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
+      @PathParam("environmentIdentifier") String environmentIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+    return ResponseDTO.newResponse(environmentService.delete(accountId, orgIdentifier, projectIdentifier,
+        environmentIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @PUT
   @ApiOperation(value = "Update an environment by identifier", nickname = "updateEnvironment")
-  public ResponseDTO<EnvironmentResponseDTO> update(
+  public ResponseDTO<EnvironmentResponseDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
+    requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Environment updatedEnvironment = environmentService.update(requestEnvironment);
-    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(updatedEnvironment));
+    return ResponseDTO.newResponse(
+        updatedEnvironment.getVersion().toString(), EnvironmentMapper.writeDTO(updatedEnvironment));
   }
 
   @PUT
   @Path("upsert")
   @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironment")
-  public ResponseDTO<EnvironmentResponseDTO> upsert(
+  public ResponseDTO<EnvironmentResponseDTO> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
+    requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Environment upsertedEnvironment = environmentService.upsert(requestEnvironment);
-    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(upsertedEnvironment));
+    return ResponseDTO.newResponse(
+        upsertedEnvironment.getVersion().toString(), EnvironmentMapper.writeDTO(upsertedEnvironment));
   }
 
   @GET

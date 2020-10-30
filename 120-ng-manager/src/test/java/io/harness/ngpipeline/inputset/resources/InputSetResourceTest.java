@@ -111,6 +111,7 @@ public class InputSetResourceTest extends CategoryTest {
                                 .inputSetYaml(cdInputSetYaml)
                                 .isErrorResponse(false)
                                 .tags(TagMapper.convertToMap(tags))
+                                .version(0L)
                                 .build();
 
     overlayInputSetResponseDTO = OverlayInputSetResponseDTO.builder()
@@ -123,6 +124,7 @@ public class InputSetResourceTest extends CategoryTest {
                                      .overlayInputSetYaml(overlayInputSetYaml)
                                      .isErrorResponse(false)
                                      .tags(TagMapper.convertToMap(tags))
+                                     .version(0L)
                                      .build();
 
     inputSetSummaryResponseDTO = InputSetSummaryResponseDTO.builder()
@@ -131,6 +133,7 @@ public class InputSetResourceTest extends CategoryTest {
                                      .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                      .inputSetType(InputSetEntityType.INPUT_SET)
                                      .tags(TagMapper.convertToMap(tags))
+                                     .version(0L)
                                      .build();
 
     inputSetEntity = InputSetEntity.builder().build();
@@ -154,6 +157,7 @@ public class InputSetResourceTest extends CategoryTest {
     baseInputSetEntity.setInputSetType(type);
     baseInputSetEntity.setInputSetYaml(yaml);
     baseInputSetEntity.setTags(tags);
+    baseInputSetEntity.setVersion(0L);
   }
 
   @Test
@@ -227,7 +231,7 @@ public class InputSetResourceTest extends CategoryTest {
     doReturn(inputSetEntity).when(inputSetEntityService).update(any());
 
     InputSetResponseDTO inputSetResponseDTO1 = inputSetResource
-                                                   .updateInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
+                                                   .updateInputSet("0", IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
                                                        PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml)
                                                    .getData();
 
@@ -242,10 +246,11 @@ public class InputSetResourceTest extends CategoryTest {
     doReturn(emptyMap).when(inputSetEntityValidationHelper).validateOverlayInputSetEntity(any());
     doReturn(overlayInputSetEntity).when(inputSetEntityService).update(any());
 
-    OverlayInputSetResponseDTO inputSetResponseDTO1 = inputSetResource
-                                                          .updateOverlayInputSet(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER,
-                                                              PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, overlayInputSetYaml)
-                                                          .getData();
+    OverlayInputSetResponseDTO inputSetResponseDTO1 =
+        inputSetResource
+            .updateOverlayInputSet(
+                "0", IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, overlayInputSetYaml)
+            .getData();
 
     assertThat(inputSetResponseDTO1).isEqualTo(overlayInputSetResponseDTO);
   }
@@ -256,10 +261,11 @@ public class InputSetResourceTest extends CategoryTest {
   public void testDelete() {
     doReturn(true)
         .when(inputSetEntityService)
-        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER);
+        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, null);
 
     Boolean response =
-        inputSetResource.delete(IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER).getData();
+        inputSetResource.delete(null, IDENTIFIER, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER)
+            .getData();
 
     assertThat(response).isTrue();
   }

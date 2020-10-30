@@ -1,11 +1,6 @@
 package io.harness.ng.core.environment.services.impl;
 
-import static io.harness.rule.OwnerRule.ARCHIT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreTestBase;
@@ -24,6 +19,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static io.harness.rule.OwnerRule.ARCHIT;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class EnvironmentServiceImplTest extends NGCoreTestBase {
   @Inject EnvironmentServiceImpl environmentService;
@@ -56,6 +55,7 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
     assertThat(createdEnvironment.getProjectIdentifier()).isEqualTo(createEnvironmentRequest.getProjectIdentifier());
     assertThat(createdEnvironment.getIdentifier()).isEqualTo(createEnvironmentRequest.getIdentifier());
     assertThat(createdEnvironment.getName()).isEqualTo(createEnvironmentRequest.getIdentifier());
+    assertThat(createdEnvironment.getVersion()).isEqualTo(0L);
 
     // Get Operations
     Optional<Environment> getEnvironment =
@@ -81,6 +81,7 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
     assertThat(updatedEnvironment.getIdentifier()).isEqualTo(updateEnvironmentRequest.getIdentifier());
     assertThat(updatedEnvironment.getName()).isEqualTo(updateEnvironmentRequest.getName());
     assertThat(updatedEnvironment.getDescription()).isEqualTo(updateEnvironmentRequest.getDescription());
+    assertThat(updatedEnvironment.getVersion()).isEqualTo(1L);
 
     updateEnvironmentRequest.setIdentifier("NEW_ENV");
     assertThatThrownBy(() -> environmentService.update(updateEnvironmentRequest))
@@ -127,7 +128,7 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
         EnvironmentMapper.writeDTO(updatedEnvironment), EnvironmentMapper.writeDTO(upsertEnv));
 
     // Delete operations
-    boolean delete = environmentService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_ENV");
+    boolean delete = environmentService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER", 1L);
     assertThat(delete).isTrue();
 
     Optional<Environment> deletedEnvironment =

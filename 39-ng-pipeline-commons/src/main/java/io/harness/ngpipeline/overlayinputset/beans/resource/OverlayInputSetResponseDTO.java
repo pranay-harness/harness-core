@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.overlayinputset.beans.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
@@ -32,4 +33,6 @@ public class OverlayInputSetResponseDTO {
 
   @ApiModelProperty(name = "isErrorResponse") boolean isErrorResponse;
   Map<String, String> invalidInputSetReferences;
+
+  @JsonIgnore Long version;
 }

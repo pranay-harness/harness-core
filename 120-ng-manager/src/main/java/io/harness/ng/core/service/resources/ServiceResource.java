@@ -1,6 +1,9 @@
 package io.harness.ng.core.service.resources;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
+import static java.lang.Long.parseLong;
+import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static software.wings.beans.Service.ServiceKeys;
 
 import com.google.inject.Inject;
@@ -37,6 +40,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -66,7 +70,8 @@ public class ServiceResource {
       @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
     Optional<ServiceEntity> serviceEntity =
         serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
-    return ResponseDTO.newResponse(serviceEntity.map(ServiceElementMapper::writeDTO).orElse(null));
+    return ResponseDTO.newResponse(
+        serviceEntity.get().getVersion().toString(), serviceEntity.map(ServiceElementMapper::writeDTO).orElse(null));
   }
 
   @POST
@@ -75,36 +80,41 @@ public class ServiceResource {
       @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
-    return ResponseDTO.newResponse(ServiceElementMapper.writeDTO(createdService));
+    return ResponseDTO.newResponse(
+        createdService.getVersion().toString(), ServiceElementMapper.writeDTO(createdService));
   }
 
   @DELETE
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Delete a service by identifier", nickname = "deleteService")
-  public ResponseDTO<Boolean> delete(@PathParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier) {
-    return ResponseDTO.newResponse(
-        serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier, serviceIdentifier));
+  public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
+      @PathParam("serviceIdentifier") String serviceIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+    return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
+        serviceIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @PUT
   @ApiOperation(value = "Update a service by identifier", nickname = "updateService")
-  public ResponseDTO<ServiceResponseDTO> update(
+  public ResponseDTO<ServiceResponseDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
+    requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
-    return ResponseDTO.newResponse(ServiceElementMapper.writeDTO(updatedService));
+    return ResponseDTO.newResponse(
+        updatedService.getVersion().toString(), ServiceElementMapper.writeDTO(updatedService));
   }
 
   @PUT
   @Path("upsert")
   @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertService")
-  public ResponseDTO<ServiceResponseDTO> upsert(
+  public ResponseDTO<ServiceResponseDTO> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
+    requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
-    return ResponseDTO.newResponse(ServiceElementMapper.writeDTO(upsertedService));
+    return ResponseDTO.newResponse(
+        upsertedService.getVersion().toString(), ServiceElementMapper.writeDTO(upsertedService));
   }
 
   @GET

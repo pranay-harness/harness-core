@@ -1,12 +1,8 @@
 package io.harness.ng.core.environment.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.exception.WingsException.USER_SRE;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.mongodb.client.result.UpdateResult;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
@@ -27,13 +23,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER_SRE;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -67,48 +66,34 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public Environment update(@Valid Environment requestEnvironment) {
-    try {
-      validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-          requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-      setName(requestEnvironment);
-      Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
-      UpdateResult updateResult = environmentRepository.update(criteria, requestEnvironment);
-      if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-        throw new InvalidRequestException(
-            String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-                requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-                requestEnvironment.getOrgIdentifier()));
-      }
-      return requestEnvironment;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format(DUP_KEY_EXP_FORMAT_STRING, requestEnvironment.getIdentifier(),
-              requestEnvironment.getProjectIdentifier(), requestEnvironment.getOrgIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+    setName(requestEnvironment);
+    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
+    Environment updatedResult = environmentRepository.update(criteria, requestEnvironment);
+    if (updatedResult == null) {
+      throw new InvalidRequestException(
+          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+              requestEnvironment.getOrgIdentifier()));
     }
+    return updatedResult;
   }
 
   @Override
   public Environment upsert(Environment requestEnvironment) {
-    try {
-      validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-          requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-      setName(requestEnvironment);
-      Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
-      UpdateResult upsertResult = environmentRepository.upsert(criteria, requestEnvironment);
-      if (!upsertResult.wasAcknowledged()) {
-        throw new InvalidRequestException(
-            String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted.",
-                requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-                requestEnvironment.getOrgIdentifier()));
-      }
-      return requestEnvironment;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format(DUP_KEY_EXP_FORMAT_STRING, requestEnvironment.getIdentifier(),
-              requestEnvironment.getProjectIdentifier(), requestEnvironment.getOrgIdentifier()),
-          USER_SRE, ex);
+    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+    setName(requestEnvironment);
+    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
+    Environment updatedResult = environmentRepository.upsert(criteria, requestEnvironment);
+    if (updatedResult == null) {
+      throw new InvalidRequestException(
+          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted or doesn't exist.",
+              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+              requestEnvironment.getOrgIdentifier()));
     }
+    return updatedResult;
   }
 
   @Override
@@ -118,17 +103,18 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public boolean delete(
-      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier) {
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier, Long version) {
     Environment environment = Environment.builder()
                                   .accountId(accountId)
                                   .orgIdentifier(orgIdentifier)
                                   .projectIdentifier(projectIdentifier)
                                   .identifier(environmentIdentifier)
+                                  .version(version)
                                   .build();
     checkThatEnvironmentIsNotReferredByOthers(environment);
     Criteria criteria = getEnvironmentEqualityCriteria(environment, false);
     UpdateResult updateResult = environmentRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged()) {
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be deleted.",
               environmentIdentifier, projectIdentifier, orgIdentifier));
@@ -175,15 +161,21 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   private Criteria getEnvironmentEqualityCriteria(Environment requestEnvironment, boolean deleted) {
-    return Criteria.where(EnvironmentKeys.accountId)
-        .is(requestEnvironment.getAccountId())
-        .and(EnvironmentKeys.orgIdentifier)
-        .is(requestEnvironment.getOrgIdentifier())
-        .and(EnvironmentKeys.projectIdentifier)
-        .is(requestEnvironment.getProjectIdentifier())
-        .and(EnvironmentKeys.identifier)
-        .is(requestEnvironment.getIdentifier())
-        .and(EnvironmentKeys.deleted)
-        .is(deleted);
+    Criteria criteria = Criteria.where(EnvironmentKeys.accountId)
+                            .is(requestEnvironment.getAccountId())
+                            .and(EnvironmentKeys.orgIdentifier)
+                            .is(requestEnvironment.getOrgIdentifier())
+                            .and(EnvironmentKeys.projectIdentifier)
+                            .is(requestEnvironment.getProjectIdentifier())
+                            .and(EnvironmentKeys.identifier)
+                            .is(requestEnvironment.getIdentifier())
+                            .and(EnvironmentKeys.deleted)
+                            .is(deleted);
+
+    if (requestEnvironment.getVersion() != null) {
+      criteria.and(EnvironmentKeys.version).is(requestEnvironment.getVersion());
+    }
+
+    return criteria;
   }
 }

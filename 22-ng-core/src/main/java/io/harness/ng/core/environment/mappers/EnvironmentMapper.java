@@ -20,6 +20,7 @@ public class EnvironmentMapper {
         .description(environmentRequestDTO.getDescription())
         .type(environmentRequestDTO.getType())
         .tags(convertToList(environmentRequestDTO.getTags()))
+        .version(environmentRequestDTO.getVersion())
         .build();
   }
 
@@ -34,6 +35,7 @@ public class EnvironmentMapper {
         .type(environment.getType())
         .deleted(environment.getDeleted())
         .tags(convertToMap(environment.getTags()))
+        .version(environment.getVersion())
         .build();
   }
 }

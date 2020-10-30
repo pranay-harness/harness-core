@@ -54,6 +54,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                                 .name("ENV")
                                 .type(EnvironmentType.PreProduction)
                                 .tags(singletonMap("k1", "v1"))
+                                .version(0L)
                                 .build();
 
     environmentResponseDTO = EnvironmentResponseDTO.builder()
@@ -64,6 +65,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                                  .name("ENV")
                                  .type(EnvironmentType.PreProduction)
                                  .tags(singletonMap("k1", "v1"))
+                                 .version(0L)
                                  .build();
 
     environmentEntity = Environment.builder()
@@ -74,6 +76,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                             .name("ENV")
                             .type(EnvironmentType.PreProduction)
                             .tags(tags)
+                            .version(0L)
                             .build();
   }
 
@@ -110,9 +113,9 @@ public class EnvironmentResourceTest extends CategoryTest {
     doReturn(true)
         .when(environmentService)
         .delete("ACCOUNT_ID", environmentRequestDTO.getOrgIdentifier(), environmentRequestDTO.getProjectIdentifier(),
-            environmentRequestDTO.getIdentifier());
+            environmentRequestDTO.getIdentifier(), null);
 
-    Boolean data = environmentResource.delete("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
+    Boolean data = environmentResource.delete(null, "IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
     assertThat(data).isTrue();
   }
 
@@ -122,7 +125,7 @@ public class EnvironmentResourceTest extends CategoryTest {
   public void testUpdate() {
     doReturn(environmentEntity).when(environmentService).update(environmentEntity);
     EnvironmentResponseDTO response =
-        environmentResource.update(environmentEntity.getAccountId(), environmentRequestDTO).getData();
+        environmentResource.update("0", environmentEntity.getAccountId(), environmentRequestDTO).getData();
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(environmentResponseDTO);
   }
@@ -133,7 +136,7 @@ public class EnvironmentResourceTest extends CategoryTest {
   public void testUpsert() {
     doReturn(environmentEntity).when(environmentService).upsert(environmentEntity);
     EnvironmentResponseDTO response =
-        environmentResource.upsert(environmentEntity.getAccountId(), environmentRequestDTO).getData();
+        environmentResource.upsert("0", environmentEntity.getAccountId(), environmentRequestDTO).getData();
     assertThat(response).isNotNull();
     assertThat(response).isEqualTo(environmentResponseDTO);
   }

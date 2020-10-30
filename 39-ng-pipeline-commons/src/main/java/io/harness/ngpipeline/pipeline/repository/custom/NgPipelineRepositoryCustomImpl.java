@@ -14,6 +14,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,12 +40,15 @@ public class NgPipelineRepositoryCustomImpl implements NgPipelineRepositoryCusto
   }
 
   @Override
-  public UpdateResult update(Criteria criteria, NgPipelineEntity ngPipelineEntity) {
+  public NgPipelineEntity update(Criteria criteria, NgPipelineEntity ngPipelineEntity) {
     Query query = new Query(criteria);
     Update update = NgPipelineFilterHelper.getUpdateOperations(ngPipelineEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Pipeline; attempt: {}", "[Failed]: Failed updating Pipeline; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, update, NgPipelineEntity.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), NgPipelineEntity.class));
   }
 
   @Override

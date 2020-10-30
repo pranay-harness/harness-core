@@ -1,7 +1,6 @@
 package io.harness.ng.core.environment.respositories.custom;
 
 import com.google.inject.Inject;
-
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
@@ -14,6 +13,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,21 +39,27 @@ public class EnvironmentRepositoryCustomImpl implements EnvironmentRepositoryCus
   }
 
   @Override
-  public UpdateResult upsert(Criteria criteria, Environment environment) {
+  public Environment upsert(Criteria criteria, Environment environment) {
     Query query = new Query(criteria);
     Update updateOperations = EnvironmentFilterHelper.getUpdateOperations(environment);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed upserting Environment; attempt: {}", "[Failed]: Failed upserting Environment; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.upsert(query, updateOperations, Environment.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(query, updateOperations,
+                     new FindAndModifyOptions().returnNew(true).upsert(true), Environment.class));
   }
 
   @Override
-  public UpdateResult update(Criteria criteria, Environment environment) {
+  public Environment update(Criteria criteria, Environment environment) {
     Query query = new Query(criteria);
     Update updateOperations = EnvironmentFilterHelper.getUpdateOperations(environment);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Environment; attempt: {}", "[Failed]: Failed updating Environment; attempt: {}");
-    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, updateOperations, Environment.class));
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, updateOperations, new FindAndModifyOptions().returnNew(true), Environment.class));
   }
 
   public UpdateResult delete(Criteria criteria) {
