@@ -379,7 +379,7 @@ java_library(
         "@maven//:io_opencensus_opencensus_api",
         "@maven//:io_opencensus_opencensus_contrib_http_util",
         "@maven//:io_perfmark_perfmark_api",
-        "@maven//:io_projectreactor_ipc_reactor_netty",
+        "@maven//:io_projectreactor_netty_reactor_netty",
         "@maven//:io_projectreactor_reactor_core",
         "@maven//:io_prometheus_simpleclient",
         "@maven//:io_prometheus_simpleclient_common",
