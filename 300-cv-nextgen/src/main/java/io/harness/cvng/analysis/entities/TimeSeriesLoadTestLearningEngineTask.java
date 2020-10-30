@@ -18,6 +18,8 @@ public class TimeSeriesLoadTestLearningEngineTask extends LearningEngineTask {
 
   private int dataLength;
   private int tolerance;
+  private Long baselineStartTime;
+
   @Override
   public LearningEngineTaskType getType() {
     return LearningEngineTaskType.TIME_SERIES_LOAD_TEST;
