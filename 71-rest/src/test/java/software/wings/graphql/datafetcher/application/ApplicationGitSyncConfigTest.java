@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.application;
 
 import static io.harness.rule.OwnerRule.HINGER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -23,7 +23,7 @@ public class ApplicationGitSyncConfigTest extends CategoryTest {
     Method method = UpdateApplicationGitSyncConfigDataFetcher.class.getDeclaredMethod(
         "mutateAndFetch", QLUpdateApplicationGitSyncConfigInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
-    assertThat(annotation.permissionType()).isEqualTo(MANAGE_APPLICATIONS);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONFIG_AS_CODE);
   }
 
   @Test
@@ -33,7 +33,7 @@ public class ApplicationGitSyncConfigTest extends CategoryTest {
     Method method = UpdateApplicationGitSyncConfigStatusDataFetcher.class.getDeclaredMethod(
         "mutateAndFetch", QLUpdateApplicationGitSyncConfigInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
-    assertThat(annotation.permissionType()).isEqualTo(MANAGE_APPLICATIONS);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONFIG_AS_CODE);
   }
 
   @Test
@@ -43,6 +43,6 @@ public class ApplicationGitSyncConfigTest extends CategoryTest {
     Method method = RemoveApplicationGitSyncConfigDataFetcher.class.getDeclaredMethod(
         "mutateAndFetch", QLUpdateApplicationGitSyncConfigInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
-    assertThat(annotation.permissionType()).isEqualTo(MANAGE_APPLICATIONS);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONFIG_AS_CODE);
   }
 }
