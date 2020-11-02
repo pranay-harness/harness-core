@@ -730,6 +730,37 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(logParamsOptional.get().getDelegateId()).isEqualTo(delegateId);
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldLogDisconnectedScalingGroup() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1 = generateUuid();
+    String delegate2 = generateUuid();
+    String groupName = generateUuid();
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegate1);
+    disconnectedScalingGroup.add(delegate2);
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logDisconnectedScalingGroup(batch, accountId, disconnectedScalingGroup, groupName);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateIds().containsAll(Arrays.asList(delegate1, delegate2)))
+        .isTrue();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(DISCONNECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate scaling group: " + groupName + " was disconnected");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(DISCONNECTED_GROUP_ID);
+  }
+
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {
     return DelegateSelectionLog.builder().accountId(generateUuid()).taskId(generateUuid());
   }

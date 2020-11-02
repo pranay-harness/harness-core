@@ -120,6 +120,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                   .project(DelegateKeys.uuid, true)
                   .project(DelegateKeys.lastHeartBeat, true)
                   .project(DelegateKeys.status, true)
+                  .project(DelegateKeys.delegateGroupName, true)
                   .asList();
             }
           });
@@ -651,16 +652,46 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         : delegatesMap.get(DelegateActivity.ACTIVE).stream().map(Delegate::getUuid).collect(Collectors.toList());
   }
 
-  private void logInactiveDelegates(
+  @VisibleForTesting
+  protected void logInactiveDelegates(
       BatchDelegateSelectionLog batch, String accountId, Map<DelegateActivity, List<Delegate>> delegatesMap) {
     if (batch == null) {
       return;
     }
 
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
-      Set<String> disconnectedDelegateIds =
-          delegatesMap.get(DelegateActivity.DISCONNECTED).stream().map(Delegate::getUuid).collect(Collectors.toSet());
-      delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegateIds);
+      Set<String> disconnectedDelegateIds = delegatesMap.get(DelegateActivity.DISCONNECTED)
+                                                .stream()
+                                                .filter(a -> isEmpty(a.getDelegateGroupName()))
+                                                .map(Delegate::getUuid)
+                                                .collect(Collectors.toSet());
+      if (isNotEmpty(disconnectedDelegateIds)) {
+        delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegateIds);
+      }
+    }
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
+      disconnectedScalingGroup = delegatesMap.get(DelegateActivity.DISCONNECTED)
+                                     .stream()
+                                     .filter(a -> isNotEmpty(a.getDelegateGroupName()))
+                                     .map(Delegate::getDelegateGroupName)
+                                     .collect(Collectors.toSet());
+    }
+
+    Set<String> connectedScalingGroup = new HashSet<>();
+    if (delegatesMap.get(DelegateActivity.ACTIVE) != null) {
+      connectedScalingGroup = delegatesMap.get(DelegateActivity.ACTIVE)
+                                  .stream()
+                                  .filter(a -> isNotEmpty(a.getDelegateGroupName()))
+                                  .map(Delegate::getDelegateGroupName)
+                                  .collect(Collectors.toSet());
+    }
+
+    disconnectedScalingGroup.removeAll(connectedScalingGroup);
+
+    for (String groupName : disconnectedScalingGroup) {
+      delegateSelectionLogsService.logDisconnectedScalingGroup(batch, accountId, disconnectedScalingGroup, groupName);
     }
 
     if (delegatesMap.get(DelegateActivity.WAITING_FOR_APPROVAL) != null) {

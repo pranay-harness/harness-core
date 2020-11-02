@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Delegate.Status.ENABLED;
@@ -46,6 +48,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
@@ -1177,11 +1180,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                  .status(Delegate.Status.WAITING_FOR_APPROVAL)
                                  .build();
 
+    String groupName = generateUuid();
+    Delegate delegateInScalingGroup = Delegate.builder()
+                                          .accountId(accountId)
+                                          .uuid(generateUuid())
+                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                          .delegateGroupName(groupName)
+                                          .build();
+
     Delegate deletedDelegate =
         createDelegateBuilder().accountId(accountId).uuid(generateUuid()).status(Delegate.Status.DELETED).build();
 
     when(accountDelegatesCache.get(accountId))
-        .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
+        .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate,
+            delegateInScalingGroup));
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
@@ -1194,9 +1206,296 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     disconnectedDelegates.add(disconnectedDelegate.getUuid());
     verify(delegateSelectionLogsService).logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
 
-    Set<String> wapprDelegates = new HashSet<>();
-    wapprDelegates.add(wapprDelegate.getUuid());
-    verify(delegateSelectionLogsService).logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(wapprDelegates));
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
+    verify(delegateSelectionLogsService)
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldLogDisconnectedDelegate() throws ExecutionException {
+    String accountId = generateUuid();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate disconnectedDelegate = createDelegateBuilder()
+                                        .accountId(accountId)
+                                        .uuid(generateUuid())
+                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                        .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(disconnectedDelegate));
+
+    List<Delegate> delegates = new ArrayList<>();
+    delegates.add(disconnectedDelegate);
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(disconnectedDelegate.getUuid());
+    verify(delegateSelectionLogsService, times(1))
+        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldLogDisconnectedScalingGroup() throws ExecutionException {
+    String accountId = generateUuid();
+    String groupName = generateUuid();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate delegateInScalingGroup = Delegate.builder()
+                                          .accountId(accountId)
+                                          .uuid(generateUuid())
+                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                          .delegateGroupName(groupName)
+                                          .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(delegateInScalingGroup));
+
+    List<Delegate> delegates = new ArrayList<>();
+    delegates.add(delegateInScalingGroup);
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
+    verify(delegateSelectionLogsService, times(1))
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldLogWaitingForApprovalDelegate() throws ExecutionException {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate waitForApprovalDelegate = createDelegateBuilder()
+                                           .uuid(delegateId)
+                                           .accountId(accountId)
+                                           .uuid(generateUuid())
+                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
+
+    List<Delegate> delegates = new ArrayList<>();
+    delegates.add(waitForApprovalDelegate);
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+    delegatesMap.put(DelegateActivity.WAITING_FOR_APPROVAL, delegates);
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(waitForApprovalDelegate.getUuid());
+    verify(delegateSelectionLogsService, times(1))
+        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotLogDisconnectedDelegate() throws ExecutionException {
+    String accountId = generateUuid();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate disconnectedDelegate = createDelegateBuilder()
+                                        .accountId(accountId)
+                                        .uuid(generateUuid())
+                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                        .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(disconnectedDelegate));
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(disconnectedDelegate.getUuid());
+    verify(delegateSelectionLogsService, never())
+        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotLogDisconnectedScalingGroup() throws ExecutionException {
+    String accountId = generateUuid();
+    String groupName = generateUuid();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate delegateInScalingGroup = Delegate.builder()
+                                          .accountId(accountId)
+                                          .uuid(generateUuid())
+                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                          .delegateGroupName(groupName)
+                                          .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(delegateInScalingGroup));
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
+    verify(delegateSelectionLogsService, never())
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotLogWaitingForApprovalDelegate() throws ExecutionException {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate waitForApprovalDelegate = createDelegateBuilder()
+                                           .uuid(delegateId)
+                                           .accountId(accountId)
+                                           .uuid(generateUuid())
+                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .build();
+
+    when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(waitForApprovalDelegate.getUuid());
+    verify(delegateSelectionLogsService, never())
+        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldOnlyLogWaitingForApprovalDelegate() throws ExecutionException {
+    String groupName = generateUuid();
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate waitForApprovalDelegate = createDelegateBuilder()
+                                           .uuid(delegateId)
+                                           .accountId(accountId)
+                                           .uuid(generateUuid())
+                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .build();
+
+    Delegate delegateInScalingGroup = Delegate.builder()
+                                          .accountId(accountId)
+                                          .uuid(generateUuid())
+                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                          .delegateGroupName(groupName)
+                                          .build();
+
+    Delegate disconnectedDelegate = createDelegateBuilder()
+                                        .accountId(accountId)
+                                        .uuid(generateUuid())
+                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                        .build();
+
+    when(accountDelegatesCache.get(accountId))
+        .thenReturn(asList(waitForApprovalDelegate, delegateInScalingGroup, disconnectedDelegate));
+
+    List<Delegate> delegates = new ArrayList<>();
+    delegates.add(waitForApprovalDelegate);
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+    delegatesMap.put(DelegateActivity.WAITING_FOR_APPROVAL, delegates);
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(waitForApprovalDelegate.getUuid());
+    verify(delegateSelectionLogsService, times(1))
+        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
+    verify(delegateSelectionLogsService, never())
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(disconnectedDelegate.getUuid());
+    verify(delegateSelectionLogsService, never())
+        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldOnlyLogDisconnectedDelegate() throws ExecutionException {
+    String groupName = generateUuid();
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    Delegate waitForApprovalDelegate = createDelegateBuilder()
+                                           .uuid(delegateId)
+                                           .accountId(accountId)
+                                           .uuid(generateUuid())
+                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .build();
+
+    Delegate delegateInScalingGroup = Delegate.builder()
+                                          .accountId(accountId)
+                                          .uuid(generateUuid())
+                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                          .delegateGroupName(groupName)
+                                          .build();
+
+    Delegate disconnectedDelegate = createDelegateBuilder()
+                                        .accountId(accountId)
+                                        .uuid(generateUuid())
+                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
+                                        .build();
+
+    when(accountDelegatesCache.get(accountId))
+        .thenReturn(asList(waitForApprovalDelegate, delegateInScalingGroup, disconnectedDelegate));
+
+    List<Delegate> delegates = new ArrayList<>();
+    delegates.add(disconnectedDelegate);
+
+    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
+    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
+
+    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
+
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(disconnectedDelegate.getUuid());
+    verify(delegateSelectionLogsService, times(1))
+        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(waitForApprovalDelegate.getUuid());
+    verify(delegateSelectionLogsService, never())
+        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
+
+    Set<String> disconnectedScalingGroup = new HashSet<>();
+    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
+    verify(delegateSelectionLogsService, never())
+        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
   }
 
   @Test
