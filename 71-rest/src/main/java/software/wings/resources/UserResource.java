@@ -29,6 +29,7 @@ import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
@@ -789,6 +790,21 @@ public class UserResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<User> disableTwoFactorAuth() {
     return new RestResponse(twoFactorAuthenticationManager.disableTwoFactorAuthentication(UserThreadLocal.get()));
+  }
+
+  @GET
+  @Path("invitation-id")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getUserInvitationId(@QueryParam("email") @NotEmpty String email) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+    if (isEmpty(user.getEmail()) || !user.getEmail().endsWith("@harness.io")) {
+      throw new UnauthorizedException("User not authorized.", USER);
+    }
+    return new RestResponse<>(userService.getUserInvitationId(email));
   }
 
   @PUT

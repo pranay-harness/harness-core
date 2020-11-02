@@ -520,6 +520,20 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public String getUserInvitationId(String email) {
+    if (isNotEmpty(email)) {
+      List<UserInvite> userInviteList = wingsPersistence.createQuery(UserInvite.class)
+                                            .filter(UserInviteKeys.email, email)
+                                            .order(Sort.descending("createdAt"))
+                                            .asList();
+      if (isNotEmpty(userInviteList)) {
+        return userInviteList.get(0).getUuid();
+      }
+    }
+    return "";
+  }
+
+  @Override
   public User getUserSummary(User user) {
     if (user == null) {
       return null;

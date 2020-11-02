@@ -861,7 +861,6 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     if (!hasUserContext()) {
       return;
     }
-
     checkForNonNullRestrictionWhenScopedToAccount(accountId, scopedToAccount, usageRestrictions);
 
     checkIfValidUsageRestrictions(usageRestrictions);

@@ -82,6 +82,8 @@ public interface UserService extends OwnedByAccount {
 
   User getUserSummary(User user);
 
+  String getUserInvitationId(String email);
+
   List<User> getUserSummary(List<User> userList);
 
   /**
