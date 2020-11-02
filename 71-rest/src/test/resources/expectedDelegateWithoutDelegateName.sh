@@ -171,9 +171,13 @@ if ! `grep managerUrl config-delegate.yml > /dev/null`; then
 fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
   echo "verificationServiceUrl: https://localhost:9090/verification/" >> config-delegate.yml
+else
+  sed -i.bak "s|^verificationServiceUrl:.*$|verificationServiceUrl: https://localhost:9090/verification/|" config-delegate.yml
 fi
 if ! `grep cvNextGenUrl config-delegate.yml > /dev/null`; then
   echo "cvNextGenUrl: https://localhost:9090/cv/api/" >> config-delegate.yml
+else
+  sed -i.bak "s|^cvNextGenUrl:.*$|cvNextGenUrl: https://localhost:9090/cv/api/|" config-delegate.yml
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
   echo "watcherCheckLocation: http://localhost:8888/watcherci.txt" >> config-delegate.yml
