@@ -20,6 +20,10 @@ public class CEMailNotificationService {
   @Autowired CEMailer mailer;
 
   public boolean send(EmailData emailData) {
+    return send(emailData, null);
+  }
+
+  public boolean send(EmailData emailData, byte[] image) {
     SmtpConfig defaultSMTPConfig;
     defaultSMTPConfig = mainConfiguration.getSmtpConfig();
     boolean isDefaultSMTPConfigValid = isSmtpConfigValid(defaultSMTPConfig);
@@ -29,7 +33,7 @@ public class CEMailNotificationService {
       log.warn("Mail not sent, : {}", getErrorString(emailData));
     } else {
       mailSentSuccessFully = true;
-      if (!sendMail(defaultSMTPConfig, emailData)) {
+      if (!sendMail(defaultSMTPConfig, emailData, image)) {
         log.warn("Mail not sent, : {}", getErrorString(emailData));
         mailSentSuccessFully = false;
       }
@@ -45,10 +49,10 @@ public class CEMailNotificationService {
     return uriBuilder.toString();
   }
 
-  private boolean sendMail(SmtpConfig config, EmailData emailData) {
+  private boolean sendMail(SmtpConfig config, EmailData emailData, byte[] image) {
     if (config.equals(mainConfiguration.getSmtpConfig())) {
       try {
-        mailer.send(config, emailData);
+        mailer.send(config, emailData, image);
         return true;
       } catch (WingsException e) {
         String errorString = getErrorString(emailData);
