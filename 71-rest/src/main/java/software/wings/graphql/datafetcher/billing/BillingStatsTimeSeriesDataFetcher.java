@@ -163,7 +163,8 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuLimitPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuRequestPointMap = new LinkedHashMap<>();
 
-    checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
+    boolean dataPresent =
+        checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
     boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
@@ -171,174 +172,177 @@ public class BillingStatsTimeSeriesDataFetcher
         || groupByEntityList.contains(QLCCMEntityGroupBy.Node);
     boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
 
-    do {
-      String additionalInfo = "";
-      QLBillingTimeDataPointBuilder dataPointBuilder = QLBillingTimeDataPoint.builder();
-      // For First Level Idle Cost Drill Down
-      QLBillingTimeDataPointBuilder cpuPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryPointBuilder = QLBillingTimeDataPoint.builder();
-      // For Leaf level Idle cost Drill Down
-      QLBillingTimeDataPointBuilder memoryAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder memoryMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+    if (dataPresent) {
+      do {
+        String additionalInfo = "";
+        QLBillingTimeDataPointBuilder dataPointBuilder = QLBillingTimeDataPoint.builder();
+        // For First Level Idle Cost Drill Down
+        QLBillingTimeDataPointBuilder cpuPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryPointBuilder = QLBillingTimeDataPoint.builder();
+        // For Leaf level Idle cost Drill Down
+        QLBillingTimeDataPointBuilder memoryAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder memoryMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
-      QLBillingTimeDataPointBuilder cpuAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder cpuMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder cpuAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder cpuAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
-      QLBillingTimeDataPointBuilder cpuMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
+        QLBillingTimeDataPointBuilder cpuMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
-      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-        switch (field.getDataType()) {
-          case DOUBLE:
-            switch (field) {
-              case CPUIDLECOST:
-                cpuPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
-                break;
-              case MEMORYIDLECOST:
-                memoryPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
-                break;
-              case MAXCPUUTILIZATION:
-                cpuMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                break;
-              case AVGCPUUTILIZATION:
-                cpuAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                break;
-              case AGGREGATEDCPUUTILIZATIONVALUE:
-                cpuAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case AGGREGATEDCPUREQUEST:
-                cpuAvgRequestPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case AGGREGATEDCPULIMIT:
-                cpuAvgLimitPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case MAXMEMORYUTILIZATION:
-                memoryMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                break;
-              case AVGMEMORYUTILIZATION:
-                memoryAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
-                break;
-              case AGGREGATEDMEMORYUTILIZATIONVALUE:
-                memoryAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case AGGREGATEDMEMORYREQUEST:
-                memoryAvgRequestPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case AGGREGATEDMEMORYLIMIT:
-                memoryAvgLimitPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
-                break;
-              case AVGCPUUTILIZATIONVALUE:
-                cpuAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              case AVGMEMORYUTILIZATIONVALUE:
-                memoryAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              case MAXCPUUTILIZATIONVALUE:
-                cpuMaxUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              case MAXMEMORYUTILIZATIONVALUE:
-                memoryMaxUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              case CPUREQUEST:
-                cpuAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              case MEMORYREQUEST:
-                memoryAvgRequestPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
-                break;
-              default:
-                dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
-            }
-            break;
-          case STRING:
-            // Group by has been re-arranged such that additional info gets populated first
-            if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
-                || (addClusterIdToEntityId && field == BillingDataMetaDataFields.CLUSTERID)
-                || (addAppIdToEntityId && field == BillingDataMetaDataFields.APPID)
-                || field == BillingDataMetaDataFields.INSTANCENAME) {
-              additionalInfo = additionalInfo.equals(EMPTY)
-                  ? resultSet.getString(field.getFieldName())
-                  : additionalInfo + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
+        for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+          switch (field.getDataType()) {
+            case DOUBLE:
+              switch (field) {
+                case CPUIDLECOST:
+                  cpuPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
+                  break;
+                case MEMORYIDLECOST:
+                  memoryPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
+                  break;
+                case MAXCPUUTILIZATION:
+                  cpuMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
+                  break;
+                case AVGCPUUTILIZATION:
+                  cpuAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
+                  break;
+                case AGGREGATEDCPUUTILIZATIONVALUE:
+                  cpuAvgUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case AGGREGATEDCPUREQUEST:
+                  cpuAvgRequestPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case AGGREGATEDCPULIMIT:
+                  cpuAvgLimitPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case MAXMEMORYUTILIZATION:
+                  memoryMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
+                  break;
+                case AVGMEMORYUTILIZATION:
+                  memoryAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
+                  break;
+                case AGGREGATEDMEMORYUTILIZATIONVALUE:
+                  memoryAvgUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case AGGREGATEDMEMORYREQUEST:
+                  memoryAvgRequestPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case AGGREGATEDMEMORYLIMIT:
+                  memoryAvgLimitPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                  break;
+                case AVGCPUUTILIZATIONVALUE:
+                  cpuAvgUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                case AVGMEMORYUTILIZATIONVALUE:
+                  memoryAvgUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                case MAXCPUUTILIZATIONVALUE:
+                  cpuMaxUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                case MAXMEMORYUTILIZATIONVALUE:
+                  memoryMaxUtilValuePointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                case CPUREQUEST:
+                  cpuAvgRequestPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                case MEMORYREQUEST:
+                  memoryAvgRequestPointBuilder.value(
+                      roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
+                  break;
+                default:
+                  dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
+              }
               break;
-            }
+            case STRING:
+              // Group by has been re-arranged such that additional info gets populated first
+              if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                  || (addClusterIdToEntityId && field == BillingDataMetaDataFields.CLUSTERID)
+                  || (addAppIdToEntityId && field == BillingDataMetaDataFields.APPID)
+                  || field == BillingDataMetaDataFields.INSTANCENAME) {
+                additionalInfo = additionalInfo.equals(EMPTY)
+                    ? resultSet.getString(field.getFieldName())
+                    : additionalInfo + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
+                break;
+              }
 
-            String entityId = resultSet.getString(field.getFieldName());
-            String idWithInfo = (addNamespaceToEntityId || addClusterIdToEntityId || addAppIdToEntityId)
-                    && !additionalInfo.equals(EMPTY)
-                ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId
-                : entityId;
-            cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
-            memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
-            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
+              String entityId = resultSet.getString(field.getFieldName());
+              String idWithInfo = (addNamespaceToEntityId || addClusterIdToEntityId || addAppIdToEntityId)
+                      && !additionalInfo.equals(EMPTY)
+                  ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId
+                  : entityId;
+              cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
+              memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
+              dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
 
-            cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
-            cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
-            cpuAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
-            cpuAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
-            cpuAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
-            cpuMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+              cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+              cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+              cpuAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+              cpuAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
+              cpuAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
+              cpuMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
 
-            memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
-            memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
-            memoryAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
-            memoryAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
-            memoryAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
-            memoryMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
-            break;
-          case TIMESTAMP:
-            long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
-            cpuPointBuilder.time(time);
-            memoryPointBuilder.time(time);
-            dataPointBuilder.time(time);
-            cpuMaxUtilsPointBuilder.time(time);
-            cpuAvgUtilsPointBuilder.time(time);
-            cpuAvgUtilValuePointBuilder.time(time);
-            cpuAvgRequestPointBuilder.time(time);
-            cpuAvgLimitPointBuilder.time(time);
-            cpuMaxUtilValuePointBuilder.time(time);
-            memoryMaxUtilsPointBuilder.time(time);
-            memoryAvgUtilsPointBuilder.time(time);
-            memoryAvgUtilValuePointBuilder.time(time);
-            memoryAvgRequestPointBuilder.time(time);
-            memoryAvgLimitPointBuilder.time(time);
-            memoryMaxUtilValuePointBuilder.time(time);
-            break;
-          default:
-            throw new InvalidRequestException("UnsupportedType " + field.getDataType());
+              memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+              memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+              memoryAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+              memoryAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
+              memoryAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
+              memoryMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
+              break;
+            case TIMESTAMP:
+              long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
+              cpuPointBuilder.time(time);
+              memoryPointBuilder.time(time);
+              dataPointBuilder.time(time);
+              cpuMaxUtilsPointBuilder.time(time);
+              cpuAvgUtilsPointBuilder.time(time);
+              cpuAvgUtilValuePointBuilder.time(time);
+              cpuAvgRequestPointBuilder.time(time);
+              cpuAvgLimitPointBuilder.time(time);
+              cpuMaxUtilValuePointBuilder.time(time);
+              memoryMaxUtilsPointBuilder.time(time);
+              memoryAvgUtilsPointBuilder.time(time);
+              memoryAvgUtilValuePointBuilder.time(time);
+              memoryAvgRequestPointBuilder.time(time);
+              memoryAvgLimitPointBuilder.time(time);
+              memoryMaxUtilValuePointBuilder.time(time);
+              break;
+            default:
+              throw new InvalidRequestException("UnsupportedType " + field.getDataType());
+          }
         }
-      }
 
-      checkDataPointIsValidAndInsert(dataPointBuilder.build(), qlTimeDataPointMap);
-      checkDataPointIsValidAndInsert(cpuPointBuilder.build(), qlTimeCpuPointMap);
-      checkDataPointIsValidAndInsert(memoryPointBuilder.build(), qlTimeMemoryPointMap);
-      checkDataPointIsValidAndInsert(cpuMaxUtilsPointBuilder.build(), qlTimeCpuUtilsPointMap);
-      checkDataPointIsValidAndInsert(memoryMaxUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
-      checkDataPointIsValidAndInsert(cpuAvgUtilsPointBuilder.build(), qlTimeCpuUtilsPointMap);
-      checkDataPointIsValidAndInsert(memoryAvgUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
-      checkDataPointIsValidAndInsert(cpuAvgRequestPointBuilder.build(), qlTimeCpuRequestPointMap);
-      checkDataPointIsValidAndInsert(cpuAvgLimitPointBuilder.build(), qlTimeCpuLimitPointMap);
-      checkDataPointIsValidAndInsert(memoryAvgRequestPointBuilder.build(), qlTimeMemoryRequestPointMap);
-      checkDataPointIsValidAndInsert(memoryAvgLimitPointBuilder.build(), qlTimeMemoryLimitPointMap);
-      checkDataPointIsValidAndInsert(cpuAvgUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
-      checkDataPointIsValidAndInsert(memoryAvgUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
-      checkDataPointIsValidAndInsert(cpuMaxUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
-      checkDataPointIsValidAndInsert(memoryMaxUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
-    } while (resultSet != null && resultSet.next());
+        checkDataPointIsValidAndInsert(dataPointBuilder.build(), qlTimeDataPointMap);
+        checkDataPointIsValidAndInsert(cpuPointBuilder.build(), qlTimeCpuPointMap);
+        checkDataPointIsValidAndInsert(memoryPointBuilder.build(), qlTimeMemoryPointMap);
+        checkDataPointIsValidAndInsert(cpuMaxUtilsPointBuilder.build(), qlTimeCpuUtilsPointMap);
+        checkDataPointIsValidAndInsert(memoryMaxUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
+        checkDataPointIsValidAndInsert(cpuAvgUtilsPointBuilder.build(), qlTimeCpuUtilsPointMap);
+        checkDataPointIsValidAndInsert(memoryAvgUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
+        checkDataPointIsValidAndInsert(cpuAvgRequestPointBuilder.build(), qlTimeCpuRequestPointMap);
+        checkDataPointIsValidAndInsert(cpuAvgLimitPointBuilder.build(), qlTimeCpuLimitPointMap);
+        checkDataPointIsValidAndInsert(memoryAvgRequestPointBuilder.build(), qlTimeMemoryRequestPointMap);
+        checkDataPointIsValidAndInsert(memoryAvgLimitPointBuilder.build(), qlTimeMemoryLimitPointMap);
+        checkDataPointIsValidAndInsert(cpuAvgUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
+        checkDataPointIsValidAndInsert(memoryAvgUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
+        checkDataPointIsValidAndInsert(cpuMaxUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
+        checkDataPointIsValidAndInsert(memoryMaxUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
+      } while (resultSet != null && resultSet.next());
+    }
 
     QLBillingStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLBillingStackedTimeSeriesData.builder();
 
@@ -406,7 +410,8 @@ public class BillingStatsTimeSeriesDataFetcher
     return 100 * roundingDoubleFieldValue(field, resultSet);
   }
 
-  private void checkAndAddPrecedingZeroValuedData(BillingDataQueryMetadata queryData, ResultSet resultSet,
+  // returns true if data is present
+  private boolean checkAndAddPrecedingZeroValuedData(BillingDataQueryMetadata queryData, ResultSet resultSet,
       long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap) throws SQLException {
     if (resultSet != null && resultSet.next()) {
       String entityId = "";
@@ -437,6 +442,9 @@ public class BillingStatsTimeSeriesDataFetcher
         addPrecedingZeroValuedData(
             queryData, qlTimeDataPointMap, entityId, idWithInfo, timeOfFirstEntry, startTimeFromFilters, resultSet);
       }
+      return true;
+    } else {
+      return false;
     }
   }
 

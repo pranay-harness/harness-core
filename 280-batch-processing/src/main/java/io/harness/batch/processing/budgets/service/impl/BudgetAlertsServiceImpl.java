@@ -162,7 +162,7 @@ public class BudgetAlertsServiceImpl {
     List<String> emailAddresses = new ArrayList<>();
     for (String userGroupId : userGroupIds) {
       UserGroup userGroup = cloudToHarnessMappingService.getUserGroup(accountId, userGroupId, true);
-      if (userGroup != null) {
+      if (userGroup != null && userGroup.getMemberIds() != null) {
         emailAddresses.addAll(userGroup.getMemberIds()
                                   .stream()
                                   .map(memberId -> {

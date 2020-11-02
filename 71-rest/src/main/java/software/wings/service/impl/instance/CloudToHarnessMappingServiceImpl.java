@@ -476,7 +476,9 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     List<UserGroup> userGroups = new ArrayList<>();
     for (UserGroup userGroup :
         wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId).fetch()) {
-      userGroups.add(userGroup);
+      if (userGroup.getAccountPermissions() != null) {
+        userGroups.add(userGroup);
+      }
     }
     return userGroups;
   }
