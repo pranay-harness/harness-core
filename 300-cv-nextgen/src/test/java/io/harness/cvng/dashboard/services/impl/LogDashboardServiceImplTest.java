@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,6 +15,9 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -44,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 
 public class LogDashboardServiceImplTest extends CvNextGenTest {
@@ -52,12 +57,13 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
-  @Inject private HPersistence hPersistence;
 
   @Inject private LogDashboardService logDashboardService;
+  @Inject private HPersistence hPersistence;
 
   @Mock private LogAnalysisService mockLogAnalysisService;
   @Mock private CVConfigService mockCvConfigService;
+  @Mock private ActivityService mockActivityService;
   @Inject private VerificationTaskService verificationTaskService;
 
   @Before
@@ -70,6 +76,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(logDashboardService, "logAnalysisService", mockLogAnalysisService, true);
     FieldUtils.writeField(logDashboardService, "cvConfigService", mockCvConfigService, true);
+    FieldUtils.writeField(logDashboardService, "activityService", mockActivityService, true);
   }
 
   @Test
@@ -287,6 +294,40 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
         startTime.plus(10, ChronoUnit.MINUTES).toEpochMilli(), startTime.plus(15, ChronoUnit.MINUTES).toEpochMilli());
 
     assertThat(timeTagCountMap).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetActivityLogs() {
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    String activityId = "activityId";
+    String cvConfigId = "cvConfigId";
+    String verificationJobInstanceId = "verificationJobInstanceId";
+    Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    when(mockActivityService.get(activityId)).thenReturn(activity);
+
+    Set<String> verificationTaskIds = new HashSet<>();
+    verificationTaskService.create(accountId, cvConfigId);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    verificationTaskIds.add(verificationTaskId);
+    SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
+    splunkCVConfig.setUuid(cvConfigId);
+    hPersistence.save(splunkCVConfig);
+
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+    PageResponse<AnalyzedLogDataDTO> response =
+        logDashboardService.getActivityLogs(activityId, accountId, projectIdentifier, orgIdentifier, envIdentifier,
+            serviceIdentifier, startTime.toEpochMilli(), endTime.toEpochMilli(), false, 0, 10);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isNotEmpty();
   }
 
   private List<LogAnalysisResult> buildLogAnalysisResults(

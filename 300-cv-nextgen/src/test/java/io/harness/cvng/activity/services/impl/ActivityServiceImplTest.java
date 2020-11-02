@@ -36,6 +36,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -69,6 +70,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private NextGenService nextGenService;
+  @Mock private VerificationTaskService verificationTaskService;
 
   private String projectIdentifier;
   private String orgIdentifier;
