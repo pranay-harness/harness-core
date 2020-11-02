@@ -95,7 +95,7 @@ public class BillingStatsEntityDataFetcher
     }
 
     if (!billingDataQueryBuilder.isFilterCombinationValid(filters, groupByEntityList)) {
-      return QLEntityTableListData.builder().data(new ArrayList<>()).info(INVALID_FILTER_MSG).build();
+      return QLEntityTableListData.builder().data(null).info(INVALID_FILTER_MSG).build();
     }
 
     queryData = billingDataQueryBuilder.formQuery(
@@ -107,8 +107,8 @@ public class BillingStatsEntityDataFetcher
     log.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
 
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
-        billingDataHelper.getBillingAmountDataForEntityCostTrend(
-            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
+        billingDataHelper.getBillingAmountDataForEntityCostTrend(accountId, aggregateFunction, filters,
+            billingDataQueryBuilder.getGroupByOrderedByDrillDown(groupByEntityList), groupByTime, sortCriteria);
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();

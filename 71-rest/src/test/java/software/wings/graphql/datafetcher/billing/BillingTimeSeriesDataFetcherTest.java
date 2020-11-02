@@ -992,6 +992,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTestBas
         count[0]++;
         return true;
       }
+      count[0] = 0;
       return false;
     });
   }
