@@ -27,11 +27,13 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
@@ -65,6 +67,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
@@ -94,6 +97,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   @Inject private transient AppService appService;
   @Inject private transient GitUtilsManager gitUtilsManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
@@ -165,18 +169,23 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       String renderedTemplate = executionContext.renderExpression(templateBody);
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY).data(renderedTemplate);
     } else if (provisioner.provisionByGit()) {
-      String sourceRepoSettingId = provisioner.getGitFileConfig().getConnectorId();
+      GitFileConfig renderedGitFileConfig =
+          gitFileConfigHelperService.renderGitFileConfig(executionContext, provisioner.getGitFileConfig());
+      String sourceRepoSettingId = renderedGitFileConfig.getConnectorId();
+
       GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
-      String branch = provisioner.getGitFileConfig().getBranch();
+      gitConfigHelperService.renderGitConfig(executionContext, gitConfig);
+
+      String branch = renderedGitFileConfig.getBranch();
       ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
       if (isNotEmpty(branch)) {
         gitConfig.setBranch(branch);
       }
-      gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
-      gitConfigHelperService.convertToRepoGitConfig(gitConfig, provisioner.getGitFileConfig().getRepoName());
+      gitConfig.setReference(renderedGitFileConfig.getCommitId());
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, renderedGitFileConfig.getRepoName());
 
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
-          .gitFileConfig(provisioner.getGitFileConfig())
+          .gitFileConfig(renderedGitFileConfig)
           .encryptedDataDetails(
               secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
           .gitConfig(gitConfig);
@@ -189,6 +198,41 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   private ExecutionResponse buildAndQueueCreateStackTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId,
       CloudFormationCreateStackRequestBuilder builder) {
+    Map<String, String> infrastructureVariables =
+        infrastructureProvisionerService.extractTextVariables(getVariables(), executionContext);
+    Map<String, String> renderedInfrastructureVariables = infrastructureVariables;
+
+    if (EmptyPredicate.isNotEmpty(infrastructureVariables.entrySet())) {
+      renderedInfrastructureVariables = infrastructureVariables.entrySet().stream().collect(Collectors.toMap(
+          e
+          -> {
+            if (EmptyPredicate.isNotEmpty(e.getKey())) {
+              return executionContext.renderExpression(e.getKey());
+            }
+            return e.getKey();
+          },
+          e -> {
+            if (EmptyPredicate.isNotEmpty(e.getValue())) {
+              return executionContext.renderExpression(e.getValue());
+            }
+            return e.getValue();
+          }));
+    }
+
+    Map<String, EncryptedDataDetail> encryptedInfrastructureVariables =
+        infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId());
+
+    Map<String, EncryptedDataDetail> renderedEncryptedInfrastructureVariables = encryptedInfrastructureVariables;
+    if (EmptyPredicate.isNotEmpty(encryptedInfrastructureVariables.entrySet())) {
+      renderedEncryptedInfrastructureVariables =
+          encryptedInfrastructureVariables.entrySet().stream().collect(Collectors.toMap(e -> {
+            if (EmptyPredicate.isNotEmpty(e.getKey())) {
+              return executionContext.renderExpression(e.getKey());
+            }
+            return e.getKey();
+          }, e -> e.getValue()));
+    }
+
     builder.stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
         .customStackName(useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
         .commandType(CloudFormationCommandType.CREATE_STACK)
@@ -196,9 +240,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .appId(executionContext.getApp().getUuid())
         .activityId(activityId)
         .commandName(mainCommandUnit())
-        .variables(infrastructureProvisionerService.extractTextVariables(getVariables(), executionContext))
-        .encryptedVariables(
-            infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId()))
+        .variables(renderedInfrastructureVariables)
+        .encryptedVariables(renderedEncryptedInfrastructureVariables)
         .awsConfig(awsConfig);
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
@@ -233,25 +276,26 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
   private ExecutionResponse buildAndQueueGitCommandTask(
       ExecutionContextImpl executionContext, CloudFormationInfrastructureProvisioner provisioner, String activityId) {
-    GitFileConfig gitFileConfig = provisioner.getGitFileConfig();
-    if (gitFileConfig.getFilePathList() == null) {
-      gitFileConfig.setFilePathList(new ArrayList<>());
+    GitFileConfig renderedGitFileConfig =
+        gitFileConfigHelperService.renderGitFileConfig(executionContext, provisioner.getGitFileConfig());
+    if (renderedGitFileConfig.getFilePathList() == null) {
+      renderedGitFileConfig.setFilePathList(new ArrayList<>());
     }
     getParametersFilePaths().forEach(parametersFilePath
-        -> gitFileConfig.getFilePathList().add(executionContext.renderExpression(parametersFilePath)));
+        -> renderedGitFileConfig.getFilePathList().add(executionContext.renderExpression(parametersFilePath)));
 
-    String sourceRepoSettingId = provisioner.getGitFileConfig().getConnectorId();
+    String sourceRepoSettingId = renderedGitFileConfig.getConnectorId();
     GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
-    String branch = provisioner.getGitFileConfig().getBranch();
+    String branch = renderedGitFileConfig.getBranch();
     ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);
     }
-    gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
-    gitConfigHelperService.convertToRepoGitConfig(gitConfig, provisioner.getGitFileConfig().getRepoName());
+    gitConfig.setReference(renderedGitFileConfig.getCommitId());
+    gitConfigHelperService.convertToRepoGitConfig(gitConfig, renderedGitFileConfig.getRepoName());
 
     DelegateTask gitFetchFileTask =
-        createGitFetchFileAsyncTask(executionContext, activityId, gitConfig, provisioner.getGitFileConfig());
+        createGitFetchFileAsyncTask(executionContext, activityId, gitConfig, renderedGitFileConfig);
     return queueFetchFileTask(executionContext, activityId, gitFetchFileTask);
   }
 
@@ -363,6 +407,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   @NotNull
   private GitFetchFilesTaskParams createGitFetchFilesTaskParams(
       ExecutionContext context, String activityId, GitConfig gitConfig, GitFileConfig gitFileConfig, Application app) {
+    gitConfigHelperService.renderGitConfig(context, gitConfig);
     GitFetchFilesConfig gitFetchFilesConfig = GitFetchFilesConfig.builder()
                                                   .gitConfig(gitConfig)
                                                   .gitFileConfig(gitFileConfig)
@@ -401,16 +446,34 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         outputElement.mergeOutputs(outputs);
       }
       ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+      Map<String, String> renderedOldStackParams = existingStackInfo.getOldStackParameters();
+      if (EmptyPredicate.isNotEmpty(existingStackInfo.getOldStackParameters())) {
+        renderedOldStackParams = existingStackInfo.getOldStackParameters().entrySet().stream().collect(Collectors.toMap(
+            e
+            -> {
+              if (EmptyPredicate.isNotEmpty(e.getKey())) {
+                return context.renderExpression(e.getKey());
+              }
+              return e.getKey();
+            },
+            e -> {
+              if (EmptyPredicate.isNotEmpty(e.getValue())) {
+                return context.renderExpression(e.getValue());
+              }
+              return e.getValue();
+            }));
+      }
+
       CloudFormationRollbackInfoElement rollbackElement =
           CloudFormationRollbackInfoElement.builder()
               .stackExisted(existingStackInfo.isStackExisted())
               .provisionerId(provisionerId)
               .awsConfigId(fetchResolvedAwsConfigId(context))
-              .region(region)
+              .region(context.renderExpression(region))
               .stackNameSuffix(getStackNameSuffix((ExecutionContextImpl) context, provisionerId))
               .customStackName(useCustomStackName ? context.renderExpression(customStackName) : StringUtils.EMPTY)
-              .oldStackBody(existingStackInfo.getOldStackBody())
-              .oldStackParameters(existingStackInfo.getOldStackParameters())
+              .oldStackBody(context.renderExpression(existingStackInfo.getOldStackBody()))
+              .oldStackParameters(renderedOldStackParams)
               .build();
       return Arrays.asList(rollbackElement, outputElement);
     }

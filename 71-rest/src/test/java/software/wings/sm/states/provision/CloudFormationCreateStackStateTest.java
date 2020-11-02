@@ -86,6 +86,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -123,6 +124,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Spy private GitClientHelper gitClientHelper;
   @Spy private GitConfigHelperService gitConfigHelperService;
+  @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private LogService logService;
 
