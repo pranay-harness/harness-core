@@ -65,6 +65,15 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.encryptors.CustomEncryptor;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.encryptors.managerproxy.ManagerCustomEncryptor;
+import io.harness.encryptors.managerproxy.ManagerKmsEncryptor;
+import io.harness.encryptors.managerproxy.ManagerVaultEncryptor;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
@@ -129,8 +138,6 @@ import io.harness.secrets.SecretsRBACService;
 import io.harness.secrets.SecretsRBACServiceImpl;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilder;
 import io.harness.secrets.setupusage.SecretSetupUsageBuilders;
-import io.harness.secrets.setupusage.SecretSetupUsageService;
-import io.harness.secrets.setupusage.SecretSetupUsageServiceImpl;
 import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
@@ -448,7 +455,7 @@ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
-import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerEncryptionServiceImpl;
+import software.wings.service.impl.security.customsecretsmanager.CustomEncryptedDataDetailBuilderImpl;
 import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerServiceImpl;
 import software.wings.service.impl.security.customsecretsmanager.NoOpCustomSecretsManagerDelegateService;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
@@ -635,8 +642,8 @@ import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.scalyr.ScalyrService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
-import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -911,26 +918,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(HarnessTagService.class).to(HarnessTagServiceImpl.class);
-    bind(SecretManagerConfigService.class).to(SecretManagerConfigServiceImpl.class);
-    bind(KmsService.class).to(KmsServiceImpl.class);
     bind(AlertService.class).to(AlertServiceImpl.class).in(Singleton.class);
     bind(AlertNotificationRuleService.class).to(AlertNotificationRuleServiceImpl.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
     bind(YamlSuccessfulChangeService.class).to(YamlSuccessfulChangeServiceImpl.class);
-    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
-    bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
-    bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
-    bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
-    bind(SecretManager.class).to(SecretManagerImpl.class);
-    bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
-    bind(NGSecretService.class).to(NGSecretServiceImpl.class);
-    bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
-    bind(VaultService.class).to(VaultServiceImpl.class);
-    bind(AwsSecretsManagerService.class).to(AwsSecretsManagerServiceImpl.class);
-    bind(CyberArkService.class).to(CyberArkServiceImpl.class);
-    bind(LocalEncryptionService.class).to(LocalEncryptionServiceImpl.class);
     bind(VerificationService.class).to(VerificationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
@@ -967,26 +960,15 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
-    bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
-    bind(CustomSecretsManagerEncryptionService.class).to(CustomSecretsManagerEncryptionServiceImpl.class);
-    bind(CustomSecretsManagerDelegateService.class).to(NoOpCustomSecretsManagerDelegateService.class);
-    bind(SecretsFileService.class).to(SecretsFileServiceImpl.class);
-    bind(SecretsAuditService.class).to(SecretsAuditServiceImpl.class);
-    bind(SecretsRBACService.class).to(SecretsRBACServiceImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 
-    bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);
     bind(GraphQLUtils.class);
     bind(DelegateRequestRateLimiter.class);
     bind(SamlUserGroupSync.class);
-    bind(GcpSecretsManagerService.class).to(GcpSecretsManagerServiceImpl.class);
-    bind(GcpKmsService.class).to(GcpKmsServiceImpl.class);
-    bind(AzureVaultService.class).to(AzureVaultServiceImpl.class);
     bind(ScimUserService.class).to(ScimUserServiceImpl.class);
     bind(ScimGroupService.class).to(ScimGroupServiceImpl.class);
-    bind(AzureSecretsManagerService.class).to(AzureSecretsManagerServiceImpl.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
@@ -1047,6 +1029,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new ManagerCacheRegistrar());
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     install(SecretManagementCoreModule.getInstance());
+    registerSecretManagementBindings();
 
     bind(PersistentScheduler.class)
         .annotatedWith(Names.named("BackgroundJobScheduler"))
@@ -1358,8 +1341,75 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(UsageLimitedFeature.class)
         .annotatedWith(Names.named(CeClusterFeature.FEATURE_NAME))
         .to(CeClusterFeature.class);
+  }
 
-    bind(SecretSetupUsageService.class).to(SecretSetupUsageServiceImpl.class);
+  void registerSecretManagementBindings() {
+    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
+    bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
+    bind(SecretManager.class).to(SecretManagerImpl.class);
+    bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
+    bind(NGSecretService.class).to(NGSecretServiceImpl.class);
+    bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
+    bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
+    bind(SecretManagerConfigService.class).to(SecretManagerConfigServiceImpl.class);
+    bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(AwsSecretsManagerService.class).to(AwsSecretsManagerServiceImpl.class);
+    bind(KmsService.class).to(KmsServiceImpl.class);
+    bind(CyberArkService.class).to(CyberArkServiceImpl.class);
+    bind(GcpSecretsManagerService.class).to(GcpSecretsManagerServiceImpl.class);
+    bind(AzureSecretsManagerService.class).to(AzureSecretsManagerServiceImpl.class);
+    bind(LocalEncryptionService.class).to(LocalEncryptionServiceImpl.class);
+    bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
+    bind(CustomEncryptedDataDetailBuilder.class).to(CustomEncryptedDataDetailBuilderImpl.class);
+    bind(SecretsFileService.class).to(SecretsFileServiceImpl.class);
+    bind(SecretsAuditService.class).to(SecretsAuditServiceImpl.class);
+    bind(SecretsRBACService.class).to(SecretsRBACServiceImpl.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+        .to(ManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_VAULT_ENCRYPTOR.getName()))
+        .to(ManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+        .to(ManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
+        .to(ManagerVaultEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
+        .to(ManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
+        .to(ManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+        .to(LocalEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_KMS_ENCRYPTOR.getName()))
+        .to(GcpKmsEncryptor.class);
+
+    binder()
+        .bind(CustomEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
+        .to(ManagerCustomEncryptor.class);
 
     binder()
         .bind(SecretSetupUsageBuilder.class)
@@ -1377,6 +1427,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+
+    bind(KmsService.class).to(KmsServiceImpl.class);
+    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
+    bind(CustomSecretsManagerDelegateService.class).to(NoOpCustomSecretsManagerDelegateService.class);
+    bind(KmsEncryptDecryptClient.class);
+    bind(GcpKmsService.class).to(GcpKmsServiceImpl.class);
+    bind(AzureVaultService.class).to(AzureVaultServiceImpl.class);
   }
 
   private void bindGcpMarketplaceProductHandlers() {

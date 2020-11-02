@@ -20,6 +20,11 @@ import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
+import io.harness.delegatetasks.DeleteSecretTask;
+import io.harness.delegatetasks.EncryptSecretTask;
+import io.harness.delegatetasks.FetchSecretTask;
+import io.harness.delegatetasks.UpsertSecretTask;
+import io.harness.delegatetasks.ValidateSecretReferenceTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
@@ -280,6 +285,13 @@ public enum TaskType {
   SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class),
   BATCH_SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class),
   SECRET_DECRYPT_REF(TaskGroup.KMS, ServiceImplDelegateTask.class),
+
+  // Secret Management (New Tasks)
+  DELETE_SECRET(TaskGroup.KMS, DeleteSecretTask.class),
+  VALIDATE_SECRET_REFERENCE(TaskGroup.KMS, ValidateSecretReferenceTask.class),
+  UPSERT_SECRET(TaskGroup.KMS, UpsertSecretTask.class),
+  FETCH_SECRET(TaskGroup.KMS, FetchSecretTask.class),
+  ENCRYPT_SECRET(TaskGroup.KMS, EncryptSecretTask.class),
 
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, HostValidationTask.class),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class),

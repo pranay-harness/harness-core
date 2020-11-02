@@ -10,9 +10,6 @@ import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
-import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -30,7 +27,6 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState.Method;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,13 +106,9 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     if (isNotEmpty(encryptedDataDetails)) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-        try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
-          if (decryptedValue != null) {
-            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
-          }
-        } catch (IOException e) {
-          throw new WingsException("APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
         }
       }
     }
@@ -135,14 +127,9 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     if (config.getEncryptedDataDetails() != null) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : config.getEncryptedDataDetails()) {
-        try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
-          if (decryptedValue != null) {
-            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
-          }
-        } catch (IOException e) {
-          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
-              "APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
         }
       }
     }

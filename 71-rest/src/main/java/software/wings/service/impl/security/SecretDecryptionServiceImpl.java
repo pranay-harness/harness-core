@@ -20,7 +20,6 @@ import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -62,7 +61,7 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
   }
 
   @Override
-  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException {
+  public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
     return encryptionService.getDecryptedValue(encryptedDataDetail, false);
   }
 }

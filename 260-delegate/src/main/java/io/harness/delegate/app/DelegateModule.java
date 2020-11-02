@@ -8,6 +8,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -55,6 +56,18 @@ import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.encryptors.CustomEncryptor;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
+import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
+import io.harness.encryptors.clients.AzureVaultEncryptor;
+import io.harness.encryptors.clients.CustomSecretsManagerEncryptor;
+import io.harness.encryptors.clients.CyberArkVaultEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.HashicorpVaultEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
@@ -574,10 +587,6 @@ public class DelegateModule extends AbstractModule {
     bind(ContainerService.class).to(ContainerServiceImpl.class);
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
     bind(GitClientV2.class).to(GitClientV2Impl.class).asEagerSingleton();
-    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
-    bind(KmsEncryptDecryptClient.class);
-    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
-    bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
@@ -609,13 +618,11 @@ public class DelegateModule extends AbstractModule {
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
     bind(AwsRoute53HelperServiceDelegate.class).to(AwsRoute53HelperServiceDelegateImpl.class);
     bind(AwsServiceDiscoveryHelperServiceDelegate.class).to(AwsServiceDiscoveryHelperServiceDelegateImpl.class);
-    bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
     bind(GcbService.class).to(GcbServiceImpl.class);
-    bind(CustomSecretsManagerDelegateService.class).to(CustomSecretsManagerDelegateServiceImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
@@ -734,5 +741,62 @@ public class DelegateModule extends AbstractModule {
     MapBinder<GcpRequest.RequestType, TaskHandler> gcpTaskTypeToTaskHandlerMap =
         MapBinder.newMapBinder(binder(), GcpRequest.RequestType.class, TaskHandler.class);
     gcpTaskTypeToTaskHandlerMap.addBinding(GcpRequest.RequestType.VALIDATE).to(GcpValidationTaskHandler.class);
+
+    registerSecretManagementBindings();
+  }
+
+  private void registerSecretManagementBindings() {
+    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
+    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
+    bind(CustomSecretsManagerDelegateService.class).to(CustomSecretsManagerDelegateServiceImpl.class);
+    bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+        .to(HashicorpVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_VAULT_ENCRYPTOR.getName()))
+        .to(AwsSecretsManagerEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+        .to(AzureVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
+        .to(CyberArkVaultEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
+        .to(AwsKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
+        .to(GcpKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+        .to(LocalEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_KMS_ENCRYPTOR.getName()))
+        .to(GcpKmsEncryptor.class);
+
+    binder()
+        .bind(CustomEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
+        .to(CustomSecretsManagerEncryptor.class);
+
+    bind(KmsEncryptDecryptClient.class);
   }
 }

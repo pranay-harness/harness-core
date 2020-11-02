@@ -30,7 +30,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.impl.security.AbstractSecretServiceImpl;
-import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
+import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 
 import java.util.HashSet;
@@ -41,15 +41,15 @@ import java.util.Set;
 public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements CustomSecretsManagerService {
   private CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
   private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
-  private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
+  private CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder;
 
   @Inject
   CustomSecretsManagerServiceImpl(CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper,
       CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper,
-      CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService) {
+      CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder) {
     this.customSecretsManagerShellScriptHelper = customSecretsManagerShellScriptHelper;
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
-    this.customSecretsManagerEncryptionService = customSecretsManagerEncryptionService;
+    this.customEncryptedDataDetailBuilder = customEncryptedDataDetailBuilder;
   }
 
   @Override
@@ -190,7 +190,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   private void validateConnectivity(
       CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
     EncryptedData encryptedData = EncryptedData.builder().name("Test Variables").parameters(testVariables).build();
-    customSecretsManagerEncryptionService.validateSecret(encryptedData, customSecretsManagerConfig);
+    customEncryptedDataDetailBuilder.validateSecret(encryptedData, customSecretsManagerConfig);
   }
 
   private void setShellScriptInConfig(CustomSecretsManagerConfig customSecretsManagerConfig) {

@@ -6,47 +6,36 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.DelegateDecryptionService;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
-import software.wings.beans.KmsConfig;
-import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- * @author marklu on 2019-02-04
- */
 @OwnedBy(PL)
 @Singleton
 public class DelegateDecryptionServiceImpl implements DelegateDecryptionService {
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public Map<String, char[]> decrypt(Map<EncryptionConfig, List<EncryptedRecord>> encryptedRecordMap) {
     Map<String, char[]> resultMap = new HashMap<>();
     for (Entry<EncryptionConfig, List<EncryptedRecord>> entry : encryptedRecordMap.entrySet()) {
       EncryptionConfig encryptionConfig = entry.getKey();
-      if (encryptionConfig instanceof KmsConfig) {
-        for (EncryptedRecord encryptedRecord : entry.getValue()) {
-          resultMap.put(encryptedRecord.getUuid(),
-              secretManagementDelegateService.decrypt(encryptedRecord, (KmsConfig) encryptionConfig));
-        }
-      } else if (encryptionConfig instanceof VaultConfig) {
-        for (EncryptedRecord encryptedRecord : entry.getValue()) {
-          resultMap.put(encryptedRecord.getUuid(),
-              secretManagementDelegateService.decrypt(encryptedRecord, (VaultConfig) encryptionConfig));
-        }
-      } else {
-        for (EncryptedRecord encryptedRecord : entry.getValue()) {
-          SimpleEncryption encryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
-          resultMap.put(encryptedRecord.getUuid(), encryption.decryptChars(encryptedRecord.getEncryptedValue()));
-        }
+      for (EncryptedRecord encryptedRecord : entry.getValue()) {
+        EncryptedRecordData encryptedRecordData = (EncryptedRecordData) encryptedRecord;
+        resultMap.put(encryptedRecord.getUuid(),
+            encryptionService.getDecryptedValue(EncryptedDataDetail.builder()
+                                                    .encryptedData(encryptedRecordData)
+                                                    .encryptionConfig(encryptionConfig)
+                                                    .build(),
+                false));
       }
     }
     return resultMap;

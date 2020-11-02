@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @OwnedBy(PL)
 class CustomSecretsManagerShellScriptHelper {
-  private TemplateService templateService;
+  private final TemplateService templateService;
 
   @Inject
   CustomSecretsManagerShellScriptHelper(TemplateService templateService) {

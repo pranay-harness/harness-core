@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.GeneralException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +28,6 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,11 +88,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       String username, EncryptedDataDetail passwordEncryptedDataDetail) {
     settings.decryptFields(settingsEncryptedDataDetail, encryptionService);
     String password;
-    try {
-      password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
-    } catch (IOException e) {
-      throw new GeneralException("Failed to decrypt the password.");
-    }
+    password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     return helper.authenticate(settings.getUserSettingsList(), username, password);
   }

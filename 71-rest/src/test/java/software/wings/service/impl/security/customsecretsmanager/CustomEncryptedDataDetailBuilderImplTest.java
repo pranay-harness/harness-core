@@ -31,13 +31,13 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
-public class CustomSecretsManagerEncryptionServiceImplTest extends CategoryTest {
+public class CustomEncryptedDataDetailBuilderImplTest extends CategoryTest {
   @Mock private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private ExpressionEvaluator expressionEvaluator;
   @Mock private FeatureFlagService featureFlagService;
-  @Inject @InjectMocks private CustomSecretsManagerEncryptionServiceImpl customSecretsManagerEncryptionService;
+  @Inject @InjectMocks private CustomEncryptedDataDetailBuilderImpl customSecretsManagerEncryptionService;
 
   @Before
   public void setup() {

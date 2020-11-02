@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -29,7 +28,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,15 +57,9 @@ public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDat
     if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
-        try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
-          if (decryptedValue != null) {
-            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
-          }
-        } catch (IOException e) {
-          throw new WingsException(dataCollectionInfo.getStateType().getName()
-                  + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
-              e);
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
         }
       }
     }

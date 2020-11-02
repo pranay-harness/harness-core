@@ -8,7 +8,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
 @OwnedBy(PL)
-public interface CustomSecretsManagerEncryptionService {
+public interface CustomEncryptedDataDetailBuilder {
   EncryptedDataDetail buildEncryptedDataDetail(
       EncryptedData encryptedData, CustomSecretsManagerConfig customSecretsManagerConfig);
   void validateSecret(EncryptedData encryptedData, CustomSecretsManagerConfig customSecretsManagerConfig);

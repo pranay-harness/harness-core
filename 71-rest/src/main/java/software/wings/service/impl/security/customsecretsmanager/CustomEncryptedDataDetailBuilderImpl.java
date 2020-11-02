@@ -15,7 +15,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
+import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -25,7 +25,7 @@ import java.util.Set;
 
 @OwnedBy(PL)
 @Slf4j
-public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsManagerEncryptionService {
+public class CustomEncryptedDataDetailBuilderImpl implements CustomEncryptedDataDetailBuilder {
   private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
   private SecretManager secretManager;
   private ManagerDecryptionService managerDecryptionService;
@@ -33,10 +33,9 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
   private FeatureFlagService featureFlagService;
 
   @Inject
-  public CustomSecretsManagerEncryptionServiceImpl(
-      CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper, SecretManager secretManager,
-      ManagerDecryptionService managerDecryptionService, ExpressionEvaluator expressionEvaluator,
-      FeatureFlagService featureFlagService) {
+  public CustomEncryptedDataDetailBuilderImpl(CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper,
+      SecretManager secretManager, ManagerDecryptionService managerDecryptionService,
+      ExpressionEvaluator expressionEvaluator, FeatureFlagService featureFlagService) {
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
     this.secretManager = secretManager;
     this.managerDecryptionService = managerDecryptionService;

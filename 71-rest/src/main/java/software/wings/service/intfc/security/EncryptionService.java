@@ -9,7 +9,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -26,5 +25,5 @@ public interface EncryptionService {
       List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList, boolean fromCache);
 
   @DelegateTaskType(TaskType.SECRET_DECRYPT_REF)
-  char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail, boolean fromCache) throws IOException;
+  char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail, boolean fromCache);
 }
