@@ -23,8 +23,10 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Map;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.util.ByteArrayDataSource;
 
 @Slf4j
 public class CEMailer {
@@ -46,9 +48,24 @@ public class CEMailer {
    * @throws IOException       Signals that an I/O exception has occurred.
    * @throws TemplateException the template exception
    */
+
   public void send(SmtpConfig smtpConfig, EmailData emailData) {
+    send(smtpConfig, emailData, null);
+  }
+
+  public void send(SmtpConfig smtpConfig, EmailData emailData, byte[] image) {
     try {
-      Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
+      Email email;
+      // Embedding image in mail
+      if (image != null) {
+        log.info("Embedding image in mail");
+        email = new HtmlEmail();
+        ByteArrayDataSource imageDataSource = new ByteArrayDataSource(image, "image/png");
+        String contentId = ((HtmlEmail) email).embed(imageDataSource, "chart");
+        ((Map<String, String>) emailData.getTemplateModel()).put("CHART", contentId);
+      } else {
+        email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
+      }
       // Setting hostname and port
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());

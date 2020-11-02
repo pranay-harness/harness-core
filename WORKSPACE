@@ -1793,6 +1793,7 @@ maven_install(
         "org.jboss.marshalling:jboss-marshalling:2.0.9.Final",
         "org.jboss.spec.javax.rmi:jboss-rmi-api_1.0_spec:1.0.6.Final",
         "org.jetbrains:annotations:13.0",
+        "org.jfree:jfreechart:1.5.0",
         "org.jfrog.artifactory.client:artifactory-java-client-api:2.9.1",
         "org.jfrog.artifactory.client:artifactory-java-client-httpClient:2.9.1",
         "org.jfrog.artifactory.client:artifactory-java-client-services:2.9.1",

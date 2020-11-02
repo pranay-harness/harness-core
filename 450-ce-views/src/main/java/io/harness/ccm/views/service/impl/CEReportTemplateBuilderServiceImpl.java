@@ -8,6 +8,7 @@ import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.graphql.QLCESortOrder;
 import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
+import io.harness.ccm.views.graphql.QLCEViewDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewFieldInput;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
@@ -17,24 +18,42 @@ import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewSortType;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
+import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.data.category.DefaultCategoryDataset;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
+import javax.imageio.ImageIO;
 
+@Slf4j
 public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuilderService {
   @Inject CEViewService ceViewService;
   @Inject ViewsBillingServiceImpl viewsBillingService;
@@ -42,7 +61,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
   // For table construction
   private static final String TABLE_START =
-      "<table style=\"border-collapse: collapse;width: 80%;font-family: arial, sans-serif;margin-left: 7%; min-width: 500px;max-width: 500px;\">";
+      "<table style=\"border-collapse: collapse;width: 80%;font-family: arial, sans-serif;margin-left: 7%; min-width: 550px;max-width: 550px;\">";
   private static final String TABLE_END = "</table>";
   private static final String COLUMN1_HEADER =
       "<th style=\"border: 1px solid #dddddd;text-align: left;padding: 8px;background-color: #dddddd;\">%s</th>";
@@ -86,6 +105,12 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String DOWNWARD_ARROW = "&darr;";
   private static final String PERCENT = "%";
   private static final String DOLLAR = "$";
+  private static final Color[] COLORS = {new Color(72, 165, 243), new Color(147, 133, 241), new Color(83, 205, 124),
+      new Color(255, 188, 9), new Color(243, 92, 97), new Color(55, 214, 203), new Color(236, 97, 181),
+      new Color(255, 142, 60), new Color(178, 96, 9), new Color(25, 88, 173)};
+  private static final Color WHITE = new Color(255, 255, 255);
+  private static final Color GRAY = new Color(112, 113, 117);
+  private static final int REPEAT_FREQUENCY = 10;
 
   @Override
   public Map<String, String> getTemplatePlaceholders(
@@ -97,6 +122,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   public Map<String, String> getTemplatePlaceholders(
       String accountId, String viewId, String reportId, BigQuery bigQuery, String cloudProviderTableName) {
     Map<String, String> templatePlaceholders = new HashMap<>();
+
     // Get cloud provider table name here
     CEView view = ceViewService.get(viewId);
     if (view == null) {
@@ -117,21 +143,36 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     // Generating Trend data
     QLCEViewTrendInfo trendData =
         viewsBillingService.getTrendStatsData(bigQuery, filters, aggregationFunction, cloudProviderTableName);
+    if (trendData == null) {
+      throw new InvalidRequestException("Exception while generating report. No data to for cost trend");
+    }
 
     // Generating table data
     List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(
         bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName);
+    if (tableData == null || tableData.isEmpty()) {
+      throw new InvalidRequestException("Exception while generating report. No data to for table");
+    }
+    List<String> entities = tableData.stream().map(QLCEViewEntityStatsDataPoint::getName).collect(Collectors.toList());
+
+    // Generating chart data
+    List<QLCEViewTimeSeriesData> chartData =
+        viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
+            bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
+    if (chartData == null) {
+      throw new InvalidRequestException("Exception while generating report. No data to for chart");
+    }
 
     // Filling template placeholders
     templatePlaceholders.put(VIEW_NAME, view.getName());
     templatePlaceholders.put(PERIOD, period);
     templatePlaceholders.put(DATE, getReportDateRange(period));
 
-    if (trendData == null) {
-      throw new InvalidRequestException("Exception while generating report. No data to for cost trend");
-    }
-    templatePlaceholders.put(TOTAL_COST, trendData.getStatsValue());
+    // Generating chart for report
+    templatePlaceholders.put(CHART, getEncodedImage(createChart(chartData, entities)));
 
+    // Trend bar for report
+    templatePlaceholders.put(TOTAL_COST, trendData.getStatsValue());
     if (trendData.getStatsTrend().doubleValue() < 0) {
       templatePlaceholders.put(TOTAL_COST_TREND,
           String.format(
@@ -147,14 +188,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     templatePlaceholders.put(
         TOTAL_COST_LAST_WEEK, DOLLAR + viewsQueryHelper.formatNumber(getTotalCostLastWeek(trendData)));
 
-    String numberOfRows = getNumberOfRows(tableData);
-    if (numberOfRows.equals(ZERO)) {
-      throw new InvalidRequestException("Exception while generating report. No data to show in table");
-    }
+    // Generating table for report
     templatePlaceholders.put(TABLE, generateTable(tableData, entity));
-
-    // Todo: Add these
-    templatePlaceholders.put(UNSUBSCRIBE_URL, "");
 
     return templatePlaceholders;
   }
@@ -242,14 +277,6 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     return table;
   }
 
-  private String getNumberOfRows(List<QLCEViewEntityStatsDataPoint> tableData) {
-    String numberOfRows = ZERO;
-    if (tableData != null) {
-      numberOfRows = String.valueOf(tableData.size());
-    }
-    return numberOfRows;
-  }
-
   private String getReportDateRange(String period) {
     long timePeriod = getTimePeriod(period);
     Instant startInstant = getStartTime(getStartOfDayTimestamp(0), timePeriod);
@@ -281,5 +308,62 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
     return (zdtStart.toEpochSecond() * 1000) - offset;
+  }
+
+  private String getEncodedImage(byte[] bytes) {
+    String encodedfile = null;
+    try {
+      encodedfile = Base64.getEncoder().encodeToString(bytes);
+    } catch (Exception e) {
+      log.error("Error in encoding chart: ", e);
+    }
+    return encodedfile;
+  }
+
+  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities) {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    int index = 0;
+
+    for (QLCEViewTimeSeriesData entry : data) {
+      for (QLCEViewDataPoint dataPoint : entry.getValues()) {
+        dataset.addValue(dataPoint.getValue().doubleValue(), dataPoint.getName(), entry.getDate());
+      }
+    }
+
+    // Creating stacked bar chart
+    JFreeChart chart =
+        ChartFactory.createStackedBarChart("", "", "", dataset, PlotOrientation.VERTICAL, true, false, false);
+    chart.setBackgroundPaint(WHITE);
+    chart.setBorderVisible(false);
+    chart.setBorderPaint(WHITE);
+
+    // Color and alignment settings of plot area
+    CategoryPlot plot = chart.getCategoryPlot();
+    plot.setBackgroundPaint(WHITE);
+    plot.setRangeGridlinesVisible(true);
+    plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
+    plot.getDomainAxis().setCategoryMargin(0.1);
+    plot.getRangeAxis().setTickLabelPaint(GRAY);
+    plot.getDomainAxis().setTickLabelPaint(GRAY);
+    ((BarRenderer) plot.getRenderer()).setBarPainter(new StandardBarPainter());
+    plot.getRangeAxis().setMinorTickCount(5);
+    plot.setOutlinePaint(WHITE);
+    plot.setRangeGridlinePaint(GRAY);
+
+    // Setting bar colors
+    while (index < entities.size()) {
+      plot.getRenderer().setSeriesPaint(index, COLORS[index % REPEAT_FREQUENCY]);
+      index++;
+    }
+
+    BufferedImage bufferedImage = chart.createBufferedImage(800, 600);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try {
+      ImageIO.write(bufferedImage, "png", byteArrayOutputStream);
+    } catch (IOException e) {
+      log.error("Error in generating chart: ", e);
+    }
+
+    return byteArrayOutputStream.toByteArray();
   }
 }

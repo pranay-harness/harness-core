@@ -25,6 +25,7 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -107,7 +108,7 @@ public class ScheduledReportServiceImpl {
     emailData.setSubject(MAIL_SUBJECT);
     emailData.setRetries(0);
     // TODO: This opens new connection every time. Makes things slow. Modify this to use connection pools with sessions.
-    emailNotificationService.send(emailData);
+    emailNotificationService.send(emailData, Base64.getDecoder().decode(templateModel.get("CHART")));
   }
 
   public void setNextExecution(String accountId, CEReportSchedule schedule) {

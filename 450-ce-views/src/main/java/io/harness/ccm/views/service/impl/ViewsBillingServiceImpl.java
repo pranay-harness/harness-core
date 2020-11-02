@@ -23,6 +23,8 @@ import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
+import io.harness.ccm.views.graphql.QLCEViewDataPoint;
+import io.harness.ccm.views.graphql.QLCEViewDataPoint.QLCEViewDataPointBuilder;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint.QLCEViewEntityStatsDataPointBuilder;
 import io.harness.ccm.views.graphql.QLCEViewFieldInput;
@@ -33,6 +35,7 @@ import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
+import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewCostData;
@@ -49,9 +52,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,6 +74,8 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   private static final String COST_DESCRIPTION = "of %s - %s";
   private static final String COST_VALUE = "$%s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
+  private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
+  private static final String DEFAULT_TIMEZONE = "GMT";
 
   @Override
   public List<String> getFilterValueStats(
@@ -417,5 +426,60 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       return value.toString();
     }
     return nullStringValueConstant;
+  }
+
+  public List<QLCEViewTimeSeriesData> convertToQLViewTimeSeriesData(TableResult result) {
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+
+    Map<Long, List<QLCEViewDataPoint>> timeSeriesDataPointsMap = new HashMap<>();
+    for (FieldValueList row : result.iterateAll()) {
+      QLCEViewDataPointBuilder billingDataPointBuilder = QLCEViewDataPoint.builder();
+      Long startTimeTruncatedTimestamp = null;
+      Double value = Double.valueOf(0);
+      for (Field field : fields) {
+        switch (field.getType().getStandardType()) {
+          case TIMESTAMP:
+            startTimeTruncatedTimestamp = row.get(field.getName()).getTimestampValue() / 1000;
+            break;
+          case STRING:
+            String stringValue = fetchStringValue(row, field);
+            billingDataPointBuilder.name(stringValue).id(stringValue);
+            break;
+          case FLOAT64:
+            value += getNumericValue(row, field);
+            break;
+          default:
+            break;
+        }
+      }
+
+      billingDataPointBuilder.value(value);
+      List<QLCEViewDataPoint> dataPoints = new ArrayList<>();
+      if (timeSeriesDataPointsMap.containsKey(startTimeTruncatedTimestamp)) {
+        dataPoints = timeSeriesDataPointsMap.get(startTimeTruncatedTimestamp);
+      }
+      dataPoints.add(billingDataPointBuilder.build());
+      timeSeriesDataPointsMap.put(startTimeTruncatedTimestamp, dataPoints);
+    }
+
+    return convertTimeSeriesPointsMapToList(timeSeriesDataPointsMap);
+  }
+
+  public List<QLCEViewTimeSeriesData> convertTimeSeriesPointsMapToList(
+      Map<Long, List<QLCEViewDataPoint>> timeSeriesDataPointsMap) {
+    return timeSeriesDataPointsMap.entrySet()
+        .stream()
+        .map(e
+            -> QLCEViewTimeSeriesData.builder()
+                   .time(e.getKey())
+                   .date(getFormattedDate(Instant.ofEpochMilli(e.getKey()), DATE_PATTERN_FOR_CHART))
+                   .values(e.getValue())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  protected String getFormattedDate(Instant instant, String datePattern) {
+    return instant.atZone(ZoneId.of("GMT")).format(DateTimeFormatter.ofPattern(datePattern));
   }
 }
