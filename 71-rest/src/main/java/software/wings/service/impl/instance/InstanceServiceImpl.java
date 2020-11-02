@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.nullCheck;
 
 import com.google.common.collect.Lists;
@@ -243,7 +244,7 @@ public class InstanceServiceImpl implements InstanceService {
     long currentTimeMillis = System.currentTimeMillis();
 
     partitions.forEach(partition -> {
-      Query<Instance> queryDeletedAlready = wingsPersistence.createQuery(Instance.class);
+      Query<Instance> queryDeletedAlready = wingsPersistence.createQuery(Instance.class, excludeAuthority);
       queryDeletedAlready.field("_id").in(partition);
       queryDeletedAlready.field(InstanceKeys.isDeleted).equal(true);
       queryDeletedAlready.project(InstanceKeys.accountId, true);
