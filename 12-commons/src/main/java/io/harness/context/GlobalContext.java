@@ -2,12 +2,19 @@ package io.harness.context;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class GlobalContext {
-  private Map<String, GlobalContextData> map = new ConcurrentHashMap<>();
+  private Map<String, GlobalContextData> map = new HashMap<>();
+
+  public GlobalContext() {}
+
+  public GlobalContext(GlobalContext globalContext) {
+    map = globalContext == null || globalContext.map == null ? new HashMap<>() : new HashMap<>(globalContext.map);
+  }
 
   public <T extends GlobalContextData> T get(String key) {
     GlobalContextData globalContextData = map.get(key);
