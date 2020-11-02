@@ -103,7 +103,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     }
 
     if (isBlank(logObject.getActivityId()) || isBlank(logObject.getCommandUnitName())) {
-      logger.info("Logging stack while saving the execution logObject ", new Exception(""));
+      log.info("Logging stack while saving the execution logObject ", new Exception(""));
     }
 
     String line =
@@ -143,7 +143,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      logger.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
       return;
     }
     logs.stream()
@@ -191,23 +191,23 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         logObject.setLinesCount(logBatch.size());
         logObject.setCommandExecutionStatus(commandUnitStatus);
         logObject.setCreatedAt(System.currentTimeMillis());
-        logger.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
+        log.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
             logObject.getCommandExecutionStatus());
         RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(
             activityId, URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId, logObject));
-        logger.info("{} logObject lines dispatched for accountId: {}",
+        log.info("{} logObject lines dispatched for accountId: {}",
             restResponse.getResource() != null ? logBatch.size() : 0, accountId);
       } catch (Exception e) {
-        logger.error("Dispatch log failed. printing lost logs[{}]", logBatch.size(), e);
-        logBatch.forEach(logObject -> logger.error(logObject.toString()));
-        logger.error("Finished printing lost logs");
+        log.error("Dispatch log failed. printing lost logs[{}]", logBatch.size(), e);
+        logBatch.forEach(logObject -> log.error(logObject.toString()));
+        log.error("Finished printing lost logs");
       }
     }
   }
 
   private void dispatchApiCallLogs(String accountId, List<ThirdPartyApiCallLog> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      logger.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
       return;
     }
     logs.stream()
@@ -220,32 +220,32 @@ public class DelegateLogServiceImpl implements DelegateLogService {
           String delegateId = getDelegateId().orElse(null);
           logsList.forEach(logObject -> logObject.setDelegateId(delegateId));
           try {
-            logger.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
+            log.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
             RestResponse restResponse = execute(managerClient.saveApiCallLogs(delegateId, accountId, logsList));
-            logger.info("Dispatched {} api call logs for [{}] [{}]",
+            log.info("Dispatched {} api call logs for [{}] [{}]",
                 restResponse == null || restResponse.getResource() != null ? logsList.size() : 0, stateExecutionId,
                 accountId);
           } catch (IOException e) {
-            logger.error("Dispatch log failed for {}. printing lost logs[{}]", stateExecutionId, logsList.size(), e);
-            logsList.forEach(logObject -> logger.error(logObject.toString()));
-            logger.error("Finished printing lost logs");
+            log.error("Dispatch log failed for {}. printing lost logs[{}]", stateExecutionId, logsList.size(), e);
+            logsList.forEach(logObject -> log.error(logObject.toString()));
+            log.error("Finished printing lost logs");
           }
         });
   }
 
   private void dispatchCVActivityLogs(String accountId, List<CVActivityLog> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      logger.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
       return;
     }
     Iterables.partition(logs, 100).forEach(batch -> {
       try {
         safeExecute(verificationServiceClient.saveActivityLogs(accountId, logs));
-        logger.info("Dispatched {} cv activity logs [{}]", batch.size(), accountId);
+        log.info("Dispatched {} cv activity logs [{}]", batch.size(), accountId);
       } catch (Exception e) {
-        logger.error("Dispatch log failed. printing lost activity logs[{}]", batch.size(), e);
-        batch.forEach(logObject -> logger.error(logObject.toString()));
-        logger.error("Finished printing lost activity logs");
+        log.error("Dispatch log failed. printing lost activity logs[{}]", batch.size(), e);
+        batch.forEach(logObject -> log.error(logObject.toString()));
+        log.error("Finished printing lost activity logs");
       }
     });
   }

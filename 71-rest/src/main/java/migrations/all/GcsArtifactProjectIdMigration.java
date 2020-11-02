@@ -48,7 +48,7 @@ public class GcsArtifactProjectIdMigration implements Migration {
             && isEmpty(artifactStream.getProjectId())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
           if (settingAttribute == null) {
-            logger.info("GCP Cloud provider Settings Attribute is null. Can not set Project Id in Artifact Stream");
+            log.info("GCP Cloud provider Settings Attribute is null. Can not set Project Id in Artifact Stream");
             continue;
           } else {
             // Get project Id from GCP Config and service account

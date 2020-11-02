@@ -119,7 +119,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployAndCheckStatus(getCommand(Commands.DEPLOY_WORKFLOW_TEST, command), ExecutionStatus.RUNNING.name()))
         .isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -202,7 +202,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployAndCheckStatus(getCommand(Commands.DEPLOY_WORKFLOW_TEST, command), ExecutionStatus.RUNNING.name()))
         .isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -227,12 +227,12 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     // Negative Case, Variables are not provided
     List<String> deployOutput =
         harnesscliHelper.getCLICommandError(command + " --variables service:" + service.getUuid());
-    logger.info(deployOutput.get(0));
+    log.info(deployOutput.get(0));
     assertThat(
         deployOutput.get(0).contains("Invalid request: Workflow variable [Infra_Def] is mandatory for execution"))
         .isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -257,7 +257,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployAndCheckStatus(getCommand(Commands.DEPLOY_USING_CONFIG, ""), ExecutionStatus.RUNNING.name()))
         .isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -279,7 +279,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
                    ExecutionStatus.FAILED.name()))
         .isTrue();
 
-    logger.info("Deleting the pipeline");
+    log.info("Deleting the pipeline");
     PipelineRestUtils.deletePipeline(bearerToken, pipeline.getUuid(), appId);
   }
 
@@ -303,7 +303,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
                           .equals(status));
 
     WorkflowExecution runningWorkflowExecution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
-    logger.info("Execution Status : " + runningWorkflowExecution.getStatus());
+    log.info("Execution Status : " + runningWorkflowExecution.getStatus());
     assertThat(ExecutionStatus.RUNNING).isEqualTo(runningWorkflowExecution.getStatus());
 
     return true;
@@ -312,13 +312,13 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   public static Pipeline getPipelineWithTwoStages(List<PipelineStage> pipelineStages, String appId, String accountId) {
     Pipeline pipeline = new Pipeline();
     String pipelineName = "CLI-PIPELINE-" + System.currentTimeMillis();
-    logger.info("Generated unique pipeline name : " + pipelineName);
+    log.info("Generated unique pipeline name : " + pipelineName);
     pipeline.setName(pipelineName);
     pipeline.setDescription("description");
     pipeline.setTemplatized(true);
     pipeline.setPipelineStages(pipelineStages);
 
-    logger.info("Creating the pipeline");
+    log.info("Creating the pipeline");
     Pipeline createdPipeline = PipelineRestUtils.createPipeline(appId, pipeline, accountId, bearerToken);
     assertThat(createdPipeline).isNotNull();
 

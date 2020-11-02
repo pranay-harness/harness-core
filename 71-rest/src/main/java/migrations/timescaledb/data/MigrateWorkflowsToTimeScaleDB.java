@@ -56,7 +56,7 @@ public class MigrateWorkflowsToTimeScaleDB implements TimeScaleDBDataMigration {
   @Override
   public boolean migrate() {
     if (!timeScaleDBService.isValid()) {
-      logger.info("TimeScaleDB not found, not migrating data to TimeScaleDB");
+      log.info("TimeScaleDB not found, not migrating data to TimeScaleDB");
       return false;
     }
     int count = 0;
@@ -87,15 +87,15 @@ public class MigrateWorkflowsToTimeScaleDB implements TimeScaleDBDataMigration {
           checkWorkflowExecution(workflowExecution);
           count++;
           if (count % 100 == 0) {
-            logger.info("Completed migrating [{}] records", count);
+            log.info("Completed migrating [{}] records", count);
           }
         }
       }
     } catch (Exception e) {
-      logger.warn("Failed to complete migration", e);
+      log.warn("Failed to complete migration", e);
       return false;
     } finally {
-      logger.info("Completed migrating [{}] records, lastTimeStamp=[{}]", count, lastTimeStamp);
+      log.info("Completed migrating [{}] records, lastTimeStamp=[{}]", count, lastTimeStamp);
     }
     return true;
   }
@@ -113,27 +113,27 @@ public class MigrateWorkflowsToTimeScaleDB implements TimeScaleDBDataMigration {
         queryStatement.setString(1, workflowExecution.getUuid());
         queryResult = queryStatement.executeQuery();
         if (queryResult != null && queryResult.next()) {
-          logger.info("WorkflowExecution found:[{}],updating it", workflowExecution.getUuid());
+          log.info("WorkflowExecution found:[{}],updating it", workflowExecution.getUuid());
           updateDataInTimescaleDB(workflowExecution, connection, updateStatement);
         } else {
-          logger.info("WorkflowExecution not found:[{}],inserting it", workflowExecution.getUuid());
+          log.info("WorkflowExecution not found:[{}],inserting it", workflowExecution.getUuid());
           insertDataInTimescaleDB(workflowExecution, connection, insertStatement);
         }
 
         successful = true;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to save workflowExecution,[{}]", workflowExecution.getUuid(), e);
+          log.error("Failed to save workflowExecution,[{}]", workflowExecution.getUuid(), e);
         } else {
-          logger.info("Failed to save workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
+          log.info("Failed to save workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
         }
         retryCount++;
       } catch (Exception e) {
-        logger.error("Failed to save workflowExecution,[{}]", workflowExecution.getUuid(), e);
+        log.error("Failed to save workflowExecution,[{}]", workflowExecution.getUuid(), e);
         retryCount = MAX_RETRY + 1;
       } finally {
         DBUtils.close(queryResult);
-        logger.info("Total time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
+        log.info("Total time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
             workflowExecution.getUuid());
       }
     }

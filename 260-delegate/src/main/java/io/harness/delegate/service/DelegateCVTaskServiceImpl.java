@@ -33,10 +33,10 @@ public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
                                             .withDelay(DELAY)
                                             .withMaxRetries(MAX_RETRIES)
                                             .onFailedAttempt(event
-                                                -> logger.info("[Retrying]: Failed updating task status attempt: {}",
+                                                -> log.info("[Retrying]: Failed updating task status attempt: {}",
                                                     event.getAttemptCount(), event.getLastFailure()))
                                             .onFailure(event
-                                                -> logger.error("[Failed]: Failed updating task status attempt: {}",
+                                                -> log.error("[Failed]: Failed updating task status attempt: {}",
                                                     event.getAttemptCount(), event.getFailure()));
       Failsafe.with(retryPolicy)
           .run(()

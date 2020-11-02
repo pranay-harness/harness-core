@@ -116,7 +116,7 @@ public class CyberArkRestClientFactory {
       getKeyStore(cyberArkPem);
       return true;
     } catch (Exception e) {
-      logger.error("Invalid client certificate", e);
+      log.error("Invalid client certificate", e);
       return false;
     }
   }

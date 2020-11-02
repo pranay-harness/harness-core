@@ -155,7 +155,7 @@ public class EnvState extends State implements WorkflowState {
     }
 
     if (isNotEmpty(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
-      ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, logger);
+      ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, log);
       if (response != null) {
         return response;
       }
@@ -351,9 +351,9 @@ public class EnvState extends State implements WorkflowState {
         executionService.triggerExecutionInterrupt(executionInterrupt);
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("Could not abort workflows.", exception);
+      log.error("Could not abort workflows.", exception);
     }
   }
 

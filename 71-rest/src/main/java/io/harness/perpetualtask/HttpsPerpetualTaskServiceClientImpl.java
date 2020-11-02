@@ -58,7 +58,7 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
       }
 
     } catch (IOException ex) {
-      logger.error("Failed to fetch task params.", ex);
+      log.error("Failed to fetch task params.", ex);
     }
 
     return null;

@@ -38,7 +38,7 @@ public class DockerArtifactTaskNG extends AbstractDelegateRunnableTask {
       ArtifactTaskParameters taskParameters = (ArtifactTaskParameters) parameters;
       return dockerArtifactTaskHelper.getArtifactCollectResponse(taskParameters);
     } catch (Exception exception) {
-      logger.error("Exception in processing DockerArtifactTaskNG task [{}]", exception);
+      log.error("Exception in processing DockerArtifactTaskNG task [{}]", exception);
       return ArtifactTaskResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(exception))

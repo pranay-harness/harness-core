@@ -63,7 +63,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
       classes.put("v1/ReplicaSet", V1ReplicaSet.class);
       classes.put("v1/StatefulSet", V1StatefulSet.class);
     } catch (Exception e) {
-      logger.error("Unexpected exception while loading classes: " + e);
+      log.error("Unexpected exception while loading classes: " + e);
     }
   }
 
@@ -98,10 +98,10 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
   @Override
   public void onAdd(ApiType resource) {
     handleMissingKindAndApiVersion(resource);
-    logger.debug("Added resource: {}", ResourceDetails.ofResource(resource));
+    log.debug("Added resource: {}", ResourceDetails.ofResource(resource));
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
-      logger.debug("Skipping publish for resource added as it has controller: {}", controller);
+      log.debug("Skipping publish for resource added as it has controller: {}", controller);
     } else {
       V1ObjectMeta objectMeta = getMetadata(resource);
       Instant creationTimestamp = Optional.ofNullable(objectMeta)
@@ -144,7 +144,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     handleMissingKindAndApiVersion(newResource);
     ResourceDetails oldResourceDetails = ResourceDetails.ofResource(oldResource);
     ResourceDetails newResourceDetails = ResourceDetails.ofResource(newResource);
-    logger.debug("Resource: {} updated from {} to {}", oldResourceDetails, oldResourceDetails.getResourceVersion(),
+    log.debug("Resource: {} updated from {} to {}", oldResourceDetails, oldResourceDetails.getResourceVersion(),
         newResourceDetails.getResourceVersion());
     String oldYaml = yamlDump(oldResource);
     String newYaml = yamlDump(newResource);
@@ -153,11 +153,11 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     boolean specChanged = !StringUtils.equals(oldYaml, newYaml);
     V1OwnerReference controller = getController(oldResource);
     K8sObjectReference objectReference = createObjectReference(oldResource);
-    logger.debug("Updated Resource: {}, SpecChanged: {}, controller:{}", objectReference, specChanged, controller);
+    log.debug("Updated Resource: {}, SpecChanged: {}, controller:{}", objectReference, specChanged, controller);
     if (controller != null) {
-      logger.debug("Skipping publish for resource updated as it has controller: {}", controller);
+      log.debug("Skipping publish for resource updated as it has controller: {}", controller);
     } else if (!specChanged) {
-      logger.debug("Skipping publish for resource updated since no yaml change");
+      log.debug("Skipping publish for resource updated since no yaml change");
     } else {
       Timestamp occurredAt = HTimestamps.fromInstant(Instant.now());
       publishWatchEvent(K8sWatchEvent.newBuilder()
@@ -179,7 +179,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
       @SuppressWarnings("unchecked") ApiType copy = (ApiType) Yaml.load(Yaml.dump(resource));
       return copy;
     } catch (IOException e) {
-      logger.warn("Serialization round trip should clone", e);
+      log.warn("Serialization round trip should clone", e);
       return resource;
     }
   }
@@ -204,10 +204,10 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
   @Override
   public void onDelete(ApiType resource, boolean finalStateUnknown) {
     handleMissingKindAndApiVersion(resource);
-    logger.debug("Delete resource: {}, finalStateUnknown: {}", ResourceDetails.ofResource(resource), finalStateUnknown);
+    log.debug("Delete resource: {}, finalStateUnknown: {}", ResourceDetails.ofResource(resource), finalStateUnknown);
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
-      logger.debug("Skipping publish for resource deleted as it has controller: {}", controller);
+      log.debug("Skipping publish for resource deleted as it has controller: {}", controller);
     } else {
       K8sWatchEvent.Builder builder = K8sWatchEvent.newBuilder()
                                           .setType(K8sWatchEvent.Type.TYPE_DELETED)
@@ -218,7 +218,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
       } else {
         // Unobserved deletion - we didn't watch deletion but noticed it during subsequent re-list.
         // TODO(avmohan): Remove this log. (Temporarily added to check how frequent)
-        logger.warn("Deletion with finalStateUnknown");
+        log.warn("Deletion with finalStateUnknown");
       }
       publishWatchEvent(builder.build(), HTimestamps.fromInstant(Instant.now()));
     }

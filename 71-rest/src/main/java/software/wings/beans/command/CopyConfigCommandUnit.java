@@ -75,7 +75,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
         logBuilder.hostName(hostName);
       }
       delegateLogService.save(context.getAccountId(), logBuilder.build());
-      logger.error("Unable to fetch log file information", e);
+      log.error("Unable to fetch log file information", e);
       return FAILURE;
     }
 
@@ -90,7 +90,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
         } catch (IOException e) {
           String message = "Unable to get config file for entityId: " + configFile.getUuid()
               + ", version: " + configFile.getVersionForEnv(context.getEnvId());
-          logger.error(message, e);
+          log.error(message, e);
           Log.Builder logBuilder = aLog()
                                        .appId(context.getAppId())
                                        .activityId(context.getActivityId())

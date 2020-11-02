@@ -471,7 +471,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onSaved, infrastructureDefinition);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+      log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
 
     customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
@@ -729,7 +729,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onUpdated, infrastructureDefinition);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+      log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
 
     customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
@@ -841,14 +841,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       try {
         return infrastructureMappingService.save(newInfraMapping, true, workflowExecutionId);
       } catch (DuplicateFieldException ex) {
-        logger.info("Trying to save but Existing InfraMapping Found. Updating........");
+        log.info("Trying to save but Existing InfraMapping Found. Updating........");
         infraMapping = infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
         newInfraMapping.setUuid(infraMapping.getUuid());
         newInfraMapping.setName(infraMapping.getName());
         return infrastructureMappingService.update(newInfraMapping, true, workflowExecutionId);
       }
     } else {
-      logger.info("Existing InfraMapping Found Updating.....");
+      log.info("Existing InfraMapping Found Updating.....");
       newInfraMapping.setUuid(infraMapping.getUuid());
       newInfraMapping.setName(infraMapping.getName());
       return infrastructureMappingService.update(newInfraMapping, true, null);
@@ -1069,7 +1069,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return workflowExecutionService.getLatestExecutionsFor(appId, infraMappingId, limit, fieldList, true);
 
     } catch (Exception e) {
-      logger.error("Failed to fetch recent executions for inframapping [{}]", infraMappingId, e);
+      log.error("Failed to fetch recent executions for inframapping [{}]", infraMappingId, e);
     }
     return Collections.emptyList();
   }
@@ -1601,7 +1601,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         clonedInfraDef.setAppId(targetAppID);
         save(clonedInfraDef, false, true);
       } catch (Exception e) {
-        logger.error("Failed to clone infrastructure definition name {}, id {} of environment {}", infraDef.getName(),
+        log.error("Failed to clone infrastructure definition name {}, id {} of environment {}", infraDef.getName(),
             infraDef.getUuid(), infraDef.getEnvId(), e);
       }
     });
@@ -1739,7 +1739,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return spotinstHelperServiceManager.listElastigroups(
           spotInstConfig, secretManager.getEncryptionDetails(spotInstConfig, appId, null), appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1751,7 +1751,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return spotinstHelperServiceManager.getElastigroupJson(
           spotInstConfig, secretManager.getEncryptionDetails(spotInstConfig, appId, null), appId, elastigroupId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1906,7 +1906,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, appId);
       return subscriptions.stream().collect(Collectors.toMap(SubscriptionData::getId, SubscriptionData::getName));
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1920,7 +1920,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return azureVMSSHelperServiceManager.listResourceGroupsNames(
           azureConfig, subscriptionId, encryptionDetails, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1937,7 +1937,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return virtualMachineScaleSets.stream().collect(
           Collectors.toMap(VirtualMachineScaleSetData::getId, VirtualMachineScaleSetData::getName));
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1951,7 +1951,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return azureVMSSHelperServiceManager.getVirtualMachineScaleSet(
           azureConfig, subscriptionId, resourceGroupName, vmssName, encryptionDetails, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1970,7 +1970,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return azureVMSSHelperServiceManager.listLoadBalancersNames(
           azureConfig, subscriptionId, resourceGroupName, encryptionDetails, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1990,7 +1990,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return azureVMSSHelperServiceManager.listLoadBalancerBackendPoolsNames(
           azureConfig, subscriptionId, resourceGroupName, loadBalancerName, encryptionDetails, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }

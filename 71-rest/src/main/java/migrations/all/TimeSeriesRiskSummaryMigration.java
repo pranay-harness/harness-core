@@ -44,9 +44,9 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
     List<CVConfiguration> cvConfigurations =
         wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).filter("enabled24x7", true).asList();
 
-    logger.info("Starting TimeSeriesRiskSummaryMigration. Total CV Configs to migrate: {}", cvConfigurations.size());
+    log.info("Starting TimeSeriesRiskSummaryMigration. Total CV Configs to migrate: {}", cvConfigurations.size());
     for (CVConfiguration config : cvConfigurations) {
-      logger.info("Currently migrating cvConfig: {}", config.getUuid());
+      log.info("Currently migrating cvConfig: {}", config.getUuid());
       PageRequest<TimeSeriesMLAnalysisRecord> recordPageRequest =
           PageRequestBuilder.aPageRequest()
               .withLimit("999")
@@ -59,11 +59,11 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       PageResponse<TimeSeriesMLAnalysisRecord> response =
           wingsPersistence.query(TimeSeriesMLAnalysisRecord.class, recordPageRequest, excludeAuthority);
 
-      logger.info("The total number of records for cvConfigId {} is {}", config.getUuid(), response.getTotal());
+      log.info("The total number of records for cvConfigId {} is {}", config.getUuid(), response.getTotal());
       int previousOffset = 0;
       while (!response.isEmpty()) {
         List<TimeSeriesMLAnalysisRecord> records = response.getResponse();
-        logger.info("Currently Migrating for cvConfigId {} and batchsize {}", config.getUuid(), records.size());
+        log.info("Currently Migrating for cvConfigId {} and batchsize {}", config.getUuid(), records.size());
         saveRiskSummaries(records);
         previousOffset += response.size();
         recordPageRequest.setOffset(String.valueOf(previousOffset));
@@ -71,14 +71,14 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       }
       sleep(ofMillis(1000));
     }
-    logger.info("Completed TimeSeriesRiskSummaryMigration after migrating {} records", completedCount);
+    log.info("Completed TimeSeriesRiskSummaryMigration after migrating {} records", completedCount);
   }
 
   private void saveRiskSummaries(List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords) {
     List<TimeSeriesRiskSummary> riskSummaries = new ArrayList<>();
 
     timeSeriesMLAnalysisRecords.forEach(mlAnalysisResponse -> {
-      logger.info("In TimeSeriesRiskSummaryMigration, processing record for config {} and minute {}",
+      log.info("In TimeSeriesRiskSummaryMigration, processing record for config {} and minute {}",
           mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getAnalysisMinute());
       mlAnalysisResponse.decompress(false);
       TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
@@ -111,7 +111,7 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       }
 
       riskSummary.setTxnMetricRiskData(risks.rowMap());
-      logger.info("Done creating the riskSummary for config {} and minute {}", mlAnalysisResponse.getCvConfigId(),
+      log.info("Done creating the riskSummary for config {} and minute {}", mlAnalysisResponse.getCvConfigId(),
           mlAnalysisResponse.getAnalysisMinute());
       riskSummary.compressMaps();
       Query<TimeSeriesRiskSummary> riskSummaryQuery =
@@ -129,6 +129,6 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
     });
 
     completedCount += timeSeriesMLAnalysisRecords.size();
-    logger.info("So far, Completed Migrating {} records", completedCount);
+    log.info("So far, Completed Migrating {} records", completedCount);
   }
 }

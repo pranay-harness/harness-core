@@ -27,13 +27,13 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForList() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
-    logger.info("Starting with the ReadOnly Test");
+    log.info("Starting with the ReadOnly Test");
 
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER).getUser();
-    logger.info("Logging in as a ReadOnly user");
+    log.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
     assertThat(readOnlyUser).isNotNull();
-    logger.info("List the users using ReadOnly permission");
+    log.info("List the users using ReadOnly permission");
     assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
@@ -42,8 +42,8 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
                    .getStatusCode()
         == HttpStatus.SC_BAD_REQUEST)
         .isTrue();
-    logger.info("List users failed with Bad request as expected");
-    logger.info("List the user groups using ReadOnly permission");
+    log.info("List users failed with Bad request as expected");
+    log.info("List the user groups using ReadOnly permission");
     assertThat(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
@@ -53,18 +53,18 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
         == HttpStatus.SC_BAD_REQUEST)
         .isTrue();
     AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUser.getUuid());
-    logger.info("Tests completed");
+    log.info("Tests completed");
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
-    logger.info("No permission test for GET");
+    log.info("No permission test for GET");
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     AccessManagementUtils.runAllGetTests(getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser",
         HttpStatus.SC_BAD_REQUEST, HttpStatus.SC_BAD_REQUEST);
-    logger.info("No permission test for GET ends");
+    log.info("No permission test for GET ends");
   }
 
   @Owner(developers = NATARAJA)
@@ -104,7 +104,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     AccessManagementUtils.runAPIKeyPostTest(
         getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", HttpStatus.SC_BAD_REQUEST, userGroup);
     assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid())).isTrue();
-    logger.info("Test completed successfully");
+    log.info("Test completed successfully");
   }
 
   @Test
@@ -152,12 +152,12 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     AccessManagementUtils.updateAndDeleteAPIKeys(
         getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", userGroup, HttpStatus.SC_BAD_REQUEST);
     assertThat(UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid())).isTrue();
-    logger.info("Test completed successfully");
+    log.info("Test completed successfully");
   }
 
   private UserGroup createUserGroup() {
-    logger.info("Creating a userGroup");
-    logger.info("Creating a new user group");
+    log.info("Creating a userGroup");
+    log.info("Creating a new user group");
     JsonObject groupInfoAsJson = new JsonObject();
     String userGroupname = "UserGroup - " + System.currentTimeMillis();
     groupInfoAsJson.addProperty("name", userGroupname);

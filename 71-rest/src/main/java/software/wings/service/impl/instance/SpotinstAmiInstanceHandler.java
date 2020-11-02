@@ -209,7 +209,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
       if (deploymentSummary == null && isNotEmpty(currentInstancesInDb)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
-          logger.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
+          log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
               infrastructureMapping.getUuid());
           return;
         }
@@ -236,7 +236,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
         instanceService.save(instance);
       });
 
-      logger.info("Instances to be added {}", ec2InstanceIdsToBeAdded.size());
+      log.info("Instances to be added {}", ec2InstanceIdsToBeAdded.size());
     }
   }
 
@@ -274,7 +274,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
       String msg = format("Incompatible infra mapping type. Expecting ami type. Found: [%s]",
           infrastructureMapping.getInfraMappingType());
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
     return (AwsAmiInfrastructureMapping) infrastructureMapping;

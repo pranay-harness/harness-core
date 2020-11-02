@@ -207,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     if (authToken == null) {
-      logger.info("Token with prefix {} not found in cache hence fetching it from db", authTokenId.substring(0, 5));
+      log.info("Token with prefix {} not found in cache hence fetching it from db", authTokenId.substring(0, 5));
       authToken = getAuthTokenFromDB(authTokenId);
       addAuthTokenToCache(authToken);
     }
@@ -244,7 +244,7 @@ public class AuthServiceImpl implements AuthService {
 
   private User getUserFromCacheOrDB(String userId) {
     if (userCache == null) {
-      logger.warn("userCache is null. Fetch from DB");
+      log.warn("userCache is null. Fetch from DB");
       return userService.get(userId);
     } else {
       User user;
@@ -268,13 +268,13 @@ public class AuthServiceImpl implements AuthService {
       List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo, boolean accountNullCheck) {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
-        logger.error("Auth Failure: non-existing accountId: {}", accountId);
+        log.error("Auth Failure: non-existing accountId: {}", accountId);
         throw new WingsException(ACCESS_DENIED);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
-      logger.error("Auth Failure: non-existing appId: {}", appId);
+      log.error("Auth Failure: non-existing appId: {}", appId);
       throw new WingsException(ACCESS_DENIED);
     }
 
@@ -306,7 +306,7 @@ public class AuthServiceImpl implements AuthService {
   public void authorize(String accountId, List<String> appIds, String envId, User user,
       List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
-      logger.error("Auth Failure: non-existing accountId: {}", accountId);
+      log.error("Auth Failure: non-existing accountId: {}", accountId);
       throw new WingsException(ACCESS_DENIED);
     }
 
@@ -323,7 +323,7 @@ public class AuthServiceImpl implements AuthService {
 
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
-        logger.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+        log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
         throw new WingsException(ACCESS_DENIED, USER);
       }
     }
@@ -334,30 +334,30 @@ public class AuthServiceImpl implements AuthService {
       String accountId, String appId, User user, boolean accountNullCheck) {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
-        logger.error("Auth Failure: non-existing accountId: {}", accountId);
+        log.error("Auth Failure: non-existing accountId: {}", accountId);
         throw new WingsException(ACCESS_DENIED, USER);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
-      logger.error("Auth Failure: non-existing appId: {}", appId);
+      log.error("Auth Failure: non-existing appId: {}", appId);
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
     if (user == null) {
-      logger.error("No user context for authorization request for app: {}", appId);
+      log.error("No user context for authorization request for app: {}", appId);
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
     UserRequestContext userRequestContext = user.getUserRequestContext();
     if (userRequestContext == null) {
-      logger.error("User Request Context null for User {}", user.getName());
+      log.error("User Request Context null for User {}", user.getName());
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
     if (userPermissionInfo == null) {
-      logger.error("User permission info null for User {}", user.getName());
+      log.error("User permission info null for User {}", user.getName());
       throw new WingsException(ACCESS_DENIED, USER);
     }
     return userPermissionInfo;
@@ -373,7 +373,7 @@ public class AuthServiceImpl implements AuthService {
   public void authorize(String accountId, List<String> appIds, String entityId, User user,
       List<PermissionAttribute> permissionAttributes) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
-      logger.error("Auth Failure: non-existing accountId: {}", accountId);
+      log.error("Auth Failure: non-existing accountId: {}", accountId);
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
@@ -444,7 +444,7 @@ public class AuthServiceImpl implements AuthService {
         throw new WingsException(EXPIRED_TOKEN, USER_ADMIN);
       }
     } catch (Exception ex) {
-      logger.warn("Error in verifying JWT token ", ex);
+      log.warn("Error in verifying JWT token ", ex);
       throw ex instanceof JWTVerificationException ? new WingsException(INVALID_TOKEN) : new WingsException(ex);
     }
   }
@@ -465,7 +465,7 @@ public class AuthServiceImpl implements AuthService {
         throw new WingsException(EXPIRED_TOKEN, USER_ADMIN);
       }
     } catch (Exception ex) {
-      logger.warn("Error in verifying JWT token ", ex);
+      log.warn("Error in verifying JWT token ", ex);
       throw ex instanceof JWTVerificationException ? new WingsException(INVALID_TOKEN) : new WingsException(ex);
     }
   }
@@ -563,7 +563,7 @@ public class AuthServiceImpl implements AuthService {
       if (cacheOnly) {
         return null;
       }
-      logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
+      log.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserPermissionInfoFromDB(accountId, user);
     }
     String key = user.getUuid();
@@ -580,7 +580,7 @@ public class AuthServiceImpl implements AuthService {
       }
       return value;
     } catch (Exception e) {
-      logger.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, e);
+      log.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, e);
     }
 
     // not found in cache. cache write through failed as well. rebuild anyway
@@ -595,7 +595,7 @@ public class AuthServiceImpl implements AuthService {
       if (cacheOnly) {
         return null;
       }
-      logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
+      log.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
     }
 
@@ -612,7 +612,7 @@ public class AuthServiceImpl implements AuthService {
       }
       return value;
     } catch (Exception ignored) {
-      logger.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+      log.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
     }
 
     // not found in cache. cache write through failed as well. rebuild anyway
@@ -755,7 +755,7 @@ public class AuthServiceImpl implements AuthService {
         return appPermissionSummary.isCanCreatePipeline();
       } else {
         String msg = "Unsupported app permission entity type: " + requiredPermissionType;
-        logger.error(msg);
+        log.error(msg);
         throw new WingsException(msg);
       }
     }
@@ -788,7 +788,7 @@ public class AuthServiceImpl implements AuthService {
       actionEntityIdMap = appPermissionSummary.getDeploymentPermissions();
     } else {
       String msg = "Unsupported app permission entity type: " + requiredPermissionType;
-      logger.error(msg);
+      log.error(msg);
       throw new WingsException(msg);
     }
 
@@ -851,7 +851,7 @@ public class AuthServiceImpl implements AuthService {
   private User getUserFromAuthToken(AuthToken authToken) {
     User user = getUserFromCacheOrDB(authToken.getUserId());
     if (user == null) {
-      logger.warn("No user found for userId:" + authToken.getUserId());
+      log.warn("No user found for userId:" + authToken.getUserId());
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
     return user;
@@ -862,7 +862,7 @@ public class AuthServiceImpl implements AuthService {
     String acctId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
     try (AutoLogContext ignore = new UserLogContext(acctId, uuid, OVERRIDE_ERROR)) {
-      logger.info("Generating bearer token");
+      log.info("Generating bearer token");
       AuthToken authToken = new AuthToken(
           user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
       authToken.setJwtToken(generateJWTSecret(authToken));
@@ -879,13 +879,13 @@ public class AuthServiceImpl implements AuthService {
         executorService.submit(() -> {
           String accountId = user.getLastAccountId();
           if (isEmpty(accountId)) {
-            logger.warn("last accountId is null for User {}", user.getUuid());
+            log.warn("last accountId is null for User {}", user.getUuid());
             return;
           }
 
           Account account = dbCache.get(Account.class, accountId);
           if (account == null) {
-            logger.warn("last account is null for User {}", user.getUuid());
+            log.warn("last account is null for User {}", user.getUuid());
             return;
           }
           try {
@@ -900,7 +900,7 @@ public class AuthServiceImpl implements AuthService {
               segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
             }
           } catch (Exception e) {
-            logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
+            log.error("Exception while reporting track event for User {} login", user.getUuid(), e);
           }
         });
       }
@@ -1139,7 +1139,7 @@ public class AuthServiceImpl implements AuthService {
 
     Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
     if (appPermissionMap == null || !appPermissionMap.containsKey(appId)) {
-      logger.error("Auth Failure: User does not have access to app {}", appId);
+      log.error("Auth Failure: User does not have access to app {}", appId);
       throw new WingsException(ACCESS_DENIED, USER);
     }
 
@@ -1148,7 +1148,7 @@ public class AuthServiceImpl implements AuthService {
 
       if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())
           || !accountPermissionSummary.getPermissions().contains(MANAGE_APPLICATIONS)) {
-        logger.error("Auth Failure: User does not have access to update {}", appId);
+        log.error("Auth Failure: User does not have access to update {}", appId);
         throw new WingsException(ACCESS_DENIED, USER);
       }
     }

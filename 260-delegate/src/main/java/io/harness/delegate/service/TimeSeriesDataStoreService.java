@@ -82,7 +82,7 @@ public class TimeSeriesDataStoreService {
   public boolean saveTimeSeriesDataRecords(
       String accountId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
     if (timeSeriesRecords.isEmpty()) {
-      logger.info(
+      log.info(
           "TimeseriesRecords is empty. So we will not be saving anything from the delegate for {}", verificationTaskId);
       return true;
     }
@@ -99,7 +99,7 @@ public class TimeSeriesDataStoreService {
 
       return restResponse.getResource();
     } catch (Exception e) {
-      logger.error("error saving new apm metrics", e);
+      log.error("error saving new apm metrics", e);
       return false;
     }
   }

@@ -43,7 +43,7 @@ public class WorkflowExecutionUpdateFake extends WorkflowExecutionUpdate {
 
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    logger.info(status.toString());
+    log.info(status.toString());
     super.callback(context, status, ex);
     signalIdsMap.get(signalId).countDown();
   }

@@ -52,12 +52,12 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
     // Running harness get pipelines before creating a new pipeline
     String appId = application.getUuid();
     String command = String.format("harness get pipelines -a %s", appId);
-    logger.info("Running harness get pipelines");
+    log.info("Running harness get pipelines");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -65,20 +65,20 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
 
     // Creating a new pipeline
     String pipelineName = "Test pipeline harnessCli - " + System.currentTimeMillis();
-    logger.info("Generated unique pipeline name : " + pipelineName);
+    log.info("Generated unique pipeline name : " + pipelineName);
     Pipeline pipeline = new Pipeline();
     pipeline.setName(pipelineName);
-    logger.info("Creating the pipeline");
+    log.info("Creating the pipeline");
     testPipeline = PipelineRestUtils.createPipeline(appId, pipeline, getAccount().getUuid(), bearerToken);
     assertThat(testPipeline).isNotNull();
 
     // Running harness get pipelines after creating a new pipeline
-    logger.info("Running harness get pipelines after creating a new pipeline");
+    log.info("Running harness get pipelines after creating a new pipeline");
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -103,12 +103,12 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
   public void getPipelinesWithInvalidArgumentsTest() {
     // Running harness get pipelines with invalid appId
     String command = String.format("harness get pipelines -a %s", "INVALID_ID");
-    logger.info("Running harness get pipelines with invalid app ID");
+    log.info("Running harness get pipelines with invalid app ID");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();

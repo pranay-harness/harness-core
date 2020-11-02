@@ -63,7 +63,7 @@ public class AccountExpiryServiceImpl implements AccountExpiryService {
         deleteDataTransfer(dataTransferClient, job);
       }
     } catch (IOException e) {
-      logger.error("Error Deleting Data Pipeline Jobs: {}", e);
+      log.error("Error Deleting Data Pipeline Jobs: {}", e);
     }
 
     // Delete the Data (DataSet, Tables)

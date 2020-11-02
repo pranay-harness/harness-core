@@ -17,7 +17,7 @@ public class LicenseExpiryReminderTimeMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting migration of lastLicenseExpiryReminderSentAt field.");
+    log.info("Starting migration of lastLicenseExpiryReminderSentAt field.");
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createAuthorizedQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
@@ -28,7 +28,7 @@ public class LicenseExpiryReminderTimeMigration implements Migration {
           wingsPersistence.update(account, updateOperations);
         }
       }
-      logger.info("Migration of lastLicenseExpiryReminderSentAt field is finished.");
+      log.info("Migration of lastLicenseExpiryReminderSentAt field is finished.");
     }
   }
 }

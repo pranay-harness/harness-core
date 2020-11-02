@@ -16,7 +16,7 @@ public class DeleteOldThirdPartyApiCallsMigration implements Migration {
     try {
       wingsPersistence.delete(wingsPersistence.createQuery(ThirdPartyApiCallLog.class));
     } catch (RuntimeException ex) {
-      logger.error("clear collection error", ex);
+      log.error("clear collection error", ex);
     }
   }
 }

@@ -675,12 +675,12 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public void run() {
-      logger.info("duration = " + duration);
+      log.info("duration = " + duration);
       try {
         Thread.sleep(duration);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
-        logger.error("", e);
+        log.error("", e);
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {
@@ -726,12 +726,12 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
-      logger.info("Executing ..." + getClass());
+      log.info("Executing ..." + getClass());
       ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
       executionResponseBuilder.stateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
-      logger.info("stateExecutionData:" + stateExecutionData);
+      log.info("stateExecutionData:" + stateExecutionData);
       if (shouldFail) {
         executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
       }
@@ -821,7 +821,7 @@ public class StateMachineTest extends WingsBaseTest {
     public ExecutionResponse execute(ExecutionContext context) {
       String uuid = generateUuid();
 
-      logger.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
+      log.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
       ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       executionResponseBuilder.async(true);
       List<String> correlationIds = new ArrayList<>();

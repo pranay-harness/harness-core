@@ -101,13 +101,13 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     for (NotificationReceiverInfo notificationReceiver : receivers) {
       if (notificationReceiver instanceof NotificationGroup) {
-        logger.info("notification group dispatch");
+        log.info("notification group dispatch");
         notificationGroupDispatcher.dispatch(notifications, (NotificationGroup) notificationReceiver);
       } else if (notificationReceiver instanceof UserGroup) {
-        logger.info("user group dispatch");
+        log.info("user group dispatch");
         userGroupDispatcher.dispatch(notifications, (UserGroup) notificationReceiver);
       } else {
-        logger.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",
+        log.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",
             notificationReceiver.getClass().getSimpleName());
       }
     }
@@ -132,7 +132,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     try {
       emailDispatcher.dispatch(notifications, asList(user.getEmail()));
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e));
+      log.warn(ExceptionUtils.getMessage(e));
     }
   }
 }

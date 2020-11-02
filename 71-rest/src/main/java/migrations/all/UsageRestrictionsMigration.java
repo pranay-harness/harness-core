@@ -41,7 +41,7 @@ public class UsageRestrictionsMigration implements Migration {
   @Override
   public void migrate() {
     UsageRestrictions allAppEnvUsageRestrictions = getAllAppEnvUsageRestrictions();
-    logger.info("Start - Updating usage restrictions for setting attributes");
+    log.info("Start - Updating usage restrictions for setting attributes");
     Query<SettingAttribute> settingAttributeQuery =
         wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority);
     try (HIterator<SettingAttribute> records = new HIterator<>(settingAttributeQuery.fetch())) {
@@ -57,19 +57,19 @@ public class UsageRestrictionsMigration implements Migration {
             wingsPersistence.update(settingAttribute, updateOperations);
           }
         } catch (Exception ex) {
-          logger.warn("Error while updating setting attribute: {}",
+          log.warn("Error while updating setting attribute: {}",
               settingAttribute != null ? settingAttribute.getName() : "", ex);
         }
       }
 
-      logger.info("Done - Updating usage restrictions for setting attributes");
+      log.info("Done - Updating usage restrictions for setting attributes");
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception ex) {
-      logger.error("Failed - Updating usage restrictions for setting attributes", ex);
+      log.error("Failed - Updating usage restrictions for setting attributes", ex);
     }
 
-    logger.info("Start - Updating usage restrictions for secrets");
+    log.info("Start - Updating usage restrictions for secrets");
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
     query.field("type").in(asList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE));
     try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
@@ -85,15 +85,15 @@ public class UsageRestrictionsMigration implements Migration {
             wingsPersistence.update(encryptedData, updateOperations);
           }
         } catch (Exception ex) {
-          logger.warn("Error while updating secret: {}", encryptedData != null ? encryptedData.getName() : "", ex);
+          log.warn("Error while updating secret: {}", encryptedData != null ? encryptedData.getName() : "", ex);
         }
       }
 
-      logger.info("Done - Updating usage restrictions for secrets");
+      log.info("Done - Updating usage restrictions for secrets");
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception ex) {
-      logger.error("Failed - Updating usage restrictions for secrets", ex);
+      log.error("Failed - Updating usage restrictions for secrets", ex);
     }
   }
 

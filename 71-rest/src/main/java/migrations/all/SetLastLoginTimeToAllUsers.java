@@ -21,7 +21,7 @@ public class SetLastLoginTimeToAllUsers implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Start - Setting user last login time for users");
+    log.info("Start - Setting user last login time for users");
     long currentTime = System.currentTimeMillis();
     try (HIterator<User> users = new HIterator<>(wingsPersistence.createQuery(User.class).fetch())) {
       for (User user : users) {
@@ -29,11 +29,11 @@ public class SetLastLoginTimeToAllUsers implements Migration {
           user.setLastLogin(currentTime);
           userService.update(user);
         } catch (Exception ex) {
-          logger.error("Error while setting user last login for user {}", user == null ? "NA" : user.getName(), ex);
+          log.error("Error while setting user last login for user {}", user == null ? "NA" : user.getName(), ex);
         }
       }
     }
 
-    logger.info("End - Setting user last login time for users");
+    log.info("End - Setting user last login time for users");
   }
 }

@@ -46,7 +46,7 @@ public class AwsEC2HelperServiceImpl implements AwsEC2HelperService {
       } while (nextToken != null);
       return ec2Instances;
     } catch (Exception ex) {
-      logger.error("Exception listEc2Instances ", ex);
+      log.error("Exception listEc2Instances ", ex);
     }
     return emptyList();
   }

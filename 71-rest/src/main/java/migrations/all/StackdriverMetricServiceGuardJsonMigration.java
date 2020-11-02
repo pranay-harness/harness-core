@@ -17,7 +17,7 @@ public class StackdriverMetricServiceGuardJsonMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Migrate stack driver metric service guard configurations");
+    log.info("Migrate stack driver metric service guard configurations");
     try (HIterator<CVConfiguration> cvConfigurationHIterator =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class)
                                  .filter("stateType", StateType.STACK_DRIVER.name())
@@ -26,7 +26,7 @@ public class StackdriverMetricServiceGuardJsonMigration implements Migration {
         StackDriverMetricCVConfiguration cvConfiguration =
             (StackDriverMetricCVConfiguration) cvConfigurationHIterator.next();
         try {
-          logger.info("Processing config id {}", cvConfiguration.getUuid());
+          log.info("Processing config id {}", cvConfiguration.getUuid());
           cvConfiguration.getMetricDefinitions().forEach(metricDefinition -> {
             if (metricDefinition.checkIfOldFilter()) {
               String updatedFilterJson =
@@ -36,12 +36,12 @@ public class StackdriverMetricServiceGuardJsonMigration implements Migration {
             }
           });
           wingsPersistence.save(cvConfiguration);
-          logger.info("Saved config id {}", cvConfiguration.getUuid());
+          log.info("Saved config id {}", cvConfiguration.getUuid());
         } catch (Exception e) {
-          logger.error("Exception while updating config id: {}", cvConfiguration.getUuid(), e);
+          log.error("Exception while updating config id: {}", cvConfiguration.getUuid(), e);
         }
       }
     }
-    logger.info("Migration completed for stack driver metric service guard configurations");
+    log.info("Migration completed for stack driver metric service guard configurations");
   }
 }

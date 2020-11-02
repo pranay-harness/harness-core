@@ -86,7 +86,7 @@ public class ArtifactCollectionState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
-      logger.info("Artifact Stream {} might have been deleted", artifactStreamId);
+      log.info("Artifact Stream {} might have been deleted", artifactStreamId);
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("Artifact source might have been deleted. Please update with the right artifact source.")
@@ -97,14 +97,14 @@ public class ArtifactCollectionState extends State {
     Artifact lastCollectedArtifact;
     if (artifactStream.isArtifactStreamParameterized()) {
       if (isEmpty(runtimeValues)) {
-        logger.info("Artifact Source {} parameterized. However, runtime values not provided", artifactStream.getName());
+        log.info("Artifact Source {} parameterized. However, runtime values not provided", artifactStream.getName());
         return ExecutionResponse.builder()
             .executionStatus(ExecutionStatus.FAILED)
             .errorMessage("Artifact source parameterized. Please provide runtime values.")
             .build();
       }
       if (isBlank(buildNo)) {
-        logger.info("Artifact Source {} parameterized. However, Build Number not provided", artifactStream.getName());
+        log.info("Artifact Source {} parameterized. However, Build Number not provided", artifactStream.getName());
         return ExecutionResponse.builder()
             .executionStatus(ExecutionStatus.FAILED)
             .errorMessage("Artifact source parameterized. Please provide Build Number.")
@@ -120,8 +120,7 @@ public class ArtifactCollectionState extends State {
         BuildDetails buildDetails = buildSourceService.getBuild(
             artifactStream.getAppId(), artifactStreamId, artifactStream.getSettingId(), runtimeValues);
         if (buildDetails == null) {
-          logger.info(
-              "Failed to get Build Number {} for Artifact stream {}", evaluatedBuildNo, artifactStream.getName());
+          log.info("Failed to get Build Number {} for Artifact stream {}", evaluatedBuildNo, artifactStream.getName());
           return ExecutionResponse.builder()
               .executionStatus(ExecutionStatus.FAILED)
               .errorMessage(
@@ -263,7 +262,7 @@ public class ArtifactCollectionState extends State {
     if (context == null || context.getStateExecutionData() == null) {
       return;
     }
-    logger.info("Action aborted either due to timeout or manual user abort");
+    log.info("Action aborted either due to timeout or manual user abort");
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         (ArtifactCollectionExecutionData) context.getStateExecutionData();
     artifactCollectionExecutionData.setMessage(

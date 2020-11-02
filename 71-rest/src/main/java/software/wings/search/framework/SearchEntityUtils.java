@@ -57,7 +57,7 @@ public final class SearchEntityUtils {
       String jsonString = mapper.writeValueAsString(object);
       return Optional.of(jsonString);
     } catch (JsonProcessingException e) {
-      logger.error("Could not convert view to json", e);
+      log.error("Could not convert view to json", e);
       return Optional.empty();
     }
   }

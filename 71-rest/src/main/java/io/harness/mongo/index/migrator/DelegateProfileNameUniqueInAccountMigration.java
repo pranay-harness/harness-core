@@ -19,7 +19,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateProfileNameUniqueInAccountMigration implements Migrator {
   @Override
   public void execute(AdvancedDatastore datastore) {
-    logger.info("Starting migration of delegate profiles with duplicate names for accountId.");
+    log.info("Starting migration of delegate profiles with duplicate names for accountId.");
     Query<AggregateResult> queryForMultipleItems =
         datastore.createQuery(AggregateResult.class).field("count").greaterThan(1);
     AggregationPipeline invalidEntryPipeline =
@@ -45,21 +45,21 @@ public class DelegateProfileNameUniqueInAccountMigration implements Migrator {
         }
       }
     }
-    logger.info("Finished migration of delegate profiles with duplicate names for accountId.");
+    log.info("Finished migration of delegate profiles with duplicate names for accountId.");
   }
 
   private void updateDelegateProfile(AdvancedDatastore datastore, int index, DelegateProfile delegateProfile) {
     try {
-      logger.info("Updating delegate profile.");
+      log.info("Updating delegate profile.");
       Query<DelegateProfile> updateQuery =
           datastore.createQuery(DelegateProfile.class).field(DelegateProfileKeys.uuid).equal(delegateProfile.getUuid());
       UpdateOperations<DelegateProfile> updateOperations =
           datastore.createUpdateOperations(DelegateProfile.class)
               .set(DelegateProfileKeys.name, delegateProfile.getName() + "_" + index);
       datastore.findAndModify(updateQuery, updateOperations, new FindAndModifyOptions());
-      logger.info("Delegate profile updated successfully.");
+      log.info("Delegate profile updated successfully.");
     } catch (Exception e) {
-      logger.error("Unexpected error occurred while processing delegate profile.", e);
+      log.error("Unexpected error occurred while processing delegate profile.", e);
     }
   }
 }

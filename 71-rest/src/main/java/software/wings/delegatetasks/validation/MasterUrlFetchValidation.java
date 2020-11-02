@@ -48,13 +48,13 @@ public class MasterUrlFetchValidation extends AbstractDelegateValidateTask {
     EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
 
     if (encryptionConfig == null) {
-      logger.error("[MasterUrlValidation] No criteria Found. Should Not Happen");
+      log.error("[MasterUrlValidation] No criteria Found. Should Not Happen");
       return null;
     } else if (encryptionConfig instanceof LocalEncryptionConfig) {
       return LOCAL_ENCRYPTION_CONFIG;
     } else {
       String masterValidationUrl = encryptionConfig.getEncryptionServiceUrl();
-      logger.info("[MasterUrlValidation] Criteria Found for validation with url" + masterValidationUrl);
+      log.info("[MasterUrlValidation] Criteria Found for validation with url" + masterValidationUrl);
       return masterValidationUrl;
     }
   }

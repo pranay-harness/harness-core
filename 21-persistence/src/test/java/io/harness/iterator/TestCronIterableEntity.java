@@ -35,7 +35,7 @@ public class TestCronIterableEntity implements PersistentCronIterable {
     }
 
     if (expandNextIterations(skipMissing, throttled, expression, nextIterations)) {
-      logger.info(expression);
+      log.info(expression);
       return nextIterations;
     }
 

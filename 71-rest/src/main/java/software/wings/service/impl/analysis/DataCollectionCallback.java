@@ -64,7 +64,7 @@ public class DataCollectionCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
-    logger.info("data collection result for state {} is: {}", stateExecutionId, result);
+    log.info("data collection result for state {} is: {}", stateExecutionId, result);
     activityLog(result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       sendErrorNotification(result.getErrorMessage());
@@ -90,7 +90,7 @@ public class DataCollectionCallback implements NotifyCallback {
   // TODO what is this used for
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.info("notify error for {} ", response.values().iterator().next());
+    log.info("notify error for {} ", response.values().iterator().next());
     if (response.values().iterator().next() instanceof ErrorNotifyResponseData) {
       final ErrorNotifyResponseData result = (ErrorNotifyResponseData) response.values().iterator().next();
       sendErrorNotification(result.getErrorMessage());
@@ -148,7 +148,7 @@ public class DataCollectionCallback implements NotifyCallback {
   }
 
   private void deleteDataCollectionCron() {
-    logger.info("Data collection failed with stateExecutionId {}, deleting data collection cron", stateExecutionId);
+    log.info("Data collection failed with stateExecutionId {}, deleting data collection cron", stateExecutionId);
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_jobs");
     BasicDBObject object = new BasicDBObject();
     object.put("keyName", stateExecutionId);

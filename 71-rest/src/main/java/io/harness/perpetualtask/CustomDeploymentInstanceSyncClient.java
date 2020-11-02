@@ -52,7 +52,7 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
           .setOutputPathKey(OUTPUT_PATH_KEY)
           .build();
     }
-    logger.error(
+    log.error(
         "[CustomDeploymentError] No Deployment Summary Found For InfraMapping " + getInfraMappingId(clientContext));
     return null;
   }

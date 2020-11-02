@@ -77,7 +77,7 @@ public class SmbHelperService {
       }
     }
 
-    logger.info("SMB server {} returned {} artifact paths : ", smbConfig.getSmbUrl(), artifactPaths.size());
+    log.info("SMB server {} returned {} artifact paths : ", smbConfig.getSmbUrl(), artifactPaths.size());
     return artifactPaths;
   }
 
@@ -98,7 +98,7 @@ public class SmbHelperService {
       return true;
 
     } catch (Exception ex) {
-      logger.warn("SMB server {} could not be reached. Exception Message {}", smbUrl, ex.getMessage());
+      log.warn("SMB server {} could not be reached. Exception Message {}", smbUrl, ex.getMessage());
     }
     return false;
   }
@@ -231,7 +231,7 @@ public class SmbHelperService {
       }
     }
 
-    logger.info("SMB server {} returned {} build details for artifact paths : ", smbConfig.getSmbUrl(),
+    log.info("SMB server {} returned {} build details for artifact paths : ", smbConfig.getSmbUrl(),
         buildDetailsList.size());
     return buildDetailsList;
   }

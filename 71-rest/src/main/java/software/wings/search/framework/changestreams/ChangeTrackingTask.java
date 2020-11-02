@@ -65,17 +65,17 @@ class ChangeTrackingTask implements Runnable {
     MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor = null;
     try {
       if (resumeToken == null) {
-        logger.info("Opening changeStream without resumeToken");
+        log.info("Opening changeStream without resumeToken");
         mongoCursor = changeStreamIterable.iterator();
       } else {
-        logger.info("Opening changeStream with resumeToken");
+        log.info("Opening changeStream with resumeToken");
         mongoCursor = changeStreamIterable.resumeAfter(resumeToken).iterator();
       }
-      logger.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
+      log.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
       mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
     } finally {
       if (mongoCursor != null) {
-        logger.info("Closing mongo cursor");
+        log.info("Closing mongo cursor");
         mongoCursor.close();
       }
     }
@@ -84,15 +84,15 @@ class ChangeTrackingTask implements Runnable {
   @Override
   public void run() {
     try {
-      logger.info("changeStream opened on {}", collection.getNamespace());
+      log.info("changeStream opened on {}", collection.getNamespace());
       openChangeStream(this ::handleChange);
     } catch (MongoInterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.warn("Changestream on {} interrupted", collection.getNamespace(), e);
+      log.warn("Changestream on {} interrupted", collection.getNamespace(), e);
     } catch (RuntimeException e) {
-      logger.error("Unexpectedly {} changeStream shutting down", collection.getNamespace(), e);
+      log.error("Unexpectedly {} changeStream shutting down", collection.getNamespace(), e);
     } finally {
-      logger.warn("{} changeStream shutting down.", collection.getNamespace());
+      log.warn("{} changeStream shutting down.", collection.getNamespace());
       latch.countDown();
     }
   }

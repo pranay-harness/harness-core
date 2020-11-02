@@ -77,7 +77,7 @@ public class YamlChangeSetPruneJob implements Job {
   }
 
   private void executeInternal(String accountId) {
-    logger.info("Running YamlChangeSetPruneJob");
+    log.info("Running YamlChangeSetPruneJob");
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(YamlChangeSet.class, accountId, Duration.ofSeconds(120))) {
       try {
@@ -85,10 +85,10 @@ public class YamlChangeSetPruneJob implements Job {
             MAX_DELETE_PER_JOB_RUN, BATCH_SIZE, RETENTION_PERIOD_IN_DAYS);
 
       } catch (WingsException e) {
-        logger.error("YamlChangeSet deletion cron job failed with error: " + e.getParams().get("message"));
+        log.error("YamlChangeSet deletion cron job failed with error: " + e.getParams().get("message"));
       }
     } catch (Exception e) {
-      logger.warn("Failed to acquire lock for account [{}]", accountId);
+      log.warn("Failed to acquire lock for account [{}]", accountId);
     }
   }
 }

@@ -23,7 +23,7 @@ public class AppDTemplateMigration implements Migration {
                                                     .filter(CVConfigurationKeys.stateType, "APP_DYNAMICS")
                                                     .asList();
 
-    logger.info("Adding metric templates for {} APP_DYNAMICS cvConfigurations", cvConfigurationList.size());
+    log.info("Adding metric templates for {} APP_DYNAMICS cvConfigurations", cvConfigurationList.size());
 
     cvConfigurationList.forEach(cvConfiguration -> {
       try {
@@ -37,7 +37,7 @@ public class AppDTemplateMigration implements Migration {
         metricTemplate.setAccountId(cvConfiguration.getAccountId());
         wingsPersistence.save(metricTemplate);
       } catch (DuplicateKeyException ex) {
-        logger.info("Swallowing the DuplicateKeyException for cvConfig: {}", cvConfiguration.getUuid());
+        log.info("Swallowing the DuplicateKeyException for cvConfig: {}", cvConfiguration.getUuid());
       }
     });
   }

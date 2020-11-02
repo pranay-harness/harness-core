@@ -44,7 +44,7 @@ public class ContainerValidationHelper {
       try {
         encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
       } catch (Exception e) {
-        logger.info("failed to decrypt " + value, e);
+        log.info("failed to decrypt " + value, e);
         return false;
       }
     }
@@ -94,7 +94,7 @@ public class ContainerValidationHelper {
       try {
         encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
       } catch (Exception e) {
-        logger.info("failed to decrypt " + value, e);
+        log.info("failed to decrypt " + value, e);
         return null;
       }
     }

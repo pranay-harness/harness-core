@@ -243,7 +243,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
     if (sm == null) {
-      logger.error("StateMachine passed for execution is null");
+      log.error("StateMachine passed for execution is null");
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "State machine is null");
     }
 
@@ -419,7 +419,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
     StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
-    logger.info("Starting execution of StateMachine {} with initialState {}", stateMachine.getName(),
+    log.info("Starting execution of StateMachine {} with initialState {}", stateMachine.getName(),
         stateMachine.getInitialStateName());
     startExecution(stateMachine, stateExecutionInstance);
     return true;
@@ -542,7 +542,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   }
 
   void startStateExecution(String appId, String executionUuid, String stateExecutionInstanceId) {
-    logger.info("startStateExecution called after wait");
+    log.info("startStateExecution called after wait");
 
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
@@ -562,7 +562,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       handleResponse(context, executionResponse);
     } catch (WingsException exception) {
       ex = exception;
-      logger.error("Exception occurred while starting state execution : {}", exception.getMessage());
+      log.error("Exception occurred while starting state execution : {}", exception.getMessage());
     } catch (Exception exception) {
       ex = new WingsException(exception);
     }
@@ -622,7 +622,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     notNullCheck("currentState", currentState);
 
-    logger.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
+    log.info("startStateExecution for State {} of type {}", currentState.getName(), currentState.getStateType());
 
     if (stateExecutionInstance.getStateParams() != null) {
       MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
@@ -660,7 +660,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     for (ExecutionEventAdvisor advisor : advisors) {
       executionEventAdvice = advisor.onExecutionEvent(executionEvent);
     }
-    logger.info("Issued Execution event advice : {}", executionEventAdvice);
+    log.info("Issued Execution event advice : {}", executionEventAdvice);
     return executionEventAdvice;
   }
 
@@ -680,7 +680,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
       if (isEmpty(executionResponse.getCorrelationIds())) {
-        logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
+        log.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         status = ERROR;
       } else {
@@ -726,7 +726,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           executionResponse.getNotifyElements(),
           RUNNING == status ? evaluateExpiryTs(currentState, context) : expiryTs);
       if (!updated) {
-        logger.info("State Execution Instance {} update failed Retrying", stateExecutionInstance.getUuid());
+        log.info("State Execution Instance {} update failed Retrying", stateExecutionInstance.getUuid());
         return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
 
@@ -737,17 +737,17 @@ public class StateMachineExecutor implements StateInspectionListener {
                                                                      .build());
 
       if (executionEventAdvice != null && !executionEventAdvice.isSkipState() && SKIPPED != status) {
-        logger.info(
+        log.info(
             "Execution Advise is not null. Handling Advise : {}", executionEventAdvice.getExecutionInterruptType());
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (isPositiveStatus(status)) {
-        logger.info("Execution Advise is null. Starting Positive Transition : {}", status);
+        log.info("Execution Advise is null. Starting Positive Transition : {}", status);
         return successTransition(context);
       } else if (isBrokeStatus(status)) {
-        logger.info("Execution Advise is null. Starting Failed Transition : {}", status);
+        log.info("Execution Advise is null. Starting Failed Transition : {}", status);
         return failedTransition(context, null);
       } else if (ExecutionStatus.isDiscontinueStatus(status)) {
-        logger.info("Execution Advise is null. Starting Discontinue Transition : {}", status);
+        log.info("Execution Advise is null. Starting Discontinue Transition : {}", status);
         endTransition(context, stateExecutionInstance, status, null);
       }
     }
@@ -770,7 +770,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     StateExecutionInstance updated = wingsPersistence.findAndModify(
         stateExecutionInstanceQuery, updateOperations, new FindAndModifyOptions().returnNew(true));
     if (updated == null) {
-      logger.error("[TimeOut Op] StateExecutionInstance stateTimeout update Failed");
+      log.error("[TimeOut Op] StateExecutionInstance stateTimeout update Failed");
     }
     return updated;
   }
@@ -781,8 +781,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstanceId);
     if (isFinalStatus(stateExecutionInstance.getStatus())) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
+      if (log.isDebugEnabled()) {
+        log.debug("StateExecutionInstance already reached the final status. Skipping the update for "
             + stateExecutionInstanceId);
       }
       return stateExecutionInstance;
@@ -820,7 +820,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         break;
       }
       case PAUSE: {
-        logger.info(
+        log.info(
             "[TimeOut Op]: Updating expiryTs to Long.MAX_VALUE on PAUSE Advice for stateExecutionInstance id: {}, name: {}",
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
@@ -836,7 +836,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         break;
       }
       case PAUSE_FOR_INPUTS: {
-        logger.info(
+        log.info(
             "Updating expiryTs to Timeout value so that state is paused until timeout. stateExecutionInstance id: {}, name: {}",
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         // update expiry and status to paused/waiting
@@ -873,7 +873,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
       case RETRY: {
         if (executionEventAdvice.getWaitInterval() != null && executionEventAdvice.getWaitInterval() > 0) {
-          logger.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
+          log.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
           String resumeId = delayEventHelper.delay(executionEventAdvice.getWaitInterval(), Collections.emptyMap());
           waitNotifyEngine.waitForAllOn(ORCHESTRATION,
               new ExecutionWaitRetryCallback(stateExecutionInstance.getAppId(),
@@ -929,7 +929,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid());
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.error("StateExecutionInstance status could not be updated - "
+      log.error("StateExecutionInstance status could not be updated - "
               + "stateExecutionInstance: {},  status: {}",
           stateExecutionInstance.getUuid(), status);
     }
@@ -1038,7 +1038,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       alertService.openAlert(
           app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
     } catch (Exception e) {
-      logger.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
+      log.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
           context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
     }
   }
@@ -1083,11 +1083,11 @@ public class StateMachineExecutor implements StateInspectionListener {
       currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       addContext(context, exception);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException ex) {
       WingsException wingsException = new WingsException(ex);
       addContext(context, wingsException);
-      logger.error("Error when processing exception", wingsException);
+      log.error("Error when processing exception", wingsException);
     }
 
     if (stateExecutionInstance != null) {
@@ -1106,13 +1106,13 @@ public class StateMachineExecutor implements StateInspectionListener {
         return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
       }
     } catch (RuntimeException ex) {
-      logger.error("Error when trying to obtain the advice ", ex);
+      log.error("Error when trying to obtain the advice ", ex);
     }
 
     try (AutoLogContext ignore = context.autoLogContext()) {
       return failedTransition(context, exception);
     } catch (RuntimeException ex) {
-      logger.error("Error in transitioning to failure state", ex);
+      log.error("Error in transitioning to failure state", ex);
     }
     return null;
   }
@@ -1124,10 +1124,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     State nextState =
         sm.getSuccessTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info(
+      log.info(
           "nextSuccessState is null.. ending execution  - currentState : {}", stateExecutionInstance.getStateName());
 
-      logger.info("State Machine execution ended for the stateMachine: {}", sm.getName());
+      log.info("State Machine execution ended for the stateMachine: {}", sm.getName());
 
       endTransition(context, stateExecutionInstance, SUCCESS, null);
     } else {
@@ -1145,21 +1145,21 @@ public class StateMachineExecutor implements StateInspectionListener {
     State nextState =
         sm.getFailureTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info("nextFailureState is null.. for the currentState : {}, stateExecutionInstanceId: {}",
+      log.info("nextFailureState is null.. for the currentState : {}, stateExecutionInstanceId: {}",
           stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
 
       ErrorStrategy errorStrategy = context.getErrorStrategy();
       if (errorStrategy == null || errorStrategy == ErrorStrategy.FAIL) {
-        logger.info("Ending execution  - currentState : {}, stateExecutionInstanceId: {}",
+        log.info("Ending execution  - currentState : {}, stateExecutionInstanceId: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
         endTransition(context, stateExecutionInstance, FAILED, exception);
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
-        logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
+        log.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
         updateStatusPauseAndWaiting(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
-        logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
+        log.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid(), errorStrategy);
       }
     } else {
@@ -1233,7 +1233,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     boolean updated = false;
     StateMachine sm = context.getStateMachine();
     try {
-      logger.info(
+      log.info(
           "[AbortInstance] Aborting StateExecution Instance with Id : {}", stateExecutionInstance.getExecutionUuid());
       State currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
@@ -1253,7 +1253,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
 
       StringBuilder errorMsgBuilder = new StringBuilder();
-      logger.info("[AbortInstance] Found {} Delegate Task Id for StateExecutionInstance {}", delegateTaskIds.size(),
+      log.info("[AbortInstance] Found {} Delegate Task Id for StateExecutionInstance {}", delegateTaskIds.size(),
           stateExecutionInstance.getUuid());
       for (String delegateTaskId : delegateTaskIds) {
         notNullCheck("context.getApp()", context.getApp());
@@ -1261,7 +1261,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           try {
             delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
           } catch (Exception e) {
-            logger.error(
+            log.error(
                 "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in aborting delegate task : {}. Reason : {}",
                 stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
           }
@@ -1272,13 +1272,13 @@ public class StateMachineExecutor implements StateInspectionListener {
               errorMsgBuilder.append(errorMsg);
             }
           } catch (Exception e) {
-            logger.error(
+            log.error(
                 "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in expiring delegate task : {}. Reason : {}",
                 stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
           }
         }
       }
-      logger.info(
+      log.info(
           "[AbortInstance] All DelegateTaskHandled for StateExecutionInstance {}", stateExecutionInstance.getUuid());
 
       String errorMessage =
@@ -1300,7 +1300,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                          .state(currentState)
                          .build());
     } catch (Exception e) {
-      logger.error("[AbortInstance] Error in discontinuing", e);
+      log.error("[AbortInstance] Error in discontinuing", e);
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_DISCONTINUE_FAILED)
@@ -1314,10 +1314,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     try {
       updated = updateStateExecutionData(
           stateExecutionInstance, null, finalStatus, errorMessage, singletonList(DISCONTINUING), null, null, null);
-      logger.info("[AbortInstance] UpdateStateExecutionData Finished with response :{} ", updated);
+      log.info("[AbortInstance] UpdateStateExecutionData Finished with response :{} ", updated);
       endTransition(context, stateExecutionInstance, finalStatus, null);
     } catch (Exception ex) {
-      logger.error("[AbortInstance] Error Occurred while UpdateStateExecutionData", ex);
+      log.error("[AbortInstance] Error Occurred while UpdateStateExecutionData", ex);
     }
     return updated;
   }
@@ -1438,7 +1438,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   private boolean updateStatusPauseAndWaiting(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
-    logger.info(
+    log.info(
         "[TimeOut Op]: Updating expiryTs to Long.MAX_VALUE on PAUSE_ALL interrupt or pause error strategy on failure for stateExecutionInstance id: {}, name: {}",
         stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason,
@@ -1459,9 +1459,8 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     if (reason != null) {
       if (stateExecutionInstance.getUuid().equals(reason.getStateExecutionInstanceId())) {
-        logger.error(
-            format("The reason execution interrupt with type %s is already assigned to this execution instance.",
-                reason.getExecutionInterruptType().name()),
+        log.error(format("The reason execution interrupt with type %s is already assigned to this execution instance.",
+                      reason.getExecutionInterruptType().name()),
             new Exception(""));
       } else {
         ops.addToSet("interruptHistory",
@@ -1477,7 +1476,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.error("StateExecutionInstance status could not be updated - "
+      log.error("StateExecutionInstance status could not be updated - "
               + "stateExecutionInstance: {},  status: {}, existingExecutionStatus: {}, ",
           stateExecutionInstance.getUuid(), status, existingExecutionStatus);
       return false;
@@ -1509,7 +1508,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
       List<ContextElement> notifyElements, @NotNull Long expiryTs) {
-    logger.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    log.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
@@ -1519,7 +1518,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
       List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
-    logger.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    log.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
@@ -1530,7 +1529,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
       Collection<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
       List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
-    logger.info("[TimeOut Op]: Updating expiryTs to {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    log.info("[TimeOut Op]: Updating expiryTs to {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, runningStatusLists,
@@ -1607,7 +1606,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.warn("StateExecutionInstance status could not be updated -"
+      log.warn("StateExecutionInstance status could not be updated -"
               + " stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
           stateExecutionInstance.getUuid(), stateExecutionData.toString(), status, errorMsg);
 
@@ -1647,7 +1646,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     while (stateExecutionInstance.getStatus() == NEW || stateExecutionInstance.getStatus() == QUEUED
         || stateExecutionInstance.getStatus() == STARTING) {
-      logger.warn("stateExecutionInstance: {} status {} is not in RUNNING state yet", stateExecutionInstance.getUuid(),
+      log.warn("stateExecutionInstance: {} status {} is not in RUNNING state yet", stateExecutionInstance.getUuid(),
           stateExecutionInstance.getStatus());
       // TODO - more elegant way
       quietSleep(Duration.ofMillis(500));
@@ -1655,7 +1654,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     if (stateExecutionInstance.getStatus() != RUNNING && stateExecutionInstance.getStatus() != PAUSED
         && stateExecutionInstance.getStatus() != DISCONTINUING) {
-      logger.warn("stateExecutionInstance: {} status {} is no longer in RUNNING/PAUSED/DISCONTINUING state",
+      log.warn("stateExecutionInstance: {} status {} is no longer in RUNNING/PAUSED/DISCONTINUING state",
           stateExecutionInstance.getUuid(), stateExecutionInstance.getStatus());
       return;
     }
@@ -1675,7 +1674,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
     try (AutoLogContext ignore = workflowExecutionInterrupt.autoLogContext()) {
-      logger.info("State To handle interrupt of Type : {}", type);
+      log.info("State To handle interrupt of Type : {}", type);
       switch (type) {
         case IGNORE: {
           StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(
@@ -1761,7 +1760,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     if (stateExecutionInstance == null) {
-      logger.info("could not find state execution for app {}, workflow execution {}, uuid {}", appId, executionUuid,
+      log.info("could not find state execution for app {}, workflow execution {}, uuid {}", appId, executionUuid,
           stateExecutionInstanceId);
       return null;
     }
@@ -1793,7 +1792,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void abortInstancesByStatus(ExecutionInterrupt workflowExecutionInterrupt,
       WorkflowExecution workflowExecution, Collection<ExecutionStatus> statuses) {
     if (!markAbortingState(workflowExecutionInterrupt, workflowExecution, statuses)) {
-      logger.warn(
+      log.warn(
           "ABORT_ALL workflowExecutionInterrupt: {} being ignored as could not mark aborting states for all instances: {}",
           workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
       return;
@@ -1807,7 +1806,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
-      logger.warn(
+      log.warn(
           "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
           workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
       return;
@@ -1914,7 +1913,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .asList();
 
     if (isEmpty(allStateExecutionInstances)) {
-      logger.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
+      log.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
     }
@@ -1941,7 +1940,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     // Set the status to DISCONTINUING
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
-      logger.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
+      log.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
     }
@@ -2060,9 +2059,9 @@ public class StateMachineExecutor implements StateInspectionListener {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         stateMachineExecutor.addContext(context, exception);
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception exception) {
-        logger.error("Unhandled exception", exception);
+        log.error("Unhandled exception", exception);
       }
     }
   }
@@ -2173,7 +2172,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           }
         }
       } catch (Exception ex) {
-        logger.warn("Failed to extract delegate metadata", ex);
+        log.warn("Failed to extract delegate metadata", ex);
       }
     }
   }

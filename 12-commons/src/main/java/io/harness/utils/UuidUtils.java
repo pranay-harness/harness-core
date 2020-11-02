@@ -24,7 +24,7 @@ public final class UuidUtils {
       UUID.fromString(value);
       return true;
     } catch (Exception e) {
-      logger.info("{} is not a valid UUID", value);
+      log.info("{} is not a valid UUID", value);
     }
     return false;
   }

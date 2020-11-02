@@ -37,7 +37,7 @@ public class AnnotationAwareJsonSubtypeResolver extends JsonSubtypeResolver {
       try {
         return getClassListLoadingCache().get(rawType);
       } catch (ExecutionException e) {
-        logger.error("error while finding subtypes", e);
+        log.error("error while finding subtypes", e);
       }
     }
     return Collections.emptyList();
@@ -61,7 +61,7 @@ public class AnnotationAwareJsonSubtypeResolver extends JsonSubtypeResolver {
       try {
         newReturnValue.addAll(getClassListLoadingCache().get(getRawType(property)));
       } catch (ExecutionException e) {
-        logger.error("Error while getting subtypes", e);
+        log.error("Error while getting subtypes", e);
       }
     }
     return newReturnValue;

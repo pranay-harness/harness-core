@@ -14,19 +14,19 @@ public class AnomalyDetectionStatsModelProcessor
     implements ItemProcessor<AnomalyDetectionTimeSeries, Anomaly>, StepExecutionListener {
   @Override
   public void beforeStep(StepExecution stepExecution) {
-    logger.info("TimeSeries Processor initialized.");
+    log.info("TimeSeries Processor initialized.");
   }
 
   @Override
   public Anomaly process(AnomalyDetectionTimeSeries data) {
-    logger.info("processing {} {}", data.getEntityType().toString(), data.getEntityId());
+    log.info("processing {} {}", data.getEntityType().toString(), data.getEntityId());
     StatsModel model = StatsModel.builder().build();
     return model.detectAnomaly(data).get(0);
   }
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    logger.info("TimeSeries Processor ended.");
+    log.info("TimeSeries Processor ended.");
     return ExitStatus.COMPLETED;
   }
 }

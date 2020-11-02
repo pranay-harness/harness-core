@@ -44,7 +44,7 @@ public class PartitionProcessorTest extends CategoryTest {
     SampleElement e5 = new SampleElement("e5");
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5);
     SamplePartitionProcessor processor = new SamplePartitionProcessor(sampleElements);
-    List<PartitionElement> partitions = processor.partitions(logger, "1", "2", "1");
+    List<PartitionElement> partitions = processor.partitions(log, "1", "2", "1");
     assertThat(partitions)
         .isNotNull()
         .hasSize(3)
@@ -72,7 +72,7 @@ public class PartitionProcessorTest extends CategoryTest {
     SampleElement e7 = new SampleElement("e7");
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7);
     SamplePartitionProcessor processor = new SamplePartitionProcessor(sampleElements);
-    List<PartitionElement> partitions = processor.partitions(logger, "10 % ", "50 %", "30 %");
+    List<PartitionElement> partitions = processor.partitions(log, "10 % ", "50 %", "30 %");
     assertThat(partitions)
         .isNotNull()
         .hasSize(3)
@@ -108,7 +108,7 @@ public class PartitionProcessorTest extends CategoryTest {
     SampleElement e12 = new SampleElement("e12");
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12);
     SamplePartitionProcessor processor = new SamplePartitionProcessor(sampleElements);
-    List<PartitionElement> partitions = processor.withPercentages("10 % ", "20 %", "30 %", "40%").partitions(logger);
+    List<PartitionElement> partitions = processor.withPercentages("10 % ", "20 %", "30 %", "40%").partitions(log);
     assertThat(partitions)
         .isNotNull()
         .hasSize(4)
@@ -140,7 +140,7 @@ public class PartitionProcessorTest extends CategoryTest {
     SampleElement e7 = new SampleElement("e7");
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7);
     SamplePartitionProcessor processor = new SamplePartitionProcessor(sampleElements);
-    List<PartitionElement> partitions = processor.partitions(logger, " 2 ", "3", "30 %");
+    List<PartitionElement> partitions = processor.partitions(log, " 2 ", "3", "30 %");
     assertThat(partitions)
         .isNotNull()
         .hasSize(3)
@@ -169,7 +169,7 @@ public class PartitionProcessorTest extends CategoryTest {
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7);
     SamplePartitionProcessor processor =
         (SamplePartitionProcessor) new SamplePartitionProcessor(sampleElements).withBreakdowns(" 2 ", "3", "30 %");
-    List<PartitionElement> partitions = processor.partitions(logger);
+    List<PartitionElement> partitions = processor.partitions(log);
     assertThat(partitions)
         .isNotNull()
         .hasSize(3)
@@ -198,7 +198,7 @@ public class PartitionProcessorTest extends CategoryTest {
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7);
     SamplePartitionProcessor processor =
         (SamplePartitionProcessor) new SamplePartitionProcessor(sampleElements).withPercentages("33%", "50%", "30 %");
-    List<PartitionElement> partitions = processor.partitions(logger);
+    List<PartitionElement> partitions = processor.partitions(log);
     assertThat(partitions)
         .isNotNull()
         .hasSize(2)
@@ -229,7 +229,7 @@ public class PartitionProcessorTest extends CategoryTest {
     List<SampleElement> sampleElements = Lists.newArrayList(e1, e2, e3, e4, e5, e6, e7);
     SamplePartitionProcessor processor =
         (SamplePartitionProcessor) new SamplePartitionProcessor(sampleElements).withCounts("2 ", " 3 ", "2");
-    List<PartitionElement> partitions = processor.partitions(logger);
+    List<PartitionElement> partitions = processor.partitions(log);
     assertThat(partitions)
         .isNotNull()
         .hasSize(3)

@@ -99,20 +99,20 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
         Map<String, String> procEnv = builder.environment();
         procEnv.putAll(varsMap);
       } catch (Exception e) {
-        logger.warn(
+        log.warn(
             format("start() - Failed (%s) to set environment for command=%s", e.getClass().getSimpleName(), cmdValue),
             e);
-        if (logger.isDebugEnabled()) {
-          logger.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
+        if (log.isDebugEnabled()) {
+          log.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
           for (StackTraceElement elem : e.getStackTrace()) {
-            logger.debug("Trace: {}", elem);
+            log.debug("Trace: {}", elem);
           }
         }
       }
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Starting shell with command: '{}' and env: {}", builder.command(), builder.environment());
+    if (log.isDebugEnabled()) {
+      log.debug("Starting shell with command: '{}' and env: {}", builder.command(), builder.environment());
     }
 
     if (root != null) {
@@ -195,23 +195,23 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
   public void destroy() {
     // NOTE !!! DO NOT NULL-IFY THE PROCESS SINCE "exitValue" is called subsequently
     if (process != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Destroy process for " + cmdValue);
+      if (log.isDebugEnabled()) {
+        log.debug("Destroy process for " + cmdValue);
       }
       process.destroy();
     }
 
     IOException e = IoUtils.closeQuietly(getInputStream(), getOutputStream(), getErrorStream());
     if (e != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(e.getClass().getSimpleName() + " while destroy streams of '" + this + "': " + e.getMessage());
+      if (log.isDebugEnabled()) {
+        log.debug(e.getClass().getSimpleName() + " while destroy streams of '" + this + "': " + e.getMessage());
       }
 
-      if (logger.isTraceEnabled()) {
+      if (log.isTraceEnabled()) {
         Throwable[] suppressed = e.getSuppressed();
         if (GenericUtils.length(suppressed) > 0) {
           for (Throwable t : suppressed) {
-            logger.trace("Suppressed " + t.getClass().getSimpleName() + ") while destroy streams of '" + this
+            log.trace("Suppressed " + t.getClass().getSimpleName() + ") while destroy streams of '" + this
                 + "': " + t.getMessage());
           }
         }

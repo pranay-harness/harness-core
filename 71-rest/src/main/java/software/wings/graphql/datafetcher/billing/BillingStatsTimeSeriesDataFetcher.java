@@ -70,7 +70,7 @@ public class BillingStatsTimeSeriesDataFetcher
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
       Integer limit, Integer offset) {
     boolean timeScaleDBServiceValid = timeScaleDBService.isValid();
-    logger.info("Timescale db service status {}", timeScaleDBServiceValid);
+    log.info("Timescale db service status {}", timeScaleDBServiceValid);
     if (!timeScaleDBServiceValid) {
       throw new InvalidRequestException("Cannot process request in BillingStatsTimeSeriesDataFetcher");
     }
@@ -120,8 +120,8 @@ public class BillingStatsTimeSeriesDataFetcher
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, !isGroupByNodeOrPodPresent(groupByEntityList));
-    logger.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
-    logger.info(queryData.getQuery());
+    log.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
+    log.info(queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -133,11 +133,11 @@ public class BillingStatsTimeSeriesDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsTimeSeriesDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsTimeSeriesDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
@@ -650,8 +650,8 @@ public class BillingStatsTimeSeriesDataFetcher
 
     queryData = billingDataQueryBuilder.formQuery(
         accountId, filters, aggregateFunction, Collections.emptyList(), groupByTime, Collections.emptyList(), true);
-    logger.info("BillingStatsTimeSeriesDataFetcher query for unallocated cost: {}", queryData.getQuery());
-    logger.info(queryData.getQuery());
+    log.info("BillingStatsTimeSeriesDataFetcher query for unallocated cost: {}", queryData.getQuery());
+    log.info(queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -680,11 +680,11 @@ public class BillingStatsTimeSeriesDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsTimeSeriesDataFetcher for unallocated cost, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsTimeSeriesDataFetcher for unallocated cost, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

@@ -482,7 +482,7 @@ public class K8sStateHelper {
 
     List<String> result = new ArrayList<>();
 
-    logger.info("Found Values at following sources: " + valuesFiles.keySet());
+    log.info("Found Values at following sources: " + valuesFiles.keySet());
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
       addNonEmptyValuesToList(K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
@@ -520,7 +520,7 @@ public class K8sStateHelper {
     if (isNotBlank(value)) {
       result.add(value);
     } else {
-      logger.info("Values content is empty in " + location);
+      log.info("Values content is empty in " + location);
     }
   }
 
@@ -747,7 +747,7 @@ public class K8sStateHelper {
     try {
       return getPodList(containerInfrastructureMapping, namespace, releaseName);
     } catch (Exception e) {
-      logger.info("Failed to fetch PodList for release {}. Exception: {}.", releaseName, e);
+      log.info("Failed to fetch PodList for release {}. Exception: {}.", releaseName, e);
     }
     return null;
   }
@@ -1139,7 +1139,7 @@ public class K8sStateHelper {
 
   private void saveK8sHelmDeploymentElement(
       ExecutionContext context, K8sHelmDeploymentElement k8SHelmDeploymentElement) {
-    logger.info("Storing {} in sweeping output", K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME);
+    log.info("Storing {} in sweeping output", K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME);
     // Just ensure that element exists in Sweeping output. The element could be already stored by another running in
     // parallel step
     sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)

@@ -67,7 +67,7 @@ public class BatchJobRunner {
     List<BatchJobType> dependentBatchJobs = batchJobType.getDependentBatchJobs();
     Instant startAt = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(accountId, batchJobType);
     if (null == startAt) {
-      logger.warn("Event not received for account {} ", accountId);
+      log.warn("Event not received for account {} ", accountId);
       return;
     }
     Instant endAt = Instant.now().minus(1, ChronoUnit.HOURS);
@@ -90,7 +90,7 @@ public class BatchJobRunner {
                   .toJobParameters();
           Instant jobStartTime = Instant.now();
           BatchStatus status = jobLauncher.run(job, params).getStatus();
-          logger.info("Job status {}", status);
+          log.info("Job status {}", status);
           Instant jobStopTime = Instant.now();
 
           if (status == BatchStatus.COMPLETED) {
@@ -112,7 +112,7 @@ public class BatchJobRunner {
 
       long totalTimeTaken = Duration.between(jobsStartTime, Instant.now()).toMinutes();
       if (totalTimeTaken >= 30) {
-        logger.warn("Job was taking more time so terminated next runs {}", totalTimeTaken);
+        log.warn("Job was taking more time so terminated next runs {}", totalTimeTaken);
         break;
       }
     }
@@ -122,11 +122,11 @@ public class BatchJobRunner {
       String accountId, BatchJobType batchJobType, BatchStatus status, Instant startInstant, Instant endInstant) {
     CacheKey cacheKey = new CacheKey(accountId, batchJobType, startInstant);
     if (logErrorCache.getIfPresent(cacheKey) == null) {
-      logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
+      log.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
           batchJobType, status, startInstant, endInstant);
       logErrorCache.put(cacheKey, Boolean.TRUE);
     } else {
-      logger.error("Error in running batch job retry for account {} type {} status {} time range {} - {}", accountId,
+      log.error("Error in running batch job retry for account {} type {} status {} time range {} - {}", accountId,
           batchJobType, status, startInstant, endInstant);
     }
   }
@@ -137,9 +137,9 @@ public class BatchJobRunner {
     if (diffMillis > 43200000) {
       CacheKey cacheKey = new CacheKey(accountId, batchJobType, startInstant);
       if (logErrorCache.getIfPresent(cacheKey) == null) {
-        logger.error("Batch job is delayed for account {} {} {}", accountId, batchJobType, diffMillis);
+        log.error("Batch job is delayed for account {} {} {}", accountId, batchJobType, diffMillis);
       } else {
-        logger.error("Batch job delayed for the account {} {} {}", accountId, batchJobType, diffMillis);
+        log.error("Batch job delayed for the account {} {} {}", accountId, batchJobType, diffMillis);
       }
     }
   }

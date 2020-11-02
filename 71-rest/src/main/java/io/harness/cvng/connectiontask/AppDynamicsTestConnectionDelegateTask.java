@@ -39,7 +39,7 @@ public class AppDynamicsTestConnectionDelegateTask extends AbstractDelegateRunna
       validCredentails = appdynamicsDelegateService.validateConfig(
           taskParameters.getAppDynamicsConnectorDTO(), taskParameters.getEncryptionDetails());
     } catch (Exception ex) {
-      logger.info("Exception while validating appdynamics credentials", ex);
+      log.info("Exception while validating appdynamics credentials", ex);
       execptionInProcessing = ex;
     }
 

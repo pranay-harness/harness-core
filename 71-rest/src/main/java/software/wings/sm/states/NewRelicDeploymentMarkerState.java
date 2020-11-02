@@ -197,7 +197,7 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

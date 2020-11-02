@@ -83,7 +83,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -274,7 +274,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     if (NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.containsKey(metricName)) {
       return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.get(metricName).getMetricType().name();
     }
-    logger.info("Invalid metricName in NewRelic {}", metricName);
+    log.info("Invalid metricName in NewRelic {}", metricName);
     return null;
   }
 

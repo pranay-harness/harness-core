@@ -47,10 +47,10 @@ public class FixCVDashboardStatusMigration implements Migration {
         wingsPersistence.update(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
                                     .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecId),
             op);
-        logger.info("Updating CVMetadata for {} to {}", stateExecId, realStatus);
+        log.info("Updating CVMetadata for {} to {}", stateExecId, realStatus);
       }
     } catch (Exception ex) {
-      logger.error("Exception while running FixCVDashboardStatusMigration", ex);
+      log.error("Exception while running FixCVDashboardStatusMigration", ex);
     }
   }
 }

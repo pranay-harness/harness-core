@@ -182,7 +182,7 @@ public class MergeInputSetHelperUtils {
 
         } else {
           String errorMessage = "Field type is not matching with original field type.";
-          logger.error(errorMessage);
+          log.error(errorMessage);
           throw new InvalidArgumentsException(errorMessage);
         }
       }

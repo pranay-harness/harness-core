@@ -29,7 +29,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
   @Context private ResourceInfo resourceInfo;
   @Override
   public Response toResponse(Throwable exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     if (hasExposeExceptionAnnotation()) {
       RestResponse<T> restResponse = new RestResponse<>();
       restResponse.getResponseMessages().add(ResponseMessage.builder()

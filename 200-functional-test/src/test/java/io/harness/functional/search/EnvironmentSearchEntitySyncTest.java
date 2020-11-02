@@ -71,7 +71,7 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, true);
-    logger.info("New environment with id {} and name {} synced.", environment.getUuid(), environment.getName());
+    log.info("New environment with id {} and name {} synced.", environment.getUuid(), environment.getName());
 
     environment.setName(EDITED_ENVIRONMENT_NAME);
     environment = EnvironmentRestUtils.updateEnvironment(
@@ -81,14 +81,14 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(environment.getName()).isEqualTo(EDITED_ENVIRONMENT_NAME);
 
     retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, true);
-    logger.info("Environment update with id {} and name {} synced.", environment.getUuid(), environment.getName());
+    log.info("Environment update with id {} and name {} synced.", environment.getUuid(), environment.getName());
 
     int statusCode = EnvironmentRestUtils.deleteEnvironment(
         bearerToken, environment.getAppId(), environment.getAccountId(), environment.getUuid());
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
     retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, false);
-    logger.info("Environment with id {} deleted", environment.getUuid());
+    log.info("Environment with id {} deleted", environment.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());
   }

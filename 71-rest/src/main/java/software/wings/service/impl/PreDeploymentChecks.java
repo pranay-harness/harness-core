@@ -38,8 +38,8 @@ public class PreDeploymentChecks {
     List<ValidationError> validationErrorList = workflowPreDeploymentValidator.validate(accountType, workflow);
     if (isNotEmpty(validationErrorList)) {
       String validationMessage = validationErrorList.get(0).getMessage();
-      logger.warn("Pre-deployment restricted features check failed for workflowId ={} with reason={} ",
-          workflow.getUuid(), validationMessage);
+      log.warn("Pre-deployment restricted features check failed for workflowId ={} with reason={} ", workflow.getUuid(),
+          validationMessage);
       throw new WingsException(FEATURE_UNAVAILABLE, validationMessage, USER).addParam("message", validationMessage);
     }
   }
@@ -49,7 +49,7 @@ public class PreDeploymentChecks {
     List<ValidationError> validationErrorList = pipelinePreDeploymentValidator.validate(accountType, pipeline);
     if (isNotEmpty(validationErrorList)) {
       String validationMessage = validationErrorList.get(0).getMessage();
-      logger.warn("Pre-deployment restricted features check failed for pipelinedId ={} with reason={} ",
+      log.warn("Pre-deployment restricted features check failed for pipelinedId ={} with reason={} ",
           pipeline.getUuid(), validationMessage);
       throw new WingsException(FEATURE_UNAVAILABLE, validationMessage, WingsException.USER);
     }

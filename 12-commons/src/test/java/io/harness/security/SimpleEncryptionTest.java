@@ -62,7 +62,7 @@ public class SimpleEncryptionTest extends CategoryTest {
     assertThat(testInput).isNotEqualTo(encryptedString);
     char[] decryptedChars = encryption.decryptChars(encryptedString.toCharArray());
     String decryptedString = new String(decryptedChars);
-    logger.info("decryptedString: {}", decryptedString);
+    log.info("decryptedString: {}", decryptedString);
     assertThat(testInput).isEqualTo(decryptedString);
   }
 
@@ -86,7 +86,7 @@ public class SimpleEncryptionTest extends CategoryTest {
       int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
       assertThat(maxKeyLength).isEqualTo(2147483647);
     } catch (NoSuchAlgorithmException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
   }
 }

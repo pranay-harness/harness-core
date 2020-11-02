@@ -88,7 +88,7 @@ public class TwoFactorAuthenticationManager {
     if (isNotEmpty(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA);
-        logger.info("Auditing enabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
+        log.info("Auditing enabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
       });
     }
 
@@ -103,19 +103,18 @@ public class TwoFactorAuthenticationManager {
     // disable 2FA only if admin has not enforced 2FA.
     if (isAllowed2FADisable(user)) {
       if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
-        logger.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
+        log.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
             user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
         if (isNotEmpty(user.getAccounts())) {
           user.getAccounts().forEach(account -> {
             auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.DISABLE_2FA);
-            logger.info(
-                "Auditing disabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
+            log.info("Auditing disabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
           });
         }
         return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).disableTwoFactorAuthentication(user);
       }
     } else {
-      logger.info("Could not disable 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
+      log.info("Could not disable 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
           user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
     }
     return user;
@@ -165,7 +164,7 @@ public class TwoFactorAuthenticationManager {
 
       // Enable 2FA for all users if admin enforced
       if (settings.isAdminOverrideTwoFactorEnabled()) {
-        logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
+        log.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
         boolean success =
             userService.overrideTwoFactorforAccount(accountId, settings.isAdminOverrideTwoFactorEnabled());
         if (success) {
@@ -186,7 +185,7 @@ public class TwoFactorAuthenticationManager {
     if (user.isTwoFactorAuthenticationEnabled()) {
       return getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).resetAndSendEmail(user);
     } else {
-      logger.warn("Two Factor authentication is not enabled for user [{}]", userId);
+      log.warn("Two Factor authentication is not enabled for user [{}]", userId);
       return false;
     }
   }
@@ -196,7 +195,7 @@ public class TwoFactorAuthenticationManager {
     userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(user -> {
       totpHandler.disableTwoFactorAuthentication(user);
       auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.DISABLE_2FA);
-      logger.info("Auditing disabling of 2FA for user={} in accountId={}", user.getName(), accountId);
+      log.info("Auditing disabling of 2FA for user={} in accountId={}", user.getName(), accountId);
     });
     return true;
   }

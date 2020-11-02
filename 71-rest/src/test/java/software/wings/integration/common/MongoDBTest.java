@@ -40,7 +40,7 @@ public class MongoDBTest extends WingsBaseTest {
         final MongoEntity entity = new MongoEntity();
         String data = "";
         for (int i = 0; i < 1000; i++) {
-          logger.info("" + i);
+          log.info("" + i);
           data = data + i;
           entity.setData(data);
           wingsPersistence.save(entity);
@@ -48,7 +48,7 @@ public class MongoDBTest extends WingsBaseTest {
           assertThat(mongoEntity.getData()).isEqualTo(data);
         }
       } catch (RuntimeException e) {
-        logger.error("", e);
+        log.error("", e);
       }
     });
   }

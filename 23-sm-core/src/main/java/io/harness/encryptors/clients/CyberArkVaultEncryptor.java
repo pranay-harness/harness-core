@@ -79,7 +79,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
             () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else {
@@ -107,7 +107,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
     }
 
     long startTime = System.currentTimeMillis();
-    logger.info(
+    log.info(
         "Reading secret CyberArk {} using AppID '{}' and query '{}'", cyberArkConfig.getCyberArkUrl(), appId, query);
 
     String secretValue = null;
@@ -118,16 +118,16 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
         secretValue = response.body().getContent();
       }
     } catch (IOException e) {
-      logger.error("Failed to read secret from CyberArk", e);
+      log.error("Failed to read secret from CyberArk", e);
     }
 
     if (isNotEmpty(secretValue)) {
-      logger.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
+      log.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
           System.currentTimeMillis() - startTime);
       return secretValue.toCharArray();
     } else {
       String errorMsg = "CyberArk query '" + query + "' is invalid in application '" + appId + "'";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMsg, USER);
     }
   }

@@ -35,7 +35,7 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the Custom Deployment InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the Custom Deployment InstanceSync perpetual task executor for task id: {}", taskId);
 
     final CustomDeploymentInstanceSyncTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), CustomDeploymentInstanceSyncTaskParams.class);
@@ -47,8 +47,8 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
       execute(
           delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), taskParams.getAccountId(), response));
     } catch (Exception e) {
-      logger.error(String.format("Failed to publish instance sync result for custom deployment. PerpetualTaskId [%s]",
-                       taskId.getId()),
+      log.error(String.format("Failed to publish instance sync result for custom deployment. PerpetualTaskId [%s]",
+                    taskId.getId()),
           e);
     }
 
@@ -110,7 +110,7 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
       try {
         Files.deleteIfExists(Paths.get(path));
       } catch (IOException e) {
-        logger.error("Failed to delete file " + path, e);
+        log.error("Failed to delete file " + path, e);
       }
     }
   }

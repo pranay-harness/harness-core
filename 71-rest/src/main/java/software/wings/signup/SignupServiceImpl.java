@@ -84,7 +84,7 @@ public class SignupServiceImpl implements SignupService {
       Map<String, String> templateModel = getTrialSignupCompletedTemplateModel(userInvite);
       sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
-      logger.error("Trial sign-up completed email couldn't be sent ", e);
+      log.error("Trial sign-up completed email couldn't be sent ", e);
     }
   }
 
@@ -205,7 +205,7 @@ public class SignupServiceImpl implements SignupService {
       String resetPasswordUrl = getResetPasswordUrl(token, userInvite);
       sendMail(userInvite, resetPasswordUrl, SETUP_PASSWORD_FOR_SIGNUP);
     } catch (URISyntaxException | UnsupportedEncodingException e) {
-      logger.error("Password setup mail for signup could't be sent", e);
+      log.error("Password setup mail for signup could't be sent", e);
     }
   }
 
@@ -265,7 +265,7 @@ public class SignupServiceImpl implements SignupService {
       try {
         isPasswordPwned = pwnedPasswordChecker.checkIfPwned(password);
       } catch (Exception e) {
-        logger.error("Received exception while checking for pwned passwords. Logging and ignoring the check", e);
+        log.error("Received exception while checking for pwned passwords. Logging and ignoring the check", e);
       }
 
       if (isPasswordPwned) {
@@ -297,10 +297,10 @@ public class SignupServiceImpl implements SignupService {
       JWT decode = JWT.decode(jwtToken);
       return decode.getClaim(EMAIL).asString();
     } catch (UnsupportedEncodingException exception) {
-      logger.error("Could not decode token for signup: {}", jwtToken);
+      log.error("Could not decode token for signup: {}", jwtToken);
       throw new SignupException("Invalid signup token. Please signup again");
     } catch (JWTVerificationException exception) {
-      logger.error("Signup token {} has expired", jwtToken);
+      log.error("Signup token {} has expired", jwtToken);
       throw new SignupException("Invalid signup token. Please signup again");
     }
   }
@@ -308,7 +308,7 @@ public class SignupServiceImpl implements SignupService {
   @Override
   public void checkIfUserInviteIsValid(UserInvite userInvite, String email) {
     if (userInvite == null) {
-      logger.info("No invite found in db for for email: {}", email);
+      log.info("No invite found in db for for email: {}", email);
       throw new SignupException(String.format("Can not process signup for email: %s", email));
     } else if (userInvite.isCompleted()) {
       throw new SignupException("User invite has already been completed. Please login");

@@ -32,12 +32,12 @@ import java.util.Optional;
 public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
-    logger.info("Published batch size is EcsTaskInfoWriter {} ", publishedMessages.size());
+    log.info("Published batch size is EcsTaskInfoWriter {} ", publishedMessages.size());
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_TASK_INFO))
         .forEach(publishedMessage -> {
           EcsTaskInfo ecsTaskInfo = (EcsTaskInfo) publishedMessage.getMessage();
-          logger.debug("Message {} ", ecsTaskInfo);
+          log.debug("Message {} ", ecsTaskInfo);
           EcsTaskDescription ecsTaskDescription = ecsTaskInfo.getEcsTaskDescription();
           ReservedResource ecsTaskResource = ecsTaskInfo.getEcsTaskResource();
           String accountId = publishedMessage.getAccountId();
@@ -100,7 +100,7 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
                                .harnessServiceInfo(harnessServiceInfo)
                                .build();
 
-            logger.info("Creating task {} ", taskId);
+            log.info("Creating task {} ", taskId);
             instanceDataService.create(instanceData);
           }
         });

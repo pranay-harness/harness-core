@@ -39,7 +39,7 @@ public class PipelineVariableConnectionDataFetcher
       Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
       if (isEmpty(pipeline.getPipelineVariables())) {
-        logger.info("No non-fixed variables present in pipeline: " + pipelineId);
+        log.info("No non-fixed variables present in pipeline: " + pipelineId);
         return new ArrayList<>();
       }
       List<Variable> userVariables = pipeline.getPipelineVariables();

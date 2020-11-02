@@ -41,7 +41,7 @@ public class TimeoutEngineTypeInformationMapper implements TypeInformationMapper
       if (clazz != null) {
         return ClassTypeInformation.from(clazz);
       }
-      logger.error("No Class recorded for Alias: {}", stringAlias);
+      log.error("No Class recorded for Alias: {}", stringAlias);
       return loadClass(stringAlias).orElse(null);
     }
     return null;
@@ -53,7 +53,7 @@ public class TimeoutEngineTypeInformationMapper implements TypeInformationMapper
     if (typeToAliasMap.containsKey(typeClass.getType())) {
       return typeToAliasMap.get(typeClass.getType());
     }
-    logger.error("No Alias recorded for TimeoutEngine Entity {}. Using fully qualified path", type.getType().getName());
+    log.error("No Alias recorded for TimeoutEngine Entity {}. Using fully qualified path", type.getType().getName());
     return Alias.of(type.getType().getName());
   }
 

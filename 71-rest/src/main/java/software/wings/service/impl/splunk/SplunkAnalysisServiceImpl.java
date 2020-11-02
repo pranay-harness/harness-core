@@ -47,12 +47,12 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {
     long startTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime());
     long endTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime());
-    logger.info("Starting Log Data collection by Host for account Id : {}, SplunkSetupTestNodeData : {}", accountId,
+    log.info("Starting Log Data collection by Host for account Id : {}, SplunkSetupTestNodeData : {}", accountId,
         setupTestNodeData);
 
     // gets the settings attributes for given settings id
     final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
-    logger.info("Settings attribute : " + settingAttribute);
+    log.info("Settings attribute : " + settingAttribute);
     if (settingAttribute == null) {
       throw new WingsException(
           "No " + StateType.SPLUNKV2 + " setting with id: " + setupTestNodeData.getSettingId() + " found");

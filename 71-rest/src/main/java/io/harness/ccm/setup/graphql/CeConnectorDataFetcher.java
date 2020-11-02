@@ -62,7 +62,7 @@ public class CeConnectorDataFetcher
     try {
       healthStatus = healthStatusService.getHealthStatus(settingAttribute.getUuid());
     } catch (Exception ex) {
-      logger.error("Error Fetching Health Status: {}", ex);
+      log.error("Error Fetching Health Status: {}", ex);
     }
     String accountName = settingAttribute.getName();
     QLCEConnectorBuilder qlCEConnectorBuilder = QLCEConnector.builder()

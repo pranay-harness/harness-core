@@ -72,7 +72,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     String accountId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
-      logger.info("Authenticating via Username Password");
+      log.info("Authenticating via Username Password");
       if (!user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }

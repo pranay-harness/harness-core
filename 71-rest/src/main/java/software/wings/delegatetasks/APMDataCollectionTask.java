@@ -125,7 +125,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     dataCollectionInfo = (APMDataCollectionInfo) parameters;
     collectionWindow =
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
-    logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
 
     if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
@@ -150,7 +150,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -255,7 +255,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         }
         result.add(resolvedUrl(url, host, startTime, endTime));
       }
-      logger.info("Start and end times for minute {} were {} and {}", dataCollectionMinute, startTime, endTime);
+      log.info("Start and end times for minute {} were {} and {}", dataCollectionMinute, startTime, endTime);
       return result;
     }
 
@@ -321,7 +321,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         try {
           initialUrl = initialUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
         } catch (Exception e) {
-          logger.warn("Unsupported exception caught when encoding a back-tick", e);
+          log.warn("Unsupported exception caught when encoding a back-tick", e);
         }
       }
       List<APMResponseParser.APMResponseData> responses = new ArrayList<>();
@@ -471,7 +471,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           || currentElapsedTime >= dataCollectionInfo.getDataCollectionTotalTime() - 1) {
         shouldCollectData = true;
       }
-      logger.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, currentElapsedTime);
+      log.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, currentElapsedTime);
       return shouldCollectData;
     }
 
@@ -533,7 +533,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
                   newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
             } else {
-              logger.info("The data record {} is older than startTime. Ignoring", newRelicMetricDataRecord);
+              log.info("The data record {} is older than startTime. Ignoring", newRelicMetricDataRecord);
             }
           });
 
@@ -543,17 +543,17 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
           if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
-            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+            log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           } else {
-            logger.debug(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
+            log.debug(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
                 allMetricRecords.size(), dataCollectionMinute);
           }
           lastEndTime = currentEndTime;
           collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
           if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() || is24x7Task) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.debug(
+            log.debug(
                 "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
@@ -563,7 +563,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 dataCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -572,7 +572,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in "
+            log.warn("error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in "
                     + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
@@ -581,7 +581,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
 
       if (completed.get()) {
-        logger.debug(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
+        log.debug(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
         shutDownCollection();
         return;
       }
@@ -620,7 +620,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         if (group == null) {
           final String errorMsg =
               "Unexpected null groupName received while sending APM Heartbeat. Please contact Harness Support.";
-          logger.error(errorMsg);
+          log.error(errorMsg);
           throw new WingsException(errorMsg);
         }
         // Heartbeat

@@ -25,7 +25,7 @@ public class VerificationComponentTest extends VerificationBaseTest {
   public void componentVerificationTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
-      logger.info("{} passed", test.getKey());
+      log.info("{} passed", test.getKey());
     }
   }
 }

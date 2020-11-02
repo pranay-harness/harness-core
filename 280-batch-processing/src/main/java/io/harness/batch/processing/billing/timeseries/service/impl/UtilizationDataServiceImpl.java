@@ -48,7 +48,7 @@ public class UtilizationDataServiceImpl {
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid() && isNotEmpty(instanceUtilizationDataList)) {
-      logger.info("Util data size {}", instanceUtilizationDataList.size());
+      log.info("Util data size {}", instanceUtilizationDataList.size());
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
@@ -65,13 +65,13 @@ public class UtilizationDataServiceImpl {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save instance Utilization data,[{}],retryCount=[{}], Exception: ",
+          log.error("Failed to save instance Utilization data,[{}],retryCount=[{}], Exception: ",
               instanceUtilizationDataList, retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.info("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
+      log.info("Not processing instance Utilization data:[{}]", instanceUtilizationDataList);
     }
     return successfulInsert;
   }
@@ -118,7 +118,7 @@ public class UtilizationDataServiceImpl {
     Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
     populateDefaultUtilizationData(utilizationDataForInstances, serviceArnToInstanceIds);
     int retryCount = 0;
-    logger.debug("Utilization data query : {}", query);
+    log.debug("Utilization data query : {}", query);
     while (retryCount < SELECT_MAX_RETRY_COUNT) {
       retryCount++;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -152,7 +152,7 @@ public class UtilizationDataServiceImpl {
         }
         return utilizationDataForInstances;
       } catch (SQLException e) {
-        logger.error("Error while fetching utilization data : exception", e);
+        log.error("Error while fetching utilization data : exception", e);
       } finally {
         DBUtils.close(resultSet);
       }

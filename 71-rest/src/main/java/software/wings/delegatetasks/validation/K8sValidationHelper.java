@@ -53,7 +53,7 @@ public class K8sValidationHelper {
         encryptionService.decrypt(
             (EncryptableSetting) value, k8sClusterConfig.getCloudProviderEncryptionDetails(), false);
       } catch (Exception e) {
-        logger.info("failed to decrypt " + value, e);
+        log.info("failed to decrypt " + value, e);
         return false;
       }
     }
@@ -137,7 +137,7 @@ public class K8sValidationHelper {
       try {
         return executeShellCommand(format("echo %s", kustomizePluginPath));
       } catch (Exception ex) {
-        logger.error(format("Could not echo kustomizePluginPath %s", kustomizePluginPath));
+        log.error(format("Could not echo kustomizePluginPath %s", kustomizePluginPath));
       }
     }
     return kustomizePluginPath;

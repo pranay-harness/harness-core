@@ -40,7 +40,7 @@ public class AsyncInformObserverTest extends CategoryTest {
           try {
             wait();
           } catch (InterruptedException exception) {
-            logger.error("", exception);
+            log.error("", exception);
           }
         }
         sync = CALLBACK_IS_DONE;

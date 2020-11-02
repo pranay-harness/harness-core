@@ -89,7 +89,7 @@ public class PrometheusCVConfigurationYamlHandler
         errorMsgBuilder.append('\n');
       });
       String errorMsg = errorMsgBuilder.toString();
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new InvalidRequestException(errorMsg);
     }
   }

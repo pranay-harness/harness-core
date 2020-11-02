@@ -12,7 +12,7 @@ public class Switch {
    * @param value the switch value that was not handled.
    */
   public static void unhandled(Object value) {
-    logger.error("Unhandled switch value {}: {}\n{}", value.getClass().getCanonicalName(), value, new Exception(""));
+    log.error("Unhandled switch value {}: {}\n{}", value.getClass().getCanonicalName(), value, new Exception(""));
   }
 
   /**

@@ -125,7 +125,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     queryData = queryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, limit, offset, selectedFields);
 
-    logger.info("CeClusterBillingDataDataFetcher query!! {}", queryData.getQuery());
+    log.info("CeClusterBillingDataDataFetcher query!! {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -136,11 +136,11 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in CeClusterBillingDataDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in CeClusterBillingDataDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
@@ -389,7 +389,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       case ENVIRONMENT:
         return QLCEEntityGroupBy.Environment;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException("Unsupported entity type " + groupByTag.getEntityType());
     }
   }

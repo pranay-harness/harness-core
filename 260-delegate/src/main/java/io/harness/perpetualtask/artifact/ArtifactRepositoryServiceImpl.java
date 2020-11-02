@@ -64,7 +64,7 @@ public class ArtifactRepositoryServiceImpl {
                                          .errorMessage(ExceptionUtils.getMessage(ex))
                                          .build();
     } catch (Exception ex) {
-      logger.error("Exception in processing BuildSource task [{}]", ex);
+      log.error("Exception in processing BuildSource task [{}]", ex);
       buildSourceExecutionResponse = BuildSourceExecutionResponse.builder()
                                          .artifactStreamId(buildSourceParameters.getArtifactStreamId())
                                          .commandExecutionStatus(FAILURE)

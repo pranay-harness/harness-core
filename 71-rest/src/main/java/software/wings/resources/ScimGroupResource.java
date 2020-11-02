@@ -40,7 +40,7 @@ public class ScimGroupResource extends ScimResource {
     try {
       return Response.status(Status.CREATED).entity(scimGroupService.createGroup(groupQuery, accountId)).build();
     } catch (Exception ex) {
-      logger.info("Failed to create the group", ex);
+      log.info("Failed to create the group", ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.CONFLICT);
     }
   }
@@ -52,7 +52,7 @@ public class ScimGroupResource extends ScimResource {
     try {
       return Response.status(Response.Status.OK).entity(scimGroupService.getGroup(groupId, accountId)).build();
     } catch (Exception ex) {
-      logger.info("Failed to fetch the groups with id: {}", groupId, ex);
+      log.info("Failed to fetch the groups with id: {}", groupId, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.NOT_FOUND);
     }
   }
@@ -78,8 +78,8 @@ public class ScimGroupResource extends ScimResource {
       ScimListResponse<ScimGroup> groupResources = scimGroupService.searchGroup(filter, accountId, count, startIndex);
       return Response.status(Response.Status.OK).entity(groupResources).build();
     } catch (Exception ex) {
-      logger.error("SCIM: Search group call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountId,
-          filter, count, startIndex, ex);
+      log.error("SCIM: Search group call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountId, filter,
+          count, startIndex, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.NOT_FOUND);
     }
   }
@@ -102,7 +102,7 @@ public class ScimGroupResource extends ScimResource {
     try {
       return scimGroupService.updateGroup(groupId, accountId, groupQuery);
     } catch (Exception ex) {
-      logger.info("Failed to update the group with id: {}, accountId {} ", groupId, accountId, ex);
+      log.info("Failed to update the group with id: {}, accountId {} ", groupId, accountId, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.PRECONDITION_FAILED);
     }
   }

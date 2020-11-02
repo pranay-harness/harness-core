@@ -1038,7 +1038,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForUpdateAction());
         break;
       default:
-        logger.error("Invalid action {} for restrictions", action);
+        log.error("Invalid action {} for restrictions", action);
         break;
     }
 
@@ -1214,7 +1214,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         // restrictions.
         if (count > 0) {
           settingsService.updateUsageRestrictionsInternal(settingAttribute.getUuid(), usageRestrictions);
-          logger.info("Reference to application {} has been removed in setting attribute {} with id {} in account {}",
+          log.info("Reference to application {} has been removed in setting attribute {} with id {} in account {}",
               appId, settingAttribute.getName(), settingAttribute.getUuid(), accountId);
         }
       }
@@ -1230,7 +1230,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         if (count > 0) {
           secretManager.updateUsageRestrictionsForSecretOrFile(
               accountId, encryptedData.getUuid(), usageRestrictions, false);
-          logger.info("Reference to application {} has been removed in encrypted text/file {} with id {} in account {}",
+          log.info("Reference to application {} has been removed in encrypted text/file {} with id {} in account {}",
               appId, encryptedData.getName(), encryptedData.getUuid(), accountId);
         }
       }

@@ -62,7 +62,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
-      logger.error("Invalid metric pack dsl path", e);
+      log.error("Invalid metric pack dsl path", e);
     }
     APPDYNAMICS_PERFORMANCE_PACK_DSL = peformancePackDsl;
     APPDYNAMICS_QUALITY_PACK_DSL = qualityPackDsl;

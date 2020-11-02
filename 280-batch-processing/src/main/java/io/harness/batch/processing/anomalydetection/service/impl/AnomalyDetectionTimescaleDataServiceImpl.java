@@ -54,7 +54,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
         queryStatement = NAMESPACE_STATEMENT;
         break;
       default:
-        logger.error("entity type is undefined in timeseries spec");
+        log.error("entity type is undefined in timeseries spec");
         break;
     }
 
@@ -67,14 +67,14 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
           statement.setString(1, timeSeriesSpec.getAccountId());
           statement.setTimestamp(2, Timestamp.from(timeSeriesSpec.getTrainStart()));
           statement.setTimestamp(3, Timestamp.from(timeSeriesSpec.getTestEnd()));
-          logger.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
+          log.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
           resultSet = statement.executeQuery();
           if (resultSet.next()) {
             listClusterAnomalyDetectionTimeSeries = readTimeSeriesFromResultSet(resultSet, timeSeriesSpec);
           }
           successfulRead = true;
         } catch (SQLException e) {
-          logger.error("Failed to fetch cluster time series for accountId ,[{}],retryCount=[{}], Exception: ",
+          log.error("Failed to fetch cluster time series for accountId ,[{}],retryCount=[{}], Exception: ",
               timeSeriesSpec.getAccountId(), retryCount, e);
           retryCount++;
         } finally {
@@ -83,7 +83,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
       }
     }
     if (listClusterAnomalyDetectionTimeSeries.isEmpty()) {
-      logger.error("No TimeSeries Data Present");
+      log.error("No TimeSeries Data Present");
     }
     return listClusterAnomalyDetectionTimeSeries;
   }
@@ -97,7 +97,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
       if (TimeSeriesUtils.validate(currentAnomalyDetectionTimeSeries, timeSeriesSpec)) {
         listClusterAnomalyDetectionTimeSeries.add(currentAnomalyDetectionTimeSeries);
       } else {
-        logger.info("Invalid time series data of {}:{} ", currentAnomalyDetectionTimeSeries.getEntityType(),
+        log.info("Invalid time series data of {}:{} ", currentAnomalyDetectionTimeSeries.getEntityType(),
             currentAnomalyDetectionTimeSeries.getEntityId());
       }
     } while (!resultSet.isClosed());
@@ -126,7 +126,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
       case WORKLOAD:
         break;
       default:
-        logger.error("entity type is undefined in timeseries spec");
+        log.error("entity type is undefined in timeseries spec");
         break;
     }
     timeSeriesBuilder.entityType(timeSeriesSpec.getEntityType()).entityId(entityId);
@@ -169,20 +169,20 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
             statement.addBatch();
             index++;
             if (index % AnomalyDetectionConstants.BATCH_SIZE == 0 || index == anomaliesList.size()) {
-              logger.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
+              log.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
               int[] count = statement.executeBatch();
-              logger.debug("Successfully inserted {} anomalies into timescaledb", IntStream.of(count).sum());
+              log.debug("Successfully inserted {} anomalies into timescaledb", IntStream.of(count).sum());
             }
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error(
+          log.error(
               "Failed to save anomalies data,[{}],retryCount=[{}], Exception: ", anomaliesList.size(), retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
+      log.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
           timeScaleDBService.isValid());
     }
     return successfulInsert;

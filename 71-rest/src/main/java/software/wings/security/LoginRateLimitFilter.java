@@ -48,13 +48,13 @@ public class LoginRateLimitFilter implements ContainerRequestFilter {
       String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
       if (isLoginOrLoginTypeApi(containerRequestContext)) {
         if (loginRequestRateLimiter.isOverRateLimit(remoteHost)) {
-          logger.warn("The request for rate limiting from {} and the Remote Host {}, has reached its limit",
+          log.warn("The request for rate limiting from {} and the Remote Host {}, has reached its limit",
               containerRequestContext.getUriInfo().getRequestUri(), remoteHost);
           return true;
         }
       }
     } else {
-      logger.warn("ServletRequest is null, therefore remoteHost is not calculated for rate limiting");
+      log.warn("ServletRequest is null, therefore remoteHost is not calculated for rate limiting");
     }
     return false;
   }

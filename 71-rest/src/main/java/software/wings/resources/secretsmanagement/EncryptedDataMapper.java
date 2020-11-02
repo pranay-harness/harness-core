@@ -121,7 +121,7 @@ public class EncryptedDataMapper {
       updatedEncryptedData.getNgMetadata().setDraft(dto.isDraft());
       return updatedEncryptedData;
     } catch (Exception exception) {
-      logger.error("Exception while copying object.", exception);
+      log.error("Exception while copying object.", exception);
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to copy object", ADMIN_SRE);
     }
   }

@@ -35,7 +35,7 @@ public class SignupSpamChecker {
     }
     trialEmailCache.put(emailAddress, registrationCount);
     if (registrationCount > REGISTRATION_SPAM_THRESHOLD) {
-      logger.info(
+      log.info(
           "Trial registration has been performed already using the email from user invite '{}' shortly before, rejecting this request.",
           userInvite.getUuid());
       return true;

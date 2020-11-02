@@ -43,8 +43,7 @@ public class SecretVariableUtils {
   }
 
   public SecretVariableDetails getSecretVariableDetails(NGAccess ngAccess, CustomSecretVariable secretVariable) {
-    logger.info(
-        "Getting secret variable details for secret ref [{}]", secretVariable.getValue().toSecretRefStringValue());
+    log.info("Getting secret variable details for secret ref [{}]", secretVariable.getValue().toSecretRefStringValue());
     SecretRefData secretRefData = secretVariable.getValue();
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
@@ -55,7 +54,7 @@ public class SecretVariableUtils {
                                    .secret(secretVariable.getValue())
                                    .type(secretType)
                                    .build();
-    logger.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType,
+    log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType,
         secretVariable.getValue().toSecretRefStringValue());
     List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {

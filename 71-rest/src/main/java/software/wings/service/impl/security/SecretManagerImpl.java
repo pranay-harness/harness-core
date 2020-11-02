@@ -246,7 +246,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret,
       EncryptedData encryptedData, SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Encrypting a secret");
+      log.info("Encrypting a secret");
       String path = null;
       Set<EncryptedDataParams> parameters = null;
       boolean scopedToAccount = false;
@@ -342,7 +342,7 @@ public class SecretManagerImpl implements SecretManager {
           } else {
             SecretManagerConfig secretManagerConfig = secretManagerConfigService.getGlobalSecretManager(accountId);
             if (secretManagerConfig != null) {
-              logger.info(
+              log.info(
                   "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
               if (secretManagerConfig.getEncryptionType() == GCP_KMS) {
                 rv = gcpKmsService.encrypt(toEncrypt, accountId, (GcpKmsConfig) secretManagerConfig, encryptedData);
@@ -352,7 +352,7 @@ public class SecretManagerImpl implements SecretManager {
               rv.setEncryptionType(secretManagerConfig.getEncryptionType());
               rv.setKmsId(secretManagerConfig.getUuid());
             } else {
-              logger.info(
+              log.info(
                   "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
               localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
               rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
@@ -399,7 +399,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Encrypting a secret");
+      log.info("Encrypting a secret");
       EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
           null, SecretText.builder().name(UUID.randomUUID().toString()).usageRestrictions(usageRestrictions).build());
       String recordId = saveEncryptedData(encryptedData);
@@ -416,7 +416,7 @@ public class SecretManagerImpl implements SecretManager {
                                       .filter(ID_KEY, encryptedDataId)
                                       .get();
     if (encryptedData == null) {
-      logger.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
+      log.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
       return Optional.empty();
     }
 
@@ -434,7 +434,7 @@ public class SecretManagerImpl implements SecretManager {
     // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
     EncryptedRecordData encryptedRecordData;
     if (encryptionConfig.isGlobalKms()) {
-      logger.info(
+      log.info(
           "Pre-processing the encrypted secret by global KMS secret manager for secret {}", encryptedData.getUuid());
 
       encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
@@ -445,7 +445,7 @@ public class SecretManagerImpl implements SecretManager {
       // fail.
       if (encryptedRecordData.getEncryptionType() == LOCAL) {
         encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-        logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
+        log.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
       }
     } else {
       encryptedRecordData = SecretManager.buildRecordData(encryptedData);
@@ -543,7 +543,7 @@ public class SecretManagerImpl implements SecretManager {
     if (isNotEmpty(workflowExecutionId)) {
       WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
       if (workflowExecution == null) {
-        logger.warn("No workflow execution with id {} found.", workflowExecutionId);
+        log.warn("No workflow execution with id {} found.", workflowExecutionId);
       } else {
         SecretUsageLog usageLog = SecretUsageLog.builder()
                                       .encryptedDataId(encryptedData.getUuid())
@@ -921,11 +921,11 @@ public class SecretManagerImpl implements SecretManager {
       // To test if the encrypted Data path is valid.
       decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultSecretRef.vaultConfig);
     } catch (Exception e) {
-      logger.error("Failed to decrypted vault secret at path " + encryptedData.getPath(), e);
+      log.error("Failed to decrypted vault secret at path " + encryptedData.getPath(), e);
     }
 
     if (isNotEmpty(decryptedValue)) {
-      logger.info("Created a vault path and key reference secret '{}' to refer to the Vault secret at {}", secretName,
+      log.info("Created a vault path and key reference secret '{}' to refer to the Vault secret at {}", secretName,
           vaultSecretRef.fullPath);
     } else {
       // If invalid reference, delete the encrypted data instance.
@@ -1110,7 +1110,7 @@ public class SecretManagerImpl implements SecretManager {
     // Can't not transition secrets with path reference to a different secret manager. Customer has to manually
     // transfer.
     if (isNotEmpty(encryptedData.getPath())) {
-      logger.warn(
+      log.warn(
           "Encrypted secret '{}' with path '{}' in account '{}' is not allowed to be transferred to a different secret manager.",
           encryptedData.getName(), encryptedData.getPath(), accountId);
       return;
@@ -1212,7 +1212,7 @@ public class SecretManagerImpl implements SecretManager {
         break;
     }
     if (secretName != null) {
-      logger.info("Deleting secret name {} from secret manager {} of type {} in account {}", secretName,
+      log.info("Deleting secret name {} from secret manager {} of type {} in account {}", secretName,
           fromConfig.getUuid(), fromEncryptionType, accountId);
     }
 
@@ -1417,9 +1417,9 @@ public class SecretManagerImpl implements SecretManager {
       try {
         String secretId = saveSecret(accountId, secretText);
         secretIds.add(secretId);
-        logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
+        log.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
       } catch (WingsException e) {
-        logger.warn("Failed to save import secret '{}' with error: {}", secretText.getName(), e.getMessage());
+        log.warn("Failed to save import secret '{}' with error: {}", secretText.getName(), e.getMessage());
       }
     }
     return secretIds;
@@ -1437,7 +1437,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionConfig harnessSecretManager = localEncryptionService.getEncryptionConfig(accountId);
     List<SecretManagerConfig> allEncryptionConfigs = listSecretManagers(accountId);
     for (EncryptionConfig encryptionConfig : allEncryptionConfigs) {
-      logger.info("Transitioning secret from secret manager {} of type {} into Harness secret manager for account {}",
+      log.info("Transitioning secret from secret manager {} of type {} into Harness secret manager for account {}",
           encryptionConfig.getUuid(), encryptionConfig.getEncryptionType(), accountId);
       transitionSecrets(accountId, encryptionConfig.getEncryptionType(), encryptionConfig.getUuid(),
           harnessSecretManager.getEncryptionType(), harnessSecretManager.getUuid());
@@ -1494,7 +1494,7 @@ public class SecretManagerImpl implements SecretManager {
           throw new IllegalStateException("Unexpected value: " + config.getEncryptionType());
       }
     }
-    logger.info("Cleared default flag for secret managers in account {}.", accountId);
+    log.info("Cleared default flag for secret managers in account {}.", accountId);
   }
 
   @Override
@@ -1934,7 +1934,7 @@ public class SecretManagerImpl implements SecretManager {
 
         case KMS: {
           file = new File(Files.createTempDir(), generateUuid());
-          logger.info("Temp file path [{}]", file.getAbsolutePath());
+          log.info("Temp file path [{}]", file.getAbsolutePath());
           fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
           kmsService.decryptToStream(file, accountId, encryptedData, output);
           break;
@@ -1942,7 +1942,7 @@ public class SecretManagerImpl implements SecretManager {
 
         case GCP_KMS: {
           file = new File(Files.createTempDir(), generateUuid());
-          logger.info("Temp file path [{}]", file.getAbsolutePath());
+          log.info("Temp file path [{}]", file.getAbsolutePath());
           fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
           gcpKmsService.decryptToStream(file, accountId, encryptedData, output);
           break;
@@ -1976,7 +1976,7 @@ public class SecretManagerImpl implements SecretManager {
       if (file != null && file.exists()) {
         boolean deleted = file.delete();
         if (!deleted) {
-          logger.warn("Temporary file {} can't be deleted.", file.getAbsolutePath());
+          log.warn("Temporary file {} can't be deleted.", file.getAbsolutePath());
         }
       }
     }
@@ -2159,7 +2159,7 @@ public class SecretManagerImpl implements SecretManager {
           // Otherwise it should be saved in the default secret store of the account.
           encryptionConfig = getSecretManager(accountId, kmsId, AZURE_VAULT);
           AzureVaultConfig azureConfig = (AzureVaultConfig) encryptionConfig;
-          logger.info("Creating file in azure vault with secret name: {}, in vault: {}, in accountName: {}", name,
+          log.info("Creating file in azure vault with secret name: {}, in vault: {}, in accountName: {}", name,
               azureConfig.getName(), accountId);
           newEncryptedFile = azureVaultService.encryptFile(accountId, azureConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(azureConfig.getUuid());
@@ -2196,8 +2196,8 @@ public class SecretManagerImpl implements SecretManager {
               AzureVaultConfig azureConfig =
                   azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
               azureVaultService.delete(accountId, secretName, azureConfig);
-              logger.info("Deleting file {} after update from vault {} in accountid {}", secretName,
-                  azureConfig.getName(), accountId);
+              log.info("Deleting file {} after update from vault {} in accountid {}", secretName, azureConfig.getName(),
+                  accountId);
               break;
             default:
               // Does not apply to other secret manager types

@@ -51,7 +51,7 @@ public class AutoLogContext implements AutoCloseable {
           break;
         case OVERRIDE_ERROR:
           try (AutoLogContext ignore = new MdcKeyLogContext(key, OVERRIDE_ERROR)) {
-            logger.error(
+            log.error(
                 format("Initialized in the same thread with a different value '%s'. Keeping the original value '%s'",
                     value, original),
                 new Exception(""));

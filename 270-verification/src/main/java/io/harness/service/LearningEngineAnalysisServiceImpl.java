@@ -154,16 +154,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         wingsPersistence.save(analysisTask);
         isTaskCreated = true;
       } else {
-        logger.warn("task is already marked success for min {}. task {}", analysisTask.getAnalysis_minute(),
+        log.warn("task is already marked success for min {}. task {}", analysisTask.getAnalysis_minute(),
             learningEngineAnalysisTask);
       }
     } else {
-      logger.warn("task is already {}. Will not queue for minute {}, {}",
-          learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
-          learningEngineAnalysisTask);
+      log.warn("task is already {}. Will not queue for minute {}, {}", learningEngineAnalysisTask.getExecutionStatus(),
+          analysisTask.getAnalysis_minute(), learningEngineAnalysisTask);
     }
     if (isTaskCreated) {
-      logger.info("LE task queued for analysis type: {} and minute: {}", analysisTask.getMl_analysis_type(),
+      log.info("LE task queued for analysis type: {} and minute: {}", analysisTask.getMl_analysis_type(),
           analysisTask.getAnalysis_minute());
     }
     return isTaskCreated;
@@ -177,7 +176,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisTask.getAnalysis_minute())
             .get();
     if (experimentalAnalysisTask != null) {
-      logger.info("task already queued for experiment {}", analysisTask.getState_execution_id());
+      log.info("task already queued for experiment {}", analysisTask.getState_execution_id());
       return false;
     }
     analysisTask.setVersion(learningEngineApiVersion);
@@ -226,12 +225,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (task != null && task.getRetry() > LearningEngineAnalysisTask.RETRIES) {
       // If some task has failed for more than 3 times, mark status as failed.
-      logger.info("LearningEngine task {} has failed 3 or more times. Setting the status to FAILED", task.getUuid());
+      log.info("LearningEngine task {} has failed 3 or more times. Setting the status to FAILED", task.getUuid());
       try {
         wingsPersistence.updateField(
             LearningEngineAnalysisTask.class, task.getUuid(), "executionStatus", ExecutionStatus.FAILED);
       } catch (DuplicateKeyException e) {
-        logger.info("task {} for state {} is already marked successful", task.getUuid(), task.getState_execution_id());
+        log.info("task {} for state {} is already marked successful", task.getUuid(), task.getState_execution_id());
       }
       return null;
     }
@@ -340,7 +339,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void markCompleted(String taskId) {
     long currentTimeMillis = Instant.now().toEpochMilli();
     if (taskId == null) {
-      logger.warn("taskId is null");
+      log.warn("taskId is null");
       return;
     }
     LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
@@ -353,7 +352,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                         task.getAnalysis_minute(), task.getState_execution_id()),
           ClusterLevel.valueOf(task.getCluster_level()), task.getMl_analysis_type(), task.getAnalysis_minute(),
           task.is24x7Task());
-      logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
+      log.info("Job has been marked as SUCCESS for taskId : {}", taskId);
     }
   }
 
@@ -381,7 +380,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public void markExpTaskCompleted(String taskId) {
     if (taskId == null) {
-      logger.warn("taskId is null");
+      log.warn("taskId is null");
       return;
     }
     wingsPersistence.updateField(LearningEngineExperimentalAnalysisTask.class, taskId,
@@ -440,7 +439,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public void markJobStatus(AnalysisContext verificationAnalysisTask, ExecutionStatus executionStatus) {
-    logger.info(
+    log.info(
         "Marking job as {} for stateExecutionId : {}", executionStatus, verificationAnalysisTask.getStateExecutionId());
     wingsPersistence.updateField(
         AnalysisContext.class, verificationAnalysisTask.getUuid(), "executionStatus", executionStatus);
@@ -468,10 +467,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public boolean notifyFailure(String taskId, LearningEngineError learningEngineError) {
-    logger.info("error payload {}", learningEngineError);
+    log.info("error payload {}", learningEngineError);
     final LearningEngineAnalysisTask analysisTask = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
     if (analysisTask == null) {
-      logger.error("No task found with id {}", taskId);
+      log.error("No task found with id {}", taskId);
       return false;
     }
 
@@ -500,7 +499,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
 
     if (!isStateValid(analysisContext.getAppId(), analysisContext.getStateExecutionId())) {
-      logger.info("For {} state is not in running state", analysisContext.getStateExecutionId());
+      log.info("For {} state is not in running state", analysisContext.getStateExecutionId());
       return false;
     }
 
@@ -524,7 +523,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       final VerificationDataAnalysisResponse response =
           VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.ERROR);
-      logger.info("Notifying state id: {} , corr id: {}", analysisContext.getStateExecutionId(),
+      log.info("Notifying state id: {} , corr id: {}", analysisContext.getStateExecutionId(),
           analysisContext.getCorrelationId());
 
       managerClientHelper.notifyManagerForVerificationAnalysis(analysisContext, response);
@@ -544,7 +543,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId))
           .getResource();
     } catch (Exception e) {
-      logger.error("for {} failed to reach to manager. Will assume that state is still valid", e);
+      log.error("for {} failed to reach to manager. Will assume that state is still valid", e);
       return true;
     }
   }
@@ -560,7 +559,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         return false;
       }
     } else {
-      logger.info("Unexpected fieldname provided in shouldUseSupervisedModel. Name: {}", fieldName);
+      log.info("Unexpected fieldname provided in shouldUseSupervisedModel. Name: {}", fieldName);
       return false;
     }
 
@@ -572,15 +571,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         dataStoreService.list(SupervisedTrainingStatus.class, supervisedTrainingStatusPageRequest);
     if (isNotEmpty(trainingStatuses)) {
       if (trainingStatuses.size() > 1) {
-        logger.info("More than one supervised training status found for service {} : {}", serviceId, trainingStatuses);
+        log.info("More than one supervised training status found for service {} : {}", serviceId, trainingStatuses);
         return false;
       } else {
-        logger.info("One supervised training status found for service {}. Returning {}", serviceId,
+        log.info("One supervised training status found for service {}. Returning {}", serviceId,
             trainingStatuses.get(0).isSupervisedReady());
         return trainingStatuses.get(0).isSupervisedReady();
       }
     }
-    logger.info("No supervised training status found for serviceId {}", serviceId);
+    log.info("No supervised training status found for serviceId {}", serviceId);
     return false;
   }
 
@@ -597,7 +596,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (phaseElement != null) {
       return phaseElement.getServiceElement().getUuid();
     }
-    logger.error("There is no serviceID associated with the stateExecutionId: " + instance.getUuid());
+    log.error("There is no serviceID associated with the stateExecutionId: " + instance.getUuid());
     return null;
   }
   /**
@@ -628,7 +627,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         ? 1
         : getNextFibonacciNumber(previousTask.getService_guard_backoff_count());
     if (nextBackoffCount > BACKOFF_LIMIT) {
-      logger.info(
+      log.info(
           "For cvConfig {} analysisMinute {} the count has reached the total backoff time. Capping the next backoff count.",
           cvConfig, analysisMinute);
       nextBackoffCount = BACKOFF_LIMIT;
@@ -651,12 +650,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     LearningEngineAnalysisTask task = taskQuery.get();
     if (task == null) {
-      logger.info(
+      log.info(
           "There are no tasks running or queued for cvConfig {} after analysisMinute {}", cvConfigId, analysisMinute);
       return false;
     } else {
-      logger.info(
-          "Found a task running or queued for cvConfig {} and minute {}", cvConfigId, task.getAnalysis_minute());
+      log.info("Found a task running or queued for cvConfig {} and minute {}", cvConfigId, task.getAnalysis_minute());
       return true;
     }
   }
@@ -685,7 +683,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (Timestamp.currentMinuteBoundary() >= Timestamp.minuteBoundary(nextSchedulableTime)) {
       return true;
     } else {
-      logger.info("For cvConfig {} analysisMinute {} the next schedule time is {}", cvConfig, analysisMinute,
+      log.info("For cvConfig {} analysisMinute {} the next schedule time is {}", cvConfig, analysisMinute,
           nextSchedulableTime);
       return false;
     }

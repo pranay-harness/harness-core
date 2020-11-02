@@ -33,13 +33,13 @@ public class MigrateServiceNowCriteriaInPipelines implements Migration {
     List<Account> allAccounts = accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
     for (Account account : allAccounts) {
       String accountId = account.getUuid();
-      logger.info(StringUtils.join(DEBUG_LINE, "Starting Servicenow Critreia migration for accountId:", accountId));
+      log.info(StringUtils.join(DEBUG_LINE, "Starting Servicenow Critreia migration for accountId:", accountId));
       migrate(account);
     }
   }
 
   public void migrate(Account account) {
-    logger.info(StringUtils.join(
+    log.info(StringUtils.join(
         DEBUG_LINE, "Starting Servicenow Critreia migration for Pipelines, accountId ", account.getUuid()));
 
     List<Pipeline> pipelines = WorkflowAndPipelineMigrationUtils.fetchAllPipelinesForAccount(
@@ -49,7 +49,7 @@ public class MigrateServiceNowCriteriaInPipelines implements Migration {
       try {
         migrate(pipelineService.readPipeline(pipeline.getAppId(), pipeline.getUuid(), true));
       } catch (Exception e) {
-        logger.error("[SERIVCENOW_CRITERIA_MIGRATION] Migration failed for PipelineId: " + pipeline.getUuid()
+        log.error("[SERIVCENOW_CRITERIA_MIGRATION] Migration failed for PipelineId: " + pipeline.getUuid()
             + ExceptionUtils.getMessage(e));
       }
     }
@@ -63,7 +63,7 @@ public class MigrateServiceNowCriteriaInPipelines implements Migration {
       PipelineStageElement stageElement = stage.getPipelineStageElements().get(0);
 
       if (stageElement.getType().equals(StateType.APPROVAL.name())) {
-        logger.info("Migrating approval state in pipeline");
+        log.info("Migrating approval state in pipeline");
         modified =
             WorkflowAndPipelineMigrationUtils.updateServiceNowProperties(stageElement.getProperties()) || modified;
       }
@@ -72,10 +72,10 @@ public class MigrateServiceNowCriteriaInPipelines implements Migration {
     if (modified) {
       try {
         pipelineService.update(pipeline, true, false);
-        logger.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
+        log.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("[SERVICENOW_CRITERIA_ERROR] Error updating pipeline " + pipeline.getUuid(), e);
+        log.error("[SERVICENOW_CRITERIA_ERROR] Error updating pipeline " + pipeline.getUuid(), e);
       }
     }
   }

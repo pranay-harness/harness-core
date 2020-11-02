@@ -54,9 +54,9 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
     }
     config.setNettyThreads(redisLockConfig.getNettyThreads());
     config.setUseScriptCache(redisLockConfig.isUseScriptCache());
-    logger.info("Starting redis client");
+    log.info("Starting redis client");
     this.client = Redisson.create(config);
-    logger.info("Started redis client");
+    log.info("Started redis client");
     String envNamespace = redisLockConfig.getEnvNamespace();
     this.lockNamespace = EmptyPredicate.isEmpty(envNamespace) ? LOCK_PREFIX.concat(":")
                                                               : String.format("%s:%s:", envNamespace, LOCK_PREFIX);
@@ -73,7 +73,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(0, timeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
-        logger.debug("Lock acquired on {} for timeout {}", name, timeout);
+        log.debug("Lock acquired on {} for timeout {}", name, timeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {
@@ -133,7 +133,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(waitTimeout.toMillis(), lockTimeout.toMillis(), TimeUnit.MILLISECONDS);
       if (locked) {
-        logger.debug("Acquired lock on {} for {} having a wait Timeout of {}", name, lockTimeout, waitTimeout);
+        log.debug("Acquired lock on {} for {} having a wait Timeout of {}", name, lockTimeout, waitTimeout);
         return RedisAcquiredLock.builder().lock(lock).build();
       }
     } catch (Exception ex) {

@@ -328,7 +328,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         return entityId;
       }
     } catch (Exception e) {
-      logger.info("Entity Id could not be converted : ", e);
+      log.info("Entity Id could not be converted : ", e);
       return entityId;
     }
   }
@@ -342,7 +342,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         return entityId;
       }
     } catch (Exception e) {
-      logger.info("Entity Id could not be converted : ", e);
+      log.info("Entity Id could not be converted : ", e);
       return entityId;
     }
   }
@@ -356,7 +356,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         return entityId;
       }
     } catch (Exception e) {
-      logger.info("Entity Id could not be converted : ", e);
+      log.info("Entity Id could not be converted : ", e);
       return entityId;
     }
   }
@@ -387,7 +387,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         return entityId;
       }
     } catch (Exception e) {
-      logger.info("Entity Id could not be converted : ", e);
+      log.info("Entity Id could not be converted : ", e);
       return entityId;
     }
   }
@@ -460,7 +460,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
         account.setLicenseInfo(licenseInfo);
       } else {
-        logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
+        log.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
       }
     }
 

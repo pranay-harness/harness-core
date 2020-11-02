@@ -55,11 +55,11 @@ public class WebhookTriggerProcessorUtils {
                                                               .setHeader(header.build())
                                                               .build());
     } catch (StatusRuntimeException e) {
-      logger.error("Failed to parse webhook payload {}", eventPayload);
+      log.error("Failed to parse webhook payload {}", eventPayload);
       throw e;
     }
 
-    logger.info(parseWebhookResponse.toString());
+    log.info(parseWebhookResponse.toString());
     return convertWebhookResponse(parseWebhookResponse);
   }
 
@@ -74,7 +74,7 @@ public class WebhookTriggerProcessorUtils {
       }
       return converPushHook(pushHook);
     } else {
-      logger.error("Unknown webhook event");
+      log.error("Unknown webhook event");
       throw new InvalidRequestException("Unknown webhook event", USER);
     }
   }

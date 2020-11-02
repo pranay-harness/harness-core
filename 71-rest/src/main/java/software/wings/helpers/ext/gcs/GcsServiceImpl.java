@@ -121,7 +121,7 @@ public class GcsServiceImpl implements GcsService {
     } catch (WingsException e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving artifacts from ", e);
+      log.error("Error occurred while retrieving artifacts from ", e);
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
@@ -198,7 +198,7 @@ public class GcsServiceImpl implements GcsService {
             new GCSPair(so.getName(), Long.toString(GCS_DATE_FORMAT.parse(so.getUpdated().toString()).getTime())));
       }
     } catch (Exception e) {
-      logger.error("Exception occurred while parsing GCS objects", USER);
+      log.error("Exception occurred while parsing GCS objects", USER);
     }
   }
 

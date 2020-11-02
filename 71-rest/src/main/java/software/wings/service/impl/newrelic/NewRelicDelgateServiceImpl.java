@@ -95,7 +95,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     Set<String> batchedSpecialCharMetrics = new HashSet<>();
     for (NewRelicMetric metric : metrics) {
       if (checkNotAllowedStrings && containsNotAllowedChars(metric.getName())) {
-        logger.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
+        log.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
             NOT_ALLOWED_STRINGS);
         continue;
       }
@@ -410,9 +410,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         return newRelicMetrics;
       } catch (RuntimeException e) {
         failedAttempts++;
-        logger.warn("txn name fetch failed. trial num: {}", failedAttempts, e);
+        log.warn("txn name fetch failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          logger.error("txn name fetch failed after {} retries", failedAttempts, e);
+          log.error("txn name fetch failed after {} retries", failedAttempts, e);
           throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
         }
         sleep(ofMillis(1000));
@@ -511,7 +511,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       return metricsWithNoData;
     } catch (RuntimeException e) {
       if (!failOnException) {
-        logger.info("for {} marking all metrics to be not with data", apiCallLog.getStateExecutionId(), e);
+        log.info("for {} marking all metrics to be not with data", apiCallLog.getStateExecutionId(), e);
         return metricNames;
       }
       throw e;
@@ -654,7 +654,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
           .build();
     } catch (Exception e) {
-      logger.info("Error while getting data for node", e);
+      log.info("Error while getting data for node", e);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
   }

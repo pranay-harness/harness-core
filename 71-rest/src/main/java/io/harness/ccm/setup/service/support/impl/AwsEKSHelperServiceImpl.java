@@ -32,7 +32,7 @@ public class AwsEKSHelperServiceImpl implements AwsEKSHelperService {
       AmazonEKSClient amazonEKSClient = getAmazonEKSClient(region, awsCrossAccountAttributes);
       return listEKSClusters(amazonEKSClient);
     } catch (Exception ex) {
-      logger.info(exceptionMessage, region, ex);
+      log.info(exceptionMessage, region, ex);
       return Collections.emptyList();
     }
   }
@@ -43,10 +43,10 @@ public class AwsEKSHelperServiceImpl implements AwsEKSHelperService {
       AmazonEKSClient amazonEKSClient = getAmazonEKSClient(region, awsCrossAccountAttributes);
       listEKSClusters(amazonEKSClient);
     } catch (AWSSecurityTokenServiceException stex) {
-      logger.info(exceptionMessage, region, stex);
+      log.info(exceptionMessage, region, stex);
       return false;
     } catch (Exception ex) {
-      logger.info(exceptionMessage, region, ex);
+      log.info(exceptionMessage, region, ex);
     }
     return true;
   }

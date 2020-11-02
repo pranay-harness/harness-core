@@ -69,7 +69,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public void orchestrate(String verificationTaskId) {
     Preconditions.checkNotNull(verificationTaskId, "verificationTaskId cannot be null when trying to orchestrate");
-    logger.info("Orchestrating for verificationTaskId: {}", verificationTaskId);
+    log.info("Orchestrating for verificationTaskId: {}", verificationTaskId);
     AnalysisOrchestrator orchestrator = getOrchestrator(verificationTaskId);
     orchestrateAtRunningState(orchestrator);
   }
@@ -77,7 +77,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
-      logger.info(errMsg);
+      log.info(errMsg);
       return;
     }
 
@@ -93,7 +93,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         orchestrateNewAnalysisStateMachine(orchestrator);
         break;
       case RUNNING:
-        logger.info("For {}, state machine is currently RUNNING. "
+        log.info("For {}, state machine is currently RUNNING. "
                 + "We will call executeStateMachine() to handover execution to state machine.",
             orchestrator.getVerificationTaskId());
         stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
@@ -103,10 +103,10 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         orchestrateFailedStateMachine(currentlyExecutingStateMachine);
         break;
       case COMPLETED:
-        logger.info("Analysis for the entire duration is done. Time to close down");
+        log.info("Analysis for the entire duration is done. Time to close down");
         break;
       default:
-        logger.info("Unknown analysis status of the state machine under execution");
+        log.info("Unknown analysis status of the state machine under execution");
     }
     hPersistence.save(orchestrator);
   }
@@ -122,7 +122,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       orchestrator.setStatus(AnalysisStatus.RUNNING);
       hPersistence.save(orchestrator);
     } else {
-      logger.info("There is currently nothing new to analyze for cvConfig: {}", orchestrator.getVerificationTaskId());
+      log.info("There is currently nothing new to analyze for cvConfig: {}", orchestrator.getVerificationTaskId());
     }
   }
 }

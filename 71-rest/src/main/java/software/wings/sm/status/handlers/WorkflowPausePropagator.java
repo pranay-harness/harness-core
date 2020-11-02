@@ -23,7 +23,7 @@ public class WorkflowPausePropagator implements WorkflowStatusPropagator {
     WorkflowExecution updatedExecution = propagatorHelper.updateStatus(
         updateInfo.getAppId(), updateInfo.getWorkflowExecutionId(), asList(QUEUED, RUNNING), PAUSED);
     if (updatedExecution == null) {
-      logger.info("Updating status to paused failed for execution id: {}", updateInfo.getWorkflowExecutionId());
+      log.info("Updating status to paused failed for execution id: {}", updateInfo.getWorkflowExecutionId());
     } else {
       workflowExecutionUpdate.publish(updatedExecution);
     }
@@ -34,7 +34,7 @@ public class WorkflowPausePropagator implements WorkflowStatusPropagator {
       WorkflowExecution pipelineExecution = propagatorHelper.updateStatus(
           updateInfo.getAppId(), execution.getPipelineExecutionId(), singletonList(RUNNING), PAUSED);
       if (pipelineExecution == null) {
-        logger.info("Updating status to paused failed for Pipeline with id: {}", execution.getPipelineExecution());
+        log.info("Updating status to paused failed for Pipeline with id: {}", execution.getPipelineExecution());
       }
     }
   }

@@ -27,7 +27,7 @@ public class ManualInterventionFilterMatcher implements FilterMatcher {
 
     ManualInterventionAlertFilters manualInterventionAlertFilters = filterConditions.getManualInterventionFilters();
     if (null == manualInterventionAlertFilters) {
-      logger.error("No manualInterventionFilters specified. Alert will be considered to not match filter.");
+      log.error("No manualInterventionFilters specified. Alert will be considered to not match filter.");
       return false;
     }
 
@@ -42,7 +42,7 @@ public class ManualInterventionFilterMatcher implements FilterMatcher {
     conditions.add(() -> {
       ManualInterventionNeededAlert alertData = (ManualInterventionNeededAlert) alert.getAlertData();
       if (null == alertData) {
-        logger.error("Manual Intervention Alert data is null. Alert: {}", alert);
+        log.error("Manual Intervention Alert data is null. Alert: {}", alert);
         return false;
       }
       return envIds.contains(alertData.getEnvId());

@@ -260,7 +260,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       return (R) environment;
     } else {
       String msg = "Unsupported type " + type + " for id " + uuid;
-      logger.error(msg);
+      log.error(msg);
       throw new WingsException(msg);
     }
   }

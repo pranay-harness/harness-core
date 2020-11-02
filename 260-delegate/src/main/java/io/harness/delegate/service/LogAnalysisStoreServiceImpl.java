@@ -46,7 +46,7 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
           throw new IllegalStateException("Invalid state: " + stateType);
       }
     } catch (Exception ex) {
-      logger.error("Exception while saving log data for stateExecutionId: {}", stateExecutionId, ex);
+      log.error("Exception while saving log data for stateExecutionId: {}", stateExecutionId, ex);
       return false;
     }
   }

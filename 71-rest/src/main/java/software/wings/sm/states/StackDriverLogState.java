@@ -93,7 +93,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

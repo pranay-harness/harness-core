@@ -154,7 +154,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   void syncInstancesInternal(String appId, String infraMappingId,
       @NotNull List<DeploymentSummary> newDeploymentSummaries, AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse,
       InstanceSyncFlow instanceSyncFlow) {
-    logger.info("# Performing Aws Lambda Instance Sync");
+    log.info("# Performing Aws Lambda Instance Sync");
     final AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = getInfraMapping(infraMappingId, appId);
     final SettingAttribute cloudProviderSetting = cloudProviderSetting(awsLambdaInfraStructureMapping);
     final AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
@@ -162,7 +162,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
 
     final Collection<ServerlessInstance> activeInstancesInDB =
         emptyIfNull(getActiveServerlessInstances(appId, infraMappingId));
-    logger.info("Total no of instances found in DB for AppId: {}, "
+    log.info("Total no of instances found in DB for AppId: {}, "
             + "No of instances in DB: {}, No of new instances to add: {}",
         appId, activeInstancesInDB.size(), newDeploymentSummaries.size());
 
@@ -176,7 +176,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
 
   private void handlePerpetualInstanceSync(
       AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse, Collection<ServerlessInstance> activeInstancesInDB) {
-    logger.info("Syncing existing Aws Lambda Instances from perpetual task");
+    log.info("Syncing existing Aws Lambda Instances from perpetual task");
     activeInstancesInDB.stream()
         .filter(awsLambdaInstance -> hasSameFunctionNameAndVersion(awsLambdaInstance, awsLambdaDetailsResponse))
         .forEach(instanceToUpdate -> syncInDBInstanceForPerpetualTask(instanceToUpdate, awsLambdaDetailsResponse));
@@ -198,7 +198,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
       handleNewDeploymentInternal(
           newDeploymentSummaries, activeInstancesInDB, awsLambdaInfraStructureMapping, awsConfig, encryptedDataDetails);
     } else {
-      logger.info("Syncing existing Aws Lambda Instances");
+      log.info("Syncing existing Aws Lambda Instances");
       activeInstancesInDB.forEach(instanceToUpdate
           -> syncInDBInstance(awsLambdaInfraStructureMapping, awsConfig, encryptedDataDetails, instanceToUpdate));
     }
@@ -209,7 +209,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
     final List<String> instanceIdsToDelete = instancesInDB.stream().map(ServerlessInstance::getUuid).collect(toList());
 
     if (isNotEmpty(instanceIdsToDelete)) {
-      logger.info("Deleting instance Ids ={}", instanceIdsToDelete);
+      log.info("Deleting instance Ids ={}", instanceIdsToDelete);
       serverlessInstanceService.delete(instanceIdsToDelete);
     }
   }
@@ -219,10 +219,10 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
       Collection<ServerlessInstance> activeInstancesInDB, AwsLambdaInfraStructureMapping infrastructureMapping,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isNotEmpty(newDeploymentSummaries)) {
-      logger.info("Handling new Aws Lambda Deployments with deployment Summary Ids : [{}]",
+      log.info("Handling new Aws Lambda Deployments with deployment Summary Ids : [{}]",
           newDeploymentSummaries.stream().map(DeploymentSummary::getUuid).collect(joining(",")));
       // functions to delete
-      logger.info("deleting active instances");
+      log.info("deleting active instances");
       deleteInstances(activeInstancesInDB);
       // functions to update, we delete all previous versions of that function
       // functions to add
@@ -239,7 +239,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
     try {
       final AwsLambdaDeploymentInfo deploymentInfo = (AwsLambdaDeploymentInfo) newDeploymentSummary.getDeploymentInfo();
 
-      logger.info("Performing sync for Aws Lambda Function: [{}], version: [{}], Deployment Summary UID =[{}] ",
+      log.info("Performing sync for Aws Lambda Function: [{}], version: [{}], Deployment Summary UID =[{}] ",
           deploymentInfo.getFunctionName(), deploymentInfo.getVersion(), newDeploymentSummary.getUuid());
 
       final AwsLambdaInstanceInfo lambdaInstanceInfo =
@@ -247,18 +247,18 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
               new Date(newDeploymentSummary.getDeployedAt()), infrastructureMapping, awsConfig, encryptedDataDetails);
 
       if (lambdaInstanceInfo == null) {
-        logger.warn("Could not find Aws Lambda Function =[{}], version =[{}]. Skipping it",
+        log.warn("Could not find Aws Lambda Function =[{}], version =[{}]. Skipping it",
             deploymentInfo.getFunctionName(), deploymentInfo.getVersion());
       } else {
         final ServerlessInstance serverlessInstance =
             buildInstanceForNewDeployment(infrastructureMapping, newDeploymentSummary, lambdaInstanceInfo);
         // save instance
         final ServerlessInstance savedServerlessInstance = serverlessInstanceService.save(serverlessInstance);
-        logger.info("Successfully Synced Aws Lambda Function: [{}], version: [{}]. Instance id = [{}] ",
+        log.info("Successfully Synced Aws Lambda Function: [{}], version: [{}]. Instance id = [{}] ",
             deploymentInfo.getFunctionName(), deploymentInfo.getVersion(), savedServerlessInstance.getUuid());
       }
     } catch (Exception e) {
-      logger.error(" Error handling new deployment for aws lambda function. skipping the sync", e);
+      log.error(" Error handling new deployment for aws lambda function. skipping the sync", e);
     }
   }
   @VisibleForTesting
@@ -299,17 +299,17 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
       List<EncryptedDataDetail> encryptedDataDetails, ServerlessInstance instanceToUpdate) {
     final String functionName = instanceToUpdate.getLambdaInstanceKey().getFunctionName();
     final String functionVersion = instanceToUpdate.getLambdaInstanceKey().getFunctionVersion();
-    logger.info("Syncing existing instance id=[{}], function name=[{}], function version=[{}]",
-        instanceToUpdate.getUuid(), functionName, functionVersion);
+    log.info("Syncing existing instance id=[{}], function name=[{}], function version=[{}]", instanceToUpdate.getUuid(),
+        functionName, functionVersion);
     try {
       final AwsLambdaInstanceInfo lambdaInstanceInfo = getLambdaInstanceInfo(functionName, functionVersion,
           new Date(instanceToUpdate.getLastDeployedAt()), infrastructureMapping, awsConfig, encryptedDataDetails);
       syncLambdaInstanceInDB(instanceToUpdate, lambdaInstanceInfo);
 
     } catch (NoDelegatesException ex) {
-      logger.warn("Delegates are not available ", ex.getMessage());
+      log.warn("Delegates are not available ", ex.getMessage());
     } catch (Exception e) {
-      logger.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
+      log.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
     }
   }
 
@@ -318,15 +318,15 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
       ServerlessInstance instanceToUpdate, AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse) {
     final String functionName = instanceToUpdate.getLambdaInstanceKey().getFunctionName();
     final String functionVersion = instanceToUpdate.getLambdaInstanceKey().getFunctionVersion();
-    logger.info("Syncing existing instance id=[{}], function name=[{}], function version=[{}]",
-        instanceToUpdate.getUuid(), functionName, functionVersion);
+    log.info("Syncing existing instance id=[{}], function name=[{}], function version=[{}]", instanceToUpdate.getUuid(),
+        functionName, functionVersion);
     try {
       final AwsLambdaInstanceInfo lambdaInstanceInfo = createLambdaInstanceInfo(
           awsLambdaDetailsResponse.getLambdaDetails(), awsLambdaDetailsResponse.getInvocationCountList());
       syncLambdaInstanceInDB(instanceToUpdate, lambdaInstanceInfo);
 
     } catch (Exception e) {
-      logger.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
+      log.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
     }
   }
 
@@ -335,7 +335,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
       handleFunctionNotExist(instanceToUpdate);
     } else {
       if (!somethingUpdated(lambdaInstanceInfo, instanceToUpdate.getInstanceInfo())) {
-        logger.info("Lambda details and Invocation count have not changed. Skipping update.");
+        log.info("Lambda details and Invocation count have not changed. Skipping update.");
       } else {
         handleNewUpdatesToInstance(instanceToUpdate, lambdaInstanceInfo);
       }
@@ -346,7 +346,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   AwsLambdaInstanceInfo getLambdaInstanceInfo(String functionName, String version, Date lastDeployedAt,
       AwsLambdaInfraStructureMapping infrastructureMapping, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails) {
-    logger.info("Fetching details for Aws Lambda Function: [{}] , version =[{}]", functionName, version);
+    log.info("Fetching details for Aws Lambda Function: [{}] , version =[{}]", functionName, version);
 
     final AwsLambdaDetails lambdaDetails =
         getFunctionDetails(infrastructureMapping, awsConfig, encryptedDataDetails, functionName, version);
@@ -361,7 +361,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
     if (lambdaDetails == null) {
       return null;
     }
-    logger.info("Fetching Invocation count for Aws Lambda Function: [{}] ", functionName);
+    log.info("Fetching Invocation count for Aws Lambda Function: [{}] ", functionName);
     List<InvocationCount> invocationCountList =
         prepareInvocationCountList(functionName, lastDeployedAt, INVOCATION_COUNT_KEY_LIST,
             infrastructureMapping.getAppId(), infrastructureMapping.getRegion(), awsConfig, encryptedDataDetails);
@@ -373,18 +373,18 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   void handleFunctionNotExist(ServerlessInstance instanceOfDeletedFunction) {
     final String functionName = instanceOfDeletedFunction.getLambdaInstanceKey().getFunctionName();
     final String version = instanceOfDeletedFunction.getLambdaInstanceKey().getFunctionVersion();
-    logger.info("Could not find Aws Lambda Function =[{}], version =[{}]. Deleting instance Id =[{}] it", functionName,
+    log.info("Could not find Aws Lambda Function =[{}], version =[{}]. Deleting instance Id =[{}] it", functionName,
         version, instanceOfDeletedFunction.getUuid());
     serverlessInstanceService.delete(Collections.singletonList(instanceOfDeletedFunction.getUuid()));
   }
   @VisibleForTesting
   ServerlessInstance handleNewUpdatesToInstance(ServerlessInstance oldInstance, AwsLambdaInstanceInfo newInstanceInfo) {
-    logger.info("Handling new updates to function");
+    log.info("Handling new updates to function");
     final ServerlessInstance newInstance = copyForUpdate(oldInstance, newInstanceInfo);
-    logger.info("Deleting instances with Id = [{}]", oldInstance.getUuid());
+    log.info("Deleting instances with Id = [{}]", oldInstance.getUuid());
     serverlessInstanceService.delete(Collections.singletonList(oldInstance.getUuid()));
     final ServerlessInstance savedServerlessInstance = serverlessInstanceService.save(newInstance);
-    logger.info("Created new instance for  Lambda Function: [{}], version: [{}]. Instance id = [{}] ",
+    log.info("Created new instance for  Lambda Function: [{}], version: [{}]. Instance id = [{}] ",
         newInstanceInfo.getFunctionName(), newInstanceInfo.getVersion(), savedServerlessInstance.getUuid());
     return savedServerlessInstance;
   }
@@ -435,7 +435,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   @Override
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    logger.info(" Handling  new deployment. New Deployment Summary Size =[{}], rollback =[{}]",
+    log.info(" Handling  new deployment. New Deployment Summary Size =[{}], rollback =[{}]",
         emptyIfNull(deploymentSummaries).size(), rollback);
     if (!isNullOrEmpty(deploymentSummaries)) {
       final String appId = deploymentSummaries.iterator().next().getAppId();
@@ -525,7 +525,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
     final List<FunctionMeta> lambdaFunctionMetaList = commandStepExecutionSummary.getLambdaFunctionMetaList();
 
     if (isNullOrEmpty(lambdaFunctionMetaList)) {
-      logger.warn("Function Metadata not found for workflow:[{}] Can't create deployment event",
+      log.warn("Function Metadata not found for workflow:[{}] Can't create deployment event",
           workflowExecution.normalizedName());
       return Optional.empty();
     }
@@ -646,7 +646,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
     try {
       final Date now = new Date();
       final Date startDate = getStartDate(now, deployedAt, invocationCountKey);
-      logger.info(
+      log.info(
           "Fetching Invocation count for AWS Lambda Function =[{}], InvocationCountKey =[{}], start Date =[{}], End Date=[{}]",
           functionName, invocationCountKey, startDate, now);
 
@@ -654,7 +654,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
           functionName, startDate, now, appId, region, awsConfig, encryptedDataDetails);
       final Optional<Double> invocationCountOpt =
           emptyIfNull(invocationCountResponse.getDatapoints()).stream().map(Datapoint::getSum).reduce(Double::sum);
-      logger.info("Invocation Count received =[{}]", invocationCountOpt);
+      log.info("Invocation Count received =[{}]", invocationCountOpt);
       return invocationCountOpt.map(invocationCount
           -> InvocationCount.builder()
                  .key(invocationCountKey)

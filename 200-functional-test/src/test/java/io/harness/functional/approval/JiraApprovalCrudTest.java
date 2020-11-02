@@ -65,7 +65,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    logger.info("Creating the workflow");
+    log.info("Creating the workflow");
     Workflow uiWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
         "JIRA APPROVAL" + System.currentTimeMillis(), environment.getUuid(), getJiraApprovalNode());
 
@@ -73,7 +73,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), uiWorkflow);
     assertThat(savedWorkflow).isNotNull();
 
-    logger.info("Checking for Phase Step Addition");
+    log.info("Checking for Phase Step Addition");
     String phaseName = ((CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow())
                            .getPostDeploymentSteps()
                            .getSteps()
@@ -82,7 +82,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(phaseName).isEqualToIgnoringCase("Approval JIRA");
 
     // Update Workflow's Approve Stage with new graph node
-    logger.info("Updating the graph node");
+    log.info("Updating the graph node");
 
     String updatedTicketId = "2345";
     PhaseStep phaseStep = new PhaseStep();
@@ -91,7 +91,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
         workflowService.updatePostDeployment(application.getUuid(), savedWorkflow.getUuid(), phaseStep);
 
     // Read the updated Value
-    logger.info("Asserting the issueId Post Update");
+    log.info("Asserting the issueId Post Update");
     HashMap<String, Object> approvalStateParams =
         (HashMap<String, Object>) phaseStepUpdated.getSteps().get(0).getProperties().get("approvalStateParams");
     HashMap<String, Object> jiraApprovalParams =
@@ -100,7 +100,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(ticketId).isEqualToIgnoringCase(updatedTicketId);
 
     // Delete the Workflow
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, savedWorkflow.getUuid(), application.getAppId());
   }
 

@@ -69,7 +69,7 @@ public class TemplatizedSecretManagerState extends State {
       executionResponseBuilder.errorMessage(
           e.getCause() == null ? ExceptionUtils.getMessage(e) : ExceptionUtils.getMessage(e.getCause()));
       executionResponseBuilder.executionStatus(ExecutionStatus.ERROR);
-      logger.error("Exception while sending email", e);
+      log.error("Exception while sending email", e);
     }
     executionResponseBuilder.stateExecutionData(stateData);
     return executionResponseBuilder.build();

@@ -75,7 +75,7 @@ public class K8sWatchServiceDelegate {
 
     @Override
     public void close() {
-      logger.info("Closing AllRegisteredInformers for watch {}", watchId);
+      log.info("Closing AllRegisteredInformers for watch {}", watchId);
       sharedInformerFactory.stopAllRegisteredInformers();
     }
   }
@@ -87,7 +87,7 @@ public class K8sWatchServiceDelegate {
   public String create(K8sWatchTaskParams params) {
     String watchId = params.getClusterId();
     watchMap.computeIfAbsent(watchId, id -> {
-      logger.info("Creating watch with id: {}", id);
+      log.info("Creating watch with id: {}", id);
 
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
@@ -130,7 +130,7 @@ public class K8sWatchServiceDelegate {
       watcherFactory.createPodWatcher(
           apiClient, clusterDetails, controllerFetcher, sharedInformerFactory, pvcFetcher, namespaceFetcher);
 
-      logger.info("Starting AllRegisteredInformers for watch {}", id);
+      log.info("Starting AllRegisteredInformers for watch {}", id);
       sharedInformerFactory.startAllRegisteredInformers();
 
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
@@ -144,7 +144,7 @@ public class K8sWatchServiceDelegate {
     int cnt = 0;
     while (!informers.stream().map(SharedInformer::hasSynced).filter(i -> !i).findFirst().orElse(Boolean.TRUE)
         && ++cnt <= 25) {
-      logger.info("Waiting for InformerFetchers to sync... {}", cnt);
+      log.info("Waiting for InformerFetchers to sync... {}", cnt);
       Thread.sleep(300);
     }
   }
@@ -153,14 +153,14 @@ public class K8sWatchServiceDelegate {
     try {
       return client.readNamespace("kube-system", null, null, null).getMetadata().getUid();
     } catch (Exception e) {
-      logger.warn("Error getting kube-system namespace uid", e);
+      log.warn("Error getting kube-system namespace uid", e);
       return "kube-system";
     }
   }
 
   public void delete(String watchId) {
     watchMap.computeIfPresent(watchId, (id, watcherGroup) -> {
-      logger.info("Deleting watch with id: {}", watchId);
+      log.info("Deleting watch with id: {}", watchId);
       watcherGroup.close();
       return null;
     });

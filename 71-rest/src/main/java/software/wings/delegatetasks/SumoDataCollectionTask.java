@@ -55,7 +55,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     DataCollectionTaskResult taskResult =
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).stateType(StateType.SUMO).build();
     this.dataCollectionInfo = (SumoDataCollectionInfo) parameters;
-    logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     sumoClient = sumoDelegateService.getSumoClient(
         dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);
     return taskResult;
@@ -68,7 +68,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -124,7 +124,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       collectionEndTime, is247Task, is247Task ? 10000 : 1000, logCollectionMinute, apiCallLog);
               logElements.addAll(logElementsResponse);
             } catch (CancellationException e) {
-              logger.info("Ugh. Search job was cancelled. Retrying ...", e);
+              log.info("Ugh. Search job was cancelled. Retrying ...", e);
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 taskResult.setErrorMessage(ExceptionUtils.getMessage(e));
@@ -152,13 +152,13 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
             continue;
           }
 
-          logger.info("sent sumo search records to server. Num of events: " + logElements.size()
+          log.info("sent sumo search records to server. Num of events: " + logElements.size()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
           break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -171,15 +171,14 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
+            log.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
                 dataCollectionInfo.getStateExecutionId(), DATA_COLLECTION_RETRY_SLEEP, ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }
       if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
-        logger.info(
-            "Failed Data collection for SumoLogic collection task so quitting the task with StateExecutionId {}",
+        log.info("Failed Data collection for SumoLogic collection task so quitting the task with StateExecutionId {}",
             dataCollectionInfo.getStateExecutionId());
         completed.set(true);
       } else {
@@ -188,7 +187,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         if (dataCollectionInfo.getCollectionTime() <= 0) {
           // We are done with all data collection, so setting task status to success and quitting.
-          logger.info(
+          log.info(
               "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
               dataCollectionInfo.getStateExecutionId());
           completed.set(true);
@@ -197,7 +196,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
 
       if (completed.get()) {
-        logger.info("Shutting down sumo data collection " + dataCollectionInfo.getStateExecutionId());
+        log.info("Shutting down sumo data collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
         return;
       }

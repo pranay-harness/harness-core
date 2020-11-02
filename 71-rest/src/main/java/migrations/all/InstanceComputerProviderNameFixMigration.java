@@ -28,7 +28,7 @@ public class InstanceComputerProviderNameFixMigration implements Migration {
       List<Account> accounts = accountService.listAllAccounts();
 
       for (Account account : accounts) {
-        logger.info("Updating data for account:" + account.getAccountName());
+        log.info("Updating data for account:" + account.getAccountName());
         try (HIterator<Instance> instanceRecords =
                  new HIterator<Instance>(wingsPersistence.createQuery(Instance.class)
                                              .filter(InstanceKeys.accountId, account.getUuid())
@@ -49,7 +49,7 @@ public class InstanceComputerProviderNameFixMigration implements Migration {
       }
 
     } catch (Exception e) {
-      logger.error("Failed to fix instance data", e);
+      log.error("Failed to fix instance data", e);
     }
   }
 }

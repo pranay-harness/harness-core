@@ -168,7 +168,7 @@ public class WeeklyReportTemplateHelper {
     try {
       return buildAbsoluteUrl(url);
     } catch (URISyntaxException e) {
-      logger.error("Error in forming Explorer URL for Weekly Report", e);
+      log.error("Error in forming Explorer URL for Weekly Report", e);
       return url;
     }
   }

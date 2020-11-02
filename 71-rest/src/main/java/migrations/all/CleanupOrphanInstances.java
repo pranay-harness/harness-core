@@ -37,7 +37,7 @@ public class CleanupOrphanInstances implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Start - Deleting of orphan instances");
+      log.info("Start - Deleting of orphan instances");
 
       List<Key<Application>> appKeyList = wingsPersistence.createQuery(Application.class, excludeAuthority).asKeyList();
       Set<String> apps = appKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
@@ -77,11 +77,11 @@ public class CleanupOrphanInstances implements Migration {
         }
       }
 
-      logger.info("Number of orphaned instances identified: " + orphanInstances.size());
+      log.info("Number of orphaned instances identified: " + orphanInstances.size());
       instanceService.delete(orphanInstances);
-      logger.info("Deleted orphan instances successfully");
+      log.info("Deleted orphan instances successfully");
     } catch (Exception ex) {
-      logger.error("Error while deleting orphan instances", ex);
+      log.error("Error while deleting orphan instances", ex);
     }
   }
 }

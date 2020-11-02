@@ -45,7 +45,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
       return run((AwsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
           (List<String>) parameters[3]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting S3 artifacts", e);
+      log.error("Exception occurred while collecting S3 artifacts", e);
       return new ListNotifyResponseData();
     }
   }
@@ -58,7 +58,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
       amazonS3Service.downloadArtifacts(
           awsConfig, encryptionDetails, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting S3 artifacts {}", ExceptionUtils.getMessage(e), e);
+      log.error("Exception occurred while collecting S3 artifacts {}", ExceptionUtils.getMessage(e), e);
       // TODO: Change list
     }
     return res;

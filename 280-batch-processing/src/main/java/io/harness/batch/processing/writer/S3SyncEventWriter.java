@@ -41,7 +41,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     List<SettingAttribute> ceConnectorsList =
         cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
 
-    logger.info("Processing batch size of {} in S3SyncEventWriter", ceConnectorsList.size());
+    log.info("Processing batch size of {} in S3SyncEventWriter", ceConnectorsList.size());
 
     ceConnectorsList.forEach(settingAttribute -> {
       S3SyncRecordBuilder s3SyncRecordBuilder = S3SyncRecord.builder();

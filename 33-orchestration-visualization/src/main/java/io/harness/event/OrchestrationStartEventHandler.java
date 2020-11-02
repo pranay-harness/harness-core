@@ -29,7 +29,7 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
   public void handleEvent(OrchestrationEvent event) {
     PlanExecution planExecution = planExecutionService.get(event.getAmbiance().getPlanExecutionId());
 
-    logger.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
+    log.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
         planExecution.getStatus());
 
     OrchestrationGraph graphInternal = OrchestrationGraph.builder()

@@ -27,7 +27,7 @@ public class PreferenceUserIdRemoveDollarSignMigration implements Migration {
           String newUserId = userId.substring(0, userId.length() - 1);
           preference.setUserId(newUserId);
           wingsPersistence.save(preference);
-          logger.info("Updated user Id {} for preference {}", preference.getUserId(), preference.getUuid());
+          log.info("Updated user Id {} for preference {}", preference.getUserId(), preference.getUuid());
         }
       }
     }

@@ -357,7 +357,7 @@ public class WorkflowServiceHelper {
               .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()))
               .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
       if (KubernetesHelper.loadYaml(hpaYaml, HorizontalPodAutoscaler.class) == null) {
-        logger.error("HPA couldn't be parsed: {}", hpaYaml);
+        log.error("HPA couldn't be parsed: {}", hpaYaml);
       }
       return hpaYaml;
     } catch (IOException e) {
@@ -575,7 +575,7 @@ public class WorkflowServiceHelper {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
     if (infrastructureMapping == null) {
-      logger.warn(
+      log.warn(
           "Service Infrastructure with id {}  for appId {} does not exist", workflowPhase.getInfraMappingId(), appId);
       throw new InvalidRequestException("ServiceInfrastructure does not exist", USER);
     }

@@ -328,7 +328,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   private ExecutionResponse taskCompletionFailureResponse(Activity activity,
       AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData, Exception exception,
       ManagerExecutionLogCallback executionLogCallback) {
-    logger.error("Ami deploy step failed with error ", exception);
+    log.error("Ami deploy step failed with error ", exception);
     String errorMessage = ExceptionUtils.getMessage(exception);
 
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), FAILED);
@@ -373,7 +373,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
 
   private ExecutionResponse taskCreationFailureResponse(
       Exception exception, String activityId, ManagerExecutionLogCallback executionLogCallback) {
-    logger.error("Ami deploy step failed with error ", exception);
+    log.error("Ami deploy step failed with error ", exception);
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = AwsAmiDeployStateExecutionData.builder().build();
     String errorMessage = getMessage(exception);

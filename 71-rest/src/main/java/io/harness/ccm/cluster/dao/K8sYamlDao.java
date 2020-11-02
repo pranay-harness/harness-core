@@ -44,7 +44,7 @@ public class K8sYamlDao {
     try {
       hPersistence.save(yamlRecord);
     } catch (DuplicateKeyException e) {
-      logger.debug("Ignoring exception for yaml already present", e);
+      log.debug("Ignoring exception for yaml already present", e);
     }
   }
 }

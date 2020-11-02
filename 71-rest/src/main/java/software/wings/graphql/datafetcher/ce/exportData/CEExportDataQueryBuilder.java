@@ -258,7 +258,7 @@ public class CEExportDataQueryBuilder {
         unit = "month";
         break;
       default:
-        logger.warn("Unsupported timeGroupType " + groupByTime.getTimePeriod());
+        log.warn("Unsupported timeGroupType " + groupByTime.getTimePeriod());
         throw new InvalidRequestException("Cant apply time group by");
     }
 
@@ -359,7 +359,7 @@ public class CEExportDataQueryBuilder {
         if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else {
-          logger.error("Failed to apply filter :[{}]", filter);
+          log.error("Failed to apply filter :[{}]", filter);
         }
       }
     }
@@ -374,7 +374,7 @@ public class CEExportDataQueryBuilder {
         addSimpleTimeFilter(selectQuery, f, type);
       }
     } else {
-      logger.info("Not adding filter since it is not valid " + f);
+      log.info("Not adding filter since it is not valid " + f);
     }
   }
 
@@ -401,7 +401,7 @@ public class CEExportDataQueryBuilder {
     if (filter.getValues().length > 0) {
       if (operator == QLIdOperator.EQUALS) {
         finalOperator = QLIdOperator.IN;
-        logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+        log.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
       } else {
         finalOperator = operator;
       }
@@ -513,7 +513,7 @@ public class CEExportDataQueryBuilder {
                                   .build());
                   break;
                 default:
-                  logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                  log.error("EntityType {} not supported in query", tagFilter.getEntityType());
                   throw new InvalidRequestException("Error while compiling query", WingsException.USER);
               }
             }
@@ -566,7 +566,7 @@ public class CEExportDataQueryBuilder {
       case ENVIRONMENT:
         return EntityType.ENVIRONMENT;
       default:
-        logger.error("Unsupported entity type {} for tag ", entityType);
+        log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
     }
   }

@@ -146,7 +146,7 @@ public class ExportExecutionsResourceService {
     ConfiguredLimit<StaticLimit> configuredLimit =
         limitConfigurationService.getOrDefault(accountId, ActionType.EXPORT_EXECUTIONS_REQUEST);
     if (configuredLimit == null) {
-      logger.error("No export executions request rate limit configured");
+      log.error("No export executions request rate limit configured");
       return;
     }
 

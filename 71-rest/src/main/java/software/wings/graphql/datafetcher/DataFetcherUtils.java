@@ -86,12 +86,12 @@ public class DataFetcherUtils {
 
   public String fetchSampleAccountIdIfNoClusterData(@NotNull String accountId) {
     if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
-      logger.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
+      log.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
       if (Boolean.FALSE.equals(isClusterDataPresentCache.get(accountId))) {
         return SAMPLE_ACCOUNT_ID;
       }
     }
-    logger.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
+    log.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
     return accountId;
   }
 
@@ -99,7 +99,7 @@ public class DataFetcherUtils {
     String clusterQuery = String.format(queryTemplate, accountId);
     String clusterDailyQuery = String.format(queryTemplateDaily, accountId);
     boolean isPresent = getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0;
-    logger.info("Clusterdata for accountId:{} is present {}", accountId, isPresent);
+    log.info("Clusterdata for accountId:{} is present {}", accountId, isPresent);
     return isPresent;
   }
 
@@ -118,7 +118,7 @@ public class DataFetcherUtils {
           count = 1;
         }
       } catch (SQLException e) {
-        logger.warn("Failed to execute query in DataFetcherUtils, query=[{}], accountId=[{}], {}", query, accountId, e);
+        log.warn("Failed to execute query in DataFetcherUtils, query=[{}], accountId=[{}], {}", query, accountId, e);
       } finally {
         DBUtils.close(resultSet);
       }

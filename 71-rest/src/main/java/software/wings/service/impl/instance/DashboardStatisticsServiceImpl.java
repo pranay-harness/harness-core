@@ -152,7 +152,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } catch (NoResultFoundException e) {
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     } catch (Exception e) {
-      logger.error("Error while compiling query for getting app instance summary stats");
+      log.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
 
@@ -194,7 +194,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       query = getInstanceQuery(accountId, appIds, false, -1);
       return getInstanceCount(query);
     } catch (Exception e) {
-      logger.error("Error while getting total instances for accountId:[{}]", accountId, e);
+      log.error("Error while getting total instances for accountId:[{}]", accountId, e);
       return -1;
     }
   }
@@ -274,7 +274,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } catch (NoResultFoundException e) {
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     } catch (Exception e) {
-      logger.error("Error while compiling query for getting app instance summary stats");
+      log.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
 
@@ -319,14 +319,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       if (isNotEmpty(responseMessageList)) {
         ResponseMessage responseMessage = responseMessageList.get(0);
         if (responseMessage.getCode() != ErrorCode.NO_APPS_ASSIGNED) {
-          logger.error("Unable to get instance stats", exception);
+          log.error("Unable to get instance stats", exception);
         }
       }
 
     } else if (exception instanceof WingsException) {
-      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, log);
     } else {
-      logger.error("Unable to get instance stats", exception);
+      log.error("Unable to get instance stats", exception);
     }
   }
 
@@ -358,9 +358,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     if (isNotEmpty(instanceList)) {
       HashSet<Instance> instanceSet = new HashSet<>(instanceList);
-      logger.info("Instances reported {}, set count {}", counter, instanceSet.size());
+      log.info("Instances reported {}, set count {}", counter, instanceSet.size());
     } else {
-      logger.info("Instances reported {}", counter);
+      log.info("Instances reported {}", counter);
     }
     return instanceList;
   }
@@ -398,7 +398,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } catch (NoResultFoundException nre) {
       return emptyList();
     } catch (Exception e) {
-      logger.error("Error while compiling query for instance stats by service");
+      log.error("Error while compiling query for instance stats by service");
       return emptyList();
     }
 
@@ -424,7 +424,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
-          logger.info(instanceInfo.toString());
+          log.info(instanceInfo.toString());
         });
 
     return constructInstanceStatsByService(instanceInfoList);
@@ -436,7 +436,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getInstanceQueryAtTime(accountId, serviceId, timestamp);
     } catch (Exception e) {
-      logger.error("Error while compiling query for instance stats by service");
+      log.error("Error while compiling query for instance stats by service");
       return emptyList();
     }
 
@@ -471,7 +471,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
     } catch (Exception e) {
-      logger.error("Error while compiling query for instance stats by service");
+      log.error("Error while compiling query for instance stats by service");
       return getEmptyPageResponse();
     }
 
@@ -823,7 +823,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       CurrentActiveInstances currentActiveInstances;
       if (lastWE == null) {
-        logger.info("Last workflow execution is null, Execution Id {}", lastWorkflowExecutionId);
+        log.info("Last workflow execution is null, Execution Id {}", lastWorkflowExecutionId);
         currentActiveInstances = CurrentActiveInstances.builder()
                                      .artifact(artifactSummary)
                                      .deployedAt(new Date(deployedAt))
@@ -949,7 +949,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
       // This is just precautionary this should never happen hence logging this
       if (workflowExecution.isOnDemandRollback() && pipelineSummary != null) {
-        logger.error("Pipeline Summary non null for rollback execution : {}", workflowExecution.getUuid());
+        log.error("Pipeline Summary non null for rollback execution : {}", workflowExecution.getUuid());
         pipelineSummary = null;
       }
       EntitySummary pipelineEntitySummary = null;
@@ -983,16 +983,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
       if (executionArgs == null) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("executionArgs is null for workflowExecution:" + workflowExecution.normalizedName());
+        if (log.isDebugEnabled()) {
+          log.debug("executionArgs is null for workflowExecution:" + workflowExecution.normalizedName());
         }
         continue;
       }
 
       List<Artifact> artifacts = executionArgs.getArtifacts();
       if (artifacts == null) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("artifacts is null for workflowExecution:" + workflowExecution.normalizedName());
+        if (log.isDebugEnabled()) {
+          log.debug("artifacts is null for workflowExecution:" + workflowExecution.normalizedName());
         }
         continue;
       }

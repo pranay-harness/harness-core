@@ -52,7 +52,7 @@ public class YamlUtils {
         sb.append(line).append('\n');
       }
     } catch (Exception e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     return sb.toString();

@@ -27,7 +27,7 @@ public class PcfServiceSpecificationToManifestFileMigration implements Migration
 
   @Override
   public void migrate() {
-    logger.info("Retrieving PCF Services");
+    log.info("Retrieving PCF Services");
 
     try (HIterator<Service> services =
              new HIterator<>(wingsPersistence.createQuery(Service.class).filter("artifactType", "PCF").fetch())) {
@@ -61,7 +61,7 @@ public class PcfServiceSpecificationToManifestFileMigration implements Migration
                   .append(pcfServiceSpecification == null ? "PcfServiceSpecification was not present"
                                                           : "manifestYaml in PcfServiceSpecification was empty. ")
                   .append(" Resetting manifestYaml");
-          logger.warn(errorMsg.toString());
+          log.warn(errorMsg.toString());
           serviceResourceService.createDefaultPcfV2Manifests(service);
         } else {
           serviceResourceService.upsertPCFSpecInManifestFile(pcfServiceSpecification);

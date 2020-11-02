@@ -40,7 +40,7 @@ public class ScimUserResource extends ScimResource {
     try {
       return scimUserServiceImpl.createUser(userQuery, accountId);
     } catch (Exception ex) {
-      logger.error("Failed to create the user", ex);
+      log.error("Failed to create the user", ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.CONFLICT);
     }
   }
@@ -53,7 +53,7 @@ public class ScimUserResource extends ScimResource {
     try {
       return scimUserServiceImpl.updateUser(userId, accountId, userQuery);
     } catch (Exception ex) {
-      logger.info("Failed to update the user with id: {} for account: {}", userId, accountId, ex);
+      log.info("Failed to update the user with id: {} for account: {}", userId, accountId, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.NOT_FOUND);
     }
   }
@@ -65,7 +65,7 @@ public class ScimUserResource extends ScimResource {
     try {
       return Response.status(Response.Status.OK).entity(scimUserServiceImpl.getUser(userId, accountId)).build();
     } catch (Exception ex) {
-      logger.info("Failed to fetch the user with id: {} for account: {}", userId, accountId, ex);
+      log.info("Failed to fetch the user with id: {} for account: {}", userId, accountId, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.NOT_FOUND);
     }
   }
@@ -83,8 +83,8 @@ public class ScimUserResource extends ScimResource {
           scimUserServiceImpl.searchUser(accountId, filter, count, startIndex);
       return Response.status(Response.Status.OK).entity(searchUserResponse).build();
     } catch (Exception ex) {
-      logger.error("SCIM: Search user call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountId,
-          filter, count, startIndex, ex);
+      log.error("SCIM: Search user call failed. AccountId: {}, filter: {}, count: {}, startIndex{}", accountId, filter,
+          count, startIndex, ex);
       return getExceptionResponse(ex, Status.NOT_FOUND.getStatusCode(), Status.NOT_FOUND);
     }
   }

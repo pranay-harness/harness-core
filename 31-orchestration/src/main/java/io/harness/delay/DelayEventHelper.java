@@ -25,10 +25,10 @@ public class DelayEventHelper {
       String resumeId = generateUuid();
       delayQueue.send(new DelayEvent(
           resumeId, Date.from(OffsetDateTime.now().plusSeconds(delayTimeInSeconds).toInstant()), context));
-      logger.info("DelayEvent with resumeId {} queued - delayTimeInSeconds: {}", resumeId, delayTimeInSeconds);
+      log.info("DelayEvent with resumeId {} queued - delayTimeInSeconds: {}", resumeId, delayTimeInSeconds);
       return resumeId;
     } catch (Exception exception) {
-      logger.error("Failed to create Delay event", exception);
+      log.error("Failed to create Delay event", exception);
     }
     return null;
   }

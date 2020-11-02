@@ -22,7 +22,7 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
   @Override
   public void handleEvent(OrchestrationEvent event) {
     PlanExecution planExecution = planExecutionService.get(event.getAmbiance().getPlanExecutionId());
-    logger.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
+    log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
         planExecution.getStatus());
 
     OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());

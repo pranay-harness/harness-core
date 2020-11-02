@@ -49,7 +49,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
     }
 
     if (matches(deploymentCtx, governanceConfig)) {
-      logger.info("Deployment Context matches governance config. accountId={} GovernanceConfig: {} Ctx: {}", accountId,
+      log.info("Deployment Context matches governance config. accountId={} GovernanceConfig: {} Ctx: {}", accountId,
           governanceConfig, deploymentCtx);
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Deployment Freeze window is active. No deployments are allowed.");
@@ -59,12 +59,12 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   public boolean matches(DeploymentCtx deploymentCtx, GovernanceConfig freezeConfig) {
     boolean timeBasedFreezeMatch = freezeConfig.getTimeRangeBasedFreezeConfigs().stream().anyMatch(
         (TimeRangeBasedFreezeConfig it) -> this.matches(deploymentCtx, it) && this.matchesTimeRange(it));
-    logger.info("DeploymentCtx: {}, governanceConfig(date range based): {}. Match: {}", deploymentCtx,
+    log.info("DeploymentCtx: {}, governanceConfig(date range based): {}. Match: {}", deploymentCtx,
         freezeConfig.getUuid(), timeBasedFreezeMatch);
     boolean weeklyFreezeMatch = freezeConfig.getWeeklyFreezeConfigs().stream().anyMatch(
         (WeeklyFreezeConfig it) -> this.matches(deploymentCtx, it) && this.matchesWeeklyRange(it));
-    logger.info("DeploymentCtx: {}, governanceConfig(weekly window): {}. Match: {}", deploymentCtx,
-        freezeConfig.getUuid(), weeklyFreezeMatch);
+    log.info("DeploymentCtx: {}, governanceConfig(weekly window): {}. Match: {}", deploymentCtx, freezeConfig.getUuid(),
+        weeklyFreezeMatch);
     return timeBasedFreezeMatch || weeklyFreezeMatch;
   }
 

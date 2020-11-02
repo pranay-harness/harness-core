@@ -59,7 +59,7 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
       case ArtifactType:
         return "artifactType";
       default:
-        logger.warn("Unknown aggregation type" + aggregation);
+        log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
@@ -95,7 +95,7 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
       case APPLICATION:
         return QLServiceEntityAggregation.Application;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

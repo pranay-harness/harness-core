@@ -54,7 +54,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
           throw(SecretManagementDelegateException) e;
         } else {
           failedAttempts++;
-          logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+          log.warn("encryption failed. trial num: {}", failedAttempts, e);
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
             throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -81,7 +81,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
           throw(SecretManagementDelegateException) e;
         } else {
           failedAttempts++;
-          logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+          log.warn("encryption failed. trial num: {}", failedAttempts, e);
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
             throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -106,7 +106,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
           throw(SecretManagementDelegateException) e;
         } else {
           failedAttempts++;
-          logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+          log.warn("encryption failed. trial num: {}", failedAttempts, e);
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
             throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -132,7 +132,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
 
   private EncryptedRecord upsertSecretInternal(String keyUrl, String value, String accountId,
       EncryptedRecord existingRecord, VaultConfig vaultConfig) throws IOException {
-    logger.info("Saving secret {} into Vault {}", keyUrl, vaultConfig.getBasePath());
+    log.info("Saving secret {} into Vault {}", keyUrl, vaultConfig.getBasePath());
 
     // With existing encrypted value. Need to delete it first and rewrite with new value.
     String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
@@ -143,7 +143,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
                                    vaultConfig.getSecretEngineName(), fullPath, value);
 
     if (isSuccessful) {
-      logger.info("Done saving vault secret at {} in {}", keyUrl, vaultConfig.getBasePath());
+      log.info("Done saving vault secret at {} in {}", keyUrl, vaultConfig.getBasePath());
       if (existingRecord != null) {
         String oldFullPath = getFullPath(vaultConfig.getBasePath(), existingRecord.getEncryptionKey());
         if (!oldFullPath.equals(fullPath)) {
@@ -153,7 +153,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
       return EncryptedRecordData.builder().encryptionKey(keyUrl).encryptedValue(keyUrl.toCharArray()).build();
     } else {
       String errorMsg = "Encryption request for " + keyUrl + " was not successful.";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }
@@ -182,7 +182,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
             () -> fetchSecretInternal(encryptedRecord, vaultConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else {
@@ -201,19 +201,19 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     String fullPath =
         isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
     long startTime = System.currentTimeMillis();
-    logger.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
+    log.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
     String value =
         VaultRestClientFactory.create(vaultConfig)
             .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
 
     if (isNotEmpty(value)) {
-      logger.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
+      log.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
           System.currentTimeMillis() - startTime);
       return value.toCharArray();
     } else {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }

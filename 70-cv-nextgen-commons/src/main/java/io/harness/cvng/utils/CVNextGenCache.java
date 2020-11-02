@@ -51,7 +51,7 @@ public class CVNextGenCache {
     try {
       return accountKeyCache.get(accountId);
     } catch (ExecutionException ex) {
-      logger.warn("Exception occurred in fetching account key {}", accountId, ex);
+      log.warn("Exception occurred in fetching account key {}", accountId, ex);
     }
     return null;
   }
@@ -60,7 +60,7 @@ public class CVNextGenCache {
     try {
       return apiKeyCache.get(clientType);
     } catch (ExecutionException ex) {
-      logger.warn("Exception occurred in fetching account key {}", clientType, ex);
+      log.warn("Exception occurred in fetching account key {}", clientType, ex);
     }
     return null;
   }

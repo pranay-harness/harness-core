@@ -43,7 +43,7 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private ParallelStepGroupRollbackPlanCreator parallelStepGroupRollbackPlanCreator;
 
   public void register() {
-    logger.info("Start: register execution plan creators");
+    log.info("Start: register execution plan creators");
     register(pipelinePlanCreator);
     register(deploymentStagePlanCreator);
     register(cdExecutionPlanCreator);
@@ -59,7 +59,7 @@ public class ExecutionPlanCreatorRegistrar {
     register(stepGroupRollbackPlanCreator);
     register(executionRollbackPlanCreator);
     register(parallelStepGroupRollbackPlanCreator);
-    logger.info("Done: register execution plan creators");
+    log.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {
     executionPlanCreatorRegistry.registerCreator(executionPlanCreator, executionPlanCreator);

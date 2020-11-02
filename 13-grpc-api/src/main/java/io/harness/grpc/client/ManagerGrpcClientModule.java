@@ -56,16 +56,16 @@ public class ManagerGrpcClientModule extends ProviderModule {
     String defaultAuthority = "default-authority.harness.io";
     String authorityToUse;
     if (!isValidAuthority(config.authority)) {
-      logger.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
+      log.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
       authorityToUse = defaultAuthority;
     } else {
       String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
       String versionedAuthority = versionPrefix + config.authority;
       if (isValidAuthority(versionedAuthority)) {
-        logger.info("Using versioned authority: {}", versionedAuthority);
+        log.info("Using versioned authority: {}", versionedAuthority);
         authorityToUse = versionedAuthority;
       } else {
-        logger.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
+        log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
         authorityToUse = config.authority;
       }
     }
@@ -76,7 +76,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
     try {
       GrpcUtil.checkAuthority(authority);
     } catch (Exception ignore) {
-      logger.error("Exception occurred when checking for valid authority", ignore);
+      log.error("Exception occurred when checking for valid authority", ignore);
       return false;
     }
     return true;

@@ -59,11 +59,10 @@ public class SftpHelperService {
           hostKeyVerifier = split[3];
         }
       } catch (IOException e) {
-        logger.error(
-            "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+        log.error("SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
       }
     } catch (Exception e) {
-      logger.error("SFTP server {} could not be reached. Exception Message {}. Retrying with host key.",
+      log.error("SFTP server {} could not be reached. Exception Message {}. Retrying with host key.",
           sftpConfig.getSftpUrl(), e.getMessage());
     }
 
@@ -85,13 +84,12 @@ public class SftpHelperService {
           artifactPaths.add(resourceInfo.getName());
         }
       } finally {
-        logger.info("Closing SFTP connection :{}", sftpConfig.getSftpUrl());
+        log.info("Closing SFTP connection :{}", sftpConfig.getSftpUrl());
       }
     } catch (IOException e) {
-      logger.error(
-          "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+      log.error("SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
     } finally {
-      logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
+      log.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
     }
 
     return artifactPaths;
@@ -131,11 +129,11 @@ public class SftpHelperService {
         }
       }
     } catch (IOException e) {
-      logger.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
+      log.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
     }
 
     if (isEmpty(hostKeyVerifier)) {
-      logger.error("SFTP server {} host key could not be verified.", sftpUrl);
+      log.error("SFTP server {} host key could not be verified.", sftpUrl);
       return false;
     }
 
@@ -145,7 +143,7 @@ public class SftpHelperService {
       ssh.connect(getSFTPConnectionHost(sftpUrl));
       return true;
     } catch (IOException e) {
-      logger.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
+      log.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
     }
     return false;
   }
@@ -170,10 +168,9 @@ public class SftpHelperService {
         }
       }
     } catch (IOException e) {
-      logger.error(
-          "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+      log.error("SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
     } finally {
-      logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
+      log.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
     }
 
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
@@ -227,17 +224,16 @@ public class SftpHelperService {
           buildDetailsList.addAll(buildDetailsListForArtifactPath);
         }
       } finally {
-        logger.info("Closing SFTP connection :{}", sftpConfig.getSftpUrl());
+        log.info("Closing SFTP connection :{}", sftpConfig.getSftpUrl());
         sftp.close();
       }
     } catch (IOException e) {
-      logger.error(
-          "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+      log.error("SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
     } finally {
-      logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
+      log.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
     }
 
-    logger.info("SFTP server {} returned {} build details for artifact paths : ", sftpConfig.getSftpUrl(),
+    log.info("SFTP server {} returned {} build details for artifact paths : ", sftpConfig.getSftpUrl(),
         buildDetailsList.size());
     return buildDetailsList;
   }

@@ -48,7 +48,7 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
 
   @Override
   public CommandLibraryServiceHttpClient get() {
-    logger.info(" Create Command Library service retrofit client");
+    log.info(" Create Command Library service retrofit client");
     ObjectMapper objectMapper = getObjectMapper();
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)

@@ -62,7 +62,7 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
     if (updatedLatestTime.isAfter(latestTimeOfAnalysis)) {
       healthVerificationHeatMapService.updateRisk(
           verificationTaskId, overallRisk, updatedLatestTime, healthVerificationPeriod);
-      logger.info("Updated the risk for verificationTaskId {}, healthVerificationPeriod {} to {} with updateTime as {}",
+      log.info("Updated the risk for verificationTaskId {}, healthVerificationPeriod {} to {} with updateTime as {}",
           verificationTaskId, healthVerificationPeriod, overallRisk, updatedLatestTime);
     }
     return updatedLatestTime;

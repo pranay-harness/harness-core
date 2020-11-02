@@ -38,7 +38,7 @@ public class GcpServiceAccountDataFetcher
                      .build())
           .collect(Collectors.toList());
     } catch (IOException e) {
-      logger.error("Unable to get the default service account.", e);
+      log.error("Unable to get the default service account.", e);
     }
     return null;
   }

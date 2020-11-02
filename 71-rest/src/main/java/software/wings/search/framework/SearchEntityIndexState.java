@@ -31,7 +31,7 @@ public class SearchEntityIndexState implements PersistentEntity {
     try {
       return (SearchEntity) Class.forName(entityClass).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-      logger.error("Could not create new instance", e);
+      log.error("Could not create new instance", e);
     }
     return null;
   }

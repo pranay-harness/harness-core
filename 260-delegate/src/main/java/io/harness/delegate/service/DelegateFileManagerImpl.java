@@ -82,36 +82,36 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Override
   public InputStream downloadArtifactByFileId(FileBucket bucket, String fileId, String accountId)
       throws IOException, ExecutionException {
-    logger.info("Downloading file:[{}] , bucket:[{}], accountId:[{}]", fileId, bucket, accountId);
+    log.info("Downloading file:[{}] , bucket:[{}], accountId:[{}]", fileId, bucket, accountId);
     synchronized (fileIdLocks.get(fileId)) { // Block all thread only one gets to enter
       File file = new File(ARTIFACT_REPO_BASE_DIR, fileId);
-      logger.info("check if file:[{}] exists at location: [{}]", fileId, file.getAbsolutePath());
+      log.info("check if file:[{}] exists at location: [{}]", fileId, file.getAbsolutePath());
       if (!file.isDirectory() && file.exists()) {
-        logger.info("file:[{}] found locally", fileId);
+        log.info("file:[{}] found locally", fileId);
         return new FileInputStream(file);
       }
-      logger.info("file:[{}] doesn't exist locally. Download from manager", fileId);
+      log.info("file:[{}] doesn't exist locally. Download from manager", fileId);
 
       InputStream inputStream = downloadByFileId(bucket, fileId, accountId);
 
-      logger.info("Input stream acquired for file:[{}]. Saving locally", fileId);
+      log.info("Input stream acquired for file:[{}]. Saving locally", fileId);
 
       File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, fileId);
       FileUtils.copyInputStreamToFile(inputStream, downloadedFile);
-      logger.info("file:[{}] saved in tmp location:[{}]", fileId, downloadedFile.getAbsolutePath());
+      log.info("file:[{}] saved in tmp location:[{}]", fileId, downloadedFile.getAbsolutePath());
 
       FileUtils.moveFile(downloadedFile, file);
-      logger.info("file:[{}] moved to  final destination:[{}]", fileId, file.getAbsolutePath());
+      log.info("file:[{}] moved to  final destination:[{}]", fileId, file.getAbsolutePath());
 
-      logger.info("file:[{}] is ready for read access", fileId);
+      log.info("file:[{}] is ready for read access", fileId);
 
-      logger.info("check if downloaded fileId[{}] exists locally", fileId);
+      log.info("check if downloaded fileId[{}] exists locally", fileId);
       if (!file.isDirectory() && file.exists()) {
-        logger.info("fileId[{}] found locally", fileId);
+        log.info("fileId[{}] found locally", fileId);
         return new FileInputStream(file);
       }
 
-      logger.error("fileId[{}] could not be found", fileId);
+      log.error("fileId[{}] could not be found", fileId);
       throw new InvalidRequestException("File couldn't be downloaded");
     }
   }
@@ -136,35 +136,35 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     }
     synchronized (fileIdLocks.get(key)) {
       File file = new File(ARTIFACT_REPO_BASE_DIR, key);
-      logger.info("check if artifact:[{}] exists at location: [{}]", key, file.getAbsolutePath());
+      log.info("check if artifact:[{}] exists at location: [{}]", key, file.getAbsolutePath());
       if (!file.isDirectory() && file.exists()) {
-        logger.info("artifact:[{}] found locally", key);
+        log.info("artifact:[{}] found locally", key);
         return new FileInputStream(file);
       }
-      logger.info("file:[{}] doesn't exist locally. Download from manager", key);
+      log.info("file:[{}] doesn't exist locally. Download from manager", key);
 
       Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
           artifactStreamAttributes, accountId, appId, activityId, commandUnitName, hostName);
       if (pair == null) {
         throw new InvalidRequestException("File couldn't be downloaded");
       }
-      logger.info("Input stream acquired for file:[{}]. Saving locally", key);
+      log.info("Input stream acquired for file:[{}]. Saving locally", key);
       File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, key);
       FileUtils.copyInputStreamToFile(pair.getRight(), downloadedFile);
-      logger.info("file:[{}] saved in tmp location:[{}]", key, downloadedFile.getAbsolutePath());
+      log.info("file:[{}] saved in tmp location:[{}]", key, downloadedFile.getAbsolutePath());
 
       FileUtils.moveFile(downloadedFile, file);
-      logger.info("file:[{}] moved to  final destination:[{}]", key, file.getAbsolutePath());
+      log.info("file:[{}] moved to  final destination:[{}]", key, file.getAbsolutePath());
 
-      logger.info("file:[{}] is ready for read access", key);
+      log.info("file:[{}] is ready for read access", key);
 
-      logger.info("check if downloaded file [{}] exists locally", key);
+      log.info("check if downloaded file [{}] exists locally", key);
       if (!file.isDirectory() && file.exists()) {
-        logger.info("file[{}] found locally", key);
+        log.info("file[{}] found locally", key);
         return new FileInputStream(file);
       }
 
-      logger.error("file[{}] could not be found", key);
+      log.error("file[{}] could not be found", key);
       throw new InvalidRequestException("File couldn't be downloaded");
     }
   }
@@ -216,12 +216,12 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     RestResponse<DelegateFile> restResponse =
         execute(delegateAgentManagerClient.getMetaInfo(fileId, fileBucket, accountId));
     if (restResponse == null) {
-      logger.error("Unknown error occurred while retrieving metainfo for file {} from bucket {}", fileId, fileBucket);
+      log.error("Unknown error occurred while retrieving metainfo for file {} from bucket {}", fileId, fileBucket);
       throw new WingsException(format(
           "Unknown error occurred while retrieving metainfo for file %s from bucket %s. Please check manager logs.",
           fileId, fileBucket));
     }
-    logger.info("Got info for file {}", fileId);
+    log.info("Got info for file {}", fileId);
     return restResponse.getResource();
   }
 
@@ -232,8 +232,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       Integer maxCachedArtifacts = delegateConfiguration.getMaxCachedArtifacts() != null
           ? delegateConfiguration.getMaxCachedArtifacts()
           : DEFAULT_MAX_CACHED_ARTIFACT;
-      logger.info("Max Cached Artifacts from Delegate Configuration: " + delegateConfiguration.getMaxCachedArtifacts());
-      logger.info("Max Cached Artifacts set to: " + maxCachedArtifacts);
+      log.info("Max Cached Artifacts from Delegate Configuration: " + delegateConfiguration.getMaxCachedArtifacts());
+      log.info("Max Cached Artifacts set to: " + maxCachedArtifacts);
       maxCachedArtifacts += 1; // adjustment for internal 'temp' directory
       if (files != null && files.length > maxCachedArtifacts) {
         Arrays.sort(files, Comparator.comparingLong(File::lastModified));
@@ -243,19 +243,19 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
             if (file.exists() && !file.isDirectory()) {
               boolean deleted = file.delete();
               if (deleted) {
-                logger.info("Successfully deleted Artifact file: [{}]", file.getName());
+                log.info("Successfully deleted Artifact file: [{}]", file.getName());
               }
             }
           }
         }
       }
     } catch (Exception ex) {
-      logger.error("Error in deleting cached artifact file", ex);
+      log.error("Error in deleting cached artifact file", ex);
     }
   }
 
   private void upload(DelegateFile delegateFile, File content) throws IOException {
-    logger.info("Uploading file name {} ", delegateFile.getLocalFilePath());
+    log.info("Uploading file name {} ", delegateFile.getLocalFilePath());
     // create RequestBody instance from file
     RequestBody requestFile = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), content);
 
@@ -266,28 +266,28 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
                                                       delegateFile.getAccountId(), delegateFile.getBucket(), part)
                                                   .execute();
     delegateFile.setFileId(response.body().getResource());
-    logger.info("Uploaded delegate file id {} ", delegateFile.getFileId());
+    log.info("Uploaded delegate file id {} ", delegateFile.getFileId());
   }
 
   @Override
   public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
     File file = new File(delegateConfiguration.getLocalDiskPath(), generateUuid());
-    logger.info("File local name {} for delegate file created", file.getName());
+    log.info("File local name {} for delegate file created", file.getName());
     try {
       FileOutputStream fout = new FileOutputStream(file);
       IOUtils.copy(contentSource, fout);
       fout.close();
       upload(delegateFile, file);
-      logger.info("File name {} with file id {} uploaded successfully", file.getName(), delegateFile.getFileId());
+      log.info("File name {} with file id {} uploaded successfully", file.getName(), delegateFile.getFileId());
     } catch (Exception e) {
-      logger.warn("Error uploading file: " + file.getName(), e);
+      log.warn("Error uploading file: " + file.getName(), e);
     } finally {
       try {
         if (!file.delete()) {
-          logger.warn("Could not delete file: {}", file.getName());
+          log.warn("Could not delete file: {}", file.getName());
         }
       } catch (Exception e) {
-        logger.warn("Error deleting file: " + file.getName(), e);
+        log.warn("Error deleting file: " + file.getName(), e);
       }
     }
 

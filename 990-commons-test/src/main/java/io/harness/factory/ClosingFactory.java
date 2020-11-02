@@ -20,7 +20,7 @@ public class ClosingFactory implements AutoCloseable {
       try {
         server.close();
       } catch (Exception exception) {
-        logger.error("Error when closing", exception);
+        log.error("Error when closing", exception);
       }
     }
     servers.clear();

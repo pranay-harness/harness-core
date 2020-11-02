@@ -182,7 +182,7 @@ public class DataGenService {
         addServices(application.getAppId());
       }
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      log.error(ex.getMessage());
     }
 
     featureFlagService.initializeFeatureFlags();
@@ -401,7 +401,7 @@ public class DataGenService {
       createOrUpdateSystemAppStackCatalogs();
       createOrUpdateSystemAppContainers();
     } catch (Exception e) {
-      logger.error("Failed to load app stack catalogs", e);
+      log.error("Failed to load app stack catalogs", e);
     }
   }
 
@@ -416,7 +416,7 @@ public class DataGenService {
 
     Map<String, SystemCatalog> fileToSystemCatalog =
         systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
-    logger.info("Creating System App Stack Catalogs");
+    log.info("Creating System App Stack Catalogs");
     // Create Tomcat 7 Standard
     SystemCatalog systemCatalog;
     if (!fileToSystemCatalog.containsKey(APACHE_TOMCAT_7_0_78_TAR_GZ)) {
@@ -440,7 +440,7 @@ public class DataGenService {
   }
 
   public void createOrUpdateSystemAppContainers() {
-    logger.info("Creating System App Containers");
+    log.info("Creating System App Containers");
     List<Account> accounts =
         accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
     if (isEmpty(accounts)) {
@@ -488,12 +488,12 @@ public class DataGenService {
             appContainerService.update(storedAppContainer);
           }
         } catch (Exception e) {
-          logger.error("", e);
-          logger.info("Error while creating system app container " + appContainer);
+          log.error("", e);
+          log.info("Error while creating system app container " + appContainer);
         }
       }
     });
-    logger.info("System App Containers created successfully");
+    log.info("System App Containers created successfully");
   }
 
   /**
@@ -501,7 +501,7 @@ public class DataGenService {
    * @param args
    */
   public static void main(String[] args) {
-    logger.info("Running tests!");
+    log.info("Running tests!");
 
     try (GlobalContextManager.GlobalContextGuard globalContextGuard =
              GlobalContextManager.initGlobalContextGuard(null)) {

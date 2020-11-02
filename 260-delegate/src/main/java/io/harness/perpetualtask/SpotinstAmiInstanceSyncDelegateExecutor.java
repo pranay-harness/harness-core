@@ -32,7 +32,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExe
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
 
     final SpotinstAmiInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), SpotinstAmiInstanceSyncPerpetualTaskParams.class);
@@ -43,12 +43,12 @@ public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExe
     SpotInstTaskExecutionResponse instanceSyncResponse = executeSyncTask(taskParams, awsConfig, spotInstConfig);
 
     try {
-      logger.info("Publish instance sync result to manager for elastigroup id {} and perpetual task {}",
+      log.info("Publish instance sync result to manager for elastigroup id {} and perpetual task {}",
           taskParams.getElastigroupId(), taskId.getId());
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), spotInstConfig.getAccountId(), instanceSyncResponse));
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           "Failed to publish the instance sync collection result to manager for elastigroup id {} and perpetual task {}",
           taskParams.getElastigroupId(), taskId.getId(), ex);
     }
@@ -79,7 +79,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExe
     try {
       return taskHandler.executeTask(params, spotInstConfig, awsConfig);
     } catch (Exception ex) {
-      logger.error("Failed to execute instance sync task for elastigroup id {}", taskParams.getElastigroupId(), ex);
+      log.error("Failed to execute instance sync task for elastigroup id {}", taskParams.getElastigroupId(), ex);
       return SpotInstTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ex.getMessage())

@@ -42,7 +42,7 @@ public abstract class AbstractAccountManagementPermissionMigration implements Mi
             wingsPersistence.update(userGroup, operations);
           }
         } catch (Exception e) {
-          logger.error(debugMessage + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
+          log.error(debugMessage + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
         }
       }
     }
@@ -57,12 +57,12 @@ public abstract class AbstractAccountManagementPermissionMigration implements Mi
 
   @Override
   public void migrate() {
-    logger.info(debugMessage + "Starting Migration");
+    log.info(debugMessage + "Starting Migration");
     try {
       runMigration();
     } catch (Exception e) {
-      logger.error(debugMessage + "Error on running migration", e);
+      log.error(debugMessage + "Error on running migration", e);
     }
-    logger.info(debugMessage + "Completed Migration");
+    log.info(debugMessage + "Completed Migration");
   }
 }

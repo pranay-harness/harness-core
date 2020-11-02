@@ -62,7 +62,7 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
 
     if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
         || isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
-      logger.info("Encrypt secret with global KMS secret manager for account {}", accountId);
+      log.info("Encrypt secret with global KMS secret manager for account {}", accountId);
       return globalEncryptDecryptClient.encrypt(accountId, value.toCharArray(), gcpKmsConfig);
     } else {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
@@ -84,7 +84,7 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
     if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
         || isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
-      logger.info("Decrypt secret with global KMS secret manager for account {}", accountId);
+      log.info("Decrypt secret with global KMS secret manager for account {}", accountId);
       return globalEncryptDecryptClient.decrypt(data, gcpKmsConfig);
     } else {
       // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
@@ -101,7 +101,7 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
               .decrypt(data, gcpKmsConfig);
         } catch (WingsException e) {
           failedAttempts++;
-          logger.info("KMS Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
+          log.info("KMS Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
           if (failedAttempts == NUM_OF_RETRIES) {
             throw e;
           }

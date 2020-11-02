@@ -367,7 +367,7 @@ public class PreAggregatedBillingDataHelper {
   static boolean preconditionsValidation(TableResult result, String entryPoint) {
     Preconditions.checkNotNull(result);
     if (result.getTotalRows() == 0) {
-      logger.warn("No result from " + entryPoint + " query");
+      log.warn("No result from " + entryPoint + " query");
       return true;
     }
     return false;

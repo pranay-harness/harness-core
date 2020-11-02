@@ -24,7 +24,7 @@ public class UserPermissionReadMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running the UserPermissionReadMigration script.");
+    log.info("Running the UserPermissionReadMigration script.");
 
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     try (HIterator<UserGroup> userGroupIterator =
@@ -43,7 +43,7 @@ public class UserPermissionReadMigration implements Migration {
         }
       }
     } catch (Exception ex) {
-      logger.error("UserPermissionReadMigration failed.", ex);
+      log.error("UserPermissionReadMigration failed.", ex);
     }
   }
 

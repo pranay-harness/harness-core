@@ -42,7 +42,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start getting load balancer by resourceGroupName: {}, loadBalancerName: {}", resourceGroupName,
+    log.debug("Start getting load balancer by resourceGroupName: {}, loadBalancerName: {}", resourceGroupName,
         loadBalancerName);
     LoadBalancer loadBalancer = azure.loadBalancers().getByResourceGroup(resourceGroupName, loadBalancerName);
 
@@ -62,7 +62,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing load balancers by resourceGroupName {}", resourceGroupName);
+    log.debug("Start listing load balancers by resourceGroupName {}", resourceGroupName);
     PagedList<LoadBalancer> loadBalancers = azure.loadBalancers().listByResourceGroup(resourceGroupName);
     return new ArrayList<>(loadBalancers);
   }
@@ -79,7 +79,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing load balancer backend pools by resourceGroupName {}, loadBalancerName: {}",
+    log.debug("Start listing load balancer backend pools by resourceGroupName {}, loadBalancerName: {}",
         resourceGroupName, loadBalancerName);
     LoadBalancer loadBalancer = azure.loadBalancers().getByResourceGroup(resourceGroupName, loadBalancerName);
     if (loadBalancer == null) {
@@ -101,8 +101,8 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing load balancer TCP probes for loadBalancerName {}, resourceGroupName: {}",
-        loadBalancerName, resourceGroupName);
+    log.debug("Start listing load balancer TCP probes for loadBalancerName {}, resourceGroupName: {}", loadBalancerName,
+        resourceGroupName);
     LoadBalancer loadBalancer = azure.loadBalancers().getByResourceGroup(resourceGroupName, loadBalancerName);
     if (loadBalancer == null) {
       return Collections.emptyList();
@@ -121,7 +121,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
       return Collections.emptyList();
     }
 
-    logger.debug("Start listing backend pool rules for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
+    log.debug("Start listing backend pool rules for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
         backendPoolName, loadBalancerName, resourceGroupName);
     return new ArrayList<>(loadBalancerBackendPoolOp.get().loadBalancingRules().values());
   }
@@ -132,7 +132,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
     Optional<LoadBalancerBackend> loadBalancerBackendPoolOp =
         getLoadBalancerBackendPool(azureConfig, subscriptionId, resourceGroupName, loadBalancerName, backendPoolName);
 
-    logger.debug("Start listing backend pool probes for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
+    log.debug("Start listing backend pool probes for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
         backendPoolName, loadBalancerName, resourceGroupName);
     return loadBalancerBackendPoolOp.map(this ::toLoadBalancerBackendProbes).orElse(Collections.emptyList());
   }
@@ -160,7 +160,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug(
+    log.debug(
         "Start getting load balancer backend pool, backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
         backendPoolName, loadBalancerName, resourceGroupName);
     LoadBalancerBackend loadBalancerBackendPool =

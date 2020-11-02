@@ -90,11 +90,11 @@ public class SecretManager {
       verifier.verify(jwtToken);
       return JWT.decode(jwtToken).getClaims();
     } catch (UnsupportedEncodingException | JWTDecodeException | SignatureVerificationException e) {
-      logger.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
+      log.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
       throw new WingsException(INVALID_CREDENTIAL, USER, e)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     } catch (InvalidClaimException e) {
-      logger.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
+      log.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
       throw new WingsException(EXPIRED_TOKEN, USER, e).addParam("message", "Token expired");
     }
   }
@@ -105,7 +105,7 @@ public class SecretManager {
       try {
         return deserializeAccountActions(claim.asString());
       } catch (IOException e) {
-        logger.error("Failed to deserialize the harness user account actions data object from token", e);
+        log.error("Failed to deserialize the harness user account actions data object from token", e);
       }
     }
     return null;

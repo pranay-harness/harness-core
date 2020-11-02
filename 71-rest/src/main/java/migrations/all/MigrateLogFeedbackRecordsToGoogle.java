@@ -35,7 +35,7 @@ public class MigrateLogFeedbackRecordsToGoogle implements Migration {
       }
 
       dataStoreService.save(LogMLFeedbackRecord.class, recordsFromMongo, true);
-      logger.info("Saved {} records from Mongo for LogMLFeedbackRecords in GDS", recordsFromMongo.size());
+      log.info("Saved {} records from Mongo for LogMLFeedbackRecords in GDS", recordsFromMongo.size());
     }
   }
 
@@ -49,6 +49,6 @@ public class MigrateLogFeedbackRecordsToGoogle implements Migration {
         dataStoreService.delete(LogMLFeedbackRecord.class, feedbackRecord.getUuid());
       }
     });
-    logger.info("Deleted {} records from GDS for LogMLFeedbackRecords", records.size());
+    log.info("Deleted {} records from GDS for LogMLFeedbackRecords", records.size());
   }
 }

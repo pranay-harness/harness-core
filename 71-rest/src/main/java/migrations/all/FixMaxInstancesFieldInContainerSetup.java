@@ -31,7 +31,7 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
     try (HIterator<Application> iterator = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       for (Application app : iterator) {
         List<Workflow> workflows =
@@ -55,12 +55,12 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
                         if (value != null) {
                           if (value instanceof String) {
                             if (((String) value).contains("randomKey")) {
-                              logger.info("Resetting [{}] to 2", value);
+                              log.info("Resetting [{}] to 2", value);
                               workflowModified = true;
                               properties.put("maxInstances", "2");
                             }
                           } else {
-                            logger.info("Setting [{}] to string value", value.toString());
+                            log.info("Setting [{}] to string value", value.toString());
                             workflowModified = true;
                             properties.put("maxInstances", value.toString());
                           }
@@ -74,16 +74,16 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
           }
           if (workflowModified) {
             try {
-              logger.info("... Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+              log.info("... Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
               workflowService.updateWorkflow(workflow, false);
               Thread.sleep(100);
             } catch (Exception e) {
-              logger.error("Error updating workflow", e);
+              log.error("Error updating workflow", e);
             }
             updateCount++;
           }
         }
-        logger.info("Application migrated: {} - {}. Updated {} out of {} workflows", app.getUuid(), app.getName(),
+        log.info("Application migrated: {} - {}. Updated {} out of {} workflows", app.getUuid(), app.getName(),
             updateCount, workflows.size());
       }
     }

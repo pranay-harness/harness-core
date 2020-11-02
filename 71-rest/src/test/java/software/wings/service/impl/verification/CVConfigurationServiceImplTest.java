@@ -1371,7 +1371,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
                             .filter(AlertKeys.status, AlertStatus.Open)
                             .count();
       numOfTrials++;
-      logger.info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
+      log.info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
       sleep(ofMillis(100));
     } while (numOfTrials < 50 && numOfOpenAlerts != numOfExpectedAlerts);
     return numOfOpenAlerts;

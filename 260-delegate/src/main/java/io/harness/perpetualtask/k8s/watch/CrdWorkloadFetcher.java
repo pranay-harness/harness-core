@@ -69,9 +69,9 @@ public class CrdWorkloadFetcher {
       }
 
     } catch (ApiException e) {
-      logger.warn("Encountered ApiException listing CRDs, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
+      log.warn("Encountered ApiException listing CRDs, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
     } catch (Exception e) {
-      logger.warn("Error listing CRDs", e);
+      log.warn("Error listing CRDs", e);
     }
     return plurals;
   }
@@ -123,16 +123,16 @@ public class CrdWorkloadFetcher {
       return Workload.of(
           workloadRef.getKind(), Optional.ofNullable(havingMetadataObject.getMetadata()).orElse(knownMetadata));
     } catch (ApiException e) {
-      logger.warn(
+      log.warn(
           "Encountered ApiException fetching custom workload, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
       if (e.getCode() == 400 || e.getCode() == 401 || e.getCode() == 403 || e.getCode() == 404) {
-        logger.warn("Tripping future calls. Response code is {}", e.getCode());
+        log.warn("Tripping future calls. Response code is {}", e.getCode());
         tripped = true;
       }
       // fallback to return a workload with the metadata we already know (without others like labels)
       return Workload.of(workloadRef.getKind(), knownMetadata);
     } catch (Exception e) {
-      logger.warn("Encountered error trying to fetch custom workload details", e);
+      log.warn("Encountered error trying to fetch custom workload details", e);
       // fallback to return a workload with the metadata we already know (without others like labels)
       return Workload.of(workloadRef.getKind(), knownMetadata);
     }

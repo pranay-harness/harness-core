@@ -57,18 +57,17 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
 
   @Override
   public void handle(SecretManagerConfig secretManagerConfig) {
-    logger.info("renewing client tokens for {}", secretManagerConfig.getUuid());
+    log.info("renewing client tokens for {}", secretManagerConfig.getUuid());
     VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
     KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
     try {
       long renewalInterval = vaultConfig.getRenewalInterval();
       if (renewalInterval <= 0 || secretManagerConfig.isTemplatized()) {
-        logger.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
+        log.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
         return;
       }
       if (!checkIfEligibleForRenewal(vaultConfig.getRenewedAt(), renewalInterval)) {
-        logger.info(
-            "Vault config {} renewed at {} not renewing now", vaultConfig.getUuid(), vaultConfig.getRenewedAt());
+        log.info("Vault config {} renewed at {} not renewing now", vaultConfig.getUuid(), vaultConfig.getRenewedAt());
         return;
       }
       if (vaultConfig.getAccessType() == APP_ROLE) {
@@ -78,7 +77,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
       }
       alertService.closeAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     } catch (Exception e) {
-      logger.info("Failed to renew vault token for vault id {}", secretManagerConfig.getUuid(), e);
+      log.info("Failed to renew vault token for vault id {}", secretManagerConfig.getUuid(), e);
       alertService.openAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     }
   }

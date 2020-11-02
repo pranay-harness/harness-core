@@ -76,10 +76,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
                                      .filter(ID_KEY, delegateScope.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
-    logger.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
+    log.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         updatedDelegateScope.getAccountId(), null, updatedDelegateScope, Event.Type.UPDATE);
-    logger.info(
+    log.info(
         "Auditing updating of DelegateScope={} for account={}", delegateScope.getUuid(), delegateScope.getAccountId());
 
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
@@ -119,7 +119,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public DelegateScope add(DelegateScope delegateScope) {
     if (!delegateScope.isValid()) {
-      logger.warn("Delegate scope cannot be empty.");
+      log.warn("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
 
@@ -129,10 +129,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       ignoredOnPurpose(e);
       throw new InvalidRequestException("Scope with given name already exists for this account");
     }
-    logger.info("Added delegate scope: {}", delegateScope.getUuid());
+    log.info("Added delegate scope: {}", delegateScope.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateScope.getAccountId(), null, delegateScope, Event.Type.CREATE);
-    logger.info("Auditing adding of DelegateScope for accountId={}", delegateScope.getAccountId());
+    log.info("Auditing adding of DelegateScope for accountId={}", delegateScope.getAccountId());
     return delegateScope;
   }
 
@@ -144,10 +144,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
                                       .get();
     if (delegateScope != null) {
       ensureScopeSafeToDelete(accountId, delegateScope);
-      logger.info("Deleting delegate scope: {}", delegateScopeId);
+      log.info("Deleting delegate scope: {}", delegateScopeId);
       wingsPersistence.delete(delegateScope);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, delegateScope);
-      logger.info("Auditing deletion of DelegateScope for accountId={}", accountId);
+      log.info("Auditing deletion of DelegateScope for accountId={}", accountId);
     }
   }
 

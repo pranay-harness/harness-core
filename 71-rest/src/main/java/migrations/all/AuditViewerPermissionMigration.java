@@ -31,7 +31,7 @@ public class AuditViewerPermissionMigration implements Migration {
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Running the AuditViewerPermissionMigration script.");
+    log.info("Running the AuditViewerPermissionMigration script.");
 
     // 1. create AccountPermission to be added when its missing from existing userGroup
     Set<PermissionType> newAccPermissions = new HashSet<>();
@@ -62,7 +62,7 @@ public class AuditViewerPermissionMigration implements Migration {
         if (count % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("UserGroups: {} updated", count);
+          log.info("UserGroups: {} updated", count);
         }
         ++count;
 
@@ -73,14 +73,14 @@ public class AuditViewerPermissionMigration implements Migration {
             .updateOne(new BasicDBObject("$set", new BasicDBObject(UserGroupKeys.accountPermissions, dbObject)));
       }
     } catch (Exception ex) {
-      logger.error("AuditViewerPermissionMigration failed: ", ex);
+      log.error("AuditViewerPermissionMigration failed: ", ex);
     }
 
     if (count % 1000 != 1) {
       try {
         bulkWriteOperation.execute();
       } catch (Exception ex) {
-        logger.error("AuditViewerPermissionMigration failed: ", ex);
+        log.error("AuditViewerPermissionMigration failed: ", ex);
       }
     }
   }

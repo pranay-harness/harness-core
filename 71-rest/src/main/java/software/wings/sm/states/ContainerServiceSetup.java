@@ -136,7 +136,7 @@ public abstract class ContainerServiceSetup extends State {
       Environment env = workflowStandardParams.getEnv();
       Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
-      logger.info("Setting up container service for service {}", service.getName());
+      log.info("Setting up container service for service {}", service.getName());
       ContainerTask containerTask =
           serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, getDeploymentType());
 
@@ -151,7 +151,7 @@ public abstract class ContainerServiceSetup extends State {
           (ContainerInfrastructureMapping) infrastructureMapping;
 
       String clusterName = containerInfrastructureMapping.getClusterName();
-      logger.info("Got cluster {} from container infra-mapping {} for cloud provider {}", clusterName,
+      log.info("Got cluster {} from container infra-mapping {} for cloud provider {}", clusterName,
           infrastructureMapping.getUuid(), infrastructureMapping.getComputeProviderSettingId());
 
       Command command =
@@ -278,7 +278,7 @@ public abstract class ContainerServiceSetup extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
-      logger.info("Received async response");
+      log.info("Received async response");
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 
       if (commandExecutionResult == null || commandExecutionResult.getStatus() != SUCCESS) {

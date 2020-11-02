@@ -69,7 +69,7 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, true);
-    logger.info("New pipeline with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
+    log.info("New pipeline with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
 
     pipeline.setName(EDITED_PIPELINE_NAME);
     pipeline = PipelineRestUtils.updatePipeline(application.getUuid(), pipeline, bearerToken);
@@ -78,13 +78,13 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(pipeline.getName()).isEqualTo(EDITED_PIPELINE_NAME);
 
     retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, true);
-    logger.info("Pipeline update with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
+    log.info("Pipeline update with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
 
     int statusCode = PipelineRestUtils.deletePipeline(pipeline.getAppId(), pipeline.getUuid(), bearerToken);
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
     retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, false);
-    logger.info("Pipeline with id {} deleted", pipeline.getUuid());
+    log.info("Pipeline with id {} deleted", pipeline.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());
   }

@@ -40,7 +40,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("StateExecutionInstance: {} updated", i);
+          log.info("StateExecutionInstance: {} updated", i);
         }
         ++i;
 

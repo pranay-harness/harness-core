@@ -62,7 +62,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private void upsertHarnessToGitError(
       GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
-    logger.info(String.format("Upsert haress to git issue for file: %s", failedChange.getFilePath()));
+    log.info(String.format("Upsert haress to git issue for file: %s", failedChange.getFilePath()));
 
     gitSyncErrorRepository.upsertGitError(failedChange.getAccountId(), failedChange.getFilePath(), HARNESS_TO_GIT,
         errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info", fullSyncPath,
@@ -74,7 +74,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private void upsertGitToHarnessError(
       GitFileChange failedGitFileChange, String errorMessage, YamlGitConfigDTO yamlGitConfig) {
-    logger.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
+    log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
 
     GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
     final GitSyncError previousGitSyncError = gitSyncErrorRepository.findByAccountIdAndYamlFilePathAndGitSyncDirection(
@@ -99,7 +99,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
             new ArrayList<>(emptyIfNull(oldGitToHarnessErrorDetails.getPreviousErrors()));
         List<String> previousCommitIds =
             new ArrayList<>(emptyIfNull(oldGitToHarnessErrorDetails.getPreviousCommitIdsWithError()));
-        logger.info("Adding the error with the commitId [{}] to the previous commit list of file [{}]",
+        log.info("Adding the error with the commitId [{}] to the previous commit list of file [{}]",
             getCommitIdOfError(previousGitSyncError), failedGitFileChange.getFilePath());
         // Setting the value of the previous details as empty as this record will not go to the previous list
         previousGitSyncError.setUuid(generateUuid());
@@ -115,7 +115,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         gitToHarnessErrorDetails.setPreviousCommitIdsWithError(previousCommitIds);
       }
     } else {
-      logger.info("Creating a new error record for the file [{}] in account", failedGitFileChange.getFilePath());
+      log.info("Creating a new error record for the file [{}] in account", failedGitFileChange.getFilePath());
       gitToHarnessErrorDetails.setPreviousErrors(Collections.emptyList());
       gitToHarnessErrorDetails.setPreviousCommitIdsWithError(Collections.emptyList());
     }
@@ -128,7 +128,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private GitToHarnessErrorDetails getGitToHarnessErrorDetails(GitFileChange failedGitFileChange) {
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
     if (failedCommitId.equals("")) {
-      logger.info("Unexpected behaviour: The git commitId is null for the git to harness error");
+      log.info("Unexpected behaviour: The git commitId is null for the git to harness error");
     }
     return GitToHarnessErrorDetails.builder()
         .gitCommitId(failedCommitId)

@@ -36,13 +36,13 @@ public class ApplicationTest extends WingsBaseTest {
     app.setCreatedBy(null);
     app.setLastUpdatedBy(null);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("TestApp : " + app);
+    if (log.isDebugEnabled()) {
+      log.debug("TestApp : " + app);
     }
 
     String json = JsonUtils.asJson(app);
-    if (logger.isDebugEnabled()) {
-      logger.debug("json : " + json);
+    if (log.isDebugEnabled()) {
+      log.debug("json : " + json);
     }
 
     Application app2 = JsonUtils.asObject(json, Application.class);

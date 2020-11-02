@@ -142,7 +142,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
           throw exception;
         }
       } else {
-        logger.error("Error while executing command", exception);
+        log.error("Error while executing command", exception);
         logService.save(context.getAccountId(),
             aLog()
                 .appId(context.getAppId())

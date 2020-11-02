@@ -29,7 +29,7 @@ public class AccountShardService {
   }
 
   public List<Account> getCeEnabledAccounts() {
-    logger.info("Shard Id {} master pod {}", getShardId(), isMasterPod());
+    log.info("Shard Id {} master pod {}", getShardId(), isMasterPod());
     List<AccountShardMapping> accountShardMappings = accountShardMappingDao.getAccountShardMapping();
     List<String> isolatedAccounts =
         accountShardMappings.stream().map(AccountShardMapping::getAccountId).collect(Collectors.toList());
@@ -54,7 +54,7 @@ public class AccountShardService {
                      .collect(Collectors.toList());
     }
     List<String> collect = accounts.stream().map(Account::getUuid).collect(Collectors.toList());
-    logger.info("Account size {} :: {} :: {}", ceEnabledAccounts.size(), accounts.size(), collect);
+    log.info("Account size {} :: {} :: {}", ceEnabledAccounts.size(), accounts.size(), collect);
     return accounts;
   }
 

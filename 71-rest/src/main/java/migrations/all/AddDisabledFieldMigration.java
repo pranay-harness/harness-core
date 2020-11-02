@@ -29,7 +29,7 @@ public class AddDisabledFieldMigration implements Migration {
         }
       }
     } catch (Exception e) {
-      logger.error("Could not run migration for users disabled field ", e);
+      log.error("Could not run migration for users disabled field ", e);
     }
   }
 }

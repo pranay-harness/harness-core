@@ -47,7 +47,7 @@ public class TestMetadataListener extends RunListener {
     for (int i = 0; i < 3; i++) {
       try {
         if (!testMetadataMap.isEmpty()) {
-          logger.debug("Test meta data map {}", testMetadataMap);
+          log.debug("Test meta data map {}", testMetadataMap);
           new MetadataPersister(outputFolder).persist(testMetadataMap);
           break;
         }

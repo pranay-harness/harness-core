@@ -232,7 +232,7 @@ public class AwsLambdaState extends State {
       workflowExecutionService.refreshAwsLambdaExecutionSummary(
           context.getWorkflowExecutionId(), awsLambdaExecutionSummaries);
     } catch (Exception ex) {
-      logger.info("Exception while updating awsLambda execution summaries", ex);
+      log.info("Exception while updating awsLambda execution summaries", ex);
     }
   }
 

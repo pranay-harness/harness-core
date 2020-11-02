@@ -64,7 +64,7 @@ public class AwsIamTask extends AbstractDelegateRunnableTask {
         }
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       throw exception;
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);

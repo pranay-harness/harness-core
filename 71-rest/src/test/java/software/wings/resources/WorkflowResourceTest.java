@@ -135,7 +135,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<Workflow>>>() {});
 
-    logger.info(JsonUtils.asJson(restResponse));
+    log.info(JsonUtils.asJson(restResponse));
     verify(WORKFLOW_SERVICE).listWorkflows(pageRequestArgumentCaptor.capture(), eq(2), eq(false), eq(null));
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

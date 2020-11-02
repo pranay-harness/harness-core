@@ -413,7 +413,7 @@ public class WorkflowExecutionController {
             return artifactNeededServiceIds;
           }
         }
-        logger.info("No Services requires artifact inputs for this workflow: " + workflowId);
+        log.info("No Services requires artifact inputs for this workflow: " + workflowId);
         return new ArrayList<>();
       }
     }

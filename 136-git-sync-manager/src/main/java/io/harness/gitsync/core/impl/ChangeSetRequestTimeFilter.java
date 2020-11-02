@@ -34,7 +34,7 @@ public class ChangeSetRequestTimeFilter {
 
   public YamlFilterResult filterFiles(
       List<GitFileChange> gitFileChangeList, String accountId, YamlGitConfigDTO yamlGitConfig) {
-    logger.info("Started applying ChangeRequestTimeFilter for files");
+    log.info("Started applying ChangeRequestTimeFilter for files");
     final YamlFilterResultBuilder filterResultBuilder = YamlFilterResult.builder();
     for (GitFileChange gitFileChange : gitFileChangeList) {
       if (commitTimeMissing(gitFileChange)) {
@@ -43,7 +43,7 @@ public class ChangeSetRequestTimeFilter {
         filterFileWithCommitTime(accountId, gitFileChange, filterResultBuilder, yamlGitConfig);
       }
     }
-    logger.info("Successfully applied ChangeRequestTimeFilter for files");
+    log.info("Successfully applied ChangeRequestTimeFilter for files");
     return filterResultBuilder.build();
   }
 
@@ -81,7 +81,7 @@ public class ChangeSetRequestTimeFilter {
 
     final HarnessSuccessFulChangeDetail changeDetail =
         (HarnessSuccessFulChangeDetail) yamlSuccessfulChange.getChangeDetail();
-    logger.info(" Skipping file [{}] with reason =[{}]. Harness -> git changeset [{}] still in queue.",
+    log.info(" Skipping file [{}] with reason =[{}]. Harness -> git changeset [{}] still in queue.",
         gitFileChange.getFilePath(), skipMessage, changeDetail.getYamlChangeSetId());
 
     filterResultBuilder.excludedFilePathWithReason(gitFileChange.getFilePath(), skipMessage);
@@ -90,8 +90,7 @@ public class ChangeSetRequestTimeFilter {
   private boolean hasHarnessChangesetProcessed(YamlSuccessfulChange yamlSuccessfulChange) {
     final Optional<YamlChangeSet> yamlChangeSet = getYamlChangeSet(yamlSuccessfulChange);
     if (yamlChangeSet.isPresent()) {
-      logger.info(
-          "Yamlchangeset id =[{}], status =[{}]", yamlChangeSet.get().getUuid(), yamlChangeSet.get().getStatus());
+      log.info("Yamlchangeset id =[{}], status =[{}]", yamlChangeSet.get().getUuid(), yamlChangeSet.get().getStatus());
       return YamlChangeSet.terminalStatusList.contains(yamlChangeSet.get().getStatus());
     }
     return true;
@@ -118,7 +117,7 @@ public class ChangeSetRequestTimeFilter {
     final String skipMessage = format(
         "Conflict detected: File change request time [%s] is less than last successfully processed change request time [%s]",
         dateStringInGMT(gitFileChange.getCommitTimeMs()), dateStringInGMT(yamlSuccessfulChange.getChangeRequestTS()));
-    logger.info(" Skipping file [{}] with reason =[{}]. last Successful change detail = [{}] ",
+    log.info(" Skipping file [{}] with reason =[{}]. last Successful change detail = [{}] ",
         gitFileChange.getFilePath(), skipMessage, yamlSuccessfulChange.getChangeDetail());
     filterResultBuilder.excludedFilePathWithReason(gitFileChange.getFilePath(), skipMessage);
   }

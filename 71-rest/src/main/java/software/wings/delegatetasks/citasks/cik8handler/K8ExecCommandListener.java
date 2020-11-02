@@ -26,19 +26,19 @@ public class K8ExecCommandListener implements ExecCommandListener {
 
   @Override
   public void onOpen(Response response) {
-    logger.info("Channel opened: {}", response);
+    log.info("Channel opened: {}", response);
   }
 
   @Override
   public void onFailure(Throwable t, Response response) {
-    logger.info("Failed to execute: {} {}", response, t);
+    log.info("Failed to execute: {} {}", response, t);
     cmdStatus.set(false);
     execWait.release();
   }
 
   @Override
   public void onClose(int code, String reason) {
-    logger.info("Channel closed with code: {}, reason: {}", code, reason);
+    log.info("Channel closed with code: {}, reason: {}", code, reason);
     cmdStatus.set(true);
     execWait.release();
   }

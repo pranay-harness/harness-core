@@ -253,7 +253,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       SettingAttribute settingAttribute =
           settingsService.getSettingAttributeByName(accountId, resolvedJenkinsConfigTemplate);
       if (settingAttribute == null) {
-        logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+        log.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
@@ -381,7 +381,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
       SettingAttribute settingAttribute =
           settingsService.getSettingAttributeByName(accountId, resolvedJenkinsConfigTemplate);
       if (settingAttribute == null) {
-        logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+        log.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
@@ -475,7 +475,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         return startJenkinsPollTask(context, response);
       } else {
         // Can not start POLL_TASK
-        logger.error("Jenkins Queued Build URL is empty and could not start POLL_TASK", USER);
+        log.error("Jenkins Queued Build URL is empty and could not start POLL_TASK", USER);
         updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
             ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(), FAILED);
         return ExecutionResponse.builder()

@@ -34,20 +34,20 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
     GitFetchFilesTaskParams parameters = (GitFetchFilesTaskParams) getParameters()[0];
 
     // Run validation task for container service parameters
-    logger.info("Running validation for task {} for container service parameters", delegateTaskId);
+    log.info("Running validation for task {} for container service parameters", delegateTaskId);
     ContainerServiceParams containerServiceParams = parameters.getContainerServiceParams();
 
     if (containerServiceParams == null) {
-      logger.info("Container Service Parameters is null for task {}", delegateTaskId);
+      log.info("Container Service Parameters is null for task {}", delegateTaskId);
     } else {
       if (parameters.isBindTaskFeatureSet()
           && !containerValidationHelper.validateContainerServiceParams(containerServiceParams)) {
-        logger.info("Failed validation for task {} for container service parameters", delegateTaskId);
+        log.info("Failed validation for task {} for container service parameters", delegateTaskId);
         return taskValidationResult(false);
       }
     }
 
-    logger.info("Running validation for task {} for repo {}", delegateTaskId, getRepoUrls());
+    log.info("Running validation for task {} for repo {}", delegateTaskId, getRepoUrls());
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = parameters.getGitFetchFilesConfigMap();
 
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {

@@ -62,14 +62,14 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
       for (String artifactPath : artifactPaths) {
-        logger.info("Collecting artifact {} of job {}", artifactPath, jobName);
+        log.info("Collecting artifact {} of job {}", artifactPath, jobName);
         Pair<String, InputStream> fileInfo =
             jenkins.downloadArtifact(jobName, arguments.get(ArtifactMetadataKeys.buildNo), artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Exception: " + ExceptionUtils.getMessage(e), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

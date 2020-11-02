@@ -12,13 +12,13 @@ public class AlertNotificationRuleCheckerImpl implements AlertNotificationRuleCh
   @Override
   public boolean doesAlertSatisfyRule(Alert alert, AlertNotificationRule rule) {
     if (rule.getAlertCategory() != alert.getCategory()) {
-      logger.debug("Alert category and rule category don't match. Alert does not satisfy rule. Alert: {}, Rule: {}",
-          alert, rule);
+      log.debug("Alert category and rule category don't match. Alert does not satisfy rule. Alert: {}, Rule: {}", alert,
+          rule);
       return false;
     }
 
     if (null == rule.getAlertFilter()) {
-      logger.debug(
+      log.debug(
           "[Missing Alert Filter] Alert matched the rule because rule category and alert category are same and no additional filters are present. Rule: {}, Alert: {}",
           alert, rule);
       return rule.getAlertCategory() == alert.getCategory();

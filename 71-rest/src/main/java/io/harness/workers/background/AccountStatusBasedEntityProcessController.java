@@ -29,7 +29,7 @@ public class AccountStatusBasedEntityProcessController<T extends PersistentItera
     try {
       accountStatus = accountService.getAccountStatus(accountId);
     } catch (AccountNotFoundException ex) {
-      logger.warn("Skipping processing entity. Account {} does not exist", accountId, ex);
+      log.warn("Skipping processing entity. Account {} does not exist", accountId, ex);
       return false;
     }
     return AccountStatus.ACTIVE.equals(accountStatus);

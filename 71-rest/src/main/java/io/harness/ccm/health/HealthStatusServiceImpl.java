@@ -244,7 +244,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
               errors.add(DELEGATE_NOT_INSTALLED);
               break;
             default:
-              logger.warn("Unexpected perpetual task state:{} for empty delegate id",
+              log.warn("Unexpected perpetual task state:{} for empty delegate id",
                   perpetualTaskRecord.getUnassignedReason());
           }
         }
@@ -309,13 +309,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           messages.add(K8S_PERMISSIONS_MISSING.getMessage());
           break;
         case PERPETUAL_TASK_CREATION_FAILURE:
-          logger.warn("The cluster id={} encounters the error {}.", clusterRecord.getUuid(),
+          log.warn("The cluster id={} encounters the error {}.", clusterRecord.getUuid(),
               PERPETUAL_TASK_CREATION_FAILURE.getMessage());
           break;
         default:
           messages.add("Unexpected error. Please contact Harness support.");
-          logger.warn(
-              "The cluster id={} encounters an unexpected error {}.", clusterRecord.getUuid(), error.getMessage());
+          log.warn("The cluster id={} encounters an unexpected error {}.", clusterRecord.getUuid(), error.getMessage());
           break;
       }
     }

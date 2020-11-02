@@ -148,7 +148,7 @@ public class ResourceRestraintStep
         throw new InvalidRequestException("The state should be ACTIVE for consumer with id [" + consumerId + "].");
       }
     } catch (InvalidPermitsException | UnableToRegisterConsumerException | PermanentlyBlockedConsumerException e) {
-      logger.error("Exception on ResourceRestraintStep for id [{}]", ambiance.obtainCurrentRuntimeId(), e);
+      log.error("Exception on ResourceRestraintStep for id [{}]", ambiance.obtainCurrentRuntimeId(), e);
     }
 
     return consumerId;

@@ -131,7 +131,7 @@ public class KubernetesConvention {
           // ToDo(anshul) needs better logic here rather than using MAX_REVISIONS
           return (revision.isPresent() && revision.get() < MAX_REVISIONS) ? revision : Optional.empty();
         } catch (NumberFormatException e) {
-          logger.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
+          log.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
         }
       }
     }
@@ -154,8 +154,8 @@ public class KubernetesConvention {
           // ToDo(anshul) needs better logic here rather than using MAX_REVISIONS
           return (revision.isPresent() && revision.get() < MAX_REVISIONS) ? revision : Optional.empty();
         } catch (NumberFormatException e) {
-          logger.error("Couldn't get version from controller name {}", name, e);
-          logger.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
+          log.error("Couldn't get version from controller name {}", name, e);
+          log.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
         }
       }
     }

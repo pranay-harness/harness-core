@@ -76,7 +76,7 @@ public class ReportProcessor {
       String methodName = failureNode.getAttributes().getNamedItem("name").getTextContent();
       String testFqdn = className + "." + methodName;
       if (isFlakyTest(testFqdn)) {
-        logger.info("Suppressing failure for flaky test {}", testFqdn);
+        log.info("Suppressing failure for flaky test {}", testFqdn);
         testsuiteNode.removeChild(failureNode);
       } else {
         success = false;

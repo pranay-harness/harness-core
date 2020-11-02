@@ -70,7 +70,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       return encryptMultipleFields ? secretManager.getEncryptedYamlRef(settingValue, fieldName)
                                    : secretManager.getEncryptedYamlRef(settingValue);
     } catch (IllegalAccessException e) {
-      logger.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
+      log.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
       throw new WingsException(e);
     }
   }

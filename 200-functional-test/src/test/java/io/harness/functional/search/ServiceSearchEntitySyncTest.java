@@ -73,7 +73,7 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, true);
-    logger.info("New service with id {} and name {} synced.", service.getUuid(), service.getName());
+    log.info("New service with id {} and name {} synced.", service.getUuid(), service.getName());
 
     service.setName(EDITED_SERVICE_NAME);
     service = ServiceRestUtils.updateService(bearerToken, application.getAccountId(), service.getAppId(), service);
@@ -82,13 +82,13 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(service.getName()).isEqualTo(EDITED_SERVICE_NAME);
 
     retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, true);
-    logger.info("Service update with id {} and name {} synced.", service.getUuid(), service.getName());
+    log.info("Service update with id {} and name {} synced.", service.getUuid(), service.getName());
 
     int statusCode = ServiceRestUtils.deleteService(bearerToken, service.getAppId(), service.getUuid());
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
     retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, false);
-    logger.info("Service with id {} deleted", service.getUuid());
+    log.info("Service with id {} deleted", service.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());
   }

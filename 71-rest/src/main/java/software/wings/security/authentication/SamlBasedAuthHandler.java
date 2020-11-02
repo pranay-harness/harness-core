@@ -61,17 +61,17 @@ public class SamlBasedAuthHandler implements AuthHandler {
       String accountId = user == null ? null : user.getDefaultAccountId();
       String uuid = user == null ? null : user.getUuid();
       try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
-        logger.info("Authenticating via SAML");
+        log.info("Authenticating via SAML");
         Account account = authenticationUtils.getDefaultAccount(user);
         if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
           domainWhitelistCheckerService.throwDomainWhitelistFilterException();
         }
-        logger.info("Authenticating via SAML for user in account {}", account.getUuid());
+        log.info("Authenticating via SAML for user in account {}", account.getUuid());
         SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
         // Occurs when SAML settings are being tested before being enabled
         if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
-          logger.info("SAML test login successful for user: [{}]", user.getEmail());
+          log.info("SAML test login successful for user: [{}]", user.getEmail());
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
 
@@ -106,7 +106,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
                 return getUser(samlResponseString, samlSettings);
               }
             } catch (SamlException e) {
-              logger.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
+              log.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
                   samlSettings.getUrl(), e);
             }
           }
@@ -128,7 +128,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
               try {
                 return getUser(samlResponseString, samlSettings);
               } catch (SamlException e) {
-                logger.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
+                log.warn("Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl,
                     samlSettings.getUrl(), e);
               }
             }
@@ -151,7 +151,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
       }
     }
 
-    logger.info("No IDP metadata could be found for URL [{}]", idpUrl);
+    log.info("No IDP metadata could be found for URL [{}]", idpUrl);
     throw new WingsException("Saml Authentication Failed");
   }
 
@@ -164,7 +164,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
         try {
           return getUser(samlResponseString, samlSettings);
         } catch (SamlException e) {
-          logger.warn(
+          log.warn(
               "Could not validate SAML Response idpUrl:[{}], samlSettings url:[{}]", idpUrl, samlSettings.getUrl(), e);
         }
       }
@@ -185,7 +185,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
         }
       }
     }
-    logger.info("Authorization failed for Saml with idp URL [{}]", idpUrl);
+    log.info("Authorization failed for Saml with idp URL [{}]", idpUrl);
     throw new WingsException("Saml Authorization Failed");
   }
 
@@ -242,7 +242,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
       validateUser(user, samlSettings.getAccountId());
       return user;
     } catch (WingsException e) {
-      logger.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
+      log.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
           samlSettings.getUrl(), samlSettings.getAccountId());
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, e);
     }
@@ -251,7 +251,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   // TODO : revisit this method when we are doing SAML authorization
   protected void validateUser(User user, String accountId) {
     if (user.getAccounts().parallelStream().filter(account -> account.getUuid().equals(accountId)).count() == 0) {
-      logger.warn("User : [{}] not part of accountId : [{}]", user.getEmail(), accountId);
+      log.warn("User : [{}] not part of accountId : [{}]", user.getEmail(), accountId);
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
   }

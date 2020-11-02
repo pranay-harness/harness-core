@@ -37,9 +37,9 @@ public class PingPongClient extends AbstractScheduledService {
                       .setVersion(version)
                       .build();
       pingPongServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).tryPing(ping);
-      logger.info("Ping at {} successful", timestamp);
+      log.info("Ping at {} successful", timestamp);
     } catch (Exception e) {
-      logger.error("Ping failed", e);
+      log.error("Ping failed", e);
     }
   }
 

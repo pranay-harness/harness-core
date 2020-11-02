@@ -104,7 +104,7 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
     ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, deployTaskParameters.getCommandName());
     String errorMessage = ExceptionUtils.getMessage(ex);
     logCallBack.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
-    logger.error(errorMessage, ex);
+    log.error(errorMessage, ex);
     return AzureVMSSTaskExecutionResponse.builder().errorMessage(errorMessage).commandExecutionStatus(FAILURE).build();
   }
 }

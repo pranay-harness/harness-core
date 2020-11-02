@@ -32,7 +32,7 @@ public class InvalidLimitConfigurationException extends RuntimeException {
       invalidLimit = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(configuredLimit);
     } catch (JsonProcessingException e) {
       invalidLimit = configuredLimit.toString();
-      logger.error("Could not convert configured limit to JSON: {}", invalidLimit);
+      log.error("Could not convert configured limit to JSON: {}", invalidLimit);
     }
 
     String reasonLine = "REASON: " + reason;

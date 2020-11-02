@@ -71,7 +71,7 @@ public class ElasticsearchBulkSyncTask {
         wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
     if (searchEntityIndexState == null
         || !searchEntityIndexState.getIndexName().equals(elasticsearchBulkMigrationJob.getNewIndexName())) {
-      logger.error("Search entitiy {} index state did not update", elasticsearchBulkMigrationJob.getEntityClass());
+      log.error("Search entitiy {} index state did not update", elasticsearchBulkMigrationJob.getEntityClass());
       return false;
     }
     return true;
@@ -97,9 +97,9 @@ public class ElasticsearchBulkSyncTask {
       SearchEntityIndexState searchEntityIndexState =
           wingsPersistence.get(SearchEntityIndexState.class, searchEntity.getClass().getCanonicalName());
       if (searchEntityIndexState != null && !searchEntityIndexState.shouldBulkSync()) {
-        logger.info("Entity {} is already migrated to elasticsearch", searchEntity.getClass());
+        log.info("Entity {} is already migrated to elasticsearch", searchEntity.getClass());
       } else {
-        logger.info("Entity {} is to be migrated to elasticsearch", searchEntity.getClass());
+        log.info("Entity {} is to be migrated to elasticsearch", searchEntity.getClass());
         entitiesToBulkSync.add(searchEntity);
       }
     }
@@ -155,26 +155,26 @@ public class ElasticsearchBulkSyncTask {
     changeEventsDuringBulkSync = new LinkedList<>();
     isFirstChangeReceived = new HashMap<>();
 
-    logger.info("Clean up failed migration jobs");
+    log.info("Clean up failed migration jobs");
     cleanupFailedBulkMigrationJobs();
 
-    logger.info("Initializing change listeners for search entities for bulk sync.");
+    log.info("Initializing change listeners for search entities for bulk sync.");
     elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
 
-    logger.info("Getting the entities that have to bulk synced");
+    log.info("Getting the entities that have to bulk synced");
     Set<SearchEntity<?>> entitiesToBulkSync = getEntitiesToBulkSync(searchEntities);
 
-    logger.info("Create jobs for bulk migration of search entities");
+    log.info("Create jobs for bulk migration of search entities");
     boolean areJobsCreated = createElasticsearchBulkMigrationJobs(entitiesToBulkSync);
 
     if (!areJobsCreated) {
       return new ElasticsearchBulkSyncTaskResult(false, changeEventsDuringBulkSync);
     }
 
-    logger.info("Starting migration of entities from persistence to search database");
+    log.info("Starting migration of entities from persistence to search database");
     boolean hasMigrationSucceeded = elasticsearchBulkMigrationHelper.doBulkSync(entitiesToBulkSync);
 
-    logger.info("Calling change tracker to close change listeners after bulk sync was completed");
+    log.info("Calling change tracker to close change listeners after bulk sync was completed");
     elasticsearchSyncHelper.stopChangeListeners();
 
     if (hasMigrationSucceeded) {

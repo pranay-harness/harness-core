@@ -187,7 +187,7 @@ public class AccountExportImportResource {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
       RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {
-        logger.error(errorMessage);
+        log.error(errorMessage);
         return Response.status(Response.Status.UNAUTHORIZED).build();
       }
     }
@@ -210,7 +210,7 @@ public class AccountExportImportResource {
       DBObject emptyFilter = new BasicDBObject();
       List<String> schemas = mongoExportImport.exportRecords(emptyFilter, schemaCollectionName);
       if (schemas.size() == 0) {
-        logger.warn("Schema collection data doesn't exist, schema version data won't be exported.");
+        log.warn("Schema collection data doesn't exist, schema version data won't be exported.");
       } else {
         exportToStream(zipOutputStream, fileOutputStream, schemas, schemaCollectionName);
       }
@@ -292,13 +292,12 @@ public class AccountExportImportResource {
       exportToStream(zipOutputStream, fileOutputStream, records, kmsConfigCollectionName);
     }
 
-    logger.info("Flushing exported data into a zip file {}.", zipFileName);
+    log.info("Flushing exported data into a zip file {}.", zipFileName);
     zipOutputStream.flush();
     zipOutputStream.close();
     fileOutputStream.flush();
     fileOutputStream.close();
-    logger.info(
-        "Finished flushing {} bytes of exported account data into a zip file {}.", zipFile.length(), zipFileName);
+    log.info("Finished flushing {} bytes of exported account data into a zip file {}.", zipFile.length(), zipFileName);
 
     return Response.ok(zipFile, MediaType.APPLICATION_OCTET_STREAM)
         .header("content-disposition", "attachment; filename = " + zipFileName)
@@ -314,7 +313,7 @@ public class AccountExportImportResource {
       String collectionName) throws IOException {
     String zipEntryName = collectionName + JSON_FILE_SUFFIX;
     ZipEntry zipEntry = new ZipEntry(zipEntryName);
-    logger.info("Zipping entry: {}", zipEntryName);
+    log.info("Zipping entry: {}", zipEntryName);
     zipOutputStream.putNextEntry(zipEntry);
     JsonArray jsonArray = convertStringListToJsonArray(records);
     String jsonString = gson.toJson(jsonArray);
@@ -322,7 +321,7 @@ public class AccountExportImportResource {
     // Flush when each collection finished exporting into the stream to reduce memory footprint.
     zipOutputStream.flush();
     fileOutputStream.flush();
-    logger.info("{} '{}' records have been exported.", records.size(), collectionName);
+    log.info("{} '{}' records have been exported.", records.size(), collectionName);
   }
 
   private DBObject getGitCommitExportFilter(DBObject accountIdFilter) {
@@ -407,14 +406,14 @@ public class AccountExportImportResource {
       String errorMessage = "User is not account administrator and can't perform the import operation.";
       RestResponse<ImportStatusReport> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {
-        logger.error(errorMessage);
+        log.error(errorMessage);
         return restResponse;
       }
     }
 
-    logger.info("Started importing data for account '{}'.", accountId);
+    log.info("Started importing data for account '{}'.", accountId);
     Map<String, String> zipEntryDataMap = readZipEntries(uploadInputStream);
-    logger.info("Finished reading uploaded input stream in zip format.");
+    log.info("Finished reading uploaded input stream in zip format.");
 
     List<ImportStatus> importStatuses = new ArrayList<>();
 
@@ -484,7 +483,7 @@ public class AccountExportImportResource {
       String collectionName = getCollectionName(entry.getValue());
       JsonArray jsonArray = getJsonArray(zipEntryDataMap, collectionName, clashedUserIdMapping);
       if (jsonArray == null) {
-        logger.info("No data found for collection '{}' to import.", collectionName);
+        log.info("No data found for collection '{}' to import.", collectionName);
       } else {
         ImportStatus importStatus = null;
         if (entry.getValue() == FeatureFlag.class) {
@@ -515,7 +514,7 @@ public class AccountExportImportResource {
     if (licenseInfo != null) {
       licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
       licenseService.updateAccountLicense(accountId, licenseInfo);
-      logger.info("Updated license of account {} to: {}", accountId, licenseInfo);
+      log.info("Updated license of account {} to: {}", accountId, licenseInfo);
     }
 
     // 9. Update the first account administrator's password for post-migration validation by CSE team if specified
@@ -532,8 +531,8 @@ public class AccountExportImportResource {
     // 10. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster
     reinstantiateQuartzJobs(accountId, importStatuses);
 
-    logger.info("{} collections has been imported.", importStatuses.size());
-    logger.info("Finished importing data for account '{}'.", accountId);
+    log.info("{} collections has been imported.", importStatuses.size());
+    log.info("Finished importing data for account '{}'.", accountId);
 
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
   }
@@ -551,14 +550,14 @@ public class AccountExportImportResource {
       try {
         featureEnum = FeatureName.valueOf(featureName);
       } catch (IllegalArgumentException iae) {
-        logger.error(
+        log.error(
             "IllegalArgumentException exception occurred while fetch feature " + featureName.replaceAll("[\r\n]", ""),
             iae);
       }
 
       if (featureEnum != null) {
         if (featureFlagService.isEnabled(featureEnum, accountId)) {
-          logger.info("Feature {} is already enabled for accountId {} or is enabled globally",
+          log.info("Feature {} is already enabled for accountId {} or is enabled globally",
               featureName.replaceAll("[\r\n]", ""), accountId);
           idClashCount++;
         } else {
@@ -588,7 +587,7 @@ public class AccountExportImportResource {
               .set(UserKeys.passwordChangedAt, System.currentTimeMillis()));
       authService.invalidateAllTokensForUser(adminUserId);
 
-      logger.info("Updated password of admin user {} with id {} for account {} during account import",
+      log.info("Updated password of admin user {} with id {} for account {} during account import",
           adminUser.getEmail(), adminUserId, accountId);
     }
   }
@@ -618,7 +617,7 @@ public class AccountExportImportResource {
       importedJobCount++;
     }
 
-    logger.info("{} cron jobs has been recreated.", importedJobCount);
+    log.info("{} cron jobs has been recreated.", importedJobCount);
 
     if (importedJobCount > 0) {
       ImportStatus importStatus =
@@ -643,14 +642,14 @@ public class AccountExportImportResource {
         if (isEmpty(email)) {
           String userName = userObject.get("name").getAsString();
           // Ignore as this user doesn't have an email attribute
-          logger.info("User '{}' with id {} doesn't have an email attribute, it will be skipped from being imported.",
+          log.info("User '{}' with id {} doesn't have an email attribute, it will be skipped from being imported.",
               userName, userId);
           continue;
         }
         User existingUser = userService.getUserByEmail(email);
         if (existingUser != null && !existingUser.getUuid().equals(userId)) {
           userIdMapping.put(userId, existingUser.getUuid());
-          logger.info(
+          log.info(
               "User '{}' with email '{}' clashes with one existing user '{}'.", userId, email, existingUser.getUuid());
           // Adding the new import account into the account list of the existing user.
           existingUser.getAccounts().add(account);
@@ -658,7 +657,7 @@ public class AccountExportImportResource {
         }
       }
       if (userIdMapping.size() > 0) {
-        logger.info(
+        log.info(
             "{} users have email clashes with existing users and all of the references to it in the imported records need to be replaced.",
             userIdMapping.size());
       }
@@ -760,7 +759,7 @@ public class AccountExportImportResource {
     try {
       return new ObjectId(fileId);
     } catch (IllegalArgumentException e) {
-      logger.warn("Invalid BSON object id: " + fileId);
+      log.warn("Invalid BSON object id: " + fileId);
       return null;
     }
   }
@@ -787,10 +786,10 @@ public class AccountExportImportResource {
       // Schema version. There should be only one entry.
       int importSchemaVersion = getSchemaVersion(schemas.get(0).getAsJsonObject());
       int currentSchemaVersion = getSchemaVersion(getSchema(jsonParser));
-      logger.info("Import schema version is {}; Current cluster's schema version is {}.", importSchemaVersion,
+      log.info("Import schema version is {}; Current cluster's schema version is {}.", importSchemaVersion,
           currentSchemaVersion);
       if (importSchemaVersion == currentSchemaVersion) {
-        logger.info("Schema compatibility check has passed. Proceed further to import account data.");
+        log.info("Schema compatibility check has passed. Proceed further to import account data.");
       } else {
         throw new WingsException("Incompatible schema version! Import schema version: " + importSchemaVersion
             + "; Current schema version: " + currentSchemaVersion);
@@ -806,7 +805,7 @@ public class AccountExportImportResource {
         // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
         String mongoCollectionName = mc.getEntityAnnotation().value();
         if (!includedMongoCollections.contains(mongoCollectionName)) {
-          logger.debug("Collection '{}' is exportable", mongoCollectionName);
+          log.debug("Collection '{}' is exportable", mongoCollectionName);
           genericExportableEntityTypes.put(mongoCollectionName, clazz);
         }
       }

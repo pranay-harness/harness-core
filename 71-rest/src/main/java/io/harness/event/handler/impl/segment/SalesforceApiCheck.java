@@ -83,23 +83,23 @@ public class SalesforceApiCheck {
       try {
         response = httpClient.execute(httpPost);
       } catch (ClientProtocolException cpe) {
-        logger.error("Error when connecting to Salesforce with userName={}", salesforceConfig.getUserName(), cpe);
+        log.error("Error when connecting to Salesforce with userName={}", salesforceConfig.getUserName(), cpe);
       } catch (IOException ioe) {
-        logger.error("Error in connecting to Salesforce with userName={}", salesforceConfig.getUserName(), ioe);
+        log.error("Error in connecting to Salesforce with userName={}", salesforceConfig.getUserName(), ioe);
       }
 
       if (response == null) {
-        logger.error("Login Response is null with given credentials in Salesforce");
+        log.error("Login Response is null with given credentials in Salesforce");
         return null;
       }
       if (response.getStatusLine() != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-        logger.info("Successfully logged in to Salesforce, with userName={}", salesforceConfig.getUserName());
+        log.info("Successfully logged in to Salesforce, with userName={}", salesforceConfig.getUserName());
       }
       String responseString = null;
       try {
         responseString = EntityUtils.toString(response.getEntity());
       } catch (IOException ioe) {
-        logger.error(
+        log.error(
             "Could not convert Salesforce Http response to EntityUtils String, where response is {}", response, ioe);
       }
       return responseString;
@@ -120,7 +120,7 @@ public class SalesforceApiCheck {
         break;
       }
       if (count >= MAX_RETRIES) {
-        logger.error("Response from Salesforce Login is null");
+        log.error("Response from Salesforce Login is null");
         return null;
       }
     }
@@ -139,12 +139,12 @@ public class SalesforceApiCheck {
         response = httpClient.execute(httpGet);
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {
-          logger.info("Successfully queried Salesforce with query={}", queryString);
+          log.info("Successfully queried Salesforce with query={}", queryString);
         }
       } catch (JSONException je) {
-        logger.error("Error in Jsonifying Salesforce Http Response {}", loginResponseString, je);
+        log.error("Error in Jsonifying Salesforce Http Response {}", loginResponseString, je);
       } catch (IOException ioe) {
-        logger.error("Could not connect to Salesforce with URI {}", uri, ioe);
+        log.error("Could not connect to Salesforce with URI {}", uri, ioe);
       }
       String responseString = null;
       try {
@@ -152,7 +152,7 @@ public class SalesforceApiCheck {
           responseString = EntityUtils.toString(response.getEntity());
         }
       } catch (IOException ioe) {
-        logger.error("Error while converting Salesforce response={} to String", response, ioe);
+        log.error("Error while converting Salesforce response={} to String", response, ioe);
       }
       return responseString;
     } finally {
@@ -171,7 +171,7 @@ public class SalesforceApiCheck {
         return responseString;
       }
       if (count >= MAX_RETRIES) {
-        logger.error("Response from Salesforce Query is null");
+        log.error("Response from Salesforce Query is null");
         return null;
       }
     }
@@ -188,25 +188,25 @@ public class SalesforceApiCheck {
     try {
       if (jsonObject.has("totalSize")) {
         if ((Integer) jsonObject.get("totalSize") > 0) {
-          logger.info("The account {} was found in Salesforce, with response={}", accountId, jsonObject);
+          log.info("The account {} was found in Salesforce, with response={}", accountId, jsonObject);
           try {
             this.salesforceAccountName =
                 ((JSONObject) ((JSONArray) jsonObject.get("records")).get(0)).get("Name").toString();
           } catch (JSONException je) {
-            logger.error("JSON Exception while getting Salesforce Account Name from API", je);
+            log.error("JSON Exception while getting Salesforce Account Name from API", je);
             return false;
           }
-          logger.info("The account {} was found in Salesforce when sending group calls to Segment", accountId);
+          log.info("The account {} was found in Salesforce when sending group calls to Segment", accountId);
           return true;
         } else {
-          logger.info("The account {} was not found in Salesforce when sending group calls to Segment", accountId);
+          log.info("The account {} was not found in Salesforce when sending group calls to Segment", accountId);
           return false;
         }
       } else {
-        logger.error("Salesforce Json object doesn't have field 'totalSize', response={}", jsonObject);
+        log.error("Salesforce Json object doesn't have field 'totalSize', response={}", jsonObject);
       }
     } catch (JSONException je) {
-      logger.error("Error while jsonifying Salesforce responseString={}", responseString, je);
+      log.error("Error while jsonifying Salesforce responseString={}", responseString, je);
     }
     return false;
   }

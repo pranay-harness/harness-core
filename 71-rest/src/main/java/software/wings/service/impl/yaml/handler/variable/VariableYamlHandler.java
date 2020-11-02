@@ -114,7 +114,7 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
                                            .type("ARTIFACT")
                                            .build());
             } else {
-              logger.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
+              log.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
             }
           }
           return VariableYaml.builder()

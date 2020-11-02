@@ -27,7 +27,7 @@ public class InstanceResourceServiceImpl implements InstanceResourceService {
       VMComputePricingInfo computeVMPricingInfo =
           vmPricingService.getComputeVMPricingInfo(instanceType, region, cloudProvider);
       if (null == computeVMPricingInfo) {
-        logger.info("Instance detail for null resource {} {} {}", instanceType, region, cloudProvider);
+        log.info("Instance detail for null resource {} {} {}", instanceType, region, cloudProvider);
       }
       cpu = computeVMPricingInfo.getCpusPerVm();
       memory = computeVMPricingInfo.getMemPerVm();

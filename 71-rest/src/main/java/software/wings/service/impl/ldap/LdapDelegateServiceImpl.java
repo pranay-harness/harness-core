@@ -51,7 +51,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   @Override
   public LdapTestResponse validateLdapConnectionSettings(
       LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapConnectionSettings with ldap settings : {}", settings);
+    log.info("Initiating validateLdapConnectionSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateConnectionConfig();
@@ -63,7 +63,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapUserSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapUserSettings with ldap settings : {}", settings);
+    log.info("Initiating validateLdapUserSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateUserConfig(settings.getUserSettingsList());
@@ -75,7 +75,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapGroupSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapGroupSettings with ldap settings : {}", settings);
+    log.info("Initiating validateLdapGroupSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateGroupConfig(settings.getGroupSettingsList().get(0));
@@ -136,7 +136,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     if (ldapEmailAttribute != null) {
       email = ldapEmailAttribute.getStringValue();
     } else {
-      logger.warn(
+      log.warn(
           "UserConfig email attribute = {} is missing for LdapEntry user object = {}", userConfig.getEmailAttr(), user);
     }
 
@@ -150,7 +150,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     } else {
       name = email;
     }
-    logger.info("LDAP user response with name {} and email {}", name, email);
+    log.info("LDAP user response with name {} and email {}", name, email);
     return LdapUserResponse.builder().dn(user.getDn()).name(name).email(email).build();
   }
 
@@ -194,7 +194,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       if (listGroupsResponse != null && listGroupsResponse.getLdapResponse() != null
           && listGroupsResponse.getLdapResponse().getStatus() != null
           && LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
-        logger.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
+        log.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
             settings.getUuid(), settings.getAccountId());
         return null;
       }
@@ -205,7 +205,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
       if (null == group) {
-        logger.info("No entries found in group");
+        log.info("No entries found in group");
         return null;
       }
 
@@ -228,12 +228,12 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
               .flatMap(Collection::stream)
               .collect(Collectors.toList());
 
-      logger.info("LDAP : Users set in Group response {}", userResponses);
+      log.info("LDAP : Users set in Group response {}", userResponses);
       groupResponse.setUsers(userResponses);
       return groupResponse;
     } catch (LdapException e) {
       if (e.getResultCode() == ResultCode.NO_SUCH_OBJECT) {
-        logger.error("Ldap [{}] received while fetching group by dn: [{}] for Ldap Name: [{}]",
+        log.error("Ldap [{}] received while fetching group by dn: [{}] for Ldap Name: [{}]",
             e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName());
         return null;
       }

@@ -112,7 +112,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     WorkflowPhase phase1 =
         aWorkflowPhase().serviceId(service.getUuid()).infraDefinitionId(infrastructureDefinition.getUuid()).build();
 
-    logger.info("Creating workflow with canary orchestration : " + dummyWorkflow);
+    log.info("Creating workflow with canary orchestration : " + dummyWorkflow);
     Workflow workflow =
         aWorkflow()
             .name(dummyWorkflow)
@@ -134,7 +134,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
         bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
 
-    logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
+    log.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 
     wfUtils.modifyPhasesForPipeline(bearerToken, savedWorkflow, application.getUuid());
   }
@@ -144,22 +144,22 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void pipelineTest() throws Exception {
     pipelineName = "Pipeline Test - " + System.currentTimeMillis();
-    logger.info("Generated unique pipeline name : " + pipelineName);
+    log.info("Generated unique pipeline name : " + pipelineName);
     Pipeline pipeline = new Pipeline();
     pipeline.setName(pipelineName);
     pipeline.setDescription("description");
-    logger.info("Creating the pipeline");
+    log.info("Creating the pipeline");
     Pipeline createdPipeline =
         PipelineRestUtils.createPipeline(application.getAppId(), pipeline, getAccount().getUuid(), bearerToken);
     assertThat(createdPipeline).isNotNull();
-    logger.info("Making a get call and verifying if the pipeline created is accessible");
+    log.info("Making a get call and verifying if the pipeline created is accessible");
     Pipeline verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(createdPipeline.getName().equals(verifyCreatedPipeline.getName())).isTrue();
-    logger.info("Create and Get pipeline verification completed");
+    log.info("Create and Get pipeline verification completed");
 
-    logger.info("Creating pipeline stages now");
+    log.info("Creating pipeline stages now");
     List<PipelineStage> pipelineStages = new ArrayList<>();
     PipelineStage executionStage = PipelineUtils.prepareExecutionStage(
         infrastructureDefinition.getEnvId(), savedWorkflow.getUuid(), Collections.emptyMap());
@@ -189,7 +189,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(pipelineExecution).isNotNull();
 
     verifyTheExecutionValues(pipelineExecution, verifyCreatedPipeline);
-    logger.info("Validation completed");
+    log.info("Validation completed");
   }
 
   private void verifyTheExecutionValues(Map<String, Object> pipelineExecution, Pipeline pipeline) {
@@ -211,7 +211,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(actualAppName.equals(application.getName())).isTrue();
     assertThat(actualName.equals(pipeline.getName())).isTrue();
 
-    logger.info("Waiting for 2 mins until the execution is complete");
+    log.info("Waiting for 2 mins until the execution is complete");
 
     Awaitility.await()
         .atMost(240, TimeUnit.SECONDS)
@@ -226,7 +226,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
                           .<String>getJsonObject("resource.status")
                           .equals(ExecutionStatus.SUCCESS.name()));
 
-    logger.info("Workflow execution completed");
+    log.info("Workflow execution completed");
     String status =
         ExecutionRestUtils.getExecutionStatus(bearerToken, getAccount(), application.getAppId(), pipelineExecutionId);
     assertThat(status).isEqualTo("SUCCESS");
@@ -234,7 +234,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), pipelineExecutionId, true);
 
-    logger.info("Validation starts");
+    log.info("Validation starts");
 
     assertThat(completedExecution.getPipelineExecution().getStatus().name().equals("SUCCESS")).isTrue();
     assertThat(completedExecution.getName().equals(pipelineName)).isTrue();

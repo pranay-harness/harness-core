@@ -17,7 +17,7 @@ public class DropAppIdIndexOnCommandLogs implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "commandLogs").dropIndex("appId_1");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
   }
 }

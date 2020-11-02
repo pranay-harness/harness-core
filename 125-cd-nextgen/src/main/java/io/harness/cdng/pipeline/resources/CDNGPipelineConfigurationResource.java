@@ -45,7 +45,7 @@ public class CDNGPipelineConfigurationResource {
   @Path("/strategies")
   @ApiOperation(value = "Gets Execution Strategy list", nickname = "getExecutionStrategyList")
   public ResponseDTO<Map<ServiceDefinitionType, List<ExecutionStrategyType>>> getExecutionStrategyList() {
-    logger.info("Get List of execution Strategy");
+    log.info("Get List of execution Strategy");
     return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getExecutionStrategyList());
   }
 

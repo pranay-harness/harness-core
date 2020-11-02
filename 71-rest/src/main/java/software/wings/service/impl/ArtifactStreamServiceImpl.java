@@ -554,7 +554,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onSaved, artifactStream);
     } catch (Exception e) {
-      logger.error(EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM, e);
+      log.error(EXCEPTION_OBSERVERS_OF_ARTIFACT_STREAM, e);
     }
   }
 
@@ -566,7 +566,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onUpdated, artifactStream);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
+      log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
   }
 
@@ -578,7 +578,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       subject.fireInform(ArtifactStreamServiceObxxxxxxxx:onDeleted, artifactStream);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Artifact Stream", e);
+      log.error("Encountered exception while informing the observers of Artifact Stream", e);
     }
   }
 
@@ -934,7 +934,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         if (ex.getCause() != null) {
           message = message + ex.getCause().getMessage();
         }
-        logger.warn(message, ex);
+        log.warn(message, ex);
         throw new ShellExecutionException("Error occurred during script execution. Please verify the script.");
       }
     }
@@ -1116,7 +1116,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifactStreamId);
     Map<String, String> artifactSourceProperties = new HashMap<>();
     if (artifactStream == null) {
-      logger.warn("Failed to construct artifact source properties. ArtifactStream {} was deleted", artifactStreamId);
+      log.warn("Failed to construct artifact source properties. ArtifactStream {} was deleted", artifactStreamId);
       return artifactSourceProperties;
     }
     SettingValue settingValue = settingsService.getSettingValueById(accountId, artifactStream.getSettingId());

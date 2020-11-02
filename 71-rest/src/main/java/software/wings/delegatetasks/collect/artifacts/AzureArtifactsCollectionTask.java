@@ -50,13 +50,13 @@ public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
       }
 
       AzureArtifactsConfig azureArtifactsConfig = taskParameters.getAzureArtifactsConfig();
-      logger.info(format("Collecting artifact: [%s] from Azure Artifacts xxxxxxxx [%s]", version,
+      log.info(format("Collecting artifact: [%s] from Azure Artifacts xxxxxxxx [%s]", version,
           azureArtifactsConfig.getAzureDevopsUrl()));
       azureArtifactsService.downloadArtifact(azureArtifactsConfig, taskParameters.getEncryptedDataDetails(),
           taskParameters.getArtifactStreamAttributes(), artifactMetadata, getDelegateId(), getTaskId(), getAccountId(),
           res);
     } catch (Exception e) {
-      logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Exception: " + ExceptionUtils.getMessage(e), e);
     }
     return res;
   }
@@ -69,7 +69,7 @@ public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
       }
       return run((TaskParameters) parameters[0]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact", e);
+      log.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }

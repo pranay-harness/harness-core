@@ -113,7 +113,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   @Override
   public void initialize(Bootstrap<VerificationConfiguration> bootstrap) {
     initializeLogging();
-    logger.info("bootstrapping ...");
+    log.info("bootstrapping ...");
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -126,7 +126,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     });
     bootstrap.setMetricRegistry(metricRegistry);
     configureObjectMapper(bootstrap.getObjectMapper());
-    logger.info("bootstrapping done.");
+    log.info("bootstrapping done.");
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
@@ -135,7 +135,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   @Override
   public void run(VerificationConfiguration configuration, Environment environment) {
-    logger.info("Starting app ...");
+    log.info("Starting app ...");
     MaintenanceController.forceMaintenance(true);
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
@@ -220,10 +220,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
 
-    logger.info("Starting app done");
+    log.info("Starting app done");
   }
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {
@@ -433,7 +433,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         environment.jersey().register(injector.getInstance(resource));
       }
     });
-    logger.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
+    log.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
   }
 
   private void registerExceptionMappers(JerseyEnvironment jersey) {

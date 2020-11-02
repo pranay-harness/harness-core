@@ -60,7 +60,7 @@ public class HarnessServiceInfoFetcher extends CacheUtils {
       }
       return harnessServiceInfo;
     } catch (Exception ex) {
-      logger.error("Error while fetching data {}", ex);
+      log.error("Error while fetching data {}", ex);
       return Optional.ofNullable(null);
     }
   }

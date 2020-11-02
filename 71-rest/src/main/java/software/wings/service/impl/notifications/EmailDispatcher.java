@@ -50,7 +50,7 @@ public class EmailDispatcher {
     }
 
     if (isEmpty(validToAddresses)) {
-      logger.info("No valid email addresses in: {}", toAddress);
+      log.info("No valid email addresses in: {}", toAddress);
       return;
     }
 
@@ -60,7 +60,7 @@ public class EmailDispatcher {
       EmailTemplate emailTemplate =
           notificationMessageResolver.getEmailTemplate(notification.getNotificationTemplateId());
       if (emailTemplate == null) {
-        logger.error("No email template found for templateId {}", notification.getNotificationTemplateId());
+        log.error("No email template found for templateId {}", notification.getNotificationTemplateId());
         return;
       }
       emailBodyList.add(
@@ -70,7 +70,7 @@ public class EmailDispatcher {
     });
 
     if (emailBodyList.isEmpty() || emailSubjectList.isEmpty()) {
-      logger.info("Email body/subject is empty. destination-emails: {}", toAddress);
+      log.info("Email body/subject is empty. destination-emails: {}", toAddress);
       return;
     }
 
@@ -88,7 +88,7 @@ public class EmailDispatcher {
     }
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
-    logger.info("Trying to send email to: {}", validToAddresses);
+    log.info("Trying to send email to: {}", validToAddresses);
     emailNotificationService.sendAsync(emailData);
   }
 

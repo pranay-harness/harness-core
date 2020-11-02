@@ -33,7 +33,7 @@ public class RemoveDeprecatedApplicationsCreatePermission implements Migration {
         migrateCurrentUserGroup(userGroup);
       }
     } catch (Exception e) {
-      logger.error(debugMessage + "Error creating query", e);
+      log.error(debugMessage + "Error creating query", e);
     }
   }
 
@@ -50,7 +50,7 @@ public class RemoveDeprecatedApplicationsCreatePermission implements Migration {
         wingsPersistence.update(userGroup, operations);
       }
     } catch (Exception e) {
-      logger.error(debugMessage + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
+      log.error(debugMessage + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
     }
   }
 
@@ -61,12 +61,12 @@ public class RemoveDeprecatedApplicationsCreatePermission implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(debugMessage + "Starting Migration");
+    log.info(debugMessage + "Starting Migration");
     try {
       runMigration();
     } catch (Exception e) {
-      logger.error(debugMessage + "Error occurred while migrating", e);
+      log.error(debugMessage + "Error occurred while migrating", e);
     }
-    logger.info(debugMessage + "Completed migration");
+    log.info(debugMessage + "Completed migration");
   }
 }

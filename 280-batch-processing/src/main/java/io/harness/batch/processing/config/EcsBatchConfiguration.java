@@ -91,7 +91,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.EC2_INSTANCE_INFO, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ec2InstanceInfoMessageReader ", ex);
+      log.error("Exception ec2InstanceInfoMessageReader ", ex);
       return null;
     }
   }
@@ -104,7 +104,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.EC2_INSTANCE_LIFECYCLE, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ec2InstanceInfoMessageReader ", ex);
+      log.error("Exception ec2InstanceInfoMessageReader ", ex);
       return null;
     }
   }
@@ -118,7 +118,7 @@ public class EcsBatchConfiguration {
       return mongoEventReader.getEventReader(
           accountId, EventTypeConstants.ECS_CONTAINER_INSTANCE_INFO, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsContainerInstanceInfoMessageReader ", ex);
+      log.error("Exception ecsContainerInstanceInfoMessageReader ", ex);
       return null;
     }
   }
@@ -132,7 +132,7 @@ public class EcsBatchConfiguration {
       return mongoEventReader.getEventReader(
           accountId, EventTypeConstants.ECS_CONTAINER_INSTANCE_LIFECYCLE, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsContainerInstanceLifecycleMessageReader ", ex);
+      log.error("Exception ecsContainerInstanceLifecycleMessageReader ", ex);
       return null;
     }
   }
@@ -144,7 +144,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.ECS_TASK_INFO, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsTaskInfoMessageReader ", ex);
+      log.error("Exception ecsTaskInfoMessageReader ", ex);
       return null;
     }
   }
@@ -156,7 +156,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.ECS_SYNC_EVENT, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsSyncEventMessageReader ", ex);
+      log.error("Exception ecsSyncEventMessageReader ", ex);
       return null;
     }
   }
@@ -169,7 +169,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.ECS_TASK_LIFECYCLE, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsTaskLifecycleMessageReader ", ex);
+      log.error("Exception ecsTaskLifecycleMessageReader ", ex);
       return null;
     }
   }
@@ -182,7 +182,7 @@ public class EcsBatchConfiguration {
     try {
       return mongoEventReader.getEventReader(accountId, EventTypeConstants.ECS_UTILIZATION, startDate, endDate);
     } catch (Exception ex) {
-      logger.error("Exception ecsUtilizationMetricsMessageReader ", ex);
+      log.error("Exception ecsUtilizationMetricsMessageReader ", ex);
       return null;
     }
   }

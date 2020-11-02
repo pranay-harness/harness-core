@@ -29,16 +29,16 @@ public class StackdriverServiceGuardMetricsGroupingMigration implements Migratio
         while (configRecords.hasNext()) {
           CVConfiguration cvConfig = configRecords.next();
           wingsPersistence.delete(CVConfiguration.class, cvConfig.getUuid());
-          logger.info("Deleted CVConfig with uuid: " + cvConfig.getUuid());
+          log.info("Deleted CVConfig with uuid: " + cvConfig.getUuid());
           // recreate it
           cvConfig.setUuid(generateUuid());
           cvConfigurationService.saveConfiguration(
               cvConfig.getAccountId(), cvConfig.getAppId(), StateType.STACK_DRIVER, cvConfig);
-          logger.info("Recreated stackdriver CVConfig with uuid: " + cvConfig.getUuid());
+          log.info("Recreated stackdriver CVConfig with uuid: " + cvConfig.getUuid());
         }
       }
     } catch (Exception ex) {
-      logger.error("Exception while executing StackdriverServiceGuardMetricsGroupingMigration", ex);
+      log.error("Exception while executing StackdriverServiceGuardMetricsGroupingMigration", ex);
     }
   }
 }

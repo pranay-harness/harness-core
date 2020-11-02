@@ -87,7 +87,7 @@ public class GitSyncResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<GitSyncError>>>() {});
 
-    logger.info(JsonUtils.asJson(restResponse));
+    log.info(JsonUtils.asJson(restResponse));
     verify(GIT_SYNC_ERROR_SERVICE).fetchErrors(pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

@@ -43,7 +43,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     SettingAttribute emailSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.PAID_EMAIL_SMTP_CONNECTOR);
     assertThat(emailSettingAttribute).isNotNull();
-    logger.info("Setup completed successfully");
+    log.info("Setup completed successfully");
   }
 
   @Owner(developers = RAMA, intermittent = true)
@@ -71,7 +71,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
     String domainName = "@harness.mailinator.com";
     String emailId = testUtils.generateUniqueInboxId();
     String fullEmailId = emailId + domainName;
-    logger.info("Generating the email id for trial user : " + fullEmailId);
+    log.info("Generating the email id for trial user : " + fullEmailId);
     String inviteId = UUIDGenerator.generateUuid();
 
     UserInvite invite = new UserInvite();

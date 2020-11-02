@@ -165,7 +165,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
               setupTestNodeData, hostName,
               createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, e).addParam("reason", e.getMessage());
     }
   }
@@ -264,7 +264,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier,
       String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       AppdynamicsMetricPackDataValidationRequest validationRequest) {
-    logger.info("for {} getting data for {}", projectIdentifier, validationRequest);
+    log.info("for {} getting data for {}", projectIdentifier, validationRequest);
     Preconditions.checkState(isNotEmpty(validationRequest.getMetricPacks()),
         "No metric packs found for project {} with the name {}", projectIdentifier, validationRequest.getMetricPacks());
     NGAccess basicNGAccessObject = BaseNGAccess.builder()

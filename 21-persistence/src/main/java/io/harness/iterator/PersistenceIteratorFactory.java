@@ -43,11 +43,11 @@ public final class PersistenceIteratorFactory {
   public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator createIterator(
       Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
     if (!workersConfiguration.confirmWorkerIsActive(cls)) {
-      logger.info("Worker {} is disabled in this setup", cls.getName());
+      log.info("Worker {} is disabled in this setup", cls.getName());
       return null;
     }
 
-    logger.info("Worker {} is enabled in this setup", cls.getName());
+    log.info("Worker {} is enabled in this setup", cls.getName());
     MongoPersistenceIterator<T, F> iterator = builder.build();
     injector.injectMembers(iterator);
     return iterator;
@@ -65,14 +65,14 @@ public final class PersistenceIteratorFactory {
   createIteratorWithDedicatedThreadPool(PersistenceIterator.ProcessMode processMode, PumpExecutorOptions options,
       Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
     if (!workersConfiguration.confirmWorkerIsActive(cls)) {
-      logger.info("Worker {} is disabled in this setup", cls.getName());
+      log.info("Worker {} is disabled in this setup", cls.getName());
       return null;
     }
 
     String iteratorName = "Iterator-" + options.getName();
     ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
         options.getPoolSize(), new ThreadFactoryBuilder().setNameFormat(iteratorName).build());
-    logger.info("Worker {} is enabled in this setup", cls.getName());
+    log.info("Worker {} is enabled in this setup", cls.getName());
 
     MetricRegistry metricRegistry = harnessMetricRegistry.getThreadPoolMetricRegistry();
     InstrumentedExecutorService instrumentedExecutorService =

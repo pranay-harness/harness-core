@@ -17,7 +17,7 @@ public class AddHarnessGroupAccessFlagToAccount implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting migration for adding isHarnessSupportAccessAllowed flag to accounts");
+    log.info("Starting migration for adding isHarnessSupportAccessAllowed flag to accounts");
 
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority)
                                                            .project(AccountKeys.isHarnessSupportAccessAllowed, true)
@@ -28,7 +28,7 @@ public class AddHarnessGroupAccessFlagToAccount implements Migration {
             Account.class, account.getUuid(), AccountKeys.isHarnessSupportAccessAllowed, Boolean.TRUE);
       }
     } catch (Exception e) {
-      logger.error("Error happened while adding isHarnessSupportAccessAllowed flag to accounts", e);
+      log.error("Error happened while adding isHarnessSupportAccessAllowed flag to accounts", e);
     }
   }
 }

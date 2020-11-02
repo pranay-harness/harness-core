@@ -37,7 +37,7 @@ public class ExceptionUtils {
     }
 
     if (failureTypes.isEmpty()) {
-      logger.error("While determining the failureTypes, none was discovered for the following exception", throwable);
+      log.error("While determining the failureTypes, none was discovered for the following exception", throwable);
     }
 
     return failureTypes;

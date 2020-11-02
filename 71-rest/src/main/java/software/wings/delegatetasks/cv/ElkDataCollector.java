@@ -134,7 +134,7 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
 
       if (timeStampValue < dataCollectionInfo.getStartTime().toEpochMilli()
           || timeStampValue > dataCollectionInfo.getEndTime().toEpochMilli()) {
-        logger.info("received response outside the time range");
+        log.info("received response outside the time range");
         continue;
       }
 

@@ -133,10 +133,10 @@ public class TemplateExpressionProcessor {
       throw new WingsException("No value provided for template expression [" + templateExpression.getExpression() + "]",
           WingsException.USER);
     }
-    logger.info("Checking  Setting attribute can be found by id {} first.", settingIdOrName);
+    log.info("Checking  Setting attribute can be found by id {} first.", settingIdOrName);
     SettingAttribute settingAttribute = settingsService.get(settingIdOrName);
     if (settingAttribute == null) {
-      logger.info("Setting attribute not found by id. Verifying if it does exist by Name {} ", settingIdOrName);
+      log.info("Setting attribute not found by id. Verifying if it does exist by Name {} ", settingIdOrName);
       settingAttribute =
           settingsService.fetchSettingAttributeByName(context.getAccountId(), settingIdOrName, settingVariableTypes);
     }

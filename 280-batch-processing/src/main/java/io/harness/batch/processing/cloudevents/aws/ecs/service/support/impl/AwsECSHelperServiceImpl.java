@@ -57,7 +57,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
       return listECSClusters(amazonECSClient);
     } catch (Exception ex) {
-      logger.error(exceptionMessage, awsCrossAccountAttributes, region, ex.getMessage());
+      log.error(exceptionMessage, awsCrossAccountAttributes, region, ex.getMessage());
       return Collections.emptyList();
     }
   }
@@ -96,7 +96,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       }
       return allServices;
     } catch (Exception ex) {
-      logger.error("Exception listServicesForCluster {}", ex.getMessage());
+      log.error("Exception listServicesForCluster {}", ex.getMessage());
     }
     return emptyList();
   }
@@ -139,7 +139,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       }
       return allContainerInstance;
     } catch (Exception ex) {
-      logger.error("Exception listContainerInstancesForCluster {}", ex.getMessage());
+      log.error("Exception listContainerInstancesForCluster {}", ex.getMessage());
     }
     return emptyList();
   }
@@ -165,7 +165,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         nextToken = listTasksResult.getNextToken();
       } while (nextToken != null);
     } catch (Exception ex) {
-      logger.error("Exception listTasksArnForService {}", ex.getMessage());
+      log.error("Exception listTasksArnForService {}", ex.getMessage());
     }
     return taskArns;
   }
@@ -193,7 +193,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       }
       return allTasks;
     } catch (Exception ex) {
-      logger.error("Exception listTasksForService ", ex);
+      log.error("Exception listTasksForService ", ex);
     }
     return emptyList();
   }

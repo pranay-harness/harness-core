@@ -27,7 +27,7 @@ public class DeleteStaleYamlChangeSetsMigration implements Migration {
   @Inject AccountService accountService;
   @Override
   public void migrate() {
-    logger.info("Deleting stale YamlChangeSets");
+    log.info("Deleting stale YamlChangeSets");
     try {
       List<Account> accounts =
           accountService.list(wingsPersistence.query(Account.class, aPageRequest().addFieldsIncluded("_id").build()));
@@ -36,7 +36,7 @@ public class DeleteStaleYamlChangeSetsMigration implements Migration {
             Integer.MAX_VALUE, BATCH_SIZE, RETENTION_PERIOD_IN_DAYS);
       }
     } catch (Exception e) {
-      logger.error("Delete YamlChangeSet error", e);
+      log.error("Delete YamlChangeSet error", e);
     }
   }
 }

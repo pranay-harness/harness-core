@@ -17,7 +17,7 @@ public class YAMLToObjectImpl implements YAMLToObject {
     try {
       ngPipeline = readYaml(yaml);
     } catch (IOException e) {
-      logger.error("Error parsing yaml file", e);
+      log.error("Error parsing yaml file", e);
     }
     return ngPipeline;
   }

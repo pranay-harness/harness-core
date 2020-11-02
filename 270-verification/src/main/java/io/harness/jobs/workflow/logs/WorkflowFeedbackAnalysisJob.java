@@ -47,20 +47,20 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
             .callManagerWithRetry(
                 managerClient.isFeatureEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, analysisContext.getAccountId()))
             .getResource()) {
-      logger.info("The feature  DISABLE_LOGML_NEURAL_NET is enabled for the account {}."
+      log.info("The feature  DISABLE_LOGML_NEURAL_NET is enabled for the account {}."
               + " Will not execute handle() in WorkflowFeedbackAnalysisJob",
           analysisContext.getAccountId());
       return;
     }
 
-    logger.info(
+    log.info(
         "Handling the feedback for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
     try {
       new FeedbackAnalysisTask(analysisService, analysisContext, Optional.empty(), learningEngineService, managerClient,
           managerClientHelper, dataStoreService, cvActivityLogService)
           .call();
     } catch (Exception e) {
-      logger.error("Feedback analysis iterator failed for {}", analysisContext.getStateExecutionId(), e);
+      log.error("Feedback analysis iterator failed for {}", analysisContext.getStateExecutionId(), e);
     }
   }
 
@@ -83,9 +83,9 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
       String errorMsg = "";
       long logAnalysisMinute = -1;
       try {
-        logger.info("Running feedback analysis for " + context.getStateExecutionId());
+        log.info("Running feedback analysis for " + context.getStateExecutionId());
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-          logger.warn("Feedback analysis : state is not valid. Stopping cron." + context.getStateExecutionId());
+          log.warn("Feedback analysis : state is not valid. Stopping cron." + context.getStateExecutionId());
           return -1L;
         }
 
@@ -105,7 +105,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
           // we still need to create new tasks.
 
           if (lastLogMLTaskMinute == logAnalysisMinute) {
-            logger.info("We are upto date Log feedback tasks for {}. Moving on", context.getStateExecutionId());
+            log.info("We are upto date Log feedback tasks for {}. Moving on", context.getStateExecutionId());
           } else {
             // create task for logAnalysisMinute + 1.
             List<CVFeedbackRecord> feedbackRecordList =
@@ -117,7 +117,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
               // mark the analysis as feedback complete and move on.
               analysisService.createAndUpdateFeedbackAnalysis(
                   LogMLAnalysisRecordKeys.stateExecutionId, context.getStateExecutionId(), lastLogMLTaskMinute);
-              logger.info(
+              log.info(
                   "There are no feedbacks available for account {}, stateExecutionId {}. Bumping analysis to feedback complete for minute {}",
                   context.getAccountId(), context.getStateExecutionId(), logAnalysisMinute);
             } else {
@@ -129,7 +129,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
           }
         } else {
           completeCron = true;
-          logger.info("Log feedback analysis is compelete for all the minutes for state {}. Completing cron",
+          log.info("Log feedback analysis is compelete for all the minutes for state {}. Completing cron",
               context.getStateExecutionId());
         }
 
@@ -138,25 +138,25 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
           // send notification to state manager and delete cron.
           if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
-              logger.info(
+              log.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
               new LogMLAnalysisGenerator(context, -1, false, analysisService, learningEngineService, managerClient,
                   managerClientHelper, MLAnalysisType.FEEDBACK_ANALYSIS)
                   .sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
             } catch (Exception e) {
-              logger.error("Send notification failed for feedback analysis manager", e);
+              log.error("Send notification failed for feedback analysis manager", e);
             } finally {
               jobExecutionContext.ifPresent(jobContext -> {
                 try {
                   jobContext.getScheduler().deleteJob(jobContext.getJobDetail().getKey());
                 } catch (SchedulerException e) {
-                  logger.error("Delete cron failed", e);
+                  log.error("Delete cron failed", e);
                 }
               });
             }
           }
         } catch (Exception ex) {
-          logger.error("analysis failed", ex);
+          log.error("analysis failed", ex);
         }
       }
 

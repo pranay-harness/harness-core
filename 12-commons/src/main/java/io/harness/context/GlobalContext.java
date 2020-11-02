@@ -19,7 +19,7 @@ public class GlobalContext {
 
   public void setGlobalContextRecord(GlobalContextData data) {
     if (map.containsKey(data.getKey())) {
-      logger.error("Global data {} is already set. Something is wrong!!!", data.getKey(), new Exception());
+      log.error("Global data {} is already set. Something is wrong!!!", data.getKey(), new Exception());
     }
     map.put(data.getKey(), data);
   }

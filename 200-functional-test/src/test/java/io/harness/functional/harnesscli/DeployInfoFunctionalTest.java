@@ -89,7 +89,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployInfoOutput.get(3).contains("Infra_Def")).isTrue();
     assertThat(deployInfoOutput.get(3).contains("Mandatory")).isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -115,7 +115,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployInfoOutput.get(7).contains(service.getName())).isTrue();
     assertThat(deployInfoOutput.get(7).contains(service.getUuid())).isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
@@ -135,7 +135,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
     assertThat(deployInfoOutput.get(3).contains("Infra_Def")).isTrue();
     assertThat(deployInfoOutput.get(3).contains("Mandatory")).isTrue();
 
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     PipelineRestUtils.deletePipeline(bearerToken, pipeline.getUuid(), appId);
   }
 

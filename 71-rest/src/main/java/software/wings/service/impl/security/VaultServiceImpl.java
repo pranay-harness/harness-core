@@ -118,7 +118,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
             .decrypt(data, vaultConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info("Vault Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
+        log.info("Vault Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
         }
@@ -241,13 +241,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public void renewAppRoleClientToken(VaultConfig vaultConfig) {
-    logger.info("Renewing Vault AppRole client token for vault id {}", vaultConfig.getUuid());
+    log.info("Renewing Vault AppRole client token for vault id {}", vaultConfig.getUuid());
     Preconditions.checkNotNull(vaultConfig.getAuthToken());
     VaultConfig decryptedVaultConfig = getVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
     VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
     checkNotNull(loginResult, "Login result during vault appRole login should not be null");
     checkNotNull(loginResult.getClientToken(), "Client token should not be empty");
-    logger.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
+    log.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
     updateSecretField(vaultConfig.getAuthToken(), vaultConfig.getAccountId(), vaultConfig.getUuid(),
         loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX, VaultConfigKeys.authToken);
     wingsPersistence.updateField(
@@ -448,12 +448,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     if (isNotEmpty(vaultConfig.getAuthToken())) {
       wingsPersistence.delete(EncryptedData.class, vaultConfig.getAuthToken());
-      logger.info("Deleted encrypted auth token record {} associated with vault secret manager '{}'",
+      log.info("Deleted encrypted auth token record {} associated with vault secret manager '{}'",
           vaultConfig.getAuthToken(), vaultConfig.getName());
     }
     if (isNotEmpty(vaultConfig.getSecretId())) {
       wingsPersistence.delete(EncryptedData.class, vaultConfig.getSecretId());
-      logger.info("Deleted encrypted secret id record {} associated with vault secret manager '{}'",
+      log.info("Deleted encrypted secret id record {} associated with vault secret manager '{}'",
           vaultConfig.getSecretId(), vaultConfig.getName());
     }
 
@@ -477,7 +477,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
             .listSecretEngines(vaultConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info("Vault Decryption failed for list secret engines for Vault serverer {}. trial num: {}",
+        log.info("Vault Decryption failed for list secret engines for Vault serverer {}. trial num: {}",
             vaultConfig.getName(), failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
@@ -634,8 +634,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
             .appRoleLogin(vaultConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info(
-            "Vault AppRole login failed Vault server {}. trial num: {}", vaultConfig.getName(), failedAttempts, e);
+        log.info("Vault AppRole login failed Vault server {}. trial num: {}", vaultConfig.getName(), failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
         }

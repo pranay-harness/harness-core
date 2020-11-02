@@ -97,7 +97,7 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
       String secretManagerUrl, String secretManagerName, String validationCriteria) {
     // Secret manager URL will be null for LOCAL secret manager, consider it reachable always.
     boolean urlReachable = secretManagerUrl == null || connectableHttpUrl(secretManagerUrl);
-    logger.info("Finished validating Vault config '{}' with URL {}.", secretManagerName, secretManagerUrl);
+    log.info("Finished validating Vault config '{}' with URL {}.", secretManagerName, secretManagerUrl);
     return DelegateConnectionResult.builder().criteria(validationCriteria).validated(urlReachable).build();
   }
 

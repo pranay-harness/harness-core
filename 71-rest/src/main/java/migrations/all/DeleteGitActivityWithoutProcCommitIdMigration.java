@@ -20,7 +20,7 @@ public class DeleteGitActivityWithoutProcCommitIdMigration implements Migration 
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "gitFileActivity").dropIndex("uniqueIdx_1");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
 
     try {
@@ -30,7 +30,7 @@ public class DeleteGitActivityWithoutProcCommitIdMigration implements Migration 
 
       wingsPersistence.delete(query);
     } catch (Exception ex) {
-      logger.error("Error while deleting activities not having processingCommitId field", ex);
+      log.error("Error while deleting activities not having processingCommitId field", ex);
     }
   }
 }

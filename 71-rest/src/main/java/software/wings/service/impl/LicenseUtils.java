@@ -212,7 +212,7 @@ public class LicenseUtils {
         LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
         account.setLicenseInfo(licenseInfo);
       } else {
-        logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
+        log.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
       }
     }
 

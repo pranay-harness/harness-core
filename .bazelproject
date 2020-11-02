@@ -44,8 +44,6 @@ directories:
   70-delegate-service
   450-ce-views
   490-ce-commons
-  71-rest
-  260-delegate
   tools/bazel
 
 # Automatically includes all relevant targets under the 'directories' above

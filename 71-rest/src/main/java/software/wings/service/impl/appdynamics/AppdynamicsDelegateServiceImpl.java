@@ -245,7 +245,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|"
         + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
-    logger.debug("fetching metrics for path {} ", metricPath);
+    log.debug("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
@@ -440,7 +440,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                   .value(appdynamicsMetricData.get(0).getMetricValues().get(0).getValue())
                   .build();
             } catch (Exception e) {
-              logger.info("Exception while validating for request " + requestGuid, e);
+              log.info("Exception while validating for request " + requestGuid, e);
               return AppdynamicsMetricValueValidationResponse.builder()
                   .metricName(metricDefinition.getName())
                   .apiResponseStatus(ThirdPartyApiResponseStatus.FAILED)

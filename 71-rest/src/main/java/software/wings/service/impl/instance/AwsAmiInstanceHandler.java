@@ -74,7 +74,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler implements Instanc
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
       String msg =
           "Incompatible infra mapping type. Expecting ami type. Found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 

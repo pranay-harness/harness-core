@@ -10,7 +10,7 @@ import java.util.Set;
 public class CommandLibraryServerMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    logger.info("Registering Command Library Server Entities in morphia");
+    log.info("Registering Command Library Server Entities in morphia");
   }
 
   @Override

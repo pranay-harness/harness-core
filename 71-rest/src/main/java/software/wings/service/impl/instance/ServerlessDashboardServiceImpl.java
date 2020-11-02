@@ -109,7 +109,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
     } catch (NoResultFoundException nrfe) {
       return anInstanceSummaryStats().totalCount(0).countMap(null).build();
     } catch (Exception e) {
-      logger.error("Error while creating query for getting app instance summary stats");
+      log.error("Error while creating query for getting app instance summary stats");
       return anInstanceSummaryStats().totalCount(0).countMap(null).build();
     }
 
@@ -151,7 +151,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
     } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
     } catch (Exception e) {
-      logger.error("Error while compiling query for instance stats by service");
+      log.error("Error while compiling query for instance stats by service");
       return getEmptyPageResponse();
     }
 
@@ -181,7 +181,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
     try {
       query = getInstanceQueryAtTime(accountId, serviceId, timestamp);
     } catch (Exception e) {
-      logger.error("Error while compiling query for instance stats by service");
+      log.error("Error while compiling query for instance stats by service");
       return emptyList();
     }
 
@@ -474,9 +474,9 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
 
     if (isNotEmpty(instanceList)) {
       HashSet<ServerlessInstance> instanceSet = new HashSet<>(instanceList);
-      logger.info("Instances reported {}, set count {}", counter, instanceSet.size());
+      log.info("Instances reported {}, set count {}", counter, instanceSet.size());
     } else {
-      logger.info("Instances reported {}", counter);
+      log.info("Instances reported {}", counter);
     }
     return instanceList;
   }

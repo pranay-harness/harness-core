@@ -36,7 +36,7 @@ public class CustomDeploymentInstanceSyncPTCreator implements InstanceSyncPerpet
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
     if (EmptyPredicate.isNotEmpty(existingPerpetualTasks)) {
       if (existingPerpetualTasks.size() > 1) {
-        logger.error(format("More than 1 Custom Deployment Instance Sync Perpetual Tasks exist for InfraMappingId %s",
+        log.error(format("More than 1 Custom Deployment Instance Sync Perpetual Tasks exist for InfraMappingId %s",
             infrastructureMapping.getUuid()));
       }
       // To allow for updation on script on deployment, task is reset so that some other delegate can pick up the task

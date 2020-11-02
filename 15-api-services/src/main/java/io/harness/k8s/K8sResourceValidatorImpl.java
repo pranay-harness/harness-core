@@ -83,7 +83,7 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
           })
           .collect(Collectors.toList());
     } catch (Exception e) {
-      logger.error("Failed to validate all permissions ", e);
+      log.error("Failed to validate all permissions ", e);
       return new ArrayList<>();
     }
   }

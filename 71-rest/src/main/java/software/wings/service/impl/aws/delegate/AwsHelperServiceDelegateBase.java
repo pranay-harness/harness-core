@@ -48,7 +48,7 @@ class AwsHelperServiceDelegateBase {
   protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isUseEc2IamCredentials()) {
-      logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
+      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
@@ -73,21 +73,21 @@ class AwsHelperServiceDelegateBase {
 
   @VisibleForTesting
   void handleAmazonClientException(AmazonClientException amazonClientException) {
-    logger.error("AWS API Client call exception: {}", amazonClientException.getMessage());
+    log.error("AWS API Client call exception: {}", amazonClientException.getMessage());
     String errorMessage = amazonClientException.getMessage();
     if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
       throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
               + " have required permissions.",
           amazonClientException, USER);
     } else {
-      logger.error("Unhandled aws exception");
+      log.error("Unhandled aws exception");
       throw new InvalidRequestException(isNotEmpty(errorMessage) ? errorMessage : "Unknown Aws client exception", USER);
     }
   }
 
   @VisibleForTesting
   void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    logger.error("AWS API call exception: {}", amazonServiceException.getMessage());
+    log.error("AWS API call exception: {}", amazonServiceException.getMessage());
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
@@ -99,24 +99,24 @@ class AwsHelperServiceDelegateBase {
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       if (amazonServiceException.getMessage().contains(
               "Trying to remove Target Groups that are not part of the group")) {
-        logger.info("Target Group already not attached: [{}]", amazonServiceException.getMessage());
+        log.info("Target Group already not attached: [{}]", amazonServiceException.getMessage());
       } else if (amazonServiceException.getMessage().contains(
                      "Trying to remove Load Balancers that are not part of the group")) {
-        logger.info("Classic load balancer already not attached: [{}]", amazonServiceException.getMessage());
+        log.info("Classic load balancer already not attached: [{}]", amazonServiceException.getMessage());
       } else {
-        logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
+        log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
-        logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
+        log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
       throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
-        logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
+        log.info("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
       }

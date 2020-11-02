@@ -180,7 +180,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
 
       return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
@@ -205,7 +205,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         }
       }
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }

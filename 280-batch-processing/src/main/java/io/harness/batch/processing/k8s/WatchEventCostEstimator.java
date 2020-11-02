@@ -36,7 +36,7 @@ public class WatchEventCostEstimator {
     ResourceClaimDiff resourceClaimDiff = Optional.ofNullable(resourceClaimDiffCalculators.get(kind))
                                               .map(rcDiffCalc -> rcDiffCalc.computeResourceClaimDiff(oldYaml, newYaml))
                                               .orElseGet(() -> {
-                                                logger.warn("Unknown kind: {}", kind);
+                                                log.warn("Unknown kind: {}", kind);
                                                 return new ResourceClaimDiff(ResourceClaim.EMPTY, ResourceClaim.EMPTY);
                                               });
     return new EstimatedCostDiff(resourceToCost(resourceClaimDiff.getOldResourceClaim()),

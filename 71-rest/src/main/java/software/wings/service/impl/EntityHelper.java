@@ -171,7 +171,7 @@ public class EntityHelper {
       affectedResourceName = userGroup.getName();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
-      logger.info("Auditing user group. User Group : {}. Operation : {}.", entityName, affectedResourceOperation);
+      log.info("Auditing user group. User Group : {}. Operation : {}.", entityName, affectedResourceOperation);
     } else if (entity instanceof Whitelist) {
       Whitelist whitelist = (Whitelist) entity;
       entityType = EntityType.WHITELISTED_IP.name();
@@ -188,7 +188,7 @@ public class EntityHelper {
       affectedResourceName = user.getName();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
-      logger.info("Auditing user. User : {}. Operation : {}.", entityName, affectedResourceOperation);
+      log.info("Auditing user. User : {}. Operation : {}.", entityName, affectedResourceOperation);
     } else if (entity instanceof UserInvite) {
       UserInvite userInvite = (UserInvite) entity;
       entityType = EntityType.USER_INVITE.name();
@@ -604,7 +604,7 @@ public class EntityHelper {
       affectedResourceType = ResourceType.SECRET_MANAGER.name();
       affectedResourceOperation = type.name();
     } else {
-      logger.error("Unhandled class for auditing: [{}]", entity.getClass().getSimpleName());
+      log.error("Unhandled class for auditing: [{}]", entity.getClass().getSimpleName());
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
       entityName = format("Name of class: [%s]", entity.getClass().getSimpleName());
     }
@@ -743,7 +743,7 @@ public class EntityHelper {
     } else {
       String errorMessage =
           format("Unrecognized class name while getting Yaml path for class: [%s]", entity.getClass().getSimpleName());
-      logger.error(errorMessage, new Exception());
+      log.error(errorMessage, new Exception());
       return EMPTY;
     }
   }
@@ -828,8 +828,8 @@ public class EntityHelper {
       }
       return finalYaml;
     } catch (InvalidRequestException ex) {
-      logger.error("Exception while getting Yaml path for entity id: [{}] of class: [{}]",
-          ((UuidAccess) entity).getUuid(), entity.getClass().getSimpleName());
+      log.error("Exception while getting Yaml path for entity id: [{}] of class: [{}]", ((UuidAccess) entity).getUuid(),
+          entity.getClass().getSimpleName());
       return EMPTY;
     }
   }

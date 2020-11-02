@@ -42,7 +42,7 @@ public class GcpResourceManagerServiceImpl implements GcpResourceManagerService 
     try {
       service = createCloudResourceManagerService();
     } catch (IOException | GeneralSecurityException e) {
-      logger.error("Unable to initialize service: ", e);
+      log.error("Unable to initialize service: ", e);
       return;
     }
 
@@ -50,9 +50,9 @@ public class GcpResourceManagerServiceImpl implements GcpResourceManagerService 
       SetIamPolicyRequest request = new SetIamPolicyRequest();
       request.setPolicy(policy);
       Policy response = service.projects().setIamPolicy(projectId, request).execute();
-      logger.info("Policy set: " + response.toString());
+      log.info("Policy set: " + response.toString());
     } catch (IOException e) {
-      logger.error("Unable to set policy: ", e);
+      log.error("Unable to set policy: ", e);
     }
   }
 
@@ -62,7 +62,7 @@ public class GcpResourceManagerServiceImpl implements GcpResourceManagerService 
     try {
       service = createCloudResourceManagerService();
     } catch (IOException | GeneralSecurityException e) {
-      logger.error("Unable to initialize service: \n", e);
+      log.error("Unable to initialize service: \n", e);
       return null;
     }
 
@@ -70,10 +70,10 @@ public class GcpResourceManagerServiceImpl implements GcpResourceManagerService 
     try {
       GetIamPolicyRequest request = new GetIamPolicyRequest();
       policy = service.projects().getIamPolicy(projectId, request).execute();
-      logger.info("Policy retrieved: " + policy.toString());
+      log.info("Policy retrieved: " + policy.toString());
       return policy;
     } catch (IOException e) {
-      logger.error("Unable to get policy: \n", e);
+      log.error("Unable to get policy: \n", e);
       return null;
     }
   }

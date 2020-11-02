@@ -78,11 +78,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       final String accountId, final ElkSetupTestNodeData elkSetupTestNodeData) {
-    logger.info("Starting Log Data collection by Host for account Id : {}, ElkSetupTestNodeData : {}", accountId,
+    log.info("Starting Log Data collection by Host for account Id : {}, ElkSetupTestNodeData : {}", accountId,
         elkSetupTestNodeData);
     // gets the settings attributes for given settings id
     final SettingAttribute settingAttribute = settingsService.get(elkSetupTestNodeData.getSettingId());
-    logger.info("Settings attribute : " + settingAttribute);
+    log.info("Settings attribute : " + settingAttribute);
     if (settingAttribute == null) {
       throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR,
           "No " + StateType.ELK + " setting with id: " + elkSetupTestNodeData.getSettingId() + " found");
@@ -111,7 +111,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
                   createApiCallLog(settingAttribute.getAccountId(), elkSetupTestNodeData.getGuid()), 5);
     } catch (IOException ex) {
-      logger.info("Error while getting data ", ex);
+      log.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     String hostName = mlServiceUtils.getHostName(elkSetupTestNodeData);
@@ -149,7 +149,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
 
     String hostNameField = elkSetupTestNodeData.getHostNameField();
 
-    logger.info("Hostname Expression : " + hostName);
+    log.info("Hostname Expression : " + hostName);
     final ElkLogFetchRequest elkFetchRequestWithHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
@@ -162,7 +162,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().toEpochSecond()))
             .queryType(elkSetupTestNodeData.getQueryType())
             .build();
-    logger.info("ElkFetchRequest to be send : " + elkFetchRequestWithHost);
+    log.info("ElkFetchRequest to be send : " + elkFetchRequestWithHost);
     Object responseWithHost;
     try {
       responseWithHost =
@@ -170,7 +170,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithHost,
                   createApiCallLog(settingAttribute.getAccountId(), elkSetupTestNodeData.getGuid()), 5);
     } catch (IOException ex) {
-      logger.info("Error while getting data for node", ex);
+      log.info("Error while getting data for node", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     List<LogElement> logElementsWithHost = parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(),
@@ -243,7 +243,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             "Too many logs returned using query: '" + query + "'. Please refine your query.");
       }
 
-      logger.info("Valid query passed with query {} and index {}", query, index);
+      log.info("Valid query passed with query {} and index {}", query, index);
       return true;
     } catch (Exception ex) {
       throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR, ExceptionUtils.getMessage(ex));

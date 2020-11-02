@@ -87,16 +87,16 @@ public class ExecutionRestUtils {
                               .jsonPath();
       Map<Object, Object> resource = jsonPath.getMap("resource");
       status = resource.get("status").toString();
-      logger.info(status);
+      log.info(status);
       if (status.equals("SUCCESS") || status.equals("FAILED")) {
         return status;
       }
       try {
         Thread.sleep(10000);
         i++;
-        logger.info(String.valueOf(i));
+        log.info(String.valueOf(i));
       } catch (InterruptedException e) {
-        logger.error("Error thrown : ", e);
+        log.error("Error thrown : ", e);
       }
     }
     return status;

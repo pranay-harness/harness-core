@@ -113,7 +113,7 @@ public class K8sMetricCollector {
         }
         isNodeProcessed.put(nodeName, Boolean.TRUE);
       } catch (Exception ex) {
-        logger.warn("Failed to collect pvMetrics for node:{}", nodeName, ex);
+        log.warn("Failed to collect pvMetrics for node:{}", nodeName, ex);
       }
     });
   }

@@ -28,7 +28,7 @@ public class AddInstanceStatsCollectionJobToAllAccounts implements Migration {
       for (Account account : records) {
         InstanceStatsCollectorJob.delete(jobScheduler, account.getUuid());
         InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
-        logger.info("Added InstanceStatsCollectorJob for account {}", account.getUuid());
+        log.info("Added InstanceStatsCollectorJob for account {}", account.getUuid());
       }
     }
   }

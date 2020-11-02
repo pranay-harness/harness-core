@@ -284,7 +284,7 @@ public class WingsApplication extends Application<MainConfiguration> {
    */
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
+      log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);
     }));
 
@@ -299,7 +299,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void initialize(Bootstrap<MainConfiguration> bootstrap) {
     initializeLogging();
-    logger.info("bootstrapping ...");
+    log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
 
     // Enable variable substitution with environment variables
@@ -316,7 +316,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.setMetricRegistry(metricRegistry);
 
-    logger.info("bootstrapping done.");
+    log.info("bootstrapping done.");
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
@@ -341,8 +341,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   @Override
   public void run(final MainConfiguration configuration, Environment environment) throws Exception {
-    logger.info("Starting app ...");
-    logger.info("Entering startup maintenance mode");
+    log.info("Starting app ...");
+    log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
@@ -544,33 +544,33 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (DeployMode.isOnPrem(deployMode)) {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
-      logger.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
+      log.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
-        logger.error("No license info is provided");
+        log.error("No license info is provided");
       } else {
         try {
-          logger.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
+          log.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
           licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
-          logger.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
+          log.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
         } catch (WingsException ex) {
-          logger.error("Error while updating license info", ex);
+          log.error("Error while updating license info", ex);
         }
       }
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
-    logger.info("Initializing gRPC server...");
+    log.info("Initializing gRPC server...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     registerDatadogPublisherIfEnabled(configuration);
 
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
-    logger.info("Starting app done");
-    logger.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+    log.info("Starting app done");
+    log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
   }
 
   private void registerAtmosphereStreams(Environment environment, Injector injector) {
@@ -622,16 +622,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     DatadogConfig datadogConfig = configuration.getDatadogConfig();
     if (datadogConfig != null && datadogConfig.isEnabled()) {
       try {
-        logger.info("Registering datadog javaagent");
+        log.info("Registering datadog javaagent");
         HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(datadogConfig.getApiKey()).build();
         DatadogReporter reporter = DatadogReporter.forRegistry(harnessMetricRegistry.getThreadPoolMetricRegistry())
                                        .withTransport(httpTransport)
                                        .build();
 
         reporter.start(60, TimeUnit.SECONDS);
-        logger.info("Registered datadog javaagent");
+        log.info("Registered datadog javaagent");
       } catch (Exception t) {
-        logger.error("Error while initializing datadog", t);
+        log.error("Error while initializing datadog", t);
       }
     }
   }
@@ -733,7 +733,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerQueueListeners(Injector injector) {
-    logger.info("Initializing queue listeners...");
+    log.info("Initializing queue listeners...");
 
     registerWaitEnginePublishers(injector);
 
@@ -757,7 +757,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
-    logger.info("Initializing scheduled jobs...");
+    log.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -900,7 +900,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerCronJobs(Injector injector) {
-    logger.info("Register cron jobs...");
+    log.info("Register cron jobs...");
     final PersistentScheduler jobScheduler =
         injector.getInstance(Key.get(PersistentScheduler.class, Names.named("BackgroundJobScheduler")));
 

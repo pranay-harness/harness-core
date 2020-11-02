@@ -118,7 +118,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
       String errorMessage = String.format(
           "Exception: %s while waiting for ECS steady state for activity: %s", ex.getMessage(), params.getActivityId());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       return EcsSteadyStateCheckResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(errorMessage)

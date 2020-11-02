@@ -54,7 +54,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup step. Workflow execution: [%s]",
               spotInstTaskParameters.getClass().getSimpleName(), spotInstTaskParameters.getWorkflowExecutionId());
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
     String spotInstAccountId = spotInstConfig.getSpotInstAccountId();

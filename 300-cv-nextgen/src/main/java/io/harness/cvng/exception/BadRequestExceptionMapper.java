@@ -20,7 +20,7 @@ public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestExce
 
   @Override
   public Response toResponse(BadRequestException exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     return Response.status(Response.Status.BAD_REQUEST)
         .entity(ResponseMessage.builder().message(exception.toString()).code(ErrorCode.INVALID_REQUEST).build())
         .type(MediaType.APPLICATION_JSON)

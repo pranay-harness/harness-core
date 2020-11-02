@@ -24,7 +24,7 @@ public class AddScopedToAccountAttributeToEncryptedData implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Executing migration AddScopedToAccountAttributeToEncryptedData");
+    log.info("Executing migration AddScopedToAccountAttributeToEncryptedData");
     UpdateOperations<EncryptedData> updateOperations = wingsPersistence.createUpdateOperations(EncryptedData.class)
                                                            .set(EncryptedDataKeys.scopedToAccount, Boolean.TRUE);
 
@@ -39,7 +39,7 @@ public class AddScopedToAccountAttributeToEncryptedData implements Migration {
 
     UpdateResults result = wingsPersistence.update(query, updateOperations);
 
-    logger.info("Migration AddScopedToAccountAttributeToEncryptedData updated {} EncryptedData records",
+    log.info("Migration AddScopedToAccountAttributeToEncryptedData updated {} EncryptedData records",
         result.getUpdatedCount());
   }
 }

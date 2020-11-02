@@ -20,7 +20,7 @@ public class Schedulable implements Runnable {
       runnable.run();
     } catch (Throwable exception) {
       if (message != null) {
-        logger.error(message, exception);
+        log.error(message, exception);
       }
     }
   }

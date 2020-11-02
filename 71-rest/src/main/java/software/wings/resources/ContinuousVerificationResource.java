@@ -99,7 +99,7 @@ public class ContinuousVerificationResource {
   public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
-    logger.info("Trigger Data Collection for 24x7 with cvConfigId {}, startTime {}, endTime {}", cvConfigId, startTime,
+    log.info("Trigger Data Collection for 24x7 with cvConfigId {}, startTime {}, endTime {}", cvConfigId, startTime,
         endTime);
     return new RestResponse<>(cvManagerService.collect247Data(cvConfigId, stateType, startTime, endTime));
   }
@@ -110,7 +110,7 @@ public class ContinuousVerificationResource {
   @LearningEngineAuth
   public RestResponse<Boolean> collectWorkflowData(@QueryParam("analysisContextId") String contextId,
       @QueryParam("startDataCollectionMinute") long collectionMinute) {
-    logger.info(
+    log.info(
         "Trigger Data Collection for workflow with contextId {}, CollectionMinute {}", contextId, collectionMinute);
     return new RestResponse<>(cvManagerService.collectCVDataForWorkflow(contextId, collectionMinute));
   }

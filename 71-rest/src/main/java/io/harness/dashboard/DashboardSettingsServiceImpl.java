@@ -74,7 +74,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
                                     .properties(properties)
                                     .build();
     eventPublishHelper.publishAccountEvent(accountId, accountEvent, false, false);
-    logger.info("Created dashboard for account {}", accountId);
+    log.info("Created dashboard for account {}", accountId);
     return savedDashboardSettings;
   }
 
@@ -104,7 +104,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     DashboardSettings updatedDashboardSettings = get(accountId, id);
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, dashboardSettingsBeforeUpdate, updatedDashboardSettings, Type.UPDATE);
-    logger.info("Updated dashboard {}", id);
+    log.info("Updated dashboard {}", id);
     return updatedDashboardSettings;
   }
 
@@ -176,7 +176,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
       boolean deleted = persistence.delete(DashboardSettings.class, dashboardSettingsId);
       if (deleted) {
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, dashboardSettings, null, Type.DELETE);
-        logger.info("Deleted dashboard {} for account {}", dashboardSettingsId, accountId);
+        log.info("Deleted dashboard {} for account {}", dashboardSettingsId, accountId);
       }
       return deleted;
     }

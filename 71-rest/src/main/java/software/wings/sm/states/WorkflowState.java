@@ -38,7 +38,7 @@ public interface WorkflowState {
   String getWorkflowId();
 
   default ExecutionResponse checkDisableAssertion(
-      ExecutionContextImpl context, WorkflowService workflowService, Logger logger) {
+      ExecutionContextImpl context, WorkflowService workflowService, Logger log) {
     String disableAssertion = getDisableAssertion();
     String workflowId = getWorkflowId();
     SkipStateExecutionData skipStateExecutionData = SkipStateExecutionData.builder().workflowId(workflowId).build();
@@ -92,7 +92,7 @@ public interface WorkflowState {
               .build();
         }
       } catch (JexlException je) {
-        logger.error("Skip Assertion Evaluation Failed", je);
+        log.error("Skip Assertion Evaluation Failed", je);
         String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
         if (jexlError.contains(":")) {
           jexlError = jexlError.split(":")[1];
@@ -103,7 +103,7 @@ public interface WorkflowState {
             .stateExecutionData(skipStateExecutionData)
             .build();
       } catch (Exception e) {
-        logger.error("Skip Assertion Evaluation Failed", e);
+        log.error("Skip Assertion Evaluation Failed", e);
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("Skip Assertion Evaluation Failed : " + (e.getMessage() != null ? e.getMessage() : ""))

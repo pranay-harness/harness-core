@@ -46,7 +46,7 @@ public class CVNGAuthenticationFilter
         return;
       }
     } catch (Exception ex) {
-      logger.error("Exception while validating credential in cvng", ex);
+      log.error("Exception while validating credential in cvng", ex);
     }
     throw new WingsException(INVALID_CREDENTIAL, USER);
   }

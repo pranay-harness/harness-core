@@ -39,7 +39,7 @@ public class AddValidUntilToDelegateTask implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("DelegateTasks: {} updated", i);
+          log.info("DelegateTasks: {} updated", i);
         }
         ++i;
 

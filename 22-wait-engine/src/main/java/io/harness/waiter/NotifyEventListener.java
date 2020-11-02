@@ -63,7 +63,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
       WaitInstance waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
 
       if (waitInstance == null) {
-        logger.error("Double notification");
+        log.error("Double notification");
         return;
       }
 
@@ -77,7 +77,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
                                  .fetch())) {
         for (NotifyResponse notifyResponse : notifyResponses) {
           if (notifyResponse.isError()) {
-            logger.info("Failed notification response {}", notifyResponse.getUuid());
+            log.info("Failed notification response {}", notifyResponse.getUuid());
             isError = true;
           }
           responseMap.put(notifyResponse.getUuid(),
@@ -94,21 +94,21 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
           } else {
             callback.notify(responseMap);
           }
-          logger.info("WaitInstance callback finished");
+          log.info("WaitInstance callback finished");
         } catch (Exception exception) {
-          logger.error("WaitInstance callback failed", exception);
+          log.error("WaitInstance callback failed", exception);
         }
       }
 
       try {
         persistence.delete(waitInstance);
       } catch (Exception exception) {
-        logger.error("Failed to delete WaitInstance", exception);
+        log.error("Failed to delete WaitInstance", exception);
       }
 
       final long passed = System.currentTimeMillis() - now;
       if (passed > MAX_CALLBACK_PROCESSING_TIME.toMillis()) {
-        logger.error("It took more than {} ms before we processed the callback. THIS IS VERY BAD!!!",
+        log.error("It took more than {} ms before we processed the callback. THIS IS VERY BAD!!!",
             MAX_CALLBACK_PROCESSING_TIME.toMillis());
       }
     }

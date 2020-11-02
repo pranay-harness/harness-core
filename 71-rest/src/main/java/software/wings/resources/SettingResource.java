@@ -357,19 +357,19 @@ public class SettingResource {
       // We expect the user to retain at least 1 Git Config
       return new RestResponse();
     }
-    logger.info("Retaining the following git connectors for accountId {}: {}", accountId, gitConnectorsToRetain);
-    logger.info("Starting deletion of git connectors for accountId {}", accountId);
+    log.info("Retaining the following git connectors for accountId {}: {}", accountId, gitConnectorsToRetain);
+    log.info("Starting deletion of git connectors for accountId {}", accountId);
     boolean gitConnectorsDeleted =
         settingsService.retainSelectedGitConnectorsAndDeleteRest(accountId, gitConnectorsToRetain);
     if (gitConnectorsDeleted) {
-      logger.info("Deleted remaining of Git Connectors for accountId {}", accountId);
+      log.info("Deleted remaining of Git Connectors for accountId {}", accountId);
     }
     boolean yamlGitConfigsDeleted =
         yamlGitService.retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(accountId, gitConnectorsToRetain);
     if (yamlGitConfigsDeleted) {
-      logger.info("Deleted Yaml Git Configs of accountId {} of remaining git connectors", accountId);
+      log.info("Deleted Yaml Git Configs of accountId {} of remaining git connectors", accountId);
     }
-    logger.info("Completed processing git connector and yaml git config deletions for accountId {}", accountId);
+    log.info("Completed processing git connector and yaml git config deletions for accountId {}", accountId);
     return new RestResponse();
   }
 

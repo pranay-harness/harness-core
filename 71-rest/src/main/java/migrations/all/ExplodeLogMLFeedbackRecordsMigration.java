@@ -34,7 +34,7 @@ public class ExplodeLogMLFeedbackRecordsMigration implements Migration {
   @Override
   public void migrate() {
     if (dataStoreService instanceof MongoDataStoreServiceImpl) {
-      logger.info("Datastore service is an instance of MongoDataStoreServiceImpl. Not migrating the records now.");
+      log.info("Datastore service is an instance of MongoDataStoreServiceImpl. Not migrating the records now.");
       return;
     }
 
@@ -48,12 +48,12 @@ public class ExplodeLogMLFeedbackRecordsMigration implements Migration {
       try {
         cvFeedbackRecords.add(createCVFeedbackRecordFromLogMLFeedback(record));
       } catch (Exception ex) {
-        logger.info("Exception while creating feedback record for " + record);
+        log.info("Exception while creating feedback record for " + record);
       }
     }
     dataStoreService.save(CVFeedbackRecord.class, cvFeedbackRecords, true);
 
-    logger.info("Moved {} records to CVFeedback record", cvFeedbackRecords.size());
+    log.info("Moved {} records to CVFeedback record", cvFeedbackRecords.size());
   }
 
   private CVFeedbackRecord createCVFeedbackRecordFromLogMLFeedback(LogMLFeedbackRecord record) {

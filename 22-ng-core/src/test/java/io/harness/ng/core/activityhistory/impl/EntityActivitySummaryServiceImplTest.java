@@ -72,7 +72,7 @@ public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
     try {
       date = dateFormat.parse(dateString);
     } catch (Exception ex) {
-      logger.info("Error parsing the date");
+      log.info("Error parsing the date");
     }
     return date.getTime();
   }
@@ -118,7 +118,7 @@ public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
     String endDateString = "Oct 28 2020 00:00:00";
     long startingTimeEpoch = getEpochTime(startDateString, "IST");
     long endTimeEpoch = getEpochTime(endDateString, "IST");
-    logger.info("start Time {}, end time {}", startingTimeEpoch, endTimeEpoch);
+    log.info("start Time {}, end time {}", startingTimeEpoch, endTimeEpoch);
     listActivitySummaryForHours(startingTimeEpoch, endTimeEpoch, "identifier3" + System.currentTimeMillis());
   }
 

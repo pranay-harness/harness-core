@@ -319,7 +319,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private ApiKeyEntry getApiKeyFromCacheOrDB(String apiKey, String accountId, boolean details) {
     if (apiKeyCache == null) {
-      logger.warn("apiKeyCache is null. Fetch from DB");
+      log.warn("apiKeyCache is null. Fetch from DB");
       return getByKeyFromDB(apiKey, accountId, details);
     } else {
       ApiKeyEntry apiKeyEntry;
@@ -346,7 +346,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public UserPermissionInfo getApiKeyPermissions(ApiKeyEntry apiKeyEntry, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
     if (apiKeyPermissionInfoCache == null) {
-      logger.warn("apiKey permissions cache is null. Fetch from DB");
+      log.warn("apiKey permissions cache is null. Fetch from DB");
       return authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
     } else {
       UserPermissionInfo apiKeyPermissionInfo;
@@ -371,7 +371,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
       ApiKeyEntry apiKeyEntry, UserPermissionInfo userPermissionInfo, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
     if (apiKeyRestrictionInfoCache == null) {
-      logger.warn("apiKey restrictions cache is null. Fetch from DB");
+      log.warn("apiKey restrictions cache is null. Fetch from DB");
       return authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
     } else {
       UserRestrictionInfo apiKeyPermissionInfo;

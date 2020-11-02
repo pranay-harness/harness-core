@@ -53,14 +53,14 @@ public class ServiceAuthServerInterceptor implements ServerInterceptor {
 
     @SuppressWarnings("unchecked") ServerCall.Listener<ReqT> noopListener = NOOP_LISTENER;
     if (token == null || isBlank(token)) {
-      logger.warn("No token in metadata. Token verification failed");
+      log.warn("No token in metadata. Token verification failed");
       serverCall.close(Status.UNAUTHENTICATED.withDescription("Token missing"), metadata);
       return noopListener;
     }
 
     final Optional<String> serviceIdOpt = GrpcAuthUtils.getServiceIdFromRequest(metadata);
     if (!serviceIdOpt.isPresent() || isBlank(serviceIdOpt.get())) {
-      logger.warn("No serviceId in metadata. Token verification failed");
+      log.warn("No serviceId in metadata. Token verification failed");
       serverCall.close(Status.UNAUTHENTICATED.withDescription("serviceId missing"), metadata);
       return noopListener;
     }
@@ -70,14 +70,14 @@ public class ServiceAuthServerInterceptor implements ServerInterceptor {
       final String serviceId = serviceIdOpt.get().trim();
       final ServiceTokenAuthenticator serviceTokenAuthenticator = serviceIdToAuthenticatorMap.get(serviceId);
       if (serviceTokenAuthenticator == null) {
-        logger.warn("unsupported serviceId [{}]", serviceId);
+        log.warn("unsupported serviceId [{}]", serviceId);
         serverCall.close(Status.UNAUTHENTICATED.withDescription("unsupported serviceId =" + serviceId), metadata);
         return noopListener;
       }
       serviceTokenAuthenticator.authenticate(token);
       ctx = GrpcAuthUtils.newAuthenticatedContext();
     } catch (Exception e) {
-      logger.warn("Token verification failed. Unauthenticated", e);
+      log.warn("Token verification failed. Unauthenticated", e);
       serverCall.close(Status.UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e), metadata);
       return noopListener;
     }

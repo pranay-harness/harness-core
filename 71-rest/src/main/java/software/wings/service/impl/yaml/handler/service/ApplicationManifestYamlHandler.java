@@ -146,7 +146,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
 
     // Dont delete the appManifest if coming from git for service.
     if (isBlank(applicationManifest.getEnvId()) && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST) {
-      logger.info("Deleting the application manifest for service from git is not allowed");
+      log.info("Deleting the application manifest for service from git is not allowed");
       return;
     }
 

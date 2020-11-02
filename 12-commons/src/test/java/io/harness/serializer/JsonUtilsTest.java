@@ -51,7 +51,7 @@ public class JsonUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
-    logger.debug("authors: {}", authors);
+    log.debug("authors: {}", authors);
     assertThat(authors).isNotNull().hasSize(4);
   }
 
@@ -64,11 +64,11 @@ public class JsonUtilsTest extends CategoryTest {
   public void shouldGetTitleAndCheapBooks() {
     DocumentContext ctx = JsonUtils.parseJson(json);
     List<String> titles = JsonUtils.jsonPath(ctx, "$.store.book[*].title");
-    logger.debug("authors: {}", titles);
+    log.debug("authors: {}", titles);
     assertThat(titles).isNotNull().hasSize(4);
 
     List<Object> cheapBooks = JsonUtils.jsonPath(ctx, "$.store.book[?(@.price < 10)]");
-    logger.debug("cheapBooks: {}", cheapBooks);
+    log.debug("cheapBooks: {}", cheapBooks);
     assertThat(cheapBooks).isNotNull().hasSize(2);
   }
 

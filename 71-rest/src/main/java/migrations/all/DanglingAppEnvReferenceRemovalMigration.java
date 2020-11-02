@@ -24,12 +24,11 @@ public class DanglingAppEnvReferenceRemovalMigration implements Migration {
         Account account = accountHIterator.next();
         try {
           int purgeCount = usageRestrictionsService.purgeDanglingAppEnvReferences(account.getUuid());
-          logger.info(
+          log.info(
               "{} usage restrictions referring to non-existent application/environment have been fixed in account {}",
               purgeCount, account.getUuid());
         } catch (Exception e) {
-          logger.error(
-              "Failed to purge dangling references in usage restrictions to application/environments in account "
+          log.error("Failed to purge dangling references in usage restrictions to application/environments in account "
                   + account.getUuid(),
               e);
         }

@@ -17,7 +17,7 @@ public class DropExistingIndexForGitFileActivityMigration implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "gitFileActivity").dropIndex("uniqueIdx");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
   }
 }

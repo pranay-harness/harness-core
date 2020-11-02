@@ -71,11 +71,11 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
           .command(cmd)
           .environment(roleEnvVariables)
           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-          .redirectError(Slf4jStream.of(logger).asError())
+          .redirectError(Slf4jStream.of(log).asError())
           .exitValue(0)
           .execute();
     } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
-      logger.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn{}",
+      log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn{}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
       throw new BatchProcessingException("S3 sync failed", e);

@@ -32,7 +32,7 @@ public class SearchEntityBulkMigrationTask<T extends PersistentEntity> implement
       IndexResponse indexResponse = elasticsearchClient.index(indexRequest);
       return indexResponse.status() == RestStatus.OK || indexResponse.status() == RestStatus.CREATED;
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      log.error("Could not connect to elasticsearch", e);
     }
     return false;
   }
@@ -54,7 +54,7 @@ public class SearchEntityBulkMigrationTask<T extends PersistentEntity> implement
     if (entityBaseView != null) {
       return upsertEntityBaseView(entityBaseView);
     } else {
-      logger.warn("object {} created nullBaseView", object.toString());
+      log.warn("object {} created nullBaseView", object.toString());
     }
     return true;
   }

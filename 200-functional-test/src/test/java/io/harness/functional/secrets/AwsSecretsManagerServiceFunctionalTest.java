@@ -59,7 +59,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
     try {
       secretsManagerId = addAwsSecretsManager(secretsManagerConfig);
       assertThat(secretsManagerId).isNotNull();
-      logger.info("AWS Secrets Manager config created.");
+      log.info("AWS Secrets Manager config created.");
 
       List<AwsSecretsManagerConfig> secretsManagerConfigs = listConfigs(getAccount().getUuid());
       assertThat(secretsManagerConfigs.size() > 0).isTrue();
@@ -87,7 +87,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
     } finally {
       if (secretsManagerId != null) {
         deleteAwsSecretsManager(getAccount().getUuid(), secretsManagerId);
-        logger.info("AWS Secrets Manager deleted.");
+        log.info("AWS Secrets Manager deleted.");
       }
     }
   }

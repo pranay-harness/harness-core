@@ -82,14 +82,14 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
           .build();
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for controller to reach steady state";
-      logger.error(msg, e);
+      log.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       return KubernetesSteadyStateCheckResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
     } catch (WingsException e) {
       Misc.logAllMessages(e, executionLogCallback);
       throw e;
     } catch (Exception e) {
-      logger.error("Exception in KubernetesSteadyStateCheck", e);
+      log.error("Exception in KubernetesSteadyStateCheck", e);
       Misc.logAllMessages(e, executionLogCallback);
       executionLogCallback.saveExecutionLog("Exception occurred while waiting for controller to reach steady state",
           LogLevel.ERROR, CommandExecutionStatus.FAILURE);

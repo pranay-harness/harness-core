@@ -116,7 +116,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
       return true;
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;
@@ -194,7 +194,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
       return true;
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;

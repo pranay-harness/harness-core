@@ -54,7 +54,7 @@ public class K8sNodeEventTasklet implements Tasklet {
     try {
       return process(publishedMessage);
     } catch (Exception ex) {
-      logger.error("K8sNodeEventTasklet Exception ", ex);
+      log.error("K8sNodeEventTasklet Exception ", ex);
     }
     return InstanceEvent.builder().build();
   }

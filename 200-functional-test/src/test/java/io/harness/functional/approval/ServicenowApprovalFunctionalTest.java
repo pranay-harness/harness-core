@@ -334,13 +334,13 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, environment.getAppId(), environment.getUuid(), executionArgs);
 
-    logger.info("Workflow Execution started");
+    log.info("Workflow Execution started");
 
     Awaitility.await().atMost(600, TimeUnit.SECONDS).pollInterval(60, TimeUnit.SECONDS).until(() -> {
       ExecutionStatus executionStatus =
           workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
               .getStatus();
-      logger.info("Current workflow execution status: {}", executionStatus.name());
+      log.info("Current workflow execution status: {}", executionStatus.name());
       return executionStatus == ExecutionStatus.PAUSED;
     });
   }
@@ -730,17 +730,17 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, environment.getAppId(), environment.getUuid(), executionArgs);
 
-    logger.info("Workflow Execution started");
+    log.info("Workflow Execution started");
 
     Awaitility.await().atMost(600, TimeUnit.SECONDS).pollInterval(20, TimeUnit.SECONDS).until(() -> {
       ExecutionStatus executionStatus =
           workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
               .getStatus();
-      logger.info("Current workflow execution status: {}", executionStatus.name());
+      log.info("Current workflow execution status: {}", executionStatus.name());
       return executionStatus == status || ExecutionStatus.isFinalStatus(executionStatus);
     });
 
-    logger.info("Workflow Execution completed successfully");
+    log.info("Workflow Execution completed successfully");
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
 
@@ -754,7 +754,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   private ExecutionArgs saveWorkflowAndGetExecutionArgs(Workflow workflow) {
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, environment.getAccountId(), environment.getAppId(), workflow);
-    logger.info("Workflow created successfully");
+    log.info("Workflow created successfully");
     assertThat(savedWorkflow).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();

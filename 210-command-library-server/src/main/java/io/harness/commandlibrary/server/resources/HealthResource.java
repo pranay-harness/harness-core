@@ -42,7 +42,7 @@ public class HealthResource {
   @ExceptionMetered
   public RestResponse<String> get() throws Exception {
     if (getMaintenanceFlag()) {
-      logger.info("In maintenance mode. Throwing exception to prevent traffic.");
+      log.info("In maintenance mode. Throwing exception to prevent traffic.");
       throw NoResultFoundException.newBuilder()
           .code(ErrorCode.RESOURCE_NOT_FOUND)
           .message("in maintenance mode")

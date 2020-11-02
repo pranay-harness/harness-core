@@ -401,7 +401,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
     assertThat(execution)
@@ -607,7 +607,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Pipeline executionId: {}", executionId);
+    log.debug("Pipeline executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
     assertThat(execution)
@@ -717,7 +717,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecution =
         wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecutionKeys.appId, appId).get();
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
-    logger.info("shouldUpdateFailedCount test done");
+    log.info("shouldUpdateFailedCount test done");
   }
 
   /**
@@ -754,7 +754,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
     assertThat(execution)
@@ -965,7 +965,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(10), ofMillis(100), () -> {
@@ -1051,7 +1051,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(3), ofMillis(100), () -> {
@@ -1215,7 +1215,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(10), ofMillis(100), () -> {
@@ -1309,7 +1309,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(5), ofMillis(100), () -> {
@@ -1413,7 +1413,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     List<GraphNode> installNodes = getNodes(executionId);
@@ -1575,7 +1575,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     List<GraphNode> installNodes = getNodes(executionId);
@@ -1780,7 +1780,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
     assertThat(execution)
@@ -1835,7 +1835,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Workflow executionId: {}", executionId);
+    log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
     assertThat(execution)
@@ -1908,7 +1908,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(CanaryOrchestrationWorkflow.class);
 
-    logger.info("Graph Json : \n {}",
+    log.info("Graph Json : \n {}",
         JsonUtils.asJson(((CanaryOrchestrationWorkflow) orchestrationWorkflow4.getOrchestrationWorkflow()).getGraph()));
 
     return orchestrationWorkflow4;
@@ -2006,7 +2006,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .isInstanceOf(CanaryOrchestrationWorkflow.class);
 
-    logger.info("Graph Json : \n {}",
+    log.info("Graph Json : \n {}",
         JsonUtils.asJson(((CanaryOrchestrationWorkflow) orchestrationWorkflow4.getOrchestrationWorkflow()).getGraph()));
 
     return orchestrationWorkflow4;

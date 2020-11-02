@@ -84,7 +84,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
             perpetualTaskRecordDao.getExistingPerpetualTask(accountId, perpetualTaskType, clientContext);
         if (perpetualTaskMaybe.isPresent()) {
           PerpetualTaskRecord perpetualTaskRecord = perpetualTaskMaybe.get();
-          logger.info("Perpetual task with id={} exists.", perpetualTaskRecord.getUuid());
+          log.info("Perpetual task with id={} exists.", perpetualTaskRecord.getUuid());
           return perpetualTaskRecord.getUuid();
         }
       }
@@ -103,7 +103,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
       perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onPerpetualTaskCreated);
       String taskId = perpetualTaskRecordDao.save(record);
       try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
-        logger.info("Created a perpetual task with id={}.", taskId);
+        log.info("Created a perpetual task with id={}.", taskId);
       }
       return taskId;
     }
@@ -113,7 +113,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   public boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
-      logger.info("Resetting the perpetual task");
+      log.info("Resetting the perpetual task");
       return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId, taskExecutionBundle);
     }
   }
@@ -124,7 +124,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
          AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
       boolean hasDeleted = perpetualTaskRecordDao.remove(accountId, taskId);
       if (hasDeleted) {
-        logger.info("Deleted the perpetual task");
+        log.info("Deleted the perpetual task");
       }
       return hasDeleted;
     }
@@ -134,7 +134,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   public boolean pauseTask(String accountId, String taskId) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
-      logger.info("Pausing the perpetual task");
+      log.info("Pausing the perpetual task");
       return perpetualTaskRecordDao.pauseTask(accountId, taskId);
     }
   }
@@ -212,7 +212,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
         perpetualTaskExecutionBundle =
             PerpetualTaskExecutionBundle.parseFrom(perpetualTaskRecord.getClientContext().getExecutionBundle());
       } catch (InvalidProtocolBufferException e) {
-        logger.error("Failed to parse perpetual task execution bundle from task parameters", e);
+        log.error("Failed to parse perpetual task execution bundle from task parameters", e);
         return null;
       }
 

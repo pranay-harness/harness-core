@@ -16,12 +16,12 @@ public class ThreadControlRule implements TestRule {
       @Override
       public void evaluate() throws Throwable {
         int activeThreadsBeforeTheTest = activeCount();
-        logger.info("Threads before the test: {}", activeThreadsBeforeTheTest);
+        log.info("Threads before the test: {}", activeThreadsBeforeTheTest);
         try {
           statement.evaluate();
         } finally {
           int activeThreadsAfterTheTest = activeCount();
-          logger.info("Threads after the test: {}", activeThreadsAfterTheTest);
+          log.info("Threads after the test: {}", activeThreadsAfterTheTest);
           if (activeThreadsAfterTheTest > activeThreadsBeforeTheTest) {
             fail(String.format("There are %d threads more at the end of the test",
                 activeThreadsAfterTheTest - activeThreadsBeforeTheTest));

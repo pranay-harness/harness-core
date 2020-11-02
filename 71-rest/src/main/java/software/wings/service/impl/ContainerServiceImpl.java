@@ -113,18 +113,18 @@ public class ContainerServiceImpl implements ContainerService {
   public List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams) {
     String containerServiceName = containerServiceParams.getContainerServiceName();
     String accountId = containerServiceParams.getSettingAttribute().getAccountId();
-    logger.info("Getting container infos for account {}, controller: {}", accountId, containerServiceName);
+    log.info("Getting container infos for account {}, controller: {}", accountId, containerServiceName);
     List<ContainerInfo> result = new ArrayList<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
     if (isKubernetesClusterConfig(value)) {
-      logger.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
+      log.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       notNullCheck("KubernetesConfig", kubernetesConfig);
       if (isNotEmpty(containerServiceName)) {
         HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, containerServiceName);
         if (controller != null) {
-          logger.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
+          log.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
           Map<String, String> labels =
               kubernetesContainerService.getPodTemplateSpec(controller).getMetadata().getLabels();
           Map<String, String> serviceLabels = new HashMap<>(labels);
@@ -132,17 +132,17 @@ public class ContainerServiceImpl implements ContainerService {
           List<io.fabric8.kubernetes.api.model.Service> services =
               kubernetesContainerService.getServices(kubernetesConfig, serviceLabels);
           String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
-          logger.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
+          log.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
           List<Pod> pods = kubernetesContainerService.getPods(kubernetesConfig, labels);
-          logger.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0,
-              containerServiceName, accountId);
+          log.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0, containerServiceName,
+              accountId);
           if (isEmpty(pods)) {
             return result;
           }
 
           for (Pod pod : pods) {
             String phase = pod.getStatus().getPhase();
-            logger.info("Phase: {} for pod {} for controller {} for account {}", pod.getStatus().getPhase(),
+            log.info("Phase: {} for pod {} for controller {} for account {}", pod.getStatus().getPhase(),
                 pod.getMetadata().getName(), containerServiceName, accountId);
             if ("Running".equals(phase)) {
               result.add(KubernetesContainerInfo.builder()
@@ -157,7 +157,7 @@ public class ContainerServiceImpl implements ContainerService {
             }
           }
         } else {
-          logger.info("Could not get controller {} for account {}", containerServiceName, accountId);
+          log.info("Could not get controller {} for account {}", containerServiceName, accountId);
         }
       } else {
         if (isEmpty(containerServiceParams.getReleaseName())) {
@@ -201,10 +201,10 @@ public class ContainerServiceImpl implements ContainerService {
           ErrorCode errorCode = ex.getCode();
           if (errorCode != null) {
             if (ErrorCode.AWS_CLUSTER_NOT_FOUND == errorCode) {
-              logger.info("ECS Cluster not found for service name:" + containerServiceName);
+              log.info("ECS Cluster not found for service name:" + containerServiceName);
               continue;
             } else if (ErrorCode.AWS_SERVICE_NOT_FOUND == errorCode) {
-              logger.info("ECS Service not found for service name:" + containerServiceName);
+              log.info("ECS Service not found for service name:" + containerServiceName);
               continue;
             }
           }

@@ -327,7 +327,7 @@ public class NewRelicServiceImpl implements NewRelicService {
                   FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, settingAttribute.getAccountId()),
               createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)
           .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
@@ -359,7 +359,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       return yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
     } catch (IOException ioex) {
-      logger.error("Could not read " + yamlPath);
+      log.error("Could not read " + yamlPath);
       throw new WingsException("Unable to load New Relic metrics", ioex);
     }
   }
@@ -386,7 +386,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       // Iterate over the metrics present in the YAML file
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
         if (entry == null) {
-          logger.error("Found a null entry in the NewRelic Metrics YAML file.");
+          log.error("Found a null entry in the NewRelic Metrics YAML file.");
         } else {
           entry.getValue().forEach(metric -> {
             /*
@@ -411,7 +411,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       metric names were spelt incorrectly.
        */
       if (!isEmpty(metricNames) && metricMap.isEmpty()) {
-        logger.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
+        log.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
         throw new WingsException("Incorrect Metric Names received.");
       }
 
@@ -432,7 +432,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       Map<String, List<Metric>> metricsMap = getMetricsFromYaml(VerificationConstants.getNewRelicMetricsYamlUrl());
       if (metricsMap == null) {
-        logger.error("Metric Map read from new relic metrics YAML is null. This is unexpected behaviour. "
+        log.error("Metric Map read from new relic metrics YAML is null. This is unexpected behaviour. "
             + "Probably the path to the YAML is incorrect.");
         return new ArrayList<>();
       }

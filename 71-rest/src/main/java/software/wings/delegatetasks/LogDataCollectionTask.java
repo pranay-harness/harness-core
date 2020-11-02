@@ -93,7 +93,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (CustomLogDataCollectionInfo) parameters;
-    logger.info("Log collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("Log collection - dataCollectionInfo: {}", dataCollectionInfo);
     if (!isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
@@ -119,7 +119,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -297,7 +297,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       } catch (Exception ex) {
         String err = ex.getMessage()
             + "Exception occurred while fetching logs. StateExecutionId: " + dataCollectionInfo.getStateExecutionId();
-        logger.error(err);
+        log.error(err);
         throw new WingsException(err);
       }
     }
@@ -380,15 +380,14 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
                 dataCollectionInfo.getServiceId(), delegateTaskId, filteredLogs);
             if (!response) {
-              logger.error(
-                  "Error while saving logs for stateExecutionId: {}", dataCollectionInfo.getStateExecutionId());
+              log.error("Error while saving logs for stateExecutionId: {}", dataCollectionInfo.getStateExecutionId());
             }
           }
           logCollectionMinute++;
           collectionStartTime += TimeUnit.MINUTES.toMillis(1);
           if (logCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.info(
+            log.info(
                 "Completed Log collection task. So setting task status to success and quitting. StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
@@ -397,7 +396,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -410,14 +409,14 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching logs. Retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
+            log.warn("error fetching logs. Retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }
 
       if (completed.get()) {
-        logger.info("Shutting down log collection {}", dataCollectionInfo.getStateExecutionId());
+        log.info("Shutting down log collection {}", dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
       }
     }

@@ -288,7 +288,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
     if (isNotEmpty(gcpKmsConfig.getCredentials())) {
       wingsPersistence.delete(EncryptedData.class, String.valueOf(gcpKmsConfig.getCredentials()));
-      logger.info("Deleted encrypted auth token record {} associated with GCP KMS '{}'", gcpKmsConfig.getCredentials(),
+      log.info("Deleted encrypted auth token record {} associated with GCP KMS '{}'", gcpKmsConfig.getCredentials(),
           gcpKmsConfig.getName());
     }
     return deleteSecretManagerAndGenerateAudit(accountId, gcpKmsConfig);

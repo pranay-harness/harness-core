@@ -46,7 +46,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
         TimeoutInstance.builder().uuid(generateUuid()).tracker(timeoutTracker).callback(timeoutCallback).build();
     timeoutInstance.resetNextIteration();
     TimeoutInstance savedTimeoutInstance = timeoutInstanceRepository.save(timeoutInstance);
-    logger.info(format("Registered timeout with uuid: %s, currentTime: %d, expiryTime: %d, diff: %d",
+    log.info(format("Registered timeout with uuid: %s, currentTime: %d, expiryTime: %d, diff: %d",
         timeoutInstance.getUuid(), System.currentTimeMillis(), timeoutInstance.getNextIteration(),
         timeoutInstance.getNextIteration() - System.currentTimeMillis()));
     if (iterator != null) {
@@ -96,27 +96,27 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   public void handle(TimeoutInstance timeoutInstance) {
     try (TimeoutInstanceLogContext ignore0 = new TimeoutInstanceLogContext(timeoutInstance.getUuid(), OVERRIDE_ERROR)) {
       final long now = System.currentTimeMillis();
-      logger.info("TimeoutInstance handle started");
+      log.info("TimeoutInstance handle started");
 
       TimeoutCallback callback = timeoutInstance.getCallback();
       injector.injectMembers(callback);
       try {
         callback.onTimeout(timeoutInstance);
-        logger.info("TimeoutInstance callback finished");
+        log.info("TimeoutInstance callback finished");
       } catch (Exception ex) {
         // TODO(gpahal): What to do in case callback throws an exception. Should we retry?
-        logger.error("TimeoutInstance callback failed", ex);
+        log.error("TimeoutInstance callback failed", ex);
       }
 
       try {
         timeoutInstanceRepository.deleteById(timeoutInstance.getUuid());
       } catch (Exception ex) {
-        logger.error("TimeoutInstance delete failed", ex);
+        log.error("TimeoutInstance delete failed", ex);
       }
 
       final long passed = System.currentTimeMillis() - now;
       if (passed > MAX_CALLBACK_PROCESSING_TIME.toMillis()) {
-        logger.error(
+        log.error(
             "TimeoutInstanceHandler: It took more than {} ms before we processed the callback. THIS IS VERY BAD!!!",
             MAX_CALLBACK_PROCESSING_TIME.toMillis());
       }

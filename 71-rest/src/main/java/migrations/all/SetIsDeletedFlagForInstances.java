@@ -28,7 +28,7 @@ public class SetIsDeletedFlagForInstances implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Start - Setting isDeleted flag for active instances");
+      log.info("Start - Setting isDeleted flag for active instances");
 
       List<Key<Instance>> keyList = wingsPersistence.createQuery(Instance.class).asKeyList();
       Set<String> idSet = keyList.stream().map(instanceKey -> (String) instanceKey.getId()).collect(Collectors.toSet());
@@ -41,10 +41,10 @@ public class SetIsDeletedFlagForInstances implements Migration {
           wingsPersistence.createQuery(Instance.class).field("isDeleted").doesNotExist().field("_id").in(idSet);
       wingsPersistence.update(query, updateOperations);
 
-      logger.info("End - Setting isDeleted flag for active instances");
+      log.info("End - Setting isDeleted flag for active instances");
 
     } catch (Exception ex) {
-      logger.error("Error while setting isDeleted flag for active instances", ex);
+      log.error("Error while setting isDeleted flag for active instances", ex);
     }
   }
 }

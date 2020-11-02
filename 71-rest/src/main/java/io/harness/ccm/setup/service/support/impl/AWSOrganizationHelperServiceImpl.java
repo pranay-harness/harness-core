@@ -33,7 +33,7 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
       AWSOrganizationsClient awsOrganizationsClient = getAWSOrganizationsClient(awsCrossAccountAttributes);
       return listAwsAccounts(awsOrganizationsClient);
     } catch (Exception ex) {
-      logger.error("Error while getting accounts", ex);
+      log.error("Error while getting accounts", ex);
     }
     return Collections.emptyList();
   }

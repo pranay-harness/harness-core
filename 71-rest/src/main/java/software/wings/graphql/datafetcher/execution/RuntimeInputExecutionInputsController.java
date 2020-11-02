@@ -93,7 +93,7 @@ public class RuntimeInputExecutionInputsController {
         return artifactNeededServiceIds;
       }
     }
-    logger.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
+    log.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
     return new ArrayList<>();
   }
 }

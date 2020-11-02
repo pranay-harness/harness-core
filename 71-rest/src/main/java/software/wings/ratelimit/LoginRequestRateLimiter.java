@@ -46,7 +46,7 @@ public class LoginRequestRateLimiter {
     boolean globalRateLimitReached =
         getAccountRateLimiter(Account.GLOBAL_ACCOUNT_ID).overLimitWhenIncremented(remoteHost);
     if (globalRateLimitReached) {
-      logger.error("Global Login Request has reached its limit with this API Call from {}", remoteHost);
+      log.error("Global Login Request has reached its limit with this API Call from {}", remoteHost);
       return true;
     }
     return false;

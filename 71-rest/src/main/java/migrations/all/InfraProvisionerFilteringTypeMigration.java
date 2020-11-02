@@ -24,7 +24,7 @@ public class InfraProvisionerFilteringTypeMigration implements Migration {
   public void migrate() {
     // We could implement a more intelligent logic like batching etc.
     // But it is probably not needed right now, as we have very few provisioners created
-    logger.info("Getting all provisioners to migrate blue prints");
+    log.info("Getting all provisioners to migrate blue prints");
     PageRequest<InfrastructureProvisioner> request = aPageRequest().withLimit(UNLIMITED).build();
     List<InfrastructureProvisioner> provisioners =
         wingsPersistence.query(InfrastructureProvisioner.class, request).getResponse();
@@ -37,10 +37,10 @@ public class InfraProvisionerFilteringTypeMigration implements Migration {
             wingsPersistence.saveAndGet(InfrastructureProvisioner.class, provisioner);
           }
         } catch (Exception ex) {
-          logger.error(ExceptionUtils.getMessage(ex), ex);
+          log.error(ExceptionUtils.getMessage(ex), ex);
         }
       });
     }
-    logger.info("Completed update of blue prints");
+    log.info("Completed update of blue prints");
   }
 }

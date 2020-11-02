@@ -136,11 +136,11 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query to getTotalClusterCost , max retry count reached, query=[{}], accountId=[{}]",
               query, accountId, e);
         } else {
-          logger.error("Error while fetching total cluster cost : exception", e);
+          log.error("Error while fetching total cluster cost : exception", e);
         }
       } finally {
         DBUtils.close(resultSet);
@@ -168,11 +168,11 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query to getTotalUnallocatedCost , max retry count reached, query=[{}], accountId=[{}]",
               query, accountId, e);
         } else {
-          logger.error("Error while fetching total unallocated cost : exception", e);
+          log.error("Error while fetching total unallocated cost : exception", e);
         }
       } finally {
         DBUtils.close(resultSet);
@@ -226,11 +226,11 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query to getTotalUnallocatedCost , max retry count reached, query=[{}], accountId=[{}]",
               query, accountId, e);
         } else {
-          logger.error("Error while fetching total idle cost : exception", e);
+          log.error("Error while fetching total idle cost : exception", e);
         }
       } finally {
         DBUtils.close(resultSet);
@@ -251,7 +251,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalK8sSpendInCe = resultSet.getDouble("COST");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -270,7 +270,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalEcsSpendInCe = resultSet.getDouble("COST");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -289,7 +289,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalK8sNamespaces = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -308,7 +308,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalK8sWorkflows = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -327,7 +327,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalK8sWorkflows = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -346,7 +346,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalK8sWorkflows = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -365,7 +365,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalEcsClusters = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -384,7 +384,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
         totalEcsTasks = resultSet.getDouble("NUM");
       }
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }

@@ -46,12 +46,12 @@ public class GetApplicationsFunctionalTest extends AbstractFunctionalTest {
   public void getApplicationsTest() {
     // Running harness get applications before creating a new application
     String command = String.format("harness get applications");
-    logger.info("Running harness get applications");
+    log.info("Running harness get applications");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -65,12 +65,12 @@ public class GetApplicationsFunctionalTest extends AbstractFunctionalTest {
     assertThat(testApplication).isNotNull();
 
     // Running harness get applications after creating a new application
-    logger.info("Running harness get applications after creating a new application");
+    log.info("Running harness get applications after creating a new application");
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();

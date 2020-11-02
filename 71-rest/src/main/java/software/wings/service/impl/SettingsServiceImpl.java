@@ -423,7 +423,7 @@ public class SettingsServiceImpl implements SettingsService {
             .build();
     int currentGitConnectorCount = list(request, null, null).getResponse().size();
     if (currentGitConnectorCount >= maxGitConnectorsAllowed) {
-      logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
+      log.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
           settingAttribute.getValue().getType(), settingAttribute.getAccountId());
       throw new WingsException(USAGE_LIMITS_EXCEEDED,
           String.format("Cannot create more than %d Git Connector", maxGitConnectorsAllowed), WingsException.USER);
@@ -618,7 +618,7 @@ public class SettingsServiceImpl implements SettingsService {
             .orElse(null);
 
     if (settingAttribute == null) {
-      logger.info("No settings associated with [accountId:{}, delegateName:{}]", accountId, delegateName);
+      log.info("No settings associated with [accountId:{}, delegateName:{}]", accountId, delegateName);
       return CEK8sDelegatePrerequisite.builder().build();
     }
     return settingValidationService.validateCEK8sDelegateSetting(settingAttribute);
@@ -643,8 +643,8 @@ public class SettingsServiceImpl implements SettingsService {
           || settingAttribute.getValue() instanceof WinRmConnectionAttributes) {
         auditServiceHelper.reportForAuditingUsingAccountId(
             settingAttribute.getAccountId(), null, settingAttribute, Type.TEST);
-        logger.info("Auditing testing of connectivity for settingAttribute={} in accountId={}",
-            settingAttribute.getUuid(), settingAttribute.getAccountId());
+        log.info("Auditing testing of connectivity for settingAttribute={} in accountId={}", settingAttribute.getUuid(),
+            settingAttribute.getAccountId());
       }
       return settingValidationService.validateConnectivity(settingAttribute);
     } catch (Exception ex) {
@@ -740,7 +740,7 @@ public class SettingsServiceImpl implements SettingsService {
         subject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
       }
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+      log.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
     syncCEInfra(settingAttribute);
@@ -787,7 +787,7 @@ public class SettingsServiceImpl implements SettingsService {
       int currentCloudAccountsCount = settingAttributesList.size();
 
       if (currentCloudAccountsCount >= maxCloudAccountsAllowed && isSave) {
-        logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
+        log.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
             settingAttribute.getValue().getType(), settingAttribute.getAccountId());
         throw new InvalidRequestException(String.format(
             "Cannot enable continuous efficiency for more than %d cloud accounts", maxCloudAccountsAllowed));
@@ -796,8 +796,7 @@ public class SettingsServiceImpl implements SettingsService {
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
         // Throw Exception if AWS connector Exists already
         if (isAwsConnectorPresent && isSave) {
-          logger.info(
-              "Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
+          log.info("Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
           throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 AWS cloud account");
         }
@@ -824,8 +823,7 @@ public class SettingsServiceImpl implements SettingsService {
       if (settingAttribute.getValue() instanceof CEGcpConfig) {
         // Throw Exception if GCP connector Exists already
         if (isGCPConnectorPresent && isSave) {
-          logger.info(
-              "Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
+          log.info("Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
           throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
         }
@@ -841,7 +839,7 @@ public class SettingsServiceImpl implements SettingsService {
         ceInfraSetupHandler.syncCEInfra(settingAttribute);
       }
     } catch (Exception e) {
-      logger.error("Encountered exception while syncing CE Infra.", e);
+      log.error("Encountered exception while syncing CE Infra.", e);
     }
   }
 
@@ -1079,7 +1077,7 @@ public class SettingsServiceImpl implements SettingsService {
         subject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
       }
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+      log.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
@@ -1175,11 +1173,11 @@ public class SettingsServiceImpl implements SettingsService {
 
     try {
       if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
-        logger.info("Deleted the cloud provider with id={}", settingAttribute.getUuid());
+        log.info("Deleted the cloud provider with id={}", settingAttribute.getUuid());
         subject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
       }
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+      log.error("Encountered exception while informing the observers of Cloud Providers.", e);
     }
 
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {

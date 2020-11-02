@@ -37,7 +37,7 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
     long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
-    logger.info("Published batch size is K8sUtilizationMetricsWriter {} ", lists.size());
+    log.info("Published batch size is K8sUtilizationMetricsWriter {} ", lists.size());
     List<InstanceUtilizationData> instanceUtilizationDataList = new ArrayList<>();
 
     lists.forEach(list -> Lists.partition(list, BATCH_SIZE).forEach(instanceIdsBatch -> {

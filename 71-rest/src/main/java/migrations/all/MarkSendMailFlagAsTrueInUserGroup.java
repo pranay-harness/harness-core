@@ -21,7 +21,7 @@ public class MarkSendMailFlagAsTrueInUserGroup implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Running Migration: {}", MarkSendMailFlagAsTrueInUserGroup.class.getSimpleName());
+      log.info("Running Migration: {}", MarkSendMailFlagAsTrueInUserGroup.class.getSimpleName());
 
       List<Account> accounts = accountService.listAllAccounts();
 
@@ -32,12 +32,12 @@ public class MarkSendMailFlagAsTrueInUserGroup implements Migration {
           NotificationSettings updatedSetting;
 
           if (null == existing) {
-            logger.info(
+            log.info(
                 "Existing notification settings are null. Creating default notifications settings for userGroup {}",
                 userGroup.getUuid());
             updatedSetting = new NotificationSettings(false, true, Collections.emptyList(), null, "", "");
           } else {
-            logger.info("Overriding original notification settings for userGroup {}", userGroup.getUuid());
+            log.info("Overriding original notification settings for userGroup {}", userGroup.getUuid());
             updatedSetting = new NotificationSettings(existing.isUseIndividualEmails(), true,
                 existing.getEmailAddresses(), existing.getSlackConfig(), "", existing.getMicrosoftTeamsWebhookUrl());
           }
@@ -47,7 +47,7 @@ public class MarkSendMailFlagAsTrueInUserGroup implements Migration {
       }
 
     } catch (Exception e) {
-      logger.error("Error running MarkSendMailFlagAsTrueInUserGroup migration", e);
+      log.error("Error running MarkSendMailFlagAsTrueInUserGroup migration", e);
     }
   }
 

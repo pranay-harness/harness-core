@@ -84,8 +84,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   public void setUp() throws Exception {
     mockClientLogger = mock(Logger.class);
     mockServerLogger = mock(Logger.class);
-    setStaticFieldValue(DelegateServiceGrpcClient.class, "logger", mockClientLogger);
-    setStaticFieldValue(DelegateServiceGrpcClient.class, "logger", mockServerLogger);
+    setStaticFieldValue(DelegateServiceGrpcClient.class, "log", mockClientLogger);
+    setStaticFieldValue(DelegateServiceGrpcClient.class, "log", mockServerLogger);
 
     String serverName = InProcessServerBuilder.generateName();
     Channel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).build());

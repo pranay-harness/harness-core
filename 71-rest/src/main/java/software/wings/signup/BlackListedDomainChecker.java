@@ -27,7 +27,7 @@ public class BlackListedDomainChecker {
   private MainConfiguration mainConfiguration;
 
   public BlackListedDomainChecker(MainConfiguration configuration) {
-    logger.info("Creating the blackisted filler");
+    log.info("Creating the blackisted filler");
     this.mainConfiguration = configuration;
     populateBlacklistedDomains();
   }
@@ -55,9 +55,9 @@ public class BlackListedDomainChecker {
           blacklistedDomains.add(line.trim().toLowerCase());
           line = bufferedReader.readLine();
         }
-        logger.info("Loaded {} temporary email domains into the blacklist.", blacklistedDomains.size());
+        log.info("Loaded {} temporary email domains into the blacklist.", blacklistedDomains.size());
       } catch (IOException e) {
-        logger.error("Failed to read blacklisted temporary email domains from file.", e);
+        log.error("Failed to read blacklisted temporary email domains from file.", e);
       }
     }
   }

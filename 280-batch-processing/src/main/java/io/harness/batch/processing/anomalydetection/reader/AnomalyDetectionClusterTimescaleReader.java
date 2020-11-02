@@ -29,10 +29,10 @@ public class AnomalyDetectionClusterTimescaleReader extends AnomalyDetectionTime
             .entityType(EntityType.CLUSTER)
             .entityIdentifier("CLUSTERID")
             .build();
-    logger.info("Anomaly Detection batch job of {} type , {} time granularity {}, for accountId:{} , endtime:{}",
+    log.info("Anomaly Detection batch job of {} type , {} time granularity {}, for accountId:{} , endtime:{}",
         EntityType.CLUSTER.toString(), TimeGranularity.DAILY.toString(), accountId, endTime.toString());
     listAnomalyDetectionTimeSeries = dataService.readData(timeSeriesSpec);
-    logger.info("successfully read {} no of {}", listAnomalyDetectionTimeSeries.size(),
+    log.info("successfully read {} no of {}", listAnomalyDetectionTimeSeries.size(),
         timeSeriesSpec.getEntityType().toString());
     timeSeriesIndex = 0;
   }

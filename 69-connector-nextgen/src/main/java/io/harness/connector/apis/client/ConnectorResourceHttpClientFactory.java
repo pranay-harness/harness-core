@@ -19,7 +19,7 @@ public class ConnectorResourceHttpClientFactory
   public ConnectorResourceHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
     super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
-    logger.info("secretManagerConfig {}", secretManagerConfig);
+    log.info("secretManagerConfig {}", secretManagerConfig);
   }
 
   @Override

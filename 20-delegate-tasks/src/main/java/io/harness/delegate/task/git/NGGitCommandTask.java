@@ -82,7 +82,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
 
   private DelegateResponseData handleCommitAndPush(GitCommandParams gitCommandParams, GitConfigDTO gitConfig) {
     CommitAndPushRequest gitCommitRequest = (CommitAndPushRequest) gitCommandParams.getGitCommandRequest();
-    logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
+    log.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
     CommitAndPushResult gitCommitAndPushResult = gitService.commitAndPush(gitConfig, gitCommitRequest, getAccountId());
 
     return GitCommandExecutionResponse.builder()
@@ -93,7 +93,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   }
 
   private DelegateResponseData handleValidateTask(GitConfigDTO gitConfig) {
-    logger.info("Processing Git command: VALIDATE");
+    log.info("Processing Git command: VALIDATE");
     String errorMessage = gitService.validate(gitConfig, getAccountId());
     if (isEmpty(errorMessage)) {
       return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();

@@ -195,7 +195,7 @@ public class WorkflowNotificationHelper {
                          .withExecutionId(context.getWorkflowExecutionId())
                          .build();
     } else {
-      logger.info("No template found for workflow status " + status);
+      log.info("No template found for workflow status " + status);
       return;
     }
 
@@ -225,7 +225,7 @@ public class WorkflowNotificationHelper {
         }
         UserGroup defaultUserGroup = userGroupService.getDefaultUserGroup(accountId);
         if (null == defaultUserGroup) {
-          logger.error("There is no default user group. accountId={}", accountId);
+          log.error("There is no default user group. accountId={}", accountId);
         } else {
           NotificationRule rule = NotificationRuleBuilder.aNotificationRule()
                                       .withUserGroupIds(Collections.singletonList(defaultUserGroup.getUuid()))
@@ -315,15 +315,15 @@ public class WorkflowNotificationHelper {
 
     String accountId = context.getApp().getAccountId();
     if (StringUtils.isEmpty(accountId)) {
-      logger.error("Could not find accountId in context. User Groups can't be rendered. Context: {}", context.asMap());
+      log.error("Could not find accountId in context. User Groups can't be rendered. Context: {}", context.asMap());
     }
 
     String expr = notificationRule.getUserGroupExpression();
     String renderedExpression = context.renderExpression(expr);
 
     if (StringUtils.isEmpty(renderedExpression)) {
-      logger.error("[EMPTY_EXPRESSION] Rendered express is: {}. Original Expression: {}, Context: {}",
-          renderedExpression, expr, context.asMap());
+      log.error("[EMPTY_EXPRESSION] Rendered express is: {}. Original Expression: {}, Context: {}", renderedExpression,
+          expr, context.asMap());
       return;
     }
 

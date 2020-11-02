@@ -76,7 +76,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
   private DelegateCallbackToken getDelegateCallbackToken(
       DelegateServiceGrpcClient delegateServiceClient, CIManagerConfiguration appConfig) {
-    logger.info("Generating Delegate callback token");
+    log.info("Generating Delegate callback token");
     final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
         DelegateCallback.newBuilder()
             .setMongoDatabase(MongoDatabase.newBuilder()
@@ -84,7 +84,7 @@ public class CIManagerServiceModule extends AbstractModule {
                                   .setConnection(appConfig.getHarnessCIMongo().getUri())
                                   .build())
             .build());
-    logger.info("Delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    log.info("Delegate callback token generated =[{}]", delegateCallbackToken.getToken());
     return delegateCallbackToken;
   }
 

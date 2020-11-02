@@ -26,7 +26,7 @@ public class InvalidCVConfigDeletionMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Staring InvalidCVConfigDeletionMigration");
+    log.info("Staring InvalidCVConfigDeletionMigration");
     int deleted = 0;
     try (HIterator<CVConfiguration> iterator =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).fetch())) {
@@ -37,7 +37,7 @@ public class InvalidCVConfigDeletionMigration implements Migration {
           Environment environment = environmentService.get(cvConfiguration.getAppId(), cvConfiguration.getEnvId());
 
           if (service == null || environment == null) {
-            logger.info("for {} deleting {} with id {}, service: {} environment: {}", cvConfiguration.getAccountId(),
+            log.info("for {} deleting {} with id {}, service: {} environment: {}", cvConfiguration.getAccountId(),
                 cvConfiguration.getName(), cvConfiguration.getUuid(), service, environment);
             cvConfigurationService.deleteConfiguration(
                 cvConfiguration.getAccountId(), cvConfiguration.getAppId(), cvConfiguration.getUuid());
@@ -45,10 +45,10 @@ public class InvalidCVConfigDeletionMigration implements Migration {
           }
           sleep(ofMillis(500));
         } catch (Exception e) {
-          logger.info("Error while running migration", e);
+          log.info("Error while running migration", e);
         }
       }
     }
-    logger.info("Complete. deleted " + deleted + " records.");
+    log.info("Complete. deleted " + deleted + " records.");
   }
 }

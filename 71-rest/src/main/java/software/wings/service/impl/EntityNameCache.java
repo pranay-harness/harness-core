@@ -104,7 +104,7 @@ public class EntityNameCache {
         claz = SettingAttribute.class;
         break;
       }
-      default: { logger.error("Invalid entity type For EntityNameCache: " + entityNameCacheKey.entityType); }
+      default: { log.error("Invalid entity type For EntityNameCache: " + entityNameCacheKey.entityType); }
     }
 
     if (claz != null) {

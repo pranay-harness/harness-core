@@ -62,7 +62,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     ManifestCollectionTaskParams manifestParams = getTaskParams(params);
     String appManifestId = manifestParams.getAppManifestId();
-    logger.info("Started manifest collection for appManifestId:{}", appManifestId);
+    log.info("Started manifest collection for appManifestId:{}", appManifestId);
     ManifestCollectionParams manifestCollectionParams =
         (ManifestCollectionParams) kryoSerializer.asObject(manifestParams.getManifestCollectionParams().toByteArray());
 
@@ -82,10 +82,10 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       if (appManifestCache.needsToPublish()) {
         publishFromCache(
             appManifestCache, startTime.plusMillis(INTERNAL_TIMEOUT_IN_MS), manifestCollectionParams, perpetualTaskId);
-        logger.info("Published manifest successfully");
+        log.info("Published manifest successfully");
       }
     } catch (Exception e) {
-      logger.error("Manifest collection failed with the following error: ", e);
+      log.error("Manifest collection failed with the following error: ", e);
     }
 
     return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
@@ -94,7 +94,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private void publishFromCache(ArtifactsPublishedCache<HelmChart> appManifestCache, Instant expiryTime,
       ManifestCollectionParams params, String taskId) {
     if (expiryTime.isBefore(Instant.now())) {
-      logger.warn("Manifest Collection timed out after {} seconds",
+      log.warn("Manifest Collection timed out after {} seconds",
           Instant.now().compareTo(expiryTime.minusMillis(INTERNAL_TIMEOUT_IN_MS)));
       return;
     }
@@ -105,7 +105,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                               .collect(Collectors.toList());
     Set<String> toBeDeletedVersions = appManifestCache.getToBeDeletedArtifactKeys();
     if (isEmpty(toBeDeletedVersions) && isEmpty(unpublishedVersions)) {
-      logger.info("No new manifest versions added or deleted to publish");
+      log.info("No new manifest versions added or deleted to publish");
       return;
     }
     ManifestCollectionExecutionResponse response =
@@ -124,7 +124,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       appManifestCache.removeDeletedArtifactKeys(toBeDeletedVersions);
       appManifestCache.addPublishedBuildDetails(unpublishedVersions);
       publishFromCache(appManifestCache, expiryTime, params, taskId);
-      logger.info("Published {} manifest versions to manager",
+      log.info("Published {} manifest versions to manager",
           unpublishedVersions.stream().map(HelmChart::getVersion).collect(Collectors.joining(",")));
     }
   }
@@ -134,7 +134,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       executeWithExceptions(managerClient.publishManifestCollectionResult(taskId, accountId, response));
       return true;
     } catch (Exception ex) {
-      logger.error("Failed to publish build source execution response with status: {}",
+      log.error("Failed to publish build source execution response with status: {}",
           response.getCommandExecutionStatus().name(), ex);
       return false;
     }
@@ -145,11 +145,11 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
     try {
       List<HelmChart> collectedManifests = manifestRepositoryService.collectManifests(params);
       if (isEmpty(collectedManifests)) {
-        logger.info("No manifests present for the repository");
+        log.info("No manifests present for the repository");
         return;
       }
 
-      logger.info("Collected {} manifest versions from repository", collectedManifests.size());
+      log.info("Collected {} manifest versions from repository", collectedManifests.size());
       appManifestCache.addCollectionResult(collectedManifests);
     } catch (Exception e) {
       publishToManager(params.getAccountId(), taskId,
@@ -171,10 +171,10 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
         (ManifestCollectionParams) kryoSerializer.asObject(manifestParams.getManifestCollectionParams().toByteArray());
     try {
       manifestRepositoryService.cleanup(manifestCollectionParams);
-      logger.info("Cleanup completed successfully for perpetual task: {}, app manifest: {}", taskId.getId(),
+      log.info("Cleanup completed successfully for perpetual task: {}, app manifest: {}", taskId.getId(),
           manifestParams.getAppManifestId());
     } catch (Exception e) {
-      logger.warn("Error in cleaning up after manifest collection", e);
+      log.warn("Error in cleaning up after manifest collection", e);
     }
     return false;
   }

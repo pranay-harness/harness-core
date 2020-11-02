@@ -437,19 +437,19 @@ public class SecureResourceTest extends CategoryTest {
     try {
       encodedKey = Hex.decodeHex(accountSecret.toCharArray());
     } catch (DecoderException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     try {
       directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      logger.error("", e);
+      log.error("", e);
       return null;
     }
 
     try {
       jwt.encrypt(directEncrypter);
     } catch (JOSEException e) {
-      logger.error("", e);
+      log.error("", e);
       return null;
     }
     return jwt.serialize();

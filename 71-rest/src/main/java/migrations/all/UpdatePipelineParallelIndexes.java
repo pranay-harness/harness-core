@@ -45,9 +45,9 @@ public class UpdatePipelineParallelIndexes implements Migration {
       wingsPersistence.save(pipeline);
     } catch (WingsException exception) {
       exception.addContext(Pipeline.class, pipeline.getUuid());
-      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
   }
 }

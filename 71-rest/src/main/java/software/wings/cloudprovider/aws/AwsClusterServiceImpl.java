@@ -59,7 +59,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     ecsContainerService.provisionNodes(region, cloudProviderSetting, encryptedDataDetails,
         awsClusterConfiguration.getSize(), awsClusterConfiguration.getLauncherConfiguration(), params, logCallback);
 
-    logger.info("Successfully created cluster and provisioned desired number of nodes");
+    log.info("Successfully created cluster and provisioned desired number of nodes");
   }
 
   @Override
@@ -81,7 +81,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   public void deleteService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName) {
     ecsContainerService.deleteService(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceName);
-    logger.info("Successfully deleted service {}", serviceName);
+    log.info("Successfully deleted service {}", serviceName);
   }
 
   @Override

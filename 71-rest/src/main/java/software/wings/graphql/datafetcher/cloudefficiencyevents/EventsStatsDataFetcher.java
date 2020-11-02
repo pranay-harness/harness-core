@@ -62,14 +62,14 @@ public class EventsStatsDataFetcher
     if (isSortByBillingAmount(sortCriteria)) {
       queryData.setQuery(queryData.getQuery() + format(offsetAndLimitQuery, offset, limit));
     }
-    logger.info("EventsStatsDataFetcher query!! {}", queryData.getQuery());
+    log.info("EventsStatsDataFetcher query!! {}", queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(queryData.getQuery());
       return generateEventsData(queryData, resultSet);
     } catch (SQLException e) {
-      logger.error("EventsStatsDataFetcher Error exception", e);
+      log.error("EventsStatsDataFetcher Error exception", e);
     } finally {
       DBUtils.close(resultSet);
     }

@@ -62,7 +62,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     if (isNotEmpty(clusterTasks)) {
       learningEngineTaskService.createLearningEngineTasks(clusterTasks);
     }
-    logger.info("Scheduled {} log cluster tasks for input {} and clusterLevel L1", clusterTasks.size(), input);
+    log.info("Scheduled {} log cluster tasks for input {} and clusterLevel L1", clusterTasks.size(), input);
     return clusterTasks.stream().map(LearningEngineTask::getUuid).collect(Collectors.toList());
   }
 
@@ -275,7 +275,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     });
     hPersistence.save(clusteredLogList);
 
-    logger.info("Saved {} clustered logs for verificationTaskId {} with clusterLevel {} and epochMinute {} ",
+    log.info("Saved {} clustered logs for verificationTaskId {} with clusterLevel {} and epochMinute {} ",
         verificationTaskId, clusterLevel, timestamp);
     learningEngineTaskService.markCompleted(taskId);
   }

@@ -66,7 +66,7 @@ public class SumoLogicResource implements LogAnalysisResource {
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String analysisServerConfigId,
       @Valid SumoLogicSetupTestNodedata sumoLogicSetupTestNodedata) {
-    logger.info("Fetching log Records for verification for accountId : " + accountId
+    log.info("Fetching log Records for verification for accountId : " + accountId
         + " and SumoLogicSetupTestNodedata :" + sumoLogicSetupTestNodedata);
     return new RestResponse<>(analysisService.getLogDataByHost(accountId, sumoLogicSetupTestNodedata));
   }

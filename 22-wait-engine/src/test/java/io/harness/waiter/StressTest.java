@@ -55,7 +55,7 @@ public class StressTest extends WaitEngineTestBase {
           if (i / 100 != (i + ids) / 100) {
             final long waits = persistence.createQuery(WaitInstance.class).count();
             long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
-            logger.info(
+            log.info(
                 "{}: i = {}, avg: {}, waits: {}, events: {}", n, (i / 100 + 1) * 100, time / i, waits, notifyQueues);
           }
           i += ids;
@@ -84,7 +84,7 @@ public class StressTest extends WaitEngineTestBase {
         notifyResponseCleaner.execute();
         final long waits = persistence.createQuery(WaitInstance.class).count();
         long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
-        logger.info("waits: {}, events: {}", waits, notifyQueues);
+        log.info("waits: {}, events: {}", waits, notifyQueues);
 
         if (notifyQueues == 0) {
           break;

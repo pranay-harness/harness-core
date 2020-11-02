@@ -45,22 +45,22 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
     harnesscliHelper.deployWorkflow(approvalWorkflow, application);
     String approvalId = harnesscliHelper.getApprovalID(workflowName);
     if (approvalId == null) {
-      logger.info("No approval Exists for the given ID");
+      log.info("No approval Exists for the given ID");
       assertThat(false).isTrue();
     }
     String command = String.format("harness reject -i %s", approvalId);
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
 
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 3) {
-      logger.info("The reject command output has " + cliOutput.size() + " lines");
+      log.info("The reject command output has " + cliOutput.size() + " lines");
       assertThat(false).isTrue();
     }
     verifyReject(cliOutput);
@@ -73,18 +73,18 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   public void rejectWithoutFlag() {
     String rejectOutput = "";
     String command = String.format("harness reject");
-    logger.info("Running command {}", command);
-    logger.info("Running command on localhost");
+    log.info("Running command {}", command);
+    log.info("Running command on localhost");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.getCLICommandError(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     rejectOutput = cliOutput.get(0);
     // Asserting that the output is good
-    logger.info("Comparing the output of reject command");
+    log.info("Comparing the output of reject command");
     assertThat(rejectOutput).isEqualTo("Error: required flag(s) \"approval-id\" not set");
   }
 
@@ -93,29 +93,29 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   @Category(CliFunctionalTests.class)
   public void rejectThePipeline() {
     pipelineName = "CLI-PIPELINE-" + System.currentTimeMillis();
-    logger.info("Generated unique pipeline name : " + pipelineName);
+    log.info("Generated unique pipeline name : " + pipelineName);
     approvalPipeline =
         PipelineUtils.createApprovalPipeline(pipelineName, getAccount(), bearerToken, application.getAppId());
     assertThat(approvalPipeline).isNotNull();
     harnesscliHelper.deployPipeline(approvalPipeline, application);
     String approvalId = harnesscliHelper.getApprovalID(approvalPipeline.getName());
     if (approvalId == null) {
-      logger.info("No approval Exists for the given ID");
+      log.info("No approval Exists for the given ID");
       assertThat(false).isTrue();
     }
     String command = String.format("harness reject -i %s", approvalId);
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
 
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 3) {
-      logger.info("The reject command output has " + cliOutput.size() + " lines");
+      log.info("The reject command output has " + cliOutput.size() + " lines");
       assertThat(false).isTrue();
     }
     verifyReject(cliOutput);

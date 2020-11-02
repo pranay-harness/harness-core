@@ -65,7 +65,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         yamlSuccessfulChangeService.updateOnHarnessChangeSet(savedYamlChangeSet);
       }
     } catch (Exception e) {
-      logger.error("error while processing onYamlChangeSetSave event", e);
+      log.error("error while processing onYamlChangeSetSave event", e);
     }
   }
 
@@ -79,7 +79,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
         yamlChangeSet.setQueueKey(buildQueueKey(yamlGitConfig));
       } catch (Exception e) {
-        logger.warn("unable to populate git sync metadata. ignoring these fields", e);
+        log.warn("unable to populate git sync metadata. ignoring these fields", e);
       }
     }
   }
@@ -154,19 +154,19 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       String accountId, String queueKey, int maxRunningChangesetsForAccount) {
     // TODO(abhinav): add persistent locker
     if (anyChangeSetRunningFoQueueKey(accountId, queueKey)) {
-      logger.info("Found running changeset for queuekey. Returning null");
+      log.info("Found running changeset for queuekey. Returning null");
       return null;
     }
 
     if (accountQuotaMaxedOut(accountId, maxRunningChangesetsForAccount)) {
-      logger.info("Account quota has been reached. Returning null");
+      log.info("Account quota has been reached. Returning null");
       return null;
     }
 
     final YamlChangeSet selectedChangeSet = selectQueuedChangeSetWithPriority(accountId, queueKey);
 
     if (selectedChangeSet == null) {
-      logger.info("No change set found in queued state");
+      log.info("No change set found in queued state");
     }
 
     return selectedChangeSet;
@@ -201,7 +201,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       if (updateStatus) {
         return get(accountId, selectedYamlChangeSet.getUuid()).orElse(null);
       } else {
-        logger.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
+        log.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
             selectedYamlChangeSet.getUuid());
       }
     }
@@ -233,7 +233,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
           yamlChangeSetRepository.updateYamlChangeSetStatus(newStatus, yamlChangeSet.get().getUuid());
       return updateResult.getModifiedCount() != 0;
     } else {
-      logger.warn("No YamlChangeSet found");
+      log.warn("No YamlChangeSet found");
     }
     return false;
   }
@@ -252,7 +252,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                               .and(YamlChangeSetKeys.retryCount)
                                               .gt(MAX_RETRY_COUNT));
     UpdateResult status = yamlChangeSetRepository.update(query, update);
-    logger.info(
+    log.info(
         "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
   }
 
@@ -305,9 +305,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       UpdateResult status = yamlChangeSetRepository.update(query, updateOperations);
       return status.getModifiedCount() != 0;
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error seen in fetching changeSet", exception);
+      log.error("Error seen in fetching changeSet", exception);
     }
 
     return false;

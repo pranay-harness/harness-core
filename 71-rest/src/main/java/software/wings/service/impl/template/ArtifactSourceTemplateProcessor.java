@@ -81,7 +81,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
   public void updateLinkedEntities(Template template) {
     Template savedTemplate = templateService.get(template.getUuid());
     if (savedTemplate == null) {
-      logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
+      log.info("Template {} was deleted. Not updating linked entities", template.getUuid());
       return;
     }
 
@@ -94,7 +94,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
         try {
           String templateVersion = artifactStream.getTemplateVersion();
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
-            logger.info("Updating the linked artifact stream with id: {}", artifactStream.getUuid());
+            log.info("Updating the linked artifact stream with id: {}", artifactStream.getUuid());
             ArtifactStream entityFromTemplate = constructEntityFromTemplate(template, EntityType.ARTIFACT_STREAM);
             if (entityFromTemplate != null) {
               updateEntity(entityFromTemplate, artifactStream);
@@ -103,16 +103,16 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
               // time consuming causing some of the template library updates to not propagate to all the linked artifact
               // streams.
               artifactStreamService.update(artifactStream, false, true);
-              logger.info("Linked artifact stream with id: {} updated", artifactStream.getUuid());
+              log.info("Linked artifact stream with id: {} updated", artifactStream.getUuid());
             } else {
-              logger.warn("Failed to update the linked Artifact Stream with id: {}", artifactStream.getUuid());
+              log.warn("Failed to update the linked Artifact Stream with id: {}", artifactStream.getUuid());
             }
           } else {
-            logger.info("The template linked to Artifact Stream with id: {} is not the latest. So, not updating it",
+            log.info("The template linked to Artifact Stream with id: {} is not the latest. So, not updating it",
                 artifactStream.getUuid());
           }
         } catch (Exception e) {
-          logger.warn("Failed to update the linked Artifact Stream with id: {}", artifactStream.getUuid(), e);
+          log.warn("Failed to update the linked Artifact Stream with id: {}", artifactStream.getUuid(), e);
         }
       }
     }

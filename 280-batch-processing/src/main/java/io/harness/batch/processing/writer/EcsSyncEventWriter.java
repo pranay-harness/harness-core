@@ -24,18 +24,18 @@ import java.util.stream.Collectors;
 public class EcsSyncEventWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
-    logger.info("Published batch size is EcsSyncEventWriter {} ", publishedMessages.size());
+    log.info("Published batch size is EcsSyncEventWriter {} ", publishedMessages.size());
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_SYNC_EVENT))
         .forEach(publishedMessage -> {
           EcsSyncEvent ecsSyncEvent = (EcsSyncEvent) publishedMessage.getMessage();
-          logger.debug("ECS sync event {} ", ecsSyncEvent);
+          log.debug("ECS sync event {} ", ecsSyncEvent);
           String accountId = publishedMessage.getAccountId();
           String clusterId = ecsSyncEvent.getClusterId();
           Timestamp lastProcessedTimestamp = ecsSyncEvent.getLastProcessedTimestamp();
           Set<String> activeInstanceIds =
               fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
-          logger.debug("Active instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
+          log.debug("Active instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
 
           Set<String> activeInstanceArns = new HashSet<>();
           activeInstanceArns.addAll(ecsSyncEvent.getActiveEc2InstanceArnsList());
@@ -46,7 +46,7 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
                                         .map(this ::getIdFromArn)
                                         .collect(Collectors.toList()));
           SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
-          logger.info("Inactive instance arns {}", inactiveInstanceArns.toString());
+          log.info("Inactive instance arns {}", inactiveInstanceArns.toString());
 
           inactiveInstanceArns.forEach(inactiveInstanceArn
               -> handleLifecycleEvent(

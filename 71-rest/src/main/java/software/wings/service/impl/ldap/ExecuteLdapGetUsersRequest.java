@@ -29,18 +29,18 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
     try {
       searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
       if (searchResult == null || searchResult.size() == 0) {
-        logger.info("Got zero results with regular search, trying with fallbackLDAPSearch instead for search to work");
+        log.info("Got zero results with regular search, trying with fallbackLDAPSearch instead for search to work");
         searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
       }
     } catch (LdapException le) {
       ldapResultCode = le.getResultCode();
       try {
-        logger.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", ldapResultCode);
+        log.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", ldapResultCode);
         searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
       } catch (LdapException ldapException) {
         ldapResultCode = ldapException.getResultCode();
-        logger.error("LdapException ErrorCode = {}", ldapResultCode);
-        logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
+        log.error("LdapException ErrorCode = {}", ldapResultCode);
+        log.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
             ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
       }
       searchStatusMsg = ldapResultCode.toString();

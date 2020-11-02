@@ -36,7 +36,7 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
                                     .setStatusCode(ExpressionValue.EvaluationStatus.ERROR)
                                     .setErrorMessage("Expression queries should not be empty")
                                     .build());
-      logger.error("Expression queries should not be empty");
+      log.error("Expression queries should not be empty");
     }
 
     for (ExpressionQuery expressionQuery : expressionQueries) {
@@ -55,7 +55,7 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
                                       .setStatusCode(ExpressionValue.EvaluationStatus.ERROR)
                                       .setErrorMessage(format("Error evaluating expression: %s", e.getMessage()))
                                       .build());
-        logger.error("Error evaluation expression", e);
+        log.error("Error evaluation expression", e);
       }
     }
     responseObserver.onNext(responseBuilder.build());

@@ -24,7 +24,7 @@ public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStag
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, DeploymentStageStepParameters stepParameters, StepInputPackage inputPackage) {
-    logger.info("Executing deployment stage with params [{}]", stepParameters);
+    log.info("Executing deployment stage with params [{}]", stepParameters);
 
     final Map<String, String> fieldToExecutionNodeIdMap = stepParameters.getFieldToExecutionNodeIdMap();
     final String executionNodeId = fieldToExecutionNodeIdMap.get("execution");
@@ -34,7 +34,7 @@ public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStag
   @Override
   public StepResponse handleChildResponse(
       Ambiance ambiance, DeploymentStageStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    logger.info("executed deployment stage =[{}]", stepParameters);
+    log.info("executed deployment stage =[{}]", stepParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }

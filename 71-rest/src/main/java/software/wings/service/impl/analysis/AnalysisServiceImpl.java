@@ -200,11 +200,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public LogMLAnalysisSummary getAnalysisSummaryForDemo(
       String stateExecutionId, String applicationId, StateType stateType) {
-    logger.info("Creating log analysis summary for demo {}", stateExecutionId);
+    log.info("Creating log analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(applicationId, stateExecutionId);
     if (stateExecutionInstance == null) {
-      logger.error("State execution instance not found for {}", stateExecutionId);
+      log.error("State execution instance not found for {}", stateExecutionId);
       return null;
     }
 
@@ -459,20 +459,20 @@ public class AnalysisServiceImpl implements AnalysisService {
       String errMsg = String.format(
           "Empty Jira parameters sent in createCollaborationFeedbackTicket for cvConfigId/StateExecutionId %s, %s",
           cvConfigId, stateExecutionId);
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("reason", errMsg);
     }
 
     JiraExecutionData jiraExecutionData = jiraHelperService.createJira(accountId, appId,
         cvJiraParameters.getCollaborationProviderConfigId(), cvJiraParameters.getJiraTaskParameters());
     if (jiraExecutionData == null || jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      logger.error("Unable to create jira ticket for cvConfigId/stateExecutionId {}/{}", cvConfigId, stateExecutionId);
+      log.error("Unable to create jira ticket for cvConfigId/stateExecutionId {}/{}", cvConfigId, stateExecutionId);
       throw new WingsException("Unable to create Jira ticket");
     }
     String jiraLink = jiraExecutionData.getIssueUrl();
 
     if (isEmpty(cvJiraParameters.getCvFeedbackRecord().getUuid())) {
-      logger.error(
+      log.error(
           "Creating a jira before giving user feedback or priority. This is not allowed. cvCOnfigId: {}", cvConfigId);
       throw new VerificationOperationException(
           ErrorCode.DEFAULT_ERROR_CODE, "Cannot create jira without a user feedback");
@@ -596,7 +596,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           if (!execution.getInfraMappingIds().contains(infraMappingId) || !execution.getEnvId().equals(envId)
               || !execution.getServiceIds().contains(serviceId)) {
             // infra mapping ID should also match, for us to call it a potential baseline.
-            logger.info("Execution {} does not have infraMappingID {} or envId {}. So moving on.", execution.getUuid(),
+            log.info("Execution {} does not have infraMappingID {} or envId {}. So moving on.", execution.getUuid(),
                 infraMappingId, envId);
             continue;
           }
@@ -611,20 +611,19 @@ public class AnalysisServiceImpl implements AnalysisService {
                 .filter(LogDataRecordKeys.query, query)
                 .count(upToOne)
             > 0) {
-          logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
+          log.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
               cvMetaData.getWorkflowExecutionId(), stateExecutionId);
           return cvMetaData.getWorkflowExecutionId();
         }
       }
 
       if (hasSuccessfulExecution) {
-        logger.info(
+        log.info(
             "We did not find any execution with data. Returning workflowExecution {} as baseline for stateExecutionId {}",
             lastSuccessFulExecution, stateExecutionId);
         return lastSuccessFulExecution;
       }
-      logger.warn(
-          "Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
+      log.warn("Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
       return null;
     }
   }
@@ -650,7 +649,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (null != feedbackRecordMap) {
         feedbackRecordMap.put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
       } else {
-        logger.error("feedbackRecordMap is null for key: {}", logMLFeedbackRecord);
+        log.error("feedbackRecordMap is null for key: {}", logMLFeedbackRecord);
       }
     }
 

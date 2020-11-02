@@ -74,7 +74,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   @Override
   public ReconciliationStatus performReconciliation(String accountId, long durationStartTs, long durationEndTs) {
     if (!timeScaleDBService.isValid()) {
-      logger.info("TimeScaleDB is not valid, skipping reconciliation for accountID:[{}] in duration:[{}-{}]", accountId,
+      log.info("TimeScaleDB is not valid, skipping reconciliation for accountID:[{}] in duration:[{}-{}]", accountId,
           new Date(durationStartTs), new Date(durationEndTs));
       return ReconciliationStatus.SUCCESS;
     }
@@ -87,10 +87,10 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
         if (record != null && !shouldPerformReconciliation(record, durationEndTs)) {
           if (record.getReconciliationStatus() == ReconciliationStatus.IN_PROGRESS) {
-            logger.info("Reconciliation is in progress, not running it again for accountID:[{}] in duration:[{}-{}]",
+            log.info("Reconciliation is in progress, not running it again for accountID:[{}] in duration:[{}-{}]",
                 accountId, new Date(durationStartTs), new Date(durationEndTs));
           } else {
-            logger.info(
+            log.info(
                 "Reconciliation was performed recently at [{}], not running it again for accountID:[{}] in duration:[{}-{}]",
                 accountId, new Date(durationStartTs), new Date(durationEndTs));
           }
@@ -105,7 +105,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
                      .durationEndTs(durationEndTs)
                      .build();
         String id = wingsPersistence.save(record);
-        logger.info("Inserted new deploymentReconRecord for accountId:[{}],uuid:[{}]", accountId, id);
+        log.info("Inserted new deploymentReconRecord for accountId:[{}],uuid:[{}]", accountId, id);
         record = fetchRecord(id);
 
         boolean duplicatesDetected = false;
@@ -115,7 +115,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         List<String> executionIDs = checkForDuplicates(accountId, durationStartTs, durationEndTs);
         if (isNotEmpty(executionIDs)) {
           duplicatesDetected = true;
-          logger.warn("Duplicates detected for accountId:[{}] in duration:[{}-{}], executionIDs:[{}]", accountId,
+          log.warn("Duplicates detected for accountId:[{}] in duration:[{}-{}], executionIDs:[{}]", accountId,
               new Date(durationStartTs), new Date(durationEndTs), executionIDs);
           deleteDuplicates(accountId, durationStartTs, durationEndTs, executionIDs);
         }
@@ -126,10 +126,10 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
           missingRecordsDetected = true;
           insertMissingRecords(accountId, durationStartTs, durationEndTs);
         } else if (primaryCount == secondaryCount) {
-          logger.info("Everything is fine, no action required for accountID:[{}] in duration:[{}-{}]", accountId,
+          log.info("Everything is fine, no action required for accountID:[{}] in duration:[{}-{}]", accountId,
               new Date(durationStartTs), new Date(durationEndTs));
         } else {
-          logger.error("Duplicates found again for accountID:[{}] in duration:[{}-{}]", accountId,
+          log.error("Duplicates found again for accountID:[{}] in duration:[{}-{}]", accountId,
               new Date(durationStartTs), new Date(durationEndTs));
         }
 
@@ -177,8 +177,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         wingsPersistence.update(record, updateOperations);
 
       } catch (Exception e) {
-        logger.error("Exception occurred while running reconciliation for accountID:[{}] in duration:[{}-{}]",
-            accountId, new Date(durationStartTs), new Date(durationEndTs), e);
+        log.error("Exception occurred while running reconciliation for accountID:[{}] in duration:[{}-{}]", accountId,
+            new Date(durationStartTs), new Date(durationEndTs), e);
         if (record != null) {
           UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
           updateOperations.set(DeploymentReconRecordKeys.reconciliationStatus, ReconciliationStatus.FAILED);
@@ -188,7 +188,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         }
       }
     } else {
-      logger.info("Reconciliation task not required for accountId:[{}], durationStartTs: [{}], durationEndTs:[{}]",
+      log.info("Reconciliation task not required for accountId:[{}], durationStartTs: [{}], durationEndTs:[{}]",
           accountId, new Date(durationStartTs), new Date(durationEndTs));
     }
     return ReconciliationStatus.SUCCESS;
@@ -226,7 +226,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
           DeploymentTimeSeriesEvent deploymentTimeSeriesEvent =
               usageMetricsEventPublisher.constructDeploymentTimeSeriesEvent(
                   workflowExecution.getAccountId(), workflowExecution);
-          logger.info("ADDING MISSING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
+          log.info("ADDING MISSING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
               deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
           deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
           successfulInsert = true;
@@ -234,7 +234,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
       } catch (SQLException ex) {
         totalTries++;
-        logger.warn("Failed to query workflowExecution from TimescaleDB for workflowExecution:[{}], totalTries:[{}]",
+        log.warn("Failed to query workflowExecution from TimescaleDB for workflowExecution:[{}], totalTries:[{}]",
             workflowExecution.getUuid(), totalTries, ex);
       } finally {
         DBUtils.close(resultSet);
@@ -261,7 +261,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         }
       } catch (SQLException ex) {
         totalTries++;
-        logger.warn(
+        log.warn(
             "Failed to retrieve execution count from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
       } finally {
@@ -283,7 +283,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         return;
       } catch (SQLException ex) {
         totalTries++;
-        logger.warn(
+        log.warn(
             "Failed to delete duplicates for accountID:[{}] in duration:[{}-{}], executionIDs:[{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), executionIDs, totalTries, ex);
       }
@@ -310,7 +310,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
       } catch (SQLException ex) {
         totalTries++;
-        logger.warn(
+        log.warn(
             "Failed to check for duplicates from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
       } finally {
@@ -368,7 +368,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
       } catch (SQLException ex) {
         totalTries++;
-        logger.warn(
+        log.warn(
             "Failed to retrieve running executions from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
       } finally {
@@ -392,7 +392,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     try (HIterator<WorkflowExecution> iterator = new HIterator<>(query.fetch())) {
       for (WorkflowExecution workflowExecution : iterator) {
         if (isStatusMismatchedInMongoAndTSDB(tsdbRunningWFs, workflowExecution)) {
-          logger.info("Status mismatch in MongoDB and TSDB for WorkflowExecution: [{}]", workflowExecution.getUuid());
+          log.info("Status mismatch in MongoDB and TSDB for WorkflowExecution: [{}]", workflowExecution.getUuid());
           updateRunningWFsFromTSDB(workflowExecution);
           statusMismatch = true;
         }
@@ -411,7 +411,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   protected void updateRunningWFsFromTSDB(WorkflowExecution workflowExecution) {
     DeploymentTimeSeriesEvent deploymentTimeSeriesEvent = usageMetricsEventPublisher.constructDeploymentTimeSeriesEvent(
         workflowExecution.getAccountId(), workflowExecution);
-    logger.info("UPDATING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
+    log.info("UPDATING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
         deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
     deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
   }
@@ -452,7 +452,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
        * This is to prevent a bad record from blocking all further reconciliations
        */
       if (System.currentTimeMillis() - record.getDurationEndTs() > COOL_DOWN_INTERVAL) {
-        logger.warn("Found an old record in progress: record: [{}] for accountID:[{}] in duration:[{}-{}]",
+        log.warn("Found an old record in progress: record: [{}] for accountID:[{}] in duration:[{}-{}]",
             record.getUuid(), record.getAccountId(), new Date(record.getDurationStartTs()),
             new Date(record.getDurationEndTs()));
         UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
@@ -478,7 +478,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     final long currentTime = System.currentTimeMillis();
     if (((currentTime - record.getReconEndTs()) < COOL_DOWN_INTERVAL)
         && (durationEndTs < currentTime && durationEndTs > (currentTime - COOL_DOWN_INTERVAL))) {
-      logger.info("Last recon for accountID:[{}] was run @ [{}], hence not rerunning it again", record.getAccountId(),
+      log.info("Last recon for accountID:[{}] was run @ [{}], hence not rerunning it again", record.getAccountId(),
           new Date(record.getReconEndTs()));
       return false;
     }

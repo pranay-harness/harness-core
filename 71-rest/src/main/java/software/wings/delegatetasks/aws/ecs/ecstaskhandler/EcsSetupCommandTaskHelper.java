@@ -757,7 +757,7 @@ public class EcsSetupCommandTaskHelper {
       return mapper.readValue(json, ServiceRegistry.class);
     } catch (IOException e) {
       String errorMsg = "Failed to Deserialize json into AWS Service object";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMsg, USER).addParam("message", errorMsg);
     }
   }
@@ -768,7 +768,7 @@ public class EcsSetupCommandTaskHelper {
       return mapper.readValue(json, Service.class);
     } catch (IOException e) {
       String errorMsg = "Failed to Deserialize json into AWS Service object";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMsg, USER).addParam("message", errorMsg);
     }
   }
@@ -867,7 +867,7 @@ public class EcsSetupCommandTaskHelper {
         .instanceCountForLatestVersion(instanceCountForLatestVersion);
 
     CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
-        setupParams, taskDefinition, containerServiceName, executionLogCallback, logger, commandExecutionDataBuilder);
+        setupParams, taskDefinition, containerServiceName, executionLogCallback, log, commandExecutionDataBuilder);
 
     executionLogCallback.saveExecutionLog(
         format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
@@ -888,8 +888,7 @@ public class EcsSetupCommandTaskHelper {
         // For Daemon service, we cache service spec json for existing service before we did actual deployment,
         // as deployment is being rolled back, update service with same service spec to restore it to original state
         if (isNotEmpty(setupParams.getPreviousEcsServiceSnapshotJson())) {
-          Service previousServiceSnapshot =
-              getAwsServiceFromJson(setupParams.getPreviousEcsServiceSnapshotJson(), logger);
+          Service previousServiceSnapshot = getAwsServiceFromJson(setupParams.getPreviousEcsServiceSnapshotJson(), log);
           UpdateServiceRequest updateServiceRequest =
               new UpdateServiceRequest()
                   .withService(previousServiceSnapshot.getServiceName())
@@ -924,7 +923,7 @@ public class EcsSetupCommandTaskHelper {
         }
       } catch (Exception e) {
         String errorMsg = "Failed while handling rollback";
-        logger.error(errorMsg, e);
+        log.error(errorMsg, e);
         throw new WingsException(errorMsg, e, USER).addParam("message", errorMsg);
       }
     }
@@ -1060,7 +1059,7 @@ public class EcsSetupCommandTaskHelper {
       return mapper.writeValueAsString(service);
     } catch (JsonProcessingException e) {
       String errorMsg = "Failed to Serialize AWS Service object into json";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMsg, USER).addParam("message", errorMsg);
     }
   }

@@ -37,7 +37,7 @@ public class RemoveServiceInfraFolder implements Migration {
     final List<Application> applications = appService.getAppsByAccountId(accountId);
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     for (Application app : applications) {
-      logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Starting migration for app", app.getUuid()));
+      log.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Starting migration for app", app.getUuid()));
       try {
         List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
 
@@ -47,15 +47,15 @@ public class RemoveServiceInfraFolder implements Migration {
           GitFileChange gitFileChange =
               generateGitFileChangeForInfraMappingDelete(accountId, app.getName(), environment.getName());
           gitFileChanges.add(gitFileChange);
-          logger.info(HarnessStringUtils.join(
+          log.info(HarnessStringUtils.join(
               StringUtils.SPACE, DEBUG_LINE, "Adding to git file changeSet", gitFileChange.getFilePath()));
         });
         yamlChangeSetService.saveChangeSet(accountId, gitFileChanges, app);
       } catch (Exception ex) {
-        logger.error(HarnessStringUtils.join(
+        log.error(HarnessStringUtils.join(
             StringUtils.SPACE, DEBUG_LINE, ExceptionUtils.getMessage(ex), "app", app.getUuid()));
       }
-      logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Finished migration for app", app.getUuid()));
+      log.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Finished migration for app", app.getUuid()));
     }
   }
 

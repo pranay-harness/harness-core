@@ -17,7 +17,7 @@ public class DropYamlGitSyncCollectionMigration implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "yamlGitSync").drop();
     } catch (RuntimeException ex) {
-      logger.error("Drop collection error", ex);
+      log.error("Drop collection error", ex);
     }
   }
 }

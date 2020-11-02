@@ -46,7 +46,7 @@ public class MigrateCVMetadataApplicationId implements Migration {
               op);
         }
       }
-      logger.info("Updated appId for {} CVExecutionMetadata records", cvList.size());
+      log.info("Updated appId for {} CVExecutionMetadata records", cvList.size());
       previousOffset += cvList.size();
       cvMetadataRequest.setOffset(String.valueOf(previousOffset));
       cvMetadataResponse = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, cvMetadataRequest);

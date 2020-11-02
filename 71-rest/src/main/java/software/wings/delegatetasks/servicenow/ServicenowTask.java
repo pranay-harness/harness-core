@@ -74,7 +74,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
 
     DelegateResponseData responseData = null;
 
-    logger.info("Executing ServiceNowTask. Action: {}, IssueNumber: {}", action, parameters.getIssueNumber());
+    log.info("Executing ServiceNowTask. Action: {}, IssueNumber: {}", action, parameters.getIssueNumber());
 
     switch (parameters.getAction()) {
       case CREATE:
@@ -86,7 +86,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         return createImportSets(parameters);
       default:
         String errorMsg = "Invalid ServiceNow delegate Task Action " + parameters.getAction();
-        logger.error(errorMsg);
+        log.error(errorMsg);
         throw new InvalidRequestException(errorMsg, ErrorCode.SERVICENOW_ERROR, WingsException.USER);
     }
   }
@@ -114,7 +114,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to create ServiceNow ticket");
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
@@ -150,7 +150,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Response<JsonNode> apiResponse = null;
     try {
       apiResponse = request.execute();
-      logger.info("Response received from serviceNow: {}", apiResponse);
+      log.info("Response received from serviceNow: {}", apiResponse);
       handleResponse(apiResponse, "Failed to create ServiceNow ticket");
       String importSetNumber = apiResponse.body().get("import_set").textValue();
       ObjectMapper mapper = new ObjectMapper();
@@ -212,7 +212,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to update ServiceNow ticket");
       JsonNode responseObj = response.body().get("result");
       String issueNumber = responseObj.get("number").get("display_value").asText();
@@ -282,7 +282,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
                           CHANGE_TASK.toString().toLowerCase(), changeTaskId, "all", "number,sys_id", body);
 
         response = request.execute();
-        logger.info("Response received from serviceNow: {}", response);
+        log.info("Response received from serviceNow: {}", response);
         handleResponse(response, "Failed to update ServiceNow ticket");
         JsonNode responseObj = response.body().get("result");
         String issueNumber = responseObj.get("number").get("display_value").asText();
@@ -290,7 +290,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
             + ".do?sys_id=" + issueId;
 
-        logger.info("Successfully updated ticket : " + issueNumber);
+        log.info("Successfully updated ticket : " + issueNumber);
         updateChangeTaskNumbers.add(issueNumber);
         updatedCjhangeTaskUrls.add(issueUrl);
       } catch (WingsException we) {
@@ -323,7 +323,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to update ServiceNow ticket");
       JsonNode responseObj = response.body().get("result");
       if (responseObj.isArray()) {
@@ -363,7 +363,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to fetch IssueId : " + parameters.getIssueNumber() + " from serviceNow");
       JsonNode responseObj = response.body().get("result");
       if (responseObj.isArray()) {

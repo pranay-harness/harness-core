@@ -24,7 +24,7 @@ public class RefactorTheFieldsInGitSyncError implements OnPrimaryManagerMigratio
 
   @Override
   public void migrate() {
-    logger.info("Running migration RefactorTheFieldsInGitSyncError");
+    log.info("Running migration RefactorTheFieldsInGitSyncError");
     Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class);
 
     try (HIterator<GitSyncError> records = new HIterator<>(query.fetch())) {
@@ -37,19 +37,19 @@ public class RefactorTheFieldsInGitSyncError implements OnPrimaryManagerMigratio
             wingsPersistence.save(updatedGitSyncError);
           }
         } catch (Exception e) {
-          logger.error("Error while processing git sync error id =" + syncError.getUuid(), e);
+          log.error("Error while processing git sync error id =" + syncError.getUuid(), e);
         }
       }
     }
 
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "gitSyncError").dropIndex("uniqueIdx");
-      logger.info("Successfully  dropped the index");
+      log.info("Successfully  dropped the index");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
 
-    logger.info("Completed migration RefactorTheFieldsInGitSyncError");
+    log.info("Completed migration RefactorTheFieldsInGitSyncError");
   }
 
   private GitSyncError populateNewGitSyncFields(GitSyncError gitSyncError) {
@@ -80,13 +80,13 @@ public class RefactorTheFieldsInGitSyncError implements OnPrimaryManagerMigratio
       updatedGitSyncError.setGitSyncDirection(GIT_TO_HARNESS.toString());
       Long commitTime = gitSyncError.getCommitTime();
       if (commitTime == null || commitTime.equals(0L)) {
-        logger.info(
+        log.info(
             "The commitTime field was not existing correctly for the gitSyncError with id {}", gitSyncError.getUuid());
       }
 
       String yamlContent = gitSyncError.getYamlContent();
       if (isBlank(yamlContent)) {
-        logger.info(
+        log.info(
             "The yamlcontent field was not existing correctly for the gitSyncError with id {}", gitSyncError.getUuid());
       }
       GitToHarnessErrorDetails gitToHarnessErrorDetails = GitToHarnessErrorDetails.builder()

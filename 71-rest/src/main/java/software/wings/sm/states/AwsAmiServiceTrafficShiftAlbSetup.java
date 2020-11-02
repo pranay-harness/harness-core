@@ -280,7 +280,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
 
   private ExecutionResponse failureResponse(
       Exception exception, String activityId, ManagerExecutionLogCallback executionLogCallback) {
-    logger.error("Ami setup step failed with error ", exception);
+    log.error("Ami setup step failed with error ", exception);
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
     String errorMessage = getMessage(exception);

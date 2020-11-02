@@ -41,7 +41,7 @@ public class AppResourceRestClient {
     Application seedApp = getAppByName(client, userResourceRestClient.getUserToken(client),
         userResourceRestClient.getSeedAccount(client).getUuid(), SEED_APP_NAME);
     if (seedApp == null) {
-      logger.info("Creating SeedApp");
+      log.info("Creating SeedApp");
       seedApp = createApp(client, userResourceRestClient.getUserToken(client),
           userResourceRestClient.getSeedAccount(client).getUuid(), SEED_APP_NAME);
     }

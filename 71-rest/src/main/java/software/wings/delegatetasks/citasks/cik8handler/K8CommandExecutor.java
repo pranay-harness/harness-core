@@ -111,7 +111,7 @@ public class K8CommandExecutor {
         try {
           return Integer.parseInt(stdout);
         } catch (NumberFormatException e) {
-          logger.error("Unknown format for process return status code: {} with error: ", stdout, e);
+          log.error("Unknown format for process return status code: {} with error: ", stdout, e);
         }
       }
     }
@@ -155,7 +155,7 @@ public class K8CommandExecutor {
       try {
         return waitForProcessCompletion(client, podName, containerName, namespace, pid, timeoutSecs, startTime);
       } catch (CommandExecutionException | KubernetesClientException | UnsupportedEncodingException e) {
-        logger.warn("Failed to check status of process with error: ", e);
+        log.warn("Failed to check status of process with error: ", e);
         numErrorRetries += 1;
 
         if (numErrorRetries < MAX_ERROR_RETRIES) {
@@ -231,7 +231,7 @@ public class K8CommandExecutor {
       try {
         return getDashCmdReturnStatusCode(client, podName, containerName, namespace, mountPath, statusCodeFileName);
       } catch (CommandExecutionException | UnsupportedEncodingException e) {
-        logger.warn("Failed to check return status code of process with error: ", e);
+        log.warn("Failed to check return status code of process with error: ", e);
         numRetries += 1;
         if (numRetries < MAX_ERROR_RETRIES) {
           sleeper.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_DURATION_SECS));
@@ -270,7 +270,7 @@ public class K8CommandExecutor {
             cmdExecutionStatus = ExecCommandStatus.FAILURE;
           }
         } catch (NumberFormatException e) {
-          logger.error("Unknown format for process return status code: {} with error: ", stdout, e);
+          log.error("Unknown format for process return status code: {} with error: ", stdout, e);
         }
       }
     }

@@ -108,7 +108,7 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
   @Override
   public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
     File file = new File(Files.createTempDir(), generateUuid());
-    logger.info("Temp file path [{}]", file.getAbsolutePath());
+    log.info("Temp file path [{}]", file.getAbsolutePath());
     fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
     EncryptionUtils.decryptToStream(file, encryptedData.getEncryptionKey(), output, encryptedData.isBase64Encoded());
   }

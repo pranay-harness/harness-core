@@ -28,7 +28,7 @@ public class PcfDeployExecutionSummary extends StepExecutionSummary implements D
   @Override
   public Optional<List<DeploymentInfo>> extractDeploymentInfo() {
     if (isEmpty(instaceData)) {
-      logger.warn(
+      log.warn(
           "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance");
       return Optional.empty();
     }

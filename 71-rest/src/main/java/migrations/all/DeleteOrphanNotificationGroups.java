@@ -36,7 +36,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Deleting zombie notification groups from workflows.");
+    log.info("Deleting zombie notification groups from workflows.");
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
       List<String> ngIds = persistence.createQuery(NotificationGroup.class, HQuery.excludeCount)
@@ -66,9 +66,9 @@ public class DeleteOrphanNotificationGroups implements Migration {
         }
       }
 
-      logger.info("Zombie notification groups deleted. Time Taken: {} ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      log.info("Zombie notification groups deleted. Time Taken: {} ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     } catch (Exception e) {
-      logger.error("Error deleting zombie notification groups", e);
+      log.error("Error deleting zombie notification groups", e);
     }
   }
 
@@ -84,7 +84,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
   private void addDefaultUserGroup(NotificationRule rule, String accountId) {
     UserGroup defaultUserGroup = userGroupService.getDefaultUserGroup(accountId);
     if (null == defaultUserGroup) {
-      logger.error("No default UserGroup found for accountId={}", accountId);
+      log.error("No default UserGroup found for accountId={}", accountId);
       return;
     }
 

@@ -64,14 +64,14 @@ public class ConnectorUtils {
   }
 
   public ConnectorDetails getConnectorDetails(NGAccess ngAccess, String connectorIdentifier) {
-    logger.info("Getting connector details for connector ref [{}]", connectorIdentifier);
+    log.info("Getting connector details for connector ref [{}]", connectorIdentifier);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifier,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
 
     ConnectorDTO connectorDTO = getConnector(connectorRef);
     List<EncryptedDataDetail> encryptedDataDetails;
     ConnectorType connectorType = connectorDTO.getConnectorInfo().getConnectorType();
-    logger.info("Decrypting connector details for connector id:[{}] type:[{}]", connectorIdentifier, connectorType);
+    log.info("Decrypting connector details for connector id:[{}] type:[{}]", connectorIdentifier, connectorType);
     switch (connectorType) {
       case DOCKER:
         DockerConnectorDTO dockerConnectorDTO =
@@ -122,7 +122,7 @@ public class ConnectorUtils {
     Optional<ConnectorDTO> connectorDTO;
 
     try {
-      logger.info("Decrypting connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
+      log.info("Decrypting connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
           connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
           connectorRef.getOrgIdentifier());
 

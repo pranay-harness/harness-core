@@ -26,7 +26,7 @@ public class RemoveSupportEmailFromSalesContacts implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("RemoveSupportEmail - Start - Removing support email from salesContacts for all accounts");
+    log.info("RemoveSupportEmail - Start - Removing support email from salesContacts for all accounts");
     Query<Account> accountsQuery = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(accountsQuery.fetch())) {
       while (records.hasNext()) {
@@ -45,16 +45,16 @@ public class RemoveSupportEmailFromSalesContacts implements Migration {
           }
 
           licenseService.updateAccountSalesContacts(account.getUuid(), salesContacts);
-          logger.info("RemoveSupportEmail - Updated sales contacts for account {}", account.getUuid());
+          log.info("RemoveSupportEmail - Updated sales contacts for account {}", account.getUuid());
         } catch (Exception ex) {
-          logger.error("RemoveSupportEmail - Error while updating sales contacts for account: {}",
+          log.error("RemoveSupportEmail - Error while updating sales contacts for account: {}",
               account != null ? account.getAccountName() : "", ex);
         }
       }
 
-      logger.info("RemoveSupportEmail - Done - Removing support email from salesContacts");
+      log.info("RemoveSupportEmail - Done - Removing support email from salesContacts");
     } catch (Exception ex) {
-      logger.error("RemoveSupportEmail - Failed - Removing support email from salesContacts", ex);
+      log.error("RemoveSupportEmail - Failed - Removing support email from salesContacts", ex);
     }
   }
 

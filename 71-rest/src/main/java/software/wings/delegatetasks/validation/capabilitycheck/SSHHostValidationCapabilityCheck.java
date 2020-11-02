@@ -49,7 +49,7 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
       performTest(hostConnectionTest);
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
-      logger.error("Failed to validate host - public dns:" + capability.getValidationInfo().getPublicDns(), e);
+      log.error("Failed to validate host - public dns:" + capability.getValidationInfo().getPublicDns(), e);
       capabilityResponseBuilder.validated(false);
     }
     return capabilityResponseBuilder.build();

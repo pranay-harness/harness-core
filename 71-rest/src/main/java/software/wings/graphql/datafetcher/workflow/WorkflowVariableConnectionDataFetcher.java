@@ -40,7 +40,7 @@ public class WorkflowVariableConnectionDataFetcher
       notNullCheck(
           "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
       if (!workflow.isTemplatized()) {
-        logger.info("No non-fixed variables present in workflow: " + workflowId);
+        log.info("No non-fixed variables present in workflow: " + workflowId);
         return new ArrayList<>();
       }
       List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();

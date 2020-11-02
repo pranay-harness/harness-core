@@ -37,7 +37,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @Override
   public boolean delete(final String accountId, final String uuid) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting pipeline governance standard  with uuid: {}", uuid);
+      log.info("Deleting pipeline governance standard  with uuid: {}", uuid);
       PipelineGovernanceConfig config = get(uuid);
       boolean deleted = persistence.delete(PipelineGovernanceConfig.class, uuid);
       if (deleted) {
@@ -50,7 +50,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @Override
   public List<PipelineGovernanceConfig> list(final String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Fetching all pipeline governance standards");
+      log.info("Fetching all pipeline governance standards");
       return persistence.createQuery(PipelineGovernanceConfig.class, HQuery.excludeCount)
           .field(PipelineGovernanceConfigKeys.accountId)
           .equal(accountId)
@@ -62,7 +62,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @RestrictedApi(PipelineGovernanceFeature.class)
   public PipelineGovernanceConfig add(@AccountId final String accountId, final PipelineGovernanceConfig config) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding pipeline governance standard");
+      log.info("Adding pipeline governance standard");
       PipelineGovernanceConfig existingConfig = get(config.getUuid());
       persistence.save(config);
       if (existingConfig == null) {

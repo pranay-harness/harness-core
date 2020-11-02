@@ -40,7 +40,7 @@ public class KeyVaultADALAuthenticator {
           authResult = getAccessToken(clientId, clientKey, authorization, resource);
           return authResult.getAccessToken();
         } catch (Exception e) {
-          logger.error("Failed to get access token for clientId {}", clientId, e);
+          log.error("Failed to get access token for clientId {}", clientId, e);
         }
         return "";
       }

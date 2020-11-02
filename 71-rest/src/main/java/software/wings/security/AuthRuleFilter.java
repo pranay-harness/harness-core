@@ -223,7 +223,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       if (isExternalApi) {
         return;
       } else {
-        logger.warn("No user context in operation: {}", uriPath);
+        log.warn("No user context in operation: {}", uriPath);
         throw new AccessDeniedException("No user context set", USER);
       }
     }
@@ -254,7 +254,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
         String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
-        logger.warn(msg);
+        log.warn(msg);
         throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
       }
     }

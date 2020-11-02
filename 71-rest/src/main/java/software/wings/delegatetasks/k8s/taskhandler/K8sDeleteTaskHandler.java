@@ -163,7 +163,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
 
       return true;
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", ERROR, CommandExecutionStatus.FAILURE);
       return false;
@@ -210,7 +210,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
       return true;
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;

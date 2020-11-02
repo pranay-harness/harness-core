@@ -153,7 +153,7 @@ public class ExpressionEvaluatorUtils {
       Object retObj = engine.getProperty(obj, field);
       return Optional.of(retObj);
     } catch (JexlException ex) {
-      logger.debug(format("Could not fetch field '%s'", field), ex);
+      log.debug(format("Could not fetch field '%s'", field), ex);
       return Optional.empty();
     }
   }
@@ -248,7 +248,7 @@ public class ExpressionEvaluatorUtils {
           }
           f.setAccessible(isAccessible);
         } catch (IllegalAccessException ignored) {
-          logger.error("Field [{}] is not accessible", f.getName());
+          log.error("Field [{}] is not accessible", f.getName());
         }
       }
       c = c.getSuperclass();

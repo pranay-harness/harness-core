@@ -52,7 +52,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
               statement.setString(9, (String) dataMap.get(EventProcessor.ARTIFACTID));
               statement.addBatch();
             } catch (SQLException e) {
-              logger.error("Failed to save instance event data point for account {} and timestamp {}",
+              log.error("Failed to save instance event data point for account {} and timestamp {}",
                   eventInfo.getAccountId(), eventInfo.getTimestamp(), e);
               return;
             }
@@ -63,17 +63,17 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
 
         } catch (SQLException e) {
           if (retryCount >= MAX_RETRY_COUNT) {
-            logger.error("Failed to save instance data,[{}]", eventInfo, e);
+            log.error("Failed to save instance data,[{}]", eventInfo, e);
           } else {
-            logger.info("Failed to save instance data,[{}],retryCount=[{}]", eventInfo, retryCount);
+            log.info("Failed to save instance data,[{}],retryCount=[{}]", eventInfo, retryCount);
           }
           retryCount++;
         } finally {
-          logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
+          log.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.trace("Not processing instance stats event:[{}]", eventInfo);
+      log.trace("Not processing instance stats event:[{}]", eventInfo);
     }
   }
 }

@@ -118,7 +118,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
       toYaml(yaml, settingAttribute, appId);
 
     } catch (IllegalAccessException e) {
-      logger.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
+      log.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
       throw new WingsException(e);
     }
     return yaml;

@@ -35,9 +35,9 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
     dataCollectionTaskService.deletePerpetualTasks(
         deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
     verificationTaskService.removeCVConfigMappings(deletedCVConfig.getCvConfig().getUuid());
-    logger.info("Deleting DeletedCVConfig {}", deletedCVConfig.getUuid());
+    log.info("Deleting DeletedCVConfig {}", deletedCVConfig.getUuid());
     delete(deletedCVConfig.getUuid());
-    logger.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());
+    log.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());
     // TODO We need retry mechanism if things get failing and retry count exceeds max number we should alert it
   }
 

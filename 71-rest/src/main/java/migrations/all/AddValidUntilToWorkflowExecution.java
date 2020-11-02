@@ -40,7 +40,7 @@ public class AddValidUntilToWorkflowExecution implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("WorkflowExecutions: {} updated", i);
+          log.info("WorkflowExecutions: {} updated", i);
         }
         ++i;
 

@@ -61,10 +61,10 @@ public class ChronicleEventTailer extends AbstractScheduledService {
 
   @Override
   protected void startUp() {
-    logger.info("Starting up");
+    log.info("Starting up");
     if (fileDeletionManager.getSentIndex() == 0 && readTailer.index() != 0) {
       // Only for migration when readTailer is present, and sentTailer is not.
-      logger.info("Index of sent-tailer is 0. Setting it to read-tailer index");
+      log.info("Index of sent-tailer is 0. Setting it to read-tailer index");
       fileDeletionManager.setSentIndex(readTailer.index());
     }
     printStats();
@@ -73,7 +73,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
 
   @Override
   protected void shutDown() {
-    logger.info("Shutting down");
+    log.info("Shutting down");
     printStats();
     fileDeletionManager.deleteOlderFiles();
     this.queue.close();
@@ -84,7 +84,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     long sentIndex = fileDeletionManager.getSentIndex();
     long endIndex = queue.createTailer().toEnd().index();
     long excerptCount = queue.countExcerpts(readIndex, endIndex);
-    logger.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
+    log.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
         endIndex, excerptCount);
   }
 
@@ -93,18 +93,18 @@ public class ChronicleEventTailer extends AbstractScheduledService {
     // service will terminate if exception is not caught.
     try {
       sampler.updateTime();
-      sampler.sampled(() -> logger.info("Checking for messages to publish"));
+      sampler.sampled(() -> log.info("Checking for messages to publish"));
       Batch batchToSend = new Batch(MAX_BATCH_BYTES, MAX_BATCH_COUNT);
       while (!batchToSend.isFull()) {
         long endIndex = queue.createTailer().toEnd().index();
         try (DocumentContext dc = readTailer.readingDocument()) {
           if (!dc.isPresent()) {
-            sampler.sampled(() -> logger.info("Reached end of queue"));
+            sampler.sampled(() -> log.info("Reached end of queue"));
             long readIndex = readTailer.index();
             if (readIndex < endIndex) {
               readTailer.moveToIndex(endIndex);
               fileDeletionManager.setSentIndex(endIndex);
-              logger.warn(
+              log.warn(
                   "Observed readTailer not at end with no document context. Moved from {} to {}", readIndex, endIndex);
             }
             break;
@@ -117,39 +117,39 @@ public class ChronicleEventTailer extends AbstractScheduledService {
               batchToSend.add(message);
             } else {
               // could happen in case of an error during append with document context open.
-              logger.warn("Read NULL message. Skipping");
+              log.warn("Read NULL message. Skipping");
             }
           } catch (Exception e) {
-            logger.error("Exception while parsing message", e);
+            log.error("Exception while parsing message", e);
           }
         }
       }
       if (batchToSend.isFull()) {
-        logger.info("Batch is full");
+        log.info("Batch is full");
       }
       if (!batchToSend.isEmpty()) {
         PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend.getMessages()).build();
         try {
           blockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).publish(publishRequest);
-          logger.info("Published {} messages successfully", batchToSend.size());
+          log.info("Published {} messages successfully", batchToSend.size());
           fileDeletionManager.setSentIndex(readTailer.index());
           scheduler.recordSuccess();
         } catch (Exception e) {
-          logger.warn("Exception during message publish", e);
+          log.warn("Exception during message publish", e);
           QueueUtils.moveToIndex(readTailer, fileDeletionManager.getSentIndex());
           scheduler.recordFailure();
         }
       } else {
-        sampler.sampled(() -> logger.info("Skipping message publish as batch is empty"));
+        sampler.sampled(() -> log.info("Skipping message publish as batch is empty"));
       }
     } catch (Exception e) {
-      logger.error("Encountered exception", e);
+      log.error("Encountered exception", e);
     } finally {
       try {
         sampler.sampled(this ::printStats);
         sampler.sampled(fileDeletionManager::deleteOlderFiles);
       } catch (Exception e) {
-        logger.error("Encountered exception in finally", e);
+        log.error("Encountered exception in finally", e);
       }
     }
   }

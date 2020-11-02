@@ -47,7 +47,7 @@ public class AzureInstanceHandler extends InstanceHandler {
     if (!(infrastructureMapping instanceof AzureInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting AZURE_INFRA type. Found:"
           + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 
@@ -56,7 +56,7 @@ public class AzureInstanceHandler extends InstanceHandler {
 
     loadInstanceMapBasedOnType(appId, infraMappingId, azureInstanceIdInstanceMap);
 
-    logger.info("Found {} azure instances for app {}",
+    log.info("Found {} azure instances for app {}",
         azureInstanceIdInstanceMap != null ? azureInstanceIdInstanceMap.size() : 0, appId);
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -103,7 +103,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   private void deleteRunningInstancesFromMap(
       Map<String, Instance> azureInstanceIdInstanceMap, List<Host> activeHostList) {
     Instance azureInstance = azureInstanceIdInstanceMap.values().iterator().next();
-    logger.info(
+    log.info(
         "Total no of Azure instances found in DB for InfraMappingId: {} and AppId: {}: {}, No of Running instances found in azure:{}",
         azureInstance.getInfraMappingId(), azureInstance.getAppId(), azureInstanceIdInstanceMap.size(),
         activeHostList.size());
@@ -116,7 +116,7 @@ public class AzureInstanceHandler extends InstanceHandler {
                                              .collect(Collectors.toSet());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
-      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }
@@ -136,7 +136,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
-    logger.warn("Deployments should be handled at InstanceHelper for azure type.");
+    log.warn("Deployments should be handled at InstanceHelper for azure type.");
     return Optional.empty();
   }
 

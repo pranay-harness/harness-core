@@ -55,18 +55,18 @@ public class WFEAddDeploymentMetaData implements Migration {
             count++;
             totalCount++;
             if (count % 1000 == 0) {
-              logger.info("Completed migrating [{}] records for account:[{}]", count, account.getAccountName());
+              log.info("Completed migrating [{}] records for account:[{}]", count, account.getAccountName());
             }
           }
         } finally {
-          logger.info("Completed migrating [{}] records for account:[{}], lastTimeStamp=[{}]", count,
+          log.info("Completed migrating [{}] records for account:[{}], lastTimeStamp=[{}]", count,
               account.getAccountName(), lastTimeStamp);
         }
       }
     } catch (Exception e) {
-      logger.warn("Failed to complete migration", e);
+      log.warn("Failed to complete migration", e);
     } finally {
-      logger.info("Completed migrating [{}] records, lastTimeStamp=[{}]", totalCount, lastTimeStamp);
+      log.info("Completed migrating [{}] records, lastTimeStamp=[{}]", totalCount, lastTimeStamp);
     }
   }
 }

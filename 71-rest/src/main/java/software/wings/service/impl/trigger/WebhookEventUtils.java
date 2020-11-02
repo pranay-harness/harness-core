@@ -188,8 +188,7 @@ public class WebhookEventUtils {
           return Optional.empty();
       }
     } catch (Exception e) {
-      logger.error(
-          "Failed to resolve the repository clone URL from payload {} and headers {}", payload, httpHeaders, e);
+      log.error("Failed to resolve the repository clone URL from payload {} and headers {}", payload, httpHeaders, e);
       return Optional.empty();
     }
   }
@@ -251,7 +250,7 @@ public class WebhookEventUtils {
           return Optional.empty();
       }
     } catch (Exception e) {
-      logger.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
+      log.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
       return Optional.empty();
     }
   }
@@ -337,7 +336,7 @@ public class WebhookEventUtils {
           return Optional.empty();
       }
     } catch (Exception e) {
-      logger.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
+      log.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
       return Optional.empty();
     }
   }
@@ -406,13 +405,13 @@ public class WebhookEventUtils {
           return null;
       }
     } catch (Exception e) {
-      logger.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
+      log.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
       return null;
     }
   }
 
   private GitHubEventType getGitHubEventType(HttpHeaders httpHeaders) {
-    logger.info("Git Hub Event header {}", httpHeaders.getHeaderString(X_GIT_HUB_EVENT));
+    log.info("Git Hub Event header {}", httpHeaders.getHeaderString(X_GIT_HUB_EVENT));
     return GitHubEventType.find(httpHeaders.getHeaderString(X_GIT_HUB_EVENT));
   }
 
@@ -459,18 +458,18 @@ public class WebhookEventUtils {
           return null;
       }
     } catch (Exception ex) {
-      logger.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
+      log.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
       return null;
     }
   }
 
   private BitBucketEventType getBitBucketEventType(HttpHeaders httpHeaders) {
-    logger.info("Bit Bucket event header {}", httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT));
+    log.info("Bit Bucket event header {}", httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT));
     return BitBucketEventType.find(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT));
   }
 
   private GitLabEventType getGitLabEventType(HttpHeaders httpHeaders) {
-    logger.info("Git Lab Event header {}", httpHeaders.getHeaderString(X_GIT_LAB_EVENT));
+    log.info("Git Lab Event header {}", httpHeaders.getHeaderString(X_GIT_LAB_EVENT));
     return GitLabEventType.find(httpHeaders.getHeaderString(X_GIT_LAB_EVENT));
   }
 
@@ -534,7 +533,7 @@ public class WebhookEventUtils {
           throw new InvalidRequestException(format("Unhandled webhook source %s", webhookSource));
       }
     } catch (Exception ex) {
-      logger.warn("Failed to validate push event for {} with headers {}", webhookSource, httpHeaders);
+      log.warn("Failed to validate push event for {} with headers {}", webhookSource, httpHeaders);
       throw ex;
     }
   }

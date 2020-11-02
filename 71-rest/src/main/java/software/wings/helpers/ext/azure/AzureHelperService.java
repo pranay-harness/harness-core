@@ -239,7 +239,7 @@ public class AzureHelperService {
     List<VirtualMachine> listVms = azure.virtualMachines().listByResourceGroup(resourceGroupName);
 
     if (isEmpty(listVms)) {
-      logger.info("List VMs by Tags and Resource group did not find any matching VMs in Azure for subscription : "
+      log.info("List VMs by Tags and Resource group did not find any matching VMs in Azure for subscription : "
           + subscriptionId);
       return Collections.emptyList();
     }
@@ -371,7 +371,7 @@ public class AzureHelperService {
                        .build())
             .collect(toList());
       } else {
-        logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
+        log.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
             + " Response: " + response.raw());
         throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
@@ -392,7 +392,7 @@ public class AzureHelperService {
       if (response.isSuccessful()) {
         return response.body().getValue().stream().map(TagDetails::getTagName).collect(toSet());
       } else {
-        logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
+        log.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
             + " Response: " + response.raw());
         throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
@@ -494,7 +494,7 @@ public class AzureHelperService {
       }
       return repositories;
     } catch (Exception e) {
-      logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
+      log.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
       throw new AzureServiceException(
@@ -521,7 +521,7 @@ public class AzureHelperService {
           .body()
           .getTags();
     } catch (Exception e) {
-      logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
+      log.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
       throw new AzureServiceException(
@@ -541,7 +541,7 @@ public class AzureHelperService {
           .body()
           .getTags();
     } catch (Exception e) {
-      logger.error("Error occurred while getting Tags for Repository :" + registryHostName + "/" + repositoryName, e);
+      log.error("Error occurred while getting Tags for Repository :" + registryHostName + "/" + repositoryName, e);
       throw new AzureServiceException(
           "Failed to retrieve repository tags " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
@@ -596,7 +596,7 @@ public class AzureHelperService {
         String errorMessage =
             "Error occurred while getting KubernetesClusterConfig from subscriptionId/resourceGroup/clusterName :"
             + subscriptionId + "/" + resourceGroup + "/" + clusterName + response.raw();
-        logger.error(errorMessage);
+        log.error(errorMessage);
         int statusCode = response.code();
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
           throw new ClusterNotFoundException(errorMessage, CLUSTER_NOT_FOUND, USER);
@@ -718,7 +718,7 @@ public class AzureHelperService {
   }
 
   private void handleAzureAuthenticationException(Exception e) {
-    logger.error("HandleAzureAuthenticationException: Exception:" + e);
+    log.error("HandleAzureAuthenticationException: Exception:" + e);
 
     Throwable e1 = e;
     while (e1.getCause() != null) {
@@ -735,7 +735,7 @@ public class AzureHelperService {
     try {
       return listVaultsInternal(accountId, azureVaultConfig);
     } catch (Exception ex) {
-      logger.error("Listing vaults failed for account Id {}", accountId, ex);
+      log.error("Listing vaults failed for account Id {}", accountId, ex);
       throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);
     }
   }
@@ -813,12 +813,12 @@ public class AzureHelperService {
     } else {
       azure = authenticate.withSubscription(azureVaultConfig.getSubscription());
     }
-    logger.info("Subscription {} is being used for account Id {}", azure.subscriptionId(), accountId);
+    log.info("Subscription {} is being used for account Id {}", azure.subscriptionId(), accountId);
 
     for (ResourceGroup rGroup : azure.resourceGroups().list()) {
       vaultList.addAll(azure.vaults().listByResourceGroup(rGroup.name()));
     }
-    logger.info("Found azure vaults {} or account id: {}", vaultList, accountId);
+    log.info("Found azure vaults {} or account id: {}", vaultList, accountId);
     return vaultList;
   }
 }

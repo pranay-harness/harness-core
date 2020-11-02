@@ -93,7 +93,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   @Override
   @SchemaIgnore
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

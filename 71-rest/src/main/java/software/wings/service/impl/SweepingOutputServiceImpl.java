@@ -246,7 +246,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
                        .equal(sweepingOutputInquiry.getStateExecutionId());
         break;
       default:
-        logger.error("Invalid scope", scope);
+        log.error("Invalid scope", scope);
     }
     if (criteria != null) {
       query.and(criteria);

@@ -130,7 +130,7 @@ public class ScpCommandUnit extends SshCommandUnit {
                   context.getAppId(), context.getActivityId(), getName(),
                   context.getHost() == null ? null : context.getHost().getPublicDns());
             } else {
-              logger.info("Copy Artifact is not supported for artifact stream type: " + artifactStreamType
+              log.info("Copy Artifact is not supported for artifact stream type: " + artifactStreamType
                   + " and artifact type: " + artifactStreamAttributes.getArtifactType());
               return CommandExecutionStatus.SUCCESS;
             }

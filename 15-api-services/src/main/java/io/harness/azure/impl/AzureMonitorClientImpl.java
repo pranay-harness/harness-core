@@ -27,8 +27,8 @@ public class AzureMonitorClientImpl extends AzureClient implements AzureMonitorC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing event data with all properties for resourceId {}, startTime {}, endTime: {}",
-        resourceId, startTime.toDateTime(), endTime.toDateTime());
+    log.debug("Start listing event data with all properties for resourceId {}, startTime {}, endTime: {}", resourceId,
+        startTime.toDateTime(), endTime.toDateTime());
     return azure.activityLogs()
         .defineQuery()
         .startingFrom(startTime)

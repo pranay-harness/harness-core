@@ -57,6 +57,6 @@ public class ExecutionGenTest extends WingsBaseTest {
 
       wingsPersistence.save(workflowExecution);
     }
-    logger.info("response size: {}", response.size());
+    log.info("response size: {}", response.size());
   }
 }

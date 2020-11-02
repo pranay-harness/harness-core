@@ -60,7 +60,7 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
-    logger.info("Get pipeline");
+    log.info("Get pipeline");
     Optional<NgPipelineEntity> ngPipelineEntity = ngPipelineService.get(accountId, orgId, projectId, pipelineId, false);
     return ResponseDTO.newResponse(ngPipelineEntity.get().getVersion().toString(),
         ngPipelineEntity.map(PipelineDtoMapper::writePipelineDto).orElse(null));
@@ -74,7 +74,7 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
-    logger.info("Get pipeline");
+    log.info("Get pipeline");
     Optional<NgPipelineEntity> ngPipelineEntity = ngPipelineService.get(accountId, orgId, projectId, pipelineId, false);
     return ResponseDTO.newResponse(ngPipelineEntity.get().getVersion().toString(),
         ngPipelineEntity.map(PipelineDtoMapper::preparePipelineSummary).orElse(null));
@@ -89,7 +89,7 @@ public class NGPipelineResource {
       @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    logger.info("Get List of pipelines");
+    log.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, NgPipeline.class);
     criteria.andOperator(
         NgPipelineFilterHelper.createCriteriaForGetList(accountId, orgId, projectId, searchTerm, false));
@@ -117,7 +117,7 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
-    logger.info("Creating pipeline");
+    log.info("Creating pipeline");
     NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     NgPipelineEntity createdEntity = ngPipelineService.create(ngPipelineEntity);
 
@@ -138,7 +138,7 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
-    logger.info("Updating pipeline");
+    log.info("Updating pipeline");
     NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     if (!ngPipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");

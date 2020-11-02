@@ -20,7 +20,7 @@ public class SalesforceAccountCheck {
 
   public boolean isAccountPresentInSalesforce(Account account) {
     if (account == null || account.getAccountName() == null) {
-      logger.error("Account to be checked in Salesforce is null");
+      log.error("Account to be checked in Salesforce is null");
       return false;
     }
     return getSalesforceAccountInternal(account);

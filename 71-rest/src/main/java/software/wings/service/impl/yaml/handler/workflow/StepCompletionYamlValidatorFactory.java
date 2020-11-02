@@ -15,7 +15,7 @@ public class StepCompletionYamlValidatorFactory {
     try {
       validator = injector.getInstance(stepType.getYamlValidatorClass());
     } catch (Exception e) {
-      logger.warn("Can not get yaml validator for step type" + stepType.getType(), e);
+      log.warn("Can not get yaml validator for step type" + stepType.getType(), e);
     }
     return validator;
   }

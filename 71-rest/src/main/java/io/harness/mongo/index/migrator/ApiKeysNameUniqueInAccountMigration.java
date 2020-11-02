@@ -19,7 +19,7 @@ import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 public class ApiKeysNameUniqueInAccountMigration implements Migrator {
   @Override
   public void execute(AdvancedDatastore datastore) {
-    logger.info("Starting migration of API keys with duplicate names for accountId.");
+    log.info("Starting migration of API keys with duplicate names for accountId.");
     Query<AggregateResult> queryForMultipleItems =
         datastore.createQuery(AggregateResult.class).field("count").greaterThan(1);
     AggregationPipeline invalidEntryPipeline =
@@ -44,20 +44,20 @@ public class ApiKeysNameUniqueInAccountMigration implements Migrator {
         }
       }
     }
-    logger.info("Finished migration of delegate profiles with duplicate names for accountId.");
+    log.info("Finished migration of delegate profiles with duplicate names for accountId.");
   }
 
   private void updateApiKey(AdvancedDatastore dataStore, int index, ApiKeyEntry keyEntry) {
     try {
-      logger.info("Updating API key.");
+      log.info("Updating API key.");
       Query<ApiKeyEntry> updateQuery =
           dataStore.createQuery(ApiKeyEntry.class).field(ApiKeyEntryKeys.uuid).equal(keyEntry.getUuid());
       UpdateOperations<ApiKeyEntry> updateOperations = dataStore.createUpdateOperations(ApiKeyEntry.class)
                                                            .set(ApiKeyEntryKeys.name, keyEntry.getName() + "_" + index);
       dataStore.findAndModify(updateQuery, updateOperations, new FindAndModifyOptions());
-      logger.info("API key updated successfully.");
+      log.info("API key updated successfully.");
     } catch (Exception e) {
-      logger.error("Unexpected error occurred while processing API key.", e);
+      log.error("Unexpected error occurred while processing API key.", e);
     }
   }
 }

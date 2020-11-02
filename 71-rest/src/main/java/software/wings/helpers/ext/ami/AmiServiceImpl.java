@@ -41,14 +41,14 @@ public class AmiServiceImpl implements AmiService {
   @Override
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       Map<String, List<String>> tags, Map<String, String> filterMap, int maxNumberOfBuilds) {
-    logger.info("Retrieving images from Aws");
+    log.info("Retrieving images from Aws");
     List<BuildDetails> buildDetails = new ArrayList<>();
     List<Filter> filters = getFilters(tags, filterMap);
     DescribeImagesRequest describeImagesRequest = new DescribeImagesRequest().withFilters(filters);
     DescribeImagesResult describeImagesResult;
     describeImagesResult =
         awsHelperService.desribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
-    logger.info("Sorting on creation time");
+    log.info("Sorting on creation time");
     Collections.sort(
         describeImagesResult.getImages(), Collections.reverseOrder(Comparator.comparing(Image::getCreationDate)));
 
@@ -62,15 +62,15 @@ public class AmiServiceImpl implements AmiService {
     int fetchedImages = limitedImages.size();
 
     if (numberOfNewImages != fetchedImages) {
-      logger.warn("Fetching top {} images only due to limit constrained ", AMI_MAX_RESULTS);
+      log.warn("Fetching top {} images only due to limit constrained ", AMI_MAX_RESULTS);
     }
     Collections.reverse(limitedImages);
 
     limitedImages.forEach(image -> constructBuildDetails(buildDetails, image));
     if (buildDetails.isEmpty()) {
-      logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
+      log.info("No images found matching with the given Region {}, and filters {}", region, filters);
     } else {
-      logger.info("Images found of size {}", buildDetails.size());
+      log.info("Images found of size {}", buildDetails.size());
     }
     return buildDetails;
   }

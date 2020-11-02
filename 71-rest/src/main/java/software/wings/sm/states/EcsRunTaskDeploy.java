@@ -166,7 +166,7 @@ public class EcsRunTaskDeploy extends State {
 
   private ExecutionResponse executeEcsRunTask(
       ExecutionContext context, String activityId, EcsRunTaskDataBag ecsRunTaskDataBag) {
-    setupEcsRunTaskDataBagIfRequired(context, ecsRunTaskDataBag, logger);
+    setupEcsRunTaskDataBagIfRequired(context, ecsRunTaskDataBag, log);
     EcsRunTaskDeployRequest ecsRunTaskDeployRequest = createEcsRunTaskRequest(context, activityId, ecsRunTaskDataBag);
 
     Application application = ecsStateHelper.getApplicationFromExecutionContext(context);
@@ -205,7 +205,7 @@ public class EcsRunTaskDeploy extends State {
             getMapFilePathToContentFromGitFiles(gitFiles, listTaskDefFilePaths);
         ecsRunTaskDataBag.setListTaskDefinitionJson(new ArrayList<>(mapFilePathsToTaskDefinitions.values()));
       } else {
-        logger.error("Git File Config is not created properly : ", gitFileConfig);
+        log.error("Git File Config is not created properly : ", gitFileConfig);
         throw new InvalidRequestException("Git File Config is not created properly");
       }
     }

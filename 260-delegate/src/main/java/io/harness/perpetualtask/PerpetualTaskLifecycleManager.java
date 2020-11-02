@@ -48,9 +48,9 @@ public class PerpetualTaskLifecycleManager {
     try {
       timeLimiter.callWithTimeout(this ::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException tex) {
-      logger.warn("Timed out starting task", tex);
+      log.warn("Timed out starting task", tex);
     } catch (Exception ex) {
-      logger.error("Exception is ", ex);
+      log.error("Exception is ", ex);
     }
   }
 
@@ -60,7 +60,7 @@ public class PerpetualTaskLifecycleManager {
         perpetualTaskExecutor.cleanup(taskId, params);
       }
     } catch (Exception ex) {
-      logger.error("Error while stopping task ", ex);
+      log.error("Error while stopping task ", ex);
     }
   }
 
@@ -72,10 +72,10 @@ public class PerpetualTaskLifecycleManager {
           perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
     } catch (UncheckedTimeoutException tex) {
       perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
-      logger.warn("Timed out starting task", tex);
+      log.warn("Timed out starting task", tex);
     } catch (Exception ex) {
       perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(500).responseMessage("failed").build();
-      logger.error("Exception is ", ex);
+      log.error("Exception is ", ex);
     }
     String perpetualTaskId = taskId.getId();
     PerpetualTaskResponse cachedPerpetualTaskResponse = perpetualTaskResponseCache.getIfPresent(perpetualTaskId);

@@ -56,19 +56,19 @@ public class ArtifactCollectionCallback implements NotifyCallback {
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
-      logger.warn(
+      log.warn(
           "Artifact file collection failed for artifactId: [{}]. Marking content status as NOT_DOWNLOADED to retry next artifac check",
           artifactId);
       if (artifact == null) {
-        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+        log.info("Artifact Id {} was deleted - nothing to do", artifactId);
         return;
       }
       artifactService.updateStatus(
           artifactId, artifact.getAccountId(), APPROVED, FAILED, "Failed to download artifact file");
     } else {
-      logger.info("Artifact collection completed - artifactId : {}", artifactId);
+      log.info("Artifact collection completed - artifactId : {}", artifactId);
       if (artifact == null) {
-        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+        log.info("Artifact Id {} was deleted - nothing to do", artifactId);
         return;
       }
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAccountId(), responseData.getData());
@@ -100,10 +100,10 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.info("Error occurred while collecting content of artifact id {}", artifactId);
+    log.info("Error occurred while collecting content of artifact id {}", artifactId);
     Artifact artifact = artifactService.get(artifactId);
     if (artifact == null) {
-      logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+      log.info("Artifact Id {} was deleted - nothing to do", artifactId);
       return;
     }
     artifactService.updateStatus(artifact.getUuid(), artifact.getAccountId(), APPROVED, FAILED);

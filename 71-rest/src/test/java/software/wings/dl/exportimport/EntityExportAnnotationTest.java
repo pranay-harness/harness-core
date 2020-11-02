@@ -42,7 +42,7 @@ public class EntityExportAnnotationTest extends CategoryTest {
           boolean accountOrAppIdPresent = checkAccountIdOrAppIdPresence(clazz);
           if (!accountOrAppIdPresent && !Schema.class.equals(clazz) && !FeatureFlag.class.equals(clazz)) {
             violationCounter.incrementAndGet();
-            logger.info(
+            log.info(
                 "Violation: Entity class {} is annotated as exportable, but doesn't have 'accountId' or 'appId' field defined.",
                 clazz.getName());
           }
@@ -69,7 +69,7 @@ public class EntityExportAnnotationTest extends CategoryTest {
   private boolean isFieldPresent(Class clazz, String fieldName) {
     Field field = null;
     try {
-      // logger.info("Search for field '{}' in class: {}", fieldName, clazz);
+      // log.info("Search for field '{}' in class: {}", fieldName, clazz);
       field = clazz.getDeclaredField(fieldName);
     } catch (Exception e) {
       // Ignore.
@@ -78,7 +78,7 @@ public class EntityExportAnnotationTest extends CategoryTest {
       return true;
     } else {
       Class superClazz = clazz.getSuperclass();
-      // logger.info("Search for field '{}' in super class: {}", fieldName, superClazz);
+      // log.info("Search for field '{}' in super class: {}", fieldName, superClazz);
       return superClazz != null && isFieldPresent(superClazz, fieldName);
     }
   }
@@ -95,7 +95,7 @@ public class EntityExportAnnotationTest extends CategoryTest {
         morphiaRegistrar.registerClasses(morphiaClasses);
       }
     } catch (Exception e) {
-      logger.error("Failed to initialize morphia object factory", e);
+      log.error("Failed to initialize morphia object factory", e);
       System.exit(1);
     }
 

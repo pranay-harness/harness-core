@@ -43,7 +43,7 @@ public class BuildDtoMapperTest extends CIManagerTest {
     when(graphGenerationService.generateOrchestrationGraphV2(EXECUTION_ID)).thenReturn(getGraph());
 
     CIBuildResponseDTO responseDTO = buildDtoMapper.writeBuildDto(ciBuild, getPipeline());
-    logger.info("Response: {}", responseDTO);
+    log.info("Response: {}", responseDTO);
     assertEquals(responseDTO.getId(), BUILD_ID);
     assertEquals(responseDTO.getTriggerType(), "webhook");
     assertEquals(responseDTO.getEvent(), "pullRequest");
@@ -62,7 +62,7 @@ public class BuildDtoMapperTest extends CIManagerTest {
 
     when(graphGenerationService.generateOrchestrationGraphV2(EXECUTION_ID)).thenReturn(getGraph());
     CIBuildResponseDTO responseDTO = buildDtoMapper.writeBuildDto(ciBuild, getPipeline());
-    logger.info("Response: {}", responseDTO);
+    log.info("Response: {}", responseDTO);
     assertEquals(responseDTO.getId(), BUILD_ID);
     assertEquals(responseDTO.getTriggerType(), "webhook");
     assertEquals(responseDTO.getEvent(), "branch");

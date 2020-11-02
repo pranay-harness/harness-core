@@ -207,10 +207,10 @@ public class ExecutionController {
   private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
     Artifact artifact = artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber);
     if (artifact != null) {
-      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+      log.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());
     } else {
-      logger.warn(
+      log.warn(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
           buildNumber, artifactStream.getUuid());
     }
@@ -267,10 +267,10 @@ public class ExecutionController {
     Artifact artifact =
         artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber, artifactVariables);
     if (artifact != null) {
-      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+      log.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());
     } else {
-      logger.warn(
+      log.warn(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
           buildNumber, artifactStream.getUuid());
     }

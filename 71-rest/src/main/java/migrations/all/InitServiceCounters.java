@@ -28,14 +28,14 @@ public class InitServiceCounters implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Initializing Service Counters");
+    log.info("Initializing Service Counters");
 
     try {
       List<Account> accounts = accountService.listAllAccounts();
       wingsPersistence.delete(
           wingsPersistence.createQuery(Counter.class).field("key").endsWith(ActionType.CREATE_SERVICE.toString()));
 
-      logger.info("Total accounts fetched. Count: {}", accounts.size());
+      log.info("Total accounts fetched. Count: {}", accounts.size());
       for (Account account : accounts) {
         String accountId = account.getUuid();
         if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
@@ -49,12 +49,12 @@ public class InitServiceCounters implements Migration {
 
         Action action = new Action(accountId, ActionType.CREATE_SERVICE);
 
-        logger.info("Initializing Counter. Account Id: {} , ServiceCount: {}", accountId, serviceCount);
+        log.info("Initializing Counter. Account Id: {} , ServiceCount: {}", accountId, serviceCount);
         Counter counter = new Counter(action.key(), serviceCount);
         wingsPersistence.save(counter);
       }
     } catch (Exception e) {
-      logger.error("Error initializing Service counters", e);
+      log.error("Error initializing Service counters", e);
     }
   }
 }

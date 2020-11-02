@@ -26,7 +26,7 @@ public class DeletedAccountStatusMigration implements Migration {
         String accountId = accounts.next().getUuid();
         String accountStatus = accountService.getAccountStatus(accountId);
         if (AccountStatus.DELETED.equals(accountStatus)) {
-          logger.info("Updating account's {} status from DELETED to MARKED-FOR-DELETION", accountId);
+          log.info("Updating account's {} status from DELETED to MARKED-FOR-DELETION", accountId);
           accountService.updateAccountStatus(accountId, AccountStatus.MARKED_FOR_DELETION);
         }
       }

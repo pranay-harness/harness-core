@@ -80,7 +80,7 @@ public class SunburstChartStatsDataFetcher
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
         groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, isClusterGroupBy,
         true);
-    logger.info("getSunburstGridData query: {}", queryData.getQuery());
+    log.info("getSunburstGridData query: {}", queryData.getQuery());
     List<QLCCMEntityGroupBy> modifiedEntityGroupBy = filterOutClusterTypeGroupBy(groupByEntityList);
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
@@ -95,11 +95,11 @@ public class SunburstChartStatsDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in SunburstChartStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in SunburstChartStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

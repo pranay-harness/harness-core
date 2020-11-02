@@ -109,25 +109,25 @@ public class StatsCollectorImpl implements StatsCollector {
     List<Instance> instances = null;
     try {
       instances = dashboardStatisticsService.getAppInstancesForAccount(accountId, timestamp.toEpochMilli());
-      logger.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timestamp);
+      log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timestamp);
 
       Mapper<Collection<Instance>, InstanceStatsSnapshot> instanceMapper = new InstanceMapper(timestamp, accountId);
       InstanceStatsSnapshot stats = instanceMapper.map(instances);
       boolean saved = statService.save(stats);
       if (!saved) {
-        logger.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timestamp);
+        log.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timestamp);
       }
 
       return saved;
 
     } catch (Exception e) {
-      logger.error("Could not create stats. AccountId: {}", accountId, e);
+      log.error("Could not create stats. AccountId: {}", accountId, e);
       return false;
     } finally {
       try {
         usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timestamp.toEpochMilli(), instances);
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Error while publishing metrics for account {}, timestamp {}", accountId, timestamp.toEpochMilli(), e);
       }
     }
@@ -137,8 +137,7 @@ public class StatsCollectorImpl implements StatsCollector {
     List<ServerlessInstance> instances = null;
     try {
       instances = serverlessDashboardService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
-      logger.info(
-          "Fetched Serverless instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
+      log.info("Fetched Serverless instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
 
       Mapper<Collection<ServerlessInstance>, ServerlessInstanceStats> instanceMapper =
           new ServerlessInstanceMapper(timesamp, accountId);
@@ -146,13 +145,13 @@ public class StatsCollectorImpl implements StatsCollector {
       ServerlessInstanceStats stats = instanceMapper.map(instances);
       boolean saved = serverlessInstanceStatService.save(stats);
       if (!saved) {
-        logger.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timesamp);
+        log.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timesamp);
       }
 
       return saved;
 
     } catch (Exception e) {
-      logger.error("Could not create stats. AccountId: {}", accountId, e);
+      log.error("Could not create stats. AccountId: {}", accountId, e);
       return false;
     }
   }

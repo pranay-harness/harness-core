@@ -61,7 +61,7 @@ public class ApprovalUtils {
     executionData.setCurrentStatus(currentStatus);
     executionData.setErrorMsg(message);
 
-    logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
+    log.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.doneWith(approvalId, executionData);
   }
 
@@ -93,7 +93,7 @@ public class ApprovalUtils {
     executionData.setCurrentStatus(approvalData.getCurrentStatus());
     executionData.setErrorMsg("Jira/ServiceNow approval failed: " + errorMessage + " ticket: ");
 
-    logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
+    log.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.doneWith(approvalId, executionData);
   }
 
@@ -132,7 +132,7 @@ public class ApprovalUtils {
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
 
-    logger.info("Saving executionData for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
+    log.info("Saving executionData for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     stateExecutionService.updateStateExecutionData(appId, stateExecutionInstanceId, executionData);
   }
 
@@ -151,25 +151,25 @@ public class ApprovalUtils {
             waitNotifyEngine, action, approvalId, appId, workflowExecutionId, issueStatus, currentStatus,
             stateExecutionInstanceId);
       } else if (issueStatus == ExecutionStatus.PAUSED) {
-        logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
+        log.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
             approvalStateExecutionData.getIssueKey(), issueStatus, currentStatus);
         continuePauseWorkflow(
             stateExecutionService, workflowExecutionId, stateExecutionInstanceId, errorMsg, approvalStateExecutionData);
       } else if (issueStatus == ExecutionStatus.FAILED) {
-        logger.info("Jira/ServiceNow delegate task failed with error: " + errorMsg);
+        log.info("Jira/ServiceNow delegate task failed with error: " + errorMsg);
         failWorkflow(stateExecutionService, waitNotifyEngine, workflowExecutionId, stateExecutionInstanceId, errorMsg,
             approvalStateExecutionData);
       } else if (issueStatus == ExecutionStatus.ERROR) {
-        logger.info("Jira/ServiceNow delegate task has encountered the following error: " + errorMsg);
+        log.info("Jira/ServiceNow delegate task has encountered the following error: " + errorMsg);
       }
     } catch (WingsException exception) {
       exception.addContext(Application.class, appId);
       exception.addContext(WorkflowExecution.class, workflowExecutionId);
       exception.addContext(ApprovalState.class, approvalId);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.warn("Error while getting execution data, approvalId: {}, workflowExecutionId: {} , issueId: {}",
-          approvalId, workflowExecutionId, approvalStateExecutionData.getIssueKey(), exception);
+      log.warn("Error while getting execution data, approvalId: {}, workflowExecutionId: {} , issueId: {}", approvalId,
+          workflowExecutionId, approvalStateExecutionData.getIssueKey(), exception);
     }
   }
 }

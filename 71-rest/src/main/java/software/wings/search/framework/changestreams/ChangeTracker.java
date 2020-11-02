@@ -76,7 +76,7 @@ public class ChangeTracker {
       clientSession = mongoClient.startSession(ClientSessionOptions.builder().build());
     }
     final String databaseName = uri.getDatabase();
-    logger.info("Database is {}", databaseName);
+    log.info("Database is {}", databaseName);
     mongoDatabase =
         mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY).withReadPreference(readPreference);
   }
@@ -88,7 +88,7 @@ public class ChangeTracker {
           mongoDatabase.getCollection(getCollectionName(changeTrackingInfo.getMorphiaClass()))
               .withDocumentClass(DBObject.class)
               .withReadPreference(readPreference);
-      logger.info("Connection details for mongo collection {}", collection.getReadPreference());
+      log.info("Connection details for mongo collection {}", collection.getReadPreference());
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
       ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(
@@ -143,7 +143,7 @@ public class ChangeTracker {
   }
 
   public void stop() {
-    logger.info("Trying to close changeTrackingTasks");
+    log.info("Trying to close changeTrackingTasks");
     for (Future<?> f : changeTrackingTasksFuture) {
       f.cancel(true);
     }

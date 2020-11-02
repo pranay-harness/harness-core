@@ -112,7 +112,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     long seed = System.currentTimeMillis();
-    logger.info("seed: {}", seed);
+    log.info("seed: {}", seed);
     randomizer = new Random(seed);
     cvConfigId = generateUuid();
     serviceId = generateUuid();
@@ -829,7 +829,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
 
     int analysisStartMinute = randomizer.nextInt(100);
     int analysisEndMinute = analysisStartMinute + randomizer.nextInt(102);
-    logger.info("start {} end {}", analysisStartMinute, analysisEndMinute);
+    log.info("start {} end {}", analysisStartMinute, analysisEndMinute);
     final Set<NewRelicMetricDataRecord> metricRecords =
         timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMinute, analysisEndMinute, null, accountId);
     int numOfMinutesAsked = analysisEndMinute - analysisStartMinute + 1;

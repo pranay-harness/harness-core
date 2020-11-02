@@ -81,7 +81,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
       try {
         newReturnValue.addAll(classListLoadingCache.get(property.getRawType()));
       } catch (ExecutionException e) {
-        logger.error("", e);
+        log.error("", e);
       }
     }
     return returnValue;
@@ -96,7 +96,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
       try {
         newReturnValue.addAll(classListLoadingCache.get(baseType.getAnnotated()));
       } catch (ExecutionException e) {
-        logger.error("", e);
+        log.error("", e);
       }
     }
     return newReturnValue;

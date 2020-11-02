@@ -260,12 +260,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
 
     ExecutionResponse executionResponse = executeInternalWithSavedElement(context, activityId);
     if (executionResponse != null) {
-      logger.info("Cloud Formation Rollback. Rollback done via DB stored config for execution: [%s]",
+      log.info("Cloud Formation Rollback. Rollback done via DB stored config for execution: [%s]",
           context.getWorkflowExecutionId());
       return executionResponse;
     }
 
-    logger.warn("Cloud Formation Rollback. Reverting to pre saved element method for execution: [{}]",
+    log.warn("Cloud Formation Rollback. Reverting to pre saved element method for execution: [{}]",
         context.getWorkflowExecutionId());
 
     Optional<CloudFormationRollbackInfoElement> stackElementOptional = getRollbackElement(context);

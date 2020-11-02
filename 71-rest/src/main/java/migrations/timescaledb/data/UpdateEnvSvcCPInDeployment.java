@@ -52,7 +52,7 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
   @Override
   public boolean migrate() {
     if (!timeScaleDBService.isValid()) {
-      logger.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
+      log.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
       return false;
     }
 
@@ -62,15 +62,15 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
       long endTime = queryEndTime - NUM_OF_DAYS * DAY_IN_MILLIS;
       while (queryEndTime > endTime) {
         // perform migration for the day
-        logger.info("Performing migration for [{}]-[{}]", new Date(queryStartTime), new Date(queryEndTime));
+        log.info("Performing migration for [{}]-[{}]", new Date(queryStartTime), new Date(queryEndTime));
         performMigration(queryStartTime, queryEndTime);
         queryEndTime = queryStartTime;
         queryStartTime = queryEndTime - DAY_IN_MILLIS;
       }
-      logger.info("Successfully migrated Env, CloudProvider and Services");
+      log.info("Successfully migrated Env, CloudProvider and Services");
       return true;
     } catch (Exception e) {
-      logger.error("migrate:Failed while performing migration", e);
+      log.error("migrate:Failed while performing migration", e);
       return false;
     }
   }
@@ -98,12 +98,12 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
 
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to performMigration query for [{}]-[{}]", new Date(queryStartTime), new Date(queryEndTime), e);
           throw new TimeScaleDBMigrationException(e);
         } else {
-          logger.warn("Failed trying to performMigration query for [{}]-[{}], retryCount:[{}]",
-              new Date(queryStartTime), new Date(queryEndTime), retryCount);
+          log.warn("Failed trying to performMigration query for [{}]-[{}], retryCount:[{}]", new Date(queryStartTime),
+              new Date(queryEndTime), retryCount);
         }
         retryCount++;
       } finally {
@@ -158,10 +158,10 @@ public class UpdateEnvSvcCPInDeployment implements TimeScaleDBDataMigration {
           }
         } catch (SQLException e) {
           if (retryCount >= MAX_RETRY) {
-            logger.error("Failed to update WFData:[{}]", wfData.getExecutionId());
+            log.error("Failed to update WFData:[{}]", wfData.getExecutionId());
             throw new TimeScaleDBMigrationException(e);
           } else {
-            logger.warn("Failed to update WFData:[{}], retryCount:[{}]", wfData, retryCount);
+            log.warn("Failed to update WFData:[{}], retryCount:[{}]", wfData, retryCount);
           }
           retryCount++;
         }

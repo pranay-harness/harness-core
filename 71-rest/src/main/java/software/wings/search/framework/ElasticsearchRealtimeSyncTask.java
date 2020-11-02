@@ -41,7 +41,7 @@ public class ElasticsearchRealtimeSyncTask {
   }
 
   public boolean run(Queue<ChangeEvent<?>> pendingChangeEvents) throws InterruptedException {
-    logger.info("Initializing change listeners for search entities");
+    log.info("Initializing change listeners for search entities");
     processChanges(pendingChangeEvents);
     elasticsearchSyncHelper.startChangeListeners(getChangeSubscriber());
     changeEventProcessor.startProcessingChangeEvents();

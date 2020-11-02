@@ -182,11 +182,11 @@ public class IndexManagerSession {
         processedCollections.add(collection.getName());
 
         if (entity.noClassnameStored() && !Modifier.isFinal(mc.getClazz().getModifiers())) {
-          logger.error(
+          log.error(
               "No class store collection {} with not final class {}", collection.getName(), mc.getClazz().getName());
         }
         if (!entity.noClassnameStored() && Modifier.isFinal(mc.getClazz().getModifiers())) {
-          logger.error("Class store collection {} with final class {}", collection.getName(), mc.getClazz().getName());
+          log.error("Class store collection {} with final class {}", collection.getName(), mc.getClazz().getName());
         }
 
         processor.process(mc, collection);
@@ -220,7 +220,7 @@ public class IndexManagerSession {
     } catch (NoSuchMethodException exception) {
       ignoredOnPurpose(exception);
     } catch (IllegalAccessException | InvocationTargetException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
 
     creatorsForFieldIndexes(mc, collection, creators);
@@ -319,7 +319,7 @@ public class IndexManagerSession {
     BasicDBObject keys = new BasicDBObject();
 
     if (fields.length == 1 && !fields[0].value().contains(".")) {
-      logger.error("Composite index with only one field {}", fields[0].value());
+      log.error("Composite index with only one field {}", fields[0].value());
     }
 
     for (Field field : fields) {
@@ -362,7 +362,7 @@ public class IndexManagerSession {
   private static void putCreator(Map<String, IndexCreator> creators, IndexCreator newCreator) {
     String indexName = newCreator.name();
     creators.merge(indexName, newCreator, (old, current) -> {
-      logger.error(
+      log.error(
           "Indexes {} and {} have the same name {}", current.getKeys().toString(), old.getKeys().toString(), indexName);
       throw new IndexManagerInspectException();
     });
@@ -376,11 +376,11 @@ public class IndexManagerSession {
       }
 
       if (creator.isSubsequence(newCreator)) {
-        logger.error("Index {} is a subsequence of index {}", newCreator.getOptions().toString(),
+        log.error("Index {} is a subsequence of index {}", newCreator.getOptions().toString(),
             creator.getOptions().toString());
       }
       if (newCreator.isSubsequence(creator)) {
-        logger.error("Index {} is a subsequence of index {}", creator.getOptions().toString(),
+        log.error("Index {} is a subsequence of index {}", creator.getOptions().toString(),
             newCreator.getOptions().toString());
       }
     }
@@ -401,14 +401,14 @@ public class IndexManagerSession {
 
       Migrator migrator = migrators.get(migratorKey);
       if (migrator != null) {
-        logger.info("Execute migration {} for index {}", migrator.getClass().getName(), indexCreator.name());
+        log.info("Execute migration {} for index {}", migrator.getClass().getName(), indexCreator.name());
         migrator.execute(datastore);
       }
     }
 
     switch (mode) {
       case AUTO:
-        logger.warn("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
+        log.warn("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
         for (int i = 0; i < 10; i++) {
           try {
             indexCreator.getCollection().createIndex(indexCreator.getKeys(), indexCreator.getOptions());
@@ -424,11 +424,11 @@ public class IndexManagerSession {
         }
         break;
       case MANUAL:
-        logger.info("{}. Should create index {} {}\n{}", step.incrementAndGet(), indexCreator.getOptions().toString(),
+        log.info("{}. Should create index {} {}\n{}", step.incrementAndGet(), indexCreator.getOptions().toString(),
             indexCreator.getKeys().toString());
         break;
       case INSPECT:
-        logger.error("{}. Should create index {}\nScript: db.{}.createIndex({}, {})", step.incrementAndGet(),
+        log.error("{}. Should create index {}\nScript: db.{}.createIndex({}, {})", step.incrementAndGet(),
             indexCreator.getOptions().get(NAME), indexCreator.getCollection().getName(),
             indexCreator.getKeys().toString(), indexCreator.getOptions().toString());
         break;
@@ -440,14 +440,14 @@ public class IndexManagerSession {
   public void dropIndex(DBCollection collection, String indexName) {
     switch (mode) {
       case AUTO:
-        logger.warn("Dropping index {}", indexName);
+        log.warn("Dropping index {}", indexName);
         collection.dropIndex(indexName);
         break;
       case MANUAL:
-        logger.info("{}. Should drop index {}", step.incrementAndGet(), indexName);
+        log.info("{}. Should drop index {}", step.incrementAndGet(), indexName);
         break;
       case INSPECT:
-        logger.error("{}. Should drop index {}\nScript: db.{}.dropIndex('{}')", step.incrementAndGet(), indexName,
+        log.error("{}. Should drop index {}\nScript: db.{}.dropIndex('{}')", step.incrementAndGet(), indexName,
             collection.getName(), indexName);
         break;
       default:
@@ -538,16 +538,16 @@ public class IndexManagerSession {
               created++;
             }
           } else {
-            logger.error("Failed to create index", mex);
+            log.error("Failed to create index", mex);
           }
         }
       } catch (DuplicateKeyException exception) {
-        logger.error("Because of deployment, a new index with uniqueness flag was introduced. "
+        log.error("Because of deployment, a new index with uniqueness flag was introduced. "
                 + "Current data does not meet this expectation."
                 + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
             exception);
       } catch (RuntimeException exception) {
-        logger.error("Unexpected exception when trying to create index", exception);
+        log.error("Unexpected exception when trying to create index", exception);
       }
     }
     return created;
@@ -582,7 +582,7 @@ public class IndexManagerSession {
                 dropIndex(collection, name);
                 actionPerformed.set(true);
               } catch (RuntimeException ex) {
-                logger.error("Failed to drop index", ex);
+                log.error("Failed to drop index", ex);
               }
             });
           }
@@ -596,9 +596,9 @@ public class IndexManagerSession {
       if (exception.getErrorCode() == 13) {
         throw new IndexManagerReadOnlyException();
       }
-      logger.error("", exception);
+      log.error("", exception);
     } catch (RuntimeException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
 
     return actionPerformed.get();
@@ -641,7 +641,7 @@ public class IndexManagerSession {
                                            .collect(toList());
 
     if (isNotEmpty(obsoleteCollections)) {
-      logger.error("Unknown mongo collections detected: {}\n"
+      log.error("Unknown mongo collections detected: {}\n"
               + "Please create migration to delete them or add them to the whitelist.",
           join(", ", obsoleteCollections));
     }

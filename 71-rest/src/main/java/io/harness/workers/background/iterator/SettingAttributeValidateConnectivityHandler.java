@@ -71,7 +71,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
 
   @Override
   public void handle(SettingAttribute settingAttribute) {
-    logger.info("Received validation connectivity check for setting attribute: {}", settingAttribute.getUuid());
+    log.info("Received validation connectivity check for setting attribute: {}", settingAttribute.getUuid());
     boolean valid = false;
     String errMsg = "";
     try {

@@ -25,14 +25,14 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
 
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) {
-    logger.info("Published batch size is NodeUtilizationMetricsWriter {} ", publishedMessages.size());
+    log.info("Published batch size is NodeUtilizationMetricsWriter {} ", publishedMessages.size());
     List<K8sGranularUtilizationData> k8sGranularUtilizationDataList = new ArrayList<>();
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.NODE_UTILIZATION))
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           NodeMetric nodeUtilizationMetric = (NodeMetric) publishedMessage.getMessage();
-          logger.debug("Node Utilization {} ", nodeUtilizationMetric);
+          log.debug("Node Utilization {} ", nodeUtilizationMetric);
 
           AggregatedUsage aggregatedUsage = nodeUtilizationMetric.getAggregatedUsage();
           if (aggregatedUsage.getMaxCpuNano() > 0) {

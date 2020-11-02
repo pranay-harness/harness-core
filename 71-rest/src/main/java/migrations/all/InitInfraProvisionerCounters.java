@@ -25,7 +25,7 @@ public class InitInfraProvisionerCounters implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Initializing Infrastructure Provisioner Counters");
+    log.info("Initializing Infrastructure Provisioner Counters");
 
     try {
       wingsPersistence.delete(wingsPersistence.createQuery(Counter.class)
@@ -34,7 +34,7 @@ public class InitInfraProvisionerCounters implements Migration {
 
       List<Account> accounts = accountService.listAllAccounts();
 
-      logger.info("Total accounts fetched. Count: {}", accounts.size());
+      log.info("Total accounts fetched. Count: {}", accounts.size());
       for (Account account : accounts) {
         String accountId = account.getUuid();
         if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
@@ -48,13 +48,13 @@ public class InitInfraProvisionerCounters implements Migration {
 
         Action action = new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER);
 
-        logger.info("Initializing Counter. Account Id: {} , Infrastructure Provisioner Count: {}", accountId,
+        log.info("Initializing Counter. Account Id: {} , Infrastructure Provisioner Count: {}", accountId,
             infraProvisionerCount);
         Counter counter = new Counter(action.key(), infraProvisionerCount);
         wingsPersistence.save(counter);
       }
     } catch (Exception e) {
-      logger.error("Error initializing Infrastructure Provisioner counters", e);
+      log.error("Error initializing Infrastructure Provisioner counters", e);
     }
   }
 }

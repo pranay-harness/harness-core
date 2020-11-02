@@ -27,7 +27,7 @@ public class CIExecutionPlanCreatorRegistrar {
   @Inject private ParallelStagePlanCreator parallelStagePlanCreator;
 
   public void register() {
-    logger.info("Start: register execution plan creators");
+    log.info("Start: register execution plan creators");
     register(integrationStagePlanCreator);
     register(ciPipelinePlanCreator);
     register(genericStepPlanCreator);
@@ -35,7 +35,7 @@ public class CIExecutionPlanCreatorRegistrar {
     register(parallelStepPlanCreator);
     register(stagesPlanCreator);
     register(parallelStagePlanCreator);
-    logger.info("Done: register execution plan creators");
+    log.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {
     executionPlanCreatorRegistry.registerCreator(executionPlanCreator, executionPlanCreator);

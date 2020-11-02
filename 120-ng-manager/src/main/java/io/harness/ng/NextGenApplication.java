@@ -71,7 +71,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
+      log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);
     }));
     new NextGenApplication().run(args);
@@ -102,7 +102,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
-    logger.info("Starting Next Gen Application ...");
+    log.info("Starting Next Gen Application ...");
     MaintenanceController.forceMaintenance(true);
     Injector injector = Guice.createInjector(new NextGenModule(appConfig));
 
@@ -171,7 +171,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerQueueListeners(Injector injector) {
-    logger.info("Initializing queue listeners...");
+    log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
@@ -188,7 +188,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerScheduleJobs(Injector injector) {
-    logger.info("Initializing scheduled jobs...");
+    log.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);

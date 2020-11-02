@@ -144,7 +144,7 @@ public class UserGroupUtils {
 
   public static UserGroup createUserGroup(
       Account account, String bearerToken, String rbacUserId, String userGroupPermission) {
-    logger.info("Starting with the ReadOnly Test");
+    log.info("Starting with the ReadOnly Test");
     List<String> userIds = new ArrayList<>();
     userIds.add(rbacUserId);
     AccountPermissions accountPermissions = null;
@@ -159,14 +159,14 @@ public class UserGroupUtils {
     } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_MANAGEMENT.toString())) {
       accountPermissions = buildAccountManagement();
     } else {
-      logger.warn("Unknown permission type found : " + userGroupPermission + ": proceeding with No Permission Type");
+      log.warn("Unknown permission type found : " + userGroupPermission + ": proceeding with No Permission Type");
       accountPermissions = buildNoPermission();
     }
     return UserGroupUtils.createUserGroupWithPermissionAndMembers(account, bearerToken, userIds, accountPermissions);
   }
 
   public static UserGroup createUserGroupAndUpdateWithNotificationSettings(Account account, String bearerToken) {
-    logger.info("Creating a new user group");
+    log.info("Creating a new user group");
     JsonObject groupInfoAsJson = new JsonObject();
     String name = "UserGroup - " + System.currentTimeMillis();
     groupInfoAsJson.addProperty("name", name);
@@ -174,13 +174,13 @@ public class UserGroupUtils {
     UserGroup userGroup = UserGroupUtils.createUserGroup(account, bearerToken, groupInfoAsJson);
     assertThat(userGroup).isNotNull();
 
-    logger.info("Creating a Notification Settings with an email id and slack webhook");
+    log.info("Creating a Notification Settings with an email id and slack webhook");
     String emailId = TestUtils.generateRandomUUID() + "@harness.io";
     String slackWebHook = new ScmSecret().decryptToString(new SecretName("slack_webhook_for_alert"));
     NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
     if (userGroup != null) {
       userGroup.setNotificationSettings(notificationSettings);
-      logger.info("Update user group with notification settings");
+      log.info("Update user group with notification settings");
       userGroup = UserGroupRestUtils.updateNotificationSettings(account, bearerToken, userGroup);
     }
     assertThat(userGroup).isNotNull();

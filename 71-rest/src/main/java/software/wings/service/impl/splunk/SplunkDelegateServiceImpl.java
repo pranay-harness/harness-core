@@ -97,7 +97,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   public boolean validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails, false);
-      logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
+      log.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
       Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
           System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
@@ -113,7 +113,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   public boolean validateConfig(SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
-      logger.info("Validating splunk, url {}, for user {} ", splunkConnectorDTO.getSplunkUrl(),
+      log.info("Validating splunk, url {}, for user {} ", splunkConnectorDTO.getSplunkUrl(),
           splunkConnectorDTO.getUsername());
       Service splunkService = initSplunkService(splunkConnectorDTO);
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
@@ -169,7 +169,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     String query = getQuery(basicQuery, hostNameField, host, isAdvancedQuery);
     addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), query, startTime, endTime);
-    logger.info("triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + query
+    log.info("triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + query
         + " url: " + splunkConfig.getSplunkUrl());
 
     try {
@@ -458,7 +458,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
           splunkConfig.getUsername(), splunkConfig.getPassword(), splunkConfig.getSplunkUrl());
 
     } catch (Exception ex1) {
-      logger.error("Token based splunk connection failed. Trying basic auth", ex1);
+      log.error("Token based splunk connection failed. Trying basic auth", ex1);
       return initSplunkServiceWithBasicAuth(
           splunkConfig.getUsername(), splunkConfig.getPassword(), splunkConfig.getSplunkUrl());
     }
@@ -469,7 +469,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       return initSplunkServiceWithToken(splunkConnectorDTO.getUsername(),
           splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
     } catch (Exception ex1) {
-      logger.error("Token based splunk connection failed. Trying basic auth", ex1);
+      log.error("Token based splunk connection failed. Trying basic auth", ex1);
       return initSplunkServiceWithBasicAuth(splunkConnectorDTO.getUsername(),
           splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
     }

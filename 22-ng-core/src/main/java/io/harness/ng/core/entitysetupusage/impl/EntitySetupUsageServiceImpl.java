@@ -64,7 +64,7 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
     try {
       savedEntitySetupUsage = entityReferenceRepository.save(entitySetupUsage);
     } catch (DuplicateKeyException ex) {
-      logger.info(String.format("Error while saving the reference entity [%s]", ex.getMessage()));
+      log.info(String.format("Error while saving the reference entity [%s]", ex.getMessage()));
       throw new DuplicateFieldException(format("Entity Reference already exists for entity [%s], referredBy [%s]",
           entitySetupUsage.getReferredEntityFQN(), entitySetupUsage.getReferredByEntityFQN()));
     }
@@ -76,8 +76,8 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
     long numberOfRecordsDeleted = 0;
     numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredEntityFQNAndReferredByEntityFQN(
         referredEntityFQN, referredByEntityFQN);
-    logger.info("Deleted {} records for the referred entity {}, referredBy {}", numberOfRecordsDeleted,
-        referredEntityFQN, referredByEntityFQN);
+    log.info("Deleted {} records for the referred entity {}, referredBy {}", numberOfRecordsDeleted, referredEntityFQN,
+        referredByEntityFQN);
     return numberOfRecordsDeleted > 0;
   }
 

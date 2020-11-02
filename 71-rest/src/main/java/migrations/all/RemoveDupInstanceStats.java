@@ -30,7 +30,7 @@ public class RemoveDupInstanceStats implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running migration - remove duplicate entries from `instanceStats` collection");
+    log.info("Running migration - remove duplicate entries from `instanceStats` collection");
 
     try (HIterator<InstanceStatsSnapshot> stats =
              new HIterator<>(persistence.createQuery(InstanceStatsSnapshot.class).fetch())) {
@@ -41,15 +41,15 @@ public class RemoveDupInstanceStats implements Migration {
         boolean added = statsSnapshotSet.add(new UniqueKey(stat.getTimestamp(), stat.getAccountId()));
         if (!added) {
           persistence.delete(stat);
-          logger.info("Deleted: {}", stat.getUuid());
+          log.info("Deleted: {}", stat.getUuid());
           deleteCount++;
         }
       }
 
-      logger.info("Finished RemoveDupInstanceStats Migration. Deleted entries: {}", deleteCount);
+      log.info("Finished RemoveDupInstanceStats Migration. Deleted entries: {}", deleteCount);
 
     } catch (Exception e) {
-      logger.error("Error running RemoveDupInstanceStats migration. ", e);
+      log.error("Error running RemoveDupInstanceStats migration. ", e);
     }
   }
 }

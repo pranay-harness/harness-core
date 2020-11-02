@@ -162,9 +162,9 @@ public class DockerPublicRegistryProcessor {
 
     } else {
       if (publicImageTags == null) {
-        logger.warn("Docker public image tag response was null.");
+        log.warn("Docker public image tag response was null.");
       } else {
-        logger.warn("Docker public image tag response had an empty or missing tag list.");
+        log.warn("Docker public image tag response had an empty or missing tag list.");
       }
       return Collections.emptyList();
     }
@@ -225,7 +225,7 @@ public class DockerPublicRegistryProcessor {
         }
       }
     } catch (IOException e) {
-      logger.warn("Exception occurred while fetching public token", e);
+      log.warn("Exception occurred while fetching public token", e);
     }
     return null;
   }

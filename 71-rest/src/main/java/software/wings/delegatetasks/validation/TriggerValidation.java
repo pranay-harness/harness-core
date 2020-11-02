@@ -31,7 +31,7 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    logger.info("Running validation for task {}", delegateTaskId);
+    log.info("Running validation for task {}", delegateTaskId);
 
     TriggerRequest triggerRequest = (TriggerRequest) (getParameters()[0]);
     TriggerCommandType triggerCommandType = triggerRequest.getTriggerCommandType();
@@ -47,7 +47,7 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
           unhandled(triggerCommandType);
       }
     } catch (Exception ex) {
-      logger.error("Exception occurred while validating trigger task for account {}, triggerCommandType {}",
+      log.error("Exception occurred while validating trigger task for account {}, triggerCommandType {}",
           triggerRequest.getAccountId(), triggerCommandType);
     }
 
@@ -81,7 +81,7 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
     try {
       encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
-      logger.info("Failed to decrypt " + gitConfig, e);
+      log.info("Failed to decrypt " + gitConfig, e);
       return false;
     }
 

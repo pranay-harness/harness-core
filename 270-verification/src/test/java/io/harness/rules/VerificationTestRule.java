@@ -94,7 +94,7 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected void after(List<Annotation> annotations) {
-    logger.info("Stopping servers...");
+    log.info("Stopping servers...");
     closingFactory.stopServers();
   }
 

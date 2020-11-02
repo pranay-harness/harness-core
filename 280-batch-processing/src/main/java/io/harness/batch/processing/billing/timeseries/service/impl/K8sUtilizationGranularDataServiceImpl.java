@@ -61,20 +61,20 @@ public class K8sUtilizationGranularDataServiceImpl {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save K8s Utilization data,[{}],retryCount=[{}], Exception: ",
+          log.error("Failed to save K8s Utilization data,[{}],retryCount=[{}], Exception: ",
               k8sGranularUtilizationDataList, retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
+      log.warn("Not processing K8s Utilization data:[{}]", k8sGranularUtilizationDataList);
     }
     return successfulInsert;
   }
 
   public boolean purgeOldKubernetesUtilData() {
     boolean purgedK8sUtilData = false;
-    logger.info("Purging old k8s util data !!");
+    log.info("Purging old k8s util data !!");
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
 
@@ -84,7 +84,7 @@ public class K8sUtilizationGranularDataServiceImpl {
           statement.execute(PURGE_DATA_QUERY);
           purgedK8sUtilData = true;
         } catch (SQLException e) {
-          logger.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
+          log.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
           retryCount++;
         }
       }
@@ -123,7 +123,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       }
       return instanceIdsList;
     } catch (SQLException e) {
-      logger.error("Error while fetching instanceIds List : exception", e);
+      log.error("Error while fetching instanceIds List : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -165,7 +165,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       }
       return instanceUtilizationDataMap;
     } catch (SQLException e) {
-      logger.error("Error while fetching Aggregated Utilization Data : exception ", e);
+      log.error("Error while fetching Aggregated Utilization Data : exception ", e);
     } finally {
       DBUtils.close(resultSet);
     }

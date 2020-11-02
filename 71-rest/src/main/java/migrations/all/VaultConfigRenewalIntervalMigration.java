@@ -29,7 +29,7 @@ public class VaultConfigRenewalIntervalMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Migrate vault configurations renewal interval");
+    log.info("Migrate vault configurations renewal interval");
     try (HIterator<SecretManagerConfig> iterator =
              new HIterator<>(wingsPersistence.createQuery(SecretManagerConfig.class)
                                  .filter(SecretManagerConfigKeys.encryptionType, VAULT)
@@ -37,16 +37,16 @@ public class VaultConfigRenewalIntervalMigration implements Migration {
       while (iterator.hasNext()) {
         VaultConfig vaultConfig = (VaultConfig) iterator.next();
         try {
-          logger.info("Processing vault {}", vaultConfig.getUuid());
+          log.info("Processing vault {}", vaultConfig.getUuid());
           long renewalInterval = Duration.ofHours(vaultConfig.getRenewIntervalHours()).toMinutes();
           wingsPersistence.updateField(
               SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewalInterval, renewalInterval);
-          logger.info("Updated vault config id {}", vaultConfig.getUuid());
+          log.info("Updated vault config id {}", vaultConfig.getUuid());
         } catch (Exception e) {
-          logger.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);
+          log.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);
         }
       }
     }
-    logger.info("Migration completed for vault config renewal interval");
+    log.info("Migration completed for vault config renewal interval");
   }
 }

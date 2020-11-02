@@ -63,11 +63,11 @@ public class MarketoHelper {
         }
 
       } else {
-        logger.error("Marketo http response reported failure while looking up lead. {}",
+        log.error("Marketo http response reported failure while looking up lead. {}",
             utils.getErrorMsg(existingLeadResponse.getErrors()));
       }
     } else {
-      logger.error("Marketo http response reported null while looking up lead");
+      log.error("Marketo http response reported null while looking up lead");
     }
 
     UserInvite userInvite;
@@ -100,7 +100,7 @@ public class MarketoHelper {
   private retrofit2.Response<Response> createLead(Retrofit retrofit, String email, String userName, Account account,
       String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo, UserInvite userInvite)
       throws IOException {
-    logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
+    log.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
 
     Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
 
@@ -109,14 +109,14 @@ public class MarketoHelper {
 
     retrofit2.Response<Response> response =
         retrofit.create(MarketoRestClient.class).createLead(accessToken, leadRequestWithEmail).execute();
-    logger.info("Created lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
+    log.info("Created lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
     return response;
   }
 
   private retrofit2.Response<Response> updateLead(Retrofit retrofit, int existingLeadId, String email, String userName,
       Account account, String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo,
       UserInvite userInvite) throws IOException {
-    logger.info("Updating lead {} to marketo", existingLeadId);
+    log.info("Updating lead {} to marketo", existingLeadId);
 
     Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
 
@@ -124,7 +124,7 @@ public class MarketoHelper {
         LeadRequestWithId.builder().action("createOrUpdate").lookupField("id").input(Arrays.asList(lead)).build();
     retrofit2.Response<Response> response =
         retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
-    logger.info("Updated lead {} to marketo", existingLeadId);
+    log.info("Updated lead {} to marketo", existingLeadId);
     return response;
   }
 
@@ -180,21 +180,21 @@ public class MarketoHelper {
   private long processLeadResponse(retrofit2.Response<Response> response) {
     long marketoLeadId = 0L;
     if (!response.isSuccessful()) {
-      logger.error(
+      log.error(
           "Error while creating lead in marketo. Error code is {}, message is {}", response.code(), response.message());
       return marketoLeadId;
     }
 
     Response leadResponse = response.body();
     if (!leadResponse.isSuccess()) {
-      logger.error("Marketo http response reported failure while creating lead. {}",
+      log.error("Marketo http response reported failure while creating lead. {}",
           utils.getErrorMsg(leadResponse.getErrors()));
       return marketoLeadId;
     }
 
     List<Response.Result> results = leadResponse.getResult();
     if (isEmpty(results)) {
-      logger.error("Marketo http response reported empty result while creating lead");
+      log.error("Marketo http response reported empty result while creating lead");
       return marketoLeadId;
     }
 
@@ -204,15 +204,15 @@ public class MarketoHelper {
     if (!("updated".equalsIgnoreCase(status) || "created".equalsIgnoreCase(status))) {
       List<Error> reasons = result.getReasons();
       if (isEmpty(reasons)) {
-        logger.error("Marketo reported status {} for lead creation. No error reported in response", status);
+        log.error("Marketo reported status {} for lead creation. No error reported in response", status);
       } else {
         Error error = reasons.get(0);
-        logger.error("Marketo reported status {} for lead creation. Error code is: {}, message is: {}", status,
+        log.error("Marketo reported status {} for lead creation. Error code is: {}, message is: {}", status,
             error.getCode(), error.getMessage());
       }
     }
 
-    logger.info("Marketo returned lead id {}", result.getId());
+    log.info("Marketo returned lead id {}", result.getId());
     return result.getId();
   }
 

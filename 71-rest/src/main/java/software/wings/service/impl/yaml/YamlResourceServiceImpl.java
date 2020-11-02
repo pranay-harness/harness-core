@@ -633,7 +633,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case STRING:
         break;
       default:
-        logger.warn("Unknown SettingVariable type:" + settingVariableType);
+        log.warn("Unknown SettingVariable type:" + settingVariableType);
     }
     return null;
   }

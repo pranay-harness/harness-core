@@ -44,7 +44,7 @@ public class BugsnagResource {
   public RestResponse<Set<BugsnagApplication>> getBugsnagApplications(@QueryParam("accountId") String accountId,
       @QueryParam("settingId") final String settingId, @QueryParam("organizationId") final String orgId)
       throws IOException {
-    logger.info("Fetching bugsnag Applications for accountId {}, orgId {}", accountId, orgId);
+    log.info("Fetching bugsnag Applications for accountId {}, orgId {}", accountId, orgId);
     return new RestResponse<>(
         logVerificationService.getOrgProjectListBugsnag(settingId, orgId, StateType.BUG_SNAG, true));
   }
@@ -55,7 +55,7 @@ public class BugsnagResource {
   @ExceptionMetered
   public RestResponse<Set<BugsnagApplication>> getBugsnagOrganizations(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    logger.info("Fetching bugsnag Organizations for accountId {}", accountId);
+    log.info("Fetching bugsnag Organizations for accountId {}", accountId);
     return new RestResponse<>(
         logVerificationService.getOrgProjectListBugsnag(settingId, "", StateType.BUG_SNAG, false));
   }
@@ -74,7 +74,7 @@ public class BugsnagResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
       @QueryParam("accountId") String accountId, @Valid BugsnagSetupTestData bugsnagSetupTestData) {
-    logger.info("Fetching log Records for verification for accountId : " + accountId
+    log.info("Fetching log Records for verification for accountId : " + accountId
         + " and BugsnagSetupTestData :" + bugsnagSetupTestData);
     return new RestResponse<>(logVerificationService.getTestLogData(accountId, bugsnagSetupTestData));
   }

@@ -46,7 +46,7 @@ public class SetRollbackDurationInDeployment implements TimeScaleDBDataMigration
   @Override
   public boolean migrate() {
     if (!timeScaleDBService.isValid()) {
-      logger.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
+      log.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
       return false;
     }
     int count = 0;
@@ -74,15 +74,15 @@ public class SetRollbackDurationInDeployment implements TimeScaleDBDataMigration
           updateWorkflowExecutionWithRollbackDuration(workflowExecution);
           count++;
           if (count % 100 == 0) {
-            logger.info("Completed migrating workflow execution [{}] records", count);
+            log.info("Completed migrating workflow execution [{}] records", count);
           }
         }
       }
     } catch (Exception e) {
-      logger.warn("Failed to complete rollback duration migration", e);
+      log.warn("Failed to complete rollback duration migration", e);
       return false;
     } finally {
-      logger.info("Completed updating [{}] records", count);
+      log.info("Completed updating [{}] records", count);
     }
     return true;
   }
@@ -109,25 +109,24 @@ public class SetRollbackDurationInDeployment implements TimeScaleDBDataMigration
         queryStatement.setString(1, workflowExecution.getUuid());
         queryResult = queryStatement.executeQuery();
         if (queryResult != null && queryResult.next()) {
-          logger.info("WorkflowExecution found:[{}],updating it", workflowExecution.getUuid());
+          log.info("WorkflowExecution found:[{}],updating it", workflowExecution.getUuid());
           updateDataInTimescaleDB(workflowExecution, updateStatement, rollbackDuration);
         }
 
         successful = true;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
+          log.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
         } else {
-          logger.info(
-              "Failed to update workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
+          log.info("Failed to update workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
         }
         retryCount++;
       } catch (Exception e) {
-        logger.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
+        log.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
         retryCount = MAX_RETRY + 1;
       } finally {
         DBUtils.close(queryResult);
-        logger.info("Total update time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
+        log.info("Total update time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
             workflowExecution.getUuid());
       }
     }

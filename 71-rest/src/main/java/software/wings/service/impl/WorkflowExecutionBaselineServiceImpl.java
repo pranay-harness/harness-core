@@ -55,7 +55,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
             existingBaselines.size() == 1, "found more than 1 baselines for " + workflowExecutionBaseline);
         WorkflowExecutionBaseline executionBaseline = existingBaselines.get(0);
         String workflowExecutionId = executionBaseline.getWorkflowExecutionId();
-        logger.info("marking {} to not to be baseline", workflowExecutionId);
+        log.info("marking {} to not to be baseline", workflowExecutionId);
         wingsPersistence.updateField(WorkflowExecution.class, workflowExecutionId, "isBaseline", false);
 
         // mark workflows in pipeline to be baseline
@@ -80,7 +80,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
         wingsPersistence.save(workflowExecutionBaseline);
       }
 
-      logger.info("marking {} to be baseline", workflowExecutionBaseline);
+      log.info("marking {} to be baseline", workflowExecutionBaseline);
       wingsPersistence.updateField(
           WorkflowExecution.class, workflowExecutionBaseline.getWorkflowExecutionId(), "isBaseline", isBaseline);
       // update metric and log data's ttl

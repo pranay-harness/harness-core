@@ -35,7 +35,7 @@ public class GcpValidationTaskHandler implements TaskHandler {
         return validateGcpServiceAccountKeyCredential(gcpRequest);
       }
     } catch (Exception ex) {
-      logger.error("Failed while validating credentials for GCP", ex);
+      log.error("Failed while validating credentials for GCP", ex);
       return getFailedGcpResponse(ex);
     }
   }

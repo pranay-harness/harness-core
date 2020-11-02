@@ -37,19 +37,19 @@ public class AddReplCtrlNameToKubeSetupProperties implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      logger.info("No applications found");
+      log.info("No applications found");
       return;
     }
 
-    logger.info("Updating {} applications", apps.size());
+    log.info("Updating {} applications", apps.size());
     for (Application app : apps) {
-      logger.info("Updating app {}", app.getUuid());
+      log.info("Updating app {}", app.getUuid());
       List<Workflow> workflows =
           workflowService
               .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, app.getUuid()).build())
@@ -58,10 +58,10 @@ public class AddReplCtrlNameToKubeSetupProperties implements Migration {
       for (Workflow workflow : workflows) {
         updateWorkflowsWithReplCtrlName(workflow, KUBERNETES_SETUP);
       }
-      logger.info("Completed updating app {}", app.getUuid());
+      log.info("Completed updating app {}", app.getUuid());
     }
 
-    logger.info("Updated all apps");
+    log.info("Updated all apps");
   }
 
   private void updateWorkflowsWithReplCtrlName(Workflow workflow, StateType stateType) {
@@ -93,11 +93,11 @@ public class AddReplCtrlNameToKubeSetupProperties implements Migration {
 
     if (workflowModified) {
       try {
-        logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+        log.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
         workflowService.updateWorkflow(workflow, false);
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("Error updating workflow", e);
+        log.error("Error updating workflow", e);
       }
     }
   }

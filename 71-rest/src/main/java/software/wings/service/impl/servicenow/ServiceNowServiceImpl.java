@@ -132,7 +132,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(
           "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
@@ -152,7 +152,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
@@ -175,7 +175,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowConfig = getServiceNowConfig(accountId, connectorId);
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      log.error("Error getting ServiceNow connector for ID: {}", connectorId);
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
@@ -199,7 +199,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowConfig = getServiceNowConfig(accountId, approvalParams.getSnowConnectorId());
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
+      log.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
 
@@ -232,7 +232,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig =
           getServiceNowConfig(approvalPollingJobEntity.getAccountId(), approvalPollingJobEntity.getConnectorId());
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
+      log.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
@@ -260,13 +260,13 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       return checkApprovalStatus(approvalPollingJobEntity, taskParameters, serviceNowDelegateService);
 
     } catch (ServiceNowException sne) {
-      logger.error("Exception in servicenow approval", sne);
+      log.error("Exception in servicenow approval", sne);
       ServiceNowExecutionData serviceNowExecutionData =
           ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
       serviceNowExecutionData.setErrorMsg(sne.getMessage());
       return serviceNowExecutionData;
     } catch (WingsException we) {
-      logger.error("Exception in servicenow approval", we);
+      log.error("Exception in servicenow approval", we);
       return ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.ERROR).build();
     }
   }
@@ -315,13 +315,13 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     try {
       serviceNowExecutionData = getApprovalStatus(entity);
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           "Error occurred while polling issue status. Continuing to poll next minute. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
           approvalId, workflowExecutionId, entity.getIssueNumber(), ex);
       return;
     }
     ExecutionStatus issueStatus = serviceNowExecutionData.getExecutionStatus();
-    logger.info("Issue: {} Status from SNOW: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
+    log.info("Issue: {} Status from SNOW: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
         entity.getIssueNumber(), issueStatus, serviceNowExecutionData.getCurrentState(), approvalId,
         workflowExecutionId);
 

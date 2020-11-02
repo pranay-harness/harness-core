@@ -100,7 +100,7 @@ public class InstanceQueryHelper {
             query.field("envId").in(entityIds);
             break;
           default:
-            logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+            log.error("EntityType {} not supported in query", tagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
@@ -116,7 +116,7 @@ public class InstanceQueryHelper {
       case ENVIRONMENT:
         return EntityType.ENVIRONMENT;
       default:
-        logger.error("Unsupported entity type {} for tag ", entityType);
+        log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
     }
   }

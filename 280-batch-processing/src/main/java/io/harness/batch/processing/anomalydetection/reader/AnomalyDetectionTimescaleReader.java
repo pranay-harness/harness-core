@@ -33,7 +33,7 @@ public abstract class AnomalyDetectionTimescaleReader
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    logger.debug("Time Series Reader ended.");
+    log.debug("Time Series Reader ended.");
     return ExitStatus.COMPLETED;
   }
 }

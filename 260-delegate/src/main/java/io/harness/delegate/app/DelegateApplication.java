@@ -118,12 +118,12 @@ public class DelegateApplication {
       java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
 
       initializeLogging();
-      logger.info("Starting Delegate");
-      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+      log.info("Starting Delegate");
+      log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
       DelegateApplication delegateApplication = new DelegateApplication();
       delegateApplication.run(configuration, watcherProcess);
     } catch (RuntimeException | IOException exception) {
-      logger.error("Delegate process initialization failed", exception);
+      log.error("Delegate process initialization failed", exception);
       throw exception;
     }
   }
@@ -194,7 +194,7 @@ public class DelegateApplication {
     addShutdownHook(injector, messageService);
 
     if (configuration.isGrpcServiceEnabled()) {
-      logger.info("Initializing gRPC server...");
+      log.info("Initializing gRPC server...");
       ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
@@ -202,7 +202,7 @@ public class DelegateApplication {
 
     boolean watched = watcherProcess != null;
     if (watched) {
-      logger.info("Sending watcher {} new delegate process ID: {}", watcherProcess, processId);
+      log.info("Sending watcher {} new delegate process ID: {}", watcherProcess, processId);
       messageService.writeMessageToChannel(WATCHER, watcherProcess, NEW_DELEGATE, processId);
       Map<String, Object> watcherData = new HashMap<>();
       watcherData.put(WATCHER_HEARTBEAT, System.currentTimeMillis());
@@ -223,21 +223,21 @@ public class DelegateApplication {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
-      logger.info("Message service has been closed.");
+      log.info("Message service has been closed.");
 
       injector.getInstance(ExecutorService.class).shutdown();
       injector.getInstance(EventPublisher.class).shutdown();
-      logger.info("Executor services have been shut down.");
+      log.info("Executor services have been shut down.");
 
       injector.getInstance(AsyncHttpClient.class).close();
-      logger.info("Async HTTP client has been closed.");
+      log.info("Async HTTP client has been closed.");
 
       ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
       if (loggerFactory instanceof LoggerContext) {
         LoggerContext context = (LoggerContext) loggerFactory;
         context.stop();
       }
-      logger.info("Log manager has been shutdown and logs have been flushed.");
+      log.info("Log manager has been shutdown and logs have been flushed.");
     }));
   }
 }

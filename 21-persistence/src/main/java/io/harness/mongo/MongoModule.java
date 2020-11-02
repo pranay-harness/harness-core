@@ -60,7 +60,7 @@ public class MongoModule extends AbstractModule {
       registerLogger(MorphiaLoggerFactory.class);
     } catch (Exception e) {
       // happens when MorphiaLoggerFactory.get has already been called.
-      logger.warn("Failed to register logger", e);
+      log.warn("Failed to register logger", e);
     }
   }
 

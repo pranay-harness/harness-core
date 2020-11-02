@@ -815,7 +815,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public void populatePhaseStepIds(PhaseStep phaseStep) {
     if (phaseStep.getSteps() == null) {
-      logger.error("Incorrect arguments to populate phaseStepIds: {}", phaseStep);
+      log.error("Incorrect arguments to populate phaseStepIds: {}", phaseStep);
       return;
     }
     phaseStep.setStepsIds(phaseStep.getSteps().stream().map(GraphNode::getId).collect(toList()));
@@ -824,17 +824,17 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void populatePhaseSteps(PhaseStep phaseStep, Graph graph) {
     if (phaseStep == null || phaseStep.getUuid() == null || graph == null || graph.getSubworkflows() == null
         || graph.getSubworkflows().get(phaseStep.getUuid()) == null) {
-      logger.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
+      log.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
       return;
     }
     if (isEmpty(phaseStep.getStepsIds())) {
-      //      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
+      //      log.info("Empty stepList for the phaseStep: {}", phaseStep);
       return;
     }
 
     Graph subWorkflowGraph = graph.getSubworkflows().get(phaseStep.getUuid());
     if (subWorkflowGraph == null) {
-      logger.info("No subworkflow found for the phaseStep: {}", phaseStep);
+      log.info("No subworkflow found for the phaseStep: {}", phaseStep);
       return;
     }
 

@@ -14,18 +14,18 @@ public class CVDataCollectionJob implements Handler<Account> {
   @Override
   public void handle(Account account) {
     final String accountId = account.getUuid();
-    logger.debug("starting processing cv task for account id {}", accountId);
+    log.debug("starting processing cv task for account id {}", accountId);
     long startTime = System.currentTimeMillis();
     continuousVerificationService.processNextCVTasks(accountId);
-    logger.info("[processNextCVTasks] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[processNextCVTasks] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.expireLongRunningCVTasks(accountId);
-    logger.info("[expireLongRunningCVTasks] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[expireLongRunningCVTasks] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.retryCVTasks(accountId);
-    logger.info("[retryCVTasks] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[retryCVTasks] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
   }
 }

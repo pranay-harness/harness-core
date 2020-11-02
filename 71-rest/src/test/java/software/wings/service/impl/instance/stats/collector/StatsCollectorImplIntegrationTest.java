@@ -123,7 +123,7 @@ public class StatsCollectorImplIntegrationTest extends IntegrationTestBase {
         ImmutableMap.of("accountId", accountId, "fromTsMillis", String.valueOf(start.toEpochMilli()), "toTsMillis",
             String.valueOf(end.toEpochMilli())));
 
-    logger.info("Timeline Url: {}", url);
+    log.info("Timeline Url: {}", url);
     WebTarget target = client.target(url);
 
     RestResponse<InstanceTimeline> restResponse =
@@ -166,7 +166,7 @@ public class StatsCollectorImplIntegrationTest extends IntegrationTestBase {
       }
       return uriBuilder.build().toString();
     } catch (URISyntaxException uriSyntaxException) {
-      logger.error("Either the path or the baseUrl are probably incorrect.");
+      log.error("Either the path or the baseUrl are probably incorrect.");
       throw uriSyntaxException;
     }
   }

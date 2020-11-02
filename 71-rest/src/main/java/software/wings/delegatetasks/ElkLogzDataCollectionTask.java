@@ -62,7 +62,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     this.dataCollectionInfo = (LogDataCollectionInfo) parameters;
-    logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(dataCollectionInfo.getStateType())
@@ -86,7 +86,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -161,7 +161,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                                               : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                         .queryType(elkDataCollectionInfo.getQueryType())
                         .build();
-                logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
+                log.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
                     elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest, apiCallLog,
                     ElkDelegateServiceImpl.MAX_RECORDS);
@@ -187,7 +187,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                         .queryType(logzDataCollectionInfo.getQueryType())
                         .build();
 
-                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
+                log.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
                     logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest, apiCallLog);
                 hostnameField = logzDataCollectionInfo.getHostnameField();
@@ -216,9 +216,9 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   timestampField, timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute,
                   is24X7Task(), dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
               logElements.addAll(logRecords);
-              logger.info("Added {} records to logElements", logRecords.size());
+              log.info("Added {} records to logElements", logRecords.size());
             } catch (Exception pe) {
-              logger.info("Exception occured while parsing elk response");
+              log.info("Exception occured while parsing elk response");
               if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 taskResult.setErrorMessage("ELK failed search job " + RETRIES + " times");
@@ -234,7 +234,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
               dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId,
               logElements);
-          logger.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
+          log.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
               + logElements.size() + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
           break;
@@ -247,18 +247,18 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
           }
           if (ex instanceof VerificationOperationException || !(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
           } else {
-            logger.warn("error fetching elk/logz logs. retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
+            log.warn("error fetching elk/logz logs. retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s", ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
       }
       if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
-        logger.info("Failed Data collection for ELK collection task so quitting the task with StateExecutionId {}",
+        log.info("Failed Data collection for ELK collection task so quitting the task with StateExecutionId {}",
             dataCollectionInfo.getStateExecutionId());
         completed.set(true);
       } else {
@@ -267,8 +267,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         if (dataCollectionInfo.getCollectionTime() <= 0) {
           // We are done with all data collection, so setting task status to success and quitting.
-          logger.info(
-              "Completed ELK collection task. So setting task status to success and quitting. StateExecutionId {}",
+          log.info("Completed ELK collection task. So setting task status to success and quitting. StateExecutionId {}",
               dataCollectionInfo.getStateExecutionId());
           completed.set(true);
           taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
@@ -276,7 +275,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       }
 
       if (completed.get()) {
-        logger.info("Shutting down ELK/LOGZ collection " + dataCollectionInfo.getStateExecutionId());
+        log.info("Shutting down ELK/LOGZ collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
       }
     }
@@ -348,7 +347,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       }
 
       if (is24x7Task && (timeStampValue < collectionStartTime || timeStampValue > collectionEndTime)) {
-        logger.info("received response outside the time range");
+        log.info("received response outside the time range");
         continue;
       }
 

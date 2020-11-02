@@ -58,7 +58,7 @@ public class PipelineStatsDataFetcher
       case Application:
         return "appId";
       default:
-        logger.warn("Unknown aggregation type" + aggregation);
+        log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
@@ -94,7 +94,7 @@ public class PipelineStatsDataFetcher
       case APPLICATION:
         return QLPipelineEntityAggregation.Application;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

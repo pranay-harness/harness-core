@@ -43,7 +43,7 @@ public class CeProductMetricsTasklet implements Tasklet {
                           .minus(3, ChronoUnit.DAYS);
       Instant end = CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE)
                         .minus(3, ChronoUnit.DAYS);
-      logger.info("Sending CE account traits through Segment group call.");
+      log.info("Sending CE account traits through Segment group call.");
       sendStatsToSegment(accountId, start, end);
     }
     return null;
@@ -56,7 +56,7 @@ public class CeProductMetricsTasklet implements Tasklet {
     Analytics analytics = Analytics.builder(writeKey).build();
     String companyName = account.getCompanyName();
     if (null == companyName) {
-      logger.info("Comapny name is null account {} {} {}", account.getUuid(), companyName, account.getAccountName());
+      log.info("Comapny name is null account {} {} {}", account.getUuid(), companyName, account.getAccountName());
       companyName = account.getAccountName();
     }
     ImmutableMap.Builder<String, Object> groupTraitsMapBuilder =
@@ -100,6 +100,6 @@ public class CeProductMetricsTasklet implements Tasklet {
                           .anonymousId(accountId)
                           .timestamp(Date.from(start))
                           .traits(groupTraitsMapBuilder.build()));
-    logger.info("Sent CE account traits through Segment group call.");
+    log.info("Sent CE account traits through Segment group call.");
   }
 }

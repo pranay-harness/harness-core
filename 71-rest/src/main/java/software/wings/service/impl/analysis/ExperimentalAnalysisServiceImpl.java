@@ -242,7 +242,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   @Override
   public void updateMismatchStatusForExperimentalRecord(String stateExecutionId, Integer analysisMinute) {
     if (stateExecutionId == null || analysisMinute == null) {
-      logger.info("Cannot update experimental status for state execution id null");
+      log.info("Cannot update experimental status for state execution id null");
       return;
     }
     ExperimentalMetricAnalysisRecord experimentalMetricAnalysisRecord =
@@ -266,12 +266,12 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   private void validateActualAndExperimentalRecords(ExperimentalMetricAnalysisRecord experimentalAnalysisRecord,
       TimeSeriesMLAnalysisRecord analysisRecord, String stateExecutionId) {
     if (analysisRecord == null) {
-      logger.info("Actual analysis not done for this state execution id: {}", stateExecutionId);
+      log.info("Actual analysis not done for this state execution id: {}", stateExecutionId);
       throw new InvalidRequestException("Actual analysis not done for this state execution id");
     }
 
     if (experimentalAnalysisRecord == null) {
-      logger.info("Experimental analysis not done for this state execution id: {}", stateExecutionId);
+      log.info("Experimental analysis not done for this state execution id: {}", stateExecutionId);
       throw new InvalidRequestException("Experimental analysis not done for this state execution id");
     }
 
@@ -279,12 +279,12 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     experimentalAnalysisRecord.decompress(false);
 
     if (isEmpty(analysisRecord.getTransactions())) {
-      logger.info("No transactions recorded for actual analysis of state execution id: {}", stateExecutionId);
+      log.info("No transactions recorded for actual analysis of state execution id: {}", stateExecutionId);
       throw new InvalidRequestException("No transactions recorded for actual analysis");
     }
 
     if (isEmpty(experimentalAnalysisRecord.getTransactions())) {
-      logger.info("Experimental transactions not found: {}", stateExecutionId);
+      log.info("Experimental transactions not found: {}", stateExecutionId);
       throw new InvalidRequestException("No transactions recorded for experimental analysis");
     }
   }
@@ -504,7 +504,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
 
   @Override
   public List<ExperimentalMessageComparisonResult> getMessagePairsToVote(String serviceId) {
-    logger.info("Getting msg pairs to vote {}", serviceId);
+    log.info("Getting msg pairs to vote {}", serviceId);
     List<ExperimentalMessageComparisonResult> messagesToShow = new ArrayList<>();
     User currentUser = UserThreadLocal.get();
 
@@ -519,10 +519,10 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
                 .addFilter(ExperimentalMessageComparisonResultKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
                 .addFilter(ExperimentalMessageComparisonResultKeys.numVotes, Operator.LT, 3)
                 .build();
-        logger.info("Querying GDS for serviceID {}, cvConfigId {}", serviceId, cvConfiguration.getUuid());
+        log.info("Querying GDS for serviceID {}, cvConfigId {}", serviceId, cvConfiguration.getUuid());
         List<ExperimentalMessageComparisonResult> comparisonResults =
             dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
-        logger.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
+        log.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
             comparisonResults.size(), serviceId, cvConfiguration.getUuid());
         if (isNotEmpty(comparisonResults)) {
           for (ExperimentalMessageComparisonResult result : comparisonResults) {
@@ -543,7 +543,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         }
       }
     }
-    logger.info("Returning {} msg pairs to vote. serviceID {}", messagesToShow.size(), serviceId);
+    log.info("Returning {} msg pairs to vote. serviceID {}", messagesToShow.size(), serviceId);
     return messagesToShow;
   }
 

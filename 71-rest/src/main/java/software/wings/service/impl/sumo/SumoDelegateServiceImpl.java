@@ -60,20 +60,20 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
   @Override
   public boolean validateConfig(SumoConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
-    logger.info("Starting config validation for SumoConfig : " + config);
+    log.info("Starting config validation for SumoConfig : " + config);
     String query = "*exception*";
     String startTime = String.valueOf(Timestamp.currentMinuteBoundary() - 1);
     String endTime = String.valueOf(Timestamp.currentMinuteBoundary());
     getSumoClient(config, encryptedDataDetails, encryptionService)
         .createSearchJob(query, startTime, endTime, TimeZone.getDefault().getID());
-    logger.info("Valid config provided");
+    log.info("Valid config provided");
     return true;
   }
 
   @Override
   public List<LogElement> getLogSample(
       SumoConfig config, String index, List<EncryptedDataDetail> encryptedDataDetails, int duration) {
-    logger.info("Starting to fetch sample log data for Sumo with config : " + config);
+    log.info("Starting to fetch sample log data for Sumo with config : " + config);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(duration);
     long endTime = Timestamp.currentMinuteBoundary();
     String query = "*exception*";
@@ -89,7 +89,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   public VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SumoConfig config, String query,
       String hostNameField, String hostName, List<EncryptedDataDetail> encryptedDataDetails,
       ThirdPartyApiCallLog apiCallLog) {
-    logger.info("Starting to fetch test log data by host for sumo logic");
+    log.info("Starting to fetch test log data by host for sumo logic");
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(accountId, null);
     }
@@ -142,7 +142,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       searchQuery = searchQuery + " | timeslice " + timeSlice;
     }
 
-    logger.info("Search query to be used in sumoLogic : " + searchQuery);
+    log.info("Search query to be used in sumoLogic : " + searchQuery);
 
     Long requestTimeStamp = 0L;
     try {
@@ -169,7 +169,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       int messageCount = searchJobStatusResponse.getMessageCount() > maxMessageCount
           ? maxMessageCount
           : searchJobStatusResponse.getMessageCount();
-      logger.info("Search job Status Response received from SumoLogic with message Count : "
+      log.info("Search job Status Response received from SumoLogic with message Count : "
           + searchJobStatusResponse.getMessageCount());
       return getMessagesForSearchJob(dataCollectionInfo, messageCount, sumoClient, searchJobId, 0, 0,
           Math.min(messageCount, 5), logCollectionMinute, is247Task);
@@ -179,7 +179,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           OffsetDateTime.now().toInstant().toEpochMilli(), sumoServerException.getHTTPStatus(), FieldType.TEXT);
       if (sumoServerException.getHTTPStatus() == RATE_LIMIT_STATUS) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
-        logger.info("Encountered Rate limiting from sumo. Sleeping {} seconds for logCollectionMin {}", 30 + randomNum,
+        log.info("Encountered Rate limiting from sumo. Sleeping {} seconds for logCollectionMin {}", 30 + randomNum,
             logCollectionMinute);
         sleep(DATA_COLLECTION_RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
       }
@@ -280,7 +280,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
       // Get the latest search job status.
       searchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
-      logger.info("Waiting on search job ID: " + searchJobId + " status: " + searchJobStatusResponse.getState());
+      log.info("Waiting on search job ID: " + searchJobId + " status: " + searchJobStatusResponse.getState());
     }
     if (searchJobStatusResponse.getState().equals("CANCELLED")) {
       throw new CancellationException("The job was cancelled by sumoLogic");

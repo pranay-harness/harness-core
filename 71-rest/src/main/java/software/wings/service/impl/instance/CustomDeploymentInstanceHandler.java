@@ -69,7 +69,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
   private void syncInstancesInternal(String appId, String infraMappingId,
       List<DeploymentSummary> newDeploymentSummaries, boolean rollback, ShellScriptProvisionExecutionData response,
       InstanceSyncFlow instanceSyncFlow) {
-    logger.info("Performing Custom Deployment Type Instance sync via [{}], Infrastructure Mapping : [{}]",
+    log.info("Performing Custom Deployment Type Instance sync via [{}], Infrastructure Mapping : [{}]",
         instanceSyncFlow, infraMappingId);
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     validateInfraMapping(infrastructureMapping);
@@ -103,8 +103,8 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
     SetView<String> instancesToBeDeleted = Sets.difference(instancesInDbMap.keySet(), latestHostInfoMap.keySet());
 
-    logger.info("Instances to be added {}", instancesToBeAdded);
-    logger.info("Instances to be deleted {}", instancesToBeDeleted);
+    log.info("Instances to be added {}", instancesToBeAdded);
+    log.info("Instances to be deleted {}", instancesToBeDeleted);
 
     Set<String> instanceIdsForDeletion = instancesInDbMap.entrySet()
                                              .stream()
@@ -121,7 +121,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
       if (isEmpty(newDeploymentSummaries)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
-          logger.warn("Couldn't find an instance from a previous deployment");
+          log.warn("Couldn't find an instance from a previous deployment");
           return;
         }
         DeploymentSummary deploymentSummaryFromPrevious =

@@ -48,11 +48,11 @@ public class ArtifactLabelEvaluator extends LateBindingMap {
         if (labelMap.isPresent() && labelMap.get().containsKey(labelKey)) {
           return labelMap.get().get(labelKey);
         } else {
-          logger.error("Label key + [" + labelKey + "] for buildNumber + [" + buildNo + "]");
+          log.error("Label key + [" + labelKey + "] for buildNumber + [" + buildNo + "]");
           return labelKey;
         }
       } else {
-        logger.error("Labels list is empty for buildNumber + [" + buildNo + "]");
+        log.error("Labels list is empty for buildNumber + [" + buildNo + "]");
         return labelKey;
       }
     }

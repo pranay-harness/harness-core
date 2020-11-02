@@ -123,7 +123,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   @Override
   public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {
-    logger.info("Collecting build details type {} and source name {} ", artifactStream.getArtifactStreamType(),
+    log.info("Collecting build details type {} and source name {} ", artifactStream.getArtifactStreamType(),
         artifactStream.getSourceName());
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
@@ -145,7 +145,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
-        logger.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
+        log.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
             artifactStream.getUuid());
         // TODO:: mark inactive maybe
         int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
@@ -185,9 +185,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     waitNotifyEngine.waitForAllOn(GENERAL,
         new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
-    logger.info("Queuing delegate task for artifactStream with waitId {}", waitId);
+    log.info("Queuing delegate task for artifactStream with waitId {}", waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
-    logger.info("Queued delegate taskId {} for artifactStream", taskId);
+    log.info("Queued delegate taskId {} for artifactStream", taskId);
   }
 
   @Override

@@ -112,14 +112,14 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
     InfrastructureDefinition infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
     assertThat(infrastructureDefinition).isNotNull();
-    logger.info("Created basic entities");
+    log.info("Created basic entities");
 
     // We now have the app, service, env and infra def fully setup.
     // Find account administrator user group.
     List<UserGroup> userGroupLists = UserGroupRestUtils.getUserGroups(getAccount(), bearerToken);
     String userGroupId = userGroupLists.get(0).getUuid();
     assertThat(userGroupId).isNotNull();
-    logger.info("User group: {} [{}]", userGroupLists.get(0).getName(), userGroupId);
+    log.info("User group: {} [{}]", userGroupLists.get(0).getName(), userGroupId);
 
     List<PhaseStep> phaseSteps1 =
         asList(aPhaseStep(ENABLE_SERVICE)
@@ -157,7 +157,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
             .build());
     phaseSteps2.get(0).setName("PHASE STEP 1");
 
-    logger.info("Creating workflow...");
+    log.info("Creating workflow...");
     Workflow workflow = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Skip Step Workflow - " + generateUuid() + " - " + System.currentTimeMillis())
@@ -201,7 +201,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
                     .build())
             .build());
     assertThat(workflow).isNotNull();
-    logger.info("Created workflow");
+    log.info("Created workflow");
 
     PipelineStage approvalStage =
         PipelineStage.builder()
@@ -234,7 +234,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
     // Add the pipeline variable using an approval stage.
     List<PipelineStage> pipelineStages = asList(approvalStage, workflowStage);
 
-    logger.info("Creating pipeline...");
+    log.info("Creating pipeline...");
     pipeline = PipelineRestUtils.createPipeline(application.getAppId(),
         Pipeline.builder()
             .accountId(application.getAccountId())
@@ -244,7 +244,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
             .build(),
         getAccount().getUuid(), bearerToken);
     assertThat(pipeline).isNotNull();
-    logger.info("Created pipeline");
+    log.info("Created pipeline");
   }
 
   @Test
@@ -273,10 +273,10 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
         bearerToken, application.getAppId(), environment.getUuid(), pipeline.getUuid(), executionArgs);
     assertThat(pipelineExecution).isNotNull();
     String executionId = (String) pipelineExecution.get("uuid");
-    logger.info("Started pipeline execution: {}", executionId);
+    log.info("Started pipeline execution: {}", executionId);
 
     // Wait for the workflow execution to reach PAUSED state, ie. waiting for approval.
-    logger.info("Waiting for approval status: {}", executionId);
+    log.info("Waiting for approval status: {}", executionId);
     awaitForStatus(executionId, singletonList(ExecutionStatus.PAUSED));
     Map<Object, Object> pipelineExecutionMap = getPipelineExecutionMap(executionId);
     assertThat(pipelineExecutionMap).isNotNull();
@@ -288,21 +288,21 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
                       .get("stateExecutionData"))
             .get("approvalId");
     assertThat(approvalId).isNotNull();
-    logger.info("Got approval: {}", approvalId);
+    log.info("Got approval: {}", approvalId);
 
     // Approve the pipeline and set the pipeline variable.
-    logger.info("Approving pipeline execution: {}, approval: {}", executionId, approvalId);
+    log.info("Approving pipeline execution: {}, approval: {}", executionId, approvalId);
     ExecutionRestUtils.approvePipeline(bearerToken, getAccount(), application.getUuid(), executionId, approvalId,
         ApprovalDetails.Action.APPROVE,
         singletonList(new NameValuePair(APPROVAL_VARIABLE_NAME, Boolean.toString(approvalVariableValue), null)));
-    logger.info("Approved pipeline");
+    log.info("Approved pipeline");
 
     // Wait for the execution to terminate and assert that it is successful.
-    logger.info("Waiting for pipeline execution completion....");
+    log.info("Waiting for pipeline execution completion....");
     awaitForStatus(executionId, asList(ExecutionStatus.SUCCESS, ExecutionStatus.FAILED, ExecutionStatus.REJECTED));
     Map<Object, Object> workflowExecutionMap = getWorkflowExecutionMap(executionId);
     assertThat((String) workflowExecutionMap.get("status")).isEqualTo(ExecutionStatus.SUCCESS.name());
-    logger.info("Pipeline execution completed");
+    log.info("Pipeline execution completed");
 
     String subWorkflowExecutionId =
         (String) ((Map<Object,

@@ -42,7 +42,7 @@ public class GrpcServerExceptionHandler implements ServerInterceptor {
           if (exceptionMapper != null) {
             status = exceptionMapper.toStatus(throwable);
           } else {
-            logger.error("Exception occurred: " + ExceptionUtils.getMessage(throwable), throwable);
+            log.error("Exception occurred: " + ExceptionUtils.getMessage(throwable), throwable);
             status = Status.INTERNAL.withDescription(throwable.getMessage()).withCause(throwable);
           }
         }

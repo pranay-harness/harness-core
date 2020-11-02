@@ -231,7 +231,7 @@ public class ArtifactServiceImpl implements ArtifactService {
           artifactCollectionUtils.getArtifactStreamAttributes(artifactStream, isMultiArtifact);
       Artifact savedArtifact = getArtifactByUniqueKey(artifactStream, artifactStreamAttributes, artifact);
       if (savedArtifact != null) {
-        logger.info(
+        log.info(
             "Skipping creation of duplicate artifact for artifact stream: [{}], saved artifact: [{}] with status {} and build number {}",
             artifactStream.getUuid(), savedArtifact.getUuid(), savedArtifact.getStatus(), artifact.getBuildNo());
         return savedArtifact;
@@ -242,7 +242,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     String key = wingsPersistence.save(artifact);
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, key);
     if (savedArtifact.getStatus() == QUEUED) {
-      logger.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
+      log.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
     executorService.submit(() -> deleteArtifactsWithContents(ARTIFACT_RETENTION_SIZE, artifactStream));
@@ -439,7 +439,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void addArtifactFile(String artifactId, String accountId, List<ArtifactFile> artifactFile) {
-    logger.info("Adding artifactFiles for artifactId {}", artifactId);
+    log.info("Adding artifactFiles for artifactId {}", artifactId);
     Query<Artifact> query = wingsPersistence.createQuery(Artifact.class)
                                 .filter(ArtifactKeys.accountId, accountId)
                                 .filter(ArtifactKeys.uuid, artifactId);
@@ -649,21 +649,21 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact startArtifactCollection(String accountId, String artifactId) {
-    logger.info("Start collecting artifact {} of accountId {}", artifactId, accountId);
+    log.info("Start collecting artifact {} of accountId {}", artifactId, accountId);
     Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);
     if (artifact == null) {
       throw new WingsException(
           "Artifact [" + artifactId + "] for the accountId [" + accountId + "] does not exist", USER);
     }
     if (RUNNING == artifact.getStatus() || QUEUED == artifact.getStatus()) {
-      logger.info(
+      log.info(
           "Artifact Metadata collection for artifactId {} of the accountId {} is in progress or queued. Returning.",
           artifactId, accountId);
       return artifact;
     }
 
     if (artifact.getContentStatus() == null && !isEmpty(artifact.getArtifactFiles())) {
-      logger.info(
+      log.info(
           "Artifact {} content status empty. It means it is already downloaded. Updating artifact content status as DOWNLOADED",
           artifactId);
       updateStatus(artifactId, artifact.getAccountId(), APPROVED, DOWNLOADED);
@@ -672,13 +672,12 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if ((METADATA_ONLY == artifact.getContentStatus()) || (DOWNLOADING == artifact.getContentStatus())
         || (DOWNLOADED == artifact.getContentStatus())) {
-      logger.info(
-          "Artifact content for artifactId {} of the accountId {} is either downloaded or in progress. Returning.",
+      log.info("Artifact content for artifactId {} of the accountId {} is either downloaded or in progress. Returning.",
           artifactId, accountId);
       return artifact;
     }
 
-    logger.info("Sending event to collect artifact {} ", artifact.getUuid());
+    log.info("Sending event to collect artifact {} ", artifact.getUuid());
     collectQueue.send(aCollectEvent().withArtifact(artifact).build());
 
     return artifact;
@@ -691,7 +690,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     if (artifactStream == null) {
-      logger.info("ArtifactStream of artifact {} was deleted", artifact.getUuid());
+      log.info("ArtifactStream of artifact {} was deleted", artifact.getUuid());
       artifact = wingsPersistence.get(Artifact.class, artifact.getUuid());
       if (artifact == null) {
         return DELETED;
@@ -769,7 +768,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return;
     }
 
-    logger.info("Deleting artifacts for artifactStreamId: [{}] of size: [{}]", artifactStream.getUuid(),
+    log.info("Deleting artifacts for artifactStreamId: [{}] of size: [{}]", artifactStream.getUuid(),
         toBeDeletedArtifacts.size());
     deleteArtifacts(artifactStream.getUuid(), toBeDeletedArtifacts);
   }
@@ -791,11 +790,11 @@ public class ArtifactServiceImpl implements ArtifactService {
         deleteArtifacts(artifactIds, artifactFileIds);
       }
     } catch (Exception ex) {
-      logger.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+      log.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
           toBeDeletedArtifacts.size(), ex);
       return;
     }
-    logger.info("Successfully deleted artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+    log.info("Successfully deleted artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
         toBeDeletedArtifacts.size());
   }
 
@@ -803,16 +802,16 @@ public class ArtifactServiceImpl implements ArtifactService {
     try {
       deleteArtifactFiles(getArtifactFileIds(toBeDeletedArtifacts));
     } catch (Exception ex) {
-      logger.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+      log.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
           toBeDeletedArtifacts.size(), ex);
       return;
     }
-    logger.info("Successfully deleted artifact files for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+    log.info("Successfully deleted artifact files for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
         toBeDeletedArtifacts.size());
   }
 
   private void deleteArtifacts(Object[] artifactIds, List<String> artifactFileIds) {
-    logger.info("Deleting artifactIds of artifacts {}", artifactIds);
+    log.info("Deleting artifactIds of artifacts {}", artifactIds);
     wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
         .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
     deleteArtifactFiles(artifactFileIds);

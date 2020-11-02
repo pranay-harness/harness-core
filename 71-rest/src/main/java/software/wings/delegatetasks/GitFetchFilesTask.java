@@ -66,7 +66,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   public GitCommandExecutionResponse run(TaskParameters parameters) {
     GitFetchFilesTaskParams taskParams = (GitFetchFilesTaskParams) parameters;
 
-    logger.info("Running GitFetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
+    log.info("Running GitFetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId());
 
     String executionLogName = isEmpty(taskParams.getExecutionLogName()) ? FetchFiles : taskParams.getExecutionLogName();
@@ -95,13 +95,13 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         // Values.yaml in service spec is optional.
         if (AppManifestKind.VALUES == appManifestKind && K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
             && ex.getCause() instanceof NoSuchFileException) {
-          logger.info("Values.yaml file not found. " + exceptionMsg, ex);
+          log.info("Values.yaml file not found. " + exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
           continue;
         }
 
         String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
-        logger.error(msg, ex);
+        log.error(msg, ex);
         executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitCommandExecutionResponse.builder()
             .errorMessage(exceptionMsg)

@@ -65,11 +65,11 @@ public class BudgetTimescaleQueryHelper {
           } catch (SQLException e) {
             retryCount++;
             if (retryCount >= MAX_RETRY) {
-              logger.error(
+              log.error(
                   "Failed to execute query in BudgetTimescaleQueryHelper, max retry count reached, query=[{}],accountId=[{}]",
                   queryMetadata.getQuery(), accountId, e);
             } else {
-              logger.warn(
+              log.warn(
                   "Failed to execute query in BudgetTimescaleQueryHelper, query=[{}],accountId=[{}], retryCount=[{}]",
                   queryMetadata.getQuery(), accountId, retryCount);
             }
@@ -119,11 +119,11 @@ public class BudgetTimescaleQueryHelper {
           } catch (SQLException e) {
             retryCount++;
             if (retryCount >= MAX_RETRY) {
-              logger.error(
+              log.error(
                   "Failed to execute query in BudgetTimescaleQueryHelper, max retry count reached, query=[{}],accountId=[{}]",
                   queryMetadata.getQuery(), accountId, e);
             } else {
-              logger.warn(
+              log.warn(
                   "Failed to execute query in BudgetTimescaleQueryHelper, query=[{}],accountId=[{}], retryCount=[{}]",
                   queryMetadata.getQuery(), accountId, retryCount);
             }
@@ -174,11 +174,10 @@ public class BudgetTimescaleQueryHelper {
           } catch (SQLException e) {
             retryCount++;
             if (retryCount >= MAX_RETRY) {
-              logger.error(
-                  "Failed to execute query in BudgetCostData, max retry count reached, query=[{}],accountId=[{}]",
+              log.error("Failed to execute query in BudgetCostData, max retry count reached, query=[{}],accountId=[{}]",
                   queryData.getQuery(), accountId, e);
             } else {
-              logger.warn("Failed to execute query in BudgetCostData, query=[{}],accountId=[{}], retryCount=[{}]",
+              log.warn("Failed to execute query in BudgetCostData, query=[{}],accountId=[{}], retryCount=[{}]",
                   queryData.getQuery(), accountId, retryCount);
             }
           } finally {

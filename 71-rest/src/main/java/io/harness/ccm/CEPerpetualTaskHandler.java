@@ -53,10 +53,10 @@ public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecor
     try (AutoLogContext ignore0 = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       if (account.isCeAutoCollectK8sEvents()) {
         cePerpetualTaskManager.createPerpetualTasks(account, DIRECT_KUBERNETES);
-        logger.info("Created perpetual tasks for all clusters with CE support under account id={}.", account.getUuid());
+        log.info("Created perpetual tasks for all clusters with CE support under account id={}.", account.getUuid());
       } else if (!account.isCloudCostEnabled()) {
         cePerpetualTaskManager.deletePerpetualTasks(account, null);
-        logger.info("Deleted perpetual tasks for all clusters with CE support under account id={}.", account.getUuid());
+        log.info("Deleted perpetual tasks for all clusters with CE support under account id={}.", account.getUuid());
       } else { // account.isCloudCostEnabled() and !account.isCeAutoCollectK8sEvents())
         List<ClusterRecord> clusterRecords = clusterRecordService.list(account.getUuid(), DIRECT_KUBERNETES);
         clusterRecords.forEach(clusterRecord -> {
@@ -84,7 +84,7 @@ public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecor
         int currentClusterCount = ceClusterFeature.getUsage(accountId);
 
         if (currentClusterCount >= maxClustersAllowed) {
-          logger.info("Did not add perpetual task to cluster: '{}' for account ID {} because usage limit exceeded",
+          log.info("Did not add perpetual task to cluster: '{}' for account ID {} because usage limit exceeded",
               clusterRecord.getCluster().getClusterName(), accountId);
           throw new InvalidRequestException(String.format(
               "Cannot add perpetual task to cluster. Max Clusters allowed for trial: %d", maxClustersAllowed));

@@ -86,7 +86,7 @@ public class WorkloadCostService {
           }
         }
       } catch (SQLException e) {
-        logger.error("Failed to fetch cost. retryCount=[{}]", retryCount, e);
+        log.error("Failed to fetch cost. retryCount=[{}]", retryCount, e);
       }
     }
     return null;

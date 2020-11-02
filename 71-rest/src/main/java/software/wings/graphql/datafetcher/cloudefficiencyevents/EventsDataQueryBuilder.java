@@ -109,7 +109,7 @@ public class EventsDataQueryBuilder {
         if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else {
-          logger.error("Failed to apply filter :[{}]", filter);
+          log.error("Failed to apply filter :[{}]", filter);
         }
       }
     }
@@ -124,7 +124,7 @@ public class EventsDataQueryBuilder {
         addSimpleTimeFilter(selectQuery, f, type);
       }
     } else {
-      logger.info("Not adding filter since it is not valid " + f);
+      log.info("Not adding filter since it is not valid " + f);
     }
   }
 

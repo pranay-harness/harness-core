@@ -130,7 +130,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   private void revertDefaultLoginToUserPassword() {
     String url = createEnableUserPassAsDefaultLoginMechanismUrl();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     Response response = getRequestBuilderWithAuthHeader(target).put(Entity.json(JsonUtils.asJson("")));
     assertThat(Response.Status.OK.getStatusCode()).isEqualTo(response.getStatus());
@@ -138,7 +138,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void createAndTestLdapSettings() {
     String url = createUploadLdapSettingsURL();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     RestResponse<LdapSettings> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapSettings>>() {});
@@ -151,7 +151,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void ldapConnectionSettingsTest() {
     String url = createTestLdapConnSettingsURL();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
@@ -161,7 +161,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void ldapUserSettingsTest() {
     String url = createTestLdapUserSettingsURL();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
@@ -171,7 +171,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void ldapGroupSettingsTest() {
     String url = createTestLdapGroupSettingsURL();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     RestResponse<LdapTestResponse> ldapSettingsRestResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.json(JsonUtils.asJson(ldapSettings)), new GenericType<RestResponse<LdapTestResponse>>() {});
@@ -181,7 +181,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void enableLdapAsDefaultLoginMechanism() {
     String url = createEnableLdapAsDefaultLoginMechanismUrl();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     LDAPTestAuthenticationRequest ldapTestAuthenticationRequest = LdapTestHelper.getAuthenticationRequestObject();
     Response response =
@@ -192,7 +192,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
   public void searchGroupByNameTest() {
     LdapSettings ldapSettings = ssoService.getLdapSettings(ACCOUNT_ID);
     String url = createSearchGroupByNameUrl(ldapSettings.getUuid());
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     RestResponse<Collection<LdapGroupResponse>> collectionRestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Collection<LdapGroupResponse>>>() {});
@@ -208,7 +208,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
     loginUsingLdap();
     LdapSettings ldapSettings = ssoService.getLdapSettings(ACCOUNT_ID);
     String url = createLinkGroupByUrl(ldapSettings.getUuid());
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
     LdapLinkGroupRequest ldapLinkGroupRequest = LdapTestHelper.getLdapLinkGroupRequest();
 
@@ -221,7 +221,7 @@ public class LdapIntegrationTest extends IntegrationTestBase implements WingsInt
 
   public void unlinkLdapGroupToHarnessUserGroupTest() {
     String url = createUnlinkGroupByUrl();
-    logger.info("Calling url: " + url);
+    log.info("Calling url: " + url);
     WebTarget target = client.target(url);
 
     RestResponse<UserGroup> userGroupResponse =

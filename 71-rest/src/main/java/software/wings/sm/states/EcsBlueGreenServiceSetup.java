@@ -200,7 +200,7 @@ public class EcsBlueGreenServiceSetup extends State {
       EcsSetUpDataBag ecsSetUpDataBag) {
     isUseSpecificListenerRuleArn = shouldUseSpecificListenerRule(prodListenerRuleArn, stageListenerRuleArn);
 
-    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, logger);
+    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, log);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()
@@ -297,7 +297,7 @@ public class EcsBlueGreenServiceSetup extends State {
         artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
     ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
         setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),
-        getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), logger);
+        getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), log);
 
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);

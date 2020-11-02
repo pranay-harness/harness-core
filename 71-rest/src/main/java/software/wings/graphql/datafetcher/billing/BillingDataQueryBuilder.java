@@ -567,7 +567,7 @@ public class BillingDataQueryBuilder {
         if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else {
-          logger.error("Failed to apply filter :[{}]", filter);
+          log.error("Failed to apply filter :[{}]", filter);
         }
       }
     }
@@ -582,7 +582,7 @@ public class BillingDataQueryBuilder {
         addSimpleTimeFilter(selectQuery, f, type);
       }
     } else {
-      logger.info("Not adding filter since it is not valid " + f);
+      log.info("Not adding filter since it is not valid " + f);
     }
   }
 
@@ -609,7 +609,7 @@ public class BillingDataQueryBuilder {
     if (filter.getValues().length > 0) {
       if (operator == QLIdOperator.EQUALS) {
         finalOperator = QLIdOperator.IN;
-        logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+        log.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
       } else {
         finalOperator = operator;
       }
@@ -1018,7 +1018,7 @@ public class BillingDataQueryBuilder {
         unit = "month";
         break;
       default:
-        logger.warn("Unsupported timeGroupType " + groupByTime.getTimeGroupType());
+        log.warn("Unsupported timeGroupType " + groupByTime.getTimeGroupType());
         throw new InvalidRequestException("Cant apply time group by");
     }
 
@@ -1114,7 +1114,7 @@ public class BillingDataQueryBuilder {
                                     .build());
                     break;
                   default:
-                    logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                    log.error("EntityType {} not supported in query", tagFilter.getEntityType());
                     throw new InvalidRequestException("Error while compiling query", WingsException.USER);
                 }
               }
@@ -1218,7 +1218,7 @@ public class BillingDataQueryBuilder {
       case ENVIRONMENT:
         return EntityType.ENVIRONMENT;
       default:
-        logger.error("Unsupported entity type {} for tag ", entityType);
+        log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
     }
   }
@@ -1235,7 +1235,7 @@ public class BillingDataQueryBuilder {
       case ENVIRONMENT:
         return QLCCMEntityGroupBy.Environment;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException("Unsupported entity type " + groupByTag.getEntityType());
     }
   }
@@ -1454,7 +1454,7 @@ public class BillingDataQueryBuilder {
           updatedFilters.add(filter);
         }
       }
-      logger.info("Updated filters {}", updatedFilters);
+      log.info("Updated filters {}", updatedFilters);
       return updatedFilters;
     }
     return filters;

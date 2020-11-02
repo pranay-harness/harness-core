@@ -59,7 +59,7 @@ public final class TerraformConfigInspectClientImpl implements TerraformConfigIn
         return Optional.of(error);
       }
     } catch (JSONException e) {
-      logger.error("Could not parse tf-config-inspect output for errors {}", jsonConfig.toString());
+      log.error("Could not parse tf-config-inspect output for errors {}", jsonConfig.toString());
     }
     return Optional.empty();
   }

@@ -25,7 +25,7 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
              new HIterator<>(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).fetch())) {
       for (TimeSeriesMLAnalysisRecord mlAnalysisRecord : iterator) {
         processed++;
-        logger.info("saving " + mlAnalysisRecord.getUuid());
+        log.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
                       .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
@@ -37,14 +37,14 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           batched = 0;
-          logger.info("updated: " + processed);
+          log.info("updated: " + processed);
         }
       }
       if (batched != 0) {
         bulkWriteOperation.execute();
-        logger.info("updated: " + processed);
+        log.info("updated: " + processed);
       }
-      logger.info("processed " + processed);
+      log.info("processed " + processed);
     }
   }
 }

@@ -106,7 +106,7 @@ public class JiraHelperService {
               "Failed to Authenticate with JIRA Server. " + jiraExecutionData.getErrorMessage(), WingsException.USER);
         }
       } else {
-        logger.error("Unexpected error during authentication to JIRA server " + responseData);
+        log.error("Unexpected error during authentication to JIRA server " + responseData);
         throw new HarnessJiraException("Unexpected error during authentication to JIRA server.", WingsException.USER);
       }
     } catch (WingsException e) {
@@ -127,15 +127,15 @@ public class JiraHelperService {
     try {
       jiraExecutionData = getApprovalStatus(entity);
     } catch (Exception ex) {
-      logger.warn(
+      log.warn(
           "Error occurred while polling JIRA status. Continuing to poll next minute. approvalId: {}, workflowExecutionId: {} , issueId: {}",
           entity.getApprovalId(), entity.getWorkflowExecutionId(), entity.getIssueId(), ex);
       return;
     }
 
     ExecutionStatus issueStatus = jiraExecutionData.getExecutionStatus();
-    logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
-        issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
+    log.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ", issueId,
+        issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
 
     ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder()
                                                                 .appId(appId)
@@ -231,7 +231,7 @@ public class JiraHelperService {
 
     DelegateResponseData responseData = delegateService.executeTask(delegateTask);
     if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
-      logger.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
+      log.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
           jiraTaskParameters.getIssueId());
     }
     if (responseData instanceof JiraExecutionData) {
@@ -269,7 +269,7 @@ public class JiraHelperService {
                                                 .rejectionValue(rejectionValue)
                                                 .build();
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
-    logger.info("Polling Approval for IssueId = {}", issueId);
+    log.info("Polling Approval for IssueId = {}", issueId);
     return jiraExecutionData;
   }
 
@@ -291,7 +291,7 @@ public class JiraHelperService {
                                                 .build();
     JiraExecutionData jiraExecutionData = runTask(approvalPollingJobEntity.getAccountId(),
         approvalPollingJobEntity.getAppId(), approvalPollingJobEntity.getConnectorId(), jiraTaskParameters);
-    logger.info("Polling Approval for IssueId = {}", approvalPollingJobEntity.getIssueId());
+    log.info("Polling Approval for IssueId = {}", approvalPollingJobEntity.getIssueId());
     return jiraExecutionData;
   }
 }

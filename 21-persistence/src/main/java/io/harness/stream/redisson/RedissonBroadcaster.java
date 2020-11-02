@@ -86,7 +86,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
     if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null && topic != null) {
       messageListenerRegistrationId =
           topic.addListener(Object.class, (channel, message) -> broadcastReceivedMessage(message));
-      logger.info("Added message listener to topic");
+      log.info("Added message listener to topic");
     }
   }
 
@@ -94,7 +94,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
     if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
       topic.removeListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
-      logger.info("Removed message listener from topic");
+      log.info("Removed message listener from topic");
     }
   }
 
@@ -123,7 +123,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
 
   @Override
   public void incomingBroadcast() {
-    logger.info("Subscribing to: {}", getID());
+    log.info("Subscribing to: {}", getID());
   }
 
   @Override

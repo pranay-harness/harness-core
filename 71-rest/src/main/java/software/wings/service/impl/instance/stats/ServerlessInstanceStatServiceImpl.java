@@ -48,11 +48,11 @@ public class ServerlessInstanceStatServiceImpl implements ServerlessInstanceStat
     String id = persistence.save(stats);
 
     if (null == id) {
-      logger.error("Could not save instance stats. Stats: {}", stats);
+      log.error("Could not save instance stats. Stats: {}", stats);
       return false;
     }
 
-    logger.info("Saved stats. Time: {}, Account: {}, ID: {} ", stats.getTimestamp(), stats.getAccountId(), id);
+    log.info("Saved stats. Time: {}, Account: {}, ID: {} ", stats.getTimestamp(), stats.getAccountId(), id);
     return true;
   }
 
@@ -99,21 +99,21 @@ public class ServerlessInstanceStatServiceImpl implements ServerlessInstanceStat
     Instant to = Instant.ofEpochMilli(toTsMillis);
     Stopwatch stopwatch = Stopwatch.createStarted();
     List<ServerlessInstanceStats> stats = aggregate(accountId, from, to);
-    logger.info("Aggregate Time: {} ms, accountId={}, from={} to={} with Invocation count key={}",
+    log.info("Aggregate Time: {} ms, accountId={}, from={} to={} with Invocation count key={}",
         stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId, from, to, invocationCountKey);
     Set<String> deletedAppIds = serverlessDashboardService.getDeletedAppIds(accountId, fromTsMillis, toTsMillis);
-    logger.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+    log.info("Get Deleted App Time: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
 
     User user = UserThreadLocal.get();
     if (null != user) {
       TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, userService);
       List<ServerlessInstanceStats> filteredStats = rbacFilters.filterServerlessStats(stats, deletedAppIds);
-      logger.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
-      logger.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+      log.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
+      log.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
       ServerlessInstanceTimeline timeline =
           ServerlessInstanceTimeline.create(filteredStats, deletedAppIds, invocationCountKey);
       ServerlessInstanceTimeline top = ServerlessInstanceTimeline.copyWithLimit(timeline, 5);
-      logger.info("Total time taken: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
+      log.info("Total time taken: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);
       return top;
     } else {
       throw NoResultFoundException.newBuilder().code(ErrorCode.USER_DOES_NOT_EXIST).build();

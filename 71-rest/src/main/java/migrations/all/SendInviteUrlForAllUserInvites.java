@@ -37,11 +37,11 @@ public class SendInviteUrlForAllUserInvites implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Start - Setting inviteURL for users");
+    log.info("Start - Setting inviteURL for users");
     MarketoConfig marketoConfig = mainConfiguration.getMarketoConfig();
 
     if (!marketoConfig.isEnabled()) {
-      logger.info("Marketo is disabled, skipping the migration");
+      log.info("Marketo is disabled, skipping the migration");
       return;
     }
 
@@ -51,14 +51,14 @@ public class SendInviteUrlForAllUserInvites implements Migration {
                             .client(Http.getUnsafeOkHttpClient(marketoConfig.getUrl()))
                             .build();
 
-    logger.info("MarketoMigration - Start - registering all users of trial accounts as leads");
+    log.info("MarketoMigration - Start - registering all users of trial accounts as leads");
     String accessToken;
     try {
       accessToken =
           marketoHelper.getAccessToken(marketoConfig.getClientId(), marketoConfig.getClientSecret(), retrofit);
-      logger.info("Obtained access token");
+      log.info("Obtained access token");
     } catch (IOException e) {
-      logger.error("Error while trying to get access token in migration", e);
+      log.error("Error while trying to get access token in migration", e);
       return;
     }
 
@@ -87,10 +87,10 @@ public class SendInviteUrlForAllUserInvites implements Migration {
             }
           }
         } catch (Exception ex) {
-          logger.error("Error while setting inviteURL for user {}", user == null ? "NA" : user.getName(), ex);
+          log.error("Error while setting inviteURL for user {}", user == null ? "NA" : user.getName(), ex);
         }
       }
     }
-    logger.info("End - Setting inviteURL for users");
+    log.info("End - Setting inviteURL for users");
   }
 }

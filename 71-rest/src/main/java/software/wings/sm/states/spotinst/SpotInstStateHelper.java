@@ -413,7 +413,7 @@ public class SpotInstStateHelper {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
       } catch (NumberFormatException e) {
-        logger.error(format("Number format Exception while evaluating: [%s]", expr), e);
+        log.error(format("Number format Exception while evaluating: [%s]", expr), e);
         retVal = defaultValue;
       }
     }

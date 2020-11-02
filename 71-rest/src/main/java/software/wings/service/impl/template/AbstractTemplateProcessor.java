@@ -66,7 +66,7 @@ public abstract class AbstractTemplateProcessor {
     // First
     templateFiles.forEach(templatePath -> {
       try {
-        logger.info("Loading url file {} for the account {} ", templatePath, accountId);
+        log.info("Loading url file {} for the account {} ", templatePath, accountId);
         loadAndSaveTemplate(templatePath, accountId, accountName);
       } catch (WingsException exception) {
         String msg = "Failed to save template from file [" + templatePath + "] for the account [" + accountId
@@ -166,7 +166,7 @@ public abstract class AbstractTemplateProcessor {
             }
           }
         } catch (Exception e) {
-          logger.warn("Error occurred while updating linked workflow {}", workflow.getUuid(), e);
+          log.warn("Error occurred while updating linked workflow {}", workflow.getUuid(), e);
         }
       }
     }

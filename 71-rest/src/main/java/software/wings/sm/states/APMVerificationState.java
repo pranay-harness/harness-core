@@ -129,7 +129,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -470,7 +470,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
-      logger.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
+      log.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
       metricInfoMap.get(evaluatedUrl).add(metricInfo);
     }
     return metricInfoMap;
@@ -521,7 +521,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                                      .tag(metricCollectionInfo.getTag())
                                      .responseMappers(getResponseMappers(metricCollectionInfo))
                                      .build();
-      logger.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
+      log.info("In APMMetricInfos, evaluatedUrl is: {}", evaluatedUrl);
       metricInfoList.add(metricInfo);
     }
     return metricInfoList;
@@ -537,7 +537,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       final String collectionUrl = metricCollectionInfo.getCollectionUrl();
       if (collectionUrl != null && collectionUrl.contains("\n") && collectionUrl.split("\n").length == 2) {
         final String[] canaryCollectionUrls = collectionUrl.split("\n");
-        logger.info("for {} canary url is provided", context.getStateExecutionInstanceId());
+        log.info("for {} canary url is provided", context.getStateExecutionInstanceId());
         metricCollectionInfo.setCollectionUrl(canaryCollectionUrls[0]);
         metricCollectionInfo.setBaselineCollectionUrl(canaryCollectionUrls[1]);
       }
@@ -574,7 +574,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                           .responseMappers(getResponseMappers(metricCollectionInfo))
                           .build());
     }
-    logger.info("for {} canaryInfo is {}", context.getStateExecutionInstanceId(), metricInfos);
+    log.info("for {} canaryInfo is {}", context.getStateExecutionInstanceId(), metricInfos);
     return metricInfos;
   }
 

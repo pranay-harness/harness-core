@@ -45,7 +45,7 @@ public class WeeklyRange {
       Calendar endCalendar = CalendarUtils.getCalendar(getDayEnum(endDay), endTime, timeZone);
       return startCalendar.before(endCalendar);
     } catch (Exception e) {
-      logger.error("Error while verifying deployment window boundary prechecks" + e);
+      log.error("Error while verifying deployment window boundary prechecks" + e);
     }
     return false;
   }

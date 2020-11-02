@@ -106,7 +106,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     setUnset(operations, LoginSettingKeys.passwordExpirationPolicy, newPasswordExpirationPolicy);
     LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
     auditPasswordExpirationPolicy(accountId, loginSettings);
-    logger.info("Auditing updation of Password Expiration Policy for account={}", accountId);
+    log.info("Auditing updation of Password Expiration Policy for account={}", accountId);
     return loginSettings;
   }
 
@@ -117,7 +117,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     setUnset(operations, LoginSettingKeys.passwordStrengthPolicy, passwordStrengthPolicy);
     LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
     auditPasswordStrengthPolicy(accountId, loginSettings);
-    logger.info("Auditing updation of Password Strength Policy for account={}", accountId);
+    log.info("Auditing updation of Password Strength Policy for account={}", accountId);
     return loginSettings;
   }
 
@@ -210,7 +210,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
   @Override
   public void updateUserLockoutInfo(User user, Account account, int newCountOfFailedLoginAttempts) {
     UserLockoutPolicy userLockoutPolicy = getLoginSettings(account.getUuid()).getUserLockoutPolicy();
-    logger.info("Updating user lockout info: {} for user: {}, new failedCount: {}",
+    log.info("Updating user lockout info: {} for user: {}, new failedCount: {}",
         userLockoutPolicy.isEnableLockoutPolicy(), user.getEmail(), newCountOfFailedLoginAttempts);
 
     createUserLockoutInfoOperationsAndUpdateUser(user, newCountOfFailedLoginAttempts, userLockoutPolicy);
@@ -232,7 +232,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     //        newCountOfFailedLoginAttempts < userLockoutPolicy.getNumberOfFailedAttemptsBeforeLockout();
 
     if (shouldLockUser) {
-      logger.info("Locking user: [{}] because of {} incorrect password attempts", user.getUuid(),
+      log.info("Locking user: [{}] because of {} incorrect password attempts", user.getUuid(),
           newCountOfFailedLoginAttempts);
       UserLockoutInfo userLockoutInfo =
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, System.currentTimeMillis());
@@ -241,11 +241,11 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
       if (isNotEmpty(user.getAccounts())) {
         user.getAccounts().forEach(account -> {
           auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOCK);
-          logger.info("Auditing locking of user={} in account={}", user.getName(), account.getAccountName());
+          log.info("Auditing locking of user={} in account={}", user.getName(), account.getAccountName());
         });
       }
     } else {
-      logger.info("Unlocking user: {}, current lock state = {}", user.getUuid(), user.isUserLocked());
+      log.info("Unlocking user: {}, current lock state = {}", user.getUuid(), user.isUserLocked());
       UserLockoutInfo userLockoutInfo =
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, user.getUserLockoutInfo().getUserLockedAt());
       updateUserLockoutOperations(operations, false, userLockoutInfo);

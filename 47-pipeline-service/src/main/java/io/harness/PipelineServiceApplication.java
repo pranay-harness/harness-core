@@ -34,7 +34,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
+      log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);
     }));
 
@@ -62,7 +62,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   @Override
   public void run(PipelineServiceConfiguration appConfig, Environment environment) {
-    logger.info("Starting Pipeline Service Application ...");
+    log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
     Injector injector = Guice.createInjector(new PipelineServiceModule(appConfig));
 

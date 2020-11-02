@@ -33,7 +33,7 @@ public class AppKeywordsMigration implements Migration {
         if (i % BATCH_SIZE == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Applications: {} updated", i);
+          log.info("Applications: {} updated", i);
         }
         ++i;
         Set<String> keywords = application.generateKeywords();

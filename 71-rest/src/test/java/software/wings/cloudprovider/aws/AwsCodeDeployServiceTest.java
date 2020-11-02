@@ -70,15 +70,15 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplication() {
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
-        .forEach(application -> { logger.info(application.toString()); });
+        .forEach(application -> { log.info(application.toString()); });
 
     awsCodeDeployService
         .listDeploymentGroup(Regions.US_EAST_1.getName(), "todolistwar", cloudProvider, Collections.emptyList())
-        .forEach(dg -> { logger.info(dg.toString()); });
+        .forEach(dg -> { log.info(dg.toString()); });
 
     awsCodeDeployService
         .listDeploymentConfiguration(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
-        .forEach(dc -> { logger.info(dc.toString()); });
+        .forEach(dc -> { log.info(dc.toString()); });
 
     CreateDeploymentRequest createDeploymentRequest =
         new CreateDeploymentRequest()
@@ -93,7 +93,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     CodeDeployDeploymentInfo codeDeployDeploymentInfo =
         awsCodeDeployService.deployApplication(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList(),
             createDeploymentRequest, new ExecutionLogCallback(), 10);
-    logger.info(codeDeployDeploymentInfo.toString());
+    log.info(codeDeployDeploymentInfo.toString());
   }
 
   @Test
@@ -101,10 +101,10 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplicationRevisions() {
-    logger.info(awsCodeDeployService
-                    .getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG",
-                        cloudProvider, Collections.emptyList())
-                    .toString());
+    log.info(awsCodeDeployService
+                 .getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG", cloudProvider,
+                     Collections.emptyList())
+                 .toString());
   }
 
   @Test

@@ -45,7 +45,7 @@ public class AddInfraMappingNameToInstanceData implements Migration {
       List<String> appIds = appService.getAppIdsByAccountId(account.getUuid());
       appIds.forEach(appId -> {
         try {
-          logger.info("Adding infraMapping name to instances for appId:" + appId);
+          log.info("Adding infraMapping name to instances for appId:" + appId);
           PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
           pageRequest.addFilter("appId", Operator.EQ, appId);
           PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
@@ -74,18 +74,18 @@ public class AddInfraMappingNameToInstanceData implements Migration {
                     -> wingsPersistence.updateField(
                         Instance.class, instance.getUuid(), "infraMappingName", infraMapping.getName()));
               } catch (Exception ex) {
-                logger.warn("Adding infraMappingName failed for infraMappingId [{}]", infraMappingId, ex);
+                log.warn("Adding infraMappingName failed for infraMappingId [{}]", infraMappingId, ex);
               }
             } catch (Exception e) {
-              logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+              log.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
             }
           });
 
-          logger.info("Adding infraMappingName done for appId:" + appId);
+          log.info("Adding infraMappingName done for appId:" + appId);
         } catch (WingsException exception) {
-          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
         } catch (Exception ex) {
-          logger.warn("Error while setting infraMappingName to instances for app: {}", appId, ex);
+          log.warn("Error while setting infraMappingName to instances for app: {}", appId, ex);
         }
       });
     });

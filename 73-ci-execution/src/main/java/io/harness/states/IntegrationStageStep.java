@@ -31,7 +31,7 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, IntegrationStageStepParameters integrationStageStepParameters, StepInputPackage inputPackage) {
-    logger.info("Executing deployment stage with params [{}]", integrationStageStepParameters);
+    log.info("Executing deployment stage with params [{}]", integrationStageStepParameters);
     // TODO Only K8 is supported currently
     if (integrationStageStepParameters.getIntegrationStage().getInfrastructure().getType().equals(
             "kubernetes-direct")) {
@@ -61,7 +61,7 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
   @Override
   public StepResponse handleChildResponse(
       Ambiance ambiance, IntegrationStageStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    logger.info("executed integration stage =[{}]", stepParameters);
+    log.info("executed integration stage =[{}]", stepParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }

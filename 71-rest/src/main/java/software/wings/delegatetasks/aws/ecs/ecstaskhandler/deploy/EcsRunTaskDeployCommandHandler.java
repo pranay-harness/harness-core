@@ -151,8 +151,8 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
 
       ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     } catch (Exception ex) {
-      logger.error("Completed operation with errors");
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error("Completed operation with errors");
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
 
       ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);

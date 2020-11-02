@@ -18,7 +18,7 @@ public class DeleteStaleSlackConfigs implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Deleting stale Slack configs");
+    log.info("Deleting stale Slack configs");
     wingsPersistence.delete(
         wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority).filter("value.type", "SLACK"));
   }

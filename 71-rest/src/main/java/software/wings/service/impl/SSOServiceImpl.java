@@ -133,7 +133,7 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig updateLogoutUrlSamlSettings(String accountId, String logoutUrl) {
-    logger.info("Logout url being set from API is {}", logoutUrl);
+    log.info("Logout url being set from API is {}", logoutUrl);
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
     if (samlSettings != null) {
       samlSettings.setLogoutUrl(logoutUrl);
@@ -428,7 +428,7 @@ public class SSOServiceImpl implements SSOService {
     boolean samlSettingsDeleted = true;
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
     if (samlSettings != null) {
-      logger.info("Deleting SAML SSO Settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
+      log.info("Deleting SAML SSO Settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
       samlSettingsDeleted = ssoSettingService.deleteSamlSettings(samlSettings);
     }
     return samlSettingsDeleted;
@@ -438,7 +438,7 @@ public class SSOServiceImpl implements SSOService {
     boolean ldapSettingsDeleted = true;
     LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
     if (ldapSettings != null) {
-      logger.info("Deleting LDAP SSO settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
+      log.info("Deleting LDAP SSO settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
       ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
     }
     return ldapSettingsDeleted;

@@ -71,7 +71,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
 
   @Override
   public void handle(ArtifactStream artifactStream) {
-    logger.info("Received the artifact cleanup for ArtifactStream");
+    log.info("Received the artifact cleanup for ArtifactStream");
     executeInternal(artifactStream);
   }
 
@@ -84,12 +84,12 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
 
       artifactCleanupServiceAsync.cleanupArtifactsAsync(artifactStream);
     } catch (WingsException exception) {
-      logger.warn("Failed to cleanup artifacts for artifact stream. Reason {}", exception.getMessage());
+      log.warn("Failed to cleanup artifacts for artifact stream. Reason {}", exception.getMessage());
       exception.addContext(Account.class, artifactStream.getAccountId());
       exception.addContext(ArtifactStream.class, artifactStreamId);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception e) {
-      logger.warn("Failed to cleanup artifacts for artifactStream. Reason {}", e.getMessage());
+      log.warn("Failed to cleanup artifacts for artifactStream. Reason {}", e.getMessage());
     }
   }
 }

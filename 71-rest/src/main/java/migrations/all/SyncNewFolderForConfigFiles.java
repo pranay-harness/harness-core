@@ -45,7 +45,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_LINE + "Starting migration for Config File");
+    log.info(DEBUG_LINE + "Starting migration for Config File");
     yamlChangeSetId = new ArrayList<>();
     try (HIterator<Account> accounts =
              new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
@@ -53,10 +53,10 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
         Account account = accounts.next();
 
         if (account == null) {
-          logger.info(DEBUG_LINE + "Account is null, continuing");
+          log.info(DEBUG_LINE + "Account is null, continuing");
           continue;
         }
-        logger.info(DEBUG_LINE + "Starting migration for account {}", account.getAccountName());
+        log.info(DEBUG_LINE + "Starting migration for account {}", account.getAccountName());
 
         try (HIterator<Application> applications =
                  new HIterator<>(wingsPersistence.createQuery(Application.class)
@@ -66,10 +66,10 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
             Application application = applications.next();
 
             if (application == null) {
-              logger.info(DEBUG_LINE + "Application is null, skipping");
+              log.info(DEBUG_LINE + "Application is null, skipping");
               continue;
             }
-            logger.info(DEBUG_LINE + "Starting migration for application {}", application.getName());
+            log.info(DEBUG_LINE + "Starting migration for application {}", application.getName());
 
             YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(account.getUuid(), application.getUuid());
             if (ygs != null) {
@@ -82,7 +82,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
                   ConfigFile configFile = configFiles.next();
 
                   if (configFile == null) {
-                    logger.info(DEBUG_LINE + "Config File is null, skipping");
+                    log.info(DEBUG_LINE + "Config File is null, skipping");
                     continue;
                   }
                   if (configFile.getEntityType() == ENVIRONMENT || configFile.getEntityType() == SERVICE_TEMPLATE) {
@@ -90,7 +90,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
                       addToYamlChangeSetForCreatingConfigFilesOnGit(
                           configFile, application.getUuid(), account.getUuid(), gitFileChanges);
                     } catch (Exception e) {
-                      logger.error(DEBUG_LINE + "Exception occurred while adding new config file.", e);
+                      log.error(DEBUG_LINE + "Exception occurred while adding new config file.", e);
                       continue;
                     }
                     addToYamlChangeSetForDeletingConfigFilesOnGit(
@@ -102,15 +102,15 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
             }
           }
         }
-        logger.info(DEBUG_LINE + "Migration done for account {}", account.getAccountName());
+        log.info(DEBUG_LINE + "Migration done for account {}", account.getAccountName());
       }
     }
-    logger.info(DEBUG_LINE + "Pushed yaml changes {}", String.join(",", yamlChangeSetId));
+    log.info(DEBUG_LINE + "Pushed yaml changes {}", String.join(",", yamlChangeSetId));
   }
 
   private void pushYamlChangeSet(String accountId, String appId, List<GitFileChange> gitFileChanges) {
     if (gitFileChanges.isEmpty()) {
-      logger.info(DEBUG_LINE + "Yamlchangeset for account {} and app {} not created as config files are not present.",
+      log.info(DEBUG_LINE + "Yamlchangeset for account {} and app {} not created as config files are not present.",
           accountId, appId);
       return;
     }
@@ -118,7 +118,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
     YamlChangeSet yamlChangeSet = obtainYamlChangeSetForNonFullSync(accountId, appId, gitFileChanges, true);
     yamlChangeSet = yamlChangeSetService.save(yamlChangeSet);
     yamlChangeSetId.add(yamlChangeSet.getUuid());
-    logger.info(DEBUG_LINE + "Yamlchangeset for account {} and app {} created with id [{}].", accountId, appId,
+    log.info(DEBUG_LINE + "Yamlchangeset for account {} and app {} created with id [{}].", accountId, appId,
         yamlChangeSet.getUuid());
   }
 
@@ -127,7 +127,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
     try {
       gitFileChanges.addAll(obtainEntityChangeSet(accountId, entity, ChangeType.DELETE));
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           String.format(DEBUG_LINE
                   + "Failed to create changeset for some config file sync for account %s and app %s while deleting.",
               accountId, appId),
@@ -140,7 +140,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
     try {
       gitFileChanges.addAll(obtainEntityChangeSet(accountId, entity, ChangeType.ADD));
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           String.format(DEBUG_LINE
                   + "Failed to create changeset for some config file sync for account %s and app %s while creating.",
               accountId, appId),
@@ -168,7 +168,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
       try {
         gitFileChanges.forEach(gitFileChange -> gitFileChange.setFilePath(modifyFilePath(gitFileChange.getFilePath())));
       } catch (Exception ex) {
-        logger.error(DEBUG_LINE + "Error in modifying file path.", ex);
+        log.error(DEBUG_LINE + "Error in modifying file path.", ex);
       }
     }
     return gitFileChanges;
@@ -184,7 +184,7 @@ public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
       return removeServiceFolderFromPath(filePath);
     }
 
-    logger.error(
+    log.error(
         DEBUG_LINE + "Failed to generate changeSet for entity as file path {} wasn't generated correctly. ", filePath);
     throw new InvalidRequestException("Wrong file path generated.");
   }

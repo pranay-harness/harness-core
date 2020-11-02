@@ -58,7 +58,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   public AzureVMSSTaskExecutionResponse run(TaskParameters parameters) {
     if (!(parameters instanceof AzureVMSSCommandRequest)) {
       String message = format(UNRECOGNIZED_TASK, parameters.getClass().getSimpleName());
-      logger.error(message);
+      log.error(message);
       return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
 
@@ -98,7 +98,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
 
         default: {
           String message = format(UNRECOGNIZED_TASK, azureVMSSTaskParameters.getCommandType().name());
-          logger.error(message);
+          log.error(message);
           return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
         }
       }
@@ -127,7 +127,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
 
   private AzureVMSSTaskExecutionResponse failureResponse(AzureVMSSTaskParameters azureVMSSTaskParameters) {
     String message = format(UNRECOGNIZED_PARAMETERS, azureVMSSTaskParameters.getClass().getSimpleName());
-    logger.error(message);
+    log.error(message);
     return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
   }
 }

@@ -44,9 +44,9 @@ public class RecentlyAddedAccountJobRunner {
     for (LatestClusterInfo latestClusterInfo : latestClusterInfos) {
       try (AutoLogContext ignore = new AccountLogContext(latestClusterInfo.getAccountId(), OVERRIDE_ERROR);
            AutoLogContext ignore3 = new BatchJobBucketLogContext("RECENTLY_ADDED", OVERRIDE_ERROR)) {
-        logger.info("Running recently added account job for {}", latestClusterInfo);
+        log.info("Running recently added account job for {}", latestClusterInfo);
         runJob(latestClusterInfo);
-        logger.info("Deleting now latest cluster info {}", latestClusterInfo);
+        log.info("Deleting now latest cluster info {}", latestClusterInfo);
         lastReceivedPublishedMessageDao.deleteLatestClusterInfo(latestClusterInfo);
       }
     }
@@ -95,7 +95,7 @@ public class RecentlyAddedAccountJobRunner {
             latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
       }
     } catch (Exception ex) {
-      logger.error("Exception while running job for recently added account", ex);
+      log.error("Exception while running job for recently added account", ex);
     }
   }
 

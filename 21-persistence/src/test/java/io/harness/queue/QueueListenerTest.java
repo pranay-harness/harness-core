@@ -117,9 +117,9 @@ public class QueueListenerTest extends PersistenceTestBase {
       consumer.setHeartbeat(ofSeconds(1));
 
       doAnswer(invocation -> {
-        logger.info("In mock executor");
+        log.info("In mock executor");
         Thread.sleep(1500);
-        logger.info("Done with mock");
+        log.info("Done with mock");
         return invocation.callRealMethod();
       })
           .when(listener)

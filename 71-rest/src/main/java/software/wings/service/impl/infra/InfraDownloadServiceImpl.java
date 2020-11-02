@@ -107,7 +107,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
               "/harness-" + envString + "-delegates" + BUILDS_PATH + version + "/" + DELEGATE_JAR, serviceAccountJson,
               3600L, accountId);
         } catch (Exception e) {
-          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+          log.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
         }
       }
     }
@@ -136,7 +136,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
               3600L, accountId);
 
         } catch (Exception e) {
-          logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
+          log.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
         }
       }
     }
@@ -163,7 +163,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     try {
       return accessTokenCache.get(LOGGING_SERVICE_ACCOUNT_ENV_VAR);
     } catch (Exception e) {
-      logger.error("Failed to get logging token", e);
+      log.error("Failed to get logging token", e);
     }
     return null;
   }
@@ -191,14 +191,14 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     if (isEmpty(serviceAccountPath)) {
       String msg = String.format(
           "Environment variable [%s] containing path to the service account not found", serviceAccountEnvVarName);
-      logger.error(msg);
+      log.error(msg);
       return null;
     }
 
     File file = new File(serviceAccountPath);
     if (!file.exists()) {
       String msg = String.format("Service account file not found at [%s]", serviceAccountPath);
-      logger.error(msg);
+      log.error(msg);
       return null;
     }
 

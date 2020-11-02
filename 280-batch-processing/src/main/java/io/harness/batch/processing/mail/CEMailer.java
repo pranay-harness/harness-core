@@ -67,7 +67,7 @@ public class CEMailer {
       try {
         email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
       } catch (AddressException e) {
-        logger.error(ExceptionUtils.getMessage(e), e);
+        log.error(ExceptionUtils.getMessage(e), e);
       }
       email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
@@ -106,12 +106,12 @@ public class CEMailer {
       }
 
       email.send();
-      logger.info("Successfully sent an email with subject '{}' to user {} through mail server {}:{}",
-          email.getSubject(), emailData.getTo(), email.getHostName(), email.getSmtpPort());
+      log.info("Successfully sent an email with subject '{}' to user {} through mail server {}:{}", email.getSubject(),
+          emailData.getTo(), email.getHostName(), email.getSmtpPort());
     } catch (EmailException | IOException e) {
-      logger.warn("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
+      log.warn("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
     } catch (TemplateException e) {
-      logger.warn("Failed to parse email template . Reason: " + ExceptionUtils.getMessage(e));
+      log.warn("Failed to parse email template . Reason: " + ExceptionUtils.getMessage(e));
     }
   }
 }

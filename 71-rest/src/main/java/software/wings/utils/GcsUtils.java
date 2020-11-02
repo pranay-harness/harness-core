@@ -43,7 +43,7 @@ public class GcsUtils {
   public String getSignedUrlForServiceAccount(
       String objectPath, String serviceAccountJsonFile, long durationInSeconds, String accountId) throws Exception {
     if (isEmpty(serviceAccountJsonFile)) {
-      logger.warn(
+      log.warn(
           "ServiceAccount json file not found,cannot generate signedUrl for {}, returning empty string", objectPath);
       throw new WingsException(ErrorCode.INVALID_INFRA_CONFIGURATION);
     }

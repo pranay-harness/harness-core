@@ -70,7 +70,7 @@ public class GitCommitServiceImpl implements GitCommitService {
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch) {
     final Optional<GitCommit> gitCommit = findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
     if (gitCommit.isPresent()) {
-      logger.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommit.get().getCommitId(),
+      log.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommit.get().getCommitId(),
           gitCommit.get().getStatus(), gitCommit.get().getLastUpdatedAt());
       return true;
     }

@@ -341,7 +341,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
     String query = queryData.getQuery();
-    logger.info("Billing data query {}", query);
+    log.info("Billing data query {}", query);
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
@@ -354,11 +354,11 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingTrendStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingTrendStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

@@ -96,7 +96,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
+      log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);
     }));
     new CIManagerApplication().run(args);
@@ -117,12 +117,12 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   @Override
   public void run(CIManagerConfiguration configuration, Environment environment) {
-    logger.info("Starting ci manager app ...");
+    log.info("Starting ci manager app ...");
 
-    logger.info("Entering startup maintenance mode");
+    log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
     modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
@@ -217,7 +217,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerStores(configuration, injector);
     scheduleJobs(injector);
     initializeServiceSecretKeys(injector);
-    logger.info("Starting app done");
+    log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
     LogManager.shutdown();
   }
@@ -225,7 +225,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   @Override
   public void initialize(Bootstrap<CIManagerConfiguration> bootstrap) {
     initializeLogging();
-    logger.info("bootstrapping ...");
+    log.info("bootstrapping ...");
 
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -236,7 +236,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    logger.info("bootstrapping done.");
+    log.info("bootstrapping done.");
   }
 
   private void registerResources(Environment environment, Injector injector) {

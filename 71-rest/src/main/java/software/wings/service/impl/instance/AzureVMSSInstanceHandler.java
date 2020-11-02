@@ -184,7 +184,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     if (!(infrastructureMapping instanceof AzureVMSSInfrastructureMapping)) {
       String msg = format("Incompatible infra mapping type. Expecting Azure VMSS type. Found: [%s]",
           infrastructureMapping.getInfraMappingType());
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
     return (AzureVMSSInfrastructureMapping) infrastructureMapping;
@@ -207,7 +207,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
       if (deploymentSummary == null && isNotEmpty(currentInstancesInDb)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
-          logger.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
+          log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
               infrastructureMapping.getUuid());
           return;
         }
@@ -227,7 +227,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
         instanceService.save(instance);
       });
 
-      logger.info("Instances to be added {}", vmIdsToBeAdded.size());
+      log.info("Instances to be added {}", vmIdsToBeAdded.size());
     }
   }
 
@@ -253,7 +253,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     });
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
-      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
   }
 

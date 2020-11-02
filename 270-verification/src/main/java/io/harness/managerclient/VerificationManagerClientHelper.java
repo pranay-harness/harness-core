@@ -39,9 +39,9 @@ public class VerificationManagerClientHelper {
       List<String> versions = callManagerWithRetry(managerClient.getListOfPublishedVersions(accountId)).getResource();
       Map<String, Object> headers = new HashMap<>();
       if (versions != null) {
-        logger.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
+        log.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
         if (analysisVersion != null && versions.contains(analysisVersion)) {
-          logger.info("Setting the version info in the manager call to {}", analysisVersion);
+          log.info("Setting the version info in the manager call to {}", analysisVersion);
           headers.put("Version", analysisVersion);
         }
       }
@@ -85,11 +85,11 @@ public class VerificationManagerClientHelper {
             .abortOn(InternalServerError.class)
             .onFailedAttempt(event -> {
               retryCount[0]++;
-              logger.warn("[Retrying] Error while calling manager for call {}, retryCount: {}",
-                  call.request().toString(), retryCount[0], event.getLastFailure());
+              log.warn("[Retrying] Error while calling manager for call {}, retryCount: {}", call.request().toString(),
+                  retryCount[0], event.getLastFailure());
             })
             .onFailure(event
-                -> logger.error("Error while calling manager for call {} after {} retries", call.request().toString(),
+                -> log.error("Error while calling manager for call {} after {} retries", call.request().toString(),
                     MAX_ATTEMPTS, event.getFailure()));
     try {
       return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone()));

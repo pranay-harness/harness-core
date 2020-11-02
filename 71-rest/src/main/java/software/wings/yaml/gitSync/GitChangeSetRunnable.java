@@ -68,11 +68,11 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    logger.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
+    log.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
 
     try {
       if (!shouldRun()) {
-        logger.info("Not continuing with GitChangeSetRunnable job");
+        log.info("Not continuing with GitChangeSetRunnable job");
         return;
       }
 
@@ -81,21 +81,20 @@ public class GitChangeSetRunnable implements Runnable {
       final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
       if (yamlChangeSets.isEmpty()) {
-        logger.info("No changesets found for processing in this run");
+        log.info("No changesets found for processing in this run");
       } else {
-        logger.info(
-            "changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
+        log.info("changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
 
         yamlChangeSets.forEach(this ::processChangeSet);
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Successfully handled changesets for waiting accounts");
+        log.info(GIT_YAML_LOG_PREFIX + "Successfully handled changesets for waiting accounts");
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
+      log.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }
   }
 
@@ -114,7 +113,7 @@ public class GitChangeSetRunnable implements Runnable {
     final String accountId = yamlChangeSet.getAccountId();
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
-      logger.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
+      log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
 
       if (yamlChangeSet.isGitToHarness()) {
         yamlGitSyncService.handleGitChangeSet(yamlChangeSet, accountId);
@@ -122,8 +121,8 @@ public class GitChangeSetRunnable implements Runnable {
         yamlGitSyncService.handleHarnessChangeSet(yamlChangeSet, accountId);
       }
     } catch (Exception ex) {
-      logger.error(format("Unexpected error while processing commit for accountId: [%s], changeSetId =[%s] ", accountId,
-                       yamlChangeSet.getUuid()),
+      log.error(format("Unexpected error while processing commit for accountId: [%s], changeSetId =[%s] ", accountId,
+                    yamlChangeSet.getUuid()),
           ex);
       yamlChangeSetService.updateStatusForGivenYamlChangeSets(
           accountId, Status.FAILED, RUNNING_STATUS_LIST, singletonList(yamlChangeSet.getUuid()));
@@ -138,12 +137,12 @@ public class GitChangeSetRunnable implements Runnable {
     final Set<ChangeSetGroupingKey> eligibleChangeSetKeysForPicking =
         getEligibleQueueKeysForPicking(queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds);
 
-    logger.info(GIT_YAML_LOG_PREFIX
+    log.info(GIT_YAML_LOG_PREFIX
             + "queuedChangeSetKeys:{}, runningChangeSetKeys:{}, maxedOutAccountIds: {} ,eligibleChangeSetKeysForPicking:{}",
         queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds, eligibleChangeSetKeysForPicking);
 
     if (isNotEmpty(maxedOutAccountIds)) {
-      logger.info(GIT_YAML_LOG_PREFIX
+      log.info(GIT_YAML_LOG_PREFIX
               + " Skipping processing of GitChangeSet for Accounts :[{}], as concurrently running tasks have maxed out",
           maxedOutAccountIds);
     }
@@ -163,11 +162,11 @@ public class GitChangeSetRunnable implements Runnable {
       final YamlChangeSet yamlChangeSet = yamlChangeSetService.getQueuedChangeSetForWaitingQueueKey(
           accountId, queueKey, getMaxRunningChangesetsForAccount());
       if (yamlChangeSet == null) {
-        logger.info("no changeset found to process");
+        log.info("no changeset found to process");
       }
       return yamlChangeSet;
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           format("error while finding changeset to process for accountId=[%s], queueKey=[%s]", accountId, queueKey),
           ex);
     }
@@ -180,11 +179,11 @@ public class GitChangeSetRunnable implements Runnable {
 
   private void handleStuckChangeSets() {
     if (shouldPerformStuckJobCheck()) {
-      logger.info("handling stuck change sets");
+      log.info("handling stuck change sets");
       lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
       gitChangeSetRunnableHelper.handleOldQueuedChangeSets(wingsPersistence);
       handleStuckRunningChangesets();
-      logger.info("Successfully handled stuck change sets");
+      log.info("Successfully handled stuck change sets");
     }
   }
 
@@ -231,7 +230,7 @@ public class GitChangeSetRunnable implements Runnable {
     final List<String> yamlChangeSetIds = uuidsOfChangeSets(changeSets);
     yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
         accountId, Status.QUEUED, RUNNING_STATUS_LIST, yamlChangeSetIds);
-    logger.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
+    log.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
 
     yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId);
   }

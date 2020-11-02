@@ -12,7 +12,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 public class LearningEngineTaskGroupNameMigration extends AddFieldMigration {
   @Override
   protected org.slf4j.Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

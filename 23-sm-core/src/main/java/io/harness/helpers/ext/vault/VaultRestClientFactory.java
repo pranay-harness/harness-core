@@ -213,7 +213,7 @@ public class VaultRestClientFactory {
 
   private static void logErrorIfRequestFailed(Response<Void> response) throws IOException {
     if (!response.isSuccessful() && response.errorBody() != null) {
-      logger.error("Could not write secret in the vault due to the following error {}", response.errorBody().string());
+      log.error("Could not write secret in the vault due to the following error {}", response.errorBody().string());
     }
   }
 

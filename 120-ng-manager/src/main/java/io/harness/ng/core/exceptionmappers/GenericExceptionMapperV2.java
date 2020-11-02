@@ -28,7 +28,7 @@ public class GenericExceptionMapperV2 implements ExceptionMapper<Throwable> {
 
   @Override
   public Response toResponse(Throwable exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     ErrorDTO errorDto = ErrorDTO.newError(Status.ERROR, ErrorCode.UNKNOWN_ERROR, message);
     if (hasExposeExceptionAnnotation()) {
       errorDto.setDetailedMessage(exception.getMessage());

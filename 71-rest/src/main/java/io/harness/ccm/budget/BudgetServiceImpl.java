@@ -186,7 +186,7 @@ public class BudgetServiceImpl implements BudgetService {
 
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formBudgetInsightQuery(
         budget.getAccountId(), filters, aggregationFunction, groupBy, Collections.emptyList());
-    logger.info("BudgetDataFetcher query: {}", queryData.getQuery());
+    log.info("BudgetDataFetcher query: {}", queryData.getQuery());
 
     ResultSet resultSet = null;
     boolean successful = false;
@@ -201,12 +201,11 @@ public class BudgetServiceImpl implements BudgetService {
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute getBudgetData query in BudgetService, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), budget.getAccountId(), e);
         } else {
-          logger.warn(
-              "Failed to execute getBudgetData query in BudgetService, query=[{}],accountId=[{}], retryCount=[{}]",
+          log.warn("Failed to execute getBudgetData query in BudgetService, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), budget.getAccountId(), retryCount);
         }
       } finally {
@@ -382,9 +381,9 @@ public class BudgetServiceImpl implements BudgetService {
   private void validateBudgetCount(Budget budget) {
     int maxBudgetsAllowed = ceBudgetFeature.getMaxUsageAllowedForAccount(budget.getAccountId());
     int currentBudgetCount = getBudgetCount(budget.getAccountId());
-    logger.info("Max budgets allowed : {} Current Count : {}", maxBudgetsAllowed, currentBudgetCount);
+    log.info("Max budgets allowed : {} Current Count : {}", maxBudgetsAllowed, currentBudgetCount);
     if (currentBudgetCount >= maxBudgetsAllowed) {
-      logger.info("Did not save Budget: '{}' for account ID {} because usage limit exceeded", budget.getName(),
+      log.info("Did not save Budget: '{}' for account ID {} because usage limit exceeded", budget.getName(),
           budget.getAccountId());
       throw new InvalidRequestException(
           String.format("Cannot create budget. Max budgets allowed for trial: %d", maxBudgetsAllowed));

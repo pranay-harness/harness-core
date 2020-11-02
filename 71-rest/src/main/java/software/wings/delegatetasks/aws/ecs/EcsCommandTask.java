@@ -41,7 +41,7 @@ public class EcsCommandTask extends AbstractDelegateRunnableTask {
       return commandTaskTypeToTaskHandlerMap.get(ecsCommandRequest.getEcsCommandType().name())
           .executeTask(ecsCommandRequest, (List) parameters[1]);
     } catch (WingsException ex) {
-      logger.error("Exception in processing ECS task [{}]", ecsCommandRequest.toString(), ex);
+      log.error("Exception in processing ECS task [{}]", ecsCommandRequest.toString(), ex);
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

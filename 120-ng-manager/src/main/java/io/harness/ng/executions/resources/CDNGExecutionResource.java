@@ -71,7 +71,7 @@ public class CDNGExecutionResource {
       @QueryParam("endTime") Long endTime, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort) {
-    logger.info("Get List of executions");
+    log.info("Get List of executions");
     if (sort.isEmpty()) {
       sort = Collections.singletonList(PipelineExecutionSummaryKeys.startedAt + ",desc");
     }

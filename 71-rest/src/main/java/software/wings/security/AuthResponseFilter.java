@@ -113,7 +113,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       }
 
       if (isEmpty(accountId) && isEmpty(appId)) {
-        logger.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
+        log.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
         return;
       }
 
@@ -121,7 +121,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
 
       authService.evictUserPermissionCacheForAccount(accountId, rebuildUserPermissionInfo);
     } catch (Exception ex) {
-      logger.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
+      log.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
     }
   }
 
@@ -138,7 +138,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       }
 
       if (isEmpty(accountId) && isEmpty(appId)) {
-        logger.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
+        log.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
         return;
       }
 
@@ -147,7 +147,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       authService.evictUserPermissionAndRestrictionCacheForAccount(
           accountId, rebuildUserPermissionInfo, rebuildUserRestrictionInfo);
     } catch (Exception ex) {
-      logger.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
+      log.error("Cache eviction failed for resourcePath {} for accountId {}", resourcePath, accountId, ex);
     }
   }
 }

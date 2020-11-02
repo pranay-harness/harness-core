@@ -87,7 +87,7 @@ public class MessageServiceImpl implements MessageService {
     boolean isOutput = messengerType == targetType && processId.equals(targetProcessId);
     String output = isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId;
     String paramStr = params != null ? join(", ", params) : "";
-    logger.info("{}: {}({})", output, message, paramStr);
+    log.info("{}: {}({})", output, message, paramStr);
     try {
       File channel = getMessageChannel(targetType, targetProcessId);
       List<String> messageContent = new ArrayList<>();
@@ -105,14 +105,14 @@ public class MessageServiceImpl implements MessageService {
           FileUtils.writeLines(channel, singletonList(join(PRIMARY_DELIMITER, messageContent)), true);
         } finally {
           if (!releaseLock(channel)) {
-            logger.error("Failed to release lock {}", channel.getPath());
+            log.error("Failed to release lock {}", channel.getPath());
           }
         }
       } else {
-        logger.error("Failed to acquire lock {}", channel.getPath());
+        log.error("Failed to acquire lock {}", channel.getPath());
       }
     } catch (Exception e) {
-      logger.error("Error writing message to channel: {}({})", message, params, e);
+      log.error("Error writing message to channel: {}({})", message, params, e);
     }
   }
 
@@ -158,10 +158,10 @@ public class MessageServiceImpl implements MessageService {
                                       .fromType(fromType)
                                       .fromProcess(fromProcess)
                                       .build();
-                if (logger.isDebugEnabled()) {
+                if (log.isDebugEnabled()) {
                   String input =
                       isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId;
-                  logger.debug("{}: {}", input, message);
+                  log.debug("{}: {}", input, message);
                 }
                 messageTimestamps.put(channel, timestamp);
                 reader.close();
@@ -174,9 +174,9 @@ public class MessageServiceImpl implements MessageService {
         }
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
+      log.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
-      logger.error("Error reading message from channel {} {}", sourceType, sourceProcessId, e);
+      log.error("Error reading message from channel {} {}", sourceType, sourceProcessId, e);
     }
     return null;
   }
@@ -197,7 +197,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       messageQueues.putIfAbsent(getMessageChannel(sourceType, sourceProcessId), new LinkedBlockingQueue<>());
     } catch (IOException e) {
-      logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
+      log.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
     }
     return new Schedulable(
         format("Error while checking for message from channel %s %s", sourceType, sourceProcessId), () -> {
@@ -237,7 +237,7 @@ public class MessageServiceImpl implements MessageService {
       if (queue == null) {
         RuntimeException ex = new RuntimeException(
             "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[ForChannel] at regular intervals.");
-        logger.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
         throw ex;
       }
       return timeLimiter.callWithTimeout(() -> {
@@ -253,10 +253,9 @@ public class MessageServiceImpl implements MessageService {
         return message;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+      log.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
-      logger.error(
-          "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
+      log.error("Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
     }
     return null;
   }
@@ -269,7 +268,7 @@ public class MessageServiceImpl implements MessageService {
       if (queue == null) {
         RuntimeException ex = new RuntimeException(
             "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[ForChannel] at regular intervals.");
-        logger.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
         throw ex;
       }
       return timeLimiter.callWithTimeout(() -> {
@@ -297,10 +296,9 @@ public class MessageServiceImpl implements MessageService {
         return messages;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+      log.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
-      logger.error(
-          "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
+      log.error("Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
     }
     return null;
   }
@@ -311,7 +309,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(channelDirectory);
     } catch (Exception e) {
-      logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
+      log.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
       return null;
     }
     return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(toList());
@@ -319,7 +317,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void closeChannel(MessengerType type, String id) {
-    logger.debug("Closing channel {} {}", type, id);
+    log.debug("Closing channel {} {}", type, id);
     try {
       File channel = getMessageChannel(type, id);
       messageTimestamps.remove(channel);
@@ -328,20 +326,20 @@ public class MessageServiceImpl implements MessageService {
         FileUtils.forceDelete(channel);
       }
     } catch (Exception e) {
-      logger.error("Error closing channel {} {}", type, id, e);
+      log.error("Error closing channel {} {}", type, id, e);
     }
   }
 
   @Override
   public void clearChannel(MessengerType type, String id) {
-    logger.debug("Clearing channel {} {}", type, id);
+    log.debug("Clearing channel {} {}", type, id);
     try {
       File channel = getMessageChannel(type, id);
       if (channel.exists()) {
         FileUtils.write(channel, "", UTF_8);
       }
     } catch (Exception e) {
-      logger.error("Error clearing channel {} {}", type, id, e);
+      log.error("Error clearing channel {} {}", type, id, e);
     }
   }
 
@@ -354,7 +352,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void putAllData(String name, Map<String, Object> dataToWrite) {
-    logger.debug("Writing data to {}: {}", name, dataToWrite);
+    log.debug("Writing data to {}: {}", name, dataToWrite);
     try {
       File file = getDataFile(name);
       if (acquireLock(file, ofSeconds(5))) {
@@ -368,16 +366,16 @@ public class MessageServiceImpl implements MessageService {
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
         } finally {
           if (!releaseLock(file)) {
-            logger.error("Failed to release lock {}", file.getPath());
+            log.error("Failed to release lock {}", file.getPath());
           }
         }
       } else {
-        logger.error("Failed to acquire lock {}", file.getPath());
+        log.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out writing data to {}. Couldn't store {}", name, dataToWrite);
+      log.error("Timed out writing data to {}. Couldn't store {}", name, dataToWrite);
     } catch (Exception e) {
-      logger.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
+      log.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
     }
   }
 
@@ -385,7 +383,7 @@ public class MessageServiceImpl implements MessageService {
   public <T> T getData(String name, String key, Class<T> valueClass) {
     Map<String, Object> allData = getAllData(name);
     if (allData == null) {
-      logger.error("Error reading data from {}. Couldn't get {}", name, key);
+      log.error("Error reading data from {}. Couldn't get {}", name, key);
       return null;
     }
     Object value = allData.get(key);
@@ -393,10 +391,10 @@ public class MessageServiceImpl implements MessageService {
       return null;
     }
     if (!valueClass.isAssignableFrom(value.getClass())) {
-      logger.error("Value is not an instance of {}: {}", valueClass.getName(), value);
+      log.error("Value is not an instance of {}: {}", valueClass.getName(), value);
       return null;
     }
-    logger.debug("Value read from {}: {} = {}", name, key, value);
+    log.debug("Value read from {}: {} = {}", name, key, value);
     return (T) value;
   }
 
@@ -409,16 +407,16 @@ public class MessageServiceImpl implements MessageService {
           return getDataMap(file);
         } finally {
           if (!releaseLock(file)) {
-            logger.error("Failed to release lock {}", file.getPath());
+            log.error("Failed to release lock {}", file.getPath());
           }
         }
       } else {
-        logger.error("Failed to acquire lock {}", file.getPath());
+        log.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out reading data from {}", name);
+      log.error("Timed out reading data from {}", name);
     } catch (Exception e) {
-      logger.error("Error reading data from {}", name, e);
+      log.error("Error reading data from {}", name, e);
     }
     return null;
   }
@@ -429,7 +427,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(dataDirectory);
     } catch (Exception e) {
-      logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
+      log.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
       return null;
     }
     return FileUtils
@@ -444,7 +442,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public void removeData(String name, String key) {
-    logger.debug("Removing data from {}: {}", name, key);
+    log.debug("Removing data from {}: {}", name, key);
     try {
       File file = getDataFile(name);
       if (acquireLock(file, ofSeconds(5))) {
@@ -458,29 +456,29 @@ public class MessageServiceImpl implements MessageService {
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
         } finally {
           if (!releaseLock(file)) {
-            logger.error("Failed to release lock {}", file.getPath());
+            log.error("Failed to release lock {}", file.getPath());
           }
         }
       } else {
-        logger.error("Failed to acquire lock {}", file.getPath());
+        log.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out removing data from {}. Couldn't remove {}", name, key);
+      log.error("Timed out removing data from {}. Couldn't remove {}", name, key);
     } catch (Exception e) {
-      logger.error("Error removing data from {}. Couldn't remove {}", name, key, e);
+      log.error("Error removing data from {}. Couldn't remove {}", name, key, e);
     }
   }
 
   @Override
   public void closeData(String name) {
-    logger.debug("Closing data: {}", name);
+    log.debug("Closing data: {}", name);
     try {
       File file = getDataFile(name);
       if (file.exists()) {
         FileUtils.forceDelete(file);
       }
     } catch (Exception e) {
-      logger.error("Error closing data: {}", name, e);
+      log.error("Error closing data: {}", name, e);
     }
   }
 
@@ -491,11 +489,11 @@ public class MessageServiceImpl implements MessageService {
       if (channel.exists()) {
         LineIterator reader = FileUtils.lineIterator(channel);
         while (reader.hasNext()) {
-          logger.error(reader.nextLine());
+          log.error(reader.nextLine());
         }
       }
     } catch (IOException e) {
-      logger.error("Couldn't read channel for {} {}.", sourceType, sourceProcessId, e);
+      log.error("Couldn't read channel for {} {}.", sourceType, sourceProcessId, e);
     }
   }
 
@@ -521,7 +519,7 @@ public class MessageServiceImpl implements MessageService {
             fileContent = FileUtils.readFileToString(file, UTF_8);
             data = JsonUtils.asObject(fileContent, HashMap.class);
           } catch (Exception e) {
-            logger.error("Couldn't read map from {}. File content: \n{}", file.getName(), fileContent, e);
+            log.error("Couldn't read map from {}. File content: \n{}", file.getName(), fileContent, e);
             FileUtils.deleteQuietly(file);
           }
         } else {

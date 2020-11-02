@@ -165,7 +165,7 @@ public class YamlHelper {
       throw e;
     } catch (Exception e) {
       // bad before Yaml
-      logger.error("", e);
+      log.error("", e);
       YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
       return Optional.empty();
     }

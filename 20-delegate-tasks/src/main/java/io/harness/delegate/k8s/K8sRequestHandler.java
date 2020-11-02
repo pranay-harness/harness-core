@@ -56,7 +56,7 @@ public abstract class K8sRequestHandler {
       K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception;
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {
-    logger.error("Exception in processing K8s task [{}]",
+    log.error("Exception in processing K8s task [{}]",
         k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), ex);
   }
 }

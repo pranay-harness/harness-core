@@ -62,7 +62,7 @@ public class GitChangeSetProcessor {
                                                 .repoName(gitDiffResult.getRepoName())
                                                 .commitId(gitDiffResult.getCommitId())
                                                 .build(OVERRIDE_ERROR)) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Started processing git diff results with files [{}]",
+      log.info(GIT_YAML_LOG_PREFIX + "Started processing git diff results with files [{}]",
           emptyIfNull(gitDiffResult.getGitFileChanges()).stream().map(GitFileChange::getFilePath).collect(toList()));
 
       // ensure gitCommit is not already processed. Else nothing to be done.
@@ -70,7 +70,7 @@ public class GitChangeSetProcessor {
           gitCommitService.isCommitAlreadyProcessed(accountId, gitDiffResult.getCommitId(), repo, branch);
       if (commitAlreadyProcessed) {
         //        // do nothing
-        logger.warn(GIT_YAML_LOG_PREFIX + "Commit [{}] already processed for account {}", gitDiffResult.getCommitId(),
+        log.warn(GIT_YAML_LOG_PREFIX + "Commit [{}] already processed for account {}", gitDiffResult.getCommitId(),
             accountId);
         return;
       }
@@ -78,7 +78,7 @@ public class GitChangeSetProcessor {
       ingestYamlChanges(accountId, gitDiffResult, gitConnectorId, repo, branch);
 
       try (ProcessTimeLogContext ignore3 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Successfully  processed git diff results");
+        log.info(GIT_YAML_LOG_PREFIX + "Successfully  processed git diff results");
       }
     }
   }
@@ -183,7 +183,7 @@ public class GitChangeSetProcessor {
             GitFileLocationHelper.getEntityType(gitFileChange.getFilePath());
             return gitFileChange;
           } catch (Exception e) {
-            logger.info("Unknown entity type for file path {} ", gitFileChange.getFilePath(), e);
+            log.info("Unknown entity type for file path {} ", gitFileChange.getFilePath(), e);
           }
           return null;
         })

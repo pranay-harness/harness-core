@@ -275,18 +275,18 @@ public abstract class IntegrationTestBase extends WingsBaseTest implements Wings
     try {
       encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
     } catch (DecoderException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     try {
       directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     try {
       jwt.encrypt(directEncrypter);
     } catch (JOSEException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     return jwt.serialize();
@@ -296,7 +296,7 @@ public abstract class IntegrationTestBase extends WingsBaseTest implements Wings
     final String name = generateUuid();
     final String accountName = generateUuid();
     final String companyName = generateUuid();
-    logger.info("signing up with email {} pwd {} name {} accounName {} companyName {}", email, pwd, name, accountName,
+    log.info("signing up with email {} pwd {} name {} accounName {} companyName {}", email, pwd, name, accountName,
         companyName);
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(

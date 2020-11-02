@@ -61,7 +61,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
                     ? 60
                     : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout()))
             .build();
-    logger.info("Retrieving build details of Custom Repository");
+    log.info("Retrieving build details of Custom Repository");
     ShellExecutionResponse shellExecutionResponse;
     try {
       shellExecutionResponse = shellExecutionService.execute(shellExecutionRequest);
@@ -76,7 +76,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       // Read the file
       String artifactResultPath = map.get(ARTIFACT_RESULT_PATH);
       if (artifactResultPath == null) {
-        logger.info("ShellExecution did not return artifact result path");
+        log.info("ShellExecution did not return artifact result path");
         throw new InvalidArtifactServerException("ShellExecution did not return artifact result path", USER);
       }
       // Convert to Build details
@@ -100,7 +100,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
             final String buildNo = result.getBuildNo();
             if (isNotEmpty(buildNo)) {
               if (buildNumbers.contains(buildNo)) {
-                logger.warn(
+                log.warn(
                     "There is an entry with buildNo {} already exists. So, skipping the result. Please ensure that buildNo is unique across the results",
                     buildNo);
                 return;
@@ -112,25 +112,25 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
                                    .build());
               buildNumbers.add(buildNo);
             } else {
-              logger.warn("There is an object in output without mandatory build number");
+              log.warn("There is an object in output without mandatory build number");
             }
           });
         } else {
-          logger.warn("Results are empty");
+          log.warn("Results are empty");
         }
-        logger.info("Retrieving build details of Custom Repository success");
+        log.info("Retrieving build details of Custom Repository success");
       } catch (Exception ex) {
         String msg =
             "Failed to transform results to the Custom Repository Response. Please verify if the script output is in the required format. Reason ["
             + ExceptionUtils.getMessage(ex) + "]";
-        logger.error(msg);
+        log.error(msg);
         throw new InvalidArtifactServerException(msg, Level.INFO, USER);
       } finally {
         // Finally delete the file
         try {
           deleteFileIfExists(file.getAbsolutePath());
         } catch (IOException e) {
-          logger.warn("Error occurred while deleting the file {}", file.getAbsolutePath());
+          log.warn("Error occurred while deleting the file {}", file.getAbsolutePath());
         }
       }
 

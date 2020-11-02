@@ -39,21 +39,21 @@ public class ProcurementAPIClientBuilder {
     Path path = Paths.get(GcpMarketPlaceConstants.SERVICE_ACCOUNT_INTEGRATION_PATH);
 
     if (!Files.exists(path)) {
-      logger.error("GCP credentials file does NOT exist. Marketplace Approval requests will fail. Path: {}", path);
+      log.error("GCP credentials file does NOT exist. Marketplace Approval requests will fail. Path: {}", path);
       return Optional.empty();
     }
     InputStream credentialStream;
     try {
       credentialStream = Files.newInputStream(path, StandardOpenOption.READ);
     } catch (IOException e) {
-      logger.error("Exception reading credentials file. Path: " + path, e);
+      log.error("Exception reading credentials file. Path: " + path, e);
       return Optional.empty();
     }
     GoogleCredential credentials;
     try {
       credentials = GoogleCredential.fromStream(credentialStream);
     } catch (IOException e) {
-      logger.error("Exception creating google credentials from credential stream. Path: " + path, e);
+      log.error("Exception creating google credentials from credential stream. Path: " + path, e);
       return Optional.empty();
     }
     if (credentials.createScopedRequired()) {

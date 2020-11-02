@@ -69,8 +69,8 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public Instance save(Instance instance) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Begin - Instance save called for uuid:" + instance.getUuid()
+    if (log.isDebugEnabled()) {
+      log.debug("Begin - Instance save called for uuid:" + instance.getUuid()
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
     if (!appService.exist(instance.getAppId())) {
@@ -83,8 +83,8 @@ public class InstanceServiceImpl implements InstanceService {
 
     String key = wingsPersistence.save(instance);
     Instance updatedInstance = wingsPersistence.getWithAppId(Instance.class, instance.getAppId(), key);
-    if (logger.isDebugEnabled()) {
-      logger.debug("End - Instance save called for uuid:" + instance.getUuid()
+    if (log.isDebugEnabled()) {
+      log.debug("End - Instance save called for uuid:" + instance.getUuid()
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
 
@@ -124,7 +124,7 @@ public class InstanceServiceImpl implements InstanceService {
              persistentLocker.waitToAcquireLock(instanceKey.toString(), Duration.ofMinutes(1), Duration.ofMinutes(2))) {
       if (acquiredLock == null) {
         String msg = "Unable to acquire lock while trying save or update instance with key " + instanceKey.toString();
-        logger.warn(msg);
+        log.warn(msg);
         throw new WingsException(msg);
       }
 
@@ -172,7 +172,7 @@ public class InstanceServiceImpl implements InstanceService {
       return podInstanceKey;
     } else {
       String msg = "Either host or container or pcf instance key needs to be set";
-      logger.error(msg);
+      log.error(msg);
       throw new WingsException(msg);
     }
   }
@@ -252,7 +252,7 @@ public class InstanceServiceImpl implements InstanceService {
 
       if (isNotEmpty(deletedInstances)) {
         final List<String> idList = deletedInstances.stream().map(Instance::getUuid).collect(Collectors.toList());
-        logger.error("Found some deleted instances that are being deleted again. accountId: [{}], instanceIds:[{}]",
+        log.error("Found some deleted instances that are being deleted again. accountId: [{}], instanceIds:[{}]",
             deletedInstances.get(0).getAccountId(), idList);
       }
 
@@ -261,7 +261,7 @@ public class InstanceServiceImpl implements InstanceService {
       query.field(InstanceKeys.isDeleted).equal(false);
       result.set(result.get() && delete(query, currentTimeMillis));
     });
-    logger.info("Instance Sync Delete Stack trace: " + Arrays.toString(Thread.currentThread().getStackTrace()));
+    log.info("Instance Sync Delete Stack trace: " + Arrays.toString(Thread.currentThread().getStackTrace()));
     return result.get();
   }
 
@@ -358,7 +358,7 @@ public class InstanceServiceImpl implements InstanceService {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
       if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
-        logger.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
+        log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
             infraMappingId);
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
         pruneByInfrastructureMapping(appId, infraMappingId);

@@ -52,7 +52,7 @@ public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
     Optional<SecretSetupUsageBuilder> secretSetupUsageBuilderOptional =
         secretSetupUsageBuilderRegistry.getSecretSetupUsageBuilder(type);
     if (!secretSetupUsageBuilderOptional.isPresent()) {
-      logger.warn("Building setup usages is not supported for {}", type);
+      log.warn("Building setup usages is not supported for {}", type);
       return secretSetupUsages;
     }
     SecretSetupUsageBuilder secretSetupUsageBuilder = secretSetupUsageBuilderOptional.get();
@@ -81,7 +81,7 @@ public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
     Optional<SecretSetupUsageBuilder> secretSetupUsageBuilderOptional =
         secretSetupUsageBuilderRegistry.getSecretSetupUsageBuilder(type);
     if (!secretSetupUsageBuilderOptional.isPresent()) {
-      logger.warn("Building setup usages is not supported for {}", type);
+      log.warn("Building setup usages is not supported for {}", type);
       return appEnvMap;
     }
     SecretSetupUsageBuilder secretSetupUsageBuilder = secretSetupUsageBuilderOptional.get();

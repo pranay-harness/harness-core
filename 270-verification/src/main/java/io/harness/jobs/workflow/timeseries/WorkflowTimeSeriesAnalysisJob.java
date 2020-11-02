@@ -122,7 +122,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
     }
 
     private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute, String groupName) {
-      logger.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
+      log.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
       int analysisStartMin =
           analysisMinute > COMPARATIVE_ANALYSIS_DURATION ? analysisMinute - COMPARATIVE_ANALYSIS_DURATION : 0;
       final String lastSuccessfulWorkflowExecutionIdWithData =
@@ -222,7 +222,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
 
     private boolean timeSeriesML(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType,
         Integer newNodeTrafficSplitPercentage) throws IOException, TimeoutException {
-      logger.info("Running timeSeriesML with analysisMinute : {} groupName: {} mlAnalysisType : {}", analysisMinute,
+      log.info("Running timeSeriesML with analysisMinute : {} groupName: {} mlAnalysisType : {}", analysisMinute,
           groupName, mlAnalysisType);
       if (learningEngineService.hasAnalysisTimedOut(
               context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
@@ -285,7 +285,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
         learningEngineAnalysisTask.setPrediction_start_time(PREDECTIVE_HISTORY_MINUTES);
       }
 
-      logger.info("Queueing for analysis {}", learningEngineAnalysisTask);
+      log.info("Queueing for analysis {}", learningEngineAnalysisTask);
       return learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
@@ -302,7 +302,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
 
     @Override
     public void run() {
-      logger.info("Starting analysis for " + context.getStateExecutionId());
+      log.info("Starting analysis for " + context.getStateExecutionId());
 
       boolean completeCron = false;
       boolean error = false;
@@ -312,7 +312,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       try {
         // Check whether workflow state is valid or not.
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-          logger.info("for {} state is no longer valid", context.getStateExecutionId());
+          log.info("for {} state is no longer valid", context.getStateExecutionId());
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
           return;
@@ -328,7 +328,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
         TimeSeriesMLAnalysisRecord failFastRecord =
             analysisService.getFailFastAnalysisRecord(context.getAppId(), context.getStateExecutionId());
         if (failFastRecord != null && failFastRecord.isShouldFailFast()) {
-          logger.info("The analysis for state {} is going to fail fast due to {}", context.getStateExecutionId(),
+          log.info("The analysis for state {} is going to fail fast due to {}", context.getStateExecutionId(),
               "Analysis failed due to fail fast thresholds: " + failFastRecord.getFailFastErrorMsg());
           completeCron = true;
           error = true;
@@ -358,7 +358,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
                     >= analysisDuration;
 
             if (completeCron) {
-              logger.info("time series analysis finished for {} after running for {} minutes",
+              log.info("time series analysis finished for {} after running for {} minutes",
                   context.getStateExecutionId(), lastHeartBeatRecord.getDataCollectionMinute());
               return;
             }
@@ -368,12 +368,12 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
               context.getAppId(), context.getStateExecutionId(), context.getWorkflowExecutionId(),
               context.getServiceId(), groupName, context.getAccountId());
           if (analysisDataRecord == null) {
-            logger.info("for {} Skipping time series analysis. No new data.", context.getStateExecutionId());
+            log.info("for {} Skipping time series analysis. No new data.", context.getStateExecutionId());
             continue;
           }
           analysisMinute = analysisDataRecord.getDataCollectionMinute();
 
-          logger.info("running analysis for {} for minute {}", context.getStateExecutionId(), analysisMinute);
+          log.info("running analysis for {} for minute {}", context.getStateExecutionId(), analysisMinute);
 
           boolean runTimeSeriesML = true;
 
@@ -391,7 +391,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
                     context.getPrevWorkflowExecutionId(), groupName, context.getAccountId());
 
                 if (analysisMinute < minControlMinute) {
-                  logger.info(
+                  log.info(
                       "For {} Baseline control minute starts at {} . But current analysis minute is {} Will run local analysis instead of ML for minute {}",
                       context.getStateExecutionId(), minControlMinute, analysisMinute, analysisMinute);
                   runTimeSeriesML = false;
@@ -407,7 +407,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
                 // newRelicMetricDataRecord is 6 months.
                 if (getRelativeAnalysisMinute(analysisMinute, context)
                     > getMaxControlRelativeMinute(maxControlMinute, minControlMinute)) {
-                  logger.warn(
+                  log.warn(
                       "For {} Not enough control data. analysis minute = {} , max control minute = {} analysisContext = {}",
                       context.getStateExecutionId(), analysisMinute, maxControlMinute, context);
                   // Do nothing. Don't run any analysis.
@@ -422,7 +422,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
               // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
               case PREDICTIVE:
               case COMPARE_WITH_CURRENT:
-                logger.info("For {} running time series ml analysis for minute {} for type {}",
+                log.info("For {} running time series ml analysis for minute {} for type {}",
                     context.getStateExecutionId(), analysisMinute, context.getComparisonStrategy());
                 taskQueued = timeSeriesML(
                     analysisMinute, groupName, timeSeriesMlAnalysisType, context.getNewNodesTrafficShiftPercent());
@@ -433,7 +433,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           }
 
           if (!runTimeSeriesML) {
-            logger.info("running local time series analysis for {}", context.getStateExecutionId());
+            log.info("running local time series analysis for {}", context.getStateExecutionId());
             NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
             analysisService.saveAnalysisRecordsIgnoringDuplicate(analysisRecord);
             analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
@@ -444,7 +444,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           try {
             createExperimentalTask(analysisMinute, groupName, timeSeriesMlAnalysisType);
           } catch (Exception ex) {
-            logger.info("[Learning Engine] : Failed to create Experimental Task for {} with error {}",
+            log.info("[Learning Engine] : Failed to create Experimental Task for {} with error {}",
                 context.getStateExecutionId(), ex);
           }
         }
@@ -452,12 +452,12 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
         completeCron = true;
         error = true;
         errMsg = ExceptionUtils.getMessage(ex);
-        logger.warn("analysis failed for {}", context.getStateExecutionId(), ex);
+        log.warn("analysis failed for {}", context.getStateExecutionId(), ex);
       } finally {
         try {
           if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
-              logger.info("send notification to state manager for {} and delete cron with error : {} errorMsg : {}",
+              log.info("send notification to state manager for {} and delete cron with error : {} errorMsg : {}",
                   context.getStateExecutionId(), error, errMsg);
               sendStateNotification(context, error, errMsg, analysisMinute);
               try {
@@ -465,15 +465,15 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
                   jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
                 }
               } catch (Exception e) {
-                logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
+                log.error("for {} Delete cron failed", context.getStateExecutionId(), e);
               }
             } catch (Exception e) {
-              logger.error("for {} Send notification failed for new relic analysis manager, this will be retried",
+              log.error("for {} Send notification failed for new relic analysis manager, this will be retried",
                   context.getStateExecutionId(), e);
             }
           }
         } catch (Exception ex) {
-          logger.error("analysis failed", ex);
+          log.error("analysis failed", ex);
         }
       }
     }
@@ -494,8 +494,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
      */
     private void createExperimentalTask(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType)
         throws UnsupportedEncodingException {
-      logger.info("Creating Experimental Task with analysisMinute : {} groupName: {} mlAnalysisType : {}",
-          analysisMinute, groupName, mlAnalysisType);
+      log.info("Creating Experimental Task with analysisMinute : {} groupName: {} mlAnalysisType : {}", analysisMinute,
+          groupName, mlAnalysisType);
       String uuid = generateUuid();
       String testInputUrl = getTestInputUrl(groupName);
       String controlInputUrl = getControlInputUrl(groupName);
@@ -556,7 +556,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
         analysisTask.setAnalysis_save_url(saveUrl);
         analysisTask.setExperiment_name(experiment.getExperimentName());
 
-        logger.info("Queueing for analysis {}", analysisTask);
+        log.info("Queueing for analysis {}", analysisTask);
         learningEngineService.addLearningEngineExperimentalAnalysisTask(analysisTask);
       }
     }
@@ -597,7 +597,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
         final VerificationDataAnalysisResponse response =
             VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
         response.setExecutionStatus(status);
-        logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+        log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
 
         managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
       }

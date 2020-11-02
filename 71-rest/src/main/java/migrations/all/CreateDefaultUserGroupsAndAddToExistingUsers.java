@@ -37,7 +37,7 @@ public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
       userList.forEach(user -> {
         List<Account> accounts = user.getAccounts();
         if (CollectionUtils.isEmpty(accounts)) {
-          logger.info("User {} is not associated to any account", user.getName());
+          log.info("User {} is not associated to any account", user.getName());
           return;
         }
 

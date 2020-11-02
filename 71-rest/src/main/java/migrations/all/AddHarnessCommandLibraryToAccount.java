@@ -18,7 +18,7 @@ public class AddHarnessCommandLibraryToAccount implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_LINE + "Starting migration for adding new  template gallery");
+    log.info(DEBUG_LINE + "Starting migration for adding new  template gallery");
 
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createAuthorizedQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
@@ -32,10 +32,10 @@ public class AddHarnessCommandLibraryToAccount implements Migration {
             templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(
                 account.getUuid(), account.getAccountName());
           } catch (Exception e) {
-            logger.error(DEBUG_LINE + "Cannot add harness gallery to account" + account.getUuid(), e);
+            log.error(DEBUG_LINE + "Cannot add harness gallery to account" + account.getUuid(), e);
           }
         }
-        logger.info(DEBUG_LINE + "Saved Harness Command library gallery to account {}", account.getUuid());
+        log.info(DEBUG_LINE + "Saved Harness Command library gallery to account {}", account.getUuid());
       }
     }
   }

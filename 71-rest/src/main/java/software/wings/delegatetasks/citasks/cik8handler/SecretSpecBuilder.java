@@ -79,7 +79,7 @@ public class SecretSpecBuilder {
     String password = null;
     if (connectorDetails != null) {
       ConnectorInfoDTO connectorInfo = connectorDetails.getConnectorDTO().getConnectorInfo();
-      logger.info("Decrypting image registry connector details of id:[{}], type:[{}]", connectorInfo.getIdentifier(),
+      log.info("Decrypting image registry connector details of id:[{}], type:[{}]", connectorInfo.getIdentifier(),
           connectorInfo.getConnectorType());
       if (connectorInfo.getConnectorType() == ConnectorType.DOCKER) {
         DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorInfo.getConnectorConfig();
@@ -120,7 +120,7 @@ public class SecretSpecBuilder {
     Map<String, SecretParams> data = new HashMap<>();
     if (isNotEmpty(secretVariableDetails)) {
       for (SecretVariableDetails secretVariableDetail : secretVariableDetails) {
-        logger.info("Decrypting custom variable name:[{}], type:[{}], secretRef:[{}]",
+        log.info("Decrypting custom variable name:[{}], type:[{}], secretRef:[{}]",
             secretVariableDetail.getSecretVariableDTO().getName(),
             secretVariableDetail.getSecretVariableDTO().getType(),
             secretVariableDetail.getSecretVariableDTO().getSecret().toSecretRefStringValue());
@@ -160,7 +160,7 @@ public class SecretSpecBuilder {
         ConnectorDTO connectorDTO = connectorDetailsEntry.getValue().getConnectorDTO();
         List<EncryptedDataDetail> encryptedDataDetails = connectorDetailsEntry.getValue().getEncryptedDataDetails();
 
-        logger.info("Decrypting publish artifact connector id:[{}], type:[{}]",
+        log.info("Decrypting publish artifact connector id:[{}], type:[{}]",
             connectorDTO.getConnectorInfo().getIdentifier(), connectorDTO.getConnectorInfo().getConnectorType());
         if (connectorDTO.getConnectorInfo().getConnectorType() == ConnectorType.DOCKER) {
           DockerConnectorDTO connectorConfig =
@@ -210,7 +210,7 @@ public class SecretSpecBuilder {
     }
     ConnectorInfoDTO connectorInfo = gitConnector.getConnectorDTO().getConnectorInfo();
     GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
-    logger.info(
+    log.info(
         "Decrypting git connector id:[{}], type:[{}]", connectorInfo.getIdentifier(), connectorInfo.getConnectorType());
     secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
     Map<String, String> data = new HashMap<>();
@@ -231,7 +231,7 @@ public class SecretSpecBuilder {
     if (data.isEmpty()) {
       String errMsg = format("Invalid GIT Authentication scheme %s for repository %s", gitConfigDTO.getGitAuthType(),
           gitConfigDTO.getUrl());
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new InvalidArgumentsException(errMsg, WingsException.USER);
     }
 

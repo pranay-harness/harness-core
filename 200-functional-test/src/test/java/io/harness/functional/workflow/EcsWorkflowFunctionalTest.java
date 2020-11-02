@@ -348,14 +348,14 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
 
-    logger.info("Invoking workflow execution");
+    log.info("Invoking workflow execution");
     //    WorkflowExecution workflowExecution = workflowExecutionService.triggerEnvExecution(service.getApplicationId(),
     //        infrastructureMapping.getEnvId(), executionArgs, Trigger.builder().name("adwait").uuid("uuId").build());
 
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
-    logger.info("Waiting for execution to finish");
+    log.info("Waiting for execution to finish");
 
     Awaitility.await()
         .atMost(600, TimeUnit.SECONDS)
@@ -372,7 +372,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     WorkflowExecution completedWorkflowExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
-    logger.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
+    log.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
     assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
   }
 }

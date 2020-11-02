@@ -86,7 +86,7 @@ public class NodeAndPodDetailsDataFetcher
     queryData = billingDataQueryBuilder.formNodeAndPodDetailsQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, limit, offset);
 
-    logger.info("NodeAndPodDetailsDataFetcher query!! {}", queryData.getQuery());
+    log.info("NodeAndPodDetailsDataFetcher query!! {}", queryData.getQuery());
     boolean successful = false;
     int retryCount = 0;
     while (!successful && retryCount < MAX_RETRY) {
@@ -98,11 +98,11 @@ public class NodeAndPodDetailsDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in NodeAndPodDetailsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in NodeAndPodDetailsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

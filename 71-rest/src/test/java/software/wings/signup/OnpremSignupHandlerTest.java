@@ -87,7 +87,7 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
       assertThat(onpremSignupHandler.completeSignup(null, null));
       fail("Expcted the above call to fail.");
     } catch (SignupException se) {
-      logger.info("Expected behaviour");
+      log.info("Expected behaviour");
     }
   }
 

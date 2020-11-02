@@ -41,9 +41,9 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   public String getPortalBaseUrl(String accountId) {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to URL of portal
-    logger.info("Generating Portal URL for account {}", accountId);
+    log.info("Generating Portal URL for account {}", accountId);
     String portalUrl = appendSeparatorToUrl(getPortalUrl(accountId));
-    logger.info("Returning {} from getPortalBaseUrl", portalUrl);
+    log.info("Returning {} from getPortalBaseUrl", portalUrl);
     return portalUrl;
   }
 
@@ -61,10 +61,10 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   public String getApiBaseUrl(String accountId) {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to API URL
-    logger.info("Generating API URL for account {}", accountId);
+    log.info("Generating API URL for account {}", accountId);
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getApiUrl().trim();
-    logger.info("Returning {} from getApiBaseUrl", apiUrl);
+    log.info("Returning {} from getApiBaseUrl", apiUrl);
     return appendSeparatorToUrl(apiUrl);
   }
 
@@ -74,18 +74,18 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    * @return
    */
   private Optional<String> getCustomSubdomainUrl(String accountId) {
-    logger.info("Getting subdomainUrl for account Id: {}", accountId);
+    log.info("Getting subdomainUrl for account Id: {}", accountId);
     try {
       if (null == accountId) {
         accountId = getAccountIdFromThreadLocal();
       }
       if (null != accountId) {
         Account account = accountService.get(accountId);
-        logger.info("Returning subdomain URL {} for account {}", account.getSubdomainUrl(), accountId);
+        log.info("Returning subdomain URL {} for account {}", account.getSubdomainUrl(), accountId);
         return Optional.ofNullable(account.getSubdomainUrl());
       }
     } catch (Exception e) {
-      logger.info("Exception occurred at getCustomSubdomainUrl for account {}", accountId, e);
+      log.info("Exception occurred at getCustomSubdomainUrl for account {}", accountId, e);
       return Optional.empty();
     }
     return Optional.empty();
@@ -93,13 +93,13 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
 
   private String getAccountIdFromThreadLocal() {
     String accountId = AccountThreadLocal.get();
-    logger.info("Got account id {} from AccountThreadLocal", accountId);
+    log.info("Got account id {} from AccountThreadLocal", accountId);
 
     if (null == accountId) {
       User user = UserThreadLocal.get();
       if (null != user && null != user.getUserRequestContext()) {
         accountId = user.getUserRequestContext().getAccountId();
-        logger.info("Got account id {} from UserThreadLocal", accountId);
+        log.info("Got account id {} from UserThreadLocal", accountId);
       }
     }
     return accountId;
@@ -135,18 +135,18 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    * @return
    */
   public String getManagerUrl(HttpServletRequest request, String accountId) {
-    logger.info("Generating manager URL for account {}", accountId);
+    log.info("Generating manager URL for account {}", accountId);
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getApiUrl().trim();
     apiUrl = removeSeparatorFromUrl(apiUrl);
-    logger.info("Returning manager URL {} for account {}", apiUrl, accountId);
+    log.info("Returning manager URL {} for account {}", apiUrl, accountId);
     return !StringUtils.isEmpty(apiUrl)
         ? apiUrl
         : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   public String getDelegateMetadataUrl(String accountId, String managerHost, String deployMode) {
-    logger.info("Generating delegate metadata URL for account {}", accountId);
+    log.info("Generating delegate metadata URL for account {}", accountId);
     if (StringUtils.isNotBlank(managerHost) && DeployMode.isOnPrem(deployMode)) {
       return managerHost + "/storage/wingsdelegates/delegateprod.txt";
     }
@@ -154,19 +154,19 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     String delegateMetadataUrl = urlConfiguration.getDelegateMetadataUrl().trim();
     delegateMetadataUrl =
         overrideMetadataUrl(subdomainUrl.isPresent() ? subdomainUrl.get() : null, delegateMetadataUrl);
-    logger.info("Returning delegate metadata URL {} for account {}", delegateMetadataUrl, accountId);
+    log.info("Returning delegate metadata URL {} for account {}", delegateMetadataUrl, accountId);
     return delegateMetadataUrl;
   }
 
   public String getWatcherMetadataUrl(String accountId, String managerHost, String deployMode) {
-    logger.info("Generating watcher metadata URL for account {}", accountId);
+    log.info("Generating watcher metadata URL for account {}", accountId);
     if (StringUtils.isNotBlank(managerHost) && DeployMode.isOnPrem(deployMode)) {
       return managerHost + "/storage/wingswatchers/watcherprod.txt";
     }
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String watcherMetadataUrl = urlConfiguration.getWatcherMetadataUrl().trim();
     watcherMetadataUrl = overrideMetadataUrl(subdomainUrl.isPresent() ? subdomainUrl.get() : null, watcherMetadataUrl);
-    logger.info("Returning watcher metadata URL {} for account {}", watcherMetadataUrl, accountId);
+    log.info("Returning watcher metadata URL {} for account {}", watcherMetadataUrl, accountId);
     return watcherMetadataUrl;
   }
 
@@ -183,11 +183,11 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
         URL customSubdomainUrl = new URL(subdomainUrl);
         URL modifiedMetadataUrl =
             new URL(customSubdomainUrl.getProtocol(), customSubdomainUrl.getHost(), originalMetadataUrl.getFile());
-        logger.info("Returning {} from replaceMetadataUrl", modifiedMetadataUrl.toString());
+        log.info("Returning {} from replaceMetadataUrl", modifiedMetadataUrl.toString());
         return modifiedMetadataUrl.toString();
       }
     } catch (Exception e) {
-      logger.info("Exception occurred at replaceMetaDataUrl with metadataUrl {}", metadataUrl, e);
+      log.info("Exception occurred at replaceMetaDataUrl with metadataUrl {}", metadataUrl, e);
       return metadataUrl;
     }
     return metadataUrl;
@@ -199,9 +199,9 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    * @return
    */
   public String getPortalBaseUrlWithoutSeparator(String accountId) {
-    logger.info("Getting download URL for account {}", accountId);
+    log.info("Getting download URL for account {}", accountId);
     String portalUrl = removeSeparatorFromUrl(getPortalUrl(accountId));
-    logger.info("Returning {} as download URL for account {}", portalUrl, accountId);
+    log.info("Returning {} as download URL for account {}", portalUrl, accountId);
     return portalUrl;
   }
 }

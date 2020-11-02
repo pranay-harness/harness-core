@@ -28,7 +28,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) {
-    logger.info("Published batch size is EcsUtilizationMetricsWriter {} ", publishedMessages.size());
+    log.info("Published batch size is EcsUtilizationMetricsWriter {} ", publishedMessages.size());
     List<InstanceUtilizationData> instanceUtilizationDataList = new ArrayList<>();
 
     publishedMessages.stream()
@@ -36,7 +36,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           EcsUtilization ecsUtilization = (EcsUtilization) publishedMessage.getMessage();
-          logger.debug("Ecs Utilization {} ", ecsUtilization);
+          log.debug("Ecs Utilization {} ", ecsUtilization);
 
           String serviceArn = ecsUtilization.getServiceArn();
           String serviceName = ecsUtilization.getServiceName();

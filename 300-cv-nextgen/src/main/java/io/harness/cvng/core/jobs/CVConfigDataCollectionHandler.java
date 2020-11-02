@@ -14,8 +14,8 @@ public class CVConfigDataCollectionHandler implements Handler<CVConfig> {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Override
   public void handle(CVConfig entity) {
-    logger.info("Enqueuing cvConfig {}", entity.getUuid());
+    log.info("Enqueuing cvConfig {}", entity.getUuid());
     dataCollectionTaskService.enqueueFirstTask(entity);
-    logger.info("Done enqueuing cvConfig {}", entity.getUuid());
+    log.info("Done enqueuing cvConfig {}", entity.getUuid());
   }
 }

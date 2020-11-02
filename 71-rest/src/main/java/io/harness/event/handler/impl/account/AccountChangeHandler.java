@@ -79,25 +79,24 @@ public class AccountChangeHandler implements EventHandler {
   public void handleEvent(final Event event) {
     EventData eventData = event.getEventData();
     if (null == eventData) {
-      logger.error("Unexpected event with null eventData. Type: {}", event.getEventType());
+      log.error("Unexpected event with null eventData. Type: {}", event.getEventType());
       return;
     }
     AccountEntityEvent accountEntityEvent = (AccountEntityEvent) eventData.getEventInfo();
     if (null == accountEntityEvent || null == accountEntityEvent.getAccount()) {
-      logger.error("Unexpected event with null account entity event. Type: {}", event.getEventType());
+      log.error("Unexpected event with null account entity event. Type: {}", event.getEventType());
       return;
     }
 
     Account account = accountEntityEvent.getAccount();
     if (StringUtils.isEmpty(account.getUuid())) {
-      logger.error(
-          "No accountId present in account entity event. account={} eventType={}", account, event.getEventType());
+      log.error("No accountId present in account entity event. account={} eventType={}", account, event.getEventType());
       return;
     }
     if (mainConfiguration.getSegmentConfig().isEnabled()) {
       publishAccountEventToSegment(account);
     } else {
-      logger.info("Segment is disabled. No events will be sent");
+      log.info("Segment is disabled. No events will be sent");
     }
   }
 
@@ -199,7 +198,7 @@ public class AccountChangeHandler implements EventHandler {
       groupTraitsMapBuilder.put("ce_license_type", ceLicenseInfo.getLicenseType().name());
     }
     groupTraitsMapBuilder.put("ce_license_expiry", ceLicenseInfo.getExpiryTime());
-    logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraitsMapBuilder);
+    log.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraitsMapBuilder);
 
     GroupMessage.Builder groupMessageBuilder = GroupMessage.builder(accountId)
                                                    .userId(user.getId())
@@ -207,6 +206,6 @@ public class AccountChangeHandler implements EventHandler {
                                                    .enableIntegration(SegmentHandler.Keys.NATERO, true);
 
     segmentHelper.enqueue(groupMessageBuilder.enableIntegration(SegmentHandler.Keys.SALESFORCE, isPresentInSalesforce));
-    logger.info("Group call sent to Salesforce is={} for accountId={}", isPresentInSalesforce, account.getUuid());
+    log.info("Group call sent to Salesforce is={} for accountId={}", isPresentInSalesforce, account.getUuid());
   }
 }

@@ -47,7 +47,7 @@ public class YamlGitConfigHelper {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    logger.error("Couldn't identify filePaths {} ", unkownPaths);
+    log.error("Couldn't identify filePaths {} ", unkownPaths);
     return yamlGitConfigGitFileChangeMaps;
   }
 }

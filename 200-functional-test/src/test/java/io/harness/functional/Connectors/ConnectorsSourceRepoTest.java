@@ -40,7 +40,7 @@ public class ConnectorsSourceRepoTest extends AbstractFunctionalTest {
     String connectorId = details.get(0);
     String webHookToken = details.get(1);
 
-    logger.info("WebHook Token: " + webHookToken);
+    log.info("WebHook Token: " + webHookToken);
 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =

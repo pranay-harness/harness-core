@@ -68,7 +68,7 @@ public class EncryptionServiceImpl implements EncryptionService {
   @Override
   public EncryptableSetting decrypt(
       EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails, boolean fromCache) {
-    logger.debug("Decrypting a secret");
+    log.debug("Decrypting a secret");
     if (object.isDecrypted() || isEmpty(encryptedDataDetails)) {
       return object;
     }
@@ -79,7 +79,7 @@ public class EncryptionServiceImpl implements EncryptionService {
 
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f == null) {
-          logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
+          log.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
           continue;
         }
         Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);
@@ -94,7 +94,7 @@ public class EncryptionServiceImpl implements EncryptionService {
         throw e;
       } catch (Exception e) {
         // Log the root cause exception of failed decryption attempts.
-        logger.error("Failed to decrypt encrypted settings.", e);
+        log.error("Failed to decrypt encrypted settings.", e);
         throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -120,12 +120,12 @@ public class EncryptionServiceImpl implements EncryptionService {
         EncryptableSetting encryptableSetting = futures.get(i).get();
         encryptableSettingWithEncryptionDetailsList.get(i).setEncryptableSetting(encryptableSetting);
       } catch (ExecutionException e) {
-        logger.error("Failed to batch process decryption request of encrypted settings.", e.getCause());
+        log.error("Failed to batch process decryption request of encrypted settings.", e.getCause());
         throw new SecretManagementException(
             ENCRYPT_DECRYPT_ERROR, "Failed to batch process decryption request of encrypted settings", USER);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        logger.error("Thread was interrupted during execution", e);
+        log.error("Thread was interrupted during execution", e);
         throw new SecretManagementException(
             ENCRYPT_DECRYPT_ERROR, "Failed to batch process decryption request of encrypted settings", USER);
       }

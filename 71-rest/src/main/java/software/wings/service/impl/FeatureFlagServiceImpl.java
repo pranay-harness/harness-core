@@ -61,7 +61,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void enableAccount(FeatureName featureName, String accountId) {
-    logger.info("Enabling feature name :[{}] for account id: [{}]", featureName.name(), accountId);
+    log.info("Enabling feature name :[{}] for account id: [{}]", featureName.name(), accountId);
     Query<FeatureFlag> query =
         wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
     UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
@@ -75,7 +75,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
-    logger.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
+    log.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
   }
 
   @Override
@@ -101,7 +101,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void enableGlobally(FeatureName featureName) {
-    logger.info("Enabling feature name :[{}] globally", featureName.name());
+    log.info("Enabling feature name :[{}] globally", featureName.name());
     Query<FeatureFlag> query =
         wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
     UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
@@ -114,13 +114,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
-    logger.info("Enabled feature name :[{}] globally", featureName.name());
+    log.info("Enabled feature name :[{}] globally", featureName.name());
   }
 
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {
-      logger.warn("FeatureFlag {} is not global", featureName.name(), new Exception(""));
+      log.warn("FeatureFlag {} is not global", featureName.name(), new Exception(""));
     }
     return isEnabled(featureName, null);
   }
@@ -163,13 +163,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       }
 
       if (isEmpty(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
-        logger.error("FeatureFlag isEnabled check without accountId", new Exception(""));
+        log.error("FeatureFlag isEnabled check without accountId", new Exception(""));
         return false;
       }
 
       if (isNotEmpty(featureFlag.getAccountIds())) {
         if (featureName.getScope() == Scope.GLOBAL) {
-          logger.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
+          log.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
           return false;
         }
         return featureFlag.getAccountIds().contains(accountId);
@@ -191,7 +191,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return new HashSet<>();
     }
     if (featureName.getScope() == Scope.GLOBAL) {
-      logger.warn("FeatureFlag {} is global, should not have accountIds", featureName.name(), new Exception(""));
+      log.warn("FeatureFlag {} is global, should not have accountIds", featureName.name(), new Exception(""));
     }
     return featureFlag.getAccountIds();
   }
@@ -286,7 +286,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       try {
         updateFeatureFlagForAccount(featureFlag.getName(), accountId, false);
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Exception occurred while deleting account {} from FeatureFlag {}", accountId, featureFlag.getName(), e);
       }
     }

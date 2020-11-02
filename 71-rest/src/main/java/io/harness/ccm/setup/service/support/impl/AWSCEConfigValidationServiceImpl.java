@@ -172,7 +172,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     } catch (AmazonS3Exception awsS3) {
       throw new InvalidArgumentsException(ImmutablePair.of(validationFailureKey, awsS3.getErrorCode()));
     } catch (Exception ex) {
-      logger.error("Exception while validating s3 bucket ", ex);
+      log.error("Exception while validating s3 bucket ", ex);
     }
     if (!isBucketAccessValid) {
       throw new InvalidArgumentsException(ImmutablePair.of(validationFailureKey, "Can not Access S3 bucket"));

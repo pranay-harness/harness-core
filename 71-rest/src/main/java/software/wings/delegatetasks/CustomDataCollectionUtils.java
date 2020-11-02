@@ -112,7 +112,7 @@ public class CustomDataCollectionUtils {
     } else if (isNotEmpty(queries) && queries.size() == 1) {
       concatenatedQuery = new ArrayList<>(queries).get(0);
     } else {
-      logger.error("Incorrect combination of query and separator");
+      log.error("Incorrect combination of query and separator");
     }
     return concatenatedQuery;
   }

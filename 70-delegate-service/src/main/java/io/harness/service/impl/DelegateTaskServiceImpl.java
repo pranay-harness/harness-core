@@ -30,7 +30,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       return;
     }
 
-    logger.info("Updating tasks");
+    log.info("Updating tasks");
 
     Query<DelegateTask> delegateTaskQuery = persistence.createQuery(DelegateTask.class)
                                                 .filter(DelegateTaskKeys.accountId, accountId)

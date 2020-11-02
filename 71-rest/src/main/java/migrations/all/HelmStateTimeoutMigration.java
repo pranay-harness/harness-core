@@ -32,8 +32,8 @@ public class HelmStateTimeoutMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running HelmStateTimeoutMigration");
-    logger.info("Retrieving applications");
+    log.info("Running HelmStateTimeoutMigration");
+    log.info("Retrieving applications");
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       for (Application application : apps) {
@@ -46,14 +46,14 @@ public class HelmStateTimeoutMigration implements Migration {
               workflowService.loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
               updateTimeoutInWorkflow(workflow);
             } catch (Exception e) {
-              logger.error("Failed to load Orchestration workflow {}", workflow.getUuid(), e);
+              log.error("Failed to load Orchestration workflow {}", workflow.getUuid(), e);
             }
           }
         }
       }
     }
 
-    logger.info("Completed HelmStateTimeoutMigration");
+    log.info("Completed HelmStateTimeoutMigration");
   }
 
   private void updateTimeoutInWorkflow(Workflow workflow) {
@@ -91,10 +91,10 @@ public class HelmStateTimeoutMigration implements Migration {
 
     if (workflowModified) {
       try {
-        logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+        log.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
         workflowService.updateWorkflow(workflow, false);
       } catch (Exception e) {
-        logger.error("Error updating workflow", e);
+        log.error("Error updating workflow", e);
       }
     }
   }
@@ -113,11 +113,11 @@ public class HelmStateTimeoutMigration implements Migration {
               int updatedTimeout = timeout / minTimeoutInMs;
               workflowModified = true;
               properties.put(steadyStateTimeout, updatedTimeout);
-              logger.info("Updating the timeout from {} to {} for state {} in workflowId {}", timeout, updatedTimeout,
+              log.info("Updating the timeout from {} to {} for state {} in workflowId {}", timeout, updatedTimeout,
                   node.getType(), workflow.getUuid());
             }
           } catch (ClassCastException ex) {
-            logger.info("Failed to convert timeout to integer for workflowId {}", workflow.getUuid());
+            log.info("Failed to convert timeout to integer for workflowId {}", workflow.getUuid());
           }
         }
       }

@@ -72,7 +72,7 @@ public class ApplicationReadyListener {
         return null;
       }, hPersistence.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out waiting for mongo connectivity");
+      log.error("Timed out waiting for mongo connectivity");
       throw e;
     }
   }
@@ -82,9 +82,9 @@ public class ApplicationReadyListener {
     File livenessMarker = new File("batch-processing-up");
     boolean created = livenessMarker.createNewFile();
     if (created) {
-      logger.info("Created liveness marker");
+      log.info("Created liveness marker");
     } else {
-      logger.error("Failed to create liveness marker");
+      log.error("Failed to create liveness marker");
     }
   }
 }

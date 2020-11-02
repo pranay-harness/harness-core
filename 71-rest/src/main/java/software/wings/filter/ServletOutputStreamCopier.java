@@ -39,7 +39,7 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
       outputStream.write(b);
       copy.write(b);
     } catch (IOException ex) {
-      logger.error("", ex);
+      log.error("", ex);
     }
   }
 
@@ -61,7 +61,7 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
         copy.close();
       }
     } catch (IOException io) {
-      logger.error("", io);
+      log.error("", io);
     }
   }
 

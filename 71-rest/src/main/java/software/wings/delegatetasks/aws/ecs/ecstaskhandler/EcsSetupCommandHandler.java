@@ -87,8 +87,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
       }
       commandResponse.setSetupData(commandExecutionDataBuilder.build());
     } catch (Exception ex) {
-      logger.error("Completed operation with errors");
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error("Completed operation with errors");
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
 
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
@@ -136,13 +136,13 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
     // service
     CreateServiceRequest createServiceRequest =
         ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails, setupParams,
-            taskDefinition, setupParams.getTaskFamily(), executionLogCallback, logger, commandExecutionDataBuilder);
+            taskDefinition, setupParams.getTaskFamily(), executionLogCallback, log, commandExecutionDataBuilder);
 
     if (existingServiceMetadataSnapshot.isPresent()) {
       Service service = existingServiceMetadataSnapshot.get();
       // Store existing service json spec, so it can be used if rollback is required
       commandExecutionDataBuilder
-          .previousEcsServiceSnapshotJson(ecsSetupCommandTaskHelper.getJsonForAwsServiceConfig(service, logger))
+          .previousEcsServiceSnapshotJson(ecsSetupCommandTaskHelper.getJsonForAwsServiceConfig(service, log))
           .containerServiceName(service.getServiceName())
           .ecsTaskDefintion(service.getTaskDefinition());
       commandExecutionDataBuilder.ecsServiceArn(service.getServiceArn());

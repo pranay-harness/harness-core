@@ -48,7 +48,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
     DockerInternalConfig dockerInternalConfig =
         DockerInternalConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
     List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerInternalConfig, "library/mysql", 5);
-    logger.info(builds.toString());
+    log.info(builds.toString());
     assertThat(builds.size()).isEqualTo(5);
   }
 
@@ -64,7 +64,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .password(scmSecret.decryptToString(new SecretName("docker_config_anubhaw_password")))
             .build();
     List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerInternalConfig, "library/mysql", 5);
-    logger.info(builds.toString());
+    log.info(builds.toString());
     assertThat(builds.size()).isGreaterThanOrEqualTo(5);
   }
 
@@ -80,7 +80,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .password(scmSecret.decryptToString(new SecretName("docker_config_anubhaw_password")))
             .build();
     BuildDetailsInternal build = dockerRegistryService.getLastSuccessfulBuild(dockerInternalConfig, "library/mysql");
-    logger.info(build.toString());
+    log.info(build.toString());
   }
 
   @Test

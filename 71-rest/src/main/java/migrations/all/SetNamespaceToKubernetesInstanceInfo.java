@@ -53,7 +53,7 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
       List<String> appIds = appService.getAppIdsByAccountId(account.getUuid());
       appIds.forEach(appId -> {
         try {
-          logger.info("Fixing instances for appId:" + appId);
+          log.info("Fixing instances for appId:" + appId);
           PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
           pageRequest.addFilter("appId", Operator.EQ, appId);
           PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
@@ -62,7 +62,7 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
 
           infraMappingList.forEach(infraMapping -> {
             String infraMappingId = infraMapping.getUuid();
-            logger.info("Fixing kubernetes instances for infra mappingId:" + infraMappingId);
+            log.info("Fixing kubernetes instances for infra mappingId:" + infraMappingId);
             try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
                      InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120), Duration.ofSeconds(120))) {
               if (lock == null) {
@@ -81,25 +81,25 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
                 instances.forEach(instance -> {
                   InstanceInfo instanceInfo = instance.getInstanceInfo();
                   if (instanceInfo == null) {
-                    logger.error("instanceInfo is null for instance {}", instance.getUuid());
+                    log.error("instanceInfo is null for instance {}", instance.getUuid());
                     return;
                   }
 
                   if (!(instanceInfo instanceof KubernetesContainerInfo)) {
-                    logger.error("instanceInfo is not of type kubernetes for instance {}", instance.getUuid());
+                    log.error("instanceInfo is not of type kubernetes for instance {}", instance.getUuid());
                     return;
                   }
 
                   KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) instanceInfo;
                   if (isNotEmpty(kubernetesContainerInfo.getNamespace())) {
-                    logger.error("namespace is not null in instance info for instance {}", instance.getUuid());
+                    log.error("namespace is not null in instance info for instance {}", instance.getUuid());
                     return;
                   }
 
                   String namespace = getNamespace(infraMapping);
 
                   if (namespace == null) {
-                    logger.error("namespace is null in infra mapping for instance {}", instance.getUuid());
+                    log.error("namespace is null in infra mapping for instance {}", instance.getUuid());
                     return;
                   }
 
@@ -107,21 +107,21 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
                   wingsPersistence.updateField(
                       Instance.class, instance.getUuid(), "instanceInfo", kubernetesContainerInfo);
                 });
-                logger.info("Instance fix completed for Kubernetes instances for infra mapping [{}]", infraMappingId);
+                log.info("Instance fix completed for Kubernetes instances for infra mapping [{}]", infraMappingId);
               } catch (Exception ex) {
-                logger.warn("Kubernetes Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
+                log.warn("Kubernetes Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
               }
             } catch (Exception e) {
-              logger.warn(
+              log.warn(
                   "Kubernetes - Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
             }
           });
 
-          logger.info("Kubernetes Instance fix done for appId:" + appId);
+          log.info("Kubernetes Instance fix done for appId:" + appId);
         } catch (WingsException exception) {
-          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
         } catch (Exception ex) {
-          logger.warn("Error while fixing Kubernetes instances for app: {}", appId, ex);
+          log.warn("Error while fixing Kubernetes instances for app: {}", appId, ex);
         }
       });
     });

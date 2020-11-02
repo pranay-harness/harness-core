@@ -61,7 +61,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       if (featureFlagService.isNotEnabled(
               DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         wingsPersistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
-        logger.info("Batch saved successfully");
+        log.info("Batch saved successfully");
       } else {
         batch.getDelegateSelectionLogs()
             .stream()
@@ -73,10 +73,10 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                     LocalDateTime.ofInstant(
                         Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault())))
             .distinct()
-            .forEach(logger::info);
+            .forEach(log::info);
       }
     } catch (Exception exception) {
-      logger.error("Error while saving into Database ", exception);
+      log.error("Error while saving into Database ", exception);
     }
   }
 

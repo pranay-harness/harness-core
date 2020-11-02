@@ -38,14 +38,14 @@ public class MigrateServiceNowCriteriaInWorkflows implements Migration {
     List<Account> allAccounts = accountService.listAllAccountWithDefaultsWithoutLicenseInfo();
     for (Account account : allAccounts) {
       String accountId = account.getUuid();
-      logger.info(StringUtils.join(DEBUG_LINE, "Starting ServiceNow Criteria migration for accountId:", accountId));
+      log.info(StringUtils.join(DEBUG_LINE, "Starting ServiceNow Criteria migration for accountId:", accountId));
       migrate(account);
     }
-    logger.info("{}: ServiceNow critieria migration over for all workflows", DEBUG_LINE);
+    log.info("{}: ServiceNow critieria migration over for all workflows", DEBUG_LINE);
   }
 
   public void migrate(Account account) {
-    logger.info(StringUtils.join(
+    log.info(StringUtils.join(
         DEBUG_LINE, "Starting ServiceNow Criteria migration for Workflows, accountId ", account.getUuid()));
 
     List<Workflow> workflows = WorkflowAndPipelineMigrationUtils.fetchAllWorkflowsForAccount(
@@ -53,12 +53,12 @@ public class MigrateServiceNowCriteriaInWorkflows implements Migration {
 
     for (Workflow workflow : workflows) {
       try {
-        logger.info(StringUtils.join(
+        log.info(StringUtils.join(
             DEBUG_LINE, "Starting ServiceNow Condition migration for Workflow, workflowId ", workflow.getUuid()));
         workflowService.loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
         migrate(workflow);
       } catch (Exception e) {
-        logger.error("[SERVICENOW_CRITERIA_ERROR] Migration failed for WorkflowId: " + workflow.getUuid()
+        log.error("[SERVICENOW_CRITERIA_ERROR] Migration failed for WorkflowId: " + workflow.getUuid()
             + ExceptionUtils.getMessage(e));
       }
     }
@@ -138,7 +138,7 @@ public class MigrateServiceNowCriteriaInWorkflows implements Migration {
         }
         workflowService.updateWorkflowPhase(appId, workflowId, phase);
       } catch (Exception e) {
-        logger.error("[SERVICENOW_CRITERIA_ERROR] Error updating workflow " + workflowId, e);
+        log.error("[SERVICENOW_CRITERIA_ERROR] Error updating workflow " + workflowId, e);
       }
     }
   }

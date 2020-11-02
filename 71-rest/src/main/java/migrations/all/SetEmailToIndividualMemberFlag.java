@@ -26,7 +26,7 @@ public class SetEmailToIndividualMemberFlag implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Running Migration: {}", SetEmailToIndividualMemberFlag.class.getSimpleName());
+      log.info("Running Migration: {}", SetEmailToIndividualMemberFlag.class.getSimpleName());
 
       List<Account> accounts = accountService.listAllAccounts();
 
@@ -38,11 +38,11 @@ public class SetEmailToIndividualMemberFlag implements Migration {
 
         UserGroup userGroup = userGroupService.getDefaultUserGroup(accountId);
         if (null == userGroup) {
-          logger.info("No default user group present. accountId={}", accountId);
+          log.info("No default user group present. accountId={}", accountId);
           continue;
         }
 
-        logger.info(
+        log.info(
             "Setting useIndividualEmails flag to true. accountId={} userGroupId={}", accountId, userGroup.getUuid());
         NotificationSettings existing = userGroup.getNotificationSettings();
         NotificationSettings updatedSetting;
@@ -59,7 +59,7 @@ public class SetEmailToIndividualMemberFlag implements Migration {
       }
 
     } catch (Exception e) {
-      logger.error("Error running SetEmailToIndividualMemberFlag migration", e);
+      log.error("Error running SetEmailToIndividualMemberFlag migration", e);
     }
   }
 }

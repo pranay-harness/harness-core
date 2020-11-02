@@ -62,7 +62,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
   @Override
   public void handle(ExportExecutionsRequest request) {
     if (request == null) {
-      logger.warn("ExportExecutionsRequest is null");
+      log.warn("ExportExecutionsRequest is null");
       return;
     }
 
@@ -71,12 +71,12 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
       try {
         exportExecutionsService.export(request);
       } catch (Exception ex) {
-        logger.error("Unable to process export executions request", ex);
+        log.error("Unable to process export executions request", ex);
 
         try {
           exportExecutionsService.failRequest(request, ExceptionUtils.getMessage(ex));
         } catch (Exception ex1) {
-          logger.error("Unable to fail export executions request", ex1);
+          log.error("Unable to fail export executions request", ex1);
           return;
         }
       }

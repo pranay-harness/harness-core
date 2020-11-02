@@ -90,7 +90,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   public void addToTimeSeriesMap(long dataCollectionMinute, double metricValue) {
     long dataCollectionMillis = TimeUnit.MINUTES.toMillis(dataCollectionMinute);
     if (!timeSeries.containsKey(dataCollectionMillis)) {
-      logger.error("Incorrect time " + dataCollectionMinute + " in TimeSeries API for metric: " + metricName);
+      log.error("Incorrect time " + dataCollectionMinute + " in TimeSeries API for metric: " + metricName);
       return;
     }
     timeSeries.put(

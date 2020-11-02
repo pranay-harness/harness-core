@@ -37,10 +37,10 @@ public abstract class LogClusterState extends AnalysisState {
       }
       workerTaskIds.addAll(taskIds);
       this.setStatus(AnalysisStatus.RUNNING);
-      logger.info(
+      log.info(
           "Executing ServiceGuardLogClusterState for input: {}. Created {} tasks", getInputs(), workerTaskIds.size());
     } else {
-      logger.info(
+      log.info(
           "Executing ServiceGuardLogClusterState for input: {}. No clustering tasks were created. Marking as success",
           getInputs());
       this.setStatus(AnalysisStatus.SUCCESS);
@@ -60,10 +60,10 @@ public abstract class LogClusterState extends AnalysisState {
         statusTaskMap.get(taskStatus).add(taskId);
       });
 
-      logger.info("Current statuses of worker tasks with inputs {} is {}", getInputs(), statusTaskMap);
+      log.info("Current statuses of worker tasks with inputs {} is {}", getInputs(), statusTaskMap);
       if (statusTaskMap.containsKey(ExecutionStatus.SUCCESS)
           && workerTaskIds.size() == statusTaskMap.get(ExecutionStatus.SUCCESS).size()) {
-        logger.info("All worker tasks have succeeded.");
+        log.info("All worker tasks have succeeded.");
         return AnalysisStatus.TRANSITION;
       } else {
         if (statusTaskMap.containsKey(ExecutionStatus.RUNNING) || statusTaskMap.containsKey(ExecutionStatus.QUEUED)) {

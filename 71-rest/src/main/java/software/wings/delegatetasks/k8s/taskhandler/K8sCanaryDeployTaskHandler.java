@@ -229,7 +229,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       updateVirtualServiceManifestFilesWithRoutes(executionLogCallback);
 
     } catch (Exception e) {
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
@@ -335,7 +335,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      logger.error("Exception:", e);
+      log.error("Exception:", e);
       return false;
     }
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);

@@ -99,7 +99,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
         PlanExecution planExecution = planExecutionService.get(releaseEntityId);
         finished = planExecution != null && Status.finalStatuses().contains(planExecution.getStatus());
       } catch (InvalidRequestException e) {
-        logger.error("", e);
+        log.error("", e);
         return false;
       }
     } else {
@@ -111,7 +111,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
             && (Status.finalStatuses().contains(nodeExecution.getStatus())
                    || DISCONTINUING == nodeExecution.getStatus());
       } catch (InvalidRequestException e) {
-        logger.error("", e);
+        log.error("", e);
         return false;
       }
     }
@@ -135,7 +135,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
         continue;
       }
 
-      logger.info("Resource constraint {} has running units {}", restraint.getUuid(), Joiner.on(", ").join(units));
+      log.info("Resource constraint {} has running units {}", restraint.getUuid(), Joiner.on(", ").join(units));
 
       units.forEach(unit -> {
         final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit, resourceRestraintRegistry);

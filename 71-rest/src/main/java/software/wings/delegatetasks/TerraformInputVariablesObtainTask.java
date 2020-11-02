@@ -112,7 +112,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
           .terraformExecutionData(TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
           .build();
     } catch (RuntimeException e) {
-      logger.error("Terraform Input Variables Task Exception " + parameters, e);
+      log.error("Terraform Input Variables Task Exception " + parameters, e);
       return TerraformInputVariablesTaskResponse.builder()
           .terraformExecutionData(TerraformExecutionData.builder()
                                       .executionStatus(ExecutionStatus.FAILED)

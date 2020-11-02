@@ -38,7 +38,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
     when(mockLogger.isErrorEnabled()).thenReturn(true);
     when(mockLogger.isInfoEnabled()).thenReturn(true);
 
-    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "log", mockLogger);
 
     mapper.toResponse(exception);
 
@@ -57,7 +57,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(MessageManager.class, "log", mockLogger);
 
     mapper.toResponse(exception);
     verify(mockLogger, times(2))
@@ -75,8 +75,8 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
     Logger mockLogger = mock(Logger.class);
     when(mockLogger.isErrorEnabled()).thenReturn(true);
     when(mockLogger.isInfoEnabled()).thenReturn(true);
-    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
-    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "log", mockLogger);
+    setStaticFieldValue(MessageManager.class, "log", mockLogger);
 
     mapper.toResponse(exception);
 
@@ -95,7 +95,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "log", mockLogger);
 
     mapper.toResponse(exception);
 
@@ -114,7 +114,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
       exception.addParam("reason", "recursive call to ${reason}");
 
       Logger mockLogger = mock(Logger.class);
-      setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
+      setStaticFieldValue(WingsExceptionMapper.class, "log", mockLogger);
 
       final WingsExceptionMapper mapper = new WingsExceptionMapper();
       mapper.toResponse(exception); // should not throw.

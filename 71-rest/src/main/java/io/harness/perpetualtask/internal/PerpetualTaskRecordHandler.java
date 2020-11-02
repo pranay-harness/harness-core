@@ -135,7 +135,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   public void assign(PerpetualTaskRecord taskRecord) {
     try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
       String taskId = taskRecord.getUuid();
-      logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
+      log.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
           taskId);
       DelegateTask validationTask = getValidationTask(taskRecord);
 
@@ -158,7 +158,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
           }
 
           String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
-          logger.info("Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId,
+          log.info("Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId,
               taskRecord.getPerpetualTaskType(), taskId);
           perpetualTaskService.appointDelegate(
               taskRecord.getAccountId(), taskId, delegateId, System.currentTimeMillis());
@@ -176,9 +176,9 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
           raiseAlert(
               taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
 
-          logger.error("Invalid request exception: ", ((RemoteMethodReturnValueData) response).getException());
+          log.error("Invalid request exception: ", ((RemoteMethodReturnValueData) response).getException());
         } else {
-          logger.error(format(
+          log.error(format(
               "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
         }
       } catch (NoInstalledDelegatesException exception) {
@@ -193,12 +193,12 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
       } catch (WingsException exception) {
         raiseAlert(taskRecord,
             format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, taskRecord.getPerpetualTaskType()));
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception e) {
         raiseAlert(
             taskRecord, format(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
 
-        logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
+        log.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
       }
     }
   }
@@ -227,7 +227,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
           PerpetualTaskExecutionBundle.parseFrom(taskRecord.getClientContext().getExecutionBundle());
 
     } catch (InvalidProtocolBufferException e) {
-      logger.error("Failed to parse perpetual task execution bundle", e);
+      log.error("Failed to parse perpetual task execution bundle", e);
       return null;
     }
 

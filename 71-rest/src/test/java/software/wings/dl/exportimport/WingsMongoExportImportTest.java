@@ -57,7 +57,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
     assertThat(records).hasSize(1);
 
     String appJson = records.get(0);
-    logger.info("Application JSON: " + appJson);
+    log.info("Application JSON: " + appJson);
 
     // Remove the inserted application to make space for re-importing.
     wingsPersistence.delete(accountId, Application.class, appId);

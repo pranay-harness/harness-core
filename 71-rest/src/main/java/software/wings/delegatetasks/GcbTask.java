@@ -98,7 +98,7 @@ public class GcbTask extends AbstractDelegateRunnableTask {
           throw new UnsupportedOperationException(format("Unsupported TaskType: %s", params.getType()));
       }
     } catch (Exception e) {
-      logger.warn("GCB task failed due to: ", e);
+      log.warn("GCB task failed due to: ", e);
       return failedGcbTaskResponse(params, e.getMessage());
     }
   }
@@ -127,7 +127,7 @@ public class GcbTask extends AbstractDelegateRunnableTask {
       } while (build.isWorking());
       return gcbDelegateResponseOf(params, build);
     } catch (RuntimeInterruptedException | InterruptedRuntimeException e) {
-      logger.error("GCB poll task failed due to: ", e);
+      log.error("GCB poll task failed due to: ", e);
       return interruptedGcbTask(params);
     }
   }
@@ -144,7 +144,7 @@ public class GcbTask extends AbstractDelegateRunnableTask {
     try {
       gcbService.cancelBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
     } catch (GcbClientException e) {
-      logger.error("Failed to cancel GCB build due to: ", e);
+      log.error("Failed to cancel GCB build due to: ", e);
       return gcbDelegateResponseOf(
           params, gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId()));
     }

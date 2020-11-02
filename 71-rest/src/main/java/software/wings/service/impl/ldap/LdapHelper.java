@@ -100,7 +100,7 @@ public class LdapHelper {
       connection.open();
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.CONNECTION_SUCCESS).build();
     } catch (LdapException e) {
-      logger.error("Ldap connection validation failed for url: [{}]", connectionConfig.generateUrl(), e);
+      log.error("Ldap connection validation failed for url: [{}]", connectionConfig.generateUrl(), e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
@@ -128,7 +128,7 @@ public class LdapHelper {
           searchResult = search.execute();
 
         } catch (LdapException e) {
-          logger.error("LdapException occurred when validating user config with baseDN = {} and search filter = {}",
+          log.error("LdapException occurred when validating user config with baseDN = {} and search filter = {}",
               config.getBaseDN(), config.getSearchFilter());
           searchStatusMsg = e.getResultCode().toString();
         }
@@ -161,7 +161,7 @@ public class LdapHelper {
     try {
       ldapListGroupsResponses = listGroups(Arrays.asList(config), null, LdapConstants.MIN_GROUP_QUERY_SIZE).get(0);
     } catch (LdapException e) {
-      logger.error("Ldap validate group config failed for: [{}]", config.getNameAttr(), e);
+      log.error("Ldap validate group config failed for: [{}]", config.getNameAttr(), e);
       message = e.getResultCode().toString();
     }
 
@@ -262,7 +262,7 @@ public class LdapHelper {
       ldapGetUsersResponse =
           ldapParallelSearchExecutor.getUserSearchResult(ldapGetUsersRequests, executeLdapGetUsersRequest);
     } else {
-      logger.warn("No user config passed to listGroupUsers method for groupDn = {} ", groupDnList.toString());
+      log.warn("No user config passed to listGroupUsers method for groupDn = {} ", groupDnList.toString());
     }
 
     return ldapGetUsersResponse;
@@ -274,7 +274,7 @@ public class LdapHelper {
     List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDnList);
 
     groups.getEntries().forEach(ldapEntry -> {
-      logger.info("Ldap Entry = [{}]", ldapEntry.toString());
+      log.info("Ldap Entry = [{}]", ldapEntry.toString());
       int groupSize =
           ldapGetUsersResponses.stream()
               .filter(ldapGetUsersResponse -> ldapEntry.getDn().equals(ldapGetUsersResponse.getGroupBaseDn()))
@@ -285,7 +285,7 @@ public class LdapHelper {
       ldapEntry.addAttribute(groupSizeAttr);
     });
     long elapsedTime = System.currentTimeMillis() - startTime;
-    logger.info("elapsedTime : {}", elapsedTime);
+    log.info("elapsedTime : {}", elapsedTime);
   }
 
   List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
@@ -341,26 +341,26 @@ public class LdapHelper {
 
       AuthenticationRequest request = new AuthenticationRequest(identifier, new Credential(password));
       AuthenticationResponse response = authenticator.authenticate(request);
-      logger.info("LAT: Authentication response: [{}], ", response.toString());
+      log.info("LAT: Authentication response: [{}], ", response.toString());
       if (response.getResult()) {
         return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.AUTHENTICATION_SUCCESS).build();
       } else {
         if (response.getResultCode() != null && response.getAuthenticationResultCode() != null) {
-          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
+          log.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}],resultCode:[{}]",
               identifier, response.getAuthenticationResultCode(), response.getResultCode().name());
         } else if (response.getResultCode() != null) {
-          logger.info("LDAP auth failed with response: identifier:[{}],resultCode:[{}]", identifier,
+          log.info("LDAP auth failed with response: identifier:[{}],resultCode:[{}]", identifier,
               response.getResultCode().name());
         } else if (response.getAuthenticationResultCode() != null) {
-          logger.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}]", identifier,
+          log.info("LDAP auth failed with response: identifier:[{}],authenticationResultCode:[{}]", identifier,
               response.getAuthenticationResultCode());
         } else {
-          logger.info("LDAP auth failed, response not available for identifier:[{}]", identifier);
+          log.info("LDAP auth failed, response not available for identifier:[{}]", identifier);
         }
         return LdapResponse.builder().status(Status.FAILURE).message(LdapConstants.INVALID_CREDENTIALS).build();
       }
     } catch (LdapException e) {
-      logger.error("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]", identifier,
+      log.error("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]", identifier,
           ldapUserConfig.getDisplayNameAttr(), e);
       return LdapResponse.builder()
           .status(Status.FAILURE)

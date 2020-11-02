@@ -179,7 +179,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       try {
         validateRequiredFields(createMeta, context);
       } catch (HarnessJiraException e) {
-        logger.error(FAILING_JIRA_STEP_DUE_TO, e);
+        log.error(FAILING_JIRA_STEP_DUE_TO, e);
         return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
       }
     }
@@ -196,7 +196,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         try {
           inferCustomFieldsTypes(createMetadata);
         } catch (HarnessJiraException e) {
-          logger.error(FAILING_JIRA_STEP_DUE_TO, e);
+          log.error(FAILING_JIRA_STEP_DUE_TO, e);
           return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
         }
       }
@@ -206,7 +206,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       try {
         resolveCustomFieldsVars(customFieldsIdToNameMap, customFieldsValueToIdMap);
       } catch (HarnessJiraException e) {
-        logger.error(FAILING_JIRA_STEP_DUE_TO, e);
+        log.error(FAILING_JIRA_STEP_DUE_TO, e);
         return ExecutionResponse.builder().errorMessage(e.getMessage()).executionStatus(FAILED).build();
       }
     }
@@ -759,14 +759,14 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
     if (isEmpty(jiraConnectorId) || isEmpty(project) || isEmpty(issueType)) {
-      logger.info("Connector Id not present in Jira State");
+      log.info("Connector Id not present in Jira State");
       results.put("Required Fields missing", "Connector, Project and IssueType must be provided.");
       return results;
     }
     if (isNotEmpty(customFields)) {
       for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
         if (customField.getValue() == null) {
-          logger.info("Field value null for a custom field selected: " + customField.getKey());
+          log.info("Field value null for a custom field selected: " + customField.getKey());
           results.put("Field value missing", "Value must be provided for " + customField.getKey());
           continue;
         }
@@ -774,21 +774,21 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
             && StringUtils.isNotBlank(customField.getValue().getFieldValue())
             && !ExpressionEvaluator.containsVariablePattern(customField.getValue().getFieldValue())
             && !customField.getValue().getFieldValue().matches("^(\\d+(w ?))?(\\d+(d ?))?(\\d+(h ?))?(\\d+(m ?))?$")) {
-          logger.info(String.format("Invalid value format for %s field", customField.getKey()));
+          log.info(String.format("Invalid value format for %s field", customField.getKey()));
           results.put("Invalid value format provided for field: " + customField.getKey(),
               "Verify provided value: " + customField.getValue().getFieldValue());
         }
         if (!checkIfRequiredFieldsAreTemplatized()) {
           JiraCustomFieldValue value = customField.getValue();
           if (value.getFieldType() == null) {
-            logger.info("Field Type null for a custom field selected: " + customField.getKey());
+            log.info("Field Type null for a custom field selected: " + customField.getKey());
             results.put("Field Type missing", "Type must be provided for " + customField.getKey());
             continue;
           }
           if (value.getFieldType().equals("datetime") || value.getFieldType().equals("date")) {
             String fieldValue = value.getFieldValue();
             if (!validateDateFieldValue(fieldValue, value.getFieldType())) {
-              logger.info("Field value not valid for a custom field selected: {} {} ", customField.getKey(),
+              log.info("Field value not valid for a custom field selected: {} {} ", customField.getKey(),
                   customField.getValue().getFieldValue());
               results.put("Invalid field value", "Value provided for " + customField.getKey() + " is not valid");
             }
@@ -797,7 +797,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       }
     }
 
-    logger.info("Jira State Validated");
+    log.info("Jira State Validated");
     return results;
   }
 

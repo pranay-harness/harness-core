@@ -33,7 +33,7 @@ public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetu
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, CIPipelineSetupParameters ciPipelineSetupParameters, StepInputPackage inputPackage) {
-    logger.info("starting execution for ci pipeline [{}]", ciPipelineSetupParameters);
+    log.info("starting execution for ci pipeline [{}]", ciPipelineSetupParameters);
 
     BuildStandardVariables buildStandardVariables =
         CIPipelineStandardVariablesUtils.fetchBuildStandardVariables(ciPipelineSetupParameters.getCiExecutionArgs());
@@ -49,7 +49,7 @@ public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetu
   @Override
   public StepResponse handleChildResponse(Ambiance ambiance, CIPipelineSetupParameters ciPipelineSetupParameters,
       Map<String, ResponseData> responseDataMap) {
-    logger.info("executed pipeline =[{}]", ciPipelineSetupParameters);
+    log.info("executed pipeline =[{}]", ciPipelineSetupParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }

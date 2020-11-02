@@ -56,7 +56,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       return fromDTO(getResponse(secretManagerClient.createSecretFile(getRequestBody(JsonUtils.asJson(dto)),
           inputStream != null ? getRequestBody(ByteStreams.toByteArray(inputStream)) : null)));
     } catch (IOException exception) {
-      logger.error("Error while converting file to bytes for request {}", dto);
+      log.error("Error while converting file to bytes for request {}", dto);
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Error while converting file to bytes", SRE);
     }
   }

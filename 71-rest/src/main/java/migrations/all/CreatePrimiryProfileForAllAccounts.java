@@ -15,7 +15,7 @@ public class CreatePrimiryProfileForAllAccounts implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Override
   public void migrate() {
-    logger.info("Starting Migration");
+    log.info("Starting Migration");
     try (HKeyIterator<Account> keys = new HKeyIterator(wingsPersistence.createQuery(Account.class).fetchKeys())) {
       while (keys.hasNext()) {
         String accountId = keys.next().getId().toString();

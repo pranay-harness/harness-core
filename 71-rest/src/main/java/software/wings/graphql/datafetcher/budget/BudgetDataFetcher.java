@@ -26,7 +26,7 @@ public class BudgetDataFetcher extends AbstractObjectDataFetcher<QLBudgetDataLis
   protected QLBudgetDataList fetch(QLBudgetQueryParameters qlQuery, String accountId) {
     Budget budget = null;
     if (qlQuery.getBudgetId() != null) {
-      logger.info("Fetching budget data");
+      log.info("Fetching budget data");
       budget = budgetService.get(qlQuery.getBudgetId());
     }
     if (budget == null) {

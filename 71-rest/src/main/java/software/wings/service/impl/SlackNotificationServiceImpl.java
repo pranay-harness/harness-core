@@ -54,26 +54,26 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
 
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
     if (StringUtils.isEmpty(webhookUrl)) {
-      logger.error("Webhook URL is empty. No message will be sent. Config: {}, Message: {}", slackConfig, message);
+      log.error("Webhook URL is empty. No message will be sent. Config: {}, Message: {}", slackConfig, message);
       return;
     }
 
     if (featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId)) {
       try {
-        logger.info("Sending message via delegate");
+        log.info("Sending message via delegate");
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                               .accountId(accountId)
                                               .appId(GLOBAL_APP_ID)
                                               .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build();
-        logger.info("Sending message for account {} via delegate", accountId);
+        log.info("Sending message for account {} via delegate", accountId);
         delegateProxyFactory.get(SlackMessageSender.class, syncTaskContext)
             .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), true);
       } catch (Exception ex) {
-        logger.error("Failed to send slack message", ex);
+        log.error("Failed to send slack message", ex);
       }
     } else {
-      logger.info("Sending message for account {} via manager", accountId);
+      log.info("Sending message for account {} via manager", accountId);
       slackMessageSender.send(
           new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false);
     }
@@ -101,11 +101,11 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
           if (!response.isSuccessful()) {
             String bodyString = (null != response.body()) ? response.body().string() : "null";
 
-            logger.error("Response not Successful. Response body: {}", bodyString);
+            log.error("Response not Successful. Response body: {}", bodyString);
           }
         }
       } catch (Exception e) {
-        logger.error("Error sending post data", e);
+        log.error("Error sending post data", e);
       }
     }
   }

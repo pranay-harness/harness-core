@@ -71,20 +71,20 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
   @VisibleForTesting
   void handleResponseForSuccessInternal(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
-    logger.info("Processing response for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]",
-        accountId, artifactStreamId);
+    log.info("Processing response for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]", accountId,
+        artifactStreamId);
 
     BuildSourceExecutionResponse buildSourceExecutionResponse = (BuildSourceExecutionResponse) notifyResponseData;
     if (buildSourceExecutionResponse.getBuildSourceResponse() != null) {
       builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
     } else {
-      logger.warn(
+      log.warn(
           "ASYNC_ARTIFACT_CLEANUP: null BuildSourceResponse in buildSourceExecutionResponse:[{}] for artifactStreamId [{}]",
           buildSourceExecutionResponse, artifactStreamId);
     }
     try {
       if (isEmpty(builds)) {
-        logger.warn(
+        log.warn(
             "ASYNC_ARTIFACT_CLEANUP: Skipping because of empty builds list for accountId:[{}] artifactStreamId:[{}]",
             accountId, artifactStreamId);
         return;
@@ -92,13 +92,13 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
       List<Artifact> artifacts = processBuilds(artifactStream);
       if (isNotEmpty(artifacts)) {
-        logger.info("[{}] artifacts deleted for artifactStreamId {}",
+        log.info("[{}] artifacts deleted for artifactStreamId {}",
             artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
       }
     } catch (WingsException ex) {
       ex.addContext(Account.class, accountId);
       ex.addContext(ArtifactStream.class, artifactStreamId);
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
     }
   }
 
@@ -108,13 +108,13 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         try {
           handleResponseForSuccessInternal(notifyResponseData, artifactStream);
         } catch (Exception ex) {
-          logger.error(
+          log.error(
               "Error while processing response for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]",
               accountId, artifactStreamId, ex);
         }
       });
     } catch (RejectedExecutionException ex) {
-      logger.error("RejectedExecutionException for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]",
+      log.error("RejectedExecutionException for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]",
           accountId, artifactStreamId, ex);
     }
   }
@@ -127,7 +127,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       if (SUCCESS == ((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus()) {
         handleResponseForSuccess(notifyResponseData, artifactStream);
       } else {
-        logger.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
+        log.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
       }
     } else {
       notifyError(response);
@@ -138,9 +138,9 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   public void notifyError(Map<String, ResponseData> response) {
     DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      log.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
-      logger.error("Unexpected  notify response:[{}] during artifact collection for artifactStreamId {} ", response,
+      log.error("Unexpected  notify response:[{}] during artifact collection for artifactStreamId {} ", response,
           artifactStreamId);
     }
   }
@@ -148,7 +148,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   private List<Artifact> processBuilds(ArtifactStream artifactStream) {
     List<Artifact> deletedArtifacts = new ArrayList<>();
     if (artifactStream == null) {
-      logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
+      log.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
       return deletedArtifacts;
     }
     String artifactStreamType = artifactStream.getArtifactStreamType();
@@ -167,7 +167,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private List<Artifact> cleanupStaleArtifacts(ArtifactStream artifactStream, List<BuildDetails> buildDetails) {
-    logger.info("Artifact Stream {} cleanup started with type {} name {}", artifactStreamId,
+    log.info("Artifact Stream {} cleanup started with type {} name {}", artifactStreamId,
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
@@ -195,7 +195,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
     artifactService.deleteArtifacts(toBeDeletedArtifacts);
 
-    logger.info("Artifact Stream {} cleanup complete with type {}, count {}", artifactStreamId,
+    log.info("Artifact Stream {} cleanup complete with type {}, count {}", artifactStreamId,
         artifactStream.getArtifactStreamType(), toBeDeletedArtifacts.size());
     return toBeDeletedArtifacts;
   }

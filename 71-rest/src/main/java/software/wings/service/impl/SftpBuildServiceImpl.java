@@ -69,7 +69,7 @@ public class SftpBuildServiceImpl implements SftpBuildService {
       SftpConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
     if (streamType.equals(ArtifactStreamType.SFTP.name())) {
       List<String> artifactPaths = sftpService.getArtifactPaths(config, encryptionDetails);
-      logger.info("Retrieved {} artifact paths from SFTP server.", artifactPaths.size());
+      log.info("Retrieved {} artifact paths from SFTP server.", artifactPaths.size());
       return artifactPaths;
     } else {
       throw new InvalidRequestException("Invalid Artifact Stream type received for getArtifactPaths.", USER);

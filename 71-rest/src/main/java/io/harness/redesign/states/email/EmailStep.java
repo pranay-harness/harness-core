@@ -43,7 +43,7 @@ public class EmailStep implements Step, SyncExecutable<EmailStepParameters> {
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     try {
-      logger.debug(
+      log.debug(
           "Email Notification - subject:{}, body:{}", emailStepParameters.getSubject(), emailStepParameters.getBody());
       emailNotificationService.send(EmailData.builder()
                                         .to(getEmailAddressList(emailStepParameters.getToAddress()))
@@ -60,7 +60,7 @@ public class EmailStep implements Step, SyncExecutable<EmailStepParameters> {
                                                               : ExceptionUtils.getMessage(e.getCause()))
                            .build())
           .status(emailStepParameters.isIgnoreDeliveryFailure() ? Status.SUCCEEDED : Status.FAILED);
-      logger.error("Exception while sending email", e);
+      log.error("Exception while sending email", e);
     }
     return stepResponseBuilder.build();
   }

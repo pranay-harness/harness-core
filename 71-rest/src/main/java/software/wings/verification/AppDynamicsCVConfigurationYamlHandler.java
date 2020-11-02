@@ -49,7 +49,7 @@ public class AppDynamicsCVConfigurationYamlHandler
         final String errMsg = String.format(
             "AppDynamics ApplicationName or TierName is empty during conversion to yaml. ApplicationId %s, tierID %s",
             bean.getAppDynamicsApplicationId(), bean.getTierId());
-        logger.error(errMsg);
+        log.error(errMsg);
         throw new InvalidRequestException(errMsg);
       }
     } catch (Exception ex) {
@@ -128,7 +128,7 @@ public class AppDynamicsCVConfigurationYamlHandler
         final String errMsg = String.format(
             "AppDynamics ApplicationName or TierName is incorrect during edit from yaml. ApplicationName %s, tierName %s",
             yaml.getAppDynamicsApplicationName(), yaml.getTierName());
-        logger.error(errMsg);
+        log.error(errMsg);
         throw new WingsException(errMsg);
       }
     } catch (Exception ex) {

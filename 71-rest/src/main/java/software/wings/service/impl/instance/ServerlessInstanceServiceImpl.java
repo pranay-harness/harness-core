@@ -37,8 +37,8 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
 
   @Override
   public ServerlessInstance save(ServerlessInstance instance) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Begin - ServerlessInstance save called for uuid:" + instance.getUuid()
+    if (log.isDebugEnabled()) {
+      log.debug("Begin - ServerlessInstance save called for uuid:" + instance.getUuid()
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
     if (!appService.exist(instance.getAppId())) {
@@ -54,8 +54,8 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
     String key = wingsPersistence.save(instance);
     ServerlessInstance updatedInstance =
         wingsPersistence.getWithAppId(ServerlessInstance.class, instance.getAppId(), key);
-    if (logger.isDebugEnabled()) {
-      logger.debug("End - ServerlessInstance save called for uuid:" + instance.getUuid()
+    if (log.isDebugEnabled()) {
+      log.debug("End - ServerlessInstance save called for uuid:" + instance.getUuid()
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
 

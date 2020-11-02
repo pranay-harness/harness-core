@@ -48,7 +48,7 @@ public class ScimUserServiceImpl implements ScimUserService {
 
   @Override
   public Response createUser(ScimUser userQuery, String accountId) {
-    logger.info("SCIM: Creating user call for accountId {} with query {}", accountId, userQuery);
+    log.info("SCIM: Creating user call for accountId {} with query {}", accountId, userQuery);
     String primaryEmail = getPrimaryEmail(userQuery);
 
     User user = userService.getUserByEmail(primaryEmail, accountId);
@@ -58,9 +58,9 @@ public class ScimUserServiceImpl implements ScimUserService {
       userQuery.setActive(true);
       if (shouldUpdateUser(userQuery, user)) {
         updateUser(user.getUuid(), accountId, userQuery);
-        logger.info("SCIM: Creating user call for accountId {} with updation {}", accountId, userQuery);
+        log.info("SCIM: Creating user call for accountId {} with updation {}", accountId, userQuery);
       } else {
-        logger.info("SCIM: Creating user call for accountId {} with conflict {}", accountId, userQuery);
+        log.info("SCIM: Creating user call for accountId {} with conflict {}", accountId, userQuery);
       }
       return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
     }
@@ -81,7 +81,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     user = userService.getUserByEmail(primaryEmail, accountId);
     if (user != null) {
       userQuery.setId(user.getUuid());
-      logger.info("SCIM: Completed creating user call for accountId {} with query {}", accountId, userQuery);
+      log.info("SCIM: Completed creating user call for accountId {} with query {}", accountId, userQuery);
       return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
     } else {
       return Response.status(Status.NOT_FOUND).build();
@@ -158,7 +158,7 @@ public class ScimUserServiceImpl implements ScimUserService {
     startIndex = startIndex == null ? 0 : startIndex;
     count = count == null ? MAX_RESULT_COUNT : count;
 
-    logger.info("SCIM: Searching users in account {} with filter: {}", accountId, filter);
+    log.info("SCIM: Searching users in account {} with filter: {}", accountId, filter);
 
     ScimListResponse<ScimUser> userResponse = new ScimListResponse<>();
     String searchQuery = null;
@@ -169,17 +169,17 @@ public class ScimUserServiceImpl implements ScimUserService {
         String operand = split[1];
         searchQuery = operand.substring(1, operand.length() - 1);
       } catch (Exception ex) {
-        logger.error("SCIM: Failed to process filter query: {} for account: {}", filter, accountId, ex);
+        log.error("SCIM: Failed to process filter query: {} for account: {}", filter, accountId, ex);
       }
     }
 
     List<ScimUser> scimUsers = new ArrayList<>();
     try {
       scimUsers = searchUserByUserName(accountId, searchQuery, count, startIndex);
-      logger.info("SCIM: Scim users in account {} found from query {}", accountId, scimUsers);
+      log.info("SCIM: Scim users in account {} found from query {}", accountId, scimUsers);
       scimUsers.forEach(userResponse::resource);
     } catch (WingsException ex) {
-      logger.info("SCIM: Search user by name failed. account: {} ,searchQuery: {}", accountId, searchQuery, ex);
+      log.info("SCIM: Search user by name failed. account: {} ,searchQuery: {}", accountId, searchQuery, ex);
     }
 
     userResponse.startIndex(startIndex);
@@ -204,9 +204,9 @@ public class ScimUserServiceImpl implements ScimUserService {
 
   @Override
   public void deleteUser(String userId, String accountId) {
-    logger.info("SCIM: deleting for accountId {} the user {}", accountId, userId);
+    log.info("SCIM: deleting for accountId {} the user {}", accountId, userId);
     userService.delete(accountId, userId);
-    logger.info("SCIM: deleting the user completed for accountId {} the user {}", accountId, userId);
+    log.info("SCIM: deleting the user completed for accountId {} the user {}", accountId, userId);
   }
 
   @Override
@@ -215,7 +215,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       try {
         applyUserUpdateOperation(accountId, userId, patchOperation);
       } catch (Exception ex) {
-        logger.error("SCIM: Failed to update user: {}, patchOperation: {}", userId, patchOperation, ex);
+        log.error("SCIM: Failed to update user: {}, patchOperation: {}", userId, patchOperation, ex);
       }
     });
     return getUser(userId, accountId);
@@ -252,8 +252,8 @@ public class ScimUserServiceImpl implements ScimUserService {
       wingsPersistence.update(user, updateOperation);
     } else {
       // Not supporting any other updates as of now.
-      logger.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}",
-          accountId, userId, patchOperation);
+      log.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}", accountId,
+          userId, patchOperation);
     }
   }
 
@@ -273,7 +273,7 @@ public class ScimUserServiceImpl implements ScimUserService {
         });
       }
     } catch (Exception ex) {
-      logger.error("SCIM: Error while removing User from SCIM User groups, with accountId {} and userId {}", accountId,
+      log.error("SCIM: Error while removing User from SCIM User groups, with accountId {} and userId {}", accountId,
           userId, ex);
     }
   }
@@ -287,7 +287,7 @@ public class ScimUserServiceImpl implements ScimUserService {
 
   @Override
   public Response updateUser(String userId, String accountId, ScimUser userResource) {
-    logger.info("SCIM: Updating user resource: {}", userResource);
+    log.info("SCIM: Updating user resource: {}", userResource);
     User user = userService.get(accountId, userId);
 
     if (user == null) {
@@ -301,7 +301,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       if (StringUtils.isNotEmpty(displayName) && !displayName.equals(user.getName())) {
         userUpdate = true;
         updateOperations.set(UserKeys.name, displayName);
-        logger.info("SCIM: Updated user's {} name: {}", userId, displayName);
+        log.info("SCIM: Updated user's {} name: {}", userId, displayName);
       }
 
       if (userResource.getName() != null) {
@@ -309,21 +309,19 @@ public class ScimUserServiceImpl implements ScimUserService {
             && !StringUtils.equals(userResource.getName().get(GIVEN_NAME).asText(), user.getGivenName())) {
           userUpdate = true;
           updateOperations.set(UserKeys.givenName, userResource.getName().get(GIVEN_NAME).asText());
-          logger.info(
-              "SCIM: Updated user's {} given name: {}", userId, userResource.getName().get(GIVEN_NAME).asText());
+          log.info("SCIM: Updated user's {} given name: {}", userId, userResource.getName().get(GIVEN_NAME).asText());
         }
         if (userResource.getName().get(FAMILY_NAME) != null
             && !StringUtils.equals(userResource.getName().get(FAMILY_NAME).asText(), user.getFamilyName())) {
           userUpdate = true;
           updateOperations.set(UserKeys.familyName, userResource.getName().get(FAMILY_NAME).asText());
-          logger.info(
-              "SCIM: Updated user's {} family name: {}", userId, userResource.getName().get(FAMILY_NAME).asText());
+          log.info("SCIM: Updated user's {} family name: {}", userId, userResource.getName().get(FAMILY_NAME).asText());
         }
       }
 
       if (userResource.getActive() != null && userResource.getActive() == user.isDisabled()) {
         userUpdate = true;
-        logger.info("SCIM: Updated user's {}, enabled: {}", userId, userResource.getActive());
+        log.info("SCIM: Updated user's {}, enabled: {}", userId, userResource.getActive());
         updateOperations.set(UserKeys.disabled, !userResource.getActive());
       }
       if (userUpdate) {

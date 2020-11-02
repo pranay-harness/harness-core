@@ -39,7 +39,7 @@ public class DeleteStaleThirdPartyApiCallLogsMigration implements Migration {
         if (deleted != 0 && idsToDelete.size() % 10000 == 0) {
           wingsPersistence.delete(
               wingsPersistence.createQuery(ThirdPartyApiCallLog.class).field("_id").in(idsToDelete));
-          logger.info("deleted: " + deleted);
+          log.info("deleted: " + deleted);
           idsToDelete.clear();
           sleep(ofMillis(3000));
         }
@@ -47,10 +47,10 @@ public class DeleteStaleThirdPartyApiCallLogsMigration implements Migration {
 
       if (!idsToDelete.isEmpty()) {
         wingsPersistence.delete(wingsPersistence.createQuery(ThirdPartyApiCallLog.class).field("_id").in(idsToDelete));
-        logger.info("deleted: " + deleted);
+        log.info("deleted: " + deleted);
       }
     }
 
-    logger.info("Complete. Deleted " + deleted + " records.");
+    log.info("Complete. Deleted " + deleted + " records.");
   }
 }

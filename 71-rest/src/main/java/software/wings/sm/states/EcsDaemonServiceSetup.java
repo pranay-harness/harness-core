@@ -203,7 +203,7 @@ public class EcsDaemonServiceSetup extends State {
       EcsSetUpDataBag ecsSetUpDataBag) {
     Application app = appService.get(context.getAppId());
 
-    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, logger);
+    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, log);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()

@@ -45,9 +45,9 @@ public class UpdateWorkflowExecutionDuration implements Migration {
       wingsPersistence.update(workflowExecution, updateOps);
     } catch (WingsException exception) {
       exception.addContext(WorkflowExecution.class, workflowExecution.getUuid());
-      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
   }
 }

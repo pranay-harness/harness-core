@@ -22,7 +22,7 @@ public class DropMongoGcsFileIdMappingCollectionMigration implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "mongoGcsFileIdMapping").drop();
     } catch (RuntimeException ex) {
-      logger.error("Drop collection error", ex);
+      log.error("Drop collection error", ex);
     }
   }
 }

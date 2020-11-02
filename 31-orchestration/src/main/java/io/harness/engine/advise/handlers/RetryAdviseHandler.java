@@ -29,7 +29,7 @@ public class RetryAdviseHandler implements AdviseHandler<RetryAdvise> {
   @Override
   public void handleAdvise(Ambiance ambiance, RetryAdvise advise) {
     if (advise.getWaitInterval() > 0) {
-      logger.info("Retry Wait Interval : {}", advise.getWaitInterval());
+      log.info("Retry Wait Interval : {}", advise.getWaitInterval());
       String resumeId = delayEventHelper.delay(advise.getWaitInterval(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
           new EngineWaitRetryCallback(ambiance.getPlanExecutionId(), advise.getRetryNodeExecutionId()), resumeId);

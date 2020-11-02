@@ -40,7 +40,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     String senderName = slackMessage.getSenderName();
     String message = slackMessage.getMessage();
 
-    logger.info("Slack sending message on channel: {}", slackChannel);
+    log.info("Slack sending message on channel: {}", slackChannel);
 
     Payload payload = new Payload();
 

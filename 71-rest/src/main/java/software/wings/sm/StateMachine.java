@@ -137,7 +137,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       deepTransform(graph, stencilMap, orchestrationWorkflow);
       valid = true;
     } catch (WingsException wingsException) {
-      logger.error("Error in State Machine transform", wingsException);
+      log.error("Error in State Machine transform", wingsException);
       errorMsg = ExceptionUtils.getMessage(wingsException);
     }
     if (!migration) {
@@ -168,7 +168,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   }
 
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.debug("Pipeline received for transformation {}", pipeline.toString());
+    log.debug("Pipeline received for transformation {}", pipeline.toString());
     setAppId(pipeline.getAppId());
     setAccountId(pipeline.getAccountId());
     this.originId = pipeline.getUuid();
@@ -177,7 +177,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error(e.getLocalizedMessage(), e);
+      log.error(e.getLocalizedMessage(), e);
       throw new InvalidRequestException("StateMachine transformation error");
     }
   }
@@ -314,7 +314,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     String originStateName = null;
     for (GraphNode node : graph.getNodes()) {
-      logger.debug("node : {}", node);
+      log.debug("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new InvalidRequestException("Unknown stencil type");
@@ -344,10 +344,10 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
         try {
           state.parseProperties(node.getProperties());
         } catch (Exception e) {
-          logger.error(
+          log.error(
               format("Error mapping properties for state: [%s] of type: [%s]", state.getName(), state.getStateType()),
               e);
-          logger.error("Properties: " + StringUtils.join(node.getProperties()));
+          log.error("Properties: " + StringUtils.join(node.getProperties()));
         }
       }
 
@@ -394,7 +394,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
           try {
             stateFrom = statesMap.get(nodeFrom.getName());
           } catch (Exception e) {
-            logger.error("", e);
+            log.error("", e);
           }
           State stateTo = statesMap.get(nodeTo.getName());
 

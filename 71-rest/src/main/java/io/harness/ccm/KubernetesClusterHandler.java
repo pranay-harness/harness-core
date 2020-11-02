@@ -72,6 +72,6 @@ public class KubernetesClusterHandler implements DelegateObserver {
                                                .build()))
                                        .build())
             .build());
-    logger.info("Created a Kubernetes cloud provider based on the in-cluster Delegate {}", delegate.getDelegateName());
+    log.info("Created a Kubernetes cloud provider based on the in-cluster Delegate {}", delegate.getDelegateName());
   }
 }

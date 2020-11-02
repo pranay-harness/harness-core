@@ -76,7 +76,7 @@ public class ServiceNowApprovalParams {
       Objects.requireNonNull(currentStatus.get(endTimeField), "Change Window End Time value in Ticket is invalid");
       Instant startTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(startTimeField))).toInstant();
       Instant endTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(endTimeField))).toInstant();
-      logger.info(
+      log.info(
           "[CHANGE_WINDOW_TIME_LOG]: Start time: {}, End time: {}, Current time: {}", startTime, endTime, nowInstant);
       if (endTime.compareTo(startTime) <= 0) {
         throw new IllegalArgumentException("Start Window Time must be earlier than End Window Time");

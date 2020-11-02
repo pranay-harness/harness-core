@@ -34,7 +34,7 @@ public class ManageApplicationsPermissionMigration implements Migration {
         addPermissionToCurrentUserGroup(userGroup);
       }
     } catch (Exception e) {
-      logger.error(DEBUG_MESSAGE + "Error creating query", e);
+      log.error(DEBUG_MESSAGE + "Error creating query", e);
     }
   }
 
@@ -51,7 +51,7 @@ public class ManageApplicationsPermissionMigration implements Migration {
         wingsPersistence.update(userGroup, operations);
       }
     } catch (Exception e) {
-      logger.error(DEBUG_MESSAGE + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
+      log.error(DEBUG_MESSAGE + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
     }
   }
 
@@ -62,12 +62,12 @@ public class ManageApplicationsPermissionMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_MESSAGE + "Starting migration");
+    log.info(DEBUG_MESSAGE + "Starting migration");
     try {
       runMigration();
     } catch (Exception e) {
-      logger.error(DEBUG_MESSAGE + "Error occurred while migrating MANAGE_APPLICATIONS", e);
+      log.error(DEBUG_MESSAGE + "Error occurred while migrating MANAGE_APPLICATIONS", e);
     }
-    logger.info(DEBUG_MESSAGE + "Completed migration");
+    log.info(DEBUG_MESSAGE + "Completed migration");
   }
 }

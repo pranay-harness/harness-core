@@ -526,7 +526,7 @@ public class AwsAmiServiceDeployState extends State {
       awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
       instanceElementListParamBuilder.instanceElements(instanceElements);
     } catch (Exception ex) {
-      logger.error("Ami deploy step failed with error ", ex);
+      log.error("Ami deploy step failed with error ", ex);
       executionStatus = FAILED;
       errorMessage = ExceptionUtils.getMessage(ex);
       awsAmiDeployStateExecutionData.setStatus(FAILED);

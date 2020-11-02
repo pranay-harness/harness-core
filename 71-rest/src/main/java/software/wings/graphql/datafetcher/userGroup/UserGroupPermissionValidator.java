@@ -245,7 +245,7 @@ public class UserGroupPermissionValidator {
         }
         break;
       default:
-        logger.info("Invalid PermissionType Given by the user");
+        log.info("Invalid PermissionType Given by the user");
     }
     throw new InvalidRequestException(
         String.format("%s Ids should not be supplied with AppFilter=\"ALL Applications\" for filterType %s",

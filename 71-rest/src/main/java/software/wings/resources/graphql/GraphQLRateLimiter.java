@@ -76,13 +76,13 @@ public class GraphQLRateLimiter {
           getGlobalRateLimiter(isInternalGraphQLCall).overLimitWhenIncremented(Account.GLOBAL_ACCOUNT_ID);
       String adj = isInternalGraphQLCall ? "Internal" : "External";
       if (globalRateLimitReached) {
-        logger.info("Global {} GraphQL API call rate limit reached", adj);
+        log.info("Global {} GraphQL API call rate limit reached", adj);
         return true;
       } else if (EmptyPredicate.isNotEmpty(accountId)) {
         boolean accountRateLimitReached =
             getRateLimiterForAccount(accountId, isInternalGraphQLCall).overLimitWhenIncremented(accountId);
         if (accountRateLimitReached) {
-          logger.info("Account level {} GraphQL API call rate limit reached for account {}", adj, accountId);
+          log.info("Account level {} GraphQL API call rate limit reached for account {}", adj, accountId);
           return true;
         }
       }
@@ -103,13 +103,13 @@ public class GraphQLRateLimiter {
       ConfiguredLimit<RateBasedLimit> configuredLimit =
           limitConfigurationService.get(Account.GLOBAL_ACCOUNT_ID, actionType);
       if (configuredLimit == null) {
-        logger.info("Global {} GraphQL rate limit from environment configuration is {} calls per minute", adj,
+        log.info("Global {} GraphQL rate limit from environment configuration is {} calls per minute", adj,
             globalGraphQLRateLimitFromEnvironment);
         return new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(RequestLimitRule.of(
             Duration.ofMinutes(GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE), globalGraphQLRateLimitFromEnvironment)));
       } else {
         RateBasedLimit rateBasedLimit = configuredLimit.getLimit();
-        logger.info(
+        log.info(
             "Configured global {} GraphQL rate limiter in MongoDB is {} calls in {} {}, it overrides the rate limit of {} calls in {} {} set from environment ",
             adj, rateBasedLimit.getCount(), rateBasedLimit.getDuration(), rateBasedLimit.getDurationUnit(),
             globalGraphQLRateLimitFromEnvironment, 1, TimeUnit.MINUTES);
@@ -126,7 +126,7 @@ public class GraphQLRateLimiter {
   }
 
   RequestRateLimiter getRateLimiterForAccountInternal(String accountId, boolean isInternalGraphQLCall) {
-    logger.info("Rate limiter cache size: {}", rateLimiterCache.estimatedSize());
+    log.info("Rate limiter cache size: {}", rateLimiterCache.estimatedSize());
     String adj = isInternalGraphQLCall ? "Internal" : "External";
     ActionType actionType = isInternalGraphQLCall ? ActionType.GRAPHQL_CUSTOM_DASH_CALL : ActionType.GRAPHQL_CALL;
     RequestRateLimiter defaultAccountRequestLimiter =
@@ -134,11 +134,11 @@ public class GraphQLRateLimiter {
 
     ConfiguredLimit<RateBasedLimit> configuredLimit = limitConfigurationService.getOrDefault(accountId, actionType);
     if (configuredLimit == null) {
-      logger.info("Return the default account-level {} GraphQL rate limiter for account {}", adj, accountId);
+      log.info("Return the default account-level {} GraphQL rate limiter for account {}", adj, accountId);
       return defaultAccountRequestLimiter;
     } else {
       RateBasedLimit rateBasedLimit = configuredLimit.getLimit();
-      logger.info("Return the configured {} GraphQL rate limiter for account {} with call count {} in {} {}", adj,
+      log.info("Return the configured {} GraphQL rate limiter for account {} with call count {} in {} {}", adj,
           accountId, rateBasedLimit.getCount(), rateBasedLimit.getDuration(), rateBasedLimit.getDurationUnit());
 
       if (useDefaultAccountRateLimiter(rateBasedLimit, isInternalGraphQLCall)) {

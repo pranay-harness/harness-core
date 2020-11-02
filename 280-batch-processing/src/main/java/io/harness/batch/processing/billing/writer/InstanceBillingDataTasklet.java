@@ -80,7 +80,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
         Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
         seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
         if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          logger.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
+          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
               parameters.toString());
           seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
         }
@@ -88,7 +88,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
       try {
         createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists);
       } catch (Exception ex) {
-        logger.error("Exception in billing step", ex);
+        log.error("Exception in billing step", ex);
         throw ex;
       }
     } while (instanceDataLists.size() == batchSize);
@@ -97,7 +97,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
   void createBillingData(String accountId, Instant startTime, Instant endTime, BatchJobType batchJobType,
       List<InstanceData> instanceDataLists) {
-    logger.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
+    log.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
@@ -137,8 +137,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
             UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
             BillingData billingData =
                 billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
-            logger.trace(
-                "Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
+            log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
             HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
             String settingId =
                 (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();

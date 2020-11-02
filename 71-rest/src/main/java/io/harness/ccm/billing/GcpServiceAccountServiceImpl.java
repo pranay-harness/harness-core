@@ -59,7 +59,7 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
                        .setApplicationName("service-accounts")
                        .build();
     } catch (IOException | GeneralSecurityException e) {
-      logger.error("Unable to initialize service.", e);
+      log.error("Unable to initialize service.", e);
     }
   }
 
@@ -77,7 +77,7 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
 
-    logger.info("Creating the service account {} in project {}.", serviceAccountId, projectId);
+    log.info("Creating the service account {} in project {}.", serviceAccountId, projectId);
     return iamService.projects().serviceAccounts().create("projects/" + projectId, request).execute();
   }
 
@@ -123,9 +123,9 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {
       credentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
     } catch (FileNotFoundException e) {
-      logger.error("Failed to find Google credential file for the CE service account in the specified path.", e);
+      log.error("Failed to find Google credential file for the CE service account in the specified path.", e);
     } catch (IOException e) {
-      logger.error("Failed to get Google credential file for the CE service account.", e);
+      log.error("Failed to get Google credential file for the CE service account.", e);
     }
     return credentials;
   }

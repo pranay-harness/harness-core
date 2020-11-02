@@ -142,9 +142,9 @@ public class APMValidation extends AbstractSecretManagerValidation {
       }
     }
 
-    logger.info("Validation config for delegate task validation is {}", validateCollectorConfig);
+    log.info("Validation config for delegate task validation is {}", validateCollectorConfig);
     boolean validated = validateCollector(validateCollectorConfig);
-    logger.info("Validated APM delegate task {}, result is {}", delegateTaskId, validated);
+    log.info("Validated APM delegate task {}, result is {}", delegateTaskId, validated);
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
   }
@@ -179,7 +179,7 @@ public class APMValidation extends AbstractSecretManagerValidation {
         return false;
       }
     } catch (Exception e) {
-      logger.error("Exception while trying to validate APM task", e);
+      log.error("Exception while trying to validate APM task", e);
       return false;
     }
   }

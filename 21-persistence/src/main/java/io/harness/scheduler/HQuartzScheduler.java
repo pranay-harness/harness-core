@@ -218,7 +218,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       scheduler.deleteJob(jobDetail.getKey());
       scheduler.scheduleJob(jobDetail, trigger);
     } catch (SchedulerException ex) {
-      logger.error("Couldn't ensure cron job [{}]", jobDetail.getKey(), ex);
+      log.error("Couldn't ensure cron job [{}]", jobDetail.getKey(), ex);
     }
   }
 
@@ -242,7 +242,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       // TODO: add additional check if the about to add job properties are the same with the already existing one.
       //       we should update the job if they differ.
     } catch (SchedulerException ex) {
-      logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
+      log.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
     }
     return null;
   }
@@ -264,7 +264,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
-        logger.error("Couldn't delete cron job [{} {}] ", groupName, jobName, ex);
+        log.error("Couldn't delete cron job [{} {}] ", groupName, jobName, ex);
       }
     }
     return false;
@@ -281,7 +281,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
         scheduler.pauseJob(new JobKey(jobName, groupName));
         return true;
       } catch (SchedulerException ex) {
-        logger.error("Couldn't pause quartz job [{} {}] ", groupName, jobName, ex);
+        log.error("Couldn't pause quartz job [{} {}] ", groupName, jobName, ex);
       }
     }
     return false;
@@ -298,7 +298,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
         scheduler.resumeJob(new JobKey(jobName, groupName));
         return true;
       } catch (SchedulerException ex) {
-        logger.error("Couldn't resume quartz job [{} {}] ", groupName, jobName, ex);
+        log.error("Couldn't resume quartz job [{} {}] ", groupName, jobName, ex);
       }
     }
     return false;
@@ -309,7 +309,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     try {
       return scheduler.rescheduleJob(triggerKey, newTrigger);
     } catch (SchedulerException e) {
-      logger.error("Couldn't reschedule cron for trigger {} with trigger {}", triggerKey, newTrigger);
+      log.error("Couldn't reschedule cron for trigger {} with trigger {}", triggerKey, newTrigger);
     }
     return null;
   }
@@ -324,7 +324,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       try {
         return scheduler.checkExists(jobKey);
       } catch (SchedulerException e) {
-        logger.error("Couldn't check for cron for trigger {}", jobKey);
+        log.error("Couldn't check for cron for trigger {}", jobKey);
       }
     }
     return false;
@@ -362,7 +362,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       try {
         scheduler.standby();
       } catch (SchedulerException e) {
-        logger.error("Error putting scheduler into standby.", e);
+        log.error("Error putting scheduler into standby.", e);
       }
     }
   }
@@ -373,7 +373,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       try {
         scheduler.start();
       } catch (SchedulerException e) {
-        logger.error("Error starting scheduler.", e);
+        log.error("Error starting scheduler.", e);
       }
     }
   }
@@ -405,7 +405,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     try {
       return scheduler.getJobKeys(matcher).stream();
     } catch (SchedulerException e) {
-      logger.error("Couldn't get JobKeys for group name {}", groupName, e);
+      log.error("Couldn't get JobKeys for group name {}", groupName, e);
       return Stream.empty();
     }
   }
@@ -419,7 +419,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     try {
       return scheduler.getJobDetail(jobKey).getJobDataMap().getString("accountId");
     } catch (SchedulerException e) {
-      logger.error("Couldn't get accountId for JobDetail associated with JobKey {}", jobKey, e);
+      log.error("Couldn't get accountId for JobDetail associated with JobKey {}", jobKey, e);
       return null;
     }
   }

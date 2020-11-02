@@ -70,7 +70,7 @@ public class YamlPushServiceImpl implements YamlPushService {
         }
       } catch (Exception e) {
         logYamlPushRequestInfo(oldEntity, newEntity, type);
-        logger.error("Exception in pushing yaml change set", e);
+        log.error("Exception in pushing yaml change set", e);
       }
     });
   }
@@ -85,16 +85,16 @@ public class YamlPushServiceImpl implements YamlPushService {
   }
 
   private <T> void logErrorMsgForAudit(T oldEntity, T newEntity, Type type, Exception e) {
-    logger.error(new StringBuilder(128)
-                     .append("Failed while trying to perform audit for Entity: ")
-                     .append(oldEntity != null ? oldEntity.getClass() : newEntity.getClass())
-                     .append(", ID: ")
-                     .append(oldEntity != null ? ((UuidAware) oldEntity).getUuid() : ((UuidAware) newEntity).getUuid())
-                     .append("Operation Type: ")
-                     .append(type.name())
-                     .append(", Exception: ")
-                     .append(e)
-                     .toString());
+    log.error(new StringBuilder(128)
+                  .append("Failed while trying to perform audit for Entity: ")
+                  .append(oldEntity != null ? oldEntity.getClass() : newEntity.getClass())
+                  .append(", ID: ")
+                  .append(oldEntity != null ? ((UuidAware) oldEntity).getUuid() : ((UuidAware) newEntity).getUuid())
+                  .append("Operation Type: ")
+                  .append(type.name())
+                  .append(", Exception: ")
+                  .append(e)
+                  .toString());
   }
 
   @Override
@@ -133,7 +133,7 @@ public class YamlPushServiceImpl implements YamlPushService {
         }
       } catch (Exception e) {
         logYamlPushRequestInfo(accountId, helperEntity, entity);
-        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
+        log.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
@@ -183,7 +183,7 @@ public class YamlPushServiceImpl implements YamlPushService {
       yamlHelper.getYamlPathForEntity(entity);
     } catch (Exception e) {
       // If we fail to generate yaml path, then we cannot push that change to git.
-      logger.info("Exception while generating yaml path", e);
+      log.info("Exception while generating yaml path", e);
       return false;
     }
 
@@ -200,13 +200,13 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
+        log.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
 
   private <R, T> void logYamlPushRequestInfo(String accountId, R helperEntity, T entity) {
-    logger.info("{} accountId {}, entity {}, entityId {}, helperEntityId {}", YAML_PUSH_SERVICE_LOG, accountId,
+    log.info("{} accountId {}, entity {}, entityId {}, helperEntityId {}", YAML_PUSH_SERVICE_LOG, accountId,
         entity.getClass().getSimpleName(), ((UuidAware) entity).getUuid(), ((UuidAware) helperEntity).getUuid());
   }
 
@@ -249,6 +249,6 @@ public class YamlPushServiceImpl implements YamlPushService {
         unhandled(type);
     }
 
-    logger.info(builder.toString());
+    log.info(builder.toString());
   }
 }

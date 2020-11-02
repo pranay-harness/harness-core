@@ -27,7 +27,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * If the error is in the JSON generation, it's a server error.
      */
     if (exception instanceof JsonGenerationException) {
-      logger.warn("Error generating JSON", exception);
+      log.warn("Error generating JSON", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(ResponseMessage.builder()
@@ -46,7 +46,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * server error and we should inform the developer.
      */
     if (message.startsWith("No suitable constructor found")) {
-      logger.error("Unable to deserialize the specific type", exception);
+      log.error("Unable to deserialize the specific type", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(ResponseMessage.builder()
@@ -61,7 +61,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     /*
      * Otherwise, it's those pesky users.
      */
-    logger.info("Unable to process JSON", exception);
+    log.info("Unable to process JSON", exception);
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(ResponseMessage.builder()

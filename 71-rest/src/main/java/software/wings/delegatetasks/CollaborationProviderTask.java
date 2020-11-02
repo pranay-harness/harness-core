@@ -43,7 +43,7 @@ public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
           throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
       }
     } catch (Exception e) {
-      logger.error("Exception in processing externalCommunicationTask task [{}]", request.toString(), e);
+      log.error("Exception in processing externalCommunicationTask task [{}]", request.toString(), e);
       return CollaborationProviderResponse.builder()
           .status(CommandExecutionStatus.FAILURE)
           .accountId(getAccountId())

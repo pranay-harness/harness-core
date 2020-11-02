@@ -59,7 +59,7 @@ public abstract class AbstractFieldsDataFetcher<T, F> implements DataFetcher {
     } catch (Exception exception) {
       throw new InvalidRequestException(EXCEPTION_MSG, exception, WingsException.USER_SRE);
     } finally {
-      logger.info("Time taken for the stats call (abstractStatsDataFetcherWithAggregationList) {}",
+      log.info("Time taken for the stats call (abstractStatsDataFetcherWithAggregationList) {}",
           System.currentTimeMillis() - startTime);
     }
     return result;

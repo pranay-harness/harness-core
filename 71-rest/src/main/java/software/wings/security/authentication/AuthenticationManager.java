@@ -145,7 +145,7 @@ public class AuthenticationManager {
     }
     List<Account> accounts = accountService.listAllAccounts();
     if (accounts.size() > 1) {
-      logger.warn(
+      log.warn(
           "On-prem deployments are expected to have exactly 1 account. Returning response for the primary account");
     }
     // It is assumed that an on-prem deployment has exactly 1 account
@@ -180,7 +180,7 @@ public class AuthenticationManager {
     try {
       failedLoginAttemptCountChecker.check(user);
     } catch (MaxLoginAttemptExceededException e) {
-      logger.info("User exceeded max failed login attemts. {}", e.getMessage());
+      log.info("User exceeded max failed login attemts. {}", e.getMessage());
       showCaptcha = true;
     }
 
@@ -239,13 +239,13 @@ public class AuthenticationManager {
     User user = userService.getUserByEmail(email);
     // Null check just in case identity service might accidentally forwarded wrong user to this cluster.
     if (user == null) {
-      logger.info("User {} doesn't exist in this manager cluster", email);
+      log.info("User {} doesn't exist in this manager cluster", email);
       //    PL-3163: LDAP/SAML users are not email-verified, but we need to allow them to login.
       //    } else if (!user.isEmailVerified()) {
-      //      logger.info("User {} is not yet email verified in this manager cluster, login is not allowed.", email);
+      //      log.info("User {} is not yet email verified in this manager cluster, login is not allowed.", email);
       //      throw new WingsException(EMAIL_NOT_VERIFIED, USER);
     } else if (user.isDisabled()) {
-      logger.info("User {} is disabled in this manager cluster, login is not allowed.", email);
+      log.info("User {} is disabled in this manager cluster, login is not allowed.", email);
       throw new WingsException(USER_DISABLED, USER);
     } else {
       if (user.isTwoFactorAuthenticationEnabled()) {
@@ -333,7 +333,7 @@ public class AuthenticationManager {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       if (authHandler == null) {
-        logger.error("No auth handler found for auth mechanism {}", authenticationMechanism);
+        log.error("No auth handler found for auth mechanism {}", authenticationMechanism);
         throw new WingsException(INVALID_CREDENTIAL);
       }
 
@@ -343,7 +343,7 @@ public class AuthenticationManager {
           PasswordBasedAuthHandler passwordBasedAuthHandler = (PasswordBasedAuthHandler) authHandler;
           user = passwordBasedAuthHandler.authenticateWithPasswordHash(userName, password).getUser();
         } else {
-          logger.error("isPasswordHash should not be true if the auth mechanism {} is not username / password",
+          log.error("isPasswordHash should not be true if the auth mechanism {} is not username / password",
               authenticationMechanism);
           throw new WingsException(INVALID_CREDENTIAL);
         }
@@ -360,14 +360,14 @@ public class AuthenticationManager {
       }
 
     } catch (WingsException we) {
-      logger.warn("Failed to login via default mechanism", we);
+      log.warn("Failed to login via default mechanism", we);
       if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
         throw we;
       } else {
         throw new WingsException(INVALID_CREDENTIAL, USER);
       }
     } catch (Exception e) {
-      logger.warn("Failed to login via default mechanism", e);
+      log.warn("Failed to login via default mechanism", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
@@ -407,7 +407,7 @@ public class AuthenticationManager {
         return loggedInUser;
       }
     } catch (Exception e) {
-      logger.warn("Failed to login via SSO", e);
+      log.warn("Failed to login via SSO", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
@@ -450,7 +450,7 @@ public class AuthenticationManager {
   }
 
   private Response generateInvalidSSOResponse(Exception e) throws URISyntaxException {
-    logger.warn("Failed to login via saml", e);
+    log.warn("Failed to login via saml", e);
     URI redirectUrl = new URI(getBaseUrl() + LOGIN_ERROR_CODE_INVALIDSSO);
     return Response.seeOther(redirectUrl).build();
   }
@@ -480,7 +480,7 @@ public class AuthenticationManager {
         user = authenticationResponse.getUser();
       }
 
-      logger.info("OauthAuthentication succeeded for email {}", user.getEmail());
+      log.info("OauthAuthentication succeeded for email {}", user.getEmail());
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
       String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
@@ -491,7 +491,7 @@ public class AuthenticationManager {
 
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {
-      logger.warn("Failed to login via oauth", e);
+      log.warn("Failed to login via oauth", e);
       URI redirectUrl = new URI(getBaseUrl() + LOGIN_ERROR_CODE_INVALIDSSO);
       return Response.seeOther(redirectUrl).build();
     }

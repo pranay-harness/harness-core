@@ -68,7 +68,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
             commandExecutionDataBuilder, executionLogCallback);
       }
     } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
     } finally {

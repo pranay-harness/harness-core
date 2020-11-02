@@ -30,7 +30,7 @@ public class AddLimitVicinityCheckJobToAllAccounts implements Migration {
         }
         LimitVicinityCheckerJob.delete(jobScheduler, account.getUuid());
         LimitVicinityCheckerJob.add(jobScheduler, account.getUuid());
-        logger.info("Added LimitVicinityCheckerJob for account {}", account.getUuid());
+        log.info("Added LimitVicinityCheckerJob for account {}", account.getUuid());
       }
     }
   }

@@ -132,7 +132,7 @@ public class InviteResource {
         InviteOperationResponse response = invitesService.create(invite);
         inviteOperationResponses.add(response);
       } catch (DuplicateFieldException ex) {
-        logger.error("error: ", ex);
+        log.error("error: ", ex);
       }
     }
     return ResponseDTO.newResponse(inviteOperationResponses);

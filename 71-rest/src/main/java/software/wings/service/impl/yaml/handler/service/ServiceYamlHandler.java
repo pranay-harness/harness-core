@@ -127,7 +127,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           } else if (ARTIFACT == variableType) {
             serviceVariableYamlHelper.convertArtifactVariableToYaml(accountId, serviceVariable, allowedValueYamlList);
           } else {
-            logger.warn("Variable type {} not supported, skipping the processing of value", variableType);
+            log.warn("Variable type {} not supported, skipping the processing of value", variableType);
           }
 
           return NameValuePair.Yaml.builder()
@@ -302,8 +302,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             break;
 
           default:
-            logger.warn(
-                format("Unhandled type %s while finding config variables to update", serviceVariable.getType()));
+            log.warn(format("Unhandled type %s while finding config variables to update", serviceVariable.getType()));
         }
       }
     }
@@ -386,13 +385,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                 accountId, configVar.getAllowedList(), configVar.getName());
             serviceVariable.setAllowedList(allowedList);
           } else {
-            logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
+            log.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
             continue;
           }
           break;
 
         default:
-          logger.warn("Yaml doesn't  support {} type service variables", serviceVariable.getType());
+          log.warn("Yaml doesn't  support {} type service variables", serviceVariable.getType());
           continue;
       }
 
@@ -429,10 +428,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             artifactVariableYamlHelper.computeAllowedList(accountId, cv.getAllowedList(), cv.getName());
         serviceVariableBuilder.allowedList(allowedList);
       } else {
-        logger.warn("Yaml doesn't support {} type service variables", cv.getValueType());
+        log.warn("Yaml doesn't support {} type service variables", cv.getValueType());
       }
     } else {
-      logger.warn("Yaml doesn't support {} type service variables", cv.getValueType());
+      log.warn("Yaml doesn't support {} type service variables", cv.getValueType());
       serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
     }
 

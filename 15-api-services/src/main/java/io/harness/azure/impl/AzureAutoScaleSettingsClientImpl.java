@@ -49,7 +49,7 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
       AutoscaleSettingResourceInner autoscaleSettingResourceInner = autoscaleSetting.inner();
       AzureJacksonAdapter adapter = new AzureJacksonAdapter();
 
-      logger.debug(
+      log.debug(
           "Start serializing AutosScaleSettingResourceInner by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
           subscriptionId, resourceGroupName, targetResourceId);
       try {
@@ -92,7 +92,7 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing AutosScale settings by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
+    log.debug("Start listing AutosScale settings by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
         subscriptionId, resourceGroupName, targetResourceId);
     PagedList<AutoscaleSetting> autosScaleSettings = azure.autoscaleSettings().listByResourceGroup(resourceGroupName);
     for (AutoscaleSetting autoScaleSetting : autosScaleSettings) {
@@ -134,7 +134,7 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
 
     AutoscaleSettingResourceInner autoScaleSettingResourceInner;
     try {
-      logger.debug(
+      log.debug(
           "Start deserialize AutosScaleSettingResourceInner by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
           subscriptionId, resourceGroupName, targetResourceId);
       autoScaleSettingResourceInner =
@@ -156,7 +156,7 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
     setDefaultAutoScaleProfileCapacity(defaultProfileScaleCapacity, autoScaleSettingResourceInner);
     setRulesMetricResourceUri(autoScaleSettingResourceInner, targetResourceId);
 
-    logger.debug(
+    log.debug(
         "Start creating or updating AutosScaleSetting by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}, newCustomAutoScalingSettingsName: {}",
         subscriptionId, resourceGroupName, targetResourceId, newCustomAutoScalingSettingsName);
     azure.autoscaleSettings().inner().createOrUpdate(
@@ -210,12 +210,11 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
     if (autoScaleSettingOp.isPresent()) {
       AutoscaleSetting autoscaleSetting = autoScaleSettingOp.get();
 
-      logger.debug(
-          "Start deleting AutosScaleSetting by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
+      log.debug("Start deleting AutosScaleSetting by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
           subscriptionId, resourceGroupName, targetResourceId);
       azure.autoscaleSettings().deleteById(autoscaleSetting.id());
     } else {
-      logger.info("There is no AutoScaleSettings attached on, subscriptionId: {}, targetResourceId: {}, "
+      log.info("There is no AutoScaleSettings attached on, subscriptionId: {}, targetResourceId: {}, "
               + "resourceGroupName: {}",
           subscriptionId, targetResourceId, resourceGroupName);
     }
@@ -265,8 +264,7 @@ public class AzureAutoScaleSettingsClientImpl extends AzureClient implements Azu
       AutoscaleSettingResourceInner autoScaleSettingInner = autoscaleSetting.inner();
       AzureJacksonAdapter adapter = new AzureJacksonAdapter();
 
-      logger.debug(
-          "Start listing AutosScale profiles by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
+      log.debug("Start listing AutosScale profiles by subscriptionId: {}, resourceGroupName: {}, targetResourceId: {}",
           subscriptionId, resourceGroupName, targetResourceId);
       return autoScaleSettingInner.profiles()
           .stream()

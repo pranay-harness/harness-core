@@ -62,7 +62,7 @@ public class PipelineQueryHelper {
             query.field("appId").in(entityIds);
             break;
           default:
-            logger.error("EntityType {} not supported in query", pipelineTagFilter.getEntityType());
+            log.error("EntityType {} not supported in query", pipelineTagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling query", WingsException.USER);
         }
       }
@@ -74,7 +74,7 @@ public class PipelineQueryHelper {
       case APPLICATION:
         return EntityType.APPLICATION;
       default:
-        logger.error("Unsupported entity type {} for tag ", entityType);
+        log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
     }
   }

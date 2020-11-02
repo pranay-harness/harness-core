@@ -98,10 +98,9 @@ public abstract class AbstractSecretServiceImpl {
           encryptedVaultToken.setEncryptedValue(reencryptedData.getEncryptedValue());
           encryptedVaultToken.setKmsId(null);
           wingsPersistence.save(encryptedVaultToken);
-          logger.info(
-              "Successfully migrated vault token {} from KMS to LOCAL encryption.", encryptedVaultToken.getName());
+          log.info("Successfully migrated vault token {} from KMS to LOCAL encryption.", encryptedVaultToken.getName());
         } catch (WingsException e) {
-          logger.warn(
+          log.warn(
               "Failed in migrating vault token " + encryptedVaultToken.getName() + " from KMS to LOCAL encryption.", e);
         }
 

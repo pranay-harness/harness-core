@@ -39,9 +39,9 @@ public class RequestSpecProvider {
     if (!port.equals("0000")) {
       requestSpecBuilder.setPort(Integer.parseInt(port));
     }
-    logger.info("Querying environment : " + host + ":" + port + basePath);
+    log.info("Querying environment : " + host + ":" + port + basePath);
     if (port.equals("0000")) {
-      logger.info(
+      log.info(
           "This querying environment would use the default port for the service. This option is good to be used in non local envs such as QA");
     }
     return requestSpecBuilder.build();

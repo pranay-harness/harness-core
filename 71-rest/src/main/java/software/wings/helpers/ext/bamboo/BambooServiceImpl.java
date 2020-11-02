@@ -98,7 +98,7 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public List<String> getJobKeys(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
-    logger.info("Retrieving job keys for plan key {}", planKey);
+    log.info("Retrieving job keys for plan key {}", planKey);
     Call<JsonNode> request =
         getBambooClient(bambooConfig, encryptionDetails)
             .listPlanWithJobDetails(
@@ -106,7 +106,7 @@ public class BambooServiceImpl implements BambooService {
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
-      logger.info("Reading job keys for plan key {} success", planKey);
+      log.info("Reading job keys for plan key {} success", planKey);
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (ArtifactServerException e) {
       throw e;
@@ -191,8 +191,8 @@ public class BambooServiceImpl implements BambooService {
     try {
       return timeLimiter.callWithTimeout(() -> {
         BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
-        logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
-        logger.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
+        log.info("Retrieving plan keys for bamboo server {}", bambooConfig);
+        log.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
         Call<JsonNode> request = bambooRestClient.listProjectPlans(
             Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
         Map<String, String> planNameMap = new HashMap<>();
@@ -212,9 +212,9 @@ public class BambooServiceImpl implements BambooService {
           }
           if (maxResults != 1 && size > maxResults) {
             int maxPlansToFetch = Math.min(size, 10000);
-            logger.info("Total no. of plans to fetch: [{}]", maxPlansToFetch);
+            log.info("Total no. of plans to fetch: [{}]", maxPlansToFetch);
             for (int startIndex = maxResults; startIndex < maxPlansToFetch; startIndex += maxResults) {
-              logger.info("Fetching plans starting at index: [{}] from bamboo server {}", startIndex,
+              log.info("Fetching plans starting at index: [{}] from bamboo server {}", startIndex,
                   bambooConfig.getBambooUrl());
               request = bambooRestClient.listProjectPlansWithPagination(
                   Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults,
@@ -239,7 +239,7 @@ public class BambooServiceImpl implements BambooService {
           }
           throw new ArtifactServerException("Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e), e);
         }
-        logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
+        log.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
       }, 110L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
@@ -351,7 +351,7 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public String triggerPlan(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey,
       Map<String, String> parameters) {
-    logger.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    log.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
     Response<JsonNode> response = null;
     String buildResultKey = null;
     try {
@@ -377,13 +377,12 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Failed to trigger bamboo plan [" + planKey + "]", e);
+      log.error("Failed to trigger bamboo plan [" + planKey + "]", e);
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message",
               "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
-    logger.info(
-        "Bamboo plan execution success for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    log.info("Bamboo plan execution success for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
     return buildResultKey;
   }
 
@@ -412,7 +411,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("BambooService job keys fetch failed with exception", e);
+      log.error("BambooService job keys fetch failed with exception", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
           .addParam("message",
               "Failed to retrieve build status for [ " + buildResultKey
@@ -440,7 +439,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("BambooService job keys fetch failed with exception", e);
+      log.error("BambooService job keys fetch failed with exception", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
           .addParam("message", "Failed to trigger bamboo plan " + buildResultKey);
     }
@@ -479,7 +478,7 @@ public class BambooServiceImpl implements BambooService {
               .orElse(null);
       if (artifactPath != null) {
         Artifact value = artifactPath.getValue();
-        logger.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
+        log.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
         String link = value.getLink();
         String artifactFileName = link.substring(link.lastIndexOf('/') + 1);
         if (isNotEmpty(artifactFileName)) {
@@ -488,8 +487,8 @@ public class BambooServiceImpl implements BambooService {
       } else { // It is not matching  direct url, so just prepare the url
         String msg =
             "Artifact path  [" + artifactPathRegex + "] not matching with any values: " + artifactPathMap.values();
-        logger.info(msg);
-        logger.info("Constructing url path to download");
+        log.info(msg);
+        log.info("Constructing url path to download");
         Artifact artifactJob = artifactPathMap.values()
                                    .stream()
                                    .filter(artifact -> artifact.getProducerJobKey() != null)
@@ -508,7 +507,7 @@ public class BambooServiceImpl implements BambooService {
             artifactUrl = bambooConfig.getBambooUrl() + "/browse/" + buildKey + "/artifact";
           }
           artifactUrl = artifactUrl + "/" + jobName + "/" + artifactSourcePath;
-          logger.info("Constructed url {}", artifactUrl);
+          log.info("Constructed url {}", artifactUrl);
           artifactFileMetadata.add(ArtifactFileMetadata.builder()
                                        .fileName(artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1))
                                        .url(artifactUrl)
@@ -562,7 +561,7 @@ public class BambooServiceImpl implements BambooService {
 
   public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
       List<EncryptedDataDetail> encryptionDetails, String artifactFileName, String artifactFilePath) {
-    logger.info("Downloading artifact from url {}", artifactFilePath);
+    log.info("Downloading artifact from url {}", artifactFilePath);
     try {
       URL url = new URL(artifactFilePath);
       URLConnection uc = url.openConnection();
@@ -589,7 +588,7 @@ public class BambooServiceImpl implements BambooService {
    */
   private Map<String, Artifact> getBuildArtifactsUrlMap(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber) {
-    logger.info("Retrieving artifacts from plan {} and build number {}", planKey, buildNumber);
+    log.info("Retrieving artifacts from plan {} and build number {}", planKey, buildNumber);
     Call<JsonNode> request =
         getBambooClient(bambooConfig, encryptionDetails)
             .getBuildArtifacts(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey, buildNumber);
@@ -625,7 +624,7 @@ public class BambooServiceImpl implements BambooService {
           });
         }
       }
-      logger.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
+      log.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
       return artifactPathMap;
     } catch (IOException e) {
       throw new ArtifactServerException(
@@ -649,7 +648,7 @@ public class BambooServiceImpl implements BambooService {
 
   public long getFileSize(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
       String artifactFileName, String artifactFilePath) {
-    logger.info("Getting file size for artifact at path {}", artifactFilePath);
+    log.info("Getting file size for artifact at path {}", artifactFilePath);
     long size;
     Pair<String, InputStream> pair =
         downloadArtifact(bambooConfig, encryptionDetails, artifactFileName, artifactFilePath);
@@ -662,7 +661,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (IOException e) {
       throw new InvalidArtifactServerException(getMessage(e), e);
     }
-    logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactFilePath));
+    log.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactFilePath));
     return size;
   }
 }

@@ -269,7 +269,7 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
       fail("Saved invalid vault config with both default and read only true");
     } catch (SecretManagementException e) {
-      logger.info("Error", e);
+      log.info("Error", e);
       assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
     }
   }
@@ -293,7 +293,7 @@ public class VaultTest extends WingsBaseTest {
       secretManager.saveSecret(accountId, secretText);
       fail("Should not have been able to create encrypted text with read only vault");
     } catch (SecretManagementException e) {
-      logger.info("Error", e);
+      log.info("Error", e);
       assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
     }
   }
@@ -318,7 +318,7 @@ public class VaultTest extends WingsBaseTest {
           new BoundedInputStream(new FileInputStream(file)), false);
       fail("Should not have been able to create encrypted file with read only vault");
     } catch (SecretManagementException e) {
-      logger.info("Error", e);
+      log.info("Error", e);
       assertThat(e.getCode()).isEqualTo(ErrorCode.SECRET_MANAGEMENT_ERROR);
     }
   }
@@ -1264,7 +1264,7 @@ public class VaultTest extends WingsBaseTest {
           accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       fail("Should not have been able to transition secrets from read only vault");
     } catch (SecretManagementException e) {
-      logger.info("Expected error", e);
+      log.info("Expected error", e);
       assertThat(e.getCode()).isEqualTo(UNSUPPORTED_OPERATION_EXCEPTION);
     }
 
@@ -1278,7 +1278,7 @@ public class VaultTest extends WingsBaseTest {
           accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       fail("Should not have been able to transition secrets to read only vault");
     } catch (SecretManagementException e) {
-      logger.info("Expected error", e);
+      log.info("Expected error", e);
       assertThat(e.getCode()).isEqualTo(UNSUPPORTED_OPERATION_EXCEPTION);
     }
   }
@@ -1433,7 +1433,7 @@ public class VaultTest extends WingsBaseTest {
     final long startTime = System.currentTimeMillis();
     long remainingCount = wingsPersistence.createQuery(KmsTransitionEvent.class, excludeAuthority).count();
     while (remainingCount > 0 && System.currentTimeMillis() < startTime + TimeUnit.SECONDS.toMillis(seconds)) {
-      logger.info("remaining secrets: " + remainingCount);
+      log.info("remaining secrets: " + remainingCount);
       remainingCount = wingsPersistence.createQuery(KmsTransitionEvent.class, excludeAuthority).count();
       Morpheus.sleep(ofSeconds(1));
     }
@@ -1452,7 +1452,7 @@ public class VaultTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
+    log.info("seed: " + seed);
     Random r = new Random(seed);
     VaultConfig fromConfig = getVaultConfigWithAuthToken(VAULT_TOKEN);
     vaultService.saveOrUpdateVaultConfig(accountId, fromConfig, true);

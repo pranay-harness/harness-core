@@ -65,7 +65,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to authenticate to servicenow. ");
+      log.error("Failed to authenticate to servicenow. ");
       if (e instanceof SocketTimeoutException) {
         throw new WingsException(ErrorCode.INVALID_TICKETING_SERVER, USER, e)
             .addParam("message",
@@ -122,7 +122,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to fetch States from serviceNow");
       List<ServiceNowMetaDTO> responseStates = new ArrayList<>();
 
@@ -139,7 +139,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         // todo: Check this error message with srinivas
         throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", "");
       }
-      logger.info("States for ticketType {}: {}", ticketType, responseStates);
+      log.info("States for ticketType {}: {}", ticketType, responseStates);
       return responseStates;
     } catch (WingsException e) {
       throw e;
@@ -190,7 +190,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     List<ServiceNowMetaDTO> fields = new ArrayList<>();
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response,
           "Failed to fetch Additional fields for ticketType : " + taskParameters.getTicketType() + " from serviceNow");
       JsonNode responseObj = response.body().get("result");
@@ -313,7 +313,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     Response<JsonNode> response = null;
     try {
       response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
+      log.info("Response received from serviceNow: {}", response);
       handleResponse(response, "Failed to fetch IssueId : " + taskParameters.getIssueNumber() + " from serviceNow");
       JsonNode responseObj = response.body().get("result");
       if (responseObj.isArray()) {

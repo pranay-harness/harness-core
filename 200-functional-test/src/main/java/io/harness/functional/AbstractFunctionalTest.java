@@ -143,13 +143,13 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       commandLibraryServiceExecutor.ensureCommandLibraryService(
           AbstractFunctionalTest.class, FunctionalTestRule.alpn, FunctionalTestRule.alpnJar);
     }
-    logger.info("Basic setup completed");
+    log.info("Basic setup completed");
   }
 
   @AfterClass
   public static void cleanup() {
     FileUtils.deleteModifiedConfig(AbstractFunctionalTest.class);
-    logger.info("All tests exit");
+    log.info("All tests exit");
   }
 
   public void resetCache(String accountId) {
@@ -161,7 +161,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             //            .body(null, ObjectMapperType.GSON)
             .put("/users/reset-cache")
             .as(new GenericType<RestResponse<Void>>() {}.getType(), ObjectMapperType.GSON);
-    logger.info(restResponse.toString());
+    log.info(restResponse.toString());
   }
 
   public static Void updateApiKey(String accountId, String bearerToken) {
@@ -227,7 +227,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected void logStateExecutionInstanceErrors(WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
-      logger.info("Workflow execution didn't failed, skipping this step");
+      log.info("Workflow execution didn't failed, skipping this step");
       return;
     }
 
@@ -239,7 +239,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             .asList();
 
     if (isEmpty(stateExecutionInstances)) {
-      logger.info("No FAILED state execution instances found for workflow {}", workflowExecution.getUuid());
+      log.info("No FAILED state execution instances found for workflow {}", workflowExecution.getUuid());
       return;
     }
 
@@ -250,12 +250,12 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             -> stateExecutionData.getStatus() == ExecutionStatus.FAILED
                 || stateExecutionData.getStatus() == ExecutionStatus.ERROR)
         .forEach(stateExecutionData -> {
-          logger.info("Analyzing failed state: {}", stateExecutionData.getStateName());
+          log.info("Analyzing failed state: {}", stateExecutionData.getStateName());
           if (isNotEmpty(stateExecutionData.getErrorMsg())) {
-            logger.info(
+            log.info(
                 "State: {} failed with error: {}", stateExecutionData.getStateName(), stateExecutionData.getErrorMsg());
           } else {
-            logger.info("No error message found for state: {}, checking phase execution summary...",
+            log.info("No error message found for state: {}, checking phase execution summary...",
                 stateExecutionData.getStateName());
           }
           if (stateExecutionData instanceof PhaseStepExecutionData) {
@@ -268,16 +268,16 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
                       -> stepExecutionSummary.getStatus() == ExecutionStatus.ERROR
                           || stepExecutionSummary.getStatus() == ExecutionStatus.FAILED)
                   .forEach(stepExecutionSummary
-                      -> logger.info("Phase step execution failed at state: {} and step name: {} with message: {}",
+                      -> log.info("Phase step execution failed at state: {} and step name: {} with message: {}",
                           stateExecutionData.getStateName(), stepExecutionSummary.getStepName(),
                           stepExecutionSummary.getMessage()));
             }
           } else {
-            logger.info(
+            log.info(
                 "No phase step execution summary found for state: {}. ¯\\_(ツ)_/¯", stateExecutionData.getStateName());
           }
 
-          logger.info("Analysis completed for failed state: {}", stateExecutionData.getStateName());
+          log.info("Analysis completed for failed state: {}", stateExecutionData.getStateName());
         });
   }
 
@@ -366,7 +366,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   protected void logFeatureFlagsEnabled(String accountId) {
     for (FeatureName featureName : FeatureName.values()) {
       if (featureFlagService.isEnabled(featureName, accountId)) {
-        logger.info("[ENABLED_FEATURE_FLAG]: {}", featureName);
+        log.info("[ENABLED_FEATURE_FLAG]: {}", featureName);
       }
     }
   }
@@ -386,16 +386,16 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
                                              .withExecutionType(ExecutionCredential.ExecutionType.SSH)
                                              .build());
 
-    logger.info("Invoking workflow execution");
+    log.info("Invoking workflow execution");
 
     WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
     logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution).isNotNull();
-    logger.info("Waiting for execution to finish");
+    log.info("Waiting for execution to finish");
     assertInstanceCount(workflowExecution.getStatus(), appId, workflowExecution.getInfraMappingIds().get(0),
         workflowExecution.getInfraDefinitionIds().get(0));
 
-    logger.info("ECs Execution status: " + workflowExecution.getStatus());
+    log.info("ECs Execution status: " + workflowExecution.getStatus());
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 

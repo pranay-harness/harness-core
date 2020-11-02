@@ -56,7 +56,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
         }
       }
     } catch (Exception exception) {
-      logger.warn("Exception is of type Exception. Ignoring.", exception);
+      log.warn("Exception is of type Exception. Ignoring.", exception);
     }
   }
 
@@ -64,7 +64,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   public <T extends DelegateResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
     try {
-      logger.info("Executing sync task");
+      log.info("Executing sync task");
       AtomicLong endAt =
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {

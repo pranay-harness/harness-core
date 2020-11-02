@@ -82,7 +82,7 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
     if (helperClass != null) {
       dummyElement = helperClass.createDummyVisitableElement(currentElement);
     } else {
-      logger.error("Helper Class not implemented for object of type" + currentElement.getClass());
+      log.error("Helper Class not implemented for object of type" + currentElement.getClass());
       throw new NotImplementedException("Helper Class not implemented for object of type" + currentElement.getClass());
     }
     boolean hasError = validateAnnotations(currentElement, dummyElement);
@@ -138,7 +138,7 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
             uuid, visitorErrorResponseWrapper, uuidToVisitorResponse, VisitorErrorResponseWrapper.builder().build());
 
       } catch (IllegalAccessException e) {
-        logger.error(String.format("Error using reflection : %s", e.getMessage()));
+        log.error(String.format("Error using reflection : %s", e.getMessage()));
       }
     }
   }

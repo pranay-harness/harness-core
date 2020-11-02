@@ -62,15 +62,15 @@ public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskSt
       K8sTaskExecutionResponse k8sTaskExecutionResponse =
           buildSetupUtils.executeCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
       if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.error("LiteEngineTaskStep execution succeeded");
+        log.error("LiteEngineTaskStep execution succeeded");
         return StepResponse.builder().status(Status.SUCCEEDED).build();
       } else {
-        logger.error("LiteEngineTaskStep execution failed with status {} and message {}",
+        log.error("LiteEngineTaskStep execution failed with status {} and message {}",
             k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse.getErrorMessage());
         return StepResponse.builder().status(Status.FAILED).build();
       }
     } catch (Exception e) {
-      logger.error("LiteEngineTaskStep execution failed", e);
+      log.error("LiteEngineTaskStep execution failed", e);
       return StepResponse.builder().status(Status.ERRORED).build();
     }
   }

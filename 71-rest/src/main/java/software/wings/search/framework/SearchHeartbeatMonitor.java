@@ -44,7 +44,7 @@ public class SearchHeartbeatMonitor implements Runnable {
       wingsPersistence.updateField(
           SearchDistributedLock.class, lockName, SearchDistributedLockKeys.heartbeat, Date.from(instant));
     } else {
-      logger.info("Search lock is deleted");
+      log.info("Search lock is deleted");
       lockTimeoutCallback.stop();
     }
   }

@@ -87,7 +87,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
     String errorMessage = success ? null : awsResponse.getErrorMessage();
     boolean canDeleteTask = success && Collections.isEmpty(awsResponse.getInstances());
     if (canDeleteTask) {
-      logger.info("Got 0 instances. Infrastructure Mapping : [{}]", infrastructureMapping.getUuid());
+      log.info("Got 0 instances. Infrastructure Mapping : [{}]", infrastructureMapping.getUuid());
     }
     return Status.builder().success(success).errorMessage(errorMessage).retryable(!canDeleteTask).build();
   }
@@ -149,7 +149,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
     if (!(infrastructureMapping instanceof AwsInfrastructureMapping)) {
       String msg =
           "Incompatible infra mapping type. Expecting aws type. Found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 
@@ -170,7 +170,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
         response.map(AwsEc2ListInstancesResponse::getInstances);
     boolean canUpdateDb = canUpdateInstancesInDb(instanceSyncFlow, infrastructureMapping.getAccountId());
 
-    logger.info("[AWS-SSH Instance sync]: can update db : {} flow: {}", canUpdateDb, instanceSyncFlow);
+    log.info("[AWS-SSH Instance sync]: can update db : {} flow: {}", canUpdateDb, instanceSyncFlow);
 
     // Check if the instances are still running. These instances were either the ones that were stored with the old
     // schema or the instances created using aws infra mapping with filter.
@@ -260,11 +260,11 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
         if (oldInstance != null) {
           instanceService.update(instance, oldInstance.getUuid());
         } else {
-          logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
+          log.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
         }
       });
 
-      logger.info("Instances to be updated {}", instancesToBeUpdated.size());
+      log.info("Instances to be updated {}", instancesToBeUpdated.size());
     }
 
     handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
@@ -277,7 +277,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
             && isNotEmpty(instancesInDB)) {
           Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
           if (!instanceWithExecutionInfoOptional.isPresent()) {
-            logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
+            log.warn("Couldn't find an instance from a previous deployment for inframapping {}",
                 infrastructureMapping.getUuid());
             return;
           }
@@ -304,7 +304,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
             infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
       }
 
-      logger.info("Instances to be added {}", instancesToBeAdded.size());
+      log.info("Instances to be added {}", instancesToBeAdded.size());
     }
   }
 
@@ -373,7 +373,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
   private void deleteRunningEc2InstancesFromMap(Map<String, Instance> ec2InstanceIdInstanceMap,
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList) {
     Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
-    logger.info("Total no of Ec2 instances found in DB for AppId: {}: {}, No of Running instances found in aws:{}",
+    log.info("Total no of Ec2 instances found in DB for AppId: {}: {}, No of Running instances found in aws:{}",
         ec2instance.getAppId(), ec2InstanceIdInstanceMap.size(), activeInstanceList.size());
     ec2InstanceIdInstanceMap.keySet().removeAll(
         activeInstanceList.stream().map(com.amazonaws.services.ec2.model.Instance::getInstanceId).collect(toSet()));
@@ -384,7 +384,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
                                              .collect(Collectors.toSet());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
-      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

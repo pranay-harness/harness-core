@@ -57,7 +57,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     updateRiskScoreInDB(verificationTaskId, AggregationLevel.VERIFICATION_TASK, healthVerificationPeriod, cvConfig,
         activity, overallRisk, endTime);
     updateActivityRiskScore(verificationTaskId, overallRisk, cvConfig, activity, healthVerificationPeriod, endTime);
-    logger.info("Updated the health verification risk score for verificationTaskId {}, category {}, period {} to {}",
+    log.info("Updated the health verification risk score for verificationTaskId {}, category {}, period {} to {}",
         verificationTaskId, cvConfig.getCategory(), healthVerificationPeriod, overallRisk);
   }
 
@@ -90,7 +90,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
       // update the activityLevel riskScore
       updateRiskScoreInDB(activity.getUuid(), AggregationLevel.ACTIVITY, healthVerificationPeriod, cvConfig, activity,
           overallRisk, endTime);
-      logger.info("Updated the activity risk score for activity {}, category {}, period {} to {}", activity.getUuid(),
+      log.info("Updated the activity risk score for activity {}, category {}, period {} to {}", activity.getUuid(),
           category, healthVerificationPeriod, overallRisk);
     }
   }

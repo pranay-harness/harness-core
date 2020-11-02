@@ -55,7 +55,7 @@ public class ExecutionLogCallback implements LogCallback {
               .executionResult(commandExecutionStatus)
               .build());
     } else {
-      logger.error("No logService injected. Couldn't save log [{}:{}]", logLevel, line);
+      log.error("No logService injected. Couldn't save log [{}:{}]", logLevel, line);
     }
   }
 

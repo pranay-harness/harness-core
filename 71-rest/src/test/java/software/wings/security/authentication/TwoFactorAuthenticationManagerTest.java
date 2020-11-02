@@ -98,7 +98,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         while (i < 6000) {
           long currentTime = DateTimeUtils.currentTimeMillis();
           long timeWithLag = currentTime + i;
-          logger.info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
+          log.info("Running test with time lag: [{}],currentTime=[{}],timeWithLag=[{}]", i, new Date(currentTime),
               new Date(timeWithLag));
           String code = TimeBasedOneTimePasswordUtil.generateNumberString(totpSecretKey, timeWithLag, 30);
           User authenticatedUser = spy(new User());

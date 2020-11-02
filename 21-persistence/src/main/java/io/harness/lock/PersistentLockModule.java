@@ -69,13 +69,13 @@ public class PersistentLockModule extends ProviderModule implements ServersModul
       Provider<MongoPersistentLocker> mongoPersistentLockerProvider) {
     switch (distributedLockImplementation) {
       case NOOP:
-        logger.info("Initialize Noop Locker");
+        log.info("Initialize Noop Locker");
         return new PersistentNoopLocker();
       case REDIS:
-        logger.info("Initialize Redis Locker");
+        log.info("Initialize Redis Locker");
         return redisPersistentLockerProvider.get();
       case MONGO:
-        logger.info("Initialize Mongo Locker");
+        log.info("Initialize Mongo Locker");
         return mongoPersistentLockerProvider.get();
       default:
         throw new UnsupportedOperationException();

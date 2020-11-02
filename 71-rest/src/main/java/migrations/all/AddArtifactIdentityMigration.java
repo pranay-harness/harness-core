@@ -40,7 +40,7 @@ public class AddArtifactIdentityMigration implements Migration {
       final DBCollection collection = wingsPersistence.getCollection(Artifact.class);
       BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-      logger.info("Starting migration for artifacts");
+      log.info("Starting migration for artifacts");
       int counter = 1;
       int exceptionCount = 0;
       int duplicateCount = 0;
@@ -63,7 +63,7 @@ public class AddArtifactIdentityMigration implements Migration {
               if (counter % 1000 == 0) {
                 bulkWriteOperation.execute();
                 bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-                logger.info("Artifacts : {} updated", counter);
+                log.info("Artifacts : {} updated", counter);
               }
               ++counter;
               String uuid = generateUuid();
@@ -94,12 +94,12 @@ public class AddArtifactIdentityMigration implements Migration {
         bulkWriteOperation.execute();
       }
 
-      logger.info("Artifacts duplicate count {}, exceptionCount {}, total artifacts {}", duplicateCount, exceptionCount,
+      log.info("Artifacts duplicate count {}, exceptionCount {}, total artifacts {}", duplicateCount, exceptionCount,
           counter);
 
       addIdentityOnOrphanTriggers();
     } catch (Exception ex) {
-      logger.error("Exception while executing AddArtifactIdentityMigration", ex);
+      log.error("Exception while executing AddArtifactIdentityMigration", ex);
     }
   }
 
@@ -117,7 +117,7 @@ public class AddArtifactIdentityMigration implements Migration {
         if (counter % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Orphan Artifacts : {} updated", counter);
+          log.info("Orphan Artifacts : {} updated", counter);
         }
         ++counter;
         String identity = generateUuid();

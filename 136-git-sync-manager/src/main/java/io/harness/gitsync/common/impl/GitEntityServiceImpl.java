@@ -118,7 +118,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
+      log.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
     }
     return RepoProviders.UNKNOWN;
   }
@@ -132,7 +132,7 @@ public class GitEntityServiceImpl implements GitEntityService {
       path = StringUtils.removeStart(path, "/");
       return path;
     } catch (URISyntaxException e) {
-      logger.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
+      log.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
     }
     return repositoryUrl;
   }

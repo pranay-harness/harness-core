@@ -113,8 +113,8 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
       template =
           getTemplatesByCommandNames(Collections.singletonList(commandName), commandStoreName, accountId, appId).get(0);
     } catch (Exception e) {
-      logger.info(String.format(
-                      "Template with command Id %s and command store id %s not found.", commandName, commandStoreName),
+      log.info(String.format(
+                   "Template with command Id %s and command store id %s not found.", commandName, commandStoreName),
           e);
     }
     return template;

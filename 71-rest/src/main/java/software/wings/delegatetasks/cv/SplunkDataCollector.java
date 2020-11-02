@@ -222,7 +222,7 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
     try {
       return initSplunkServiceWithToken(splunkConfig);
     } catch (Exception ex1) {
-      logger.error("Token based splunk connection failed. Trying basic auth", ex1);
+      log.error("Token based splunk connection failed. Trying basic auth", ex1);
       return initSplunkServiceWithBasicAuth(splunkConfig);
     }
   }

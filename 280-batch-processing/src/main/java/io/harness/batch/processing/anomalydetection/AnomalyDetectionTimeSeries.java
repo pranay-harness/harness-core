@@ -28,7 +28,7 @@ public class AnomalyDetectionTimeSeries extends AnomalyDetectionInfo {
     } else if (testTimePointsList.contains(instant)) {
       value = testDataPointsList.get(testTimePointsList.indexOf(instant));
     } else {
-      logger.debug("requested value for invalid timestamp");
+      log.debug("requested value for invalid timestamp");
       value = null;
     }
     return value;

@@ -29,7 +29,7 @@ public class ChangeTrackerTest extends WingsBaseTest {
   public void changeStreamTrackerTest() {
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
     ChangeTrackingInfo<?> changeTrackingInfo =
-        new ChangeTrackingInfo<>(Application.class, changeEvent -> logger.info(changeEvent.toString()), null);
+        new ChangeTrackingInfo<>(Application.class, changeEvent -> log.info(changeEvent.toString()), null);
     changeTrackingInfos.add(changeTrackingInfo);
 
     changeTracker.start(changeTrackingInfos);

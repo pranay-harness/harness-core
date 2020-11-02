@@ -99,7 +99,7 @@ public class SshDelegateExecutor {
       final String curlCommand = "curl -k -o harness-delegate.tar.gz \""
           + getDownloadURL(account.getUuid(), bearerToken) + "&delegateName=ssh-delegate"
           + "\"";
-      logger.info("Curl command = " + curlCommand);
+      log.info("Curl command = " + curlCommand);
 
       String[] commands = {
           "apt-get update",
@@ -138,7 +138,7 @@ public class SshDelegateExecutor {
           id, commandArray, DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
       LogStream output = docker.execStart(execCreation.id());
       String execOutput = output.readFully();
-      logger.info("Command output : " + execOutput);
+      log.info("Command output : " + execOutput);
     }
   }
 
@@ -180,7 +180,7 @@ public class SshDelegateExecutor {
       }
       return false;
     } catch (Exception e) {
-      logger.error("Failed to get status of delegate(s)", e);
+      log.error("Failed to get status of delegate(s)", e);
       return false;
     }
   }
@@ -215,7 +215,7 @@ public class SshDelegateExecutor {
       copyDelegateAndWatcherJars(directoryPath);
       publishLocalDelegate(version);
     } catch (IOException e) {
-      logger.error("Local storage creation failed", e);
+      log.error("Local storage creation failed", e);
     }
   }
 
@@ -245,7 +245,7 @@ public class SshDelegateExecutor {
       // Download JRE and copy to local-storage
       FileUtils.copyURLToFile(new URL(JRE_DOWNLOAD_URL), new File(jreDestination.toString()), 60000, 60000);
     } catch (IOException e) {
-      logger.error("Unable to copy Jars", e);
+      log.error("Unable to copy Jars", e);
     }
   }
 
@@ -263,14 +263,14 @@ public class SshDelegateExecutor {
       if (globalAccount == null) {
         throw new RuntimeException("Global Account settings not found. Run DataGen Application");
       } else {
-        logger.info("Publishing Local delegate");
+        log.info("Publishing Local delegate");
         UpdateOperations<Account> ops = wingsPersistence.createUpdateOperations(Account.class);
         setUnset(ops, "delegateConfiguration",
             DelegateConfiguration.builder().watcherVersion(version).delegateVersions(asList(version)).build());
         wingsPersistence.update(globalAccountQuery, ops);
       }
     } catch (Exception e) {
-      logger.error("Unable to Publish local delegate version", e);
+      log.error("Unable to Publish local delegate version", e);
     }
   }
 
@@ -283,13 +283,13 @@ public class SshDelegateExecutor {
           if (name.equals("/ssh_delegate")) {
             docker.stopContainer(container.id(), 0);
             docker.removeContainer(container.id());
-            logger.info("Docker Container with name {} cleaned up", name);
+            log.info("Docker Container with name {} cleaned up", name);
             return;
           }
         }
       }
     } catch (DockerException | InterruptedException | DockerCertificateException e) {
-      logger.error("unable to cleanup docker container", e);
+      log.error("unable to cleanup docker container", e);
     }
   }
 

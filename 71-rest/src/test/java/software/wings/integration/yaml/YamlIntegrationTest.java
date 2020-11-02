@@ -80,7 +80,7 @@ public class YamlIntegrationTest extends IntegrationTestBase {
 
   private void decryptGitConfig() {
     yamlIntegrationTestHelper.decryptGitConfig(
-        (GitConfig) gitConnector.getValue(), secretManager, logger, encryptionService);
+        (GitConfig) gitConnector.getValue(), secretManager, log, encryptionService);
   }
 
   private void setGitConnector() {
@@ -104,7 +104,7 @@ public class YamlIntegrationTest extends IntegrationTestBase {
     makeSureFileDoesntExistInRepo(yamlPath);
 
     Application application = yamlIntegrationTestHelper.createApplication(appName, accountId, appService);
-    logger.info("Created Application : " + application.getName());
+    log.info("Created Application : " + application.getName());
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertThat(gitFetchFilesResult.getFiles()).hasSize(1);
@@ -119,7 +119,7 @@ public class YamlIntegrationTest extends IntegrationTestBase {
     if (application == null) {
       application =
           yamlIntegrationTestHelper.createApplication("App" + System.currentTimeMillis(), accountId, appService);
-      logger.info("Created Application : " + application.getName());
+      log.info("Created Application : " + application.getName());
     }
     String serviceName = "Service" + System.currentTimeMillis();
     String yamlPath = new StringBuilder()
@@ -131,7 +131,7 @@ public class YamlIntegrationTest extends IntegrationTestBase {
 
     makeSureFileDoesntExistInRepo(yamlPath);
     Service service = yamlIntegrationTestHelper.createService(serviceName, application, serviceResourceService);
-    logger.info("Created Service : " + service.getName());
+    log.info("Created Service : " + service.getName());
 
     getGitFetchFilesResultByCount(yamlPath, 2);
   }
@@ -147,7 +147,7 @@ public class YamlIntegrationTest extends IntegrationTestBase {
 
   private GitFetchFilesResult getGitFetchFilesResult(
       String yamlPath, boolean isFailureExpected, int expectedCountOfFiles) throws Exception {
-    logger.info("Executing  YamlIntegrationTest.getGitFetchFilesResult()");
+    log.info("Executing  YamlIntegrationTest.getGitFetchFilesResult()");
     GitFetchFilesResult gitFetchFilesResult = null;
     for (int count = 0; count < 18; count++) {
       if (count > 0 && isFailureExpected) {
@@ -157,18 +157,18 @@ public class YamlIntegrationTest extends IntegrationTestBase {
       try {
         Thread.sleep(10000);
         gitFetchFilesResult =
-            gitIntegrationTestUtil.fetchFromGitUsingUsingBranch(gitConnector, "test", logger, Arrays.asList(yamlPath));
+            gitIntegrationTestUtil.fetchFromGitUsingUsingBranch(gitConnector, "test", log, Arrays.asList(yamlPath));
         // No exception means we got files from git
 
         if (expectedCountOfFiles == gitFetchFilesResult.getFiles().size()) {
-          logger.info("Retrieved files from git successfully");
+          log.info("Retrieved files from git successfully");
           break;
         }
       } catch (Exception e) {
         if (!isFailureExpected) {
-          logger.warn("Failed to retrieve files those were expected to be in Git repo");
+          log.warn("Failed to retrieve files those were expected to be in Git repo");
         } else {
-          logger.info("Not able to fetch file: " + e.getMessage());
+          log.info("Not able to fetch file: " + e.getMessage());
         }
       }
     }

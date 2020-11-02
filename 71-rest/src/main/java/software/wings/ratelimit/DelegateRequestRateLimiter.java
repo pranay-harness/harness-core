@@ -54,12 +54,12 @@ public class DelegateRequestRateLimiter {
     } else {
       boolean globalRateLimitReached = globalRateLimiter.overLimitWhenIncremented(Account.GLOBAL_ACCOUNT_ID);
       if (globalRateLimitReached) {
-        logger.info("Global Delegate Acquire Task limit reached");
+        log.info("Global Delegate Acquire Task limit reached");
         return true;
       } else if (isNotEmpty(accountId)) {
         boolean rateLimitReached = getAccountRateLimiter(accountId).overLimitWhenIncremented(delegateId);
         if (rateLimitReached) {
-          logger.info("Delegate Acquire Task limit reached");
+          log.info("Delegate Acquire Task limit reached");
           return true;
         }
       }

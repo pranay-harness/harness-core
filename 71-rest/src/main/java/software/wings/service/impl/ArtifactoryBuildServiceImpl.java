@@ -95,9 +95,9 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<String> getArtifactPaths(
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     if (isEmpty(groupId)) {
-      logger.info("Retrieving {} repo paths.", jobName);
+      log.info("Retrieving {} repo paths.", jobName);
       List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
-      logger.info("Retrieved {} repo paths.", repoPaths.size());
+      log.info("Retrieved {} repo paths.", repoPaths.size());
       return repoPaths;
     }
     return new ArrayList<>();
@@ -132,18 +132,18 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getGroupIds(
       String repoType, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    logger.info("Retrieving {} docker images.", repoType);
+    log.info("Retrieving {} docker images.", repoType);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repoType);
-    logger.info("Retrieved {} docker images.", repoPaths.size());
+    log.info("Retrieved {} docker images.", repoPaths.size());
     return repoPaths;
   }
 
   @Override
   public List<String> getGroupIds(String repositoryName, String repositoryType, ArtifactoryConfig config,
       List<EncryptedDataDetail> encryptionDetails) {
-    logger.info("Retrieving {} docker images.", repositoryName);
+    log.info("Retrieving {} docker images.", repositoryName);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repositoryName);
-    logger.info("Retrieved {} docker images.", repoPaths.size());
+    log.info("Retrieved {} docker images.", repoPaths.size());
     return repoPaths;
   }
 

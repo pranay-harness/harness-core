@@ -30,14 +30,14 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateTerraform() {
-    logger.info("Running terraform validation for task {}", delegateTaskId);
+    log.info("Running terraform validation for task {}", delegateTaskId);
     final ProcessExecutor processExecutor = new ProcessExecutor().command("/bin/sh", "-c", "terraform --version");
     boolean valid = false;
     try {
       final ProcessResult result = processExecutor.execute();
       valid = result.getExitValue() == 0;
     } catch (Exception e) {
-      logger.error("Checking terraform version threw exception", e);
+      log.error("Checking terraform version threw exception", e);
     }
     return valid;
   }
@@ -54,13 +54,13 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
     TerraformProvisionParameters terraformProvisionParameters = (TerraformProvisionParameters) getParameters()[0];
     final GitConfig gitConfig = terraformProvisionParameters.getSourceRepo();
     if (gitConfig != null) {
-      logger.info("Running git validation for task {} for repo [{}]", delegateTaskId, gitConfig.getRepoUrl());
+      log.info("Running git validation for task {} for repo [{}]", delegateTaskId, gitConfig.getRepoUrl());
       List<EncryptedDataDetail> encryptionDetails = terraformProvisionParameters.getSourceRepoEncryptionDetails();
 
       try {
         encryptionService.decrypt(gitConfig, encryptionDetails, false);
       } catch (Exception e) {
-        logger.info("Failed to decrypt " + gitConfig.getRepoUrl(), e);
+        log.info("Failed to decrypt " + gitConfig.getRepoUrl(), e);
         return false;
       }
       return isEmpty(gitClient.validate(gitConfig));
@@ -71,12 +71,12 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     boolean terraformValidate = validateTerraform();
-    logger.info("Terraform validation result: {}", terraformValidate);
+    log.info("Terraform validation result: {}", terraformValidate);
     if (!terraformValidate) {
       return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
     }
     boolean gitValidate = validateGit();
-    logger.info("Git validation result: {}", gitValidate);
+    log.info("Git validation result: {}", gitValidate);
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(gitValidate).build());
   }

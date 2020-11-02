@@ -72,7 +72,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
     }
 
     jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
-    logger.info("Scheduled SI usage check job. accountId={}", accountId);
+    log.info("Scheduled SI usage check job. accountId={}", accountId);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
         return;
       }
 
-      logger.info("Triggered: {} accountId: {}", ServiceInstanceUsageCheckerJob.class.getSimpleName(), accountId);
+      log.info("Triggered: {} accountId: {}", ServiceInstanceUsageCheckerJob.class.getSimpleName(), accountId);
       double usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
 
       instanceUsageLimitExcessHandler.updateViolationCount(accountId, usage);

@@ -27,7 +27,7 @@ public class AddTemplateMgmtPermissionToAdminUserGroup implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting updating user groups with new permission type");
+    log.info("Starting updating user groups with new permission type");
     UserGroup userGroup = null;
     try (HIterator<UserGroup> userGroups =
              new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority).fetch())) {
@@ -45,10 +45,10 @@ public class AddTemplateMgmtPermissionToAdminUserGroup implements Migration {
             }
           }
         } catch (Exception ex) {
-          logger.error("Error while updating user group {}", userGroup != null ? userGroup.getUuid() : "NA", ex);
+          log.error("Error while updating user group {}", userGroup != null ? userGroup.getUuid() : "NA", ex);
         }
       }
     }
-    logger.info("Completed updating user groups with new permission type");
+    log.info("Completed updating user groups with new permission type");
   }
 }

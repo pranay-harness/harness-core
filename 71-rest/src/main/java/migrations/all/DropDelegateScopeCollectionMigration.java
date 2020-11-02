@@ -17,7 +17,7 @@ public class DropDelegateScopeCollectionMigration implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "delegateScope").drop();
     } catch (RuntimeException ex) {
-      logger.error("Drop collection error", ex);
+      log.error("Drop collection error", ex);
     }
   }
 }

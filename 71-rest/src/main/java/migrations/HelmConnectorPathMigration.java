@@ -35,19 +35,19 @@ public class HelmConnectorPathMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_LINE + "Starting migration for Helm Connector Path");
+    log.info(DEBUG_LINE + "Starting migration for Helm Connector Path");
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
 
         if (account == null) {
-          logger.info(DEBUG_LINE + "account is null, continuing");
+          log.info(DEBUG_LINE + "account is null, continuing");
           continue;
         }
 
         Map<String, SettingAttribute> settingAttributeIdObjectMap = getSettingAttributeIdObjectMap(account);
 
-        logger.info(format("%s found %s setting attributes of GCS or S3 type for account id : %s", DEBUG_LINE,
+        log.info(format("%s found %s setting attributes of GCS or S3 type for account id : %s", DEBUG_LINE,
             settingAttributeIdObjectMap.size(), account.getUuid()));
 
         try (HIterator<Application> applications =
@@ -58,7 +58,7 @@ public class HelmConnectorPathMigration implements Migration {
             Application application = applications.next();
 
             if (application == null) {
-              logger.info(DEBUG_LINE + "Application is null, skipping");
+              log.info(DEBUG_LINE + "Application is null, skipping");
               continue;
             }
 
@@ -71,7 +71,7 @@ public class HelmConnectorPathMigration implements Migration {
                 ApplicationManifest applicationManifest = applicationManifests.next();
 
                 if (applicationManifest == null) {
-                  logger.info(DEBUG_LINE + "Application Manifest is null, skipping");
+                  log.info(DEBUG_LINE + "Application Manifest is null, skipping");
                   continue;
                 }
 
@@ -82,7 +82,7 @@ public class HelmConnectorPathMigration implements Migration {
         }
       }
     }
-    logger.info(DEBUG_LINE + "Ended migration for Helm Connector Path");
+    log.info(DEBUG_LINE + "Ended migration for Helm Connector Path");
   }
 
   private void updateApplicationManifest(
@@ -91,7 +91,7 @@ public class HelmConnectorPathMigration implements Migration {
       if (applicationManifest.getHelmChartConfig() != null
           && applicationManifest.getHelmChartConfig().getConnectorId() != null) {
         if (isNotEmpty(applicationManifest.getHelmChartConfig().getBasePath())) {
-          logger.info(format("%s Found existing base path %s for Application Manifest Id: %s , skipping", DEBUG_LINE,
+          log.info(format("%s Found existing base path %s for Application Manifest Id: %s , skipping", DEBUG_LINE,
               applicationManifest.getHelmChartConfig().getBasePath(), applicationManifest.getUuid()));
           return;
         }
@@ -118,12 +118,12 @@ public class HelmConnectorPathMigration implements Migration {
 
         wingsPersistence.updateFields(ApplicationManifest.class, applicationManifest.getUuid(),
             Collections.singletonMap("helmChartConfig.basePath", folderPath));
-        logger.info(format("%s Updated base path to %s for application manifest Id : %s", DEBUG_LINE, folderPath,
+        log.info(format("%s Updated base path to %s for application manifest Id : %s", DEBUG_LINE, folderPath,
             applicationManifest.getUuid()));
       }
     } catch (Exception ex) {
-      logger.error(format("%s Failure occurred in updating application manifest id : %s", DEBUG_LINE,
-                       applicationManifest.getUuid()),
+      log.error(format("%s Failure occurred in updating application manifest id : %s", DEBUG_LINE,
+                    applicationManifest.getUuid()),
           ex);
     }
   }
@@ -140,7 +140,7 @@ public class HelmConnectorPathMigration implements Migration {
         SettingAttribute settingAttribute = settingAttributes.next();
 
         if (settingAttribute == null) {
-          logger.info(DEBUG_LINE + "setting attribute is null, skipping");
+          log.info(DEBUG_LINE + "setting attribute is null, skipping");
           continue;
         }
 

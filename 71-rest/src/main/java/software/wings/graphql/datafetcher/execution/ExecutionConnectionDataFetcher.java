@@ -83,7 +83,7 @@ public class ExecutionConnectionDataFetcher
         connectionBuilder.node(builder1.build());
       } else {
         String errorMgs = "Unsupported execution type: " + execution.getWorkflowType();
-        logger.error(errorMgs);
+        log.error(errorMgs);
         throw new UnexpectedException(errorMgs);
       }
     }));

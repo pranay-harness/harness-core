@@ -209,7 +209,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String artifactStreamId, String settingId, Map<String, Object> runtimeValues) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
+      log.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
       return null;
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
@@ -255,7 +255,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
+      log.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
       return new ArrayList<>();
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
@@ -315,7 +315,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      logger.warn("Artifact xxxxxxxx [{}] was deleted for artifact stream: [{}]", settingId, artifactStreamId);
+      log.warn("Artifact xxxxxxxx [{}] was deleted for artifact stream: [{}]", settingId, artifactStreamId);
       return Collections.emptyList();
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
@@ -448,8 +448,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (artifactStream.isArtifactStreamParameterized()) {
       throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
     }
-    logger.info(
-        format("Manually pulling for artifact stream: [%s] with artifact: [%s]", artifactStreamId, displayName));
+    log.info(format("Manually pulling for artifact stream: [%s] with artifact: [%s]", artifactStreamId, displayName));
     return artifactCollectionServiceAsync.collectArtifact(artifactStreamId, buildDetails);
   }
 

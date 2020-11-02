@@ -429,8 +429,7 @@ public class EcsStateHelper {
       try {
         maxVal = Integer.valueOf(context.renderExpression(maxInstanceStr));
       } catch (NumberFormatException e) {
-        logger.error(
-            format("Invalid number format for max instances: %s", context.renderExpression(maxInstanceStr)), e);
+        log.error(format("Invalid number format for max instances: %s", context.renderExpression(maxInstanceStr)), e);
       }
     }
 
@@ -730,7 +729,7 @@ public class EcsStateHelper {
           ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
         }
       } else {
-        logger.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
+        log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
         throw new InvalidRequestException("Manifest does not contain the proper git file config");
       }
     }
@@ -1116,7 +1115,7 @@ public class EcsStateHelper {
     try {
       return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
     } catch (Exception e) {
-      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
+      log.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
       return null;
     }
   }

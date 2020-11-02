@@ -23,7 +23,7 @@ public class InfraSetUpUtils {
     try {
       awsAccountId = String.valueOf(new BigDecimal(awsAccountId).longValue());
     } catch (Exception ex) {
-      logger.error("Exception while getting accountId {}", ex);
+      log.error("Exception while getting accountId {}", ex);
     }
     return awsAccountId;
   }

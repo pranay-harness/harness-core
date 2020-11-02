@@ -58,7 +58,7 @@ public class SlackMessageDispatcher {
     List<SettingAttribute> settingAttributes =
         settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SLACK.name());
     if (isEmpty(settingAttributes)) {
-      logger.warn("No slack configuration found ");
+      log.warn("No slack configuration found ");
       return;
     }
     SettingAttribute settingAttribute = settingAttributes.iterator().next();
@@ -69,7 +69,7 @@ public class SlackMessageDispatcher {
     notifications.forEach(notification -> {
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
-        logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
+        log.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
         return;
       }
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));
@@ -141,7 +141,7 @@ public class SlackMessageDispatcher {
 
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
-        logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
+        log.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
         continue;
       }
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));

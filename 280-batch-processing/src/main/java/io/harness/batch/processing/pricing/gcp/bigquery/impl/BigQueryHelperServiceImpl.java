@@ -65,7 +65,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   }
 
   private Map<String, VMInstanceBillingData> query(String formattedQuery) {
-    logger.info("Formatted query {}", formattedQuery);
+    log.info("Formatted query {}", formattedQuery);
     BigQuery bigQueryService = getBigQueryService();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
     TableResult result = null;
@@ -73,7 +73,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       result = bigQueryService.query(queryConfig);
       return convertToAwsInstanceBillingData(result);
     } catch (InterruptedException e) {
-      logger.error("Failed to get PreAggregateBillingOverview. {}", e);
+      log.error("Failed to get PreAggregateBillingOverview. {}", e);
       Thread.currentThread().interrupt();
     }
     return Collections.emptyMap();
@@ -140,7 +140,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       }
       instanceServiceBillingDataList.add(dataBuilder.build());
     }
-    logger.info("Resource Id data {} ", instanceServiceBillingDataList);
+    log.info("Resource Id data {} ", instanceServiceBillingDataList);
     return instanceServiceBillingDataList;
   }
 
@@ -172,7 +172,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    logger.info("resource map data {} ", vmInstanceBillingDataMap);
+    log.info("resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 

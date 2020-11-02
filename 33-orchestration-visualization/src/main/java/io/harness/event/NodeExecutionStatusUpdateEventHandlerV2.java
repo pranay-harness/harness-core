@@ -43,13 +43,13 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
         graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
 
     if (orchestrationGraph.getRootNodeIds().isEmpty()) {
-      logger.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
+      log.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
       orchestrationGraph.getRootNodeIds().add(nodeExecutionId);
     }
 
     Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
     if (graphVertexMap.containsKey(nodeExecutionId)) {
-      logger.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+      log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
           nodeExecution.getStatus(), ambiance.getPlanExecutionId());
       graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
         GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
@@ -59,7 +59,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
         return newValue;
       });
     } else {
-      logger.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+      log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
           nodeExecution.getStatus(), ambiance.getPlanExecutionId());
       orchestrationAdjacencyListGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
     }

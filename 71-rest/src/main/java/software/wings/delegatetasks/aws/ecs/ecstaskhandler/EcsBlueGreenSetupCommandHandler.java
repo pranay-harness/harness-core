@@ -94,8 +94,8 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
       ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
     } catch (Exception ex) {
-      logger.error("Completed operation with errors");
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error("Completed operation with errors");
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
 
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
@@ -289,7 +289,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     if (isEmpty(listeners)) {
       String message =
           format("Did not find any listeners for load balancer: [%s] with arn: [%s]", loadBalancerName, listenerArn);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }
@@ -298,7 +298,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     if (!optionalListener.isPresent()) {
       String message =
           format("Did not find any listeners by Arn: [%s] for load balancer: [%s].", listenerArn, loadBalancerName);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }

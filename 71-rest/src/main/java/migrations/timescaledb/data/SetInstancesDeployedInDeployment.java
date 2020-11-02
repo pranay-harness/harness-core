@@ -45,7 +45,7 @@ public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigratio
   @Override
   public boolean migrate() {
     if (!timeScaleDBService.isValid()) {
-      logger.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
+      log.info("TimeScaleDB not found, not migrating deployment data to TimeScaleDB");
       return false;
     }
 
@@ -54,18 +54,18 @@ public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigratio
     long startTime = currentTime - NUM_OF_DAYS_IN_MILLIS;
     long endTime = startTime + DAY;
     while (startTime <= currentTime) {
-      logger.info("Starting processing records from {} and to {}", startTime, endTime);
+      log.info("Starting processing records from {} and to {}", startTime, endTime);
       success = updateExecutionsForGivenTime(startTime, endTime);
       if (!success) {
-        logger.info("Failed to process records from {} and to {}, Aborting migration...", startTime, endTime);
+        log.info("Failed to process records from {} and to {}, Aborting migration...", startTime, endTime);
         return false;
       }
-      logger.info("Processed records from {} and to {}", startTime, endTime);
+      log.info("Processed records from {} and to {}", startTime, endTime);
       startTime += DAY;
       endTime += DAY;
     }
 
-    logger.info("Added instances deployed to all the workflow executions successfully");
+    log.info("Added instances deployed to all the workflow executions successfully");
     return true;
   }
 
@@ -94,15 +94,15 @@ public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigratio
           updateWorkflowExecutionWithInstancesDeployed(workflowExecution);
           count++;
           if (count % 100 == 0) {
-            logger.info("Completed migrating workflow execution [{}] records", count);
+            log.info("Completed migrating workflow execution [{}] records", count);
           }
         }
       }
     } catch (Exception e) {
-      logger.warn("Failed to complete instances deployed migration", e);
+      log.warn("Failed to complete instances deployed migration", e);
       return false;
     } finally {
-      logger.info("Completed updating [{}] records", count);
+      log.info("Completed updating [{}] records", count);
     }
     return true;
   }
@@ -122,8 +122,8 @@ public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigratio
         queryStatement.setString(1, workflowExecution.getUuid());
         queryResult = queryStatement.executeQuery();
         if (queryResult != null && queryResult.next()) {
-          logger.info("WorkflowExecution found:[{}], updating it with instances deployed {}",
-              workflowExecution.getUuid(), instancesDeployed);
+          log.info("WorkflowExecution found:[{}], updating it with instances deployed {}", workflowExecution.getUuid(),
+              instancesDeployed);
           updateStatement.setInt(1, instancesDeployed);
           updateStatement.setString(2, workflowExecution.getUuid());
           updateStatement.execute();
@@ -131,18 +131,17 @@ public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigratio
         successful = true;
       } catch (SQLException e) {
         if (retryCount == (MAX_RETRY - 1)) {
-          logger.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
+          log.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
         } else {
-          logger.info(
-              "Failed to update workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
+          log.info("Failed to update workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
         }
         retryCount++;
       } catch (Exception e) {
-        logger.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
+        log.error("Failed to update workflowExecution,[{}]", workflowExecution.getUuid(), e);
         retryCount = MAX_RETRY + 1;
       } finally {
         DBUtils.close(queryResult);
-        logger.info("Total update time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
+        log.info("Total update time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
             workflowExecution.getUuid());
       }
     }

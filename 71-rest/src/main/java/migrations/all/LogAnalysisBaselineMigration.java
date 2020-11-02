@@ -34,10 +34,10 @@ public class LogAnalysisBaselineMigration implements Migration {
                     .set(LogMLAnalysisRecordKeys.validUntil, BASELINE_TTL));
 
         if (updateResults.getUpdatedCount() == 0) {
-          logger.info(
+          log.info(
               "for pinned baseline {} there was no analysis remaining in the db", workflowExecutionBaseline.getUuid());
         } else {
-          logger.info("updated {} records for baseline {}", updateResults.getUpdatedCount(),
+          log.info("updated {} records for baseline {}", updateResults.getUpdatedCount(),
               workflowExecutionBaseline.getUuid());
         }
         sleep(ofMillis(1000));

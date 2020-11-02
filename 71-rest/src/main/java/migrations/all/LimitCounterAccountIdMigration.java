@@ -22,7 +22,7 @@ public class LimitCounterAccountIdMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Migrating existing limit counters to add accountId field");
+    log.info("Migrating existing limit counters to add accountId field");
 
     int count = 0;
     try (HIterator<Counter> counters =
@@ -30,7 +30,7 @@ public class LimitCounterAccountIdMigration implements Migration {
       while (counters.hasNext()) {
         Counter counter = counters.next();
         if (counter.getAccountId() == null) {
-          logger.info("Updating counter {}", counter.getKey());
+          log.info("Updating counter {}", counter.getKey());
 
           counter.populateAccountIdFromKey();
           String accountId = counter.getAccountId();
@@ -42,11 +42,11 @@ public class LimitCounterAccountIdMigration implements Migration {
           wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
           count++;
 
-          logger.info("Completed updating counter {} with accountId {}", counter.getKey(), accountId);
+          log.info("Completed updating counter {} with accountId {}", counter.getKey(), accountId);
         }
       }
     }
 
-    logger.info("Updated all {} counters", count);
+    log.info("Updated all {} counters", count);
   }
 }

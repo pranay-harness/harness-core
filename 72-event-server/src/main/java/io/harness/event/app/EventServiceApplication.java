@@ -61,7 +61,7 @@ public class EventServiceApplication {
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
 
-    logger.info("Starting event service application...");
+    log.info("Starting event service application...");
 
     File configFile = new File(args[1]);
     EventServiceConfig config =
@@ -70,7 +70,7 @@ public class EventServiceApplication {
   }
 
   private void run() throws InterruptedException {
-    logger.info("Starting application using config: {}", config);
+    log.info("Starting application using config: {}", config);
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -113,13 +113,13 @@ public class EventServiceApplication {
 
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
-    logger.info("Server startup complete");
+    log.info("Server startup complete");
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutting down server...");
+      log.info("Shutting down server...");
       serviceManager.stopAsync().awaitStopped();
     }));
     serviceManager.awaitStopped();
-    logger.info("Server shutdown complete");
+    log.info("Server shutdown complete");
     LogManager.shutdown();
   }
 

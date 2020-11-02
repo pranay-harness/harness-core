@@ -54,7 +54,7 @@ public class OauthOptions {
   }
 
   public SSORequest createOauthSSORequest(String accountId) {
-    logger.info("Creating OAuth SSO Request for user");
+    log.info("Creating OAuth SSO Request for user");
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
 
     if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
@@ -62,9 +62,9 @@ public class OauthOptions {
     }
 
     List<OauthProviderType> oauthProviderTypes = Lists.newArrayList(oauthSettings.getAllowedProviders());
-    logger.info("OAuth provider types: {}", oauthProviderTypes);
+    log.info("OAuth provider types: {}", oauthProviderTypes);
     OauthProviderType defaultOAuthProviderType = oauthProviderTypes.get(0);
-    logger.info("Default OAuth provider: {}", defaultOAuthProviderType);
+    log.info("Default OAuth provider: {}", defaultOAuthProviderType);
 
     return new SSORequest(defaultOAuthProviderType, getRedirectURI(defaultOAuthProviderType), oauthProviderTypes);
   }

@@ -483,7 +483,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         try {
           refreshSummaries(workflowExecution);
         } catch (Exception e) {
-          logger.error(
+          log.error(
               format("Failed to refresh service summaries for the workflow execution %s", workflowExecution.getUuid()),
               e);
         }
@@ -494,7 +494,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         try {
           populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false);
         } catch (Exception e) {
-          logger.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
+          log.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
         }
       }
     }
@@ -537,7 +537,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (null == approvalDetails.getApprovedBy()) {
-      logger.error("Approved by not set in approval details. Details: {}", approvalDetails);
+      log.error("Approved by not set in approval details. Details: {}", approvalDetails);
     }
 
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
@@ -797,7 +797,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       executorService.submit(() -> updatePipelineEstimates(workflowExecution));
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
-      logger.warn("Pipeline execution update failed ", cex); // TODO: add retry
+      log.warn("Pipeline execution update failed ", cex); // TODO: add retry
     }
   }
 
@@ -972,7 +972,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowStatusPropagator.handleStatusUpdate(updateInfo);
     } catch (Exception e) {
       // Ignore Exception for Now
-      logger.error("Status Update Failed from propagator Hooks ExecutionId: {}, Status : {}",
+      log.error("Status Update Failed from propagator Hooks ExecutionId: {}, Status : {}",
           updateInfo.getWorkflowExecutionId(), updateInfo.getStatus());
     }
   }
@@ -1013,7 +1013,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
-    logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
+    log.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null && workflowExecution.getArtifacts() != null) {
@@ -1054,7 +1054,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (includeStatus && tree.getOverrideStatus() != null) {
         if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())
             && ExecutionStatus.isFinalStatus(tree.getOverrideStatus())) {
-          logger.error("Workflow Execution is in final status but override status is not Override Status: {}",
+          log.error("Workflow Execution is in final status but override status is not Override Status: {}",
               tree.getOverrideStatus());
         }
         workflowExecution.setStatus(tree.getOverrideStatus());
@@ -1290,7 +1290,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
 
-    logger.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
+    log.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1429,7 +1429,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
-    logger.info("Created workflow execution {}", workflowExecution.getUuid());
+    log.info("Created workflow execution {}", workflowExecution.getUuid());
     WorkflowExecution finalWorkflowExecution = workflowExecution;
     if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
       if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
@@ -1657,11 +1657,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           quietSleep(ofMillis(10));
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
-          logger.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
+          log.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
           stringBuilder.append(format("Error collecting build for artifact source %s.", artifactStream.getName()));
           stringBuilder.append('\n');
         } catch (ExecutionException e) {
-          logger.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
+          log.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
           stringBuilder.append(format("Error collecting build for artifact source %s.", artifactStream.getName()));
           stringBuilder.append('\n');
         }
@@ -1757,7 +1757,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
 
       if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
-        logger.error("Service instances argument and valid service instance retrieved size not matching");
+        log.error("Service instances argument and valid service instance retrieved size not matching");
         throw new InvalidRequestException("Invalid service instances");
       }
       executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
@@ -1892,7 +1892,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<Artifact> artifacts =
         artifactService.listByIds(appService.getAccountIdByAppId(workflowExecution.getAppId()), artifactIds);
     if (artifacts == null || artifacts.size() != artifactIds.size()) {
-      logger.error("artifactIds from executionArgs contains invalid artifacts");
+      log.error("artifactIds from executionArgs contains invalid artifacts");
       throw new InvalidRequestException("Invalid artifact");
     }
 
@@ -1912,8 +1912,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (artifactStreamIds.contains(artifact.getArtifactStreamId())) {
         filteredArtifacts.add(artifact);
       } else {
-        logger.warn(
-            "Artifact stream: [{}] is not available in services: {}", artifact.getArtifactStreamId(), serviceIds);
+        log.warn("Artifact stream: [{}] is not available in services: {}", artifact.getArtifactStreamId(), serviceIds);
       }
     }
 
@@ -1972,7 +1971,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
 
     if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
-      logger.error("helmChartIds from executionArgs contains invalid helmCharts");
+      log.error("helmChartIds from executionArgs contains invalid helmCharts");
       throw new InvalidRequestException("Invalid helm chart");
     }
 
@@ -2178,7 +2177,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (UsageLimitExceededException e) {
       String errMsg =
           "Deployment rate limit reached. Some deployments may not be allowed. Please contact Harness support.";
-      logger.info("Message: {}, accountId={}", e.getMessage(), accountId);
+      log.info("Message: {}, accountId={}", e.getMessage(), accountId);
 
       // open alert for triggers
       if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION && null != trigger) {
@@ -2379,7 +2378,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (!workflowExecutionList.get(0).getUuid().equals(workflowExecution.getUuid())) {
-      logger.info("Last successful execution found: {} ", workflowExecutionList.get(0));
+      log.info("Last successful execution found: {} ", workflowExecutionList.get(0));
       throw new InvalidRequestException(
           "This is not the latest successful workflowExecution: " + workflowExecution.getName());
     }
@@ -2391,7 +2390,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     WorkflowExecution lastSecondSuccessfulWE = workflowExecutionList.get(1);
-    logger.info("Fetching artifact from execution: {}", lastSecondSuccessfulWE);
+    log.info("Fetching artifact from execution: {}", lastSecondSuccessfulWE);
     return lastSecondSuccessfulWE.getArtifacts();
   }
 
@@ -2440,7 +2439,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     String accountId = this.appService.getAccountIdByAppId(appId);
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
+      log.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
     }
 
     checkDeploymentRateLimit(accountId, appId);
@@ -2458,18 +2457,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
-        logger.debug("Received an pipeline execution request");
+        log.debug("Received an pipeline execution request");
         if (executionArgs.getPipelineId() == null) {
-          logger.error("pipelineId is null for an pipeline execution");
+          log.error("pipelineId is null for an pipeline execution");
           throw new InvalidRequestException("pipelineId is null for an pipeline execution");
         }
         return triggerPipelineExecution(appId, executionArgs.getPipelineId(), executionArgs, trigger);
       }
 
       case ORCHESTRATION: {
-        logger.debug("Received an orchestrated execution request");
+        log.debug("Received an orchestrated execution request");
         if (executionArgs.getOrchestrationId() == null) {
-          logger.error("workflowId is null for an orchestrated execution");
+          log.error("workflowId is null for an orchestrated execution");
           throw new InvalidRequestException("workflowId is null for an orchestrated execution");
         }
         return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs, trigger);
@@ -2501,13 +2500,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new InvalidRequestException("Emergency rollback not supported for pipelines");
     }
 
-    logger.debug("Received an emergency rollback  execution request");
+    log.debug("Received an emergency rollback  execution request");
     if (executionArgs.getOrchestrationId() == null) {
-      logger.error("workflowId is null for an orchestrated execution");
+      log.error("workflowId is null for an orchestrated execution");
       throw new InvalidRequestException("workflowId is null for an orchestrated execution");
     }
 
-    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    log.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
 
     String workflowId = executionArgs.getOrchestrationId();
     Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId);
@@ -2556,13 +2555,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (LimitApproachingException e) {
       String errMsg = e.getPercent()
           + "% of Deployment Rate Limit reached. Some deployments may not be allowed beyond 100% usage. Please contact Harness support.";
-      logger.info("Approaching Limit Message: {}", e.getMessage());
+      log.info("Approaching Limit Message: {}", e.getMessage());
       AlertData alertData = new DeploymentRateApproachingLimitAlert(e.getLimit(), accountId, e.getPercent(), errMsg);
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT, alertData);
     } catch (UsageLimitExceededException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Error checking deployment rate limit. accountId={}", accountId, e);
+      log.error("Error checking deployment rate limit. accountId={}", accountId, e);
     }
   }
 
@@ -2573,7 +2572,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
           "You have reached your service instance limits. Deployments will be blocked.", USER);
     } catch (Exception e) {
-      logger.error("Error while checking SI usage limit. accountId={}", accountId, e);
+      log.error("Error while checking SI usage limit. accountId={}", accountId, e);
     }
   }
 
@@ -2639,9 +2638,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try {
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+      log.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
           workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType(), exception);
     }
 
@@ -2670,9 +2669,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
       } catch (WingsException exception) {
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (RuntimeException exception) {
-        logger.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+        log.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
             workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType(), exception);
       }
     }
@@ -2686,7 +2685,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("workflowType", executionArgs.getWorkflowType());
 
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
-      logger.debug("Received an orchestrated execution request");
+      log.debug("Received an orchestrated execution request");
       notNullCheck("orchestrationId", executionArgs.getOrchestrationId());
 
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
@@ -3350,7 +3349,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
       String infraMappingId, Optional<String> infrastructureDefinitionId, StateType stateType, String stateName) {
-    logger.info(
+    log.info(
         "for execution {} looking for following appId: {} executionUuid: {} , stateType: {}, displayName: {}, contextElement.serviceElement.uuid:  {}, contextElement.infraMappingId: {}",
         executionUuid, appId, executionUuid, stateType, stateName, serviceId, infraMappingId);
     Query<StateExecutionInstance> stateExecutionInstanceQuery =
@@ -3556,8 +3555,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
         && !workflowServiceHelper.isExecutionForK8sV2Service(workflowExecution)) {
-      logger.info("Calculating the breakdown for workflowExecutionId {} and workflowId {} ",
-          workflowExecution.getUuid(), workflowExecution.getWorkflowId());
+      log.info("Calculating the breakdown for workflowExecutionId {} and workflowId {} ", workflowExecution.getUuid(),
+          workflowExecution.getWorkflowId());
       total = workflowExecution.getTotal();
       if (total == 0) {
         total = refreshTotal(workflowExecution);
@@ -3591,10 +3590,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);
-    logger.info("Got the breakdown status: {}, breakdown: {}", workflowExecution.getStatus(), breakdown);
+    log.info("Got the breakdown status: {}, breakdown: {}", workflowExecution.getStatus(), breakdown);
 
     if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
-      logger.info(
+      log.info(
           "Set the breakdown of the completed status: {}, breakdown: {}", workflowExecution.getStatus(), breakdown);
 
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
@@ -3606,9 +3605,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       try {
         updateOps.set("breakdown", breakdown).set("total", total);
         UpdateResults updated = wingsPersistence.update(query, updateOps);
-        logger.info("Updated : {} row", updated.getWriteResult().getN());
+        log.info("Updated : {} row", updated.getWriteResult().getN());
       } catch (Exception e) {
-        logger.error("Error occurred while updating with breakdown summary", e);
+        log.error("Error occurred while updating with breakdown summary", e);
       }
     }
   }
@@ -3673,7 +3672,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private int refreshTotal(WorkflowExecution workflowExecution) {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-      logger.info("Workflow was deleted. Skipping the refresh total");
+      log.info("Workflow was deleted. Skipping the refresh total");
       return 0;
     }
 
@@ -3686,7 +3685,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       List<Host> hosts = hostService.getHostsByInfraMappingIds(workflow.getAppId(), resolvedInfraMappingIds);
       return hosts == null ? 0 : hosts.size();
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
     }
 
@@ -4132,7 +4131,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     DeploymentExecutionContext executionContext =
         stateMachineExecutor.getExecutionContext(appId, currentExecId, stateExecutionId);
     if (executionContext == null) {
-      logger.info("failed to get baseline details for app {}, workflow execution {}, uuid {}", appId, currentExecId,
+      log.info("failed to get baseline details for app {}, workflow execution {}, uuid {}", appId, currentExecId,
           stateExecutionId);
       return null;
     }
@@ -4439,7 +4438,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getStateMachine() != null) {
       return workflowExecution.getStateMachine();
     }
-    logger.warn("Workflow execution {} do not have inline state machine", workflowExecution.getUuid());
+    log.warn("Workflow execution {} do not have inline state machine", workflowExecution.getUuid());
     return wingsPersistence.getWithAppId(
         StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }
@@ -4758,21 +4757,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastWE) {
     if (lastWE.getStatus() != SUCCESS) {
-      logger.info("On demand rollback not available for non successful executions {}", lastWE);
+      log.info("On demand rollback not available for non successful executions {}", lastWE);
       return false;
     }
     if (lastWE.getWorkflowType() == PIPELINE) {
-      logger.info("On demand rollback not available for pipeline executions {}", lastWE);
+      log.info("On demand rollback not available for pipeline executions {}", lastWE);
       return false;
     }
     if (lastWE.getEnvType() != EnvironmentType.PROD) {
-      logger.info("On demand rollback not available for Non prod environments {}", lastWE);
+      log.info("On demand rollback not available for Non prod environments {}", lastWE);
       return false;
     }
     List<String> infraDefId = lastWE.getInfraDefinitionIds();
     if (isEmpty(infraDefId) || infraDefId.size() != 1) {
       // Only allowing on demand rollback for workflow deploying single infra definition.
-      logger.info("On demand rollback not available, Infra definition size not equal to 1 {}", lastWE);
+      log.info("On demand rollback not available, Infra definition size not equal to 1 {}", lastWE);
       return false;
     } else {
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId.get(0));
@@ -4901,7 +4900,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowTree tree = mongoStore.get(
         GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), getParamsForTree());
     if (tree != null) {
-      logger.info("Invalidating cache after interrupt {} for workflow {}", executionInterrupt.getUuid(),
+      log.info("Invalidating cache after interrupt {} for workflow {}", executionInterrupt.getUuid(),
           workflowExecution.getUuid());
       WorkflowTree downgradedTree = WorkflowTree.builder()
                                         .contextOrder(System.currentTimeMillis() - downgradeValueInMillis)

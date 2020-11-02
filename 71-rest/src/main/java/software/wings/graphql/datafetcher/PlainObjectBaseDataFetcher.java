@@ -123,7 +123,7 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
       try {
         FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
       } catch (IllegalAccessException exception) {
-        logger.error("This should not happen", exception);
+        log.error("This should not happen", exception);
       }
     }
 

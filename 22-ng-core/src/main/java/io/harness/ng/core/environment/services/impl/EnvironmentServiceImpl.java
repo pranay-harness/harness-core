@@ -137,7 +137,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));
     } catch (Exception ex) {
-      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           environment.getIdentifier(), ex);
       throw new UnexpectedException(
           "Error while deleting the Environment as was not able to check entity reference records.");

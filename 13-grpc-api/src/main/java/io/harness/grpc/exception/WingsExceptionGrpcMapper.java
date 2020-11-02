@@ -21,7 +21,7 @@ public class WingsExceptionGrpcMapper implements GrpcExceptionMapper<WingsExcept
   public Status toStatus(WingsException throwable) {
     Status status = null;
     if (throwable != null) {
-      ExceptionLogger.logProcessedMessages(throwable, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(throwable, MANAGER, log);
       List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(throwable, REST_API);
       if (isNotEmpty(responseMessages)) {
         status = Status.INTERNAL.withDescription(responseMessages.get(0).getMessage()).withCause(throwable);

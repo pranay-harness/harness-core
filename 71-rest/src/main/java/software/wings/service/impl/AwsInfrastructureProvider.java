@@ -272,7 +272,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsEc2HelperServiceManager.listEc2Instances(awsConfig, encryptedDataDetails,
           awsInfrastructureMapping.getRegion(), filters, awsInfrastructureMapping.getAppId());
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -284,7 +284,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsEc2HelperServiceManager.listEc2Instances(
           awsConfig, encryptedDataDetails, awsInstanceInfrastructure.getRegion(), filters, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -478,7 +478,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsEc2HelperServiceManager.listTags(
           awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, "");
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -489,7 +489,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return awsAsgHelperServiceManager.listAutoScalingGroupNames(
           awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }

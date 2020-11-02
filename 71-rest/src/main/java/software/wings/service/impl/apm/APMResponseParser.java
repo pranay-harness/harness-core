@@ -35,7 +35,7 @@ public class APMResponseParser {
   public static Collection<NewRelicMetricDataRecord> extract(List<APMResponseData> apmResponseData) {
     Map<String, NewRelicMetricDataRecord> resultMap = new HashMap<>();
     for (APMResponseData data : apmResponseData) {
-      logger.info("Response Data is :  {}", data);
+      log.info("Response Data is :  {}", data);
       for (APMMetricInfo metricInfo : data.getMetricInfos()) {
         VerificationResponseParser apmResponseParser = new VerificationResponseParser();
         for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
@@ -48,7 +48,7 @@ public class APMResponseParser {
         try {
           output = apmResponseParser.extract(data.text);
         } catch (Exception ex) {
-          logger.warn("Unable to extract data in APM ResponseParser {}", data.text);
+          log.warn("Unable to extract data in APM ResponseParser {}", data.text);
           continue;
         }
         createRecords(metricInfo.getResponseMappers().get("txnName").getFieldValue(), metricInfo.getMetricName(),
@@ -63,7 +63,7 @@ public class APMResponseParser {
     if (groupName == null) {
       final String errorMsg =
           "Unexpected null groupName received while parsing APMResponse. Please contact Harness Support.";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new WingsException(errorMsg);
     }
     for (Multimap<String, Object> record : response) {

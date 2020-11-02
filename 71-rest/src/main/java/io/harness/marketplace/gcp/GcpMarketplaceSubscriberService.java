@@ -20,7 +20,7 @@ public class GcpMarketplaceSubscriberService implements Managed {
     try {
       gcpMarketplaceTopicSubscriber.subscribeAsync();
     } catch (Exception e) {
-      logger.error("Could not subscribe to GCP marketplace Topic.", e);
+      log.error("Could not subscribe to GCP marketplace Topic.", e);
     }
   }
 

@@ -46,7 +46,7 @@ public class KmsResource {
   public RestResponse<String> saveGlobalKmsConfig(
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding Global KMS Secret Manager");
+      log.info("Adding Global KMS Secret Manager");
       RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
       if (response == null) {
         response = new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
@@ -61,7 +61,7 @@ public class KmsResource {
   @ExceptionMetered
   public RestResponse<String> saveKmsConfig(@QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding KMS Secret Manager");
+      log.info("Adding KMS Secret Manager");
       return new RestResponse<>(kmsService.saveKmsConfig(accountId, kmsConfig));
     }
   }
@@ -74,7 +74,7 @@ public class KmsResource {
   public RestResponse<Boolean> deleteKmsConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting KMS Secret Manager");
+      log.info("Deleting KMS Secret Manager");
       return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
     }
   }
@@ -85,7 +85,7 @@ public class KmsResource {
   public RestResponse<Boolean> deleteKmsConfig2(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting KMS Secret Manager");
+      log.info("Deleting KMS Secret Manager");
       return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
     }
   }

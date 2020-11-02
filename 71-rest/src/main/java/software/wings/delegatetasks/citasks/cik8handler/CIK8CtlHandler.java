@@ -213,7 +213,7 @@ public class CIK8CtlHandler {
         execCommandStatus = ExecCommandStatus.ERROR;
       }
     } catch (TimeoutException e) {
-      logger.warn("Failed to execute command with error: ", e);
+      log.warn("Failed to execute command with error: ", e);
       execCommandStatus = ExecCommandStatus.TIMEOUT;
     }
     return execCommandStatus;

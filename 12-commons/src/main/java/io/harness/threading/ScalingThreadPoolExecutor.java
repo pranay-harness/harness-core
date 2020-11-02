@@ -46,7 +46,7 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
 
   @Override
   public Future<?> submit(Runnable task) {
-    logger.debug("Task submitted: {}", task);
+    log.debug("Task submitted: {}", task);
     return super.submit(task);
   }
 
@@ -70,7 +70,7 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
   protected void afterExecute(Runnable r, Throwable t) {
     activeCount.decrementAndGet();
     if (t != null) {
-      logger.error("Unhandled Exception: ", t);
+      log.error("Unhandled Exception: ", t);
     }
   }
 }

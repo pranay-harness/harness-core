@@ -74,18 +74,18 @@ public class CleanupStep implements Step, SyncExecutable<CleanupStepInfo> {
                                                     .taskDescription("Execute command task")
                                                     .build();
 
-      logger.info("Sending cleanup task");
+      log.info("Sending cleanup task");
       K8sTaskExecutionResponse k8sTaskExecutionResponse =
           (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.info("Cleanup task completed successfully");
+        log.info("Cleanup task completed successfully");
         return StepResponse.builder().status(Status.SUCCEEDED).build();
       } else {
-        logger.error("Cleanup task completed with status {}", k8sTaskExecutionResponse.getCommandExecutionStatus());
+        log.error("Cleanup task completed with status {}", k8sTaskExecutionResponse.getCommandExecutionStatus());
         return StepResponse.builder().status(Status.FAILED).build();
       }
     } catch (Exception e) {
-      logger.error("Cleanup task errored", e);
+      log.error("Cleanup task errored", e);
       return StepResponse.builder().status(Status.ERRORED).build();
     }
   }

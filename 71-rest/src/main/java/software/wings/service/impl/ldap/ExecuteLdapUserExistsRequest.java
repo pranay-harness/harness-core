@@ -32,8 +32,7 @@ public class ExecuteLdapUserExistsRequest implements Function<LdapUserExistsRequ
       dn = resolver.resolve(new User(identifier));
       searchStatus = Status.SUCCESS;
     } catch (LdapException le) {
-      logger.error(
-          "LdapException exception occured when executing user exits request for baseDN = {}, searchFilter = {} ",
+      log.error("LdapException exception occured when executing user exits request for baseDN = {}, searchFilter = {} ",
           ldapUserConfig.getSearchFilter(), ldapUserConfig.getSearchFilter());
       searchStatus = Status.FAILURE;
       searchStatusMsg = le.getResultCode().toString();

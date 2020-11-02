@@ -50,15 +50,15 @@ public class BambooTask extends AbstractDelegateRunnableTask {
   @Override
   public BambooExecutionResponse run(Object[] parameters) {
     BambooExecutionResponse bambooExecutionResponse = new BambooExecutionResponse();
-    logger.info("In Bamboo Task run method");
+    log.info("In Bamboo Task run method");
     try {
       bambooExecutionResponse = run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
           (String) parameters[2], (List<ParameterEntry>) parameters[3]);
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
       bambooExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
     }
-    logger.info("Bamboo task  completed");
+    log.info("Bamboo task  completed");
     return bambooExecutionResponse;
   }
 
@@ -78,11 +78,11 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       String buildState = result.getBuildState();
       if (result == null || buildState == null) {
         executionStatus = ExecutionStatus.FAILED;
-        logger.info("Bamboo execution failed for plan {}", planKey);
+        log.info("Bamboo execution failed for plan {}", planKey);
       } else {
         if (!"Successful".equalsIgnoreCase(buildState)) {
           executionStatus = ExecutionStatus.FAILED;
-          logger.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}",
+          log.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}",
               bambooConfig.getBambooUrl(), planKey, buildResultKey, result);
         }
         bambooExecutionResponse.setProjectName(result.getProjectName());
@@ -93,7 +93,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
         bambooExecutionResponse.setParameters(parameterEntries);
       }
     } catch (Exception e) {
-      logger.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Failed to execute Bamboo verification task: " + ExceptionUtils.getMessage(e), e);
       errorMessage = ExceptionUtils.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
     }
@@ -106,14 +106,14 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey) {
     Result result;
     do {
-      logger.info("Waiting for build execution {} to finish", buildResultKey);
+      log.info("Waiting for build execution {} to finish", buildResultKey);
       sleep(ofSeconds(5));
       result = bambooService.getBuildResult(bambooConfig, encryptionDetails, buildResultKey);
-      logger.info("Build result for build key {} is {}", buildResultKey, result);
+      log.info("Build result for build key {} is {}", buildResultKey, result);
     } while (result.getBuildState() == null || result.getBuildState().equalsIgnoreCase("Unknown"));
 
     // Get the build result
-    logger.info("Build execution for build key {} is finished. Result:{} ", buildResultKey, result);
+    log.info("Build execution for build key {} is finished. Result:{} ", buildResultKey, result);
     return result;
   }
 }

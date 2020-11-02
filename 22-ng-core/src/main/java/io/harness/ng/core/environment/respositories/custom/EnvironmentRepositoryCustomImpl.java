@@ -77,7 +77,7 @@ public class EnvironmentRepositoryCustomImpl implements EnvironmentRepositoryCus
         .handle(DuplicateKeyException.class)
         .withDelay(RETRY_SLEEP_DURATION)
         .withMaxAttempts(MAX_ATTEMPTS)
-        .onFailedAttempt(event -> logger.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
-        .onFailure(event -> logger.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

@@ -40,7 +40,7 @@ class ElasticsearchSyncHelper {
       changeTrackingInfos.add(changeTrackingInfo);
     }
 
-    logger.info("Calling change tracker to start change listeners");
+    log.info("Calling change tracker to start change listeners");
     changeTracker.start(changeTrackingInfos);
   }
 
@@ -60,7 +60,7 @@ class ElasticsearchSyncHelper {
   }
 
   void stopChangeListeners() {
-    logger.info("Stopping change listeners");
+    log.info("Stopping change listeners");
     changeTracker.stop();
   }
 }

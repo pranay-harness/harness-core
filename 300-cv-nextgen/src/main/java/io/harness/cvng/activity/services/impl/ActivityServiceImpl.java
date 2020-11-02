@@ -76,7 +76,7 @@ public class ActivityServiceImpl implements ActivityService {
     activity.validate();
     activity.setVerificationJobInstanceIds(createVerificationJobInstances(activity));
     hPersistence.save(activity);
-    logger.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
+    log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
         activity.getProjectIdentifier(), activity.getOrgIdentifier());
   }
 

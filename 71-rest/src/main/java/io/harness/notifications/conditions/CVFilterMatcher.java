@@ -29,13 +29,13 @@ public class CVFilterMatcher implements FilterMatcher {
     CVAlertFilters cvAlertFilters = filterConditions.getCvAlertFilters();
 
     if (null == cvAlertFilters) {
-      logger.info("No cvAlertFilters specified. Alert will be considered to match filter.");
+      log.info("No cvAlertFilters specified. Alert will be considered to match filter.");
       return true;
     }
 
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alert.getAlertData();
     if (null == alertData) {
-      logger.error("CV Alert data is null. Alert: {}", alert);
+      log.error("CV Alert data is null. Alert: {}", alert);
       return false;
     }
 

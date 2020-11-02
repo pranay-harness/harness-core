@@ -89,7 +89,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
       String accountId = user == null ? null : user.getDefaultAccountId();
       String uuid = user == null ? null : user.getUuid();
       try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
-        logger.info("Authenticating via OAuth for accountId: {}", accountId);
+        log.info("Authenticating via OAuth for accountId: {}", accountId);
         // if the email doesn't exists in harness system, sign him up.
         if (null == user) {
           return OauthAuthenticationResponse.builder()
@@ -122,7 +122,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
       // harness website.
       sendTrialSignupCompleteMailForFreeUsers(user);
 
-      logger.error(
+      log.error(
           String.format("User [{}] tried to login using OauthMechanism while his authentication mechanism was: [{}]"),
           user.getEmail(), account.getAuthenticationMechanism());
       throw new WingsException(ErrorCode.INCORRECT_SIGN_IN_MECHANISM);
@@ -143,15 +143,15 @@ public class OauthBasedAuthHandler implements AuthHandler {
       return;
     }
     Set<OauthProviderType> allowedOauthProviders = Sets.newHashSet(oauthSettings.getAllowedProviders());
-    logger.info("Matching OAuth Provider for user {}, account {}", user.getEmail(), primaryAccountId);
+    log.info("Matching OAuth Provider for user {}, account {}", user.getEmail(), primaryAccountId);
     matchOauthProviderAndAuthMechanism(user.getEmail(), oauthClient.getName(), allowedOauthProviders);
   }
 
   private void matchOauthProviderAndAuthMechanism(
       String email, String oauthProvider, Set<OauthProviderType> allowedOauthProviders) {
     if (!allowedOauthProviders.contains(OauthProviderType.valueOf(oauthProvider.toUpperCase()))) {
-      logger.info("Could not login email {} with OAuth provider {} as the allowed providers for the account are {}",
-          email, oauthProvider, allowedOauthProviders);
+      log.info("Could not login email {} with OAuth provider {} as the allowed providers for the account are {}", email,
+          oauthProvider, allowedOauthProviders);
       String errorMsg = "OAuth via " + oauthProvider + " is not enabled for your account";
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, errorMsg, WingsException.USER);
     }

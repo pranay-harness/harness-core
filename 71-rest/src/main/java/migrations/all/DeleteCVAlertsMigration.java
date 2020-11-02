@@ -25,7 +25,7 @@ public class DeleteCVAlertsMigration implements Migration {
     List<Account> harnessAccounts =
         wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, "Harness.io").asList();
     if (isEmpty(harnessAccounts)) {
-      logger.info("There are no harness accounts in DeleteCVAlertsMigration. Returning");
+      log.info("There are no harness accounts in DeleteCVAlertsMigration. Returning");
       return;
     }
 
@@ -36,8 +36,8 @@ public class DeleteCVAlertsMigration implements Migration {
                                   .filter(AlertKeys.type, "CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT");
 
     List<Alert> alerts = alertQuery.asList();
-    logger.info("Total number of CV Datacollection alerts to be deleted {}", alerts.size());
+    log.info("Total number of CV Datacollection alerts to be deleted {}", alerts.size());
     wingsPersistence.delete(alertQuery);
-    logger.info("{} CV Datacollection alerts have been deleted", alerts.size());
+    log.info("{} CV Datacollection alerts have been deleted", alerts.size());
   }
 }

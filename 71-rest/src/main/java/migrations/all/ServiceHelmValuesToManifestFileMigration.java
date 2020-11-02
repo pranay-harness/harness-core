@@ -33,15 +33,15 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running ServiceHelmValuesToManifestFileMigration");
+    log.info("Running ServiceHelmValuesToManifestFileMigration");
 
     migrateHelmValuesInServices();
 
-    logger.info("Completed ServiceHelmValuesToManifestFileMigration");
+    log.info("Completed ServiceHelmValuesToManifestFileMigration");
   }
 
   private void migrateHelmValuesInServices() {
-    logger.info("Migrating service helm values");
+    log.info("Migrating service helm values");
 
     List<Service> services = wingsPersistence.createQuery(Service.class, excludeAuthority)
                                  .filter(ServiceKeys.artifactType, "DOCKER")
@@ -50,11 +50,11 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
                                  .asList();
 
     if (isEmpty(services)) {
-      logger.info("Completed migrating service helm values. No service with helm values found");
+      log.info("Completed migrating service helm values. No service with helm values found");
       return;
     }
 
-    logger.info("Found {} services", services.size());
+    log.info("Found {} services", services.size());
     int migratedServices = 0;
 
     for (Service service : services) {
@@ -77,8 +77,8 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
       }
     }
 
-    logger.info("Migrated {} services", migratedServices);
-    logger.info("Completed migrating service helm values");
+    log.info("Migrated {} services", migratedServices);
+    log.info("Completed migrating service helm values");
   }
 
   private boolean isHelmDeploymentTypeInfraMappingPresent(String serviceId) {

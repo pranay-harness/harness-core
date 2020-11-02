@@ -40,13 +40,12 @@ public class ServiceVariableYamlHelper {
                                          .type("ARTIFACT")
                                          .build());
           } else {
-            logger.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
+            log.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
           }
         }
       }
     } else {
-      logger.warn(
-          "Variable type ARTIFACT not supported, skipping processing of variable {}", serviceVariable.getName());
+      log.warn("Variable type ARTIFACT not supported, skipping processing of variable {}", serviceVariable.getName());
     }
   }
 }

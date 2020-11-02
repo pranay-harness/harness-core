@@ -115,7 +115,7 @@ public class DeploymentAuthHandler {
       authorizePipelineExecution(appId, workflowOrPipelineId);
     }
     if (workflow == null && pipeline == null) {
-      logger.error(
+      log.error(
           "Provided workflowOrPipelineId for Auth is neither a workflow nor a pipeline, with appId {} and entityId {}",
           appId, workflowOrPipelineId);
       throw new InvalidRequestException(

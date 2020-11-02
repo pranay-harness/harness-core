@@ -90,10 +90,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                        .filter(ID_KEY, delegateProfile.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
-    logger.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
+    log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
-    logger.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+    log.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return updatedDelegateProfile;
   }
 
@@ -109,7 +109,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     DelegateProfile delegateProfileSelectorsUpdated =
         wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
-    logger.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+    log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
     return delegateProfileSelectorsUpdated;
   }
 
@@ -122,17 +122,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                        .filter(DelegateProfileKeys.accountId, accountId)
                                        .filter(DelegateProfileKeys.uuid, delegateProfileId);
     DelegateProfile updatedDelegateProfile = wingsPersistence.findAndModify(query, updateOperations, returnNewOptions);
-    logger.info("Updated profile scoping rules for accountId={}", accountId);
+    log.info("Updated profile scoping rules for accountId={}", accountId);
     return updatedDelegateProfile;
   }
 
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
     wingsPersistence.save(delegateProfile);
-    logger.info("Added delegate profile: {}", delegateProfile.getUuid());
+    log.info("Added delegate profile: {}", delegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
-    logger.info("Auditing adding of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+    log.info("Auditing adding of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return delegateProfile;
   }
 
@@ -144,10 +144,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                           .get();
     if (delegateProfile != null) {
       ensureProfileSafeToDelete(accountId, delegateProfile);
-      logger.info("Deleting delegate profile: {}", delegateProfileId);
+      log.info("Deleting delegate profile: {}", delegateProfileId);
       wingsPersistence.delete(delegateProfile);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
-      logger.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+      log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     }
   }
 
@@ -178,18 +178,18 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public void onAccountCreated(Account account) {
-    logger.info("AccountCreated event received.");
+    log.info("AccountCreated event received.");
 
     if (!account.isForImport()) {
       DelegateProfile delegateProfile = buildPrimaryDelegateProfile(account.getUuid());
       add(delegateProfile);
 
-      logger.info("Primary Delegate Profile added.");
+      log.info("Primary Delegate Profile added.");
 
       return;
     }
 
-    logger.info("Account is marked as ForImport and creation of Primary Delegate Profile has been skipped.");
+    log.info("Account is marked as ForImport and creation of Primary Delegate Profile has been skipped.");
   }
 
   @Override

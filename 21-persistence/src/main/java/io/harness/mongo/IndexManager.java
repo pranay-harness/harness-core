@@ -35,10 +35,10 @@ public class IndexManager {
       }
     } catch (IndexManagerReadOnlyException exception) {
       ignoredOnPurpose(exception);
-      logger.warn("The user has read only access.");
+      log.warn("The user has read only access.");
     } finally {
       if (mode == INSPECT || mode == MANUAL) {
-        logger.info("the inspection finished");
+        log.info("the inspection finished");
       }
     }
   }

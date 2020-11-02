@@ -58,11 +58,11 @@ public class WorkflowVerificationTaskPoller {
       do {
         try {
           verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
-          logger.info("pulled analysis task {}", verificationAnalysisTask);
+          log.info("pulled analysis task {}", verificationAnalysisTask);
           schedulePredictiveDataCollectionCronJob(verificationAnalysisTask);
           if (verificationAnalysisTask != null && PREDICTIVE != verificationAnalysisTask.getComparisonStrategy()) {
             // for both Log and Metric
-            logger.info("Scheduling Data collection cron");
+            log.info("Scheduling Data collection cron");
             scheduleDataCollection(verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
@@ -73,7 +73,7 @@ public class WorkflowVerificationTaskPoller {
             }
           }
         } catch (Throwable e) {
-          logger.error("error scheduling verification crons", e);
+          log.error("error scheduling verification crons", e);
         }
       } while (verificationAnalysisTask != null);
     }, 5, 5, TimeUnit.SECONDS);
@@ -81,10 +81,10 @@ public class WorkflowVerificationTaskPoller {
 
   private void scheduleDataCollection(AnalysisContext context) {
     if (GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
-      logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
+      log.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());
       // TODO: add logs here after triggering data collection.
-      logger.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
+      log.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
       Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
       JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
                           .withIdentity(context.getStateExecutionId(),
@@ -107,7 +107,7 @@ public class WorkflowVerificationTaskPoller {
               .startAt(startDate)
               .build();
       jobScheduler.scheduleJob(job, trigger);
-      logger.info("Scheduled Data Collection Cron Job with details : {}", job);
+      log.info("Scheduled Data Collection Cron Job with details : {}", job);
     }
   }
 
@@ -117,7 +117,7 @@ public class WorkflowVerificationTaskPoller {
       if (isNotEmpty(cvConfigUuid)) {
         return;
       }
-      logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
+      log.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
       cvConfigUuid = generateUuid();
       CVConfiguration cvConfiguration;
       switch (context.getStateType()) {
@@ -128,8 +128,8 @@ public class WorkflowVerificationTaskPoller {
         default:
           throw new IllegalArgumentException("Invalid state: " + context.getStateType());
       }
-      logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
-          cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
+      log.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}", cvConfiguration.getStateType(),
+          cvConfiguration.getUuid(), context.getStateExecutionId());
       context.setPredictiveCvConfigId(cvConfigUuid);
       wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
       wingsPersistence.updateField(

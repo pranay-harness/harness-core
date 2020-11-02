@@ -36,7 +36,7 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     PcfInstanceSyncPerpetualTaskParams instanceSyncParams =
         AnyUtils.unpack(params.getCustomizedParams(), PcfInstanceSyncPerpetualTaskParams.class);
     String applicationName = instanceSyncParams.getApplicationName();
@@ -66,16 +66,16 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     try {
       int instanceSize = Collections.size(pcfInstanceSyncResponse.getInstanceIndices());
-      logger.info("Found {} number of instances pcf deployment", instanceSize);
+      log.info("Found {} number of instances pcf deployment", instanceSize);
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), pcfConfig.getAccountId(), pcfCommandExecutionResponse));
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           "Failed to publish the instance collection result to manager for application name {} and PerpetualTaskId {}",
           applicationName, taskId.getId(), ex);
     }
     CommandExecutionStatus commandExecutionStatus = pcfCommandExecutionResponse.getCommandExecutionStatus();
-    logger.info("Published instanceSync successfully for perp task: {}, state: {}", taskId, commandExecutionStatus);
+    log.info("Published instanceSync successfully for perp task: {}, state: {}", taskId, commandExecutionStatus);
     return getPerpetualTaskResponse(pcfCommandExecutionResponse, commandExecutionStatus);
   }
 

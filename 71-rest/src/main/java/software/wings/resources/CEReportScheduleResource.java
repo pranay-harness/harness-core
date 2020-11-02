@@ -125,7 +125,7 @@ public class CEReportScheduleResource {
       RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
       return prepareResponse(rr, Response.Status.OK);
     } catch (IllegalArgumentException e) {
-      logger.error("ERROR", e);
+      log.error("ERROR", e);
       RestResponse rr = new RestResponse();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
@@ -145,7 +145,7 @@ public class CEReportScheduleResource {
           ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
       return prepareResponse(rr, Response.Status.OK);
     } catch (IllegalArgumentException e) {
-      logger.warn(String.valueOf(e));
+      log.warn(String.valueOf(e));
       RestResponse rr = new RestResponse();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
@@ -167,14 +167,14 @@ public class CEReportScheduleResource {
       addResponseMessage(rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. No Recipients Provided");
       return prepareResponse(rr, Response.Status.BAD_REQUEST);
     }
-    logger.info("Valid viewId and recipients list");
+    log.info("Valid viewId and recipients list");
     Map<String, String> templatePlaceholders = ceReportTemplateBuilderService.getTemplatePlaceholders(
         accountId, viewId, bigQueryService.get(), cloudBillingHelper.getCloudProviderTableName(accountId, unified));
 
     try {
       templatePlaceholders.put(URL, buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId)));
     } catch (URISyntaxException e) {
-      logger.error("Error in forming View URL for Scheduled Report", e);
+      log.error("Error in forming View URL for Scheduled Report", e);
       templatePlaceholders.put(URL, "");
     }
 

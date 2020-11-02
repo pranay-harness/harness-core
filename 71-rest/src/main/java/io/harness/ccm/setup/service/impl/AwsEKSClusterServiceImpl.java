@@ -45,7 +45,7 @@ public class AwsEKSClusterServiceImpl implements AwsEKSClusterService {
         clusters.add(ceCluster);
       });
     });
-    logger.info("EKS clusters {}", clusters);
+    log.info("EKS clusters {}", clusters);
     return clusters;
   }
 }

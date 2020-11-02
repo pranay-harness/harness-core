@@ -43,7 +43,7 @@ public class TokenAuthenticator {
     try {
       decrypter = new DirectDecrypter(accountKey);
     } catch (KeyLengthException e) {
-      logger.error("Invalid key " + accountKey, e);
+      log.error("Invalid key " + accountKey, e);
       throw new UnexpectedException();
     }
 
@@ -60,17 +60,17 @@ public class TokenAuthenticator {
     try {
       encryptedJWT = EncryptedJWT.parse(tokenString);
     } catch (ParseException e) {
-      logger.error("Invalid JWE token " + tokenString, e);
+      log.error("Invalid JWE token " + tokenString, e);
       throw new UnauthorizedException(null, WingsException.USER_SRE);
     }
     return encryptedJWT;
   }
 
   private String fetchKey(String accountId) {
-    logger.debug("Fetching key for accountId: {}", accountId);
+    log.debug("Fetching key for accountId: {}", accountId);
     String accountKey = keyFetcher.fetchKey(accountId);
     if (accountKey == null) {
-      logger.error("Key not found for accountId: {}", accountId);
+      log.error("Key not found for accountId: {}", accountId);
       throw new AccessDeniedException(null, WingsException.USER_SRE);
     }
 
@@ -82,7 +82,7 @@ public class TokenAuthenticator {
     try {
       encodedKey = Hex.decodeHex(accountKey.toCharArray());
     } catch (DecoderException e) {
-      logger.error("Invalid hex key " + accountKey, e);
+      log.error("Invalid hex key " + accountKey, e);
       throw new UnexpectedException();
     }
     return new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");

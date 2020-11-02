@@ -43,7 +43,7 @@ public class ScheduleSegmentPublishJob implements Migration {
       }
 
     } catch (Exception e) {
-      logger.error("Exception scheduling segment job", e);
+      log.error("Exception scheduling segment job", e);
     }
   }
 }

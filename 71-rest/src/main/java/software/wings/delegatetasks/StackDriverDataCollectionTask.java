@@ -69,7 +69,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (StackDriverDataCollectionInfo) parameters;
-    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.STACK_DRIVER)
@@ -88,7 +88,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -128,7 +128,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.info(
+          log.info(
               "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionCurrentMinute);
 
           dataCollectionInfo.setDataCollectionMinute(dataCollectionCurrentMinute);
@@ -158,7 +158,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             taskResult.setErrorMessage("Cannot save new stack driver metric records to Harness. Server returned error");
             throw new RuntimeException("Cannot save new stack driver metric records to Harness. Server returned error");
           }
-          logger.debug("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
+          log.debug("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
               dataCollectionCurrentMinute);
 
           dataCollectionCurrentMinute++;
@@ -166,7 +166,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
           if (dataCollectionCurrentMinute - dataCollectionStartMinute >= dataCollectionInfo.getCollectionTime()) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.info(
+            log.info(
                 "Completed stack driver collection task. So setting task status to success and quitting. StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
@@ -175,7 +175,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 dataCollectionCurrentMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -184,8 +184,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching stack driver metrics for minute " + dataCollectionCurrentMinute
-                    + ". retrying in " + DATA_COLLECTION_RETRY_SLEEP + "s",
+            log.warn("error fetching stack driver metrics for minute " + dataCollectionCurrentMinute + ". retrying in "
+                    + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
@@ -193,7 +193,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       }
 
       if (completed.get()) {
-        logger.info("Shutting down stack driver data collection");
+        log.info("Shutting down stack driver data collection");
         shutDownCollection();
         return;
       }
@@ -425,11 +425,10 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             }));
       }
 
-      logger.debug("fetching stackdriver metrics for {} strategy {} for min {}",
-          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
-          dataCollectionCurrentMinute);
+      log.debug("fetching stackdriver metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
+          dataCollectionInfo.getTimeSeriesMlAnalysisType(), dataCollectionCurrentMinute);
       List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
-      logger.debug("done fetching stackdriver metrics for {} strategy {} for min {}",
+      log.debug("done fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionCurrentMinute);
       results.forEach(result -> {

@@ -24,7 +24,7 @@ public class ImportedTemplateGalleryMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_LINE + "Starting migration for adding field in template gallery");
+    log.info(DEBUG_LINE + "Starting migration for adding field in template gallery");
 
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createAuthorizedQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
@@ -38,8 +38,8 @@ public class ImportedTemplateGalleryMigration implements Migration {
                                            .field(GALLERY_KEY)
                                            .doesNotExist();
         UpdateResults result = wingsPersistence.update(query, updateOperations);
-        logger.info("Updated account gallery to have gallery type for account %s ");
-        logger.info(DEBUG_LINE + "Gallery type update for already existing gallery for account {} resulted in {}",
+        log.info("Updated account gallery to have gallery type for account %s ");
+        log.info(DEBUG_LINE + "Gallery type update for already existing gallery for account {} resulted in {}",
             account.getUuid(), result);
       }
     }

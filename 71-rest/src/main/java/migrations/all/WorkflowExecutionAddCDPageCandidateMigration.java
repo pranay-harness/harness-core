@@ -23,7 +23,7 @@ public class WorkflowExecutionAddCDPageCandidateMigration implements Migration {
   @Override
   public void migrate() {
     int count = 0;
-    logger.info(DEBUG_LINE + "Starting migration");
+    log.info(DEBUG_LINE + "Starting migration");
     try (HIterator<WorkflowExecution> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
                                  .field(WorkflowExecutionKeys.cdPageCandidate)
@@ -34,9 +34,9 @@ public class WorkflowExecutionAddCDPageCandidateMigration implements Migration {
         migrate(workflowExecution);
         count++;
       }
-      logger.info(DEBUG_LINE + "Completed migrating {} records", count);
+      log.info(DEBUG_LINE + "Completed migrating {} records", count);
     } catch (Exception e) {
-      logger.error(DEBUG_LINE + "Failed to complete migration", e);
+      log.error(DEBUG_LINE + "Failed to complete migration", e);
     }
   }
 
@@ -56,7 +56,7 @@ public class WorkflowExecutionAddCDPageCandidateMigration implements Migration {
       wingsPersistence.update(workflowExecution, updateOps);
 
     } catch (Exception e) {
-      logger.error(
+      log.error(
           DEBUG_LINE + "Exception occurred while processing workflowExecution:[{}]", workflowExecution.getUuid(), e);
     }
   }

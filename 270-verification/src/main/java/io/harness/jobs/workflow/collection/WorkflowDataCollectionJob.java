@@ -34,7 +34,7 @@ public class WorkflowDataCollectionJob implements Job, Handler<AnalysisContext> 
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.info("Triggering Data collection job");
+    log.info("Triggering Data collection job");
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
@@ -42,17 +42,17 @@ public class WorkflowDataCollectionJob implements Job, Handler<AnalysisContext> 
                .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
                    FeatureName.WORKFLOW_DATA_COLLECTION_ITERATOR, context.getAccountId()))
                .getResource()) {
-        logger.info("Executing Workflow data collection job with params : {} and context : {}", params, context);
+        log.info("Executing Workflow data collection job with params : {} and context : {}", params, context);
         boolean jobTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
         if (!jobTriggered) {
           deleteJob(jobExecutionContext);
         }
-        logger.info("Triggering scheduled job with params {}", params);
+        log.info("Triggering scheduled job with params {}", params);
       } else {
-        logger.info("for {} the iterator will handle data collection", context.getStateExecutionId());
+        log.info("for {} the iterator will handle data collection", context.getStateExecutionId());
       }
     } catch (Exception ex) {
-      logger.error("Data Collection cron failed with error", ex);
+      log.error("Data Collection cron failed with error", ex);
     }
   }
 
@@ -62,15 +62,15 @@ public class WorkflowDataCollectionJob implements Job, Handler<AnalysisContext> 
              .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
                  FeatureName.WORKFLOW_DATA_COLLECTION_ITERATOR, context.getAccountId()))
              .getResource()) {
-      logger.info("for {} the cron will handle data collection", context.getStateExecutionId());
+      log.info("for {} the cron will handle data collection", context.getStateExecutionId());
       return;
     }
     if (Instant.now().isBefore(Instant.ofEpochMilli(context.getCreatedAt()).plus(DELAY_MINUTES, ChronoUnit.MINUTES))) {
-      logger.info("for {} the delay of {} mins hasn't reached yet", context.getStateExecutionId(), DELAY_MINUTES);
+      log.info("for {} the delay of {} mins hasn't reached yet", context.getStateExecutionId(), DELAY_MINUTES);
       return;
     }
 
-    logger.info("Executing Workflow data collection iterator for context : {}", context);
+    log.info("Executing Workflow data collection iterator for context : {}", context);
     boolean jobTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     if (!jobTriggered) {
       continuousVerificationService.markWorkflowDataCollectionDone(context);
@@ -85,9 +85,9 @@ public class WorkflowDataCollectionJob implements Job, Handler<AnalysisContext> 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
       continuousVerificationService.markWorkflowDataCollectionDone(context);
-      logger.info("Deleting Data Collection job for context {}", jobExecutionContext);
+      log.info("Deleting Data Collection job for context {}", jobExecutionContext);
     } catch (SchedulerException e) {
-      logger.error("Unable to clean up cron", e);
+      log.error("Unable to clean up cron", e);
     }
   }
 }

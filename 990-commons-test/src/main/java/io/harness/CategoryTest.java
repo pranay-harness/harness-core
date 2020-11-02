@@ -39,6 +39,6 @@ public class CategoryTest {
     if (repetition > 0) {
       sb.append(" - ").append(repetition);
     }
-    logger.info(sb.toString());
+    log.info(sb.toString());
   }
 }

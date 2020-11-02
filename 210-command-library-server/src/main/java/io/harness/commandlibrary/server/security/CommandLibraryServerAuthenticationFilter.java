@@ -52,7 +52,7 @@ public class CommandLibraryServerAuthenticationFilter implements ContainerReques
         return;
       }
     } catch (Exception ex) {
-      logger.error("error while validating user", ex);
+      log.error("error while validating user", ex);
       throw ex;
     }
 

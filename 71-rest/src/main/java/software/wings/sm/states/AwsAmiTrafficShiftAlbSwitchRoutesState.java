@@ -237,7 +237,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
 
   private ExecutionResponse taskCreationFailureResponse(
       Activity activity, ManagerExecutionLogCallback executionLogCallback, Exception exception) {
-    logger.error("Aws Ami traffic shift failed with error ", exception);
+    log.error("Aws Ami traffic shift failed with error ", exception);
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
     String errorMessage = getMessage(exception);

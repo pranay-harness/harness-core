@@ -52,7 +52,7 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
       kubernetesContainerService.validate(kubernetesConfig);
       validCredentials = true;
     } catch (Exception ex) {
-      logger.info("Exception while validating kubernetes credentials", ex);
+      log.info("Exception while validating kubernetes credentials", ex);
       execptionInProcessing = ex;
     }
     return KubernetesConnectionTaskResponse.builder()

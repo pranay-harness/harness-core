@@ -20,7 +20,7 @@ public class CreateDefaultAlertNotificationRule implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Creating default alert notification rules for all accounts.");
+    log.info("Creating default alert notification rules for all accounts.");
 
     try {
       List<Account> accounts = accountService.listAllAccounts();
@@ -33,11 +33,11 @@ public class CreateDefaultAlertNotificationRule implements Migration {
 
         AlertNotificationRule rule = alertNotificationRuleService.createDefaultRule(accountId);
         if (null == rule) {
-          logger.error("No default notification rule create. accountId={}", accountId);
+          log.error("No default notification rule create. accountId={}", accountId);
         }
       }
     } catch (Exception e) {
-      logger.error("Error creating default notification rules", e);
+      log.error("Error creating default notification rules", e);
     }
   }
 }

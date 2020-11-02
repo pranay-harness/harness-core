@@ -132,7 +132,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
         auditHelper.finalizeAudit(header, nullToEmpty(resultStr).getBytes(StandardCharsets.UTF_8));
       }
     } catch (Exception e) {
-      logger.error("error while finalizing audit header", e);
+      log.error("error while finalizing audit header", e);
     }
   }
 

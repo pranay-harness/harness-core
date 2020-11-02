@@ -99,13 +99,13 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
           .buildSourceResponse(BuildSourceResponse.builder().buildDetails(buildDetails).stable(true).build())
           .build();
     } catch (WingsException ex) {
-      ExceptionLogger.logProcessedMessages(ex, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(ex, DELEGATE, log);
       return BuildSourceExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     } catch (Exception ex) {
-      logger.error("Exception in processing BuildSource task [{}]", ex);
+      log.error("Exception in processing BuildSource task [{}]", ex);
       return BuildSourceExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

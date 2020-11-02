@@ -27,13 +27,13 @@ public class SetQueueKeyYamChangeSetMigration implements OnPrimaryManagerMigrati
 
   @Override
   public void migrate() {
-    logger.info("Running migration SetQueueKeyYamChangeSetMigration");
+    log.info("Running migration SetQueueKeyYamChangeSetMigration");
 
     gitChangeSetRunnableHelper.handleOldQueuedChangeSets(wingsPersistence);
 
     populateQueueKeyAndMetadata();
 
-    logger.info("Completed migration SetQueueKeyYamChangeSetMigration");
+    log.info("Completed migration SetQueueKeyYamChangeSetMigration");
   }
 
   private void populateQueueKeyAndMetadata() {
@@ -47,13 +47,13 @@ public class SetQueueKeyYamChangeSetMigration implements OnPrimaryManagerMigrati
         try {
           // Is the record already being processed ? If yes then skip
           if (StringUtils.isBlank(yamlChangeSet.getQueueKey()) || yamlChangeSet.getGitSyncMetadata() == null) {
-            logger.info("Updating yamlchangeset id = [{}]", yamlChangeSet.getUuid());
+            log.info("Updating yamlchangeset id = [{}]", yamlChangeSet.getUuid());
             yamlChangeSetService.populateGitSyncMetadata(yamlChangeSet);
             updateRequiredFieldsOnly(yamlChangeSet);
-            logger.info("Successfully updated yamlchangeset id = [{}]", yamlChangeSet.getUuid());
+            log.info("Successfully updated yamlchangeset id = [{}]", yamlChangeSet.getUuid());
           }
         } catch (Exception e) {
-          logger.error("Error while updating yamlchangeset id =" + yamlChangeSet.getUuid(), e);
+          log.error("Error while updating yamlchangeset id =" + yamlChangeSet.getUuid(), e);
         }
       }
     }

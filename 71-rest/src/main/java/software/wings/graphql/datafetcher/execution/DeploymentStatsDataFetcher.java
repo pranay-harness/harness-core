@@ -167,7 +167,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         successful = true;
         long endTime = System.currentTimeMillis();
         if (endTime - startTime > 2000L) {
-          logger.warn("TIMESCALEDB : query taking [{}] ms, [{}]", endTime - startTime, queryData.getQuery());
+          log.warn("TIMESCALEDB : query taking [{}] ms, [{}]", endTime - startTime, queryData.getQuery());
         }
         switch (queryData.getResultType()) {
           case SINGLE_POINT:
@@ -185,9 +185,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         }
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to execute query=[{}],accountId=[{}]", queryData.getQuery(), accountId, e);
+          log.error("Failed to execute query=[{}],accountId=[{}]", queryData.getQuery(), accountId, e);
         } else {
-          logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", queryData.getQuery(), accountId,
+          log.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", queryData.getQuery(), accountId,
               retryCount);
         }
         retryCount++;
@@ -262,7 +262,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             }
             break;
           default:
-            logger.info("Unsupported data type : " + field.getDataType());
+            log.info("Unsupported data type : " + field.getDataType());
         }
       }
 
@@ -591,7 +591,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
     } else {
       finalSortCriteria = null;
-      logger.info("Not adding sortCriteria since it is a timeSeries");
+      log.info("Not adding sortCriteria since it is a timeSeries");
     }
 
     selectQuery.getWhereClause().setDisableParens(true);
@@ -684,7 +684,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       finalSortCriteria = validateAndAddSortCriteria(selectTags, sortCriteria, fieldNames);
     } else {
       finalSortCriteria = null;
-      logger.info("Not adding sortCriteria since it is a timeSeries");
+      log.info("Not adding sortCriteria since it is a timeSeries");
     }
 
     boolean isValidGroupByTime = isValidGroupByTime(groupByTime);
@@ -861,7 +861,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
        */
       long currentTime = System.currentTimeMillis();
       long timeWeekAgo = currentTime - weekOffset;
-      logger.info("T1 and T2, both not present, adding T1:[{}], T2:[{}]", new Date(timeWeekAgo), new Date(currentTime));
+      log.info("T1 and T2, both not present, adding T1:[{}], T2:[{}]", new Date(timeWeekAgo), new Date(currentTime));
       Filter t1Filter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(timeWeekAgo).build();
       Filter t2Filter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(currentTime).build();
       addSimpleTimeFilter(selectQuery, t1Filter, QLDeploymentFilterType.EndTime);
@@ -871,7 +871,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
        * No T1 present, only T2 present
        */
       long t1Time = timeFilterQueryResult.getT2() - weekOffset;
-      logger.info("T1 not present, adding T1:[{}]", new Date(t1Time));
+      log.info("T1 not present, adding T1:[{}]", new Date(t1Time));
       Filter t1Filter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(t1Time).build();
       addSimpleTimeFilter(selectQuery, t1Filter, timeFilterQueryResult.getT2Type());
     } else if (!timeFilterQueryResult.isT2Present()) {
@@ -879,7 +879,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
        * No T2 present, only T1 present
        */
       long t2Time = timeFilterQueryResult.getT1() + weekOffset;
-      logger.info("T2 not present, adding T2:[{}]", new Date(t2Time));
+      log.info("T2 not present, adding T2:[{}]", new Date(t2Time));
       Filter t2Filter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(t2Time).build();
       addSimpleTimeFilter(selectQuery, t2Filter, timeFilterQueryResult.getT1Type());
     }
@@ -981,7 +981,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         } else if (type.getMetaDataFields().getFilterKind() == QLFilterKind.HSTORE) {
           decorateHstoreFilter(selectQuery, filter, type);
         } else {
-          logger.error("Failed to apply filter :[{}]", filter);
+          log.error("Failed to apply filter :[{}]", filter);
         }
       }
     }
@@ -1033,7 +1033,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                 newList.add(QLDeploymentFilter.builder().tags(tagFilter).build());
                 break;
               default:
-                logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                log.error("EntityType {} not supported in query", tagFilter.getEntityType());
                 throw new InvalidRequestException("Error while compiling query", WingsException.USER);
             }
           }
@@ -1185,7 +1185,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         addSimpleStringOperator(selectQuery, f, type);
       }
     } else {
-      logger.error("Not adding filter since it is not valid " + f);
+      log.error("Not adding filter since it is not valid " + f);
     }
   }
 
@@ -1257,7 +1257,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       switch (operator) {
         case EQUALS:
           finalOperator = QLStringOperator.IN;
-          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+          log.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
           break;
         default:
           finalOperator = operator;
@@ -1283,7 +1283,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       switch (operator) {
         case EQUALS:
           finalOperator = QLIdOperator.IN;
-          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+          log.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
           break;
         default:
           finalOperator = operator;
@@ -1584,7 +1584,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       case DEPLOYMENT:
         return QLDeploymentEntityAggregation.Deployment;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

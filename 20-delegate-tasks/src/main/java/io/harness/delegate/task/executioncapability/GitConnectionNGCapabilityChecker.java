@@ -30,7 +30,7 @@ public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
     try {
       decryptionService.decrypt(gitConfig.getGitAuth(), encryptedDataDetails);
     } catch (Exception e) {
-      logger.info("Failed to decrypt " + capability.getGitConfig(), e);
+      log.info("Failed to decrypt " + capability.getGitConfig(), e);
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     String accountId = delegateConfiguration.getAccountId();

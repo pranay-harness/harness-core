@@ -25,22 +25,22 @@ public abstract class AddAccountIdToCollectionUsingAppIdMigration implements Mig
 
   @Override
   public void migrate() {
-    logger.info("Adding accountId to {}", getCollectionName());
+    log.info("Adding accountId to {}", getCollectionName());
     Map<String, String> appIdToAccountIdMap = new HashMap<>();
     updateAccountIdForAppId(appIdToAccountIdMap);
-    logger.info("Adding accountIds to {} completed for all applications", getCollectionName());
+    log.info("Adding accountIds to {} completed for all applications", getCollectionName());
   }
 
   private String getAccountIdForAppId(Map<String, String> appIdToAccountIdMap, String appId) {
     if (!appIdToAccountIdMap.containsKey(appId)) {
-      logger.info("Fetching account for app id {} and collection {}", appId, getCollectionName());
+      log.info("Fetching account for app id {} and collection {}", appId, getCollectionName());
       Application application = wingsPersistence.get(Application.class, appId);
       if (application == null) {
         appIdToAccountIdMap.put(appId, "dummy_account_id");
       } else {
         appIdToAccountIdMap.put(appId, application.getAccountId());
       }
-      logger.info("Set account id: {} for app id {} and collection {}", appIdToAccountIdMap.get(appId), appId,
+      log.info("Set account id: {} for app id {} and collection {}", appIdToAccountIdMap.get(appId), appId,
           getCollectionName());
     }
 
@@ -77,16 +77,16 @@ public abstract class AddAccountIdToCollectionUsingAppIdMigration implements Mig
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           dataRecords = collection.find(objectsToBeUpdated, projection).limit(1000);
           batched = 0;
-          logger.info("Number of records updated for {} is: {}", getCollectionName(), updated);
+          log.info("Number of records updated for {} is: {}", getCollectionName(), updated);
         }
       }
 
       if (batched != 0) {
         bulkWriteOperation.execute();
-        logger.info("Number of records updated for {} is: {}", getCollectionName(), updated);
+        log.info("Number of records updated for {} is: {}", getCollectionName(), updated);
       }
     } catch (Exception e) {
-      logger.error("Exception occurred while migrating account id field for {}", getCollectionName(), e);
+      log.error("Exception occurred while migrating account id field for {}", getCollectionName(), e);
     } finally {
       dataRecords.close();
     }

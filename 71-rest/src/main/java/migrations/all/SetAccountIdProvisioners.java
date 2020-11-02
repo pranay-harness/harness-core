@@ -48,24 +48,24 @@ public class SetAccountIdProvisioners implements Migration {
             if (isNotEmpty(accountId)) {
               updateAccountId.put(InfrastructureProvisionerKeys.accountId, accountId);
               wingsPersistence.updateFields(InfrastructureProvisioner.class, provisioner.getUuid(), updateAccountId);
-              logger.info(join(SPACE, DEBUG_LINE,
+              log.info(join(SPACE, DEBUG_LINE,
                   format("Set accountId [%s] for provisioner [%s]", accountId, provisioner.getUuid())));
               corrections++;
             } else {
               errors++;
-              logger.error(join(SPACE, DEBUG_LINE, "empty accountId for appId-", appId));
+              log.error(join(SPACE, DEBUG_LINE, "empty accountId for appId-", appId));
             }
           } catch (Exception ex) {
             errors++;
-            logger.error(join(SPACE, DEBUG_LINE, "could not fetch accountId for appId -", appId));
+            log.error(join(SPACE, DEBUG_LINE, "could not fetch accountId for appId -", appId));
           }
         } else {
           errors++;
-          logger.error(join(SPACE, DEBUG_LINE, "This should not be happening, We need appId here"));
+          log.error(join(SPACE, DEBUG_LINE, "This should not be happening, We need appId here"));
         }
       }
     }
-    logger.info(HarnessStringUtils.join(SPACE, DEBUG_LINE, "Set AccountId for provisioners done", SPACE,
-        "Corrections -", String.valueOf(corrections), "Errors -", String.valueOf(errors)));
+    log.info(HarnessStringUtils.join(SPACE, DEBUG_LINE, "Set AccountId for provisioners done", SPACE, "Corrections -",
+        String.valueOf(corrections), "Errors -", String.valueOf(errors)));
   }
 }

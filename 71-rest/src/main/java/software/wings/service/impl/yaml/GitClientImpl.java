@@ -135,10 +135,10 @@ public class GitClientImpl implements GitClient {
         FileUtils.deleteDirectory(new File(gitRepoDirectory));
       }
     } catch (IOException ioex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
+      log.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
     }
 
-    logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
+    log.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
 
     CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), gitConfig);
     try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
@@ -150,7 +150,7 @@ public class GitClientImpl implements GitClient {
                        .call()) {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
@@ -164,10 +164,10 @@ public class GitClientImpl implements GitClient {
       if (!config.getString("remote", "origin", "url").equals(url)) {
         config.setString("remote", "origin", "url", url);
         config.save();
-        logger.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", url);
+        log.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", url);
       }
     } catch (IOException ioex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config", ioex);
+      log.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config", ioex);
     }
   }
 
@@ -204,7 +204,7 @@ public class GitClientImpl implements GitClient {
           startCommitIdStr = firstCommit.getName();
         }
       }
-      logger.info(GIT_YAML_LOG_PREFIX + "startCommitIdStr =[{}], endCommitIdStr=[{}], endCommitId.name=[{}]",
+      log.info(GIT_YAML_LOG_PREFIX + "startCommitIdStr =[{}], endCommitIdStr=[{}], endCommitId.name=[{}]",
           startCommitIdStr, endCommitIdStr, endCommitId.name());
 
       ObjectId endCommitTreeId = repository.resolve(endCommitIdStr + "^{tree}");
@@ -233,7 +233,7 @@ public class GitClientImpl implements GitClient {
       }
 
     } catch (IOException | GitAPIException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -272,7 +272,7 @@ public class GitClientImpl implements GitClient {
 
   private List<GitFile> getGitFilesFromDiff(
       List<DiffEntry> diffs, Repository repository, GitRepositoryType gitRepositoryType) throws IOException {
-    logger.info(getGitLogMessagePrefix(gitRepositoryType)
+    log.info(getGitLogMessagePrefix(gitRepositoryType)
         + "Get git files from diff. Total diff entries found : " + diffs.size());
 
     List<GitFile> gitFiles = new ArrayList<>();
@@ -298,7 +298,7 @@ public class GitClientImpl implements GitClient {
   void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId, GitConfig gitConfig,
       Repository repository, boolean excludeFilesOutsideSetupFolder, Long commitTimeMs, String commitMessage)
       throws IOException {
-    logger.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
+    log.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
     for (DiffEntry entry : diffs) {
       String content = null;
       String filePath;
@@ -314,7 +314,7 @@ public class GitClientImpl implements GitClient {
       }
 
       if (excludeFilesOutsideSetupFolder && filePath != null && !filePath.startsWith(SETUP_FOLDER)) {
-        logger.info("Excluding file [{}] ", filePath);
+        log.info("Excluding file [{}] ", filePath);
         continue;
       }
 
@@ -349,7 +349,7 @@ public class GitClientImpl implements GitClient {
         }
 
       } catch (RefAlreadyExistsException refExIgnored) {
-        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+        log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
             + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
       }
 
@@ -360,7 +360,7 @@ public class GitClientImpl implements GitClient {
 
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException(format("Unable to checkout given reference: %s",
                                   isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
           USER);
@@ -403,7 +403,7 @@ public class GitClientImpl implements GitClient {
       List<DiffEntry> diffs = getDiffEntries(git.getRepository(), git, newCommitHead, oldCommitHead);
       return getGitFileChangesFromDiff(diffs, git.getRepository(), gitConfig.getAccountId());
     } catch (Exception ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException("Error in getting the files commited to the git", USER_ADMIN);
     }
   }
@@ -445,8 +445,7 @@ public class GitClientImpl implements GitClient {
       try {
         git.add().addFilepattern(".").call();
       } catch (GitAPIException ex) {
-        logger.error(
-            format("Error in add/modify git operation connectorId:[%s]", gitOperationContext.getGitConnectorId())
+        log.error(format("Error in add/modify git operation connectorId:[%s]", gitOperationContext.getGitConnectorId())
                 + " Exception: ",
             ex);
         throw new YamlException(
@@ -474,19 +473,19 @@ public class GitClientImpl implements GitClient {
         case ADD:
         case MODIFY:
           try {
-            logger.info(
+            log.info(
                 getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Adding git file " + gitFileChange.toString());
             FileUtils.forceMkdir(file.getParentFile());
             FileUtils.writeStringToFile(file, gitFileChange.getFileContent(), UTF_8);
             filesToAdd.add(gitFileChange.getFilePath());
           } catch (IOException ex) {
-            logger.error(
+            log.error(
                 getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in adding/modifying file to git " + ex);
             throw new YamlException("IOException in ADD/MODIFY git operation", ADMIN);
           }
           break;
         case RENAME:
-          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Old path:[{}], new path: [{}]",
+          log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Old path:[{}], new path: [{}]",
               gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
           String oldFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getOldFilePath();
           String newFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
@@ -500,12 +499,12 @@ public class GitClientImpl implements GitClient {
               filesToAdd.add(gitFileChange.getFilePath());
               git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
             } catch (IOException | GitAPIException e) {
-              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in renaming file " + e);
+              log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in renaming file " + e);
               throw new YamlException(
                   format("Exception in renaming file [%s]->[%s]", oldFile.toPath(), newFile.toPath()), ADMIN_SRE);
             }
           } else {
-            logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
+            log.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
                 gitFileChange.getOldFilePath());
           }
           break;
@@ -515,14 +514,14 @@ public class GitClientImpl implements GitClient {
             try {
               git.rm().addFilepattern(gitFileChange.getFilePath()).call();
             } catch (GitAPIException e) {
-              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in deleting file " + e);
+              log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in deleting file " + e);
               throw new YamlException(
                   format("Exception in deleting file [%s]", gitFileChange.getFilePath()), ADMIN_SRE);
             }
-            logger.info(
+            log.info(
                 getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Deleting git file " + gitFileChange.toString());
           } else {
-            logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
+            log.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
                 gitFileChange.getFilePath());
           }
           break;
@@ -539,19 +538,19 @@ public class GitClientImpl implements GitClient {
 
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
       try {
-        logger.info(new StringBuilder(128)
-                        .append(" Processing Git command: FILES_BETWEEN_COMMITS ")
-                        .append("Account: ")
-                        .append(gitConfig.getAccountId())
-                        .append(", repo: ")
-                        .append(gitConfig.getRepoUrl())
-                        .append(", newCommitId: ")
-                        .append(gitRequest.getNewCommitId())
-                        .append(", oldCommitId: ")
-                        .append(gitRequest.getOldCommitId())
-                        .append(", gitConnectorId: ")
-                        .append(gitRequest.getGitConnectorId())
-                        .toString());
+        log.info(new StringBuilder(128)
+                     .append(" Processing Git command: FILES_BETWEEN_COMMITS ")
+                     .append("Account: ")
+                     .append(gitConfig.getAccountId())
+                     .append(", repo: ")
+                     .append(gitConfig.getRepoUrl())
+                     .append(", newCommitId: ")
+                     .append(gitRequest.getNewCommitId())
+                     .append(", oldCommitId: ")
+                     .append(gitRequest.getOldCommitId())
+                     .append(", gitConnectorId: ")
+                     .append(gitRequest.getGitConnectorId())
+                     .toString());
 
         gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
         cloneRepoForFilePathCheckout(gitConfig, StringUtils.EMPTY, gitConnectorId);
@@ -568,7 +567,7 @@ public class GitClientImpl implements GitClient {
           gitFilesFromDiff = getGitFilesFromDiff(diffs, repository, gitConfig.getGitRepoType());
 
         } catch (IOException | GitAPIException ex) {
-          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
           throw new YamlException("Error in getting commit diff", USER_ADMIN);
         }
 
@@ -584,7 +583,7 @@ public class GitClientImpl implements GitClient {
         throw e;
       } catch (Exception e) {
         tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
-        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
+        log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files between commits ")
                                     .append("Account: ")
@@ -627,18 +626,18 @@ public class GitClientImpl implements GitClient {
     synchronized (gitClientHelper.getLockObject(gitRequest.getGitConnectorId())) {
       defaultRepoTypeToYaml(gitConfig);
 
-      logger.info(new StringBuilder(128)
-                      .append(" Processing Git command: FETCH_FILES ")
-                      .append("Account: ")
-                      .append(gitConfig.getAccountId())
-                      .append(", repo: ")
-                      .append(gitConfig.getRepoUrl())
-                      .append(gitRequest.isUseBranch() ? ", Branch: " : ", CommitId: ")
-                      .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                      .append(", filePaths: ")
-                      .append(gitRequest.getFilePaths())
+      log.info(new StringBuilder(128)
+                   .append(" Processing Git command: FETCH_FILES ")
+                   .append("Account: ")
+                   .append(gitConfig.getAccountId())
+                   .append(", repo: ")
+                   .append(gitConfig.getRepoUrl())
+                   .append(gitRequest.isUseBranch() ? ", Branch: " : ", CommitId: ")
+                   .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                   .append(", filePaths: ")
+                   .append(gitRequest.getFilePaths())
 
-                      .toString());
+                   .toString());
 
       String gitConnectorId = gitRequest.getGitConnectorId();
       // create repository/gitFilesDownload/<AccId>/<GitConnectorId> path
@@ -720,7 +719,7 @@ public class GitClientImpl implements GitClient {
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
 
         if (isNotEmpty(gitFiles)) {
-          gitFiles.forEach(gitFile -> logger.info("File fetched : " + gitFile.getFilePath()));
+          gitFiles.forEach(gitFile -> log.info("File fetched : " + gitFile.getFilePath()));
         }
         return GitFetchFilesResult.builder()
             .files(gitFiles)
@@ -734,7 +733,7 @@ public class GitClientImpl implements GitClient {
         throw e;
       } catch (Exception e) {
         tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
-        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
+        log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(
             new StringBuilder()
                 .append("Failed while fetching files ")
@@ -816,13 +815,13 @@ public class GitClientImpl implements GitClient {
 
   private void checkoutGivenCommitForAllPaths(String commitId, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
-      logger.info("Checking out commitId: " + commitId);
+      log.info("Checking out commitId: " + commitId);
       CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false).setAllPaths(true);
 
       checkoutCommand.call();
-      logger.info("Successfully Checked out commitId: " + commitId);
+      log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -831,14 +830,14 @@ public class GitClientImpl implements GitClient {
   private void checkoutGivenCommitForPath(
       String commitId, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
-      logger.info("Checking out commitId: " + commitId);
+      log.info("Checking out commitId: " + commitId);
       CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false);
 
       setPathsForCheckout(filePaths, checkoutCommand);
       checkoutCommand.call();
-      logger.info("Successfully Checked out commitId: " + commitId);
+      log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -855,7 +854,7 @@ public class GitClientImpl implements GitClient {
   private void checkoutBranchForPath(
       String branch, List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
-      logger.info("Checking out Branch: " + branch);
+      log.info("Checking out Branch: " + branch);
       CheckoutCommand checkoutCommand = git.checkout()
                                             .setCreateBranch(true)
                                             .setStartPoint("origin/" + branch)
@@ -864,9 +863,9 @@ public class GitClientImpl implements GitClient {
                                             .setName(branch);
       setPathsForCheckout(filePaths, checkoutCommand);
       checkoutCommand.call();
-      logger.info("Successfully Checked out Branch: " + branch);
+      log.info("Successfully Checked out Branch: " + branch);
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + branch, USER);
     }
@@ -876,18 +875,18 @@ public class GitClientImpl implements GitClient {
     try {
       resetWorkingDir(gitConfig, gitConnectorId);
     } catch (Exception ex) {
-      logger.info("Not able to reset repository", ex);
+      log.info("Not able to reset repository", ex);
     }
   }
 
   private void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
-      logger.info("Resetting repo");
+      log.info("Resetting repo");
       ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
       resetCommand.call();
-      logger.info("Resetting repo completed successfully");
+      log.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -901,9 +900,9 @@ public class GitClientImpl implements GitClient {
       LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
       lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
       Collection<Ref> refs = lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
     } catch (Exception e) {
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
 
       if (e instanceof InvalidRemoteException || e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + repoUrl;
@@ -931,11 +930,11 @@ public class GitClientImpl implements GitClient {
    * @param gitConfig the git config
    */
   private synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
-    logger.info(new StringBuilder(64)
-                    .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
-                    .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
-                    .append(gitConfig.toString())
-                    .toString());
+    log.info(new StringBuilder(64)
+                 .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
+                 .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
+                 .append(gitConfig.toString())
+                 .toString());
 
     boolean exceptionOccured = false;
     File repoDir = new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId));
@@ -951,23 +950,23 @@ public class GitClientImpl implements GitClient {
                                       .setTagOpt(TagOpt.FETCH_TAGS)
                                       .call(); // fetch all remote references
 
-        logger.info(new StringBuilder()
-                        .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
-                        .append("result fetched: ")
-                        .append(fetchResult.toString())
-                        .toString());
+        log.info(new StringBuilder()
+                     .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
+                     .append("result fetched: ")
+                     .append(fetchResult.toString())
+                     .toString());
 
         return;
       } catch (Exception ex) {
         exceptionOccured = true;
         if (ex instanceof IOException) {
-          logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
+          log.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
               gitConfig.getRepoUrl(), ex);
-          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+          log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
         } else {
-          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+          log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
               gitConfig.getBranch());
-          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
@@ -991,7 +990,7 @@ public class GitClientImpl implements GitClient {
       updateRemoteOriginInConfig(gitConfig, repoDir);
 
       try (Git git = Git.open(repoDir)) {
-        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
+        log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
 
         FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
                                       .setTagOpt(TagOpt.FETCH_TAGS)
@@ -1002,21 +1001,20 @@ public class GitClientImpl implements GitClient {
         if (StringUtils.isEmpty(gitConfig.getReference())) {
           Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
         }
-        logger.info(
+        log.info(
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
         // TODO:: log failed commits queued and being ignored.
         return;
       } catch (Exception ex) {
         executionFailed = true;
         if (ex instanceof IOException) {
-          logger.error(
-              getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
+          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
               gitConfig.getRepoUrl(), ex);
         } else {
           if (ex instanceof GitAPIException) {
-            logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+            log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
                 gitConfig.getBranch());
-            logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+            log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }
@@ -1034,7 +1032,7 @@ public class GitClientImpl implements GitClient {
 
     // We are here, so either repo doesnt exist or we encounter some error while
     // opening/updating repo
-    logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
+    log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
     clone(gitConfig, gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig.getBranch(), false);
   }
 
@@ -1093,7 +1091,7 @@ public class GitClientImpl implements GitClient {
       SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
       generateTGTUsingSshConfig(sshSessionConfig, new NoopExecutionCallback());
     } catch (Exception e) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
+      log.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
           gitConfig.getRepoUrl(), getMessage(e));
       throw new InvalidRequestException("Failed to do Kerberos authentication");
     }

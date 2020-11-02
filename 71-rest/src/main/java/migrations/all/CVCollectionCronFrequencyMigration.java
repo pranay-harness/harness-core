@@ -20,7 +20,7 @@ public class CVCollectionCronFrequencyMigration implements Migration {
     final WriteResult result = collection.updateMulti(new BasicDBObject("keyGroup", "METRIC_DATA_PROCESSOR_CRON_GROUP"),
         new BasicDBObject("$set", new BasicDBObject("repeatInterval", Long.valueOf(30000))));
 
-    logger.info("updated {} records", result.getN());
-    logger.info("migration done...");
+    log.info("updated {} records", result.getN());
+    log.info("migration done...");
   }
 }

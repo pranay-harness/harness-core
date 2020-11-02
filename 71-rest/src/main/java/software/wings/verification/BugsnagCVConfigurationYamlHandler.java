@@ -62,7 +62,7 @@ public class BugsnagCVConfigurationYamlHandler extends LogsCVConfigurationYamlHa
         final String errMsg = String.format(
             "Bugsnag Organization Name or Project Name is empty during conversion to yaml. OrganizationId %s, ProjectId %s",
             ((BugsnagCVConfiguration) bean).getOrgId(), ((BugsnagCVConfiguration) bean).getProjectId());
-        logger.error(errMsg);
+        log.error(errMsg);
         throw new InvalidRequestException(errMsg);
       }
     } catch (Exception ex) {
@@ -142,7 +142,7 @@ public class BugsnagCVConfigurationYamlHandler extends LogsCVConfigurationYamlHa
         final String errMsg = String.format(
             "Bugsnag Organization Name or Project Name is incorrect during edit from yaml. Organization Name %s, Project Name %s",
             yaml.getOrgName(), yaml.getProjectName());
-        logger.error(errMsg);
+        log.error(errMsg);
         throw new WingsException(errMsg);
       }
     } catch (Exception ex) {

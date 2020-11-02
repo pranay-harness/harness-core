@@ -44,7 +44,7 @@ public class CommandTask extends AbstractDelegateRunnableTask {
     try {
       commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
     } catch (Exception e) {
-      logger.warn("Exception while executing task {}: {}", getTaskId(), ExceptionUtils.getMessage(e), e);
+      log.warn("Exception while executing task {}: {}", getTaskId(), ExceptionUtils.getMessage(e), e);
       errorMessage = ExceptionUtils.getMessage(e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }

@@ -110,7 +110,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void handleHarnessChangeSet(YamlChangeSet yamlChangeSet, String accountId) {
-    logger.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git changeset");
+    log.info(GIT_YAML_LOG_PREFIX + "Started handling harness -> git changeset");
 
     List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
 
@@ -119,7 +119,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       try {
         createDelegateTaskForCommitAndPush(yamlChangeSet, accountId, gitFileChange);
       } catch (Exception e) {
-        logger.info("git Sync failed for filepath [{}] with exception [{}]", gitFileChange.getFilePath(), e);
+        log.info("git Sync failed for filepath [{}] with exception [{}]", gitFileChange.getFilePath(), e);
       }
     }
   }
@@ -137,7 +137,7 @@ public class YamlGitServiceImpl implements YamlGitService {
           format(GIT_YAML_LOG_PREFIX + "GitConfig shouldn't be null for accountId [%s]", yamlGitConfig, accountId));
     }
 
-    logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
+    log.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
     TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, connector.get(),
         accountId, yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
@@ -150,7 +150,7 @@ public class YamlGitServiceImpl implements YamlGitService {
             yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
         taskId);
 
-    logger.info(
+    log.info(
         GIT_YAML_LOG_PREFIX + "Successfully queued harness->git changeset for processing with delegate taskId=[{}]",
         taskId);
   }
@@ -239,12 +239,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          YamlProcessingLogContext ignore2 =
              YamlProcessingLogContext.builder().webhookToken(webhookToken).build(OVERRIDE_ERROR)) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Started processing webhook request");
+      log.info(GIT_YAML_LOG_PREFIX + "Started processing webhook request");
 
       List<ConnectorInfoDTO> connectors = getGitConnectors(accountId);
 
       if (isEmpty(connectors)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Git connector not found for account");
+        log.info(GIT_YAML_LOG_PREFIX + "Git connector not found for account");
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
 
@@ -256,14 +256,14 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       boolean gitPingEvent = webhookEventUtils.isGitPingEvent(headers);
       if (gitPingEvent) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Ping event found. Skip processing");
+        log.info(GIT_YAML_LOG_PREFIX + "Ping event found. Skip processing");
         return RESPONSE_FOR_PING_EVENT;
       }
 
       final Optional<String> repoName = obtainRepoFromPayload(yamlWebHookPayload, headers);
 
       if (!repoName.isPresent()) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Repo not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
+        log.info(GIT_YAML_LOG_PREFIX + "Repo not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
             webhookToken, yamlWebHookPayload, headers);
         throw new InvalidRequestException("Repo not found from webhook payload", USER);
       }
@@ -271,7 +271,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       final String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
 
       if (isEmpty(branchName)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
+        log.info(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
             webhookToken, yamlWebHookPayload, headers);
         throw new InvalidRequestException("Branch not found from webhook payload", USER);
       }
@@ -280,7 +280,7 @@ public class YamlGitServiceImpl implements YamlGitService {
           yamlGitConfigService.getByConnectorRepoAndBranch(gitConnectorId, repoName.get(), branchName, accountId);
 
       if (isEmpty(yamlGitConfigs)) {
-        logger.info(
+        log.info(
             GIT_YAML_LOG_PREFIX + "No git sync configured for repo = [{}], branch =[{}]", repoName.get(), branchName);
         throw new InvalidRequestException("No git sync configured for the repo and branch.", USER);
       }
@@ -289,11 +289,11 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       if (isNotEmpty(headCommitId)
           && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repoName.get(), branchName)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
+        log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         return "Commit already processed";
       }
 
-      logger.info(GIT_YAML_LOG_PREFIX + " Found branch name =[{}], headCommitId=[{}]", branchName, headCommitId);
+      log.info(GIT_YAML_LOG_PREFIX + " Found branch name =[{}], headCommitId=[{}]", branchName, headCommitId);
 
       YamlChangeSet yamlChangeSet = buildYamlChangeSetForGitToHarness(
           accountId, yamlWebHookPayload, headers, gitConnectorId, repoName.get(), branchName, headCommitId);
@@ -301,8 +301,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       try (ProcessTimeLogContext ignore3 =
                new ProcessTimeLogContext(startedStopWatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        logger.info(
-            GIT_YAML_LOG_PREFIX + "Successfully accepted webhook request for processing as yamlChangeSetId=[{}]",
+        log.info(GIT_YAML_LOG_PREFIX + "Successfully accepted webhook request for processing as yamlChangeSetId=[{}]",
             savedYamlChangeSet.getUuid());
       }
 
@@ -333,7 +332,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     try {
       return JsonUtils.asJson(headers.getRequestHeaders());
     } catch (Exception ex) {
-      logger.warn("Failed to convert request headers in json string", ex);
+      log.warn("Failed to convert request headers in json string", ex);
       return null;
     }
   }
@@ -367,12 +366,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          YamlProcessingLogContext ignore3 =
              getYamlProcessingLogContext(gitConnectorId, repo, branchName, null, yamlChangeSet.getUuid())) {
-      logger.info(
+      log.info(
           GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
 
       if (isNotEmpty(headCommitId)
           && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repo, branchName)) {
-        logger.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
+        log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), YamlChangeSet.Status.SKIPPED);
         return;
       }
@@ -380,27 +379,27 @@ public class YamlGitServiceImpl implements YamlGitService {
       final List<YamlGitConfigDTO> yamlGitConfigs = getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
 
       if (yamlGitConfigs == null) {
-        logger.info(GIT_YAML_LOG_PREFIX + "Git sync configuration not found");
+        log.info(GIT_YAML_LOG_PREFIX + "Git sync configuration not found");
         throw new InvalidRequestException("Git sync configuration not found with repo and branch " + branchName, USER);
       }
 
       final Optional<GitCommit> lastProcessedGitCommitId = fetchLastProcessedGitCommitId(accountId, repo, branchName);
 
       final String processedCommit = lastProcessedGitCommitId.map(GitCommit::getCommitId).orElse(null);
-      logger.info(GIT_YAML_LOG_PREFIX + "Last processed git commit found =[{}]", processedCommit);
+      log.info(GIT_YAML_LOG_PREFIX + "Last processed git commit found =[{}]", processedCommit);
 
       String taskId =
           createDelegateTaskForDiff(yamlChangeSet, accountId, yamlGitConfigs, processedCommit, headCommitId);
 
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        logger.info(
+        log.info(
             GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",
             taskId);
       }
 
     } catch (Exception ex) {
-      logger.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness changeset [%s]",
-                       yamlChangeSet.getUuid()),
+      log.error(format(GIT_YAML_LOG_PREFIX + "Unexpected error while processing git->harness changeset [%s]",
+                    yamlChangeSet.getUuid()),
           ex);
       yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), YamlChangeSet.Status.SKIPPED);
     }
@@ -417,7 +416,7 @@ public class YamlGitServiceImpl implements YamlGitService {
               yamlChangeSet.getAccountId(), yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId()));
     }
 
-    logger.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");
+    log.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");
     TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, connector.get(), accountId,
         yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId(), lastProcessedCommitId, endCommitId);
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
@@ -429,7 +428,7 @@ public class YamlGitServiceImpl implements YamlGitService {
             yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
         taskId);
 
-    logger.info(
+    log.info(
         GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",
         taskId);
     return taskId;
@@ -477,7 +476,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private String obtainCommitIdFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
     if (headers == null) {
-      logger.info("Empty header found");
+      log.info("Empty header found");
       return null;
     }
 
@@ -492,7 +491,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private Optional<String> obtainRepoFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
     if (headers == null) {
-      logger.info("Empty header found");
+      log.info("Empty header found");
       return Optional.empty();
     }
 
@@ -503,7 +502,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     try {
       payLoadMap = JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
     } catch (Exception ex) {
-      logger.info("Webhook payload: " + yamlWebHookPayload, ex);
+      log.info("Webhook payload: " + yamlWebHookPayload, ex);
       throw new InvalidRequestException(
           "Failed to parse the webhook payload. Error " + ExceptionUtils.getMessage(ex), USER);
     }
@@ -513,7 +512,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private String obtainBranchFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
     if (headers == null) {
-      logger.info("Empty header found");
+      log.info("Empty header found");
       return null;
     }
 
@@ -524,7 +523,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     try {
       payLoadMap = JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
     } catch (Exception ex) {
-      logger.info("Webhook payload: " + yamlWebHookPayload, ex);
+      log.info("Webhook payload: " + yamlWebHookPayload, ex);
       throw new InvalidRequestException(
           "Failed to parse the webhook payload. Error " + ExceptionUtils.getMessage(ex), USER);
     }

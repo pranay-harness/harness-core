@@ -55,7 +55,7 @@ public class AcquiredDistributedLock implements AcquiredLock<DistributedLock> {
     final long elapsed = monotonicTimestamp() - startTimestamp;
     final int timeout = lock.getOptions().getInactiveLockTimeout();
     if (elapsed > timeout) {
-      logger.error("The distributed lock {} was not released on time. THIS IS VERY BAD!!!, elapsed: {}, timeout {}",
+      log.error("The distributed lock {} was not released on time. THIS IS VERY BAD!!!, elapsed: {}, timeout {}",
           lock.getName(), elapsed, timeout);
 
       // At this point the situation is already troublesome. After the timeout expired the current
@@ -69,7 +69,7 @@ public class AcquiredDistributedLock implements AcquiredLock<DistributedLock> {
     }
 
     if (!lock.isLocked()) {
-      logger.error("attempt to release lock that is not currently locked", new Exception(""));
+      log.error("attempt to release lock that is not currently locked", new Exception(""));
       return;
     }
 
@@ -87,7 +87,7 @@ public class AcquiredDistributedLock implements AcquiredLock<DistributedLock> {
           unhandled(closeAction);
       }
     } catch (RuntimeException ex) {
-      logger.warn("releaseLock failed for key: " + lock.getName(), ex);
+      log.warn("releaseLock failed for key: " + lock.getName(), ex);
     }
   }
 }

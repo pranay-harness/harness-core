@@ -35,7 +35,7 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(debugLine + "Migration of stateExecutionInstances started");
+    log.info(debugLine + "Migration of stateExecutionInstances started");
     Map<String, Set<String>> accountIdToAppIdMap = new HashMap<>();
     try (HIterator<Account> accounts = new HIterator<>(
              wingsPersistence.createQuery(Account.class, excludeAuthority).project(Account.ID_KEY, true).fetch())) {
@@ -58,11 +58,11 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
         bulkSetAccountId(entry.getKey(), "stateExecutionInstances", appId);
       }
     }
-    logger.info(debugLine + "Migration of stateExecutionInstances finished");
+    log.info(debugLine + "Migration of stateExecutionInstances finished");
   }
 
   private void bulkSetAccountId(String accountId, String collectionName, String appId) {
-    logger.info(debugLine + "Migrating all stateExecutionInstances for account " + accountId);
+    log.info(debugLine + "Migrating all stateExecutionInstances for account " + accountId);
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, collectionName);
 
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
@@ -90,16 +90,16 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           dataRecords = collection.find(objectsToBeUpdated, projection).limit(1000);
           batched = 0;
-          logger.info(debugLine + "Number of records updated for {} is: {}", collectionName, updated);
+          log.info(debugLine + "Number of records updated for {} is: {}", collectionName, updated);
         }
       }
 
       if (batched != 0) {
         bulkWriteOperation.execute();
-        logger.info(debugLine + "Number of records updated for {} is: {}", collectionName, updated);
+        log.info(debugLine + "Number of records updated for {} is: {}", collectionName, updated);
       }
     } catch (Exception e) {
-      logger.error(debugLine + "Exception occurred while migrating account id field for {}", collectionName, e);
+      log.error(debugLine + "Exception occurred while migrating account id field for {}", collectionName, e);
     } finally {
       dataRecords.close();
     }

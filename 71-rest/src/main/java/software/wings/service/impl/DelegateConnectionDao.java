@@ -35,7 +35,7 @@ public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
 
   public void delegateDisconnected(String accountId, String delegateConnectionId) {
-    logger.info("Mark as disconnected delegateConnectionId: {}", delegateConnectionId);
+    log.info("Mark as disconnected delegateConnectionId: {}", delegateConnectionId);
     Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
                                           .filter(DelegateConnectionKeys.accountId, accountId)
                                           .filter(DelegateConnectionKeys.uuid, delegateConnectionId);

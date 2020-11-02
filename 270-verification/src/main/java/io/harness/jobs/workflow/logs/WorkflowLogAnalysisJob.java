@@ -113,14 +113,14 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
       String errorMsg = "";
       long logAnalysisMinute = -1;
       try {
-        logger.info("running log ml analysis for " + context.getStateExecutionId());
+        log.info("running log ml analysis for " + context.getStateExecutionId());
         /*
          * Work flow is invalid
          * exit immediately
          */
         boolean createExperiment;
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-          logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
+          log.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
           return -1L;
@@ -141,14 +141,14 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
           long logAnalysisClusteringTestMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(),
               context.getAppId(), context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1,
               analysisService.getCollectedNodes(context, ClusterLevel.L1));
-          logger.info("For {} logAnalysisClusteringTestMinute is {}", context.getStateExecutionId(),
+          log.info("For {} logAnalysisClusteringTestMinute is {}", context.getStateExecutionId(),
               logAnalysisClusteringTestMinute);
           if (logAnalysisClusteringTestMinute != -1) {
             boolean hasTestRecords =
                 analysisService.hasDataRecords(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
                     context.getStateType(), analysisService.getCollectedNodes(context, ClusterLevel.L1),
                     ClusterLevel.L1, logAnalysisClusteringTestMinute);
-            logger.info("For {} hasTestRecords is {}", context.getStateExecutionId(), hasTestRecords);
+            log.info("For {} hasTestRecords is {}", context.getStateExecutionId(), hasTestRecords);
             if (hasTestRecords) {
               preProcess(logAnalysisClusteringTestMinute, context.getQuery(),
                   analysisService.getCollectedNodes(context, ClusterLevel.L1));
@@ -164,7 +164,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
               context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2,
               analysisService.getCollectedNodes(context, ClusterLevel.L2));
           if (logAnalysisMinute != -1) {
-            logger.info("For {} logAnalysisMinute is {}", context.getStateExecutionId(), logAnalysisMinute);
+            log.info("For {} logAnalysisMinute is {}", context.getStateExecutionId(), logAnalysisMinute);
             if (learningEngineService.hasAnalysisTimedOut(
                     context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
               learningEngineService.markStatus(context.getWorkflowExecutionId(), context.getStateExecutionId(),
@@ -185,7 +185,7 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
                 .run();
 
           } else {
-            logger.info("No data for log ml analysis " + context.getStateExecutionId());
+            log.info("No data for log ml analysis " + context.getStateExecutionId());
           }
         }
 
@@ -199,13 +199,13 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
         return logAnalysisMinute;
       } catch (Exception ex) {
         error = true;
-        logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
+        log.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
       } finally {
         try {
           // send notification to state manager and delete cron.
           if (completeCron || !learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
-              logger.info(
+              log.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
               if (managerClientHelper
                       .callManagerWithRetry(
@@ -220,15 +220,15 @@ public class WorkflowLogAnalysisJob implements Handler<AnalysisContext> {
                         jobExecutionContext.get().getJobDetail().getKey());
                   }
                 } catch (Exception e) {
-                  logger.error("for {} Delete cron failed", context.getStateExecutionId(), e);
+                  log.error("for {} Delete cron failed", context.getStateExecutionId(), e);
                 }
               }
             } catch (Exception e) {
-              logger.error("Send notification failed for {} log analysis manager", context.getStateExecutionId(), e);
+              log.error("Send notification failed for {} log analysis manager", context.getStateExecutionId(), e);
             }
           }
         } catch (Exception ex) {
-          logger.error("analysis failed", ex);
+          log.error("analysis failed", ex);
         }
       }
 

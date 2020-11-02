@@ -109,13 +109,13 @@ public class InfraMappingToDefinitionMigration implements Migration {
     for (String accountId : accountIdsToIncluded) {
       Account account = accountService.get(accountId);
 
-      logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId:", accountId));
+      log.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId:", accountId));
       List<String> appIds = appService.getAppIdsByAccountId(accountId);
 
       Map<String, InfrastructureProvisioner> infrastructureProvisionerMap = new HashMap<>();
 
       for (String appId : appIds) {
-        logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for appId ", appId));
+        log.info(StringUtils.join(DEBUG_LINE, "Starting migration for appId ", appId));
 
         List<String> envIds = environmentService.getEnvIdsByApp(appId);
 
@@ -130,7 +130,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
           }
         }
         for (String envId : envIds) {
-          logger.info(StringUtils.join(DEBUG_LINE, "Starting migration for envId ", envId));
+          log.info(StringUtils.join(DEBUG_LINE, "Starting migration for envId ", envId));
 
           try (HIterator<InfrastructureMapping> infrastructureMappingHIterator =
                    new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
@@ -140,7 +140,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                                        .equal(envId)
                                        .fetch())) {
             for (InfrastructureMapping infrastructureMapping : infrastructureMappingHIterator) {
-              logger.info(StringUtils.join(
+              log.info(StringUtils.join(
                   DEBUG_LINE, "Starting migration for inframappingId ", infrastructureMapping.getUuid()));
 
               // If infradefinitionId is already set, then no need to migrate
@@ -152,31 +152,31 @@ public class InfraMappingToDefinitionMigration implements Migration {
                   try {
                     InfrastructureDefinition savedDefinition = infrastructureDefinitionService.save(def, true);
                     setInfraDefinitionId(savedDefinition.getUuid(), infrastructureMapping);
-                    logger.info(StringUtils.join(DEBUG_LINE,
+                    log.info(StringUtils.join(DEBUG_LINE,
                         format("Migrated infra mapping %s to infra definition %s", infrastructureMapping.getUuid(),
                             savedDefinition.getUuid())));
                   } catch (Exception ex) {
-                    logger.error(StringUtils.join(
+                    log.error(StringUtils.join(
                         DEBUG_LINE, ExceptionUtils.getMessage(ex), " inframapping ", infrastructureMapping.getUuid()));
                   }
                 });
               } else {
-                logger.info(StringUtils.join(DEBUG_LINE, "skipping infra mapping ", infrastructureMapping.getUuid(),
+                log.info(StringUtils.join(DEBUG_LINE, "skipping infra mapping ", infrastructureMapping.getUuid(),
                     " since infra definition is set to ", infrastructureMapping.getInfrastructureDefinitionId()));
               }
             }
           } catch (IllegalStateException ex) {
-            logger.error(StringUtils.join(DEBUG_LINE,
+            log.error(StringUtils.join(DEBUG_LINE,
                 format(" Infra Mapping in env %s has more than 1 provisioners referenced ", envId), ex.getMessage()));
           } catch (Exception ex) {
-            logger.error(StringUtils.join(
+            log.error(StringUtils.join(
                 DEBUG_LINE, format("Error migrating env %s of app %s", envId, appId), ex.getMessage()));
           }
 
-          logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for envId ", envId));
+          log.info(StringUtils.join(DEBUG_LINE, "Finished migration for envId ", envId));
         }
 
-        logger.info(StringUtils.join(DEBUG_LINE, "Finished migration for appId ", appId));
+        log.info(StringUtils.join(DEBUG_LINE, "Finished migration for appId ", appId));
       }
       setInfraDefinitionTriggers.migrate(account);
       setInfraDefinitionPipelines.migrate(account);
@@ -184,10 +184,10 @@ public class InfraMappingToDefinitionMigration implements Migration {
       setInfraDefinitionTriggers.migrate(account);
       migrateDelegateScopesToInfraDefinition.migrate(account);
 
-      logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
+      log.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
 
-      logger.info("Enabling feature flag for accountId : [{}]", accountId);
-      logger.info("Enabled feature flag for accountId : [{}]", accountId);
+      log.info("Enabling feature flag for accountId : [{}]", accountId);
+      log.info("Enabled feature flag for accountId : [{}]", accountId);
 
       yamlGitService.asyncFullSyncForEntireAccount(accountId);
     }
@@ -212,7 +212,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
       if (isNotEmpty(src.getServiceId())) {
         definitionBuilder.scopedToServices(Arrays.asList(src.getServiceId()));
       } else {
-        logger.error(
+        log.error(
             StringUtils.join(DEBUG_LINE, format("No service linked to Inframapping %s, continuing..", src.getUuid())));
       }
 
@@ -220,7 +220,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
           (prov == null) ? Collections.EMPTY_LIST : prov.getMappingBlueprints();
 
       if (prov != null) {
-        logger.info(StringUtils.join(DEBUG_LINE,
+        log.info(StringUtils.join(DEBUG_LINE,
             format("found %s mapping blueprints for infra provisioner %s", infrastructureMappingBlueprints.size(),
                 prov.getUuid())));
       }
@@ -419,11 +419,11 @@ public class InfraMappingToDefinitionMigration implements Migration {
                              .build();
       } else {
         infrastructure = null;
-        logger.error(StringUtils.join(DEBUG_LINE, " Unknown type for infra mapping %s ", src.getUuid()));
+        log.error(StringUtils.join(DEBUG_LINE, " Unknown type for infra mapping %s ", src.getUuid()));
       }
       return Optional.of(definitionBuilder.infrastructure(infrastructure).build());
     } catch (Exception ex) {
-      logger.error(StringUtils.join(DEBUG_LINE, ExceptionUtils.getMessage(ex),
+      log.error(StringUtils.join(DEBUG_LINE, ExceptionUtils.getMessage(ex),
           " Could not create infradefinition for inframapping ", src.getUuid()));
       return Optional.empty();
     }
@@ -440,7 +440,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
             .filter(blueprint -> serviceId.equals(blueprint.getServiceId()))
             .collect(Collectors.toList());
     if (blueprintList.isEmpty()) {
-      logger.info(StringUtils.join(DEBUG_LINE,
+      log.info(StringUtils.join(DEBUG_LINE,
           format("No service mapping for serviceId %s found "
                   + "with provisioner %s linked to infraMapping",
               awsInfrastructureMapping.getServiceId(), awsInfrastructureMapping.getProvisionerId(),
@@ -452,13 +452,13 @@ public class InfraMappingToDefinitionMigration implements Migration {
       } else if (NodeFilteringType.AWS_INSTANCE_FILTER == blueprint.getNodeFilteringType()) {
         return false;
       } else {
-        logger.error(StringUtils.join(DEBUG_LINE,
+        log.error(StringUtils.join(DEBUG_LINE,
             "Unknown node filtering type for "
                 + "inframapping ",
             awsInfrastructureMapping.getUuid(), " ", blueprint.getNodeFilteringType()));
       }
     } else {
-      logger.error(StringUtils.join(DEBUG_LINE,
+      log.error(StringUtils.join(DEBUG_LINE,
           format("Provisioner %s has more than 1 service "
                   + "mappings "
                   + "for 1 service %s",
@@ -478,7 +478,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
             .filter(blueprint -> serviceId.equals(blueprint.getServiceId()))
             .collect(Collectors.toList());
     if (blueprintList.isEmpty()) {
-      logger.info(StringUtils.join(DEBUG_LINE,
+      log.info(StringUtils.join(DEBUG_LINE,
           format("No service mapping for serviceId %s found "
                   + "with provisioner %s linked to infraMapping",
               ecsInfrastructureMapping.getServiceId(), ecsInfrastructureMapping.getProvisionerId(),
@@ -490,13 +490,13 @@ public class InfraMappingToDefinitionMigration implements Migration {
       } else if (NodeFilteringType.AWS_ECS_FARGATE == blueprint.getNodeFilteringType()) {
         return LaunchType.FARGATE.toString();
       } else {
-        logger.error(StringUtils.join(DEBUG_LINE,
+        log.error(StringUtils.join(DEBUG_LINE,
             "Unknown node filtering type for infra mapping "
                 + "%s ",
             ecsInfrastructureMapping.getUuid(), " ", blueprint.getNodeFilteringType()));
       }
     } else {
-      logger.error(StringUtils.join(DEBUG_LINE,
+      log.error(StringUtils.join(DEBUG_LINE,
           format("Provisioner %s has more than 1 service "
                   + "mappings "
                   + "for 1 service %s",
@@ -521,13 +521,13 @@ public class InfraMappingToDefinitionMigration implements Migration {
             .collect(Collectors.toList());
 
     if (bluePrintPropertiesList.isEmpty()) {
-      logger.info(StringUtils.join(DEBUG_LINE,
+      log.info(StringUtils.join(DEBUG_LINE,
           format("No service mapping for serviceId %s found "
                   + "with provisioner %s linked to infraMapping",
               infrastructureMapping.getServiceId(), infrastructureMapping.getProvisionerId(),
               infrastructureMapping.getUuid())));
     } else if (bluePrintPropertiesList.size() > 1) {
-      logger.error(StringUtils.join(DEBUG_LINE,
+      log.error(StringUtils.join(DEBUG_LINE,
           format("Provisioner %s has more than 1 service "
                   + "mappings "
                   + "for 1 service %s",
@@ -549,7 +549,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
           .flatMap(Collection::stream)
           .filter(nameValuePair -> isNotEmpty(nameValuePair.getValue()) && isNotEmpty(nameValuePair.getName()))
           .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue, (value1, value2) -> {
-            logger.info(StringUtils.join(DEBUG_LINE,
+            log.info(StringUtils.join(DEBUG_LINE,
                 " Found duplicate value for keys in "
                     + "provisioner for infra mapping ",
                 infrastructureMapping.getProvisionerId()));
@@ -565,7 +565,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
     try {
       wingsPersistence.updateFields(InfrastructureMapping.class, infrastructureMapping.getUuid(), toUpdate);
     } catch (Exception ex) {
-      logger.error(StringUtils.join(DEBUG_LINE,
+      log.error(StringUtils.join(DEBUG_LINE,
           "Could not set infradefinition Id for infra "
               + "mapping ",
           infrastructureMapping.getUuid()));

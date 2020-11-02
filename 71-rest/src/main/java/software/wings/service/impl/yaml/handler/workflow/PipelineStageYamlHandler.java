@@ -173,7 +173,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         }
       }
     }
-    logger.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
+    log.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
         String.valueOf(properties));
   }
 
@@ -204,7 +204,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     String envId = null;
 
     if (workflow.checkEnvironmentTemplatized()) {
-      logger.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
+      log.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
           workflow.getUuid(), workflow.getEnvId());
 
       if (isNotEmpty(yaml.getWorkflowVariables())) {
@@ -217,7 +217,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
         if (workflowEnvVariable != null) {
           if (matchesVariablePattern(workflowEnvVariable.getValue())) {
-            logger.info("Environment parameterized in pipeline and the value is {}", workflowEnvVariable.getValue());
+            log.info("Environment parameterized in pipeline and the value is {}", workflowEnvVariable.getValue());
             properties.put("envId", workflowEnvVariable.getValue());
           } else {
             Environment environment =

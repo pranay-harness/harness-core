@@ -143,7 +143,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public JobWithDetails getJobWithDetails(String jobname) {
-    logger.info("Retrieving job {}", jobname);
+    log.info("Retrieving job {}", jobname);
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -161,14 +161,14 @@ public class JenkinsImpl implements Jenkins {
 
           } catch (HttpResponseException e) {
             if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
-              logger.warn("Error occurred while retrieving job with details {}. Retrying ", jobname, e);
+              log.warn("Error occurred while retrieving job with details {}. Retrying ", jobname, e);
               sleep(ofSeconds(1L));
               continue;
             } else {
               throw e;
             }
           }
-          logger.info("Retrieving job with details {} success", jobname);
+          log.info("Retrieving job with details {} success", jobname);
           return singletonList(jobWithDetails).get(0);
         }
       }, 120L, TimeUnit.SECONDS, true);
@@ -183,7 +183,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public Job getJob(String jobname, JenkinsConfig jenkinsConfig) {
-    logger.info("Retrieving job {}", jobname);
+    log.info("Retrieving job {}", jobname);
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -201,14 +201,14 @@ public class JenkinsImpl implements Jenkins {
 
           } catch (HttpResponseException e) {
             if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
-              logger.warn("Error occurred while retrieving job {}. Retrying ", jobname, e);
+              log.warn("Error occurred while retrieving job {}. Retrying ", jobname, e);
               sleep(ofSeconds(1L));
               continue;
             } else {
               throw e;
             }
           }
-          logger.info("Retrieving job {} success", jobname);
+          log.info("Retrieving job {} success", jobname);
           return singletonList(job).get(0);
         }
       }, 120L, TimeUnit.SECONDS, true);
@@ -267,7 +267,7 @@ public class JenkinsImpl implements Jenkins {
       }
       return result;
     } catch (Exception ex) {
-      logger.error("Error in fetching job lists ", ex);
+      log.error("Error in fetching job lists ", ex);
       return result;
     }
   }
@@ -278,7 +278,7 @@ public class JenkinsImpl implements Jenkins {
         return URLDecoder.decode(jobName, Charsets.UTF_8.name());
       }
     } catch (UnsupportedEncodingException e) {
-      logger.warn("Failed to decode jobName {}", jobName, e);
+      log.warn("Failed to decode jobName {}", jobName, e);
     }
     return jobName;
   }
@@ -406,7 +406,7 @@ public class JenkinsImpl implements Jenkins {
       }
     } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
       // unexpected exception
-      logger.warn(
+      log.warn(
           "Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(), e);
     }
   }
@@ -415,13 +415,13 @@ public class JenkinsImpl implements Jenkins {
   public BuildDetails getLastSuccessfulBuildForJob(String jobName, List<String> artifactPaths) throws IOException {
     JobWithDetails jobWithDetails = getJobWithDetails(jobName);
     if (jobWithDetails == null) {
-      logger.info("Job {} does not exist", jobName);
+      log.info("Job {} does not exist", jobName);
       return null;
     }
 
     Build lastSuccessfulBuild = jobWithDetails.getLastSuccessfulBuild();
     if (lastSuccessfulBuild == null) {
-      logger.info("There is no last successful build for job {}", jobName);
+      log.info("There is no last successful build for job {}", jobName);
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
@@ -443,14 +443,14 @@ public class JenkinsImpl implements Jenkins {
 
     QueueReference queueReference;
     try {
-      logger.info("Triggering job {} ", job.getUrl());
+      log.info("Triggering job {} ", job.getUrl());
       if (isEmpty(parameters)) {
         ExtractHeader location = job.getClient().post(job.getUrl() + "build", null, ExtractHeader.class, true);
         queueReference = new QueueReference(location.getLocation());
       } else {
         queueReference = job.build(parameters, true);
       }
-      logger.info("Triggering job {} success ", job.getUrl());
+      log.info("Triggering job {} success ", job.getUrl());
       return queueReference;
     } catch (HttpResponseException e) {
       if (e.getStatusCode() == 400 && isEmpty(parameters)) {
@@ -520,7 +520,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException {
-    logger.info("Downloading artifactpathRegex {}, buildNo {} and jobname {}", artifactpathRegex, buildNo, jobname);
+    log.info("Downloading artifactpathRegex {}, buildNo {} and jobname {}", artifactpathRegex, buildNo, jobname);
     JobWithDetails jobDetails = getJobWithDetails(jobname);
     if (jobDetails == null) {
       return null;
@@ -568,7 +568,7 @@ public class JenkinsImpl implements Jenkins {
       return new HashMap<>();
     }
 
-    logger.info("Retrieving environment variables for job {}", buildUrl);
+    log.info("Retrieving environment variables for job {}", buildUrl);
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -583,7 +583,7 @@ public class JenkinsImpl implements Jenkins {
             jsonString = jenkinsHttpClient.get(path);
           } catch (HttpResponseException e) {
             if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains(SERVER_ERROR)) {
-              logger.warn(
+              log.warn(
                   format("Error occurred while retrieving environment variables for job %s. Retrying", buildUrl), e);
               sleep(ofSeconds(1L));
               continue;
@@ -608,7 +608,7 @@ public class JenkinsImpl implements Jenkins {
                           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
           }
 
-          logger.info("Retrieving environment variables for job {} success", buildUrl);
+          log.info("Retrieving environment variables for job {} success", buildUrl);
           return envVars;
         }
       }, 30L, TimeUnit.SECONDS, true);
@@ -686,7 +686,7 @@ public class JenkinsImpl implements Jenkins {
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
       builder.setSSLHostnameVerifier(allHostsValid);
     } catch (Exception ex) {
-      logger.warn("Installing trust managers");
+      log.warn("Installing trust managers");
     }
     return builder;
   }
@@ -703,7 +703,7 @@ public class JenkinsImpl implements Jenkins {
     } catch (IOException | URISyntaxException e) {
       throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
     }
-    logger.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactPath));
+    log.info(format("Computed file size: [%d] bytes for artifact Path: %s", size, artifactPath));
     return size;
   }
 

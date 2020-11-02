@@ -29,7 +29,7 @@ public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMCon
 
   @Override
   public CCMConfig get(String accountId, String yamlFilePath) {
-    logger.error("This method is not supported.");
+    log.error("This method is not supported.");
     return null;
   }
 

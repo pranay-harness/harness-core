@@ -83,7 +83,7 @@ public class EmailState extends State {
       String evaluatedCc = context.renderExpression(ccAddress);
       String evaluatedSubject = context.renderExpression(subject);
       String evaluatedBody = context.renderExpression(body);
-      logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
+      log.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(EmailData.builder()
                                         .to(getEmailAddressList(evaluatedTo))
                                         .cc(getEmailAddressList(evaluatedCc))
@@ -97,7 +97,7 @@ public class EmailState extends State {
       executionResponseBuilder.errorMessage(
           e.getCause() == null ? ExceptionUtils.getMessage(e) : ExceptionUtils.getMessage(e.getCause()));
       executionResponseBuilder.executionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
-      logger.error("Exception while sending email", e);
+      log.error("Exception while sending email", e);
     }
 
     executionResponseBuilder.stateExecutionData(emailStateExecutionData);

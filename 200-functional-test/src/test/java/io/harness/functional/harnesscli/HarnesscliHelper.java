@@ -57,7 +57,7 @@ public class HarnesscliHelper {
     try {
       processFinal.waitFor();
     } catch (java.lang.InterruptedException e) {
-      logger.info("Could not wait for the completion of the process");
+      log.info("Could not wait for the completion of the process");
     }
     inputStream = processFinal.getInputStream();
     BufferedReader processStdErr = new BufferedReader(new InputStreamReader(inputStream));
@@ -99,17 +99,17 @@ public class HarnesscliHelper {
     // Will the domain be localhost:9090 always ?
     String command = String.format("harness login -u  %s -p  admin  -d %s", adminUserEmail, domain);
 
-    logger.info("Logging to localhost");
+    log.info("Logging to localhost");
     List<String> cliOutput = null;
     try {
       cliOutput = executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 1) {
-      logger.info("The login command output has %d lines", cliOutput.size());
+      log.info("The login command output has %d lines", cliOutput.size());
       assertThat(false).isTrue();
     }
   }
@@ -118,9 +118,9 @@ public class HarnesscliHelper {
       Account account, String bearerToken, String workflowName, Application application) {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    logger.info("Creating the workflow");
+    log.info("Creating the workflow");
 
-    logger.info("Fetching User Group Id");
+    log.info("Fetching User Group Id");
     List<UserGroup> userGroupLists = UserGroupRestUtils.getUserGroups(account, bearerToken);
     String userGroupId = userGroupLists.get(0).getUuid();
 
@@ -131,7 +131,7 @@ public class HarnesscliHelper {
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), uiWorkflow);
     assertThat(savedWorkflow).isNotNull();
 
-    logger.info("Asserting that the Phase step of approval is added");
+    log.info("Asserting that the Phase step of approval is added");
     String phaseName = ((CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow())
                            .getPostDeploymentSteps()
                            .getSteps()
@@ -143,53 +143,53 @@ public class HarnesscliHelper {
 
   public void deployWorkflow(Workflow savedWorkflow, Application application) {
     String command = String.format("harness deploy -w %s -a %s", savedWorkflow.getUuid(), application.getUuid());
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
     List<String> cliOutput = null;
     try {
       cliOutput = executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 2) {
-      logger.info("The deploy command output has " + cliOutput.size() + " lines");
-      logger.info("Deploy command failed");
+      log.info("The deploy command output has " + cliOutput.size() + " lines");
+      log.info("Deploy command failed");
       assertThat(false).isTrue();
     }
   }
 
   public void deployPipeline(Pipeline approvalPipeline, Application application) {
     String command = String.format("harness deploy -p %s -a %s", approvalPipeline.getUuid(), application.getUuid());
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
     List<String> cliOutput = null;
     try {
       cliOutput = executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 2) {
-      logger.info("The deploy command output has " + cliOutput.size() + " lines");
-      logger.info("Deploy command failed");
+      log.info("The deploy command output has " + cliOutput.size() + " lines");
+      log.info("Deploy command failed");
       assertThat(false).isTrue();
     }
   }
 
   public String getApproval(String executionName) {
     String command = "harness get approvals";
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
     List<String> cliOutput = null;
     try {
       cliOutput = executeCLICommand(command);
     } catch (IOException e) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null) {
-      logger.info("get approvals command failed");
+      log.info("get approvals command failed");
       assertThat(false).isTrue();
     }
 
@@ -210,7 +210,7 @@ public class HarnesscliHelper {
   }
 
   public void deleteWorkflow(String bearerToken, Workflow savedWorkflow, Application application) {
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, savedWorkflow.getUuid(), application.getAppId());
   }
 

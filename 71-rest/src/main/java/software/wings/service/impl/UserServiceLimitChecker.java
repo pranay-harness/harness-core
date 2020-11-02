@@ -32,13 +32,13 @@ public class UserServiceLimitChecker {
   public void limitCheck(String accountId, List<User> existingUsersAndInvites, Set<String> emailsToInvite) {
     Account account = accountService.get(accountId);
     if (null == account) {
-      logger.error("No account found for accountId={}", accountId);
+      log.error("No account found for accountId={}", accountId);
       return;
     }
 
     ConfiguredLimit limit = limits.getOrDefault(accountId, ActionType.CREATE_USER);
     if (null == limit) {
-      logger.error("No user limit configured. accountId={}", accountId);
+      log.error("No user limit configured. accountId={}", accountId);
       return;
     }
 

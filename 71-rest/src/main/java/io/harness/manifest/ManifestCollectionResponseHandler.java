@@ -59,7 +59,7 @@ public class ManifestCollectionResponseHandler {
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       ApplicationManifest appManifest = applicationManifestService.getById(executionResponse.getAppId(), appManifestId);
       if (appManifest == null || !perpetualTaskId.equals(appManifest.getPerpetualTaskId())) {
-        logger.warn("Invalid perpetual task found for app manifest: {}", appManifestId);
+        log.warn("Invalid perpetual task found for app manifest: {}", appManifestId);
         appManifestPTaskHelper.deletePerpetualTask(accountId, appManifestId, perpetualTaskId);
         return;
       }
@@ -111,24 +111,24 @@ public class ManifestCollectionResponseHandler {
 
     if (isNotEmpty(toBeDeletedVersions)) {
       if (!helmChartService.deleteHelmChartsByVersions(accountId, appManifestId, toBeDeletedVersions)) {
-        logger.error("Failed to delete manifest versions: {}", toBeDeletedVersions);
+        log.error("Failed to delete manifest versions: {}", toBeDeletedVersions);
       } else {
-        logger.info("Deleted manifest versions {}, count = {} ", toBeDeletedVersions, toBeDeletedVersions.size());
+        log.info("Deleted manifest versions {}, count = {} ", toBeDeletedVersions, toBeDeletedVersions.size());
       }
     }
 
     if (isNotEmpty(manifestsCollected)) {
       if (!helmChartService.addCollectedHelmCharts(accountId, appManifestId, manifestsCollected)) {
-        logger.error("Error in saving one or more collected manifest versions: {}",
+        log.error("Error in saving one or more collected manifest versions: {}",
             manifestsCollected.stream().map(HelmChart::getVersion).collect(toSet()));
         return;
       }
 
       if (manifestsCollected.size() > MAX_MANIFEST_COLLECTION_FOR_WARN) {
-        logger.warn("Collected {} versions in single attempt", manifestsCollected.size());
+        log.warn("Collected {} versions in single attempt", manifestsCollected.size());
       }
       manifestsCollected.stream().limit(MAX_LOGS).forEach(
-          manifest -> logger.info("Collected new version {}", manifest.getVersion()));
+          manifest -> log.info("Collected new version {}", manifest.getVersion()));
 
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
         if (manifestCollectionResponse.isStable()) {

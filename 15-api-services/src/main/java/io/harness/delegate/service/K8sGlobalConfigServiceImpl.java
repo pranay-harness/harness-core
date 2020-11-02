@@ -27,10 +27,10 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
    */
   public String getHelmPath(@Nullable HelmVersion helmVersion) {
     if (helmVersion == null) {
-      logger.error("Did not expect null value of helmVersion, defaulting to V2");
+      log.error("Did not expect null value of helmVersion, defaulting to V2");
       helmVersion = V2;
     }
-    logger.info("[HELM]: picked helm binary corresponding to version {}", helmVersion);
+    log.info("[HELM]: picked helm binary corresponding to version {}", helmVersion);
     switch (helmVersion) {
       case V2:
         return InstallUtils.getHelm2Path();

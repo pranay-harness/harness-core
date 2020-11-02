@@ -78,20 +78,20 @@ import javax.validation.ValidatorFactory;
 public class DataGenApplication extends Application<MainConfiguration> {
   public static void main(String... args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      logger.info("Shutdown hook, entering maintenance...");
+      log.info("Shutdown hook, entering maintenance...");
       // TODO: any cleanup
     }));
-    logger.info("Starting DataGen Application");
-    logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+    log.info("Starting DataGen Application");
+    log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DataGenApplication dataGenApplication = new DataGenApplication();
     dataGenApplication.run(args);
   }
 
   @Override
   public void run(MainConfiguration configuration, Environment environment) throws Exception {
-    logger.info("Starting app ...");
+    log.info("Starting app ...");
 
-    logger.info("Entering startup maintenance mode");
+    log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
     configuration.setSegmentConfig(SegmentConfig.builder().enabled(false).build());
@@ -207,32 +207,32 @@ public class DataGenApplication extends Application<MainConfiguration> {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
-        logger.error("No license info is provided");
+        log.error("No license info is provided");
       } else {
         try {
           licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
         } catch (WingsException ex) {
-          logger.error("Error while updating license info", ex);
+          log.error("Error while updating license info", ex);
         }
       }
     }
 
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
-    logger.info("Starting app done");
+    log.info("Starting app done");
 
-    logger.info("Populating the data");
+    log.info("Populating the data");
 
     DataGenService dataGenService = injector.getInstance(DataGenService.class);
 
     try (GlobalContextManager.GlobalContextGuard globalContextGuard =
              GlobalContextManager.initGlobalContextGuard(null)) {
       dataGenService.populateData();
-      logger.info("Populating data is completed");
+      log.info("Populating data is completed");
       System.exit(0);
     } catch (Exception e) {
-      logger.error("Exception occurred. Exiting datagen application...", e);
+      log.error("Exception occurred. Exiting datagen application...", e);
       System.exit(1);
     }
   }

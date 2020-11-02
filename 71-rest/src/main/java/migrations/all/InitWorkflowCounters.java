@@ -28,14 +28,14 @@ public class InitWorkflowCounters implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Initializing Workflow Counters");
+    log.info("Initializing Workflow Counters");
 
     try {
       List<Account> accounts = accountService.listAllAccounts();
       wingsPersistence.delete(
           wingsPersistence.createQuery(Counter.class).field("key").endsWith(ActionType.CREATE_WORKFLOW.toString()));
 
-      logger.info("Total accounts fetched. Count: {}", accounts.size());
+      log.info("Total accounts fetched. Count: {}", accounts.size());
       for (Account account : accounts) {
         String accountId = account.getUuid();
         if (GLOBAL_ACCOUNT_ID.equals(accountId)) {
@@ -49,12 +49,12 @@ public class InitWorkflowCounters implements Migration {
 
         Action action = new Action(accountId, ActionType.CREATE_WORKFLOW);
 
-        logger.info("Initializing Counter. Account Id: {} , WorkflowCount: {}", accountId, workflowCount);
+        log.info("Initializing Counter. Account Id: {} , WorkflowCount: {}", accountId, workflowCount);
         Counter counter = new Counter(action.key(), workflowCount);
         wingsPersistence.save(counter);
       }
     } catch (Exception e) {
-      logger.error("Error initializing Workflow counters", e);
+      log.error("Error initializing Workflow counters", e);
     }
   }
 }

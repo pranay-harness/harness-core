@@ -67,7 +67,7 @@ public class AwsLambdaDetails {
 
         builder.lastModified(simpleDateFormat.parse(config.getLastModified()));
       } catch (ParseException e) {
-        logger.warn("Unable to parse date [{}]", config.getLastModified());
+        log.warn("Unable to parse date [{}]", config.getLastModified());
       }
     }
 

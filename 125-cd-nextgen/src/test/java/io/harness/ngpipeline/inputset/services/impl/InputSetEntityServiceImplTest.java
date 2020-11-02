@@ -125,7 +125,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     try {
       when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
     } catch (IOException ex) {
-      logger.info("Encountered exception ", ex);
+      log.info("Encountered exception ", ex);
     }
     doReturn(request)
         .when(entitySetupUsageClient)
@@ -206,7 +206,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
     try {
       when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
     } catch (IOException ex) {
-      logger.info("Encountered exception ", ex);
+      log.info("Encountered exception ", ex);
     }
     doReturn(request)
         .when(entitySetupUsageClient)

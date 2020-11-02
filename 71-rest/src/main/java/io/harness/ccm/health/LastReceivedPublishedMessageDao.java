@@ -78,7 +78,7 @@ public class LastReceivedPublishedMessageDao {
             .order(Sort.ascending(LastReceivedPublishedMessageKeys.createdAt));
     LastReceivedPublishedMessage lastReceivedPublishedMessage = filteredQuery.get();
     if (null != lastReceivedPublishedMessage) {
-      logger.info("First event received time {}", lastReceivedPublishedMessage.getCreatedAt());
+      log.info("First event received time {}", lastReceivedPublishedMessage.getCreatedAt());
       return Instant.ofEpochMilli(lastReceivedPublishedMessage.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);
     }
     return null;

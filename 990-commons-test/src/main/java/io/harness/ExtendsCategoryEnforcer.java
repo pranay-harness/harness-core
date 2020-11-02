@@ -18,7 +18,7 @@ public class ExtendsCategoryEnforcer extends RunListener {
     if (!(CategoryTest.class.isAssignableFrom(testClass)
             // hack needed for working across ClassLoaders (eg: Powermock)
             || superClassNames(testClass).contains(CategoryTest.class.getName()))) {
-      logger.error("Test {} does not extend CategoryTest", testClass);
+      log.error("Test {} does not extend CategoryTest", testClass);
       fail("Test classes should extend CategoryTest");
     }
   }

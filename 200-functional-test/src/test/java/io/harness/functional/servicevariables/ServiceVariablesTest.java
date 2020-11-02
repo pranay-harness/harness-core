@@ -112,7 +112,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void variablesTest() {
-    logger.info("Starting the test");
+    log.info("Starting the test");
     ServiceVariable normalServiceVariable = new ServiceVariable();
     normalServiceVariable.setAccountId(getAccount().getUuid());
     normalServiceVariable.setAppId(service.getAppId());
@@ -134,17 +134,17 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     ServiceVariable addedOverridableServiceVariable = null;
     ServiceVariable addedEnvOverriddenVariable = null;
 
-    logger.info("Adding service variable : " + normalServiceVariable.getName());
+    log.info("Adding service variable : " + normalServiceVariable.getName());
     addedNormalServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, normalServiceVariable);
     assertThat(addedNormalServiceVariable).isNotNull();
-    logger.info("Adding service variable : " + overridableVariables.getName());
+    log.info("Adding service variable : " + overridableVariables.getName());
     addedOverridableServiceVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
     assertThat(addedOverridableServiceVariable).isNotNull();
     overridableVariables.setEntityType(EntityType.ENVIRONMENT);
     overridableVariables.setEntityId(environment.getUuid());
     overridableVariables.setAppId(environment.getAppId());
     overridableVariables.setValue(ENV_OVERRIDDEN_TEXT.toCharArray());
-    logger.info("Adding environment service variable : " + overridableVariables.getName());
+    log.info("Adding environment service variable : " + overridableVariables.getName());
     addedEnvOverriddenVariable = ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, overridableVariables);
     assertThat(addedEnvOverriddenVariable).isNotNull();
 
@@ -152,7 +152,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
         aWorkflowPhase().serviceId(service.getUuid()).infraDefinitionId(infrastructureDefinition.getUuid()).build();
     final String variablesTestName = "Variables Test";
 
-    logger.info("Creating workflow with canary orchestration : " + variablesTestName);
+    log.info("Creating workflow with canary orchestration : " + variablesTestName);
     Workflow workflow =
         aWorkflow()
             .name("Variables Test")
@@ -181,11 +181,11 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     executionArgs.setOrchestrationId(savedWorkflow.getUuid());
     executionArgs.setArtifacts(Collections.singletonList(artifact));
 
-    logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
+    log.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 
     WorkflowUtils.modifyPhases(bearerToken, savedWorkflow, application.getUuid());
 
-    logger.info("Workflow execution starts");
+    log.info("Workflow execution starts");
 
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
@@ -193,7 +193,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
 
     assertThat(workflowExecution).isNotNull();
 
-    logger.info("Waiting for 2 mins until the workflow execution is complete");
+    log.info("Waiting for 2 mins until the workflow execution is complete");
 
     Awaitility.await()
         .atMost(120, TimeUnit.SECONDS)
@@ -208,12 +208,12 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
                           .<String>getJsonObject("resource.status")
                           .equals(ExecutionStatus.SUCCESS.name()));
 
-    logger.info("Workflow execution completed");
+    log.info("Workflow execution completed");
 
     WorkflowExecution completedWorkflowExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
 
-    logger.info("Validation starts");
+    log.info("Validation starts");
 
     assertThat(completedWorkflowExecution.getExecutionNode().getStatus()).isEqualTo("SUCCESS");
     assertThat(completedWorkflowExecution.getName().equals(variablesTestName)).isTrue();
@@ -257,6 +257,6 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     String envTextValue = jPath.get("headers." + ENV_OVERRIDDEN_TEXT.toLowerCase()).toString();
     assertThat(envTextValue.equals("Test")).isTrue();
 
-    logger.info("All validations ended successfully");
+    log.info("All validations ended successfully");
   }
 }

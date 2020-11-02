@@ -71,18 +71,18 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
   public void run() {
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(LOCK_NAME, Duration.ofMinutes(15))) {
       if (lock == null) {
-        logger.info("Couldn't acquire lock");
+        log.info("Couldn't acquire lock");
         return;
       }
 
-      logger.info("Artifact stream perpetual task migration job started");
+      log.info("Artifact stream perpetual task migration job started");
       try {
         runInternal();
       } catch (Exception ex) {
-        logger.error("Error migrating artifact streams to perpetual task", ex);
+        log.error("Error migrating artifact streams to perpetual task", ex);
       }
 
-      logger.info("Artifact stream perpetual task migration job completed");
+      log.info("Artifact stream perpetual task migration job completed");
     }
   }
 
@@ -107,17 +107,17 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
     if (EmptyPredicate.isNotEmpty(accountIds)) {
       createPerpetualTasks(accountIds);
     } else {
-      logger.info("Not migrating artifact streams to perpetual task for any accounts");
+      log.info("Not migrating artifact streams to perpetual task for any accounts");
     }
   }
 
   private void createPerpetualTasks(Set<String> accountIds) {
     Query<ArtifactStream> query;
     if (EmptyPredicate.isEmpty(accountIds)) {
-      logger.info("Migrating artifact streams to perpetual task for all accounts");
+      log.info("Migrating artifact streams to perpetual task for all accounts");
       query = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority);
     } else {
-      logger.info(format("Migrating artifact streams to perpetual task for %d accounts", accountIds.size()));
+      log.info(format("Migrating artifact streams to perpetual task for %d accounts", accountIds.size()));
       query = wingsPersistence.createQuery(ArtifactStream.class).field(ArtifactStreamKeys.accountId).in(accountIds);
     }
 
@@ -129,11 +129,11 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .asList(new FindOptions().limit(BATCH_SIZE));
     if (EmptyPredicate.isEmpty(artifactStreams)) {
-      logger.info("No eligible artifact streams for perpetual task migration");
+      log.info("No eligible artifact streams for perpetual task migration");
       return;
     }
 
-    logger.info(format("Migrating %d artifact streams to perpetual task", artifactStreams.size()));
+    log.info(format("Migrating %d artifact streams to perpetual task", artifactStreams.size()));
     artifactStreams.forEach(artifactStream -> artifactStreamPTaskHelper.createPerpetualTask(artifactStream));
   }
 

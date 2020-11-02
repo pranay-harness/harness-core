@@ -43,7 +43,7 @@ class ElasticsearchBulkMigrationHelper {
           IOUtils.toString(getClass().getResourceAsStream(BASE_CONFIGURATION_PATH), StandardCharsets.UTF_8);
       return SearchEntityUtils.mergeSettings(baseSettingsString, entitySettingsString);
     } catch (IOException e) {
-      logger.error("Failed to create index", e);
+      log.error("Failed to create index", e);
       return null;
     }
   }
@@ -79,10 +79,10 @@ class ElasticsearchBulkMigrationHelper {
       }
       return true;
     } catch (InterruptedException e) {
-      logger.error("Bulk migration interrupted", e);
+      log.error("Bulk migration interrupted", e);
       Thread.currentThread().interrupt();
     } catch (ExecutionException e) {
-      logger.error("Bulk migration errored due to error", e.getCause());
+      log.error("Bulk migration errored due to error", e.getCause());
     } finally {
       executorService.shutdownNow();
     }
@@ -121,14 +121,13 @@ class ElasticsearchBulkMigrationHelper {
   boolean doBulkSync(Set<SearchEntity<?>> entitiesToBulkSync) {
     boolean hasMigrationSucceeded = true;
     for (SearchEntity<?> searchEntity : entitiesToBulkSync) {
-      logger.info("Migrating {} to elasticsearch", searchEntity.getClass().getCanonicalName());
+      log.info("Migrating {} to elasticsearch", searchEntity.getClass().getCanonicalName());
       hasMigrationSucceeded = runBulkMigration(searchEntity);
 
       if (hasMigrationSucceeded) {
-        logger.info("{} migrated to elasticsearch", searchEntity.getClass().getCanonicalName());
+        log.info("{} migrated to elasticsearch", searchEntity.getClass().getCanonicalName());
       } else {
-        logger.error(
-            String.format("Failed to migrate %s to elasticsearch", searchEntity.getClass().getCanonicalName()));
+        log.error(String.format("Failed to migrate %s to elasticsearch", searchEntity.getClass().getCanonicalName()));
         break;
       }
     }

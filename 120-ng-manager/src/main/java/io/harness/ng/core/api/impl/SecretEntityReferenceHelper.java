@@ -54,7 +54,7 @@ public class SecretEntityReferenceHelper {
     try {
       RestCallToNGManagerClientUtils.execute(entitySetupUsageClient.save(entityReferenceDTO));
     } catch (Exception ex) {
-      logger.info(ENTITY_REFERENCE_LOG_PREFIX
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not created when the secret [{}] was created from the secret manager [{}]",
           secretFQN, secretMangerFQN);
     }
@@ -70,12 +70,12 @@ public class SecretEntityReferenceHelper {
       entityReferenceDeleted = RestCallToNGManagerClientUtils.execute(
           entitySetupUsageClient.deleteAllReferredByEntityRecords(encryptedDataDTO.getAccount(), secretFQN));
     } catch (Exception ex) {
-      logger.info(ENTITY_REFERENCE_LOG_PREFIX
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",
           secretFQN, secretMangerFQN, ex.getMessage());
     }
     if (entityReferenceDeleted) {
-      logger.info(ENTITY_REFERENCE_LOG_PREFIX
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}]",
           secretFQN, secretMangerFQN);
     }

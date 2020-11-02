@@ -275,7 +275,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
         ContainerSetupCommandUnitExecutionData.builder());
 
     assertThat(createServiceRequest).isNotNull();
@@ -330,7 +330,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
         ContainerSetupCommandUnitExecutionData.builder());
 
     assertCreateServiceRequestObject(taskDefinition, createServiceRequest);
@@ -354,7 +354,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
         ContainerSetupCommandUnitExecutionData.builder());
 
     List<ServiceRegistry> serviceRegistries = createServiceRequest.getServiceRegistries();
@@ -375,7 +375,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
-    Service service = ecsSetupCommandTaskHelper.getAwsServiceFromJson(ecsSErviceSpecJsonString, logger);
+    Service service = ecsSetupCommandTaskHelper.getAwsServiceFromJson(ecsSErviceSpecJsonString, log);
     assertThat(service).isNotNull();
     assertThat(service.getServiceRegistries()).isNotNull();
     assertThat(service.getServiceRegistries()).hasSize(1);
@@ -428,7 +428,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
-        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, logger,
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
         ContainerSetupCommandUnitExecutionData.builder());
 
     assertThat(createServiceRequest.getNetworkConfiguration()).isNotNull();

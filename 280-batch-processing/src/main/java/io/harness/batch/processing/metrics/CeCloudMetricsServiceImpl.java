@@ -48,7 +48,7 @@ public class CeCloudMetricsServiceImpl implements CeCloudMetricsService {
         }
         return totalCloudCost;
       } catch (InterruptedException e) {
-        logger.error("Failed to get total cloud cost from PreAggregateBilling. ", e);
+        log.error("Failed to get total cloud cost from PreAggregateBilling. ", e);
         Thread.currentThread().interrupt();
         return 0;
       }

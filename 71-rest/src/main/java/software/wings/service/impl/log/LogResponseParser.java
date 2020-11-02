@@ -73,10 +73,10 @@ public class LogResponseParser {
     }
     List<Multimap<String, Object>> output = null;
     try {
-      logger.info("Response was {}", data.responseText);
+      log.info("Response was {}", data.responseText);
       output = logsResponseParser.extract(data.responseText);
     } catch (Exception ex) {
-      logger.error("Unable to extract data in LogResponseParser {}", data.responseText);
+      log.error("Unable to extract data in LogResponseParser {}", data.responseText);
     }
     createRecords(output, resultMap, timestampFormat, data.fixedHostName);
     // filter only the hosts we care about
@@ -99,7 +99,7 @@ public class LogResponseParser {
       DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFormat);
       timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
     } catch (Exception ex) {
-      logger.debug("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
+      log.debug("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
       SimpleDateFormat simpleDateFormat = new SimpleDateFormat(timestampFormat);
       Date date = simpleDateFormat.parse(timestampStr);
       timestamp = date.toInstant().toEpochMilli();
@@ -110,7 +110,7 @@ public class LogResponseParser {
   private void createRecords(List<Multimap<String, Object>> response, Map<String, LogElement> resultMap,
       String timestampFormat, boolean fixedHostName) {
     if (response == null) {
-      logger.error("Something went wrong during parsing. Response is null.");
+      log.error("Something went wrong during parsing. Response is null.");
       return;
     }
     for (Multimap<String, Object> record : response) {

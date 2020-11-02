@@ -38,7 +38,7 @@ public class CatalogServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetCardviewSortBy() {
     List<CatalogItem> catalogItems = catalogService.getCatalogItems("CARD_VIEW_SORT_BY");
-    logger.debug("catalogItems: {}", catalogItems);
+    log.debug("catalogItems: {}", catalogItems);
     assertThat(catalogItems).isNotNull();
     assertThat(catalogItems.size()).isEqualTo(3);
   }

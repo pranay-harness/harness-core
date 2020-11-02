@@ -75,9 +75,9 @@ public class DelegateQueueTask implements Runnable {
       }
       rebroadcastUnassignedTasks();
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error seen in the DelegateQueueTask call", exception);
+      log.error("Error seen in the DelegateQueueTask call", exception);
     }
   }
 
@@ -92,7 +92,7 @@ public class DelegateQueueTask implements Runnable {
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
-      logger.info("Marking following timed out tasks as failed [{}]", keyList);
+      log.info("Marking following timed out tasks as failed [{}]", keyList);
       endTasks(keyList);
     }
   }
@@ -119,7 +119,7 @@ public class DelegateQueueTask implements Runnable {
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
-      logger.info("Marking following long queued tasks as failed [{}]", keyList);
+      log.info("Marking following long queued tasks as failed [{}]", keyList);
       endTasks(keyList);
     }
   }
@@ -138,7 +138,7 @@ public class DelegateQueueTask implements Runnable {
                              .filter(task -> isNotEmpty(task.getWaitId()))
                              .collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
     } catch (Exception e1) {
-      logger.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
+      log.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
       for (String taskId : taskIds) {
         try {
           DelegateTask task =
@@ -148,7 +148,7 @@ public class DelegateQueueTask implements Runnable {
             taskWaitIds.put(taskId, task.getWaitId());
           }
         } catch (Exception e2) {
-          logger.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
+          log.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
           try {
             String waitId = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                 .filter(DelegateTaskKeys.uuid, taskId)
@@ -159,7 +159,7 @@ public class DelegateQueueTask implements Runnable {
               taskWaitIds.put(taskId, waitId);
             }
           } catch (Exception e3) {
-            logger.error(
+            log.error(
                 "Could not deserialize task {} with waitId only, giving up. Task will be deleted but notify not called.",
                 taskId, e3);
           }
@@ -176,7 +176,7 @@ public class DelegateQueueTask implements Runnable {
           String errorMessage = delegateTasks.containsKey(taskId)
               ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTasks.get(taskId))
               : "Unable to determine proper error as delegate task could not be deserialized.";
-          logger.info("Marking task as failed - {}: {}", taskId, errorMessage);
+          log.info("Marking task as failed - {}: {}", taskId, errorMessage);
 
           if (delegateTasks.get(taskId) != null) {
             delegateService.handleResponse(delegateTasks.get(taskId), null,
@@ -233,13 +233,13 @@ public class DelegateQueueTask implements Runnable {
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-          logger.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
+          log.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
       }
 
-      logger.info("{} tasks were rebroadcast", count);
+      log.info("{} tasks were rebroadcast", count);
     }
   }
 }

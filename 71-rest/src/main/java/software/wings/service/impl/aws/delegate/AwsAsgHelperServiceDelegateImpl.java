@@ -291,7 +291,7 @@ public class AwsAsgHelperServiceDelegateImpl
         } catch (Exception ignored) {
           describeAutoScalingGroupActivities(
               amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
-          logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+          log.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
         if (isNotEmpty(autoScalingGroup.getLaunchConfigurationName())) {
           try {
@@ -302,7 +302,7 @@ public class AwsAsgHelperServiceDelegateImpl
           } catch (Exception ignored) {
             describeAutoScalingGroupActivities(
                 amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
-            logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
+            log.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
           }
         }
       });
@@ -473,7 +473,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private void describeAutoScalingGroupActivities(AmazonAutoScalingClient amazonAutoScalingClient,
       String autoScalingGroupName, Set<String> completedActivities, LogCallback callback, boolean withCause) {
     if (callback == null) {
-      logger.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
+      log.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
       return;
     }
     try {
@@ -505,7 +505,7 @@ public class AwsAsgHelperServiceDelegateImpl
             });
       }
     } catch (Exception e) {
-      logger.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
+      log.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
     }
   }
 
@@ -547,7 +547,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       return allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, logCallback);
     } catch (Exception ex) {
-      logger.warn("Aws List Ec2 instance call failed. Retrying once after 15 seconds");
+      log.warn("Aws List Ec2 instance call failed. Retrying once after 15 seconds");
     }
     sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
     return allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, logCallback);
@@ -700,7 +700,7 @@ public class AwsAsgHelperServiceDelegateImpl
     } catch (Exception ex) {
       String errorMessage = format("Exception: [%s] while extracting policy JSON for scaling policy: [%s]. Ignored.",
           ex.getMessage(), scalingPolicy.getPolicyARN());
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       logCallback.saveExecutionLog(errorMessage);
       return EMPTY;
     }
@@ -783,7 +783,7 @@ public class AwsAsgHelperServiceDelegateImpl
     } catch (Exception ex) {
       String errorMessage = format("Exception: [%s] while desirializing cached JSON", ex.getMessage());
       logCallback.saveExecutionLog(errorMessage);
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       return null;
     }
   }

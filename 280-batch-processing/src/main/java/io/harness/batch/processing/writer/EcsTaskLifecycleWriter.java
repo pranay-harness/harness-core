@@ -16,12 +16,12 @@ import java.util.List;
 public class EcsTaskLifecycleWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
-    logger.info("Published batch size is EcsTaskLifecycleWriter {} ", publishedMessages.size());
+    log.info("Published batch size is EcsTaskLifecycleWriter {} ", publishedMessages.size());
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_TASK_LIFECYCLE))
         .forEach(publishedMessage -> {
           EcsTaskLifecycle ecsTaskLifecycle = (EcsTaskLifecycle) publishedMessage.getMessage();
-          logger.debug("ECS task lifecycle {} ", ecsTaskLifecycle);
+          log.debug("ECS task lifecycle {} ", ecsTaskLifecycle);
           String accountId = publishedMessage.getAccountId();
           Lifecycle lifecycle = ecsTaskLifecycle.getLifecycle();
           handleLifecycleEvent(accountId, lifecycle);

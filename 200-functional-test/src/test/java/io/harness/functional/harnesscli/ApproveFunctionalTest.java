@@ -45,22 +45,22 @@ public class ApproveFunctionalTest extends AbstractFunctionalTest {
     harnesscliHelper.deployWorkflow(approvalWorkflow, application);
     String approvalId = harnesscliHelper.getApprovalID(workflowName);
     if (approvalId == null) {
-      logger.info("No approval Exists for the given ID");
+      log.info("No approval Exists for the given ID");
       assertThat(false).isTrue();
     }
     String command = String.format("harness approve -i %s", approvalId);
-    logger.info("Running command {}", command);
+    log.info("Running command {}", command);
 
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 3) {
-      logger.info("The approve command output has " + cliOutput.size() + " lines");
+      log.info("The approve command output has " + cliOutput.size() + " lines");
       assertThat(false).isTrue();
     }
     verifyApproval(cliOutput);
@@ -73,18 +73,18 @@ public class ApproveFunctionalTest extends AbstractFunctionalTest {
   public void approveWithoutFlag() {
     String approveOutput = "";
     String command = String.format("harness approve");
-    logger.info("Running command {}", command);
-    logger.info("Running command on localhost");
+    log.info("Running command {}", command);
+    log.info("Running command on localhost");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.getCLICommandError(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     approveOutput = cliOutput.get(0);
     // Asserting that the output is good
-    logger.info("Comparing the output of approve command");
+    log.info("Comparing the output of approve command");
     assertThat(approveOutput).isEqualTo("Error: required flag(s) \"approval-id\" not set");
   }
 
@@ -93,29 +93,29 @@ public class ApproveFunctionalTest extends AbstractFunctionalTest {
   @Category(CliFunctionalTests.class)
   public void approveThePipeline() {
     pipelineName = "CLI-PIPELINE-" + System.currentTimeMillis();
-    logger.info("Generated unique pipeline name : " + pipelineName);
+    log.info("Generated unique pipeline name : " + pipelineName);
     approvalPipeline =
         PipelineUtils.createApprovalPipeline(pipelineName, getAccount(), bearerToken, application.getAppId());
     assertThat(approvalPipeline).isNotNull();
     harnesscliHelper.deployPipeline(approvalPipeline, application);
     String approvalId = harnesscliHelper.getApprovalID(approvalPipeline.getName());
     if (approvalId == null) {
-      logger.info("No approval Exists for the given ID");
+      log.info("No approval Exists for the given ID");
       assertThat(false).isTrue();
     }
     String command = String.format("harness approve -i %s", approvalId);
-    logger.info("Running command " + command);
+    log.info("Running command " + command);
 
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 3) {
-      logger.info("The approve command output has " + cliOutput.size() + " lines");
+      log.info("The approve command output has " + cliOutput.size() + " lines");
       assertThat(false).isTrue();
     }
     verifyApproval(cliOutput);

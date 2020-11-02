@@ -24,7 +24,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsTextCRUDTests() {
-    logger.info("Local secrets text test starts");
+    log.info("Local secrets text test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();
     String secretsNewName = "newName-" + System.currentTimeMillis();
     String secretValue = "value";
@@ -69,7 +69,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore("TODO: Ignored because it was causing RBAC errors when running in parallel")
   public void secretsTextCRUDTestsWithUsageRestrictions() {
-    logger.info("Local secrets text test starts");
+    log.info("Local secrets text test starts");
     String secretsName = "AnotherSecret-" + System.currentTimeMillis();
     String secretsNewName = "AnotherNewName-" + System.currentTimeMillis();
     String secretValue = "value";
@@ -110,7 +110,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsFileCRUDTests() {
-    logger.info("Local secrets file test starts");
+    log.info("Local secrets file test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();
     String secretsNewName = "newName-" + System.currentTimeMillis();
     String filePath = System.getProperty("user.dir");

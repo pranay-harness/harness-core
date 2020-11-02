@@ -66,14 +66,14 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
          AccountLogContext ignore2 = new AccountLogContext(this.accountId, OVERRIDE_ERROR)) {
       runDelegateTask();
     } catch (Throwable e) {
-      logger.error("Unexpected error executing delegate taskId: [{}] in accountId: [{}]", taskId, accountId, e);
+      log.error("Unexpected error executing delegate taskId: [{}] in accountId: [{}]", taskId, accountId, e);
     }
   }
 
   @SuppressWarnings("PMD")
   private void runDelegateTask() {
     if (!preExecute.getAsBoolean()) {
-      logger.info("Pre-execute returned false for task {}", taskId);
+      log.info("Pre-execute returned false for task {}", taskId);
       return;
     }
 
@@ -85,7 +85,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder =
         ErrorNotifyResponseData.builder().delegateMetaInfo(delegateMetaInfo);
     try {
-      logger.info("Started executing task {}", taskId);
+      log.info("Started executing task {}", taskId);
 
       DelegateResponseData result = parameters.length == 1 && parameters[0] instanceof TaskParameters
           ? run((TaskParameters) parameters[0])
@@ -100,33 +100,32 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
             taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
           }
         } else {
-          logger.error("{} does not implement DelegateTaskNotifyResponseData", result.getClass().getName());
+          log.error("{} does not implement DelegateTaskNotifyResponseData", result.getClass().getName());
         }
         taskResponse.response(result);
       } else {
         String errorMessage = "No response from delegate task " + taskId;
-        logger.error(errorMessage);
+        log.error(errorMessage);
         taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
                                   .errorMessage(errorMessage)
                                   .build());
         taskResponse.responseCode(ResponseCode.FAILED);
       }
-      logger.info("Completed executing task {}", taskId);
+      log.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
-      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
-      logger.error(
-          format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
+      log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
           exception);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
                                 .errorMessage(ExceptionUtils.getMessage(exception))

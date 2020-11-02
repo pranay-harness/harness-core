@@ -44,7 +44,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
         result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
       }
     } catch (Exception ex) {
-      logger.error("Exception in processing CI K8 delete setup task: {}", taskParams, ex);
+      log.error("Exception in processing CI K8 delete setup task: {}", taskParams, ex);
       result = K8sTaskExecutionResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .errorMessage(ex.getMessage())
@@ -61,7 +61,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
     for (String podName : podNameList) {
       Boolean isDeleted = kubeCtlHandler.deletePod(kubernetesClient, podName, namespace);
       if (isDeleted.equals(Boolean.FALSE)) {
-        logger.error("Failed to delete pod {}", podName);
+        log.error("Failed to delete pod {}", podName);
         isSuccess = false;
       }
     }
@@ -76,7 +76,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
     for (String serviceName : serviceNameList) {
       Boolean isDeleted = kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName);
       if (isDeleted.equals(Boolean.FALSE)) {
-        logger.error("Failed to delete service {}", serviceName);
+        log.error("Failed to delete service {}", serviceName);
         isSuccess = false;
       }
     }

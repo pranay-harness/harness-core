@@ -66,7 +66,7 @@ public class RequestExecutor {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
         sleep(RETRY_SLEEP_DURATION.plus(Duration.ofSeconds(randomNum)));
         if (retryCount == MAX_RETRIES) {
-          logger.error("Request did not succeed after " + MAX_RETRIES + "  retries ");
+          log.error("Request did not succeed after " + MAX_RETRIES + "  retries ");
           throw new DataCollectionException(e);
         }
       } catch (Exception e) {

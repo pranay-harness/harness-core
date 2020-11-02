@@ -175,7 +175,7 @@ public class AccountGenerator {
       updateLimitConfiguration(account.getUuid());
 
     } catch (WingsException wEx) {
-      logger.error(wEx.getMessage());
+      log.error(wEx.getMessage());
     }
 
     return account;
@@ -187,7 +187,7 @@ public class AccountGenerator {
     account = exists(account);
 
     if (account == null) {
-      logger.info("Account does not exist with accountName = {}", accountName);
+      log.info("Account does not exist with accountName = {}", accountName);
       account = Builder.anAccount()
                     .withUuid(accountId)
                     .withAccountName(accountName)

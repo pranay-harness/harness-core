@@ -1014,7 +1014,7 @@ public class UserResource {
     try {
       return new RestResponse<>(userService.checkInviteStatus(userInvite));
     } catch (Exception e) {
-      logger.error("error checking invite", e);
+      log.error("error checking invite", e);
       return new RestResponse<>(InviteOperationResponse.FAIL);
     }
   }
@@ -1076,14 +1076,14 @@ public class UserResource {
       @NotNull UserInvite userInvite) {
     // Only AWS / GCP marketplaces are supported
     try (AutoLogContext ignore1 = new MarketplaceTypeLogContext(marketPlaceType, OVERRIDE_ERROR)) {
-      logger.info("Marketplace sign-up. MarketPlaceType= {}", marketPlaceType);
+      log.info("Marketplace sign-up. MarketPlaceType= {}", marketPlaceType);
 
       try {
         companyName = URLDecoder.decode(companyName, UTF_8.displayName());
         accountName = URLDecoder.decode(accountName, UTF_8.displayName());
       } catch (UnsupportedEncodingException e) {
-        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {}",
-            accountName, companyName);
+        log.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {}", accountName,
+            companyName);
         throw new InvalidRequestException("Account Name and Company Name must be UTF-8 compliant.", e);
       }
 

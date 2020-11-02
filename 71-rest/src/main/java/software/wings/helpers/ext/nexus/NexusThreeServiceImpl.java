@@ -90,7 +90,7 @@ public class NexusThreeServiceImpl {
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryFormat) throws IOException {
-    logger.info("Retrieving repositories");
+    log.info("Retrieving repositories");
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<List<Nexus3Repository>> response;
     if (nexusConfig.hasCredentials()) {
@@ -104,7 +104,7 @@ public class NexusThreeServiceImpl {
 
     if (isSuccessful(response)) {
       if (isNotEmpty(response.body())) {
-        logger.info("Retrieving {} repositories success", repositoryFormat);
+        log.info("Retrieving {} repositories success", repositoryFormat);
         final Map<String, String> repositories;
         if (repositoryFormat == null) {
           repositories =
@@ -116,20 +116,20 @@ public class NexusThreeServiceImpl {
                              .filter(o -> o.getFormat().equals(filterBy))
                              .collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
         }
-        logger.info("Retrieved repositories are {}", repositories.values());
+        log.info("Retrieved repositories are {}", repositories.values());
         return repositories;
       } else {
         throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
             .addParam("message", "Failed to fetch the repositories");
       }
     }
-    logger.info("No repositories found returning empty map");
+    log.info("No repositories found returning empty map");
     return emptyMap();
   }
 
   public List<String> getPackageNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repository, String repositoryFormat, List<String> images) throws IOException {
-    logger.info("Retrieving packageNames for repositoryFormat {}", repository);
+    log.info("Retrieving packageNames for repositoryFormat {}", repository);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -326,7 +326,7 @@ public class NexusThreeServiceImpl {
 
   public List<String> getGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repository, String repositoryFormat, List<String> images) throws IOException {
-    logger.info("Retrieving groups for repositoryFormat {}", repository);
+    log.info("Retrieving groups for repositoryFormat {}", repository);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -375,7 +375,7 @@ public class NexusThreeServiceImpl {
 
   public List<String> getDockerImages(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repository, List<String> images) throws IOException {
-    logger.info("Retrieving docker images for repository {} from url {}", repository, nexusConfig.getNexusUrl());
+    log.info("Retrieving docker images for repository {} from url {}", repository, nexusConfig.getNexusUrl());
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<DockerImageResponse> response;
     if (nexusConfig.hasCredentials()) {
@@ -390,21 +390,21 @@ public class NexusThreeServiceImpl {
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getRepositories() != null) {
         images.addAll(response.body().getRepositories().stream().collect(toList()));
-        logger.info("Retrieving docker images for repository {} from url {} success. Images are {}", repository,
+        log.info("Retrieving docker images for repository {} from url {} success. Images are {}", repository,
             nexusConfig.getNexusUrl(), images);
       }
     } else {
-      logger.warn("Failed to fetch the docker images as request is not success");
+      log.warn("Failed to fetch the docker images as request is not success");
       throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
           .addParam("message", "Failed to fetch the docker images");
     }
-    logger.info("No images found for repository {}", repository);
+    log.info("No images found for repository {}", repository);
     return images;
   }
 
   public List<BuildDetails> getPackageVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryName, String packageName, boolean supportForNexusGroupReposEnabled) throws IOException {
-    logger.info("Retrieving package versions for repository {} package {} ", repositoryName, packageName);
+    log.info("Retrieving package versions for repository {} package {} ", repositoryName, packageName);
     List<String> versions = new ArrayList<>();
     Map<String, Asset> versionToArtifactUrls = new HashMap<>();
     Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls = new HashMap<>();
@@ -457,9 +457,9 @@ public class NexusThreeServiceImpl {
             .addParam("message", "Failed to fetch the versions for package [" + packageName + "]");
       }
     }
-    logger.info("Versions come from nexus server {}", versions);
+    log.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    log.info("After sorting alphanumerically versions {}", versions);
 
     return versions.stream()
         .map(version -> {
@@ -513,7 +513,7 @@ public class NexusThreeServiceImpl {
     String repoName = ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(),
         artifactStreamAttributes.getNexusDockerPort(), artifactStreamAttributes.getNexusDockerRegistryUrl(),
         artifactStreamAttributes.getImageName());
-    logger.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
+    log.info("Retrieving docker tags for repository {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<DockerImageTagResponse> response;
@@ -551,7 +551,7 @@ public class NexusThreeServiceImpl {
       throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
           .addParam("message", "Failed to fetch the docker tags of image [" + imageName + "]");
     }
-    logger.info("No tags found for image name {}", imageName);
+    log.info("No tags found for image name {}", imageName);
     return buildDetails;
   }
 
@@ -574,7 +574,7 @@ public class NexusThreeServiceImpl {
         final String version = artifactMetadata.get(ArtifactMetadataKeys.buildNo);
         final String packageName = artifactMetadata.get(ArtifactMetadataKeys.nexusPackageName);
         final String repoName = artifactMetadata.get(ArtifactMetadataKeys.repositoryName);
-        logger.info("Downloading version {} of package {} from repository {}", version, packageName, repoName);
+        log.info("Downloading version {} of package {} from repository {}", version, packageName, repoName);
         NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
         Response<Nexus3AssetResponse> response;
         if (nexusConfig.hasCredentials()) {
@@ -615,7 +615,7 @@ public class NexusThreeServiceImpl {
         final String extension = artifactStreamAttributes.getExtension();
         final String classifier = artifactStreamAttributes.getClassifier();
 
-        logger.info("Downloading version {} of groupId: {} artifactId: {} from repository {}", version, groupId,
+        log.info("Downloading version {} of groupId: {} artifactId: {} from repository {}", version, groupId,
             artifactName, repoName);
         NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
         Response<Nexus3AssetResponse> response = getNexus3MavenAssets(
@@ -698,9 +698,9 @@ public class NexusThreeServiceImpl {
 
   public List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String path) throws IOException {
-    logger.info("Retrieving Artifact Names");
+    log.info("Retrieving Artifact Names");
     List<String> artifactNames = new ArrayList<>();
-    logger.info("Retrieving artifact names for repository {}", repoId);
+    log.info("Retrieving artifact names for repository {}", repoId);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -743,14 +743,14 @@ public class NexusThreeServiceImpl {
             .addParam("message", "Failed to fetch the groupIds");
       }
     }
-    logger.info("Retrieving Artifact Names success");
+    log.info("Retrieving Artifact Names success");
     return artifactNames;
   }
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName, String extension, String classifier,
       boolean supportForNexusGroupReposEnabled) throws IOException {
-    logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
+    log.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     List<String> versions = new ArrayList<>();
     Map<String, String> versionToArtifactUrls = new HashMap<>();
     Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls = new HashMap<>();
@@ -829,7 +829,7 @@ public class NexusThreeServiceImpl {
 
   public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName, String extension, String classifier) throws IOException {
-    logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
+    log.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -866,7 +866,7 @@ public class NexusThreeServiceImpl {
 
   public boolean isServerValid(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
-    logger.info("Validate if nexus is running by retrieving repositories");
+    log.info("Validate if nexus is running by retrieving repositories");
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<List<Nexus3Repository>> response;
     if (nexusConfig.hasCredentials()) {
@@ -913,7 +913,7 @@ public class NexusThreeServiceImpl {
 
   public long getFileSize(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
-    logger.info("Getting file size for artifact at path {}", artifactUrl);
+    log.info("Getting file size for artifact at path {}", artifactUrl);
     long size;
     Pair<String, InputStream> pair = downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
     if (pair == null) {
@@ -925,7 +925,7 @@ public class NexusThreeServiceImpl {
     } catch (IOException e) {
       throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
     }
-    logger.info(format("Computed file size: [%d] bytes for artifact Path: [%s]", size, artifactUrl));
+    log.info(format("Computed file size: [%d] bytes for artifact Path: [%s]", size, artifactUrl));
     return size;
   }
 

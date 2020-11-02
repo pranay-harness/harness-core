@@ -36,15 +36,15 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running K8sV2ServiceInfraReleaseNameMigration");
+    log.info("Running K8sV2ServiceInfraReleaseNameMigration");
     migrateServiceInfra();
-    logger.info("Completed K8sV2ServiceInfraReleaseNameMigration");
+    log.info("Completed K8sV2ServiceInfraReleaseNameMigration");
   }
 
   private void migrateServiceInfra() {
     List<Service> servicesList = new ArrayList<>();
 
-    logger.info("Fetching k8v2 services");
+    log.info("Fetching k8v2 services");
     try (HIterator<Service> services = new HIterator<>(
              wingsPersistence.createQuery(Service.class, excludeAuthority).filter(ServiceKeys.isK8sV2, true).fetch())) {
       while (services.hasNext()) {
@@ -57,7 +57,7 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
     allowedInfraMappingTypes.add(DIRECT_KUBERNETES.name());
     allowedInfraMappingTypes.add(GCP_KUBERNETES.name());
 
-    logger.info("Migrating service Infra for k8v2");
+    log.info("Migrating service Infra for k8v2");
     for (Service service : servicesList) {
       if (!service.isK8sV2()) {
         continue;

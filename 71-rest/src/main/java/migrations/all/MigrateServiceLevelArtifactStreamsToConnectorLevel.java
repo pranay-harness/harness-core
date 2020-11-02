@@ -51,19 +51,19 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
 
   @Override
   public void migrate() {
-    logger.info("Migration Started - move service level artifact streams to connector level");
+    log.info("Migration Started - move service level artifact streams to connector level");
     Account account = wingsPersistence.get(Account.class, ACCOUNT_ID);
     if (account == null) {
-      logger.info("Specified account not found. Not migrating artifact streams from services to connectors.");
+      log.info("Specified account not found. Not migrating artifact streams from services to connectors.");
       return;
     }
 
     migrateAccount(account.getUuid());
-    logger.info("Migration Completed - move service level artifact streams to connector level");
+    log.info("Migration Completed - move service level artifact streams to connector level");
   }
 
   private void migrateAccount(String accountId) {
-    logger.info("Processing account: " + accountId);
+    log.info("Processing account: " + accountId);
 
     // Prefetch applications for this account
     List<Application> applications = wingsPersistence.createQuery(Application.class)
@@ -96,7 +96,7 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
       for (SettingAttribute settingAttribute : settingAttributeHIterator) {
         Set<String> addedNames = new HashSet<>();
         // For each SettingId find all the artifact Steams
-        logger.info("Finding all artifact streams associated with settingId {}", settingAttribute.getUuid());
+        log.info("Finding all artifact streams associated with settingId {}", settingAttribute.getUuid());
         try (HIterator<ArtifactStream> artifactStreamsIterator =
                  new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
                                      .filter(ArtifactStreamKeys.settingId, settingAttribute.getUuid())
@@ -124,7 +124,7 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
         }
         if (found) {
           bulkWriteOperation.execute();
-          logger.info("Updated: " + updated + " artifact streams for setting id: " + settingAttribute.getUuid());
+          log.info("Updated: " + updated + " artifact streams for setting id: " + settingAttribute.getUuid());
           updated = 0;
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           found = false;
@@ -134,12 +134,12 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
 
     // Create Custom Artifact Source folder and migrate all CUSTOM ARTIFACT STREAMS
     migrateCustomArtifactStreamsToAccountLevel(accountId, appIdToNameMap, serviceIdToNameMap, bulkWriteOperation);
-    logger.info("Done processing account: " + accountId);
+    log.info("Done processing account: " + accountId);
   }
 
   private void migrateCustomArtifactStreamsToAccountLevel(String accountId, Map<String, String> appIdToNameMap,
       Map<String, String> serviceIdToNameMap, BulkWriteOperation bulkWriteOperation) {
-    logger.info("Inside migrateCustomArtifactStreamsToAccountLevel for account: " + accountId);
+    log.info("Inside migrateCustomArtifactStreamsToAccountLevel for account: " + accountId);
     Pair<SettingAttribute, String> settingAttributeStringPair = getCustomArtifactServerName(accountId);
     SettingAttribute savedSettingAttribute = settingAttributeStringPair.getLeft();
     if (savedSettingAttribute == null) {
@@ -164,11 +164,11 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
               .withUsageRestrictions(UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build())
               .build();
 
-      logger.info("Creating Custom Artifact Server folder for account: " + accountId);
+      log.info("Creating Custom Artifact Server folder for account: " + accountId);
       savedSettingAttribute = settingsService.save(settingAttribute);
     }
 
-    logger.info("Finding all artifact streams of type CUSTOM");
+    log.info("Finding all artifact streams of type CUSTOM");
     int updated = 0;
     boolean found = false;
     Set<String> addedNames = new HashSet<>();
@@ -229,15 +229,14 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
         }
         if (foundArtifacts) {
           artifactsBulkWriteOperation.execute();
-          logger.info("Migrated: " + updatedArtifacts + " custom artifacts belonging to artifactStream: "
+          log.info("Migrated: " + updatedArtifacts + " custom artifacts belonging to artifactStream: "
               + artifactStream.getUuid() + " to settingId: " + savedSettingAttribute.getUuid());
         }
       }
     }
     if (found) {
       bulkWriteOperation.execute();
-      logger.info(
-          "Migrated: " + updated + " custom artifact streams to setting id: " + savedSettingAttribute.getUuid());
+      log.info("Migrated: " + updated + " custom artifact streams to setting id: " + savedSettingAttribute.getUuid());
     }
   }
 

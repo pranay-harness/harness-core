@@ -83,7 +83,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public List<String> fetchRelevantEncryptedSecrets() {
     if (keyAuth) {
       if (isBlank(sshSettingId)) {
-        logger.error("Key auth with empty ssh setting id");
+        log.error("Key auth with empty ssh setting id");
       }
 
       // TODO(gpahal): Once ssh and winrm are moved to secrets, we can change this also.

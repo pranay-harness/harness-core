@@ -65,12 +65,12 @@ public class TimelineRbacFilters {
     }
 
     final Set<String> allowedAppIds = getAssignedApps(currentUser);
-    logger.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
         currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
     final Set<String> allowedAppIdsFinal = Sets.newHashSet(allowedAppIds);
     if (includeDeletedAppIds) {
       allowedAppIdsFinal.addAll(deletedAppIds);
-      logger.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+      log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
     }
 
     return stats.stream()
@@ -90,9 +90,9 @@ public class TimelineRbacFilters {
     }
 
     final Set<String> allowedAppIds = getAssignedApps(currentUser);
-    logger.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
         currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
-    logger.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+    log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
 
     final Set<String> allowedAppIdsFinal =
         union(allowedAppIds, includeDeletedAppIds ? SetUtils.emptyIfNull(deletedAppIds) : emptySet());
@@ -163,7 +163,7 @@ public class TimelineRbacFilters {
 
     Set<String> allowedAppIds = userRequestContext.getAppIds();
     if (isEmpty(allowedAppIds)) {
-      logger.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
+      log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
       return emptySet();
     }
 

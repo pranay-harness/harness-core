@@ -26,13 +26,13 @@ public class OrchestrationEventListener extends QueueListener<OrchestrationEvent
   @Override
   public void onMessage(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
-      logger.info("Notifying for OrchestrationEvent");
+      log.info("Notifying for OrchestrationEvent");
 
       try {
         OrchestrationSubject subject = handlerRegistry.obtain(event.getEventType());
         subject.handleEventAsync(event);
       } catch (Exception ex) {
-        logger.error("Exception Occurred while handling OrchestrationEvent", ex);
+        log.error("Exception Occurred while handling OrchestrationEvent", ex);
       }
     }
   }

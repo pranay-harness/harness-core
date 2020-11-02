@@ -119,9 +119,9 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
 
     String usersJson = users.toString();
     String newUsersJson = accountExportImportResource.replaceClashedUserIds(usersJson, userIdMapping);
-    logger.info(userIdMapping.toString());
-    logger.info(usersJson);
-    logger.info(newUsersJson);
+    log.info(userIdMapping.toString());
+    log.info(usersJson);
+    log.info(newUsersJson);
 
     assertThat(newUsersJson).isNotEqualTo(usersJson);
     assertThat(newUsersJson.indexOf(userId) < 0).isTrue();

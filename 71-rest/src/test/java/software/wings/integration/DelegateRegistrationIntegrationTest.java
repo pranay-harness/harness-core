@@ -42,7 +42,7 @@ public class DelegateRegistrationIntegrationTest extends IntegrationTestBase {
       List<DelegateConnection> delegateConnections =
           wingsPersistence.createQuery(DelegateConnection.class, excludeAuthority).asList();
       boolean connected = !delegateConnections.isEmpty();
-      logger.info("Got {} delegate connections.", delegateConnections.size());
+      log.info("Got {} delegate connections.", delegateConnections.size());
       return connected;
     }, CoreMatchers.is(true));
   }

@@ -26,7 +26,7 @@ public class InitializeAppCounters implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Initializing Counters");
+    log.info("Initializing Counters");
     Datastore ds = wingsPersistence.getDatastore(Counter.class);
 
     try {
@@ -43,12 +43,12 @@ public class InitializeAppCounters implements Migration {
         long appCount =
             ds.getCount(wingsPersistence.createQuery(Application.class).field("accountId").equal(accountId));
 
-        logger.info("Initializing Counter. Account Id: {} , AppCount: {}", accountId, appCount);
+        log.info("Initializing Counter. Account Id: {} , AppCount: {}", accountId, appCount);
         Counter counter = new Counter(action.key(), appCount);
         wingsPersistence.save(counter);
       }
     } catch (Exception e) {
-      logger.error("Error initializing app counters", e);
+      log.error("Error initializing app counters", e);
     }
   }
 }

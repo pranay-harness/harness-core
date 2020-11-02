@@ -36,7 +36,7 @@ public class InstanceControllerManager {
     if (instanceController != null) {
       return instanceController.populateInstance(instance);
     } else {
-      logger.error("No InstanceInfoMapping found for InstanceInfo : " + instance.getInstanceInfo().getClass());
+      log.error("No InstanceInfoMapping found for InstanceInfo : " + instance.getInstanceInfo().getClass());
       return null;
     }
   }

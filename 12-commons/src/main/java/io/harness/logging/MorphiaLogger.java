@@ -4,95 +4,95 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MorphiaLogger implements org.mongodb.morphia.logging.Logger {
-  private Logger logger;
+  private Logger log;
 
   MorphiaLogger(Class<?> c) {
-    logger = LoggerFactory.getLogger(c);
+    log = LoggerFactory.getLogger(c);
   }
 
   @Override
   public void debug(String msg) {
-    logger.debug(msg);
+    log.debug(msg);
   }
 
   @Override
   public void debug(String msg, Object... arg) {
-    logger.debug(msg, arg);
+    log.debug(msg, arg);
   }
 
   @Override
   public void debug(String msg, Throwable t) {
-    logger.debug(msg, t);
+    log.debug(msg, t);
   }
 
   @Override
   public void error(String msg) {
-    logger.error(msg);
+    log.error(msg);
   }
 
   @Override
   public void error(String msg, Object... arg) {
-    logger.error(msg, arg);
+    log.error(msg, arg);
   }
 
   @Override
   public void error(String msg, Throwable t) {
-    logger.error(msg, t);
+    log.error(msg, t);
   }
 
   @Override
   public void info(String msg) {
-    logger.info(msg);
+    log.info(msg);
   }
 
   @Override
   public void info(String msg, Object... arg) {
-    logger.info(msg, arg);
+    log.info(msg, arg);
   }
 
   @Override
   public void info(String msg, Throwable t) {
-    logger.info(msg, t);
+    log.info(msg, t);
   }
 
   @Override
   public boolean isDebugEnabled() {
-    return logger.isDebugEnabled();
+    return log.isDebugEnabled();
   }
 
   @Override
   public boolean isErrorEnabled() {
-    return logger.isErrorEnabled();
+    return log.isErrorEnabled();
   }
 
   @Override
   public boolean isInfoEnabled() {
-    return logger.isInfoEnabled();
+    return log.isInfoEnabled();
   }
 
   @Override
   public boolean isTraceEnabled() {
-    return logger.isTraceEnabled();
+    return log.isTraceEnabled();
   }
 
   @Override
   public boolean isWarningEnabled() {
-    return logger.isWarnEnabled();
+    return log.isWarnEnabled();
   }
 
   @Override
   public void trace(String msg) {
-    logger.trace(msg);
+    log.trace(msg);
   }
 
   @Override
   public void trace(String msg, Object... arg) {
-    logger.trace(msg, arg);
+    log.trace(msg, arg);
   }
 
   @Override
   public void trace(String msg, Throwable t) {
-    logger.trace(msg, t);
+    log.trace(msg, t);
   }
 
   @Override
@@ -105,16 +105,16 @@ public class MorphiaLogger implements org.mongodb.morphia.logging.Logger {
             .equals(msg)) {
       return;
     }
-    logger.warn(msg);
+    log.warn(msg);
   }
 
   @Override
   public void warning(String msg, Object... arg) {
-    logger.warn(msg, arg);
+    log.warn(msg, arg);
   }
 
   @Override
   public void warning(String msg, Throwable t) {
-    logger.warn(msg, t);
+    log.warn(msg, t);
   }
 }

@@ -75,7 +75,7 @@ public class Http {
       URL url = new URL(urlString);
       return connectableHost(url.getHost(), url.getPort() < 0 ? 80 : url.getPort());
     } catch (MalformedURLException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     return false;
   }
@@ -87,7 +87,7 @@ public class Http {
           .build(new CacheLoader<String, Integer>() {
             @Override
             public Integer load(String url) throws IOException {
-              logger.info("Testing connectivity");
+              log.info("Testing connectivity");
 
               // Create a trust manager that does not validate certificate chains
               // Install the all-trusting trust manager
@@ -104,7 +104,7 @@ public class Http {
                 connection.setConnectTimeout(15000);
                 connection.setReadTimeout(15000);
                 int responseCode = connection.getResponseCode();
-                logger.info("Returned code {}", responseCode);
+                log.info("Returned code {}", responseCode);
                 return responseCode;
               } finally {
                 if (connection != null) {
@@ -121,7 +121,7 @@ public class Http {
           .build(new CacheLoader<String, Integer>() {
             @Override
             public Integer load(String url) throws IOException {
-              logger.info("Testing connectivity");
+              log.info("Testing connectivity");
               // Create a trust manager that does not validate certificate chains
               // Install the all-trusting trust manager
               HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
@@ -136,7 +136,7 @@ public class Http {
                 connection.setConnectTimeout(150000);
                 connection.setReadTimeout(150000);
                 int responseCode = connection.getResponseCode();
-                logger.info("Returned code {}", responseCode);
+                log.info("Returned code {}", responseCode);
                 return responseCode;
               } finally {
                 connection.disconnect();
@@ -153,7 +153,7 @@ public class Http {
       try {
         return checkResponseCode(responseCodeForValidation.get(url));
       } catch (Exception e) {
-        logger.info("Could not connect: {}", e.getMessage());
+        log.info("Could not connect: {}", e.getMessage());
       }
     }
     return false;
@@ -164,7 +164,7 @@ public class Http {
       try {
         return checkResponseCode(jenkinsResponseCodeForValidation.get(url));
       } catch (Exception e) {
-        logger.info("Could not connect: {}", e.getMessage());
+        log.info("Could not connect: {}", e.getMessage());
       }
     }
     return false;
@@ -187,7 +187,7 @@ public class Http {
       sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
       return sslContext;
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      logger.error("Error while initializing the SSL context", e);
+      log.error("Error while initializing the SSL context", e);
     }
     return null;
   }
@@ -265,7 +265,7 @@ public class Http {
       }
       return builder;
     } catch (Exception e) {
-      logger.error("Error while building safe okhttpclient ", e);
+      log.error("Error while building safe okhttpclient ", e);
       throw new RuntimeException(e);
     }
   }
@@ -351,7 +351,7 @@ public class Http {
       URI uri = getNormalizedURI(url);
       return uri.getHost();
     } catch (Exception e) {
-      logger.warn("Bad URI syntax", e);
+      log.warn("Bad URI syntax", e);
       return null;
     }
   }
@@ -368,7 +368,7 @@ public class Http {
       }
       return scheme + "://" + hostName + ":" + port + "/";
     } catch (Exception e) {
-      logger.warn("Bad URI syntax", e);
+      log.warn("Bad URI syntax", e);
       return null;
     }
   }
@@ -382,7 +382,7 @@ public class Http {
       }
       return hostName;
     } catch (Exception e) {
-      logger.warn("Bad URI syntax", e);
+      log.warn("Bad URI syntax", e);
       return null;
     }
   }
@@ -427,7 +427,7 @@ public class Http {
 
     String user = getProxyUserName();
     if (isNotEmpty(user)) {
-      logger.info("###Using proxy Auth");
+      log.info("###Using proxy Auth");
       String password = getProxyPassword();
       builder.proxyAuthenticator((route, response) -> {
         String credential = Credentials.basic(user, password);

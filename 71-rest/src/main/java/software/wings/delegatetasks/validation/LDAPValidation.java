@@ -59,29 +59,29 @@ public class LDAPValidation extends AbstractSecretManagerValidation {
 
     try {
       if (null != settings && null != encryptedDataDetail) {
-        logger.info("Validation config for delegate task validation is {}", settings.getConnectionSettings());
+        log.info("Validation config for delegate task validation is {}", settings.getConnectionSettings());
         settings.decryptFields(encryptedDataDetail, encryptionService);
-        logger.info("LTVF: Decryption of password was successful. Delegate task id {}", delegateTaskId);
+        log.info("LTVF: Decryption of password was successful. Delegate task id {}", delegateTaskId);
         LdapConnectionSettings ldapConnectionConfig = settings.getConnectionSettings();
         LdapHelper ldapHelper = new LdapHelper(ldapConnectionConfig);
         response = ldapHelper.validateConnectionConfig();
       }
 
       if (response != null) {
-        logger.info("LTVF: Response status is: {}, task id is: {}", response.getStatus(), delegateTaskId);
+        log.info("LTVF: Response status is: {}, task id is: {}", response.getStatus(), delegateTaskId);
       } else {
-        logger.info("LTVF: Response is null, task id is: {}", delegateTaskId);
+        log.info("LTVF: Response is null, task id is: {}", delegateTaskId);
       }
 
       if (response != null && response.getStatus() == Status.SUCCESS) {
-        logger.info("LTVF: Response status is: {}, task id is: {}", response.getStatus(), delegateTaskId);
+        log.info("LTVF: Response status is: {}, task id is: {}", response.getStatus(), delegateTaskId);
         validated = true;
       }
 
-      logger.info("LTVF: Response received is: {}, task id is: {}", response, delegateTaskId);
-      logger.info("Validated LDAP delegate task {}, result is {}", delegateTaskId, validated);
+      log.info("LTVF: Response received is: {}, task id is: {}", response, delegateTaskId);
+      log.info("Validated LDAP delegate task {}, result is {}", delegateTaskId, validated);
     } catch (Exception e) {
-      logger.error("Failed to validate the ldap connection.", e);
+      log.error("Failed to validate the ldap connection.", e);
     }
 
     return singletonList(

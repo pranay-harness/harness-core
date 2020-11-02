@@ -161,7 +161,7 @@ public class CEPerpetualTaskManager {
           String ecsTaskId = createEcsTask(clusterRecord.getAccountId(), ecsPerpetualTaskClientParams);
           clusterRecordService.attachPerpetualTaskId(clusterRecord, ecsTaskId);
         } else {
-          logger.info("Not creating perpetual task for cluster {}", clusterRecord.getUuid());
+          log.info("Not creating perpetual task for cluster {}", clusterRecord.getUuid());
         }
         break;
       case GCP_KUBERNETES:

@@ -81,9 +81,9 @@ public class SecretsRestUtils {
   public static String addSecretWithUsageRestrictions(String accountId, String bearerToken, SecretText secretText) {
     RestResponse<String> secretsResponse = null;
     try {
-      logger.info("Entering add Secret with restrictions");
+      log.info("Entering add Secret with restrictions");
       JsonElement jsonElement = SecretsUtils.getUsageRestDataAsJson(secretText);
-      logger.info(jsonElement.toString());
+      log.info(jsonElement.toString());
       secretsResponse = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)
@@ -91,10 +91,10 @@ public class SecretsRestUtils {
                             .body(jsonElement.toString())
                             .post("/secrets/add-secret")
                             .as(new GenericType<RestResponse<String>>() {}.getType());
-      logger.info(secretsResponse.toString());
-      logger.info("Secret Id : " + secretsResponse.getResource());
+      log.info(secretsResponse.toString());
+      log.info("Secret Id : " + secretsResponse.getResource());
     } catch (Exception e) {
-      logger.error("Exception thrown : ", e);
+      log.error("Exception thrown : ", e);
     }
 
     if (secretsResponse != null) {

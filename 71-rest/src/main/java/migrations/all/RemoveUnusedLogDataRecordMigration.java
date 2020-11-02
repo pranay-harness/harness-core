@@ -14,9 +14,9 @@ public class RemoveUnusedLogDataRecordMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Deleting all records without validUntil");
+    log.info("Deleting all records without validUntil");
     final boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(LogDataRecord.class).field(LogDataRecordKeys.validUntil).doesNotExist());
-    logger.info("migration done. result {}", deleted);
+    log.info("migration done. result {}", deleted);
   }
 }

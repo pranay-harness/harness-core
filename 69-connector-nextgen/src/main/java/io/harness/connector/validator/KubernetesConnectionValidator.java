@@ -28,7 +28,7 @@ public class KubernetesConnectionValidator
         super.validateConnector(kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     if (responseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      logger.info("Error in validation task for connector : [{}] with failure types [{}]",
+      log.info("Error in validation task for connector : [{}] with failure types [{}]",
           errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
     }
     KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;

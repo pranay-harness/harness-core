@@ -98,7 +98,7 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
     service.signRequest(accessToken, request);
     final Response response = service.execute(request);
     String responseJson = response.getBody();
-    logger.info("LinkedIn json response for get email address: {}", responseJson);
+    log.info("LinkedIn json response for get email address: {}", responseJson);
     DocumentContext jsonContext = JsonPath.parse(responseJson);
     return jsonContext.read("$['elements'][0]['handle~']['emailAddress']");
   }
@@ -110,7 +110,7 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
     service.signRequest(accessToken, request);
     final Response response = service.execute(request);
     String responseJson = response.getBody();
-    logger.info("LinkedIn json response for getting user profile: {}", responseJson);
+    log.info("LinkedIn json response for getting user profile: {}", responseJson);
     DocumentContext jsonContext = JsonPath.parse(responseJson);
     String firstName = jsonContext.read("$['firstName']['localized']['en_US']");
     String lastName = jsonContext.read("$['lastName']['localized']['en_US']");

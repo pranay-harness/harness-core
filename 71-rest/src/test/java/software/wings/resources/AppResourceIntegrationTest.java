@@ -82,7 +82,7 @@ public class AppResourceIntegrationTest extends IntegrationTestBase {
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
-    logger.debug("Create URL to hit: {}", url);
+    log.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
 
     Application app = null;
@@ -98,7 +98,7 @@ public class AppResourceIntegrationTest extends IntegrationTestBase {
     // delete an app
     String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + app.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
-    logger.debug("Delete URL to hit: {}", deleteUrl);
+    log.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
     assertThat(Status.OK.getStatusCode()).isEqualTo(status);
@@ -128,7 +128,7 @@ public class AppResourceIntegrationTest extends IntegrationTestBase {
 
     val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
-    logger.debug("Create URL to hit: {}", url);
+    log.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
 
     concurrentConsume(target, maxApps - appCount);
@@ -140,7 +140,7 @@ public class AppResourceIntegrationTest extends IntegrationTestBase {
     Application appToDelete = fetchAppsQuery().get();
     String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + appToDelete.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
-    logger.debug("Delete URL to hit: {}", deleteUrl);
+    log.debug("Delete URL to hit: {}", deleteUrl);
 
     status = getRequestBuilderWithAuthHeader(deleteTarget).delete().getStatus();
     assertThat(Status.OK.getStatusCode()).isEqualTo(status);

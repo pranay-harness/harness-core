@@ -66,7 +66,7 @@ public class EcsIntegrationTest extends CategoryTest {
             -> ecsClient.describeClusters(new DescribeClustersRequest().withClusters(clusterArns))
                    .getClusters()
                    .stream())
-        .forEach(cluster -> logger.info("Cluster : " + cluster));
+        .forEach(cluster -> log.info("Cluster : " + cluster));
   }
 
   @Test
@@ -80,7 +80,7 @@ public class EcsIntegrationTest extends CategoryTest {
             -> ecsClient.listContainerInstances(new ListContainerInstancesRequest().withCluster(arn))
                    .getContainerInstanceArns()
                    .stream())
-        .forEach(containInstance -> logger.info("Container Instance : " + containInstance));
+        .forEach(containInstance -> log.info("Container Instance : " + containInstance));
   }
 
   @Test
@@ -90,7 +90,7 @@ public class EcsIntegrationTest extends CategoryTest {
   public void shouldCreateCluster() {
     CreateClusterRequest demo2 = new CreateClusterRequest().withClusterName("Demo2");
     CreateClusterResult demo2Cluster = ecsClient.createCluster(demo2);
-    logger.info(demo2Cluster.toString());
+    log.info(demo2Cluster.toString());
   }
 
   @Test
@@ -102,7 +102,7 @@ public class EcsIntegrationTest extends CategoryTest {
         ecsClient.listTasks(new ListTasksRequest().withCluster("test2").withServiceName("Nix__docker__Development__6"));
     List<String> taskArns = listTasksResult.getTaskArns();
     DescribeTasksResult describeTasksResult = ecsClient.describeTasks(new DescribeTasksRequest().withTasks(taskArns));
-    logger.info(taskArns.toString());
+    log.info(taskArns.toString());
   }
 
   @Test
@@ -136,7 +136,7 @@ public class EcsIntegrationTest extends CategoryTest {
         mapper.readValue(josn, RegisterTaskDefinitionRequest.class);
     RegisterTaskDefinitionResult registerTaskDefinitionResult =
         ecsClient.registerTaskDefinition(registerTaskDefinitionRequest);
-    logger.info(registerTaskDefinitionResult.toString());
+    log.info(registerTaskDefinitionResult.toString());
   }
 
   @Test
@@ -157,7 +157,7 @@ public class EcsIntegrationTest extends CategoryTest {
     CreateServiceRequest createServiceRequest = mapper.readValue(serviceJson, CreateServiceRequest.class);
 
     CreateServiceResult service = ecsClient.createService(createServiceRequest);
-    logger.info(service.toString());
+    log.info(service.toString());
   }
 
   @Test
@@ -169,7 +169,7 @@ public class EcsIntegrationTest extends CategoryTest {
         "{\"cluster\":\"demo\",\"desiredCount\":1,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:7\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    logger.info(updateServiceResult.toString());
+    log.info(updateServiceResult.toString());
   }
 
   @Test
@@ -181,7 +181,7 @@ public class EcsIntegrationTest extends CategoryTest {
         "{\"cluster\":\"demo\",\"desiredCount\":10,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    logger.info(updateServiceResult.toString());
+    log.info(updateServiceResult.toString());
   }
 
   @Test
@@ -193,7 +193,7 @@ public class EcsIntegrationTest extends CategoryTest {
         "{\"cluster\":\"demo\",\"desiredCount\":0,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    logger.info(updateServiceResult.toString());
+    log.info(updateServiceResult.toString());
   }
 
   @Test
@@ -217,7 +217,7 @@ public class EcsIntegrationTest extends CategoryTest {
                 Base64.encodeBase64String("#!/bin/bash\necho ECS_CLUSTER=demo >> /etc/ecs/ecs.config".getBytes()));
 
     RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
-    logger.info(runInstancesRequest.toString());
+    log.info(runInstancesRequest.toString());
   }
 
   @Test
@@ -231,12 +231,12 @@ public class EcsIntegrationTest extends CategoryTest {
         new UpdateAutoScalingGroupRequest()
             .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
             .withMaxSize(10));
-    logger.info(updateAutoScalingGroupResult.toString());
+    log.info(updateAutoScalingGroupResult.toString());
     SetDesiredCapacityResult setDesiredCapacityResult = amazonAutoScalingClient.setDesiredCapacity(
         new SetDesiredCapacityRequest()
             .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
             .withDesiredCapacity(5));
-    logger.info(setDesiredCapacityResult.toString());
+    log.info(setDesiredCapacityResult.toString());
   }
 
   @Test
@@ -248,7 +248,7 @@ public class EcsIntegrationTest extends CategoryTest {
     //        new AmazonAutoScalingClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ",
     //        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
 
-    logger.info(
+    log.info(
         "curl --data \"name=wings&password=wings123&password2=wings123\" http://localhost:${PORT}/todolist/register\ncurl -b cookies.txt -c cookies.txt --data \"name=wings&password=wings123\" http://localhost:${PORT}/todolist/requestLogin\ncurl -IL -b cookies.txt -c cookies.txt http://localhost:${PORT}/todolist/inside/display\nfor i in $(seq 10)\ndo\n    curl -IL -b cookies.txt -c cookies.txt \"http://localhost:${PORT}/todolist/inside/addTask?priority=1&task=task\"$i\n    sleep 0.1\ndone\nrm cookies.txt\n");
   }
 

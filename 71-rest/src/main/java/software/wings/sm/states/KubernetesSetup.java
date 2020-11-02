@@ -355,7 +355,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
       try {
         maxVal = Integer.valueOf(context.renderExpression(getMaxInstances()));
       } catch (NumberFormatException e) {
-        logger.error(
+        log.error(
             format("Invalid number format for max instances: %s", context.renderExpression(getMaxInstances())), e);
       }
     }

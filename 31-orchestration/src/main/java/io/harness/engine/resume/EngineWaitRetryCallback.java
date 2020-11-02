@@ -41,6 +41,6 @@ public class EngineWaitRetryCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.info("Retry Error Callback Received");
+    log.info("Retry Error Callback Received");
   }
 }

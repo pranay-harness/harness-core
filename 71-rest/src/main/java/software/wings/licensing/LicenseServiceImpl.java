@@ -173,7 +173,7 @@ public class LicenseServiceImpl implements LicenseService {
         }
       }
     } catch (Exception e) {
-      logger.warn("Failed to check license info", e);
+      log.warn("Failed to check license info", e);
     }
   }
 
@@ -187,13 +187,13 @@ public class LicenseServiceImpl implements LicenseService {
     } else {
       String templateName = getEmailTemplateName(account, System.currentTimeMillis(), expiryTime);
       if (templateName != null) {
-        logger.info("Sending trial account expiration email with template name {} to account {}", templateName,
+        log.info("Sending trial account expiration email with template name {} to account {}", templateName,
             account.getUuid());
         boolean emailSent = sendEmailToAccountAdmin(account, templateName);
         if (emailSent) {
           updateLastLicenseExpiryReminderSentAt(account.getUuid(), System.currentTimeMillis());
         } else {
-          logger.warn("Couldn't send trial expiration email to customer for account {}", account.getUuid());
+          log.warn("Couldn't send trial expiration email to customer for account {}", account.getUuid());
         }
       }
     }
@@ -268,7 +268,7 @@ public class LicenseServiceImpl implements LicenseService {
   private void sendEmailToSales(
       Account account, long expiryTime, String accountType, String subject, String body, List<String> defaultContacts) {
     if (isEmpty(account.getSalesContacts()) && isEmpty(defaultContacts)) {
-      logger.info("Skipping the sending of email since no sales contacts were configured");
+      log.info("Skipping the sending of email since no sales contacts were configured");
       return;
     }
 
@@ -297,7 +297,7 @@ public class LicenseServiceImpl implements LicenseService {
       updateEmailSentToSales(account.getUuid(), true);
     } else {
       updateEmailSentToSales(account.getUuid(), false);
-      logger.warn("Couldn't send email to sales for account {}", account.getUuid());
+      log.warn("Couldn't send email to sales for account {}", account.getUuid());
     }
   }
 
@@ -330,13 +330,13 @@ public class LicenseServiceImpl implements LicenseService {
                                 .build();
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(3);
-      logger.info("Sending trial expiration reminder for account {} to account admin {}", accountId, user.getEmail());
+      log.info("Sending trial expiration reminder for account {} to account admin {}", accountId, user.getEmail());
       boolean emailSentToAdmin = emailNotificationService.send(emailData);
       emailSent = emailSent || emailSentToAdmin;
-      logger.info("Trial expiration reminder for account {} sent to account admin {} successfully {}", accountId,
+      log.info("Trial expiration reminder for account {} sent to account admin {} successfully {}", accountId,
           user.getEmail(), emailSentToAdmin);
     }
-    logger.info("Trial account expiration email with template name {} sent successfully {}", templateName, emailSent);
+    log.info("Trial account expiration email with template name {} sent successfully {}", templateName, emailSent);
     return emailSent;
   }
 

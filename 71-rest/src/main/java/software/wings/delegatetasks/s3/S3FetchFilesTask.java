@@ -57,7 +57,7 @@ public class S3FetchFilesTask extends AbstractDelegateRunnableTask {
   @Override
   public FetchS3FilesExecutionResponse run(TaskParameters parameters) {
     FetchS3FilesCommandParams taskParams = (FetchS3FilesCommandParams) parameters;
-    logger.info("Running S3FetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
+    log.info("Running S3FetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId());
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, taskParams.getAccountId(),
@@ -75,7 +75,7 @@ public class S3FetchFilesTask extends AbstractDelegateRunnableTask {
           .build();
     } catch (Exception ex) {
       String errorMessage = format("Exception: %s while fetching s3 file.", ExceptionUtils.getMessage(ex));
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
 
       return FetchS3FilesExecutionResponse.builder().errorMessage(errorMessage).commandStatus(FAILURE).build();

@@ -46,7 +46,7 @@ public class LdapSearch implements LdapValidator {
   public static class Builder {
     public LdapSearch build() {
       LdapSearch search = internalBuild();
-      search.validate(logger);
+      search.validate(log);
       return search;
     }
   }
@@ -71,7 +71,7 @@ public class LdapSearch implements LdapValidator {
       request.setReferralHandler(new SearchReferralHandler(maxReferralHops));
     }
 
-    logger.info("LdapSearchRequest : [{}]", request);
+    log.info("LdapSearchRequest : [{}]", request);
 
     try (Connection connection = connectionFactory.getConnection()) {
       connection.open();

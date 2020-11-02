@@ -79,7 +79,7 @@ public class MLServiceUtils {
         ? nodeData.getInstanceName()
         : executionContext.renderExpression(nodeData.getHostExpression(), contextBuilder.build());
 
-    logger.info("rendered host is {}", hostName);
+    log.info("rendered host is {}", hostName);
     return hostName;
   }
 }

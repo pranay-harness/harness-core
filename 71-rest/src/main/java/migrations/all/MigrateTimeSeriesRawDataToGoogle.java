@@ -40,7 +40,7 @@ public class MigrateTimeSeriesRawDataToGoogle implements Migration {
   @Override
   public void migrate() {
     if (dataStoreService instanceof MongoDataStoreServiceImpl) {
-      logger.info("DataStore service is an instance of MongoDB. Not migrating the records now");
+      log.info("DataStore service is an instance of MongoDB. Not migrating the records now");
       return;
     }
 
@@ -100,7 +100,7 @@ public class MigrateTimeSeriesRawDataToGoogle implements Migration {
             // rawData.addAll(rawDataForCurrentRecord);
             if (rawData.size() >= 1000) {
               dataStoreService.save(TimeSeriesRawData.class, rawData, true);
-              logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
+              log.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
               rawData.clear();
               sleep(ofMillis(1500));
             }
@@ -108,9 +108,9 @@ public class MigrateTimeSeriesRawDataToGoogle implements Migration {
         }
       }
       dataStoreService.save(TimeSeriesRawData.class, rawData, true);
-      logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
+      log.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
     } catch (Exception e) {
-      logger.error("Exception occurred while migrate time series raw data to GDS", e);
+      log.error("Exception occurred while migrate time series raw data to GDS", e);
     }
   }
 }

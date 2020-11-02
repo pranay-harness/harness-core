@@ -62,7 +62,7 @@ public class SshDelegateFunctionalTest extends AbstractFunctionalTest {
     assertThat(application).isNotNull();
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    logger.info("Ensuring SSH  Delegate");
+    log.info("Ensuring SSH  Delegate");
     sshDelegateExecutor.ensureSshDelegate(getAccount(), bearerToken, SshDelegateFunctionalTest.class);
   }
 

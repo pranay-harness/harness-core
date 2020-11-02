@@ -33,7 +33,7 @@ public class ReCaptchaVerifier {
       err = verifyCaptcha(captchaResponseToken);
     } catch (Exception e) {
       // catching exception because login should not be blocked because of error in verifying captcha
-      logger.error("Exception occurred while trying to verify captcha.", e);
+      log.error("Exception occurred while trying to verify captcha.", e);
       return;
     }
 
@@ -50,7 +50,7 @@ public class ReCaptchaVerifier {
     String secret = System.getenv("RECAPTCHA_SECRET");
 
     if (StringUtils.isEmpty(secret)) {
-      logger.error(
+      log.error(
           "Could not find captcha secret. Marking captcha verification as pass since it is an error on our side.");
       return Optional.empty();
     }
@@ -65,7 +65,7 @@ public class ReCaptchaVerifier {
       }
 
       if (!verificationStatusResponse.body().getSuccess()) {
-        logger.error("Captcha verification failed. Response: {}", verificationStatusResponse.body());
+        log.error("Captcha verification failed. Response: {}", verificationStatusResponse.body());
         return Optional.of(new Error(ErrorCode.INVALID_CAPTCHA_TOKEN, "Invalid Captcha Token"));
       }
 

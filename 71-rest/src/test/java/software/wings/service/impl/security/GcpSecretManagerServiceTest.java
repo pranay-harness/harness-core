@@ -237,7 +237,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
       result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
-      logger.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
     assertThat(result).isNull();
   }
@@ -262,7 +262,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
       result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
-      logger.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
     assertThat(result).isNull();
   }
@@ -287,7 +287,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
       result = gcpSecretsManagerService.saveGcpKmsConfig(UUIDGenerator.generateUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
-      logger.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
     assertThat(result).isNull();
   }

@@ -354,7 +354,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             triggerVariables.stream().filter(t -> t.getName().equals(var.getName())).findFirst().orElse(null);
         if (envVarInTrigger != null) {
           if (matchesVariablePattern(envVarInTrigger.getValue())) {
-            logger.info("Environment parameterized in Trigger and the value is {}", envVarInTrigger.getValue());
+            log.info("Environment parameterized in Trigger and the value is {}", envVarInTrigger.getValue());
             if (!matchesVariablePattern(variable.getValue())) {
               throw new InvalidRequestException(
                   "Infrastructure Definition should be templatised when environment value is templatised: Invalid Infra value: "
@@ -468,7 +468,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     String envId = null;
 
     if (workflow.checkEnvironmentTemplatized()) {
-      logger.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
+      log.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
           workflow.getUuid(), workflow.getEnvId());
 
       if (isNotEmpty(variables)) {
@@ -480,7 +480,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
         if (workflowEnvVariable != null) {
           if (matchesVariablePattern(workflowEnvVariable.getValue())) {
-            logger.info("Environment parameterized in Trigger and the value is {}", workflowEnvVariable.getValue());
+            log.info("Environment parameterized in Trigger and the value is {}", workflowEnvVariable.getValue());
           } else {
             Environment environment =
                 environmentService.getEnvironmentByName(appId, workflowEnvVariable.getValue(), false);

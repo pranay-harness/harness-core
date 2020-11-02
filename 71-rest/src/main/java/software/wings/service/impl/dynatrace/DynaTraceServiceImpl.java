@@ -75,7 +75,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
             .build();
       }
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new VerificationOperationException(
           ErrorCode.DYNA_TRACE_ERROR, "Error in getting metric data for the node. " + e.getMessage());
     }

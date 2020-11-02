@@ -62,7 +62,7 @@ public class StackDriverServiceImpl implements StackDriverService {
     try {
       tmpStackDriverYaml = Resources.toString(STACKDRIVER_METRICS_URL, Charsets.UTF_8);
     } catch (IOException ex) {
-      logger.info("Exception while reading StackDriver yaml", ex);
+      log.info("Exception while reading StackDriver yaml", ex);
     }
     STACKDRIVER_YAML = tmpStackDriverYaml;
   }
@@ -127,7 +127,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                 createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
       }
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR).addParam("reason", e.getMessage());
     }
   }
@@ -151,7 +151,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                             .build(),
               guid, query, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), System.currentTimeMillis());
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
           .addParam("reason", "Error in getting sample log data." + e.getMessage());
     }

@@ -250,7 +250,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       application = yamlHelper.getApp(auditRequestData.getAccountId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.APPLICATION.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.APPLICATION.name()));
     }
 
     if (application == null) {
@@ -274,7 +274,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       environment = yamlHelper.getEnvironment(auditRequestData.getAppId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.ENVIRONMENT.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.ENVIRONMENT.name()));
     }
 
     if (environment == null) {
@@ -298,7 +298,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       service = yamlHelper.getService(auditRequestData.getAppId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.SERVICE.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.SERVICE.name()));
     }
 
     if (service == null) {
@@ -322,7 +322,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       workflow = yamlHelper.getWorkflow(auditRequestData.getAccountId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.WORKFLOW.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.WORKFLOW.name()));
     }
 
     if (workflow == null) {
@@ -344,7 +344,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       trigger = yamlHelper.getTrigger(auditRequestData.getAppId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.TRIGGER.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.TRIGGER.name()));
     }
 
     if (trigger == null) {
@@ -365,7 +365,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       pipeline = yamlHelper.getPipeline(auditRequestData.getAccountId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.PIPELINE.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.PIPELINE.name()));
     }
 
     if (pipeline == null) {
@@ -389,7 +389,7 @@ public class AuditYamlHelperForFailedChanges {
       infrastructureProvisioner =
           yamlHelper.getInfrastructureProvisioner(auditRequestData.getAccountId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.PROVISIONER.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.PROVISIONER.name()));
     }
 
     if (infrastructureProvisioner == null) {
@@ -417,7 +417,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       cvConfiguration = yamlHelper.getCVConfiguration(auditRequestData.getAccountId(), yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(
+      log.warn(getWarningMessage(
           yamlFilePath, auditRequestData.getAccountId(), EntityType.VERIFICATION_CONFIGURATION.name()));
     }
 
@@ -576,7 +576,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       mapping = yamlHelper.getInfraMapping(auditRequestData.getAccountId(), auditRequestData.getYamlFilePath());
     } catch (Exception e) {
-      logger.warn(getWarningMessage(
+      log.warn(getWarningMessage(
           auditRequestData.getYamlFilePath(), auditRequestData.getAccountId(), YamlType.INFRA_MAPPING.name()));
       mapping = null;
     }
@@ -604,7 +604,7 @@ public class AuditYamlHelperForFailedChanges {
     try {
       settingAttribute = getSettingAttribute(auditRequestData.getAccountId(), type, yamlFilePath);
     } catch (Exception e) {
-      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), type.name()));
+      log.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), type.name()));
       settingAttribute = null;
     }
 
@@ -764,11 +764,11 @@ public class AuditYamlHelperForFailedChanges {
       Map map = (Map) object;
       return (String) map.get("type");
     } catch (Exception e) {
-      logger.warn(new StringBuilder(128)
-                      .append("Failed to get YamlSubtype for Path: ")
-                      .append(yamlPath)
-                      .append(" during git change audit...")
-                      .toString());
+      log.warn(new StringBuilder(128)
+                   .append("Failed to get YamlSubtype for Path: ")
+                   .append(yamlPath)
+                   .append(" during git change audit...")
+                   .toString());
       return null;
     }
   }
@@ -780,11 +780,11 @@ public class AuditYamlHelperForFailedChanges {
       Map map = (Map) object;
       return (String) map.get("targetFilePath");
     } catch (Exception e) {
-      logger.warn(new StringBuilder(128)
-                      .append("Failed to get targetFilePath for Path: ")
-                      .append(yamlPath)
-                      .append(" during git change audit...")
-                      .toString());
+      log.warn(new StringBuilder(128)
+                   .append("Failed to get targetFilePath for Path: ")
+                   .append(yamlPath)
+                   .append(" during git change audit...")
+                   .toString());
       return null;
     }
   }
@@ -796,11 +796,11 @@ public class AuditYamlHelperForFailedChanges {
       Map map = (Map) object;
       return (String) map.get("serviceName");
     } catch (Exception e) {
-      logger.warn(new StringBuilder(128)
-                      .append("Failed to get serviceName for Path: ")
-                      .append(yamlPath)
-                      .append(" during git change audit...")
-                      .toString());
+      log.warn(new StringBuilder(128)
+                   .append("Failed to get serviceName for Path: ")
+                   .append(yamlPath)
+                   .append(" during git change audit...")
+                   .toString());
       return null;
     }
   }

@@ -59,9 +59,9 @@ public class ChangeEventProcessorTask implements Runnable {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("ChangeEvent processor interrupted");
+      log.error("ChangeEvent processor interrupted");
     } finally {
-      logger.info("Shutting down search consumer service");
+      log.info("Shutting down search consumer service");
       executorService.shutdownNow();
     }
   }
@@ -80,8 +80,7 @@ public class ChangeEventProcessorTask implements Runnable {
     SearchSourceEntitySyncState searchSourceEntitySyncState =
         wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
     if (searchSourceEntitySyncState == null || !searchSourceEntitySyncState.getLastSyncedToken().equals(token)) {
-      logger.error(
-          String.format("Search Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
+      log.error(String.format("Search Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
       return false;
     }
     return true;
@@ -110,19 +109,19 @@ public class ChangeEventProcessorTask implements Runnable {
         isChangeHandled = processChangeEventFuture.get();
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        logger.error("Change Event thread interrupted", e);
+        log.error("Change Event thread interrupted", e);
       } catch (ExecutionException e) {
-        logger.error("Change event thread interrupted due to exception", e.getCause());
+        log.error("Change event thread interrupted due to exception", e.getCause());
       }
       if (!isChangeHandled) {
-        logger.error("Could not process changeEvent {}", changeEvent.toString());
+        log.error("Could not process changeEvent {}", changeEvent.toString());
         return false;
       }
     }
 
     boolean isSaved = saveSearchSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
     if (!isSaved) {
-      logger.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
+      log.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
           sourceClass.getCanonicalName());
     }
 
@@ -136,11 +135,11 @@ public class ChangeEventProcessorTask implements Runnable {
     logMetricsCounter++;
     boolean shouldLogMetrics = (logMetricsCounter % 5000) == 0;
     if (shouldLogMetrics) {
-      logger.info("Search change event blocking queue size {}", changeEventQueue.size());
-      logger.info("Time taken for changeEvent {}:{} is {}", changeEvent.getEntityType(), changeEvent.getChangeType(),
+      log.info("Search change event blocking queue size {}", changeEventQueue.size());
+      log.info("Time taken for changeEvent {}:{} is {}", changeEvent.getEntityType(), changeEvent.getChangeType(),
           timeTaken);
-      logger.info("Running average: {}", changeEventMetricsTracker.getRunningAverageTime());
-      logger.info("No. of change Events processed: {}", changeEventMetricsTracker.getNumChangeEvents());
+      log.info("Running average: {}", changeEventMetricsTracker.getRunningAverageTime());
+      log.info("No. of change Events processed: {}", changeEventMetricsTracker.getNumChangeEvents());
     }
   }
 }

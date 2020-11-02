@@ -63,7 +63,7 @@ public class CDNGPipelineExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) throws IOException {
-    logger.info("Validating pipeline");
+    log.info("Validating pipeline");
     CDPipelineValidationInfo cdPipelineValidationInfo =
         ngPipelineExecuteHelper.validatePipeline(pipelineId, accountId, orgId, projectId).orElse(null);
     if (cdPipelineValidationInfo == null) {

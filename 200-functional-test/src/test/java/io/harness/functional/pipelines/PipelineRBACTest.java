@@ -92,7 +92,7 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     assertThat(artifactStream).isNotNull();
 
-    logger.info("Creating k8s rolling workflow");
+    log.info("Creating k8s rolling workflow");
     savedWorkflow = K8SUtils.createWorkflow(application.getUuid(), qaEnvironment.getUuid(), service.getUuid(),
         qaInfrastructureDefinition.getUuid(), "Workflow - Pipeline RBAC - " + System.currentTimeMillis(),
         OrchestrationWorkflowType.ROLLING, bearerToken, application.getAccountId());
@@ -100,7 +100,7 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
     assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
-    logger.info("Setup complete");
+    log.info("Setup complete");
   }
 
   @Test
@@ -108,59 +108,59 @@ public class PipelineRBACTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void testPipelineRBAC() {
     String pipelineName = "Pipeline RBAC Test - " + System.currentTimeMillis();
-    logger.info("Pipeline name: " + pipelineName);
+    log.info("Pipeline name: " + pipelineName);
 
     Pipeline pipeline = new Pipeline();
     pipeline.setName(pipelineName);
     pipeline.setDescription("description");
 
-    logger.info("Creating pipeline...");
+    log.info("Creating pipeline...");
     Pipeline createdPipeline =
         PipelineRestUtils.createPipeline(application.getAppId(), pipeline, getAccount().getUuid(), bearerToken);
     assertThat(createdPipeline).isNotNull();
 
-    logger.info("Verifying pipeline...");
+    log.info("Verifying pipeline...");
     Pipeline verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(createdPipeline.getName().equals(verifyCreatedPipeline.getName())).isTrue();
-    logger.info("Created pipeline");
+    log.info("Created pipeline");
 
-    logger.info("Creating pipeline stages...");
+    log.info("Creating pipeline stages...");
     List<PipelineStage> pipelineStages = new ArrayList<>();
     PipelineStage executionStage = PipelineUtils.prepareExecutionStage(
         qaInfrastructureDefinition.getEnvId(), savedWorkflow.getUuid(), Collections.emptyMap());
     pipelineStages.add(executionStage);
     verifyCreatedPipeline.setPipelineStages(pipelineStages);
 
-    logger.info("Updating pipeline...");
+    log.info("Updating pipeline...");
     createdPipeline = PipelineRestUtils.updatePipeline(application.getAppId(), verifyCreatedPipeline, bearerToken);
     assertThat(createdPipeline).isNotNull();
 
-    logger.info("Verifying updated pipeline...");
+    log.info("Verifying updated pipeline...");
     verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(verifyCreatedPipeline.getPipelineStages().size() == pipelineStages.size()).isTrue();
-    logger.info("Updated pipeline");
+    log.info("Updated pipeline");
 
-    logger.info("Updating workflow environment...");
+    log.info("Updating workflow environment...");
     savedWorkflow.setEnvId(prodEnvironment.getUuid());
     savedWorkflow.setInfraDefinitionId(prodInfrastructureDefinition.getUuid());
     savedWorkflow =
         WorkflowRestUtils.updateWorkflow(bearerToken, application.getAccountId(), application.getUuid(), savedWorkflow);
-    logger.info("Updated workflow environment");
+    log.info("Updated workflow environment");
 
-    logger.info("Deleting environment...");
+    log.info("Deleting environment...");
     EnvironmentRestUtils.deleteEnvironment(
         bearerToken, application.getUuid(), application.getAccountId(), qaEnvironment.getUuid());
-    logger.info("Deleted environment");
+    log.info("Deleted environment");
 
-    logger.info("Verifying if pipeline still accessible...");
+    log.info("Verifying if pipeline still accessible...");
     verifyCreatedPipeline =
         PipelineRestUtils.getPipeline(application.getAppId(), createdPipeline.getUuid(), bearerToken);
     assertThat(verifyCreatedPipeline).isNotNull();
     assertThat(verifyCreatedPipeline.getName()).isEqualTo(pipelineName);
-    logger.info("Validation completed");
+    log.info("Validation completed");
   }
 }

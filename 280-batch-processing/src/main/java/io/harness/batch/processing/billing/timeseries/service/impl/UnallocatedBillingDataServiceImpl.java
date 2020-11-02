@@ -57,7 +57,7 @@ public class UnallocatedBillingDataServiceImpl {
       }
       return unallocatedCostDataList;
     } catch (SQLException e) {
-      logger.error("Error while fetching Unallocated Cost Data List : exception", e);
+      log.error("Error while fetching Unallocated Cost Data List : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -88,7 +88,7 @@ public class UnallocatedBillingDataServiceImpl {
       }
       return clusterCostData;
     } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
+      log.error("Error while fetching Common Fields : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }

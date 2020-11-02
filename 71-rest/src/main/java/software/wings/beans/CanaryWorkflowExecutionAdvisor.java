@@ -106,7 +106,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           executionInterruptManager.checkForExecutionInterrupt(context.getAppId(), context.getWorkflowExecutionId());
       if (executionInterrupts != null
           && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ABORT_ALL)) {
-        logger.info("Returning advise for ABORT_ALL");
+        log.info("Returning advise for ABORT_ALL");
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
@@ -298,7 +298,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
     } catch (Exception ex) {
-      logger.error("Error Occurred while calculating advise. This is really bad");
+      log.error("Error Occurred while calculating advise. This is really bad");
       return null;
     } finally {
       try {
@@ -308,7 +308,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               phaseStepSubWorkflow, executionEvent, workflowExecution, context, stateExecutionInstance);
         }
       } catch (Exception ex) {
-        logger.warn("Error while getting workflow execution data for instance sync for execution: {}",
+        log.warn("Error while getting workflow execution data for instance sync for execution: {}",
             workflowExecution.getUuid(), ex);
       }
     }
@@ -411,7 +411,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     if (workflowStandardParams != null && isNotEmpty(workflowStandardParams.getExecutionHosts())) {
-      logger.info("Not generating rolling  phases when execution hosts are present");
+      log.info("Not generating rolling  phases when execution hosts are present");
       return true;
     }
     return false;
@@ -706,7 +706,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName);
 
     if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
-      logger.error("Defaulting to accepting the action. "
+      log.error("Defaulting to accepting the action. "
               + "the propagated failure types for state {} are unknown. ",
           stateName);
     }

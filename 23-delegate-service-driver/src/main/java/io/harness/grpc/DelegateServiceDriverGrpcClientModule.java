@@ -56,16 +56,16 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
     String defaultAuthority = "default-authority.harness.io";
     String authorityToUse;
     if (!isValidAuthority(authority)) {
-      logger.info("Authority in config {} is invalid. Using default value {}", authority, defaultAuthority);
+      log.info("Authority in config {} is invalid. Using default value {}", authority, defaultAuthority);
       authorityToUse = defaultAuthority;
     } else {
       String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
       String versionedAuthority = versionPrefix + authority;
       if (isValidAuthority(versionedAuthority)) {
-        logger.info("Using versioned authority: {}", versionedAuthority);
+        log.info("Using versioned authority: {}", versionedAuthority);
         authorityToUse = versionedAuthority;
       } else {
-        logger.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
+        log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
         authorityToUse = authority;
       }
     }
@@ -78,7 +78,7 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
       GrpcUtil.checkAuthority(authority);
       return true;
     } catch (Exception var2) {
-      logger.error("Exception occurred when checking for valid authority", var2);
+      log.error("Exception occurred when checking for valid authority", var2);
       return false;
     }
   }

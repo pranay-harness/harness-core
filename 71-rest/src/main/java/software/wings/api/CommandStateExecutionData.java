@@ -114,7 +114,7 @@ public class CommandStateExecutionData extends StateExecutionData {
             }
           });
         } catch (Exception e) {
-          logger.error("Failed to retrieve command units for appId {} and activityId {} ", appId, activityId, e);
+          log.error("Failed to retrieve command units for appId {} and activityId {} ", appId, activityId, e);
         }
       }
       if (countsByStatuses != null) {

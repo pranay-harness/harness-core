@@ -44,10 +44,10 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
       try (CollectionLogContext ignore1 = new CollectionLogContext(iterator.getCollection(), OVERRIDE_NESTS);
            ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(watch.getTime(), OVERRIDE_NESTS)) {
         if (watch.getTime() > dangerouslySlowProcessing) {
-          logger.error("HIterator is dangerously slow processing the data for query: {}",
+          log.error("HIterator is dangerously slow processing the data for query: {}",
               iterator.getCursor().getQuery().toString());
         } else {
-          logger.info("Time consuming HIterator processing");
+          log.info("Time consuming HIterator processing");
         }
       }
     }

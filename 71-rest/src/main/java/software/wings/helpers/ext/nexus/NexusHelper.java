@@ -28,9 +28,9 @@ public class NexusHelper {
   public List<BuildDetails> constructBuildDetails(String repoId, String groupId, String artifactName,
       List<String> versions, Map<String, String> versionToArtifactUrls,
       Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls, String extension, String classifier) {
-    logger.info("Versions come from nexus server {}", versions);
+    log.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    log.info("After sorting alphanumerically versions {}", versions);
 
     return versions.stream()
         .map(version -> {

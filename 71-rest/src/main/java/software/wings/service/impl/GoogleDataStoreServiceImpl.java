@@ -124,13 +124,13 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String id) {
-    logger.info("Deleting from GoogleDatastore table {}, id: {}",
+    log.info("Deleting from GoogleDatastore table {}, id: {}",
         clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value(), id);
     Key keyToDelete = datastore.newKeyFactory()
                           .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                           .newKey(id);
     datastore.delete(keyToDelete);
-    logger.info("Deleted from GoogleDatastore table {}, id: {}",
+    log.info("Deleted from GoogleDatastore table {}, id: {}",
         clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value(), id);
   }
 
@@ -144,7 +144,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
                            .build();
     List<Key> keysToDelete = new ArrayList<>();
     datastore.run(query).forEachRemaining(keysToDelete::add);
-    logger.info("deleting {} keys for activity {}", keysToDelete.size(), activityId);
+    log.info("deleting {} keys for activity {}", keysToDelete.size(), activityId);
     datastore.delete(keysToDelete.stream().toArray(Key[] ::new));
   }
 
@@ -157,17 +157,17 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
     dataStoreClasses.forEach(dataStoreClass -> {
       String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
-      logger.info("cleaning up {}", collectionName);
+      log.info("cleaning up {}", collectionName);
       Query<Key> query = Query.newKeyQueryBuilder()
                              .setKind(collectionName)
                              .setFilter(PropertyFilter.lt("validUntil", System.currentTimeMillis()))
                              .build();
       List<Key> keysToDelete = new ArrayList<>();
       datastore.run(query).forEachRemaining(keysToDelete::add);
-      logger.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
+      log.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
       final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
       keyBatches.forEach(keys -> {
-        logger.info("purging {} records from {}", keys.size(), collectionName);
+        log.info("purging {} records from {}", keys.size(), collectionName);
         datastore.delete(keys.stream().toArray(Key[] ::new));
       });
     });
@@ -176,16 +176,16 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String fieldName, String fieldValue) {
     String collectionName = clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
-    logger.info("deleting records from {} for {} = {}", collectionName, fieldName, fieldValue);
+    log.info("deleting records from {} for {} = {}", collectionName, fieldName, fieldValue);
     Query<Key> query =
         Query.newKeyQueryBuilder().setKind(collectionName).setFilter(PropertyFilter.eq(fieldName, fieldValue)).build();
     List<Key> keysToDelete = new ArrayList<>();
     datastore.run(query).forEachRemaining(keysToDelete::add);
-    logger.info("Total keys to delete in {} are {} for condition {} = {}", collectionName, keysToDelete.size(),
-        fieldName, fieldValue);
+    log.info("Total keys to delete in {} are {} for condition {} = {}", collectionName, keysToDelete.size(), fieldName,
+        fieldValue);
     final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
     keyBatches.forEach(keys -> {
-      logger.info("purging {} records from {}", keys.size(), collectionName);
+      log.info("purging {} records from {}", keys.size(), collectionName);
       datastore.delete(keys.stream().toArray(Key[] ::new));
     });
   }

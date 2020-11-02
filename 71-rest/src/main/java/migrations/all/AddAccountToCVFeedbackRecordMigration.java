@@ -40,7 +40,7 @@ public class AddAccountToCVFeedbackRecordMigration implements Migration {
             if (cvConfiguration != null) {
               record.setAccountId(cvConfiguration.getAccountId());
             } else {
-              logger.info("Bad cvConfigID found in CVFeedbackRecord" + cvConfig);
+              log.info("Bad cvConfigID found in CVFeedbackRecord" + cvConfig);
             }
           } else {
             StateExecutionInstance stateExecutionInstance =
@@ -51,7 +51,7 @@ public class AddAccountToCVFeedbackRecordMigration implements Migration {
         }
 
       } catch (Exception ex) {
-        logger.info("Failure while adding accountId to CVFeedbackRecord");
+        log.info("Failure while adding accountId to CVFeedbackRecord");
       }
     });
 

@@ -62,7 +62,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
   @Override
   public void handle(ApprovalPollingJobEntity entity) {
     try (AutoLogContext ignore1 = new AccountLogContext(entity.getAccountId(), OVERRIDE_ERROR)) {
-      logger.info(
+      log.info(
           "Polling Approval status for approval polling job {} approval type {}", entity, entity.getApprovalType());
     }
 

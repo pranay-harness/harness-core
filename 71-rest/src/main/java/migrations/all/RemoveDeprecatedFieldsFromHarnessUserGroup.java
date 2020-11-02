@@ -21,14 +21,14 @@ public class RemoveDeprecatedFieldsFromHarnessUserGroup implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Removing deprecated fields from Harness user groups.");
+      log.info("Removing deprecated fields from Harness user groups.");
 
       List<HarnessUserGroup> harnessUserGroups =
           persistence.createQuery(HarnessUserGroup.class, excludeAuthority).asList();
       harnessUserGroups.forEach(group -> persistence.save(group));
 
     } catch (Exception ex) {
-      logger.error("Error while removing deprecated fields from Harness user groups.", ex);
+      log.error("Error while removing deprecated fields from Harness user groups.", ex);
     }
   }
 }

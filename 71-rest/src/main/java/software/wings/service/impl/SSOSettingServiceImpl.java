@@ -126,7 +126,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
-    logger.info("Auditing creation of SAML Settings for account={}", settings.getAccountId());
+    log.info("Auditing creation of SAML Settings for account={}", settings.getAccountId());
 
     return savedSettings;
   }
@@ -150,7 +150,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     Account account = accountService.get(settings.getAccountId());
     accountService.update(account);
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, settings, Event.Type.CREATE);
-    logger.info("Auditing creation of OAUTH Settings for account={}", settings.getAccountId());
+    log.info("Auditing creation of OAUTH Settings for account={}", settings.getAccountId());
     return savedSettings;
   }
 
@@ -166,7 +166,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     wingsPersistence.save(oldSettings);
     OauthSettings newSettings = wingsPersistence.get(OauthSettings.class, oldSettings.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, newSettings, Event.Type.UPDATE);
-    logger.info("Auditing updation of OAUTH Settings for account={}", newSettings.getAccountId());
+    log.info("Auditing updation of OAUTH Settings for account={}", newSettings.getAccountId());
     return newSettings;
   }
 
@@ -183,7 +183,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     account.setOauthEnabled(false);
     accountService.update(account);
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settings);
-    logger.info("Auditing deletion of OAUTH Settings for account={}", accountId);
+    log.info("Auditing deletion of OAUTH Settings for account={}", accountId);
     return wingsPersistence.delete(settings);
   }
 
@@ -194,7 +194,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException("No Saml settings found for this account");
     }
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, samlSettings);
-    logger.info("Auditing deletion of SAML Settings for account={}", accountId);
+    log.info("Auditing deletion of SAML Settings for account={}", accountId);
     return deleteSamlSettings(samlSettings);
   }
 
@@ -229,7 +229,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
-    logger.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
+    log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
     return savedSettings;
   }
@@ -253,7 +253,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
     auditServiceHelper.reportForAuditingUsingAccountId(
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
-    logger.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
+    log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
     return savedSettings;
   }
@@ -277,7 +277,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     wingsPersistence.delete(settings);
     LdapGroupSyncJob.delete(jobScheduler, this, settings.getAccountId(), settings.getUuid());
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(settings.getAccountId(), settings);
-    logger.info("Auditing deletion of LDAP Settings for account={}", settings.getAccountId());
+    log.info("Auditing deletion of LDAP Settings for account={}", settings.getAccountId());
     return settings;
   }
 

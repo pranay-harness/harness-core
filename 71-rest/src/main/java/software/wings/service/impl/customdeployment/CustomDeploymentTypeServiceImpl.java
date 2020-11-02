@@ -101,7 +101,7 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
         return template.getName();
       }
     } catch (Exception e) {
-      logger.error("Linked Custom Deployment Type Not Found", e);
+      log.error("Linked Custom Deployment Type Not Found", e);
     }
     return null;
   }
@@ -136,7 +136,7 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
             entity -> entity.setDeploymentTypeName(templateIdToNameMap.get(entity.getDeploymentTypeTemplateId())));
       }
     } catch (Exception ex) {
-      logger.error("Could not batch get deployment templates", ex);
+      log.error("Could not batch get deployment templates", ex);
     }
   }
 }

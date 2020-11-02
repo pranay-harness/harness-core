@@ -69,7 +69,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
         () -> applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST));
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.GCP_HELM);
-    logger.info("Ensured Infra def");
+    log.info("Ensured Infra def");
     resetCache(owners.obtainAccount().getUuid());
   }
 
@@ -115,9 +115,9 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
 
   private void testHelmWorkflowExecution(Service service, String workflowName) {
     addValuesYamlToService(service);
-    logger.info("Added values.yaml to service");
+    log.info("Added values.yaml to service");
     workflow = helmHelper.createHelmWorkflow(seed, owners, workflowName, service, infrastructureDefinition);
-    logger.info("Workflow created");
+    log.info("Workflow created");
 
     resetCache(owners.obtainAccount().getUuid());
     ExecutionArgs executionArgs = getExecutionArgs("functional-tests");

@@ -123,7 +123,7 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
   private List<AppdynamicsMetricData> getTierBTMetricData(@Nullable String hostName, String btName) {
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + appdynamicsTier.getName() + "|" + btName + "|"
         + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
-    logger.info("fetching metrics for path {} ", metricPath);
+    log.info("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest = getAppDynamicsRestClient().getMetricDataTimeRange(
         getHeaderWithCredentials(), dataCollectionInfo.getAppDynamicsApplicationId(), metricPath,
         dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli(), false);
@@ -165,7 +165,7 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
         String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
         String nodeName = isEmpty(host) ? tierName : appdynamicsPathPieces[5];
         if (isNotEmpty(host) && !dataCollectionInfo.getHosts().contains(nodeName)) {
-          logger.info("skipping: {}", nodeName);
+          log.info("skipping: {}", nodeName);
           continue;
         }
         String txnName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);

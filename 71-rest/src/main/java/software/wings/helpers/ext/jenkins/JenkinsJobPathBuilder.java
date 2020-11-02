@@ -42,7 +42,7 @@ public class JenkinsJobPathBuilder {
         }
       }
 
-      logger.info("Retrieving job {} success", jobName);
+      log.info("Retrieving job {} success", jobName);
       return jenkinsJobPath;
 
     } catch (Exception e) {

@@ -50,7 +50,7 @@ public class BigQueryServiceImpl implements BigQueryService {
         return ValidationResult.builder().valid(true).build();
       }
     } catch (BigQueryException be) {
-      logger.error("Unable to access BigQuery Dataset", be);
+      log.error("Unable to access BigQuery Dataset", be);
       return ValidationResult.builder().valid(false).errorMessage(be.getMessage()).build();
     }
   }

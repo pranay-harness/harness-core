@@ -60,7 +60,7 @@ public class ContainerSyncImpl implements ContainerSync {
         if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
           String msg =
               "Unsupported infrastructure mapping type for containers :" + infrastructureMapping.getInfraMappingType();
-          logger.error(msg);
+          log.error(msg);
           throw new WingsException(msg);
         }
 
@@ -116,13 +116,12 @@ public class ContainerSyncImpl implements ContainerSync {
         // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
         // will be deleted.
         if (e.getCode() == ErrorCode.CLUSTER_NOT_FOUND) {
-          logger.info(e.getMessage());
+          log.info(e.getMessage());
         } else {
           throw e;
         }
       } catch (Exception ex) {
-        logger.warn(
-            "Error while getting instances for container {}", containerDeploymentInfo.getContainerSvcName(), ex);
+        log.warn("Error while getting instances for container {}", containerDeploymentInfo.getContainerSvcName(), ex);
         throw new WingsException(ErrorCode.GENERAL_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container " + containerDeploymentInfo.getContainerSvcName());
@@ -136,11 +135,11 @@ public class ContainerSyncImpl implements ContainerSync {
       ContainerInfrastructureMapping containerInfraMapping, List<ContainerMetadata> containerMetadataList) {
     List<ContainerInfo> result = Lists.newArrayList();
 
-    logger.info("getInstances() call for app {}", containerInfraMapping.getAppId());
+    log.info("getInstances() call for app {}", containerInfraMapping.getAppId());
 
     for (ContainerMetadata containerMetadata : containerMetadataList) {
       try {
-        logger.info("getInstances() call for app {} and containerSvcName {}", containerInfraMapping.getAppId(),
+        log.info("getInstances() call for app {} and containerSvcName {}", containerInfraMapping.getAppId(),
             containerMetadata);
 
         ContainerServiceParams containerServiceParams =
@@ -168,7 +167,7 @@ public class ContainerSyncImpl implements ContainerSync {
         // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
         // will be deleted.
         if (e.getCode() == ErrorCode.CLUSTER_NOT_FOUND) {
-          logger.info(e.getMessage());
+          log.info(e.getMessage());
         } else {
           throw e;
         }

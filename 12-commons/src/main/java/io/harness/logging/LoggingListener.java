@@ -19,30 +19,30 @@ public class LoggingListener extends Service.Listener {
   @Override
   public void starting() {
     super.starting();
-    logger.info("Service {} starting", service);
+    log.info("Service {} starting", service);
   }
 
   @Override
   public void running() {
     super.running();
-    logger.info("Service {} running", service);
+    log.info("Service {} running", service);
   }
 
   @Override
   public void stopping(Service.State from) {
     super.stopping(from);
-    logger.info("Service {} stopping from {}", service, from);
+    log.info("Service {} stopping from {}", service, from);
   }
 
   @Override
   public void terminated(Service.State from) {
     super.terminated(from);
-    logger.info("Service {} terminated from {}", service, from);
+    log.info("Service {} terminated from {}", service, from);
   }
 
   @Override
   public void failed(Service.State from, Throwable failure) {
     super.failed(from, failure);
-    logger.error("Service {} failed from {} with error", service, from, failure);
+    log.error("Service {} failed from {} with error", service, from, failure);
   }
 }

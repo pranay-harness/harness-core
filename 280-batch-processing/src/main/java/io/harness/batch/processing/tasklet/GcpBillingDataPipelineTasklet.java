@@ -89,7 +89,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
                 billingDataPipelineService.createTransferScheduledQueriesForGCP(transferJobDisplayName, dstDataSetId,
                     gcpOrganization.getServiceAccountEmail(), gcpBqProjectId + "." + gcpBqDatasetId);
               } catch (IOException e) {
-                logger.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+                log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
               }
               try {
                 runOnceScheduledQueryName =
@@ -98,8 +98,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
                     billingDataPipelineService.createRunOnceScheduledQueryGCP(runOnceScheduledQueryName, gcpBqProjectId,
                         gcpBqDatasetId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
               } catch (IOException e) {
-                logger.error(
-                    "Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
+                log.error("Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
               }
               break;
             default:
@@ -109,7 +108,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
                     billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName, gcpBqProjectId,
                         gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
               } catch (IOException e) {
-                logger.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+                log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
               }
           }
 
@@ -117,7 +116,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
             billingDataPipelineService.triggerTransferJobRun(
                 transferJobResourceName, gcpOrganization.getServiceAccountEmail());
           } catch (IOException e) {
-            logger.error("Error while starting manual run for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+            log.error("Error while starting manual run for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
           }
 
           String scheduledQueryResourceName = null;
@@ -126,7 +125,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
             scheduledQueryResourceName =
                 billingDataPipelineService.createScheduledQueriesForGCP(scheduledQueryDisplayName, dstDataSetId);
           } catch (IOException e) {
-            logger.error("Error while creating Scheduled Queries {}", scheduledQueryDisplayName, e);
+            log.error("Error while creating Scheduled Queries {}", scheduledQueryDisplayName, e);
           }
 
           String billingDataPipelineRecordId = billingDataPipelineRecordDao.create(
@@ -156,7 +155,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
                                                     .build());
             });
           } catch (IOException e) {
-            logger.error("Error while getting manual runs for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+            log.error("Error while getting manual runs for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
           }
         });
     return null;

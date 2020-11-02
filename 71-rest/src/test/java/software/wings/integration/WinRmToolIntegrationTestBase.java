@@ -22,12 +22,12 @@ public abstract class WinRmToolIntegrationTestBase extends CategoryTest {
   private static void setUp() {}
 
   public static void main(String[] args) {
-    logger.info("WinRmToolIntegrationTestBase: Start.");
+    log.info("WinRmToolIntegrationTestBase: Start.");
     // test2();
-    logger.info(getEndpoint("localhost", 80, true));
-    logger.info(psWrappedCommand("echo hello\r\ndir"));
+    log.info(getEndpoint("localhost", 80, true));
+    log.info(psWrappedCommand("echo hello\r\ndir"));
 
-    logger.info("WinRmToolIntegrationTestBase: Done.");
+    log.info("WinRmToolIntegrationTestBase: Done.");
   }
 
   private static String localhost = "https://localhost:5986/wsman";
@@ -57,10 +57,10 @@ public abstract class WinRmToolIntegrationTestBase extends CategoryTest {
       StringWriter out = new StringWriter();
       StringWriter err = new StringWriter();
       exitCode = shell.execute("PowerShell Get-ChildItem", out, err);
-      logger.info(out.toString());
-      logger.info(err.toString());
+      log.info(out.toString());
+      log.info(err.toString());
       // exitCode = shell.execute("dir /s", out, err);
-      // logger.info(out.toString());
+      // log.info(out.toString());
     }
   }
 
@@ -79,7 +79,7 @@ public abstract class WinRmToolIntegrationTestBase extends CategoryTest {
       tool.setRetriesForConnectionFailures(1);
       tool.executePs("echo hi");
     } catch (Exception e) {
-      logger.error(e.getMessage());
+      log.error(e.getMessage());
     }
 
     context.shutdown();

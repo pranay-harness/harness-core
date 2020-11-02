@@ -25,7 +25,7 @@ public class FunctionalComponentTest extends AbstractFunctionalTest {
   public void componentFunctionalTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
-      logger.info("{} passed", test.getKey());
+      log.info("{} passed", test.getKey());
     }
   }
 }

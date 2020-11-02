@@ -12,7 +12,7 @@ public class SystemTemplateGalleryMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Migrating Harness Inc Gallery");
+    log.info("Migrating Harness Inc Gallery");
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplates();
   }

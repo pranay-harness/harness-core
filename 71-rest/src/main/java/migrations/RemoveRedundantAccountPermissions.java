@@ -53,7 +53,7 @@ public class RemoveRedundantAccountPermissions implements Migration {
     try {
       runMigration();
     } catch (Exception e) {
-      logger.error("Migration: Error on running migration", e);
+      log.error("Migration: Error on running migration", e);
     }
   }
 }

@@ -73,18 +73,18 @@ public class K8sPodInfoTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
       if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        logger.info("Started Processing for size: {} {}", publishedMessageList.size(), Instant.now());
+        log.info("Started Processing for size: {} {}", publishedMessageList.size(), Instant.now());
       }
       List<InstanceInfo> collect =
           publishedMessageList.stream().map(this ::processPodInfoMessage).collect(Collectors.toList());
       if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        logger.info("Ended Processing for size: {} {}", publishedMessageList.size(), Instant.now());
+        log.info("Ended Processing for size: {} {}", publishedMessageList.size(), Instant.now());
       }
       collect.stream()
           .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
           .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
       if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        logger.info("Ended upsert for size: {} {}", publishedMessageList.size(), Instant.now());
+        log.info("Ended upsert for size: {} {}", publishedMessageList.size(), Instant.now());
       }
     } while (publishedMessageList.size() == batchSize);
     return null;
@@ -94,7 +94,7 @@ public class K8sPodInfoTasklet implements Tasklet {
     try {
       return process(publishedMessage);
     } catch (Exception ex) {
-      logger.error("K8sPodInfoTasklet Exception ", ex);
+      log.error("K8sPodInfoTasklet Exception ", ex);
     }
     return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
   }
@@ -161,7 +161,7 @@ public class K8sPodInfoTasklet implements Tasklet {
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
-      logger.warn("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
+      log.warn("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
           podInfo.getNodeName(), podUid, podInfo.getPodName());
     }
 
@@ -174,7 +174,7 @@ public class K8sPodInfoTasklet implements Tasklet {
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);
     } catch (Exception ex) {
-      logger.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
+      log.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
     }
 
     Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());

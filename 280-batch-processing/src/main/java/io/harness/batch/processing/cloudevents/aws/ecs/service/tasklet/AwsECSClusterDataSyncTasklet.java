@@ -106,7 +106,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     ceClusters.forEach(ceCluster -> {
       AwsCrossAccountAttributes awsCrossAccountAttributes = crossAccountAttributes.get(ceCluster.getInfraAccountId());
       if (null != awsCrossAccountAttributes) {
-        logger.info("Sync for cluster {}", ceCluster.getUuid());
+        log.info("Sync for cluster {}", ceCluster.getUuid());
         syncECSClusterData(accountId, awsCrossAccountAttributes, ceCluster);
         lastReceivedPublishedMessageDao.upsert(accountId, ceCluster.getUuid());
       }
@@ -117,7 +117,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   private void syncECSClusterData(
       String accountId, AwsCrossAccountAttributes awsCrossAccountAttributes, CECluster ceCluster) {
     List<ContainerInstance> containerInstances = listContainerInstances(awsCrossAccountAttributes, ceCluster);
-    logger.debug("cluster {} Container instances {}", containerInstances, ceCluster);
+    log.debug("cluster {} Container instances {}", containerInstances, ceCluster);
 
     updateContainerInstance(accountId, ceCluster, awsCrossAccountAttributes, containerInstances);
 
@@ -125,7 +125,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     loadTaskArnServiceNameMap(
         awsCrossAccountAttributes, ceCluster.getClusterArn(), ceCluster.getRegion(), taskArnServiceNameMap);
     List<Task> tasks = listTask(awsCrossAccountAttributes, ceCluster.getClusterArn(), ceCluster.getRegion());
-    logger.debug("Task list {}", tasks);
+    log.debug("Task list {}", tasks);
     updateTasks(accountId, ceCluster, tasks, taskArnServiceNameMap);
     publishUtilizationMetrics(awsCrossAccountAttributes, ceCluster);
   }
@@ -327,7 +327,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                                         .build();
 
         updateInstanceStopTimeForTask(instanceData, task);
-        logger.debug("Creating task {} ", taskId);
+        log.debug("Creating task {} ", taskId);
         instanceDataService.create(instanceData);
       }
     });
@@ -458,7 +458,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                                             .allocatableResource(resource)
                                             .metaData(metaData)
                                             .build();
-            logger.debug("Creating container instance {} ", containerInstanceId);
+            log.debug("Creating container instance {} ", containerInstanceId);
             instanceDataService.create(instanceData);
           }
         });
@@ -520,7 +520,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
       instanceMap = instances.stream()
                         .filter(instance -> null != instance.getLaunchTime())
                         .collect(Collectors.toMap(Instance::getInstanceId, instance -> instance));
-      logger.debug("Instances {} ", instances.toString());
+      log.debug("Instances {} ", instances.toString());
     }
     return instanceMap;
   }

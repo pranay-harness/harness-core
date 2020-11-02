@@ -98,10 +98,10 @@ public class MigrationServiceImpl implements MigrationService {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
             .addParam("message", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
       }
-      logger.info("[Migration] - Initializing Global DB Entries");
+      log.info("[Migration] - Initializing Global DB Entries");
       initializeGlobalDbEntriesIfNeeded();
 
-      logger.info("[Migration] - Checking for new migrations");
+      log.info("[Migration] - Checking for new migrations");
       Schema schema = wingsPersistence.createQuery(Schema.class).get();
 
       if (schema == null) {
@@ -124,7 +124,7 @@ public class MigrationServiceImpl implements MigrationService {
           try (AcquiredLock ignore =
                    persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
             timeLimiter.<Boolean>callWithTimeout(() -> {
-              logger.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
+              log.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
                   maxBackgroundVersion);
 
               for (int i = currentBackgroundVersion + 1; i <= maxBackgroundVersion; i++) {
@@ -132,11 +132,11 @@ public class MigrationServiceImpl implements MigrationService {
                   continue;
                 }
                 Class<? extends Migration> migration = backgroundMigrations.get(i);
-                logger.info("[Migration] - Migrating to background version {}: {} ...", i, migration.getSimpleName());
+                log.info("[Migration] - Migrating to background version {}: {} ...", i, migration.getSimpleName());
                 try {
                   injector.getInstance(migration).migrate();
                 } catch (Exception ex) {
-                  logger.error("Error while running migration {}", migration.getSimpleName(), ex);
+                  log.error("Error while running migration {}", migration.getSimpleName(), ex);
                   break;
                 }
 
@@ -145,30 +145,30 @@ public class MigrationServiceImpl implements MigrationService {
                 wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
               }
 
-              logger.info("[Migration] - Background migration complete");
+              log.info("[Migration] - Background migration complete");
               return true;
             }, 2, TimeUnit.HOURS, true);
           } catch (Exception ex) {
-            logger.warn("background work", ex);
+            log.warn("background work", ex);
           }
         });
       } else if (currentBackgroundVersion > maxBackgroundVersion) {
         // If the current version is bigger than the max version we are downgrading. Restore to the previous version
-        logger.info("[Migration] - Rolling back schema background version from {} to {}", currentBackgroundVersion,
+        log.info("[Migration] - Rolling back schema background version from {} to {}", currentBackgroundVersion,
             maxBackgroundVersion);
         final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
         updateOperations.set(Schema.BACKGROUND_VERSION, maxBackgroundVersion);
         wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
       } else {
-        logger.info("[Migration] - Schema background is up to date");
+        log.info("[Migration] - Schema background is up to date");
       }
 
       if (schema.getVersion() < maxVersion) {
-        logger.info("[Migration] - Updating schema version from {} to {}", schema.getVersion(), maxVersion);
+        log.info("[Migration] - Updating schema version from {} to {}", schema.getVersion(), maxVersion);
         for (int i = schema.getVersion() + 1; i <= maxVersion; i++) {
           if (migrations.containsKey(i)) {
             Class<? extends Migration> migration = migrations.get(i);
-            logger.info("[Migration] - Migrating to version {}: {} ...", i, migration.getSimpleName());
+            log.info("[Migration] - Migrating to version {}: {} ...", i, migration.getSimpleName());
             injector.getInstance(migration).migrate();
 
             final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
@@ -177,10 +177,10 @@ public class MigrationServiceImpl implements MigrationService {
           }
         }
 
-        logger.info("[Migration] - Migration complete");
+        log.info("[Migration] - Migration complete");
 
         executorService.submit(() -> {
-          logger.info("Running Git full sync on all the accounts");
+          log.info("Running Git full sync on all the accounts");
 
           try (
               HIterator<Account> accounts = new HIterator<>(
@@ -189,21 +189,21 @@ public class MigrationServiceImpl implements MigrationService {
               try {
                 yamlGitService.fullSyncForEntireAccount(account.getUuid());
               } catch (Exception ex) {
-                logger.error("Git full sync failed for account: {}. Reason is: {}", account.getAccountName(),
+                log.error("Git full sync failed for account: {}. Reason is: {}", account.getAccountName(),
                     ExceptionUtils.getMessage(ex));
               }
             }
           }
-          logger.info("Git full sync on all the accounts completed");
+          log.info("Git full sync on all the accounts completed");
         });
       } else if (schema.getVersion() > maxVersion) {
         // If the current version is bigger than the max version we are downgrading. Restore to the previous version
-        logger.info("[Migration] - Rolling back schema version from {} to {}", schema.getVersion(), maxVersion);
+        log.info("[Migration] - Rolling back schema version from {} to {}", schema.getVersion(), maxVersion);
         final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
         updateOperations.set(Schema.VERSION, maxVersion);
         wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
       } else {
-        logger.info("[Migration] - Schema is up to date");
+        log.info("[Migration] - Schema is up to date");
       }
 
       /*
@@ -212,12 +212,12 @@ public class MigrationServiceImpl implements MigrationService {
        * any special logic to check if they have already been run or not.
        */
       if (schema.getSeedDataVersion() < maxSeedDataVersion) {
-        logger.info("[SeedDataMigration] - Updating schema version from {} to {}", schema.getSeedDataVersion(),
+        log.info("[SeedDataMigration] - Updating schema version from {} to {}", schema.getSeedDataVersion(),
             maxSeedDataVersion);
         for (int i = schema.getSeedDataVersion() + 1; i <= maxSeedDataVersion; i++) {
           if (seedDataMigrations.containsKey(i)) {
             Class<? extends SeedDataMigration> seedDataMigration = seedDataMigrations.get(i);
-            logger.info("[SeedDataMigration] - Migrating to version {}: {} ...", i, seedDataMigration.getSimpleName());
+            log.info("[SeedDataMigration] - Migrating to version {}: {} ...", i, seedDataMigration.getSimpleName());
             injector.getInstance(seedDataMigration).migrate();
 
             final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
@@ -226,20 +226,20 @@ public class MigrationServiceImpl implements MigrationService {
           }
         }
       } else {
-        logger.info("[SeedDataMigration] - Schema is up to date");
+        log.info("[SeedDataMigration] - Schema is up to date");
       }
 
       if (schema.getTimescaleDbVersion() < maxTimeScaleDBMigration) {
-        logger.info("[TimescaleDBMigration] - Forward migrating schema version from {} to {}",
+        log.info("[TimescaleDBMigration] - Forward migrating schema version from {} to {}",
             schema.getTimescaleDbVersion(), maxTimeScaleDBMigration);
         for (int i = schema.getTimescaleDbVersion() + 1; i <= maxTimeScaleDBMigration; i++) {
           if (timescaleDBMigrations.containsKey(i)) {
             Class<? extends TimeScaleDBMigration> timescaleDBMigration = timescaleDBMigrations.get(i);
-            logger.info("[TimescaleDBMigration] - Forward Migrating to version {}: {} ...", i,
+            log.info("[TimescaleDBMigration] - Forward Migrating to version {}: {} ...", i,
                 timescaleDBMigration.getSimpleName());
             boolean result = injector.getInstance(timescaleDBMigration).migrate();
             if (!result) {
-              logger.info("Forward TimescaleDBMigration did not run successfully");
+              log.info("Forward TimescaleDBMigration did not run successfully");
             } else {
               final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
               updateOperations.set(Schema.TIMESCALEDB_VERSION, i);
@@ -248,8 +248,7 @@ public class MigrationServiceImpl implements MigrationService {
           }
         }
       } else {
-        logger.info(
-            "No TimescaleDB migration required, schema version is valid : [{}]", schema.getTimescaleDbVersion());
+        log.info("No TimescaleDB migration required, schema version is valid : [{}]", schema.getTimescaleDbVersion());
       }
 
       int currentTimeScaleDBDataMigration = schema.getTimescaleDBDataVersion();
@@ -258,7 +257,7 @@ public class MigrationServiceImpl implements MigrationService {
           try (AcquiredLock ignore = persistentLocker.acquireLock(
                    Schema.class, "TimeScaleDBBackground-" + SCHEMA_ID, ofMinutes(120 + 1))) {
             timeLimiter.<Boolean>callWithTimeout(() -> {
-              logger.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
+              log.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
                   currentTimeScaleDBDataMigration, maxTimeScaleDBDataMigration);
 
               boolean successfulMigration = true;
@@ -268,12 +267,12 @@ public class MigrationServiceImpl implements MigrationService {
                   continue;
                 }
                 Class<? extends TimeScaleDBDataMigration> migration = backgroundTimeScaleDBDataMigrations.get(i);
-                logger.info("[TimeScaleDBDataMigration] - Migrating to background version {}: {} ...", i,
+                log.info("[TimeScaleDBDataMigration] - Migrating to background version {}: {} ...", i,
                     migration.getSimpleName());
                 try {
                   successfulMigration = successfulMigration && injector.getInstance(migration).migrate();
                 } catch (Exception ex) {
-                  logger.error("Error while running timeScaleDBDataMigration {}", migration.getSimpleName(), ex);
+                  log.error("Error while running timeScaleDBDataMigration {}", migration.getSimpleName(), ex);
                   break;
                 }
                 if (successfulMigration) {
@@ -286,23 +285,23 @@ public class MigrationServiceImpl implements MigrationService {
                 }
               }
               if (successfulMigration) {
-                logger.info("TimeScaleDBData migration was successfully completed");
+                log.info("TimeScaleDBData migration was successfully completed");
               } else {
-                logger.info("TimeScaleDBData migration was not successful ");
+                log.info("TimeScaleDBData migration was not successful ");
               }
               return true;
             }, 2, TimeUnit.HOURS, true);
           } catch (Exception ex) {
-            logger.warn("timescaledbData background work", ex);
+            log.warn("timescaledbData background work", ex);
           }
         });
       } else {
-        logger.info("No TimescaleDB Data migration required, schema version is valid : [{}]",
+        log.info("No TimescaleDB Data migration required, schema version is valid : [{}]",
             schema.getTimescaleDBDataVersion());
       }
 
     } catch (RuntimeException e) {
-      logger.error("[Migration] - Migration failed.", e);
+      log.error("[Migration] - Migration failed.", e);
     }
   }
 
@@ -327,21 +326,21 @@ public class MigrationServiceImpl implements MigrationService {
         wingsPersistence.update(globalAccountQuery, ops);
       }
     } catch (Exception e) {
-      logger.error("[Migration] - initializeGlobalDbEntriesIfNeeded failed.", e);
+      log.error("[Migration] - initializeGlobalDbEntriesIfNeeded failed.", e);
     }
   }
 
   @VisibleForTesting
   void runMigrationWhenNewManagerIsPrimary(final int maxOnPrimaryManagerMigrationVersion,
       final Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerDataMigrations) {
-    logger.info("This is primary manager. Queuing OnPrimaryManager Migration Job");
+    log.info("This is primary manager. Queuing OnPrimaryManager Migration Job");
     executorService.submit(() -> {
       try (AcquiredLock ignore =
                persistentLocker.acquireLock(Schema.class, "OnPrimaryManager-" + SCHEMA_ID, ofMinutes(120 + 1))) {
         timeLimiter.<Boolean>callWithTimeout(() -> {
           final int currentOnPrimaryMigrationVersion = getCurrentOnPrimaryMigrationVersion();
           if (currentOnPrimaryMigrationVersion < maxOnPrimaryManagerMigrationVersion) {
-            logger.info("[Migration] - Updating schema primary manager version from {} to {}",
+            log.info("[Migration] - Updating schema primary manager version from {} to {}",
                 currentOnPrimaryMigrationVersion, maxOnPrimaryManagerMigrationVersion);
 
             for (int i = currentOnPrimaryMigrationVersion + 1; i <= maxOnPrimaryManagerMigrationVersion; i++) {
@@ -349,12 +348,11 @@ public class MigrationServiceImpl implements MigrationService {
                 continue;
               }
               Class<? extends OnPrimaryManagerMigration> migration = onPrimaryManagerDataMigrations.get(i);
-              logger.info(
-                  "[Migration] - Migrating to primary manager version {}: {} ...", i, migration.getSimpleName());
+              log.info("[Migration] - Migrating to primary manager version {}: {} ...", i, migration.getSimpleName());
               try {
                 injector.getInstance(migration).migrate();
               } catch (Exception ex) {
-                logger.error("Error while running migration {}", migration.getSimpleName(), ex);
+                log.error("Error while running migration {}", migration.getSimpleName(), ex);
                 break;
               }
 
@@ -362,14 +360,14 @@ public class MigrationServiceImpl implements MigrationService {
               updateOperations.set(Schema.ON_PRIMARY_MANAGER_VERSION, i);
               wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
             }
-            logger.info("[Migration] - Primary manager migration complete");
+            log.info("[Migration] - Primary manager migration complete");
           } else {
-            logger.info("[Migration] - Schema primary manager is up to date");
+            log.info("[Migration] - Schema primary manager is up to date");
           }
           return true;
         }, 2, TimeUnit.HOURS, true);
       } catch (Exception ex) {
-        logger.warn("primary manager work", ex);
+        log.warn("primary manager work", ex);
       }
     });
   }
@@ -394,13 +392,13 @@ public class MigrationServiceImpl implements MigrationService {
 
     } else if (currentOnPrimaryManagerVersion > maxOnPrimaryManagerMigrationVersion) {
       // If the current version is bigger than the max version we are downgrading. Restore to the previous version
-      logger.info("[Migration] - Rolling back schema primary manager version from {} to {}",
+      log.info("[Migration] - Rolling back schema primary manager version from {} to {}",
           currentOnPrimaryManagerVersion, maxOnPrimaryManagerMigrationVersion);
       final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
       updateOperations.set(Schema.ON_PRIMARY_MANAGER_VERSION, maxOnPrimaryManagerMigrationVersion);
       wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
     } else {
-      logger.info("[Migration] - Schema primary manager is up to date");
+      log.info("[Migration] - Schema primary manager is up to date");
     }
   }
   private void startOnPrimaryMigrationScheduledJob(Runnable runnable) {
@@ -411,25 +409,25 @@ public class MigrationServiceImpl implements MigrationService {
       while (shouldRun.get()) {
         waitForSometime();
         final int currentRunCount = runCount.incrementAndGet();
-        logger.info(
+        log.info(
             "Started next run of OnPrimaryMigrationScheduledJob with isNotUnderMaintenance =[{}] , isPrimary= [{}], runCount=[{}]",
             isNotUnderMaintenance(), configurationController.isPrimary(), currentRunCount);
         if (currentRunCount > maxRunCount) {
           shouldRun.set(false);
-          logger.info("Exceeded max run count of {}. Skip run ", maxRunCount);
+          log.info("Exceeded max run count of {}. Skip run ", maxRunCount);
         } else if (isNotUnderMaintenance() && configurationController.isPrimary()) {
           try {
             runnable.run();
           } catch (Exception e) {
-            logger.error("error while running OnPrimaryMigrationScheduledJob", e);
+            log.error("error while running OnPrimaryMigrationScheduledJob", e);
           }
           shouldRun.set(false);
         }
-        logger.info("Completed run of OnPrimaryMigrationScheduledJob with shouldRun= [{}]", shouldRun.get());
+        log.info("Completed run of OnPrimaryMigrationScheduledJob with shouldRun= [{}]", shouldRun.get());
       }
-      logger.info("Stopping OnPrimaryMigrationScheduledJob");
+      log.info("Stopping OnPrimaryMigrationScheduledJob");
     });
-    logger.info("Scheduled OnPrimaryMigrationScheduledJob");
+    log.info("Scheduled OnPrimaryMigrationScheduledJob");
   }
 
   private void waitForSometime() {

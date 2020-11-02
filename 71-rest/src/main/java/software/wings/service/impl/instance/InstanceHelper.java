@@ -132,27 +132,27 @@ public class InstanceHelper {
       PhaseStepSubWorkflow phaseStepSubWorkflow, ExecutionContext context) {
     try {
       if (phaseExecutionData == null) {
-        logger.error("phaseExecutionData is null for state execution {}", stateExecutionInstanceId);
+        log.error("phaseExecutionData is null for state execution {}", stateExecutionInstanceId);
         return;
       }
 
       if (phaseStepExecutionData == null) {
-        logger.error("phaseStepExecutionData is null for state execution {}", stateExecutionInstanceId);
+        log.error("phaseStepExecutionData is null for state execution {}", stateExecutionInstanceId);
         return;
       }
 
       if (workflowStandardParams == null) {
-        logger.warn("workflowStandardParams can't be null, skipping instance processing");
+        log.warn("workflowStandardParams can't be null, skipping instance processing");
         return;
       }
 
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
       if (artifact == null) {
-        logger.info("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
+        log.info("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
       }
 
       if (context.fetchInfraMappingId() == null) {
-        logger.info("infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
+        log.info("infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
         return;
       }
 
@@ -165,7 +165,7 @@ public class InstanceHelper {
         PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
         if (phaseStepExecutionSummary == null) {
-          logger.warn(
+          log.warn(
               "phaseStepExecutionSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
               infrastructureMapping.getInfraMappingType(), appId, workflowExecution.normalizedName(),
               workflowExecution.getWorkflowId());
@@ -173,7 +173,7 @@ public class InstanceHelper {
         }
 
         if (phaseStepExecutionData.getElementStatusSummary() == null) {
-          logger.warn(
+          log.warn(
               "elementStatusSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
               infrastructureMapping.getInfraMappingType(), appId, workflowExecution.normalizedName(),
               workflowExecution.getWorkflowId());
@@ -183,7 +183,7 @@ public class InstanceHelper {
         for (ElementExecutionSummary summary : phaseStepExecutionData.getElementStatusSummary()) {
           List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
           if (isEmpty(instanceStatusSummaries)) {
-            logger.info("No instances to process");
+            log.info("No instances to process");
             return;
           }
 
@@ -216,10 +216,10 @@ public class InstanceHelper {
           if (!hasNoInstanceHandler(infrastructureMapping.getInfraMappingType())) {
             String msg =
                 "Instance handler not found for infraMappingType: " + infrastructureMapping.getInfraMappingType();
-            logger.error(msg);
+            log.error(msg);
             throw new WingsException(msg);
           } else {
-            logger.info("Instance handler not supported for infra mapping type: {}",
+            log.info("Instance handler not supported for infra mapping type: {}",
                 infrastructureMapping.getInfraMappingType());
             return;
           }
@@ -242,7 +242,7 @@ public class InstanceHelper {
       }
     } catch (Exception ex) {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
-      logger.error(
+      log.error(
           "Error while updating instance change information for executionId [{}], ", workflowExecution.getUuid(), ex);
     }
   }
@@ -293,13 +293,13 @@ public class InstanceHelper {
         if (instance != null) {
           setInstanceInfoAndKey(builder, instance, infraMapping.getUuid());
         } else {
-          logger.warn(
+          log.warn(
               "Cannot build host based instance info since instanceId is not found in AWS workflowId:{}, instanceId:{}",
               workflowExecution.getUuid(), host.getInstanceId());
           return null;
         }
       } else {
-        logger.warn(
+        log.warn(
             "Cannot build host based instance info since both hostId and ec2Instance are null for workflow execution {}",
             workflowExecution.getUuid());
         return null;
@@ -427,7 +427,7 @@ public class InstanceHelper {
       List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
 
       if (isEmpty(deploymentSummaries)) {
-        logger.error("Deployment Summaries can not be empty or null");
+        log.error("Deployment Summaries can not be empty or null");
         return;
       }
 
@@ -438,8 +438,7 @@ public class InstanceHelper {
       processDeploymentSummaries(
           deploymentSummaries, deploymentEvent.isRollback(), deploymentEvent.getOnDemandRollbackInfo());
     } catch (Exception ex) {
-      logger.error(
-          "Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
+      log.error("Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
     }
   }
 
@@ -484,7 +483,7 @@ public class InstanceHelper {
     String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
-      logger.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+      log.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
 
       InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
       notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
@@ -496,14 +495,14 @@ public class InstanceHelper {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback, onDemandRollbackInfo);
         createPerpetualTaskForNewDeploymentIfEnabled(infraMapping, deploymentSummaries);
-        logger.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
+        log.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
       } else {
-        logger.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
+        log.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
       }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.warn("Exception while handling deployment event for executionId [{}], infraMappingId [{}]",
+      log.warn("Exception while handling deployment event for executionId [{}], infraMappingId [{}]",
           workflowExecutionId, infraMappingId, ex);
     }
   }
@@ -574,10 +573,10 @@ public class InstanceHelper {
               (PhaseExecutionData) stateExecutionData, phaseStepExecutionData, workflowStandardParams,
               context.getAppId(), workflowExecution, phaseStepSubWorkflow, context);
         } else {
-          logger.warn("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
+          log.warn("Fetched execution data is not of type phase for phase step {}", phaseStepSubWorkflow.getId());
         }
       } else {
-        logger.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
+        log.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
       }
     }
   }
@@ -607,23 +606,23 @@ public class InstanceHelper {
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
       if (lock == null) {
-        logger.warn("Couldn't acquire infra lock for infraMapping of appId [{}]", appId);
+        log.warn("Couldn't acquire infra lock for infraMapping of appId [{}]", appId);
         return;
       }
 
       try {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         if (instanceHandler == null) {
-          logger.warn("Instance handler null for infraMapping of appId [{}]", appId);
+          log.warn("Instance handler null for infraMapping of appId [{}]", appId);
           return;
         }
-        logger.info("Instance sync started for infraMapping");
+        log.info("Instance sync started for infraMapping");
         instanceHandler.syncInstances(appId, infraMappingId, instanceSyncFlow);
         instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
             infraMapping.getDisplayName(), System.currentTimeMillis());
-        logger.info("Instance sync completed for infraMapping");
+        log.info("Instance sync completed for infraMapping");
       } catch (Exception ex) {
-        logger.warn("Instance sync failed for infraMapping", ex);
+        log.warn("Instance sync failed for infraMapping", ex);
         String errorMsg = getErrorMsg(ex);
 
         instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
@@ -647,7 +646,7 @@ public class InstanceHelper {
   void createPerpetualTaskForNewDeploymentIfEnabled(
       InfrastructureMapping infrastructureMapping, List<DeploymentSummary> deploymentSummaries) {
     if (isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
-      logger.info("Creating Perpetual tasks for new deployment for account: [{}] and infrastructure mapping [{}]",
+      log.info("Creating Perpetual tasks for new deployment for account: [{}] and infrastructure mapping [{}]",
           infrastructureMapping.getAccountId(), infrastructureMapping.getUuid());
       instanceSyncPerpetualTaskService.createPerpetualTasksForNewDeployment(infrastructureMapping, deploymentSummaries);
     }
@@ -678,20 +677,20 @@ public class InstanceHelper {
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infrastructureMappingId);
     if (infrastructureMapping == null) {
-      logger.info(
+      log.info(
           "Handling Instance sync response. Infrastructure Mapping does not exist for Id : [{}]. Deleting Perpetual Tasks ",
           infrastructureMappingId);
       instanceSyncPerpetualTaskService.deletePerpetualTasks(accountId, infrastructureMappingId);
       return;
     }
 
-    logger.info("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.info("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
 
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(
              InfrastructureMapping.class, infrastructureMapping.getUuid(), Duration.ofSeconds(180))) {
       if (lock == null) {
-        logger.warn(
+        log.warn(
             "Couldn't acquire lock on Infrastructure Mapping. Infrastructure Mapping : [{}], Application Id : [{}]",
             infrastructureMappingId, appId);
         return;
@@ -699,7 +698,7 @@ public class InstanceHelper {
       handleInstanceSyncResponseFromPerpetualTask(infrastructureMapping, perpetualTaskRecord, response);
     }
 
-    logger.info("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.info("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
   }
 
@@ -715,7 +714,7 @@ public class InstanceHelper {
     try {
       handler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, response);
     } catch (Exception ex) {
-      logger.error("Error handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+      log.error("Error handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
           infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
       String errorMsg = getErrorMsg(ex);
 
@@ -724,7 +723,7 @@ public class InstanceHelper {
           infrastructureMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
 
       if (stopSync) {
-        logger.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+        log.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
       }
@@ -738,14 +737,13 @@ public class InstanceHelper {
             System.currentTimeMillis());
       }
       if (!status.isRetryable()) {
-        logger.info(
-            "Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+        log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTask(
             infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
       }
       if (!status.isSuccess()) {
-        logger.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+        log.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.resetPerpetualTask(
             infrastructureMapping.getAccountId(), perpetualTaskRecord.getUuid());

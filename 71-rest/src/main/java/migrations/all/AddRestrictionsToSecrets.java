@@ -41,11 +41,11 @@ public class AddRestrictionsToSecrets implements Migration {
     try {
       // We are only doing this migration for iHerb since they have asked for this behavior and they have 100s of
       // secrets.
-      logger.info("Starting to migrate secrets for iherb");
+      log.info("Starting to migrate secrets for iherb");
 
       Account account = accountService.getByName("iHerb");
       if (account == null) {
-        logger.error("Cannot locate iherb account");
+        log.error("Cannot locate iherb account");
         return;
       }
 
@@ -86,9 +86,9 @@ public class AddRestrictionsToSecrets implements Migration {
         secretManager.updateUsageRestrictionsForSecretOrFile(accountId, secretText.getUuid(), usageRestrictions, false);
       });
 
-      logger.info("Migration of secrets done successfully");
+      log.info("Migration of secrets done successfully");
     } catch (Exception e) {
-      logger.error("Migration of secrets failed", e);
+      log.error("Migration of secrets failed", e);
     }
   }
 }

@@ -131,7 +131,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

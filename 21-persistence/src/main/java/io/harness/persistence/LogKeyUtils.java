@@ -14,7 +14,7 @@ public class LogKeyUtils {
   public static String logKeyForId(Class entityClass) {
     return entityIdName.computeIfAbsent(entityClass, cls -> {
       final String key = calculateLogKeyForId(cls);
-      logger.warn("Provide logKeyForId for the class {} instead of using the default one", cls.getName());
+      log.warn("Provide logKeyForId for the class {} instead of using the default one", cls.getName());
       return key;
     });
   }

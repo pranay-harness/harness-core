@@ -89,7 +89,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
   @Override
   public void initialize(Bootstrap<CommandLibraryServerConfig> bootstrap) {
     initializeLogging();
-    logger.info("Bootstrapping Command Library Service ...");
+    log.info("Bootstrapping Command Library Service ...");
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -108,14 +108,14 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         bootstrap.getObjectMapper().getSerializationConfig().withView(JsonViews.Public.class));
     bootstrap.setMetricRegistry(metricRegistry);
 
-    logger.info("Bootstrapping done.");
+    log.info("Bootstrapping done.");
   }
 
   @Override
   public void run(CommandLibraryServerConfig configuration, Environment environment) throws Exception {
-    logger.info("Starting Command library Servicee ...");
+    log.info("Starting Command library Servicee ...");
 
-    logger.info("Entering startup maintenance mode");
+    log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
     final List<Module> modules = new ArrayList<>();
@@ -206,10 +206,10 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
 
     registerHealthChecks(environment, injector);
 
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
-    logger.info("Starting app done");
+    log.info("Starting app done");
   }
 
   private void initMetrics() {

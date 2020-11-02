@@ -47,7 +47,7 @@ public class HMongoTemplate extends MongoTemplate {
       try {
         return executor.execute();
       } catch (MongoSocketOpenException | MongoSocketReadException | OptimisticLockingFailureException e) {
-        logger.error("Exception ignored on retry ", e);
+        log.error("Exception ignored on retry ", e);
       } catch (RuntimeException exception) {
         if (ExceptionUtils.cause(MongoSocketOpenException.class, exception) != null) {
           continue;

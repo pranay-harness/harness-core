@@ -61,7 +61,7 @@ public class K8sPodEventTasklet implements Tasklet {
     try {
       return process(publishedMessage);
     } catch (Exception ex) {
-      logger.error("K8sPodEventTasklet Exception ", ex);
+      log.error("K8sPodEventTasklet Exception ", ex);
     }
     return InstanceEvent.builder().build();
   }

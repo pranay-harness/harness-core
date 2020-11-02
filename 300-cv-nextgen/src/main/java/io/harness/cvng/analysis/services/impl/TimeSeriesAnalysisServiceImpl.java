@@ -330,7 +330,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> getCumulativeSums(
       String verificationTaskId, Instant startTime, Instant endTime) {
-    logger.info(
+    log.info(
         "Fetching cumulative sums for config: {}, startTime: {}, endTime: {}", verificationTaskId, startTime, endTime);
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class)
@@ -347,7 +347,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String verificationTaskId) {
-    logger.info("Fetching longterm anomalies for config: {}", verificationTaskId);
+    log.info("Fetching longterm anomalies for config: {}", verificationTaskId);
     TimeSeriesAnomalousPatterns anomalousPatterns =
         hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
             .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
@@ -360,7 +360,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, List<Double>>> getShortTermHistory(String verificationTaskId) {
-    logger.info("Fetching short term history for config: {}", verificationTaskId);
+    log.info("Fetching short term history for config: {}", verificationTaskId);
     TimeSeriesShortTermHistory shortTermHistory =
         hPersistence.createQuery(TimeSeriesShortTermHistory.class)
             .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, verificationTaskId)
@@ -431,7 +431,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(riskSummary);
     hPersistence.save(cumulativeSums);
-    logger.info("Saving analysis for config: {}", cvConfigId);
+    log.info("Saving analysis for config: {}", cvConfigId);
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     if (cvConfig != null) {

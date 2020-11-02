@@ -604,12 +604,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
     entityB.setFieldB("fieldB1");
     wingsPersistence.save(entityB);
 
-    logger.debug("Done with TestEntityB save");
+    log.debug("Done with TestEntityB save");
     TestEntity entity = new TestEntity();
     entity.setFieldA("fieldA1");
     entity.setTestEntityB(entityB);
     wingsPersistence.save(entity);
-    logger.debug("Done with TestInternalEntity save");
+    log.debug("Done with TestInternalEntity save");
     assertThat(entity)
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
@@ -620,7 +620,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
         .hasFieldOrPropertyWithValue("testEntityB", entityB);
-    logger.debug("Done with TestInternalEntity get");
+    log.debug("Done with TestInternalEntity get");
   }
 
   /**
@@ -805,7 +805,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     serviceVariable.setUuid("uuid");
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(serviceVariable));
     result = wingsPersistence.get(ServiceVariable.class, "uuid");
-    logger.info(result.getName());
+    log.info(result.getName());
     assertThat(updatedPassword).isEqualTo(result.getEncryptedValue().toCharArray());
     assertThat(result.getValue()).isNull();
   }
