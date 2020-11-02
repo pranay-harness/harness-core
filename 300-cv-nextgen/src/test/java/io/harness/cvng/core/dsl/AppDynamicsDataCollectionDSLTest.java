@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -16,6 +17,7 @@ import io.harness.cvng.HoverflyCVNextGenTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.appd.AppDynamicsConnectorValidationInfo;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -23,6 +25,8 @@ import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.specto.hoverfly.junit.core.SimulationSource;
 import org.junit.Before;
@@ -223,6 +227,71 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     assertThat(Sets.newHashSet(timeSeriesRecords))
         .isEqualTo(new Gson().fromJson(readJson("quality-collection-hosts-expectation.json"),
             new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_appDynamicsConnectionValidationValidSettings() {
+    String filePath = "appdynamics/connection-validation-valid.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
+    AppDynamicsConnectorValidationInfo appDynamicsConnectorValidationInfo =
+        AppDynamicsConnectorValidationInfo.builder().build();
+    appDynamicsConnectorValidationInfo.setConnectorConfigDTO(
+        AppDynamicsConnectorDTO.builder()
+            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
+            .accountname("harness-test")
+            .username("uitest@harness.io")
+            .passwordRef(SecretRefData.builder().decryptedValue("**".toCharArray()).build())
+            .build());
+    String code = appDynamicsConnectorValidationInfo.getConnectionValidationDSL();
+    Instant instant = Instant.now();
+    System.out.println(instant);
+
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(appDynamicsConnectorValidationInfo.getStartTime(instant))
+                                              .endTime(appDynamicsConnectorValidationInfo.getEndTime(instant))
+                                              .commonHeaders(appDynamicsConnectorValidationInfo.collectionHeaders())
+                                              .baseUrl(appDynamicsConnectorValidationInfo.getBaseUrl())
+                                              .build();
+    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters);
+    assertThat(isValid).isEqualTo("true");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_appDynamicsConnectionValidationInValidSettings() {
+    String filePath = "appdynamics/connection-validation-invalid.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
+    AppDynamicsConnectorValidationInfo appDynamicsConnectorValidationInfo =
+        AppDynamicsConnectorValidationInfo.builder().build();
+    appDynamicsConnectorValidationInfo.setConnectorConfigDTO(
+        AppDynamicsConnectorDTO.builder()
+            .controllerUrl("https://harness-test.saas.appdynamics.com/controllerr")
+            .accountname("harness-test")
+            .username("uitest@harness.io")
+            .passwordRef(SecretRefData.builder().decryptedValue("**".toCharArray()).build())
+            .build());
+    String code = appDynamicsConnectorValidationInfo.getConnectionValidationDSL();
+    Instant instant = Instant.now();
+    System.out.println(instant);
+
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(appDynamicsConnectorValidationInfo.getStartTime(instant))
+                                              .endTime(appDynamicsConnectorValidationInfo.getEndTime(instant))
+                                              .commonHeaders(appDynamicsConnectorValidationInfo.collectionHeaders())
+                                              .baseUrl(appDynamicsConnectorValidationInfo.getBaseUrl())
+                                              .build();
+    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters))
+        .hasMessage(
+            "io.harness.datacollection.exception.DataCollectionException: io.harness.datacollection.exception.DataCollectionException: Response code: 404 Error: Response{protocol=http/1.1, code=404, message=Not Found, url=https://harness-test.saas.appdynamics.com/controllerr/rest/applications?output=json}");
   }
 
   private String readDSL(String name) throws IOException {

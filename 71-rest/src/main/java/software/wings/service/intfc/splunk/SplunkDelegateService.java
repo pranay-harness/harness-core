@@ -30,14 +30,6 @@ public interface SplunkDelegateService {
   boolean validateConfig(@NotNull SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
-   * Method to validate Next Gen Splunk connector
-   * @param splunkConnectorDTO
-   * @param encryptedDataDetails
-   * @return
-   */
-  boolean validateConfig(SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails);
-
-  /**
    * Method to initialize the Splunk Service.
    * @param splunkConfig
    * @param encryptedDataDetails

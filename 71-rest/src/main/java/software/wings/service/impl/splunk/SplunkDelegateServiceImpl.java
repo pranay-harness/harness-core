@@ -108,24 +108,6 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       throw new DataCollectionException(e);
     }
   }
-
-  @Override
-  public boolean validateConfig(SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
-      log.info("Validating splunk, url {}, for user {} ", splunkConnectorDTO.getSplunkUrl(),
-          splunkConnectorDTO.getUsername());
-      Service splunkService = initSplunkService(splunkConnectorDTO);
-      createSearchJob(splunkService, getQuery("*exception*", null, null, false),
-          System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
-      return true;
-    } catch (HttpException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new DataCollectionException(e);
-    }
-  }
-
   private Job createSearchJob(Service splunkService, String query, long startTimeMillis, long endTimeMillis) {
     JobArgs jobargs = new JobArgs();
     jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);

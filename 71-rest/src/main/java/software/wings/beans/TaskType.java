@@ -4,8 +4,7 @@ import static org.joor.Reflect.on;
 
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
-import io.harness.cvng.connectiontask.AppDynamicsTestConnectionDelegateTask;
-import io.harness.cvng.connectiontask.SplunkTestConnectionDelegateTask;
+import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
@@ -188,7 +187,7 @@ public enum TaskType {
   CUSTOM_LOG_VALIDATE_CONNECTOR_TASK(TaskGroup.LOG, ServiceImplDelegateTask.class),
   APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
-  APPDYNAMICS_NG_CONFIGURATION_VALIDATE_TASK(TaskGroup.APPDYNAMICS, AppDynamicsTestConnectionDelegateTask.class),
+  CVNG_CONNECTOR_VALIDATE_TASK(TaskGroup.CVNG, CVNGConnectorValidationDelegateTask.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_APP_TASK_NG(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_TIER_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
@@ -229,7 +228,6 @@ public enum TaskType {
   STACKDRIVER_COLLECT_24_7_LOG_DATA(TaskGroup.GUARD_24x7, StackDriverLogDataCollectionTask.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),
-  SPLUNK_NG_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, SplunkTestConnectionDelegateTask.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),
   SPLUNK_NG_GET_SAVED_SEARCHES(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),
   SPLUNK_NG_VALIDATION_RESPONSE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),

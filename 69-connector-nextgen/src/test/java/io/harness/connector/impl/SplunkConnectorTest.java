@@ -18,7 +18,6 @@ import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.validator.ConnectionValidator;
-import io.harness.connector.validator.SplunkConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
@@ -44,7 +43,6 @@ import java.util.Optional;
 public class SplunkConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
-  @Mock SplunkConnectionValidator splunkConnectionValidator;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks DefaultConnectorServiceImpl connectorService;
 
@@ -108,18 +106,6 @@ public class SplunkConnectorTest extends CategoryTest {
     ensureSplunkConnectorFieldsAreCorrect(connectorDTOOutput);
   }
 
-  @Test
-  @Owner(developers = OwnerRule.NEMANJA)
-  @Category(UnitTests.class)
-  public void testConnection() {
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
-        .thenReturn(Optional.of(connector));
-    when(connectionValidatorMap.get(any())).thenReturn(splunkConnectionValidator);
-    when(splunkConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
-        .thenReturn(ConnectorValidationResult.builder().valid(true).errorMessage("").build());
-    connectorService.testConnection(accountIdentifier, null, null, identifier);
-    verify(splunkConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
-  }
   private void ensureSplunkConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {
     ConnectorInfoDTO connector = connectorResponse.getConnector();
     assertThat(connector).isNotNull();

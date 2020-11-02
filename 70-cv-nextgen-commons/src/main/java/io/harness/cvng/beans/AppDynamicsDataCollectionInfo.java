@@ -1,12 +1,11 @@
 package io.harness.cvng.beans;
 
+import io.harness.cvng.beans.appd.AppDynamicsUtils;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.codec.binary.Base64;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,21 +43,12 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
   @Override
   public Map<String, String> collectionHeaders(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
     Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", getHeaderWithCredentials(appDynamicsConnectorDTO));
+    headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(appDynamicsConnectorDTO));
     return headers;
   }
 
   @Override
   public Map<String, String> collectionParams(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
     return Collections.emptyMap();
-  }
-
-  private String getHeaderWithCredentials(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    return "Basic "
-        + Base64.encodeBase64String(
-              String
-                  .format("%s@%s:%s", appDynamicsConnectorDTO.getUsername(), appDynamicsConnectorDTO.getAccountname(),
-                      new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
-                  .getBytes(StandardCharsets.UTF_8));
   }
 }

@@ -5,13 +5,14 @@ import static java.time.Duration.ofMinutes;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
-import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
-import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -21,29 +22,34 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
-
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class SplunkConnectionValidator implements ConnectionValidator<SplunkConnectorDTO> {
+public class CVConnectorValidator<T extends ConnectorConfigDTO> implements ConnectionValidator<T> {
+  @Inject private final SecretManagerClientService ngSecretService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
-  private final SecretManagerClientService ngSecretService;
-
+  @Override
   public ConnectorValidationResult validate(
-      SplunkConnectorDTO splunkConnectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)
                                        .orgIdentifier(orgIdentifier)
                                        .projectIdentifier(projectIdentifier)
                                        .build();
-    List<EncryptedDataDetail> encryptedDataDetailList =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, splunkConnectorDTO);
+
+    List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
+    if (connectorDTO instanceof DecryptableEntity) {
+      encryptedDataDetailList =
+          ngSecretService.getEncryptionDetails(basicNGAccessObject, (DecryptableEntity) connectorDTO);
+    }
+
     final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                         .accountId(accountIdentifier)
-                                                        .taskType("SPLUNK_NG_CONFIGURATION_VALIDATE_TASK")
-                                                        .taskParameters(SplunkConnectionTaskParams.builder()
-                                                                            .splunkConnectorDTO(splunkConnectorDTO)
+                                                        .taskType("CVNG_CONNECTOR_VALIDATE_TASK")
+                                                        .taskParameters(CVConnectorTaskParams.builder()
+                                                                            .connectorConfigDTO(connectorDTO)
                                                                             .encryptionDetails(encryptedDataDetailList)
                                                                             .build())
                                                         .executionTimeout(ofMinutes(1))
@@ -59,10 +65,10 @@ public class SplunkConnectionValidator implements ConnectionValidator<SplunkConn
           .build();
     }
 
-    SplunkConnectionTaskResponse splunkConnectionTaskResponse = (SplunkConnectionTaskResponse) delegateResponseData;
+    CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
     return ConnectorValidationResult.builder()
-        .valid(splunkConnectionTaskResponse.isValid())
-        .errorMessage(splunkConnectionTaskResponse.getErrorMessage())
+        .valid(cvConnectorTaskResponse.isValid())
+        .errorMessage(cvConnectorTaskResponse.getErrorMessage())
         .build();
   }
 }
