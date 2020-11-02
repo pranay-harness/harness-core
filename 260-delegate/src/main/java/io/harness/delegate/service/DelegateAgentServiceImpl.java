@@ -113,7 +113,6 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.AutoLogContext;
@@ -1837,11 +1836,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         Map<String, EncryptedDataDetail> encryptedVariables = shellScriptProvisionParameters.getEncryptedVariables();
         if (isNotEmpty(encryptedVariables)) {
           for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
-            try {
-              secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
-            } catch (IOException e) {
-              throw new WingsException("Error occurred while decrypting encrypted variables", e);
-            }
+            secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
           }
         }
       }

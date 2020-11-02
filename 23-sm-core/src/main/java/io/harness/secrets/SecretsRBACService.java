@@ -13,8 +13,8 @@ public interface SecretsRBACService {
 
   boolean hasAccessToReadSecret(@NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity);
 
-  boolean hasAccessToReadSecret(@NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity,
-      @NotEmpty String appId, @NotEmpty String envId);
+  boolean hasAccessToReadSecret(
+      @NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity, @NotEmpty String appId, String envId);
 
   boolean hasAccessToReadSecrets(String accountId, List<ScopedEntity> scopedEntities, String appId, String envId);
 

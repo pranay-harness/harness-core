@@ -130,15 +130,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
-        try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
-          if (decryptedValue != null) {
-            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
-          }
-        } catch (IOException e) {
-          throw new WingsException(dataCollectionInfo.getStateType().getName()
-                  + ": APM data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
-              e);
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
         }
       }
     }

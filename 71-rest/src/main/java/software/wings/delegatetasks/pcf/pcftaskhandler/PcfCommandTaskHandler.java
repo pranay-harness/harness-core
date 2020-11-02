@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.EncryptDecryptException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
@@ -17,7 +16,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -49,17 +47,12 @@ public abstract class PcfCommandTaskHandler {
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback);
 
   private Optional<LogSanitizer> getLogSanitizer(String activityId, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      Set<String> secrets = new HashSet<>();
-      if (isNotEmpty(encryptedDataDetails)) {
-        for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
-        }
+    Set<String> secrets = new HashSet<>();
+    if (isNotEmpty(encryptedDataDetails)) {
+      for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+        secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
       }
-
-      return isNotEmpty(secrets) ? Optional.of(new ActivityBasedLogSanitizer(activityId, secrets)) : Optional.empty();
-    } catch (IOException e) {
-      throw new EncryptDecryptException("Error occurred while decrypting encrypted values", e);
     }
+    return isNotEmpty(secrets) ? Optional.of(new ActivityBasedLogSanitizer(activityId, secrets)) : Optional.empty();
   }
 }

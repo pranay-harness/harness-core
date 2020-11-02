@@ -146,7 +146,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
-import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
+import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -215,7 +215,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
-  @Inject private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
+  @Inject private CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretSetupUsageService secretSetupUsageService;
   @Inject @Named("hashicorpvault") private RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
@@ -370,7 +370,7 @@ public class SecretManagerImpl implements SecretManager {
         case CUSTOM:
           CustomSecretsManagerConfig customSecretsManagerConfig =
               (CustomSecretsManagerConfig) getSecretManager(accountId, kmsId, CUSTOM);
-          customSecretsManagerEncryptionService.validateSecret(encryptedData, customSecretsManagerConfig);
+          customEncryptedDataDetailBuilder.validateSecret(encryptedData, customSecretsManagerConfig);
           rv = encryptedData;
           break;
 
@@ -454,7 +454,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptionConfig.setUuid(null);
     EncryptedDataDetail encryptedDataDetail;
     if (encryptionConfig.getEncryptionType() == CUSTOM) {
-      encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
+      encryptedDataDetail = customEncryptedDataDetailBuilder.buildEncryptedDataDetail(
           encryptedData, (CustomSecretsManagerConfig) encryptionConfig);
       encryptedDataDetail.setFieldName(fieldName);
     } else {

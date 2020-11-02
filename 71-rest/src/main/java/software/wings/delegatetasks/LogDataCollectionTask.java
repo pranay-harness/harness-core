@@ -17,8 +17,6 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -43,7 +41,6 @@ import software.wings.service.impl.log.LogResponseParser;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -97,17 +94,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
     if (!isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
-        try {
-          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
-          if (decryptedValue != null) {
-            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
-          }
-
-        } catch (IOException e) {
-          throw new VerificationOperationException(ErrorCode.DEFAULT_ERROR_CODE,
-              dataCollectionInfo.getStateType().getName() + ": Log data collection : Unable to decrypt field "
-                  + encryptedDataDetail.getFieldName(),
-              e);
+        decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
+        if (decryptedValue != null) {
+          decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
         }
       }
     }

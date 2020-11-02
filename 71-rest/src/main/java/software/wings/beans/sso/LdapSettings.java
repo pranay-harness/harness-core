@@ -9,7 +9,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,7 +21,6 @@ import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.Valid;
@@ -96,12 +94,8 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   public void decryptFields(
       @NotNull EncryptedDataDetail encryptedDataDetail, @NotNull EncryptionService encryptionService) {
     if (connectionSettings.getBindPassword().equals(LdapConstants.MASKED_STRING)) {
-      try {
-        String bindPassword = new String(encryptionService.getDecryptedValue(encryptedDataDetail, false));
-        connectionSettings.setBindPassword(bindPassword);
-      } catch (IOException e) {
-        throw new WingsException("Unable to decrypt the field bindPassword");
-      }
+      String bindPassword = new String(encryptionService.getDecryptedValue(encryptedDataDetail, false));
+      connectionSettings.setBindPassword(bindPassword);
     }
   }
 
