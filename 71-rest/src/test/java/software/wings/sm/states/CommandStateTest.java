@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.sun.tools.javac.util.List;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EmbeddedUser;
@@ -148,6 +147,7 @@ import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -351,7 +351,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(templateService.get(eq("123454"), any()))
         .thenReturn(Template.builder()
-                        .templateObject(SshCommandTemplate.builder().commandUnits(List.of(commandUnit)).build())
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
                         .build());
     ExecutionResponse executionResponse = commandState.execute(context);
 
@@ -397,7 +397,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(templateService.get(eq("123454"), any()))
         .thenReturn(Template.builder()
-                        .templateObject(SshCommandTemplate.builder().commandUnits(List.of(commandUnit)).build())
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
                         .build());
     ExecutionResponse executionResponse = commandState.execute(context);
 
@@ -436,7 +436,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(templateService.get(eq("123454"), any()))
         .thenReturn(Template.builder()
-                        .templateObject(SshCommandTemplate.builder().commandUnits(List.of(commandUnit)).build())
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
                         .build());
     ExecutionResponse executionResponse = commandState.execute(context);
 
@@ -476,8 +476,8 @@ public class CommandStateTest extends WingsBaseTest {
     when(templateService.get(eq("123454"), any()))
         .thenReturn(Template.builder()
                         .templateObject(SshCommandTemplate.builder()
-                                            .commandUnits(List.of(commandUnit))
-                                            .referencedTemplateList(List.of(ReferencedTemplate.builder().build()))
+                                            .commandUnits(Arrays.asList(commandUnit))
+                                            .referencedTemplateList(Arrays.asList(ReferencedTemplate.builder().build()))
                                             .build())
                         .build());
     ExecutionResponse executionResponse = commandState.execute(context);
@@ -521,8 +521,8 @@ public class CommandStateTest extends WingsBaseTest {
     when(templateService.get(eq("123454"), any()))
         .thenReturn(Template.builder()
                         .templateObject(SshCommandTemplate.builder()
-                                            .commandUnits(List.of(commandUnit))
-                                            .referencedTemplateList(List.of(ReferencedTemplate.builder().build()))
+                                            .commandUnits(Arrays.asList(commandUnit))
+                                            .referencedTemplateList(Arrays.asList(ReferencedTemplate.builder().build()))
                                             .build())
                         .build());
     ExecutionResponse executionResponse = commandState.execute(context);
@@ -568,7 +568,7 @@ public class CommandStateTest extends WingsBaseTest {
         aCommand()
             .addCommandUnits(
                 ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
-            .withTemplateVariables(List.of(variable))
+            .withTemplateVariables(Arrays.asList(variable))
             .build();
 
     setWorkflowStandardParams(artifact, command);
@@ -646,7 +646,7 @@ public class CommandStateTest extends WingsBaseTest {
         aCommand()
             .addCommandUnits(
                 ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
-            .withTemplateVariables(List.of(variable))
+            .withTemplateVariables(Arrays.asList(variable))
             .build();
 
     setWorkflowStandardParams(artifact, command);
