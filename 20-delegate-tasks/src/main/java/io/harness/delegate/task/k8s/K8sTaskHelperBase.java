@@ -368,15 +368,15 @@ public class K8sTaskHelperBase {
           }
 
           int sleepTimeInSeconds = 5;
-          logger.info("waitForLoadBalancerService: LoadBalancer Service {} not ready. Sleeping for {} seconds", name,
+          log.info("waitForLoadBalancerService: LoadBalancer Service {} not ready. Sleeping for {} seconds", name,
               sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
       }, timeoutInSeconds, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out waiting for LoadBalancer service. Moving on.", e);
+      log.error("Timed out waiting for LoadBalancer service. Moving on.", e);
     } catch (Exception e) {
-      logger.error("Exception while trying to get LoadBalancer service", e);
+      log.error("Exception while trying to get LoadBalancer service", e);
     }
 
     return null;
@@ -420,7 +420,7 @@ public class K8sTaskHelperBase {
         loadBalancerResource.getResourceId().getNamespace(), 60);
 
     if (service == null) {
-      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
+      log.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
       return null;
     }
 
@@ -451,7 +451,7 @@ public class K8sTaskHelperBase {
         loadBalancerResource.getResourceId().getName(), loadBalancerResource.getResourceId().getNamespace(), 60);
 
     if (service == null) {
-      logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
+      log.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
       return null;
     }
 
@@ -852,7 +852,7 @@ public class K8sTaskHelperBase {
       return true;
     } else {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-      logger.warn("Failed to scale workload. Error {}", result.getOutput());
+      log.warn("Failed to scale workload. Error {}", result.getOutput());
       return false;
     }
   }
@@ -880,7 +880,7 @@ public class K8sTaskHelperBase {
                 client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
             ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
             if (result.getExitValue() != 0) {
-              logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+              log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
             }
           }
         }
@@ -898,7 +898,7 @@ public class K8sTaskHelperBase {
           client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
       ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
       if (result.getExitValue() != 0) {
-        logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
       }
     }
 
@@ -1024,7 +1024,7 @@ public class K8sTaskHelperBase {
         return false;
       }
     } catch (Exception e) {
-      logger.error("Exception in running dry-run", e);
+      log.error("Exception in running dry-run", e);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -1105,11 +1105,11 @@ public class K8sTaskHelperBase {
       success = result.getExitValue() == 0;
 
       if (!success) {
-        logger.warn(result.outputUTF8());
+        log.warn(result.outputUTF8());
       }
       return success;
     } catch (Exception e) {
-      logger.error("Exception while doing statusCheck", e);
+      log.error("Exception while doing statusCheck", e);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     } finally {
@@ -1141,7 +1141,7 @@ public class K8sTaskHelperBase {
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputUTF8());
+        log.warn(result.outputUTF8());
         return false;
       }
 
@@ -1151,7 +1151,7 @@ public class K8sTaskHelperBase {
         result = jobCompletionTimeCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
         success = 0 == result.getExitValue();
         if (!success) {
-          logger.warn(result.outputUTF8());
+          log.warn(result.outputUTF8());
           return false;
         }
 
@@ -1165,7 +1165,7 @@ public class K8sTaskHelperBase {
 
       success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputUTF8());
+        log.warn(result.outputUTF8());
         return false;
       }
 
@@ -1258,7 +1258,7 @@ public class K8sTaskHelperBase {
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputUTF8());
+        log.warn(result.outputUTF8());
       }
 
       return success;
@@ -1345,7 +1345,7 @@ public class K8sTaskHelperBase {
 
       return success;
     } catch (Exception e) {
-      logger.error("Exception while doing statusCheck", e);
+      log.error("Exception while doing statusCheck", e);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     } finally {
@@ -1429,7 +1429,7 @@ public class K8sTaskHelperBase {
     try {
       files = getFilesUnderPath(directory.toString());
     } catch (Exception ex) {
-      logger.info(ExceptionUtils.getMessage(ex));
+      log.info(ExceptionUtils.getMessage(ex));
       throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
     }
 
@@ -1444,7 +1444,7 @@ public class K8sTaskHelperBase {
           skippedFilesList.add(fileData.getFilePath());
         }
       } catch (Exception ex) {
-        logger.info("Could not convert to string for file" + fileData.getFilePath(), ex);
+        log.info("Could not convert to string for file" + fileData.getFilePath(), ex);
       }
     }
 
@@ -1485,7 +1485,7 @@ public class K8sTaskHelperBase {
     try {
       fileDataList = getFilesUnderPath(directory.toString());
     } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
+      log.error(ExceptionUtils.getMessage(ex));
       throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
     }
 
@@ -1497,7 +1497,7 @@ public class K8sTaskHelperBase {
                               .fileContent(new String(fileData.getFileBytes(), UTF_8))
                               .build());
       } else {
-        logger.info("Found file [{}] with unsupported extension", fileData.getFilePath());
+        log.info("Found file [{}] with unsupported extension", fileData.getFilePath());
       }
     }
 
@@ -1555,7 +1555,7 @@ public class K8sTaskHelperBase {
       throw new KubernetesValuesException(message, kvexception.getCause());
     }
 
-    logger.info("Values file options: " + valuesFileOptions);
+    log.info("Values file options: " + valuesFileOptions);
 
     List<FileData> result = new ArrayList<>();
 
@@ -1648,7 +1648,7 @@ public class K8sTaskHelperBase {
         try {
           fileBytes = Files.readAllBytes(path);
         } catch (Exception ex) {
-          logger.info(ExceptionUtils.getMessage(ex));
+          log.info(ExceptionUtils.getMessage(ex));
           throw new InvalidRequestException(
               format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ex)));
         }
@@ -1722,7 +1722,7 @@ public class K8sTaskHelperBase {
 
       return success;
     } catch (Exception e) {
-      logger.error("Exception while doing statusCheck", e);
+      log.error("Exception while doing statusCheck", e);
       executionLogCallback.saveExecutionLog("\nFailed to execute the status check of the custom resources.", INFO);
       executionLogCallback.saveExecutionLog(color(
           format(
@@ -1801,7 +1801,7 @@ public class K8sTaskHelperBase {
 
       boolean success = 0 == result.getExitValue();
       if (!success) {
-        logger.warn(result.outputUTF8());
+        log.warn(result.outputUTF8());
         return false;
       }
 
@@ -1964,7 +1964,7 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (Exception e) {
-      logger.error("Failure in fetching files from git", e);
+      log.error("Failure in fetching files from git", e);
       executionLogCallback.saveExecutionLog(
           "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
           CommandExecutionStatus.FAILURE);

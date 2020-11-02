@@ -28,7 +28,7 @@ public class ServiceGuardTrendAnalysisState extends AnalysisState {
   public AnalysisState execute() {
     workerTaskId = trendAnalysisService.scheduleTrendAnalysisTask(getInputs());
     this.setStatus(AnalysisStatus.RUNNING);
-    logger.info("Executing service guard trend analysis for {}", getInputs());
+    log.info("Executing service guard trend analysis for {}", getInputs());
     return this;
   }
 
@@ -61,7 +61,7 @@ public class ServiceGuardTrendAnalysisState extends AnalysisState {
     // increment the retryCount without caring for the max
     // clean up state in underlying worker and then execute
     this.setRetryCount(getRetryCount() + 1);
-    logger.info("In service guard trend analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
+    log.info("In service guard trend analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
         workerTaskId);
     workerTaskId = null;
     this.execute();
@@ -91,7 +91,7 @@ public class ServiceGuardTrendAnalysisState extends AnalysisState {
       this.setStatus(AnalysisStatus.FAILED);
     } else {
       setRetryCount(getRetryCount() + 1);
-      logger.info("In service guard trend analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
+      log.info("In service guard trend analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
           getInputs(), workerTaskId);
       workerTaskId = null;
       execute();

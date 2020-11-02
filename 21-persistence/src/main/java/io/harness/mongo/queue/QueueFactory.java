@@ -25,7 +25,7 @@ public class QueueFactory {
       injector.injectMembers(mongoQueuePublisher);
       return mongoQueuePublisher;
     } else {
-      logger.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
+      log.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
       return new NoopQueuePublisher();
     }
   }
@@ -37,7 +37,7 @@ public class QueueFactory {
       injector.injectMembers(mongoQueueConsumer);
       return mongoQueueConsumer;
     } else {
-      logger.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
+      log.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
       return new NoopQueueConsumer<>();
     }
   }

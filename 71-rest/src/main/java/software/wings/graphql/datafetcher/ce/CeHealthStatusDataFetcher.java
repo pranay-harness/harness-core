@@ -31,7 +31,7 @@ public class CeHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO>
           .clusterHealthStatusList(ceHealthStatus.getClusterHealthStatusList())
           .build();
     } catch (IllegalArgumentException e) {
-      logger.error("Exception getting health status", e);
+      log.error("Exception getting health status", e);
     }
     return null;
   }

@@ -113,7 +113,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      logger.info("Executing container service deploy");
+      log.info("Executing container service deploy");
       ContextData contextData = new ContextData(context, this);
 
       InfrastructureMapping infrastructureMapping =
@@ -154,7 +154,7 @@ public abstract class ContainerServiceDeploy extends State {
               .withActivityId(activity.getUuid());
 
       if (isRollback()) {
-        logger.info("Executing rollback");
+        log.info("Executing rollback");
 
         // Deployment of a K8 V2 service with a V1 workflow is not allowed. So if we reach here there is nothing to
         // rollback and hence we fail with an appropriate error message and exception
@@ -253,7 +253,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
-      logger.info("Received async response");
+      log.info("Received async response");
       CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 

@@ -41,7 +41,7 @@ public class SharedInformerFactoryFactory {
   }
 
   public SharedInformerFactory createSharedInformerFactory(ApiClient apiClient, ClusterDetails clusterDetails) {
-    logger.info("Creating new SharedInformerFactory for cluster: {}", clusterDetails.getClusterId());
+    log.info("Creating new SharedInformerFactory for cluster: {}", clusterDetails.getClusterId());
     SharedInformerFactory factory = new SharedInformerFactory();
     addHandlerForReplicaSet(factory, apiClient, clusterDetails);
     addHandlerForDeployment(factory, apiClient, clusterDetails);

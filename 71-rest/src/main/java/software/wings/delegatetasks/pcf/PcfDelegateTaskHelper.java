@@ -25,7 +25,7 @@ public class PcfDelegateTaskHelper {
       return commandTaskTypeToTaskHandlerMap.get(pcfCommandRequest.getPcfCommandType().name())
           .executeTask(pcfCommandRequest, encryptedDataDetails);
     } catch (Exception ex) {
-      logger.error("Exception in processing PCF task [{}]", pcfCommandRequest.toString(), ex);
+      log.error("Exception in processing PCF task [{}]", pcfCommandRequest.toString(), ex);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

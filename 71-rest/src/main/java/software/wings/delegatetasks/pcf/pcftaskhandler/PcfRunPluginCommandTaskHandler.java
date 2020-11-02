@@ -179,9 +179,9 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
   @VisibleForTesting
   PcfCommandExecutionResponse handleError(
       ExecutionLogCallback executionLogCallback, PcfRunPluginCommandRequest pluginCommandRequest, Exception e) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Run Plugin Command task [{}]",
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Run Plugin Command task [{}]",
         pluginCommandRequest);
-    logger.error("Exception is ", e);
+    log.error("Exception is ", e);
     executionLogCallback.saveExecutionLog("\n\n ----------  PCF Run Plugin Command failed to complete successfully",
         ERROR, CommandExecutionStatus.FAILURE);
     Misc.logAllMessages(e, executionLogCallback);
@@ -198,7 +198,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
         FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       }
     } catch (Exception e) {
-      logger.warn("Failed to remove temp files created", e);
+      log.warn("Failed to remove temp files created", e);
     }
   }
 

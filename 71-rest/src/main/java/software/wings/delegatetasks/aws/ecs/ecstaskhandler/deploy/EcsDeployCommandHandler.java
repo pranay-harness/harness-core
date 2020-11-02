@@ -118,15 +118,15 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
       resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
     } catch (TimeoutException ex) {
-      logger.error(ex.getMessage());
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error(ex.getMessage());
+      log.error(ExceptionUtils.getMessage(ex), ex);
       executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR);
       ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       ecsServiceDeployResponse.setOutput(ex.getMessage());
     } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
-      logger.error("Completed operation with errors");
+      log.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(format("Completed operation with errors%n%s%n", DASH_STRING), ERROR);
       ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       ecsServiceDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
@@ -166,7 +166,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
         executionDataBuilder.previousContainerInfos(containerInfos);
       }
       ecsDeployCommandTaskHelper.logContainerInfos(containerInfos, executionLogCallback);
-      logger.info("Successfully completed resize operation");
+      log.info("Successfully completed resize operation");
       executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));
     }
   }

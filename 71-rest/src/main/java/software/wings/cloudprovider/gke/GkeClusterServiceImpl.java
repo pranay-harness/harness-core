@@ -74,8 +74,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                             .clusters()
                             .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
                             .execute();
-      logger.info("Cluster already exists");
-      logger.debug("Cluster {}, location {}, project {}", clusterName, location, projectId);
+      log.info("Cluster already exists");
+      log.debug("Cluster {}, location {}, project {}", clusterName, location, projectId);
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, location, clusterName, "getting");
@@ -104,8 +104,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                               .clusters()
                               .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
                               .execute();
-        logger.info("Cluster status: {}", cluster.getStatus());
-        logger.debug("Master endpoint: {}", cluster.getEndpoint());
+        log.info("Cluster status: {}", cluster.getStatus());
+        log.debug("Master endpoint: {}", cluster.getEndpoint());
         return configFromCluster(cluster, namespace);
       }
     } catch (IOException e) {
@@ -173,7 +173,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   private String waitForOperationToComplete(Operation operation, Container gkeContainerService, String projectId,
       String location, String operationLogMessage) {
-    logger.info(operationLogMessage + "...");
+    log.info(operationLogMessage + "...");
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -185,17 +185,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                   .execute()
                   .getStatus();
           if (!status.equals("RUNNING")) {
-            logger.info(operationLogMessage + ": " + status);
+            log.info(operationLogMessage + ": " + status);
             return status;
           }
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
         }
       }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out checking operation status");
+      log.error("Timed out checking operation status");
       return "UNKNOWN";
     } catch (Exception e) {
-      logger.error("Error checking operation status", e);
+      log.error("Error checking operation status", e);
       return "UNKNOWN";
     }
   }
@@ -221,9 +221,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                             .clusters()
                             .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
                             .execute();
-      logger.debug("Found cluster {} in location {} for project {}", clusterName, location, projectId);
-      logger.info("Cluster status: {}", cluster.getStatus());
-      logger.debug("Master endpoint: {}", cluster.getEndpoint());
+      log.debug("Found cluster {} in location {} for project {}", clusterName, location, projectId);
+      log.info("Cluster status: {}", cluster.getStatus());
+      log.debug("Master endpoint: {}", cluster.getEndpoint());
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       // PL-1118: In case the cluster is being destroyed/torn down. Return null will immediately reclaim the service
@@ -232,12 +232,12 @@ public class GkeClusterServiceImpl implements GkeClusterService {
           && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
         String errorMessage =
             format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId);
-        logger.warn(errorMessage, e);
+        log.warn(errorMessage, e);
         throw new WingsException(CLUSTER_NOT_FOUND, e).addParam("message", errorMessage);
       } else {
         String errorMessage =
             format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId);
-        logger.error(errorMessage, e);
+        log.error(errorMessage, e);
         throw new InvalidRequestException(errorMessage, e);
       }
     }
@@ -261,7 +261,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                                     .collect(toList())
                               : ImmutableList.of();
     } catch (IOException e) {
-      logger.error("Error listing clusters for project " + projectId, e);
+      log.error("Error listing clusters for project " + projectId, e);
     }
     return null;
   }
@@ -308,10 +308,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       IOException e, String projectId, String location, String clusterName, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
         && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      logger.warn(
-          format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId), e);
+      log.warn(format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId), e);
     } else {
-      logger.error(
+      log.error(
           format("Error %s cluster %s in location %s for project %s", actionVerb, clusterName, location, projectId), e);
     }
   }

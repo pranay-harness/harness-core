@@ -36,7 +36,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
     }
 
     if (!notificationProcessingController.canProcessAccount(notificationGroup.getAccountId())) {
-      logger.info("Notification Group's {} account {} is disabled. Notifications cannot be dispatched",
+      log.info("Notification Group's {} account {} is disabled. Notifications cannot be dispatched",
           notificationGroup.getUuid(), notificationGroup.getAccountId());
       return;
     }
@@ -59,7 +59,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
 
   @Override
   public Logger logger() {
-    return logger;
+    return log;
   }
 
   private void handleNotificationGroupRoles(NotificationGroup notificationGroup, List<Notification> notifications) {
@@ -77,7 +77,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
 
       PageResponse<User> users = userService.list(request, false);
       List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
-      logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
+      log.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
       emailDispatcher.dispatch(notifications, toAddresses);
     });
   }

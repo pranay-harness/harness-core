@@ -33,7 +33,7 @@ public class AddInstanceUsageCheckerJob implements Migration {
 
         ServiceInstanceUsageCheckerJob.delete(jobScheduler, account.getUuid());
         ServiceInstanceUsageCheckerJob.addWithDelay(jobScheduler, account.getUuid());
-        logger.info("Added ServiceInstanceUsageCheckerJob for account {}", account.getUuid());
+        log.info("Added ServiceInstanceUsageCheckerJob for account {}", account.getUuid());
       }
     }
   }

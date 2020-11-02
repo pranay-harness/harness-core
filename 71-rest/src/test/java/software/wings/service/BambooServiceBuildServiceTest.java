@@ -46,7 +46,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   public void shouldFetchBambooSettings() {
     PageResponse<SettingAttribute> settingAttributes = settingsService.list(new PageRequest<>(), null, null);
     SettingAttribute settingAttribute = settingsService.get("YcsuxTFqR6uH093foR_K5w-bamboo");
-    logger.info(settingAttribute.toString());
+    log.info(settingAttribute.toString());
   }
 
   @Test
@@ -54,7 +54,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetJobs() {
-    logger.info(bambooService.getPlanKeys(bambooConfig, null).toString());
+    log.info(bambooService.getPlanKeys(bambooConfig, null).toString());
   }
 
   @Test
@@ -68,7 +68,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {
-    logger.info(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1").toString());
+    log.info(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1").toString());
   }
 
   @Test
@@ -76,6 +76,6 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuilds() {
-    logger.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", Arrays.asList(), 50).toString());
+    log.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", Arrays.asList(), 50).toString());
   }
 }

@@ -53,7 +53,7 @@ public class DeletedEntityHandler implements Handler<DeletedEntity> {
       if (entityType.equals(DeletedEntityType.ACCOUNT)) {
         deleteAccountHelper.handleDeletedAccount(entity);
       } else {
-        logger.error("Unknown entity type: {}", entityType);
+        log.error("Unknown entity type: {}", entityType);
       }
     }
   }

@@ -27,7 +27,7 @@ public class VaultAppRoleRenewalMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Migrate vault app role renewal interval");
+    log.info("Migrate vault app role renewal interval");
     try (HIterator<VaultConfig> iterator = new HIterator<>(wingsPersistence.createQuery(VaultConfig.class)
                                                                .filter(SecretManagerConfigKeys.encryptionType, VAULT)
                                                                .filter(VaultConfigKeys.renewalInterval, 0)
@@ -37,15 +37,15 @@ public class VaultAppRoleRenewalMigration implements Migration {
       while (iterator.hasNext()) {
         VaultConfig vaultConfig = iterator.next();
         try {
-          logger.info("Processing vault {}", vaultConfig.getUuid());
+          log.info("Processing vault {}", vaultConfig.getUuid());
           wingsPersistence.updateField(
               VaultConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewalInterval, DEFAULT_RENEWAL_INTERVAL);
-          logger.info("Updated vault config id {}", vaultConfig.getUuid());
+          log.info("Updated vault config id {}", vaultConfig.getUuid());
         } catch (Exception e) {
-          logger.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);
+          log.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);
         }
       }
     }
-    logger.info("Migration completed for vault config renewal interval");
+    log.info("Migration completed for vault config renewal interval");
   }
 }

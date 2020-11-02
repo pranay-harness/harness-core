@@ -134,7 +134,7 @@ public class AwsStateHelper {
     try {
       return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
     } catch (Exception e) {
-      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
+      log.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
       return null;
     }
   }

@@ -24,15 +24,15 @@ public class DockerConfigFunctor implements ExpressionFunctor {
   }
 
   private String getDockerConfig() {
-    logger.info("Getting dockerConfig");
+    log.info("Getting dockerConfig");
 
     try {
       return artifactCollectionUtils.getDockerConfig(artifactStreamId);
     } catch (InvalidRequestException e) {
-      logger.error("Error in getDockerConfig", e);
+      log.error("Error in getDockerConfig", e);
       return "";
     } finally {
-      logger.info("Done getting dockerConfig");
+      log.info("Done getting dockerConfig");
     }
   }
 }

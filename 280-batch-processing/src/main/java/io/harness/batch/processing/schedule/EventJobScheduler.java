@@ -78,7 +78,7 @@ public class EventJobScheduler {
       try {
         recentlyAddedAccountJobRunner.runJobForRecentlyAddedAccounts();
       } catch (Exception ex) {
-        logger.error("Exception while running runRecentlyAddedAccountJob Job", ex);
+        log.error("Exception while running runRecentlyAddedAccountJob Job", ex);
       }
     }
   }
@@ -102,7 +102,7 @@ public class EventJobScheduler {
 
   @Scheduled(cron = "0 0 */6 ? * *")
   public void scanDelayedJobs() {
-    logger.info("Inside scanning delayed jobs !! ");
+    log.info("Inside scanning delayed jobs !! ");
     Stream.of(BatchJobBucket.values()).forEach(batchJobBucket -> runCloudEfficiencyEventJobs(batchJobBucket, false));
   }
 
@@ -125,13 +125,13 @@ public class EventJobScheduler {
       try {
         k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
       } catch (Exception ex) {
-        logger.error("Exception while running runTimescalePurgeJob", ex);
+        log.error("Exception while running runTimescalePurgeJob", ex);
       }
 
       try {
         billingDataService.purgeOldHourlyBillingData();
       } catch (Exception ex) {
-        logger.error("Exception while running purgeOldHourlyBillingData Job", ex);
+        log.error("Exception while running purgeOldHourlyBillingData Job", ex);
       }
     }
   }
@@ -143,7 +143,7 @@ public class EventJobScheduler {
       try {
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
-        logger.error("Exception while running runConnectorsHealthStatusJob {}", ex);
+        log.error("Exception while running runConnectorsHealthStatusJob {}", ex);
       }
     }
   }
@@ -155,7 +155,7 @@ public class EventJobScheduler {
       try {
         accountExpiryCleanupService.execute();
       } catch (Exception ex) {
-        logger.error("Exception while running runAccountExpiryCleanup {}", ex);
+        log.error("Exception while running runAccountExpiryCleanup {}", ex);
       }
     }
   }
@@ -164,9 +164,9 @@ public class EventJobScheduler {
   public void runWeeklyReportJob() {
     try {
       weeklyReportService.generateAndSendWeeklyReport();
-      logger.info("Weekly billing report generated and send");
+      log.info("Weekly billing report generated and send");
     } catch (Exception ex) {
-      logger.error("Exception while running weeklyReportJob", ex);
+      log.error("Exception while running weeklyReportJob", ex);
     }
   }
 
@@ -175,9 +175,9 @@ public class EventJobScheduler {
     // In case jobs take longer time, the jobs will be queued and executed in turn
     try {
       scheduledReportService.generateAndSendScheduledReport();
-      logger.info("Scheduled reports generated and sent");
+      log.info("Scheduled reports generated and sent");
     } catch (Exception ex) {
-      logger.error("Exception while running runScheduledReportJob", ex);
+      log.error("Exception while running runScheduledReportJob", ex);
     }
   }
 
@@ -185,9 +185,9 @@ public class EventJobScheduler {
   public void runBudgetAlertsJob() {
     try {
       budgetAlertsService.sendBudgetAlerts();
-      logger.info("Budget alerts send");
+      log.info("Budget alerts send");
     } catch (Exception ex) {
-      logger.error("Exception while running budgetAlertsJob", ex);
+      log.error("Exception while running budgetAlertsJob", ex);
     }
   }
 
@@ -226,7 +226,7 @@ public class EventJobScheduler {
         batchJobRunner.runJob(accountId, job, runningMode);
       }
     } catch (Exception ex) {
-      logger.error("Exception while running job {}", job);
+      log.error("Exception while running job {}", job);
     }
   }
 }

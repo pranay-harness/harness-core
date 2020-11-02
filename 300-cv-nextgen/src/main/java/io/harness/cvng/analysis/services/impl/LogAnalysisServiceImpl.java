@@ -85,7 +85,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public String scheduleServiceGuardLogAnalysisTask(AnalysisInput input) {
     ServiceGuardLogAnalysisTask task = createServiceGuardLogAnalysisTask(input);
-    logger.info("Scheduling ServiceGuardLogAnalysisTask {}", task);
+    log.info("Scheduling ServiceGuardLogAnalysisTask {}", task);
     return learningEngineTaskService.createLearningEngineTask(task);
   }
 
@@ -116,7 +116,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public String scheduleDeploymentLogAnalysisTask(AnalysisInput analysisInput) {
     LogAnalysisLearningEngineTask task = createLogCanaryAnalysisLearningEngineTask(analysisInput);
-    logger.info("Scheduling LogCanaryAnalysisLearningEngineTask {}", task);
+    log.info("Scheduling LogCanaryAnalysisLearningEngineTask {}", task);
     return learningEngineTaskService.createLearningEngineTask(task);
   }
 
@@ -198,7 +198,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public void saveAnalysis(String taskId, LogAnalysisDTO analysisBody) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
-    logger.info("Saving service guard log analysis for verificationTaskid {} and taskId {}",
+    log.info("Saving service guard log analysis for verificationTaskid {} and taskId {}",
         learningEngineTask.getVerificationTaskId(), taskId);
     analysisBody.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
     analysisBody.setAnalysisStartTime(learningEngineTask.getAnalysisStartTime());
@@ -208,7 +208,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             learningEngineTask.getAnalysisStartTime(), learningEngineTask.getAnalysisEndTime());
     LogAnalysisResult analysisResult = analysisBody.toAnalysisResult(learningEngineTask.getVerificationTaskId(),
         learningEngineTask.getAnalysisStartTime(), learningEngineTask.getAnalysisEndTime());
-    logger.info("Saving {} analyzed log clusters for LETask", learningEngineTask);
+    log.info("Saving {} analyzed log clusters for LETask", learningEngineTask);
     // first delete the existing records which have not been evicted.
     hPersistence.delete(
         hPersistence.createQuery(LogAnalysisCluster.class)

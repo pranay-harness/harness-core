@@ -28,7 +28,7 @@ public class AddAccountIdToTimeSeriesKeyTransaction implements Migration {
   public void migrate() {
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "timeSeriesKeyTransactions");
 
-    logger.info("Starting migration from timeSeriesKeyTransactions");
+    log.info("Starting migration from timeSeriesKeyTransactions");
     Map<String, String> configToAccountIdMap = new HashMap<>();
     try (HIterator<TimeSeriesKeyTransactions> timeSeriesKeyTransactionsHIterator =
              new HIterator<>(wingsPersistence.createQuery(TimeSeriesKeyTransactions.class, excludeAuthority)
@@ -51,16 +51,16 @@ public class AddAccountIdToTimeSeriesKeyTransaction implements Migration {
 
           if (accountId == null) {
             collection.remove(new BasicDBObject("_id", uuId));
-            logger.info("Deleted key transaction for cvConfigId: {}", cvConfigId);
+            log.info("Deleted key transaction for cvConfigId: {}", cvConfigId);
           } else {
             collection.update(new BasicDBObject("_id", uuId),
                 new BasicDBObject("$set", new BasicDBObject(TimeSeriesKeyTransactionsKeys.accountId, accountId)));
-            logger.info("Updated account id for id: {}", uuId);
+            log.info("Updated account id for id: {}", uuId);
           }
           sleep(Duration.ofMillis(100));
         }
       } catch (Exception e) {
-        logger.error("Exception while migrating timeSeriesKeyTransactions", e);
+        log.error("Exception while migrating timeSeriesKeyTransactions", e);
       }
     }
   }

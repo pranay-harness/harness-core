@@ -83,7 +83,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     List<HeatMap> rv = Collections.synchronizedList(new ArrayList<>());
     List<CVConfiguration> cvConfigurations = getCVConfigurations(appId, serviceId);
     if (isEmpty(cvConfigurations)) {
-      logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
+      log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
 
@@ -93,7 +93,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         .forEach(cvConfig -> callables.add(() -> {
           cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
           String envName = cvConfig.getEnvName();
-          logger.info("Environment name {}", envName);
+          log.info("Environment name {}", envName);
           final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
           rv.add(heatMap);
 
@@ -114,7 +114,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
                                                  .filter(CVConfigurationKeys.enabled24x7, true)
                                                  .asList();
     if (isEmpty(cvConfigurations)) {
-      logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
+      log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
     return cvConfigurations;
@@ -142,7 +142,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     // total number of read units
     int numberOfUnits = (int) ceil((double) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime) / unitDuration);
 
-    logger.info("total small units = {}, number of required units = {}", units.size(), numberOfUnits);
+    log.info("total small units = {}, number of required units = {}", units.size(), numberOfUnits);
 
     for (int i = 0; i < numberOfUnits; i++) {
       // merge [i * eventsPerUnit, (i + 1) * eventsPerUnit)
@@ -250,7 +250,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   public LogMLAnalysisSummary getAnalysisSummary(String cvConfigId, Long startTime, Long endTime, String appId) {
     LogsCVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     if (!VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
-      logger.error("Incorrect CVConfigID to fetch logAnalysisSummary {}", cvConfigId);
+      log.error("Incorrect CVConfigID to fetch logAnalysisSummary {}", cvConfigId);
       return null;
     }
 
@@ -492,19 +492,18 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .get();
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     if (analysisRecord == null) {
-      logger.info("No analysis has been done for {}", cvConfiguration.getUuid());
+      log.info("No analysis has been done for {}", cvConfiguration.getUuid());
       return TimeUnit.MINUTES.toMillis(currentMinute);
     } else {
       if (analysisRecord.getAnalysisMinute() + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
-        logger.info(
-            "For {} It has been more than 2 hours since the last one. We will be attempting the one 2 hours ago",
+        log.info("For {} It has been more than 2 hours since the last one. We will be attempting the one 2 hours ago",
             cvConfiguration.getUuid());
         long currentWindowEnd =
             TimeUnit.MINUTES.toMillis(currentMinute - PREDECTIVE_HISTORY_MINUTES + CRON_POLL_INTERVAL_IN_MINUTES);
-        logger.info("For {} Returning {} as the current window end time ", cvConfiguration.getUuid(), currentWindowEnd);
+        log.info("For {} Returning {} as the current window end time ", cvConfiguration.getUuid(), currentWindowEnd);
         return currentWindowEnd;
       } else {
-        logger.info(
+        log.info(
             "For {}, the last analysis minute was {}", cvConfiguration.getUuid(), analysisRecord.getAnalysisMinute());
         return TimeUnit.MINUTES.toMillis(analysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
       }
@@ -523,13 +522,13 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
                                            .get();
 
     if (lastAnalysis == null) {
-      logger.info("There has been no analysis done for {}. So current window end time minute is {}",
+      log.info("There has been no analysis done for {}. So current window end time minute is {}",
           cvConfiguration.getUuid(), baselineStart + CRON_POLL_INTERVAL_IN_MINUTES);
       return TimeUnit.MINUTES.toMillis(baselineStart + CRON_POLL_INTERVAL_IN_MINUTES);
     }
 
     if (lastAnalysis.getLogCollectionMinute() > baselineStart && lastAnalysis.getLogCollectionMinute() < baselineEnd) {
-      logger.info("We are within the baseline window for {}", cvConfiguration.getUuid());
+      log.info("We are within the baseline window for {}", cvConfiguration.getUuid());
       return TimeUnit.MINUTES.toMillis(lastAnalysis.getLogCollectionMinute() + CRON_POLL_INTERVAL_IN_MINUTES);
     }
 
@@ -543,7 +542,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
 
     if (lastAnalysis.getLogCollectionMinute() + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
-      logger.info("For {} Last analysis was more than 2 hours ago, we will restart analysis from 2hours ago.",
+      log.info("For {} Last analysis was more than 2 hours ago, we will restart analysis from 2hours ago.",
           cvConfiguration.getUuid());
       long expectedStart = currentMinute - PREDECTIVE_HISTORY_MINUTES;
       if (Math.floorMod(expectedStart - 1, CRON_POLL_INTERVAL_IN_MINUTES) != 0) {
@@ -569,22 +568,22 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
                                                   .order(LearningEngineAnalysisTaskKeys.analysis_minute)
                                                   .get();
     if (analysisTask != null) {
-      logger.info("For {} found an analysis task in {} status. Returning analysisMinute {}", cvConfigId,
+      log.info("For {} found an analysis task in {} status. Returning analysisMinute {}", cvConfigId,
           analysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute());
       return TimeUnit.MINUTES.toMillis(analysisTask.getAnalysis_minute());
     }
 
     if (VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())) {
-      logger.info("The configuration {} is a log config. Calling getCurrentAnalysisMinuteForLogs", cvConfigId);
+      log.info("The configuration {} is a log config. Calling getCurrentAnalysisMinuteForLogs", cvConfigId);
       return getCurrentAnalysisMinuteForLogs(cvConfiguration);
     } else if (VerificationConstants.getMetricAnalysisStates().contains(cvConfiguration.getStateType())) {
-      logger.info(
+      log.info(
           "The configuration {} is a timeseries config. Calling getCurrentAnalysisMinuteForTimeseries", cvConfigId);
       return getCurrentAnalysisMinuteForTimeseries(cvConfiguration);
     } else {
       final String errMsg = "The stateType for cvConfigId: " + cvConfigId
           + "does not belong to timeseries or logs. Invalid State provided";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new WingsException(errMsg);
     }
   }

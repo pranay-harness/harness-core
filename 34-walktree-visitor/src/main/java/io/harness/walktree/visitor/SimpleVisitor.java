@@ -67,7 +67,7 @@ public abstract class SimpleVisitor<T extends DummyVisitableElement> extends Vis
     if (helperClass != null) {
       dummyElement = helperClass.createDummyVisitableElement(currentElement);
     } else {
-      logger.error("Helper Class not implemented for object of type" + currentElement.getClass());
+      log.error("Helper Class not implemented for object of type" + currentElement.getClass());
       throw new InvalidArgumentsException(
           "Helper Class not implemented for object of type" + currentElement.getClass());
     }

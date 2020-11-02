@@ -56,11 +56,11 @@ public class CommandLibraryServiceExecutor {
     if (acquireLock(lockfile, ofMinutes(2))) {
       try {
         if (isHealthy()) {
-          logger.info("Command Library Service is healthy");
+          log.info("Command Library Service is healthy");
           return;
         }
         final File rootDirectory = new File(rootDirectoryPath);
-        logger.info("Execute the command library service from {}", rootDirectory);
+        log.info("Execute the command library service from {}", rootDirectory);
         final Path jar = Paths.get(
             rootDirectory.getPath(), COMMAND_LIBRARY_SERVER_MODULE, "target", "command-library-app-capsule.jar");
         final Path config =
@@ -76,7 +76,7 @@ public class CommandLibraryServiceExecutor {
         }
 
         for (int i = 0; i < 10; i++) {
-          logger.info("****");
+          log.info("****");
         }
 
         List<String> command = new ArrayList<>();
@@ -84,7 +84,7 @@ public class CommandLibraryServiceExecutor {
         addJacocoAgentVM(jar, command);
         addJar(jar, command);
         addConfig(config, command);
-        logger.info(join(command, " "));
+        log.info(join(command, " "));
 
         startServiceProcess(rootDirectory, command);
 
@@ -134,14 +134,14 @@ public class CommandLibraryServiceExecutor {
       Setup.commandLibraryService().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
-        logger.info("not healthy");
+        log.info("not healthy");
       } else {
-        logger.info("not healthy - {}", exception.getMessage());
+        log.info("not healthy - {}", exception.getMessage());
         previous = exception;
       }
       return false;
     }
-    logger.info("healthy");
+    log.info("healthy");
     return true;
   }
 }

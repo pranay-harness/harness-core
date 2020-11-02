@@ -70,7 +70,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
       Integer timeoutMinutes = Integer.valueOf(stateTimeoutInMinutes);
       return StateTimeoutUtils.getTimeoutMillisFromMinutes(timeoutMinutes);
     } catch (IllegalArgumentException ex) {
-      logger.error(format("Could not convert stateTimeout %s to Integer", stateTimeoutInMinutes), ex);
+      log.error(format("Could not convert stateTimeout %s to Integer", stateTimeoutInMinutes), ex);
       return null;
     }
   }

@@ -31,7 +31,7 @@ public class AccountExpiryCleanupService {
 
   public void execute() {
     List<Account> accounts = cloudToHarnessMappingService.getCeAccountsWithLicense();
-    logger.info("Accounts batch size is AccountExpiryCleanupTasklet {} ", accounts.size());
+    log.info("Accounts batch size is AccountExpiryCleanupTasklet {} ", accounts.size());
     accounts.forEach(account -> {
       String accountId = account.getUuid();
       List<SettingAttribute> ceConnectors = cloudToHarnessMappingService.getCEConnectors(accountId);
@@ -60,7 +60,7 @@ public class AccountExpiryCleanupService {
       CeLicenseInfo ceLicenseInfo = account.getCeLicenseInfo();
       long expiryTime = ceLicenseInfo.getExpiryTimeWithGracePeriod();
       if (expiryTime != 0L && Instant.now().toEpochMilli() > expiryTime) {
-        logger.info("Triggering Data Pipeline Clean up for account: {} ", account);
+        log.info("Triggering Data Pipeline Clean up for account: {} ", account);
         accountExpiryService.dataPipelineCleanup(account);
       }
     });

@@ -151,23 +151,23 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void loadHarnessGallery() {
-    logger.info("Loading Harness Inc Gallery");
+    log.info("Loading Harness Inc Gallery");
     deleteAccountGalleryByName(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    logger.info("Creating harness gallery");
+    log.info("Creating harness gallery");
     TemplateGallery gallery = saveHarnessGallery();
-    logger.info("Harness template gallery created successfully");
-    logger.info("Loading Harness default template folders");
+    log.info("Harness template gallery created successfully");
+    log.info("Loading Harness default template folders");
     templateFolderService.loadDefaultTemplateFolders();
-    logger.info("Loading Harness default template folders success");
-    logger.info("Loading default templates for command");
+    log.info("Loading Harness default template folders success");
+    log.info("Loading default templates for command");
     templateService.loadDefaultTemplates(TemplateType.SSH, GLOBAL_ACCOUNT_ID, gallery.getName());
-    logger.info("Loading default templates for command success");
-    logger.info("Loading default templates for http");
+    log.info("Loading default templates for command success");
+    log.info("Loading default templates for http");
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, gallery.getName());
-    logger.info("Loading default templates for http success");
-    logger.info("Loading default templates for shell script");
+    log.info("Loading default templates for http success");
+    log.info("Loading default templates for shell script");
     templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, GLOBAL_ACCOUNT_ID, gallery.getName());
-    logger.info("Loading default templates for shell script success");
+    log.info("Loading default templates for shell script success");
   }
 
   @Override
@@ -232,7 +232,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
 
   @Override
   public void saveHarnessCommandLibraryGalleryToAccount(String accountId, String accountName) {
-    logger.info("Creating command library gallery for the account {}", accountName);
+    log.info("Creating command library gallery for the account {}", accountName);
     TemplateGallery templateGallery =
         save(TemplateGallery.builder()
                  .name(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name()) /* Setting name as gallery key*/
@@ -241,20 +241,20 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                  .galleryKey(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name())
                  .build());
     templateFolderService.createRootImportedTemplateFolder(accountId, templateGallery.getUuid());
-    logger.info(
+    log.info(
         "Created command library gallery for account {} with galleryId {}", accountName, templateGallery.getUuid());
   }
 
   @Override
   public void copyHarnessTemplatesToAccount(String accountId, String accountName) {
-    logger.info("Copying Harness templates for the account {}", accountName);
+    log.info("Copying Harness templates for the account {}", accountName);
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
-    logger.info("Creating Account gallery");
+    log.info("Creating Account gallery");
     TemplateGallery accountGallery = save(TemplateGallery.builder()
                                               .name(accountName)
                                               .appId(GLOBAL_APP_ID)
@@ -262,27 +262,27 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                                               .galleryKey(getAccountGalleryKey().name())
                                               .referencedGalleryId(harnessTemplateGallery.getUuid())
                                               .build());
-    logger.info("Creating Account gallery success with galleryId {}", accountGallery.getUuid());
-    logger.info("Copying harness template folders to account {}", accountName);
+    log.info("Creating Account gallery success with galleryId {}", accountGallery.getUuid());
+    log.info("Copying harness template folders to account {}", accountName);
     templateFolderService.copyHarnessTemplateFolders(accountGallery.getUuid(), accountId, accountName);
-    logger.info("Copying harness template folders to account {} success", accountName);
-    logger.info("Copying default templates for account {}", accountName);
+    log.info("Copying harness template folders to account {} success", accountName);
+    log.info("Copying default templates for account {}", accountName);
     templateService.loadDefaultTemplates(TemplateType.SSH, accountId, accountName);
     templateService.loadDefaultTemplates(TemplateType.HTTP, accountId, accountName);
     //    templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, accountId, accountName);
-    logger.info("Copying default templates for account {} success", accountName);
+    log.info("Copying default templates for account {} success", accountName);
   }
 
   @Override
   public void copyHarnessTemplatesToAccountV2(String accountId, String accountName) {
-    logger.info("Copying Harness templates for the account {}", accountName);
+    log.info("Copying Harness templates for the account {}", accountName);
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
-    logger.info("Creating Account gallery");
+    log.info("Creating Account gallery");
     TemplateGallery accountGallery = save(TemplateGallery.builder()
                                               .name(accountName)
                                               .appId(GLOBAL_APP_ID)
@@ -290,11 +290,11 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                                               .galleryKey(getAccountGalleryKey().name())
                                               .referencedGalleryId(harnessTemplateGallery.getUuid())
                                               .build());
-    logger.info("Creating Account gallery success");
-    logger.info("Copying harness template folders to account {}", accountName);
+    log.info("Creating Account gallery success");
+    log.info("Copying harness template folders to account {}", accountName);
     templateFolderService.copyHarnessTemplateFolders(accountGallery.getUuid(), accountId, accountName);
-    logger.info("Copying harness template folders to account {} success", accountName);
-    logger.info("Copying default templates for account {}", accountName);
+    log.info("Copying harness template folders to account {} success", accountName);
+    log.info("Copying default templates for account {}", accountName);
     //    templateService.loadDefaultTemplates(TemplateType.SSH, accountId, accountName);
     templateService.loadDefaultTemplates(TemplateType.HTTP, accountId, accountName);
     templateService.loadDefaultTemplates(
@@ -307,7 +307,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     templateGalleryService.copyHarnessTemplateFromGalleryToAccount(POWER_SHELL_COMMANDS, TemplateType.SSH,
         "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V5_INSTALL_PATH, accountId, accountName,
         accountGallery.getUuid());
-    logger.info("Copying default templates for account {} success", accountName);
+    log.info("Copying default templates for account {} success", accountName);
   }
   private Set<String> getKeywords(TemplateGallery templateGallery) {
     Set<String> generatedKeywords = trimmedLowercaseSet(templateGallery.generateKeywords());
@@ -329,18 +329,18 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Override
   public void copyHarnessTemplateFromGalleryToAccounts(
       String sourceFolderPath, TemplateType templateType, String templateName, String yamlFilePath) {
-    logger.info("Copying Harness template [{}] from global account to all accounts", templateName);
+    log.info("Copying Harness template [{}] from global account to all accounts", templateName);
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
 
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
       try {
-        logger.info("Copying template [{}] started for account [{}]", templateName, account.getUuid());
+        log.info("Copying template [{}] started for account [{}]", templateName, account.getUuid());
         TemplateGallery templateGallery = wingsPersistence.createQuery(TemplateGallery.class)
                                               .filter(GALLERY_KEY, GalleryKey.ACCOUNT_TEMPLATE_GALLERY)
                                               .field("accountId")
@@ -352,14 +352,14 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                 account.getUuid(), account.getAccountName() + "/" + sourceFolderPath, templateGallery.getUuid());
             if (destTemplateFolder != null) {
               templateService.loadYaml(templateType, yamlFilePath, account.getUuid(), account.getAccountName());
-              logger.info("Template copied to account [{}]", account.getUuid());
+              log.info("Template copied to account [{}]", account.getUuid());
             }
           }
         } else {
-          logger.info("Template gallery does not exist for account [{}]. Do nothing", account.getUuid());
+          log.info("Template gallery does not exist for account [{}]. Do nothing", account.getUuid());
         }
       } catch (Exception ex) {
-        logger.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
+        log.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
       }
     }
   }
@@ -367,16 +367,16 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Override
   public void copyHarnessTemplateFromGalleryToAccount(String sourceFolderPath, TemplateType templateType,
       String templateName, String yamlFilePath, String accountId, String accountName, String galleryId) {
-    logger.info("Copying Harness template [{}] from global account to all accounts", templateName);
+    log.info("Copying Harness template [{}] from global account to all accounts", templateName);
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
 
     try {
-      logger.info("Copying template [{}] started for account [{}]", templateName, accountId);
+      log.info("Copying template [{}] started for account [{}]", templateName, accountId);
       TemplateGallery templateGallery = wingsPersistence.createQuery(TemplateGallery.class)
                                             .filter(GALLERY_KEY, GalleryKey.ACCOUNT_TEMPLATE_GALLERY)
                                             .field(ACCOUNT_ID_KEY)
@@ -389,13 +389,13 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
           if (destTemplateFolder != null) {
             templateService.loadYaml(templateType, yamlFilePath, accountId, accountName);
           }
-          logger.info("Template copied to account [{}]", accountId);
+          log.info("Template copied to account [{}]", accountId);
         }
       } else {
-        logger.info("Template gallery does not exist for account [{}]. Do nothing", accountId);
+        log.info("Template gallery does not exist for account [{}]. Do nothing", accountId);
       }
     } catch (Exception ex) {
-      logger.error("Copy Harness template failed for account [{}]", accountId, ex);
+      log.error("Copy Harness template failed for account [{}]", accountId, ex);
     }
   }
 
@@ -412,12 +412,12 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
           existingTemplate.setReferencedTemplateId(globalTemplate.getUuid());
           existingTemplate.setTemplateObject(globalTemplate.getTemplateObject());
           existingTemplate.setVariables(globalTemplate.getVariables());
-          logger.info("Updating template in account [{}]", account.getUuid());
+          log.info("Updating template in account [{}]", account.getUuid());
           templateService.update(existingTemplate);
-          logger.info("Template updated in account [{}]", account.getUuid());
+          log.info("Template updated in account [{}]", account.getUuid());
         } else {
-          logger.info("Template gallery does not exist for account id: [{}] and name:[{}] . Do nothing",
-              account.getUuid(), account.getAccountName());
+          log.info("Template gallery does not exist for account id: [{}] and name:[{}] . Do nothing", account.getUuid(),
+              account.getAccountName());
         }
       }
     }
@@ -426,18 +426,18 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Override
   public void copyNewFolderAndTemplatesFromGlobalToAccounts(
       String sourceFolderPath, TemplateType templateType, List<String> yamlFilePaths) {
-    logger.info("Trying to copy new folder and templates from global account to all accounts");
+    log.info("Trying to copy new folder and templates from global account to all accounts");
 
     TemplateGallery harnessTemplateGallery = get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
 
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
       try {
-        logger.info("Copying templates started for account [{}]", account.getUuid());
+        log.info("Copying templates started for account [{}]", account.getUuid());
         TemplateGallery templateGallery = get(account.getUuid(), account.getAccountName());
         if (templateGallery != null) {
           TemplateFolder templateFolder =
@@ -451,18 +451,17 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                 templateService.loadYaml(templateType, path, account.getUuid(), account.getAccountName());
               }
             } else {
-              logger.info("Folder [{}] could not be added to account. Not copying templates", sourceFolderPath);
+              log.info("Folder [{}] could not be added to account. Not copying templates", sourceFolderPath);
             }
           } else {
-            logger.info(
-                "Parent Template folder does not exist for account [{}]. Cannot proceed with new Folder creation",
+            log.info("Parent Template folder does not exist for account [{}]. Cannot proceed with new Folder creation",
                 account.getUuid());
           }
         } else {
-          logger.info("Template gallery does not exist for account [{}]. Do nothing.", account.getUuid());
+          log.info("Template gallery does not exist for account [{}]. Do nothing.", account.getUuid());
         }
       } catch (Exception ex) {
-        logger.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
+        log.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
       }
     }
   }

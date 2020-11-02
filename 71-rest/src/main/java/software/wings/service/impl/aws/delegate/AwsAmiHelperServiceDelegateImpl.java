@@ -230,7 +230,7 @@ public class AwsAmiHelperServiceDelegateImpl
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR, CommandExecutionStatus.FAILURE);
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
   }
@@ -347,7 +347,7 @@ public class AwsAmiHelperServiceDelegateImpl
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR, CommandExecutionStatus.FAILURE);
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
   }
@@ -393,7 +393,7 @@ public class AwsAmiHelperServiceDelegateImpl
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
       logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
-      logger.error(errorMessage, ex);
+      log.error(errorMessage, ex);
       return AwsAmiServiceDeployResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
   }
@@ -617,7 +617,7 @@ public class AwsAmiHelperServiceDelegateImpl
         getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     logCallback.saveExecutionLog(
         format("Exception: [%s].", exception.getMessage()), ERROR, CommandExecutionStatus.FAILURE);
-    logger.error(exception.getMessage());
+    log.error(exception.getMessage());
     return AwsAmiSwitchRoutesResponse.builder()
         .errorMessage(ExceptionUtils.getMessage(exception))
         .executionStatus(FAILED)
@@ -727,7 +727,7 @@ public class AwsAmiHelperServiceDelegateImpl
   private AwsAmiServiceTrafficShiftAlbSetupResponse failureResponse(
       Exception exception, ExecutionLogCallback logCallback) {
     logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
-    logger.error(exception.getMessage(), exception);
+    log.error(exception.getMessage(), exception);
     return AwsAmiServiceTrafficShiftAlbSetupResponse.builder()
         .errorMessage(ExceptionUtils.getMessage(exception))
         .executionStatus(FAILED)
@@ -1044,7 +1044,7 @@ public class AwsAmiHelperServiceDelegateImpl
       return builder.build();
     } catch (Exception exception) {
       logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
-      logger.error(exception.getMessage(), exception);
+      log.error(exception.getMessage(), exception);
       return AwsAmiServiceSetupResponse.builder()
           .errorMessage(ExceptionUtils.getMessage(exception))
           .executionStatus(FAILED)
@@ -1122,7 +1122,7 @@ public class AwsAmiHelperServiceDelegateImpl
             }
             versionsRetained++;
           } else {
-            logger.info("ASG Cleanup. Deleting ASG: " + autoScalingGroup.getAutoScalingGroupName());
+            log.info("ASG Cleanup. Deleting ASG: " + autoScalingGroup.getAutoScalingGroupName());
             executionLogCallback.saveExecutionLog(
                 color("# Deleting Existing ASG: " + autoScalingGroup.getAutoScalingGroupName(), Yellow, Bold));
             downsizeAsgToZero(awsConfig, encryptionDetails, request, executionLogCallback, autoScalingGroup);
@@ -1134,7 +1134,7 @@ public class AwsAmiHelperServiceDelegateImpl
       }
     } catch (Exception e) {
       String msg = "Failed while downsizing/deleting older ASGs";
-      logger.error(msg, e);
+      log.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, ERROR);
     }
   }
@@ -1455,7 +1455,7 @@ public class AwsAmiHelperServiceDelegateImpl
       String errorMessage =
           format("Couldn't find reference AutoScalingGroup: [%s] in region: [%s]", baseAutoScalingGroupName, region);
       logCallback.saveExecutionLog(errorMessage, ERROR);
-      logger.error(errorMessage);
+      log.error(errorMessage);
       throw new InvalidRequestException(errorMessage);
     }
     return baseAutoScalingGroup;

@@ -17,10 +17,10 @@ public class GcpResourceManagerUtils {
     for (Binding b : bindings) {
       if (b.getRole().equals(role)) {
         b.getMembers().add(member);
-        logger.info("Member " + member + " added to role " + role);
+        log.info("Member " + member + " added to role " + role);
         return;
       }
     }
-    logger.error("Role not found in policy; member not added");
+    log.error("Role not found in policy; member not added");
   }
 }

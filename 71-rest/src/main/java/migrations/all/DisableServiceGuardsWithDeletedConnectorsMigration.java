@@ -20,7 +20,7 @@ public class DisableServiceGuardsWithDeletedConnectorsMigration implements Migra
 
   @Override
   public void migrate() {
-    logger.info("starting migration");
+    log.info("starting migration");
     try (HIterator<CVConfiguration> cvConfigurations =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).fetch())) {
       while (cvConfigurations.hasNext()) {
@@ -29,7 +29,7 @@ public class DisableServiceGuardsWithDeletedConnectorsMigration implements Migra
         final SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, connectorId);
 
         if (settingAttribute == null) {
-          logger.info("for {} in account {} the connector has been deleted. Disabling the service guard",
+          log.info("for {} in account {} the connector has been deleted. Disabling the service guard",
               cvConfiguration.getUuid(), cvConfiguration.getAccountId());
           wingsPersistence.updateField(
               CVConfiguration.class, cvConfiguration.getUuid(), CVConfigurationKeys.enabled24x7, Boolean.FALSE);
@@ -38,6 +38,6 @@ public class DisableServiceGuardsWithDeletedConnectorsMigration implements Migra
       }
     }
 
-    logger.info("migration finished");
+    log.info("migration finished");
   }
 }

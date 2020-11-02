@@ -58,7 +58,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
     if (connectorInfo.getIdentifier().equals(HARNESS_SECRET_MANAGER_IDENTIFIER)) {
       if (!defaultConnectorService.get(accountIdentifier, null, null, HARNESS_SECRET_MANAGER_IDENTIFIER).isPresent()) {
-        logger.info("Account level Harness Secret Manager not found");
+        log.info("Account level Harness Secret Manager not found");
         String orgIdentifier = connectorInfo.getOrgIdentifier();
         String projectIdentifier = connectorInfo.getProjectIdentifier();
         String description = connectorInfo.getDescription();
@@ -86,7 +86,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       try {
         return defaultConnectorService.create(connector, accountIdentifier);
       } catch (Exception ex) {
-        logger.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
+        log.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
         ngSecretManagerService.deleteSecretManager(accountIdentifier, connectorInfo.getOrgIdentifier(),
             connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
         throw new SecretManagementException(
@@ -143,7 +143,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
           ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
       return ConnectorValidationResult.builder().valid(success).testedAt(currentTime).build();
     } catch (Exception exception) {
-      logger.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
+      log.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
           projectIdentifier, connectorIdentifier, exception);
       return ConnectorValidationResult.builder()
           .valid(false)

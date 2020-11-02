@@ -100,7 +100,7 @@ public class ConfigurationController implements Managed, QueueController {
                  versionInfoManager.getVersionInfo().getVersion(), managerConfiguration.getPrimaryVersion());
 
       if (primary.getAndSet(isPrimary) != isPrimary) {
-        logger.info("{} primary mode", isPrimary ? "Entering" : "Leaving");
+        log.info("{} primary mode", isPrimary ? "Entering" : "Leaving");
         synchronized (configChangeListeners) {
           configChangeListeners.forEach((k, v) -> executorService.submit(() -> {
             if (configChangeListeners.get(k).contains(PrimaryChanged)) {

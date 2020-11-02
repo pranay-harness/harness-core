@@ -139,7 +139,7 @@ public class GitConfigHelperService {
 
       GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
 
-      logger.info(GIT_YAML_LOG_PREFIX + "GitConfigValidation [{}]", gitCommandExecutionResponse);
+      log.info(GIT_YAML_LOG_PREFIX + "GitConfigValidation [{}]", gitCommandExecutionResponse);
 
       if (gitCommandExecutionResponse.getGitCommandStatus() == GitCommandStatus.FAILURE) {
         throw new WingsException(ErrorCode.INVALID_CREDENTIAL).addParam("message", "Invalid git credentials.");
@@ -207,7 +207,7 @@ public class GitConfigHelperService {
       path = StringUtils.removeEnd(path, ".git");
       return StringUtils.removeStart(path, "/");
     } catch (URISyntaxException e) {
-      logger.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
+      log.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
     }
     return repositoryUrl;
   }
@@ -227,7 +227,7 @@ public class GitConfigHelperService {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
+      log.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
     }
     return GitRepositoryInfo.GitProvider.UNKNOWN;
   }

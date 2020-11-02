@@ -77,13 +77,13 @@ public class AWS4SignerForAuthorizationHeader {
 
     // canonicalize the various components of the request
     String canonicalRequest = getCanonicalRequest(endpointUrl, canonicalizedHeaderNames, canonicalizedHeaders);
-    logger.info("Step 1: Create canonical request done...");
+    log.info("Step 1: Create canonical request done...");
 
     // construct the string to be signed
     String dateStamp = dateStampFormat.format(now);
     String scope = dateStamp + "/" + regionName + "/" + SERVICE + "/" + TERMINATOR;
     String stringToSign = getStringToSign(dateTimeStamp, scope, canonicalRequest);
-    logger.info("Step 2: Create string to sign done...");
+    log.info("Step 2: Create string to sign done...");
 
     // compute the signing key
     byte[] kSecret = (SCHEME + awsSecretKey).getBytes(UTF_8);
@@ -92,7 +92,7 @@ public class AWS4SignerForAuthorizationHeader {
     byte[] kService = sign(SERVICE, kRegion, HMAC_SHA_256);
     byte[] kSigning = sign(TERMINATOR, kService, HMAC_SHA_256);
     byte[] signature = sign(stringToSign, kSigning, HMAC_SHA_256);
-    logger.info("Step 3: Calculate signature done...");
+    log.info("Step 3: Calculate signature done...");
 
     String credentialsAuthorizationHeader = "Credential=" + awsAccessKey + "/" + scope;
     String signedHeadersAuthorizationHeader = "SignedHeaders=" + canonicalizedHeaderNames;
@@ -100,7 +100,7 @@ public class AWS4SignerForAuthorizationHeader {
 
     String authorizationHeader = SCHEME + "-" + ALGORITHM + " " + credentialsAuthorizationHeader + ", "
         + signedHeadersAuthorizationHeader + ", " + signatureAuthorizationHeader;
-    logger.info("Step 4: Create authorization header done...");
+    log.info("Step 4: Create authorization header done...");
     return authorizationHeader;
   }
 

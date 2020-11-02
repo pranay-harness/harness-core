@@ -2057,7 +2057,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       srs.updateLambdaSpecification(lambdaSpecification);
       fail("Should have thrown a wingsException");
     } catch (WingsException e) {
-      logger.info("Expected exception");
+      log.info("Expected exception");
     }
 
     FunctionSpecification functionSpecification2 = FunctionSpecification.builder()

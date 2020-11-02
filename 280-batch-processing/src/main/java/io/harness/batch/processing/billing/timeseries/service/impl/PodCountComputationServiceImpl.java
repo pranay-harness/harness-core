@@ -123,12 +123,12 @@ public class PodCountComputationServiceImpl {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save podCount data,retryCount=[{}], Exception: ", retryCount, e);
+          log.error("Failed to save podCount data,retryCount=[{}], Exception: ", retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.error("TimescaleDbService is invalid");
+      log.error("TimescaleDbService is invalid");
     }
     return successfulInsert;
   }
@@ -153,10 +153,10 @@ public class PodCountComputationServiceImpl {
         } catch (SQLException e) {
           retryCount++;
           if (retryCount >= MAX_RETRY) {
-            logger.error("Failed to execute query in getNodes, max retry count reached, query=[{}],accountId=[{}]",
-                query, accountId, e);
+            log.error("Failed to execute query in getNodes, max retry count reached, query=[{}],accountId=[{}]", query,
+                accountId, e);
           } else {
-            logger.warn("Failed to execute query in getNodes, query=[{}],accountId=[{}], retryCount=[{}]", query,
+            log.warn("Failed to execute query in getNodes, query=[{}],accountId=[{}], retryCount=[{}]", query,
                 accountId, retryCount);
           }
         } finally {
@@ -187,11 +187,11 @@ public class PodCountComputationServiceImpl {
         } catch (SQLException e) {
           retryCount++;
           if (retryCount >= MAX_RETRY) {
-            logger.error("Failed to execute query in getPods, max retry count reached, query=[{}],accountId=[{}]",
-                query, accountId, e);
+            log.error("Failed to execute query in getPods, max retry count reached, query=[{}],accountId=[{}]", query,
+                accountId, e);
           } else {
-            logger.warn("Failed to execute query in getPods, query=[{}],accountId=[{}], retryCount=[{}]", query,
-                accountId, retryCount);
+            log.warn("Failed to execute query in getPods, query=[{}],accountId=[{}], retryCount=[{}]", query, accountId,
+                retryCount);
           }
         } finally {
           DBUtils.close(resultSet);

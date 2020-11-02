@@ -32,7 +32,7 @@ public class MigrateCloudwatchCVTemplates implements Migration {
                                                   .asList();
 
     if (isNotEmpty(cloudWatchConfigs)) {
-      logger.info("Migrating the templates of {} cloudwatch configs", cloudWatchConfigs.size());
+      log.info("Migrating the templates of {} cloudwatch configs", cloudWatchConfigs.size());
       cloudWatchConfigs.forEach(config -> {
         // delete the existing template
         wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
@@ -52,7 +52,7 @@ public class MigrateCloudwatchCVTemplates implements Migration {
         metricTemplate.setAccountId(config.getAccountId());
         metricTemplate.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid());
         wingsPersistence.save(metricTemplate);
-        logger.info("Migrated the metric template for {}", config.getUuid());
+        log.info("Migrated the metric template for {}", config.getUuid());
       });
     }
   }

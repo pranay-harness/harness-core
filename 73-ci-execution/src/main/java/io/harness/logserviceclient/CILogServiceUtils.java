@@ -28,7 +28,7 @@ public class CILogServiceUtils {
 
   @NotNull
   public String getLogServiceToken(String accountID) throws Exception {
-    logger.info("Initiating token request to log service: " + this.logServiceConfig.getBaseUrl());
+    log.info("Initiating token request to log service: " + this.logServiceConfig.getBaseUrl());
     Call<String> tokenCall = ciLogServiceClient.generateToken(accountID, this.logServiceConfig.getGlobalToken());
     Response<String> response = tokenCall.execute();
     // Received error from the server

@@ -106,7 +106,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
             continue;
           }
 
-          logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
+          log.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
           ExecutionInterrupt executionInterrupt;
           if (stateExecutionInstance.isWaitingForInputs()
               && CONTINUE_WITH_DEFAULTS == stateExecutionInstance.getActionOnTimeout()) {
@@ -128,13 +128,13 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
           executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
         }
       } catch (WingsException exception) {
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception e) {
-        logger.error("Error in cleaning up the workflow execution {}", entity.getUuid(), e);
+        log.error("Error in cleaning up the workflow execution {}", entity.getUuid(), e);
       }
 
       if (!hasActiveStates) {
-        logger.warn("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
+        log.warn("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
             entity.getUuid());
 
         final StateExecutionInstance stateExecutionInstance =
@@ -149,12 +149,12 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                 .get();
 
         if (stateExecutionInstance == null) {
-          logger.error("Workflow execution stuck, but we cannot find good state to callback from. This is so wrong!");
+          log.error("Workflow execution stuck, but we cannot find good state to callback from. This is so wrong!");
           return;
         }
 
         if (stateExecutionInstance.getLastUpdatedAt() > System.currentTimeMillis() - INACTIVITY_TIMEOUT.toMillis()) {
-          logger.warn("WorkflowExecution {} last callbackable state {} is very recent."
+          log.warn("WorkflowExecution {} last callbackable state {} is very recent."
                   + "Lets give more time to the system it might be just in the middle of things.",
               entity.getUuid(), stateExecutionInstance.getUuid());
           return;
@@ -168,14 +168,14 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
           boolean expired = entity.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis();
           // We lost the eventual exception, but its better than doing nothing
           ExecutionStatus finalStatus = expired ? EXPIRED : ERROR;
-          logger.info("[WorkflowStateUpdate] Executing StateCallBack with status: {}", finalStatus);
+          log.info("[WorkflowStateUpdate] Executing StateCallBack with status: {}", finalStatus);
           stateMachineExecutor.executeCallback(executionContext, stateExecutionInstance, finalStatus, null);
         }
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error in monitoring the workflow execution {}", entity.getUuid());
+      log.error("Error in monitoring the workflow execution {}", entity.getUuid());
     }
   }
 

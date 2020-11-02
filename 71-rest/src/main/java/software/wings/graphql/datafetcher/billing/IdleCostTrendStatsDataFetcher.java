@@ -82,7 +82,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formTrendStatsQuery(
         accountId, aggregateFunction, billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters));
     String query = queryData.getQuery();
-    logger.info("Unallocated cost data query {}", query);
+    log.info("Unallocated cost data query {}", query);
     ResultSet resultSet = null;
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
@@ -100,7 +100,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
     BillingDataQueryMetadata queryData =
         billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
     String query = queryData.getQuery();
-    logger.info("Idle cost data query {}", query);
+    log.info("Idle cost data query {}", query);
     ResultSet resultSet = null;
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {

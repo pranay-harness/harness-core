@@ -132,7 +132,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, List<PackageTypeImpl> packageTypes) {
-    logger.info("Retrieving repositories for packages {}", packageTypes.toArray());
+    log.info("Retrieving repositories for packages {}", packageTypes.toArray());
     Map<String, String> repositories = new HashMap<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     ArtifactoryRequest repositoryRequest =
@@ -150,23 +150,22 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             repositories.put(repository.get(KEY).toString(), repository.get(KEY).toString());
           }
         } catch (Exception e) {
-          logger.warn(
-              "Failed to get repository settings for repo {}, Reason {}", repoKey, ExceptionUtils.getMessage(e));
+          log.warn("Failed to get repository settings for repo {}, Reason {}", repoKey, ExceptionUtils.getMessage(e));
           // TODO : Get Settings api only works for Artifactory Pro
           repositories.put(repository.get(KEY).toString(), repository.get(KEY).toString());
         }
       }
       if (repositories.isEmpty()) {
         // Better way of handling Unauthorized access
-        logger.info("Repositories are not available of package types {} or User not authorized to access artifactory",
+        log.info("Repositories are not available of package types {} or User not authorized to access artifactory",
             packageTypes);
       }
-      logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
+      log.info("Retrieving repositories for packages {} success", packageTypes.toArray());
     } catch (SocketTimeoutException e) {
-      logger.error(errorOccurredWhileRetrievingRepositories, e);
+      log.error(errorOccurredWhileRetrievingRepositories, e);
       return repositories;
     } catch (Exception e) {
-      logger.error(errorOccurredWhileRetrievingRepositories, e);
+      log.error(errorOccurredWhileRetrievingRepositories, e);
       handleAndRethrow(e, USER);
     }
     return repositories;
@@ -182,7 +181,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     List<String> images = new ArrayList<>();
     String errorOnListingDockerimages = "Error occurred while listing docker images from artifactory %s for Repo %s";
     try {
-      logger.info("Retrieving docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
+      log.info("Retrieving docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
       Map response = artifactory
                          .restCall(new ArtifactoryRequestImpl()
                                        .apiUrl("api/docker/" + repoKey + "/v2"
@@ -193,17 +192,17 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (response != null) {
         images = (List<String>) response.get("repositories");
         if (isEmpty(images)) {
-          logger.info("No docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
+          log.info("No docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
           images = new ArrayList<>();
         }
-        logger.info("Retrieving images from artifactory url {} and repo key {} success. Images {}",
-            artifactory.getUri(), repoKey, images);
+        log.info("Retrieving images from artifactory url {} and repo key {} success. Images {}", artifactory.getUri(),
+            repoKey, images);
       }
     } catch (SocketTimeoutException e) {
-      logger.error(format(errorOnListingDockerimages, artifactory, repoKey), e);
+      log.error(format(errorOnListingDockerimages, artifactory, repoKey), e);
       return images;
     } catch (Exception e) {
-      logger.error(format(errorOnListingDockerimages, artifactory, repoKey), e);
+      log.error(format(errorOnListingDockerimages, artifactory, repoKey), e);
       handleAndRethrow(e, USER);
     }
     return images;
@@ -214,7 +213,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     String repoKey = artifactStreamAttributes.getJobName();
     String imageName = artifactStreamAttributes.getImageName();
-    logger.info("Retrieving docker tags for repoKey {} imageName {} ", repoKey, imageName);
+    log.info("Retrieving docker tags for repoKey {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
@@ -226,7 +225,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (response != null) {
         List<String> tags = (List<String>) response.get("tags");
         if (isEmpty(tags)) {
-          logger.info("No  docker tags for repoKey {} imageName {} success ", repoKey, imageName);
+          log.info("No  docker tags for repoKey {} imageName {} success ", repoKey, imageName);
           return buildDetails;
         }
         String tagUrl = getBaseUrl(artifactoryConfig) + repoKey + "/" + imageName + "/";
@@ -246,12 +245,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                  .build();
                            })
                            .collect(toList());
-        logger.info(
+        log.info(
             "Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName, tags);
       }
 
     } catch (Exception e) {
-      logger.info("Exception occurred while retrieving the docker docker tags for Image {}", imageName);
+      log.info("Exception occurred while retrieving the docker docker tags for Image {}", imageName);
       handleAndRethrow(e, USER);
     }
 
@@ -263,7 +262,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, String artifactPath, String repositoryType,
       int maxVersions) {
-    logger.info("Retrieving file paths for repositoryName {} artifactPath {}", repositoryName, artifactPath);
+    log.info("Retrieving file paths for repositoryName {} artifactPath {}", repositoryName, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
     LinkedHashMap<String, String> map = new LinkedHashMap<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
@@ -300,7 +299,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
         if (artifactoryResponse.getStatusLine().getStatusCode() == 403
             || artifactoryResponse.getStatusLine().getStatusCode() == 400) {
-          logger.warn(
+          log.warn(
               "User not authorized to perform or using OSS version deep level search. Trying with different search api. Message {}",
               artifactoryResponse.getStatusLine().getReasonPhrase());
           return getBuildDetails(artifactoryConfig, artifactory, repositoryName, artifactPath, maxVersions);
@@ -326,7 +325,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             }
           }
         }
-        logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
+        log.info("Artifact paths order from Artifactory Server" + artifactPaths);
         Collections.reverse(artifactPaths);
         String finalArtifactPath = artifactPath;
         return artifactPaths.stream()
@@ -344,7 +343,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         throw new ArtifactoryServerException("Artifact path can not be empty", INVALID_ARTIFACT_SERVER, USER);
       }
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
+      log.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
       handleAndRethrow(e, USER);
     }
@@ -363,7 +362,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   private List<String> getFilePathsForAnonymousUser(
       Artifactory artifactory, String repoKey, String artifactPath, int maxVersions) {
-    logger.info("Retrieving file paths for repoKey {} artifactPath {}", repoKey, artifactPath);
+    log.info("Retrieving file paths for repoKey {} artifactPath {}", repoKey, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
 
     List<FolderPath> folderPaths;
@@ -422,10 +421,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       } else {
         throw new ArtifactoryServerException("Artifact path can not be empty", INVALID_ARTIFACT_SERVER);
       }
-      logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
+      log.info("Artifact paths order from Artifactory Server" + artifactPaths);
       return artifactPaths;
     } catch (Exception e) {
-      logger.error(
+      log.error(
           format("Error occurred while retrieving File Paths from Artifactory server %s", artifactory.getUsername()),
           e);
       handleAndRethrow(e, USER);
@@ -468,7 +467,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                             .build());
       }
     } catch (Exception e) {
-      logger.error("Exception occurred in retrieving folder paths", e);
+      log.error("Exception occurred in retrieving folder paths", e);
     }
     return folderPaths;
   }
@@ -481,7 +480,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath).replaceFirst(repositoryName, "").substring(1);
     String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     try {
-      logger.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
+      log.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
       InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
       artifactCollectionTaskHelper.addDataToResponse(
           new ImmutablePair<>(artifactName, inputStream), artifactPath, res, delegateId, taskId, accountId);
@@ -501,7 +500,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath).replaceFirst(repositoryName, "").substring(1);
     String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     try {
-      logger.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
+      log.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
       InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
       pair = new ImmutablePair<>(artifactName, inputStream);
     } catch (Exception e) {
@@ -515,7 +514,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public boolean validateArtifactPath(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryName, String artifactPath, String repositoryType) {
-    logger.info("Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repositoryName,
+    log.info("Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repositoryName,
         repositoryType);
     if (isBlank(artifactPath)) {
       throw new ArtifactoryServerException("Artifact Pattern can not be empty", ARTIFACT_SERVER_ERROR, USER);
@@ -526,7 +525,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     if (isEmpty(filePaths)) {
       prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
     }
-    logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
+    log.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
     return true;
   }
 
@@ -542,24 +541,24 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     String artifactName = metadata.get(ArtifactMetadataKeys.artifactFileName);
 
     try {
-      logger.info("Artifact name {}", artifactName);
+      log.info("Artifact name {}", artifactName);
       if (artifactNames.add(artifactName)) {
         if (metadata.get(ArtifactMetadataKeys.artifactPath) != null) {
-          logger.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
-          logger.info("Downloading file {} ", artifactPath);
+          log.info(DOWNLOAD_FILE_FOR_GENERIC_REPO);
+          log.info("Downloading file {} ", artifactPath);
           InputStream inputStream = artifactory.repository(repoKey).download(artifactPath).doDownload();
-          logger.info("Downloading file {} success", artifactPath);
+          log.info("Downloading file {} success", artifactPath);
           return inputStream;
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to download the artifact of repository {} from path {}", repoKey, artifactPath, e);
+      log.error("Failed to download the artifact of repository {} from path {}", repoKey, artifactPath, e);
       String msg =
           "Failed to download the latest artifacts  of repository [" + repoKey + "] file path [" + artifactPath;
       throw new ArtifactoryServerException(
           msg + REASON + ExceptionUtils.getRootCauseMessage(e), ARTIFACT_SERVER_ERROR, USER);
     }
-    logger.info(
+    log.info(
         "Downloading artifacts from artifactory for repository  {} and file path {} success", repoKey, artifactPath);
     return null;
   }
@@ -585,7 +584,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         builder.setUsername(artifactoryConfig.getUsername());
         builder.setPassword(new String(artifactoryConfig.getPassword()));
       } else {
-        logger.info("Username is not set for artifactory config {} . Will use anonymous access.",
+        log.info("Username is not set for artifactory config {} . Will use anonymous access.",
             artifactoryConfig.getArtifactoryUrl());
       }
 
@@ -627,7 +626,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   public Long getFileSize(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
-    logger.info("Retrieving file paths for artifactPath {}", artifactPath);
+    log.info("Retrieving file paths for artifactPath {}", artifactPath);
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
       String apiStorageQuery = "api/storage/" + artifactPath;
@@ -641,7 +640,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         throw new ArtifactoryServerException("Unable to get artifact file size ", INVALID_ARTIFACT_SERVER, USER);
       }
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
+      log.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
       handleAndRethrow(e, USER);
     }
@@ -650,21 +649,21 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public boolean isRunning(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
-    logger.info("Validating artifactory server");
+    log.info("Validating artifactory server");
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     ArtifactoryRequest repositoryRequest =
         new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
     try {
       artifactory.restCall(repositoryRequest);
-      logger.info("Validating artifactory server success");
+      log.info("Validating artifactory server success");
     } catch (RuntimeException e) {
-      logger.error("Runtime exception occurred while validating artifactory", e);
+      log.error("Runtime exception occurred while validating artifactory", e);
       handleAndRethrow(e, USER);
     } catch (SocketTimeoutException e) {
-      logger.error("Exception occurred while validating artifactory", e);
+      log.error("Exception occurred while validating artifactory", e);
       return true;
     } catch (Exception e) {
-      logger.error("Exception occurred while validating artifactory", e);
+      log.error("Exception occurred while validating artifactory", e);
       handleAndRethrow(e, USER);
     }
     return true;

@@ -49,21 +49,21 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   @Override
   public void executeParkedTask(
       ExecuteParkedTaskRequest request, StreamObserver<ExecuteParkedTaskResponse> responseObserver) {
-    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
+    log.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
         request.getTaskId().getId());
     try {
       delegateServiceGrpcLiteClient.executeParkedTask(request.getAccountId(), request.getTaskId());
       responseObserver.onNext(ExecuteParkedTaskResponse.newBuilder().setTaskId(request.getTaskId()).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing execute parked task request.", ex);
+      log.error("Unexpected error occurred while processing execute parked task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
 
   @Override
   public void taskProgress(TaskProgressRequest request, StreamObserver<TaskProgressResponse> responseObserver) {
-    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
+    log.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
         request.getTaskId().getId());
     try {
       TaskExecutionStage taskExecutionStage =
@@ -71,7 +71,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
       responseObserver.onNext(TaskProgressResponse.newBuilder().setCurrentStage(taskExecutionStage).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing taskProgress request.", ex);
+      log.error("Unexpected error occurred while processing taskProgress request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -79,7 +79,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   @Override
   public void fetchParkedTaskStatus(
       FetchParkedTaskStatusRequest request, StreamObserver<FetchParkedTaskStatusResponse> responseObserver) {
-    logger.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}",
+    log.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}",
         request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
       io.harness.delegate.FetchParkedTaskStatusResponse fetchParkedTaskStatusResponse =
@@ -97,7 +97,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
       }
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing getTaskResults request.", ex);
+      log.error("Unexpected error occurred while processing getTaskResults request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -127,8 +127,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
 
   @Override
   public void sendTaskStatus(SendTaskStatusRequest request, StreamObserver<SendTaskStatusResponse> responseObserver) {
-    logger.info("Received sendTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}",
-        request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
+    log.info("Received sendTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}", request.getAccountId().getId(),
+        request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
       TaskStatusData taskStatusData = request.getTaskStatusData();
       if (taskStatusData.hasStepStatus()) {
@@ -157,7 +157,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing getTaskResults request.", ex);
+      log.error("Unexpected error occurred while processing getTaskResults request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

@@ -116,7 +116,7 @@ public class DelegateIntegrationTest extends IntegrationTestBase {
         .execute()
         .getOutput()
         .getLines()
-        .forEach(logger::info);
+        .forEach(log::info);
 
     // TODO: check there is no connected delegate
 
@@ -136,7 +136,7 @@ public class DelegateIntegrationTest extends IntegrationTestBase {
         .execute()
         .getOutput()
         .getLines()
-        .forEach(logger::info);
+        .forEach(log::info);
     waitForDelegateToDeregisterWithTimeout();
 
     // TODO: check there is no connected delegate
@@ -158,7 +158,7 @@ public class DelegateIntegrationTest extends IntegrationTestBase {
         .execute()
         .getOutput()
         .getLines()
-        .forEach(logger::info);
+        .forEach(log::info);
 
     commandStatus = new ProcessExecutor()
                         .command("/bin/sh", "-c", "cd harness-delegate && ./start.sh")
@@ -175,7 +175,7 @@ public class DelegateIntegrationTest extends IntegrationTestBase {
         .execute()
         .getOutput()
         .getLines()
-        .forEach(logger::info);
+        .forEach(log::info);
     waitForDelegateToDeregisterWithTimeout();
 
     // TODO: check there is connected delegate
@@ -187,9 +187,9 @@ public class DelegateIntegrationTest extends IntegrationTestBase {
 
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
       List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
-      logger.info("Delegate found " + delegates.size());
+      log.info("Delegate found " + delegates.size());
       delegates.forEach(delegate -> {
-        logger.info("Delegate version " + delegate.getVersion());
+        log.info("Delegate version " + delegate.getVersion());
         registeredDelegateVersions.add(delegate.getVersion());
       });
       return registeredDelegateVersions.size() == 2;

@@ -55,7 +55,7 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
       AtmosphereProducers p = newClassInstance(AtmosphereProducers.class, AtmosphereProducers.class);
       p.configure(config);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
   }
 
@@ -67,8 +67,8 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
     if (injector != null) {
       t = injector.getInstance(classToInstantiate);
     } else {
-      logger.warn("No Guice Injector found in current ServletContext?");
-      logger.trace("Unable to find {}. Creating the object directly.", classToInstantiate.getName());
+      log.warn("No Guice Injector found in current ServletContext?");
+      log.trace("Unable to find {}. Creating the object directly.", classToInstantiate.getName());
       t = classToInstantiate.newInstance();
     }
 
@@ -92,10 +92,10 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
 
       AbstractModule[] a = modules.toArray(new AbstractModule[0]);
       if (existingInjector != null) {
-        logger.trace("Adding AtmosphereModule to existing Guice injector");
+        log.trace("Adding AtmosphereModule to existing Guice injector");
         injector = existingInjector.createChildInjector(a);
       } else {
-        logger.trace("Creating the Guice injector manually with AtmosphereModule");
+        log.trace("Creating the Guice injector manually with AtmosphereModule");
         injector = Guice.createInjector(a);
       }
     }

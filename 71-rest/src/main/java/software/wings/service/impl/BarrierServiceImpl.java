@@ -194,7 +194,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
           workflow.setPhaseExecutionId(keys.next().getId().toString());
           if (keys.hasNext()) {
-            logger.error("More than one execution instance for the same phase state");
+            log.error("More than one execution instance for the same phase state");
           }
         }
       }
@@ -211,7 +211,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
           workflow.setStepExecutionId(keys.next().getId().toString());
           if (keys.hasNext()) {
-            logger.error("More than one execution instance for the same phase state");
+            log.error("More than one execution instance for the same phase state");
           }
         }
       }
@@ -335,7 +335,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
       String result = keys.next().getId().toString();
       if (keys.hasNext()) {
-        logger.error("More than one barrier for the same pipeline execution with the same identifier");
+        log.error("More than one barrier for the same pipeline execution with the same identifier");
       }
 
       return result;

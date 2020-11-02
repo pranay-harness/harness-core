@@ -249,7 +249,7 @@ public class AzureVMSSSwitchRoutesState extends State {
 
   private ExecutionResponse taskCreationFailureResponse(
       Activity activity, ManagerExecutionLogCallback executionLogCallback, Exception exception) {
-    logger.error(SWAP_ROUTE_FAILURE, exception);
+    log.error(SWAP_ROUTE_FAILURE, exception);
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AzureVMSSSwitchRouteStateExecutionData switchRouteStateExecutionData =
         AzureVMSSSwitchRouteStateExecutionData.builder().build();

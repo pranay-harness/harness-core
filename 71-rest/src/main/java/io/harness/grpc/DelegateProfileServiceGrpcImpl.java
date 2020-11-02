@@ -73,7 +73,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       }
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing list profiles request.", ex);
+      log.error("Unexpected error occurred while processing list profiles request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -92,7 +92,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing get profile request.", ex);
+      log.error("Unexpected error occurred while processing get profile request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -105,7 +105,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       responseObserver.onNext(AddProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing add profile request.", ex);
+      log.error("Unexpected error occurred while processing add profile request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -124,7 +124,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing update profile request.", ex);
+      log.error("Unexpected error occurred while processing update profile request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -136,7 +136,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       responseObserver.onNext(DeleteProfileResponse.newBuilder().build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing delete profile request.", ex);
+      log.error("Unexpected error occurred while processing delete profile request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -162,7 +162,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing update profile selectors request.", ex);
+      log.error("Unexpected error occurred while processing update profile selectors request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -195,7 +195,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing update profile scoping rules request.", ex);
+      log.error("Unexpected error occurred while processing update profile scoping rules request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

@@ -40,7 +40,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving all YamlGitConfigs");
+    log.info("Retrieving all YamlGitConfigs");
     UsageRestrictions defaultUsageRestrictions =
         usageRestrictionsService.getUsageRestrictionsFromJson(jsonUsageRestrictionString);
 
@@ -65,7 +65,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
                                                      .get();
 
         if (savedSettingAttribute == null) {
-          logger.info("Creating GitConnector for yaml from YamlGitConfig {}", yamlGitConfig.getUuid());
+          log.info("Creating GitConnector for yaml from YamlGitConfig {}", yamlGitConfig.getUuid());
           GitConfig gitConfig = getGitConfig(yamlGitConfig, encryptedData);
 
           SettingAttribute settingAttributeForGit =
@@ -78,8 +78,8 @@ public class YamlGitConfigRefactoringMigration implements Migration {
                   .build();
           wingsPersistence.save(settingAttributeForGit);
 
-          logger.info("Created GitConnector from YamlGitConfig {}", yamlGitConfig.getUuid());
-          logger.info("Updating YamlGitConfig with newly created GitConnector");
+          log.info("Created GitConnector from YamlGitConfig {}", yamlGitConfig.getUuid());
+          log.info("Updating YamlGitConfig with newly created GitConnector");
 
           if (encryptedData != null) {
             List<Field> encryptedFields = EncryptionReflectUtils.getEncryptedFields(gitConfig.getClass());
@@ -95,7 +95,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
            * */
           wingsPersistence.updateField(
               YamlGitConfig.class, yamlGitConfig.getUuid(), "gitConnectorId", settingAttributeForGit.getUuid());
-          logger.info("Updated YamlGitConfig with newly created GitConnector {}", settingAttributeForGit.getUuid());
+          log.info("Updated YamlGitConfig with newly created GitConnector {}", settingAttributeForGit.getUuid());
         }
       }
     }

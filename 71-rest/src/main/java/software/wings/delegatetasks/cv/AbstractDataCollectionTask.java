@@ -81,7 +81,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
         } catch (TimeoutException ex) {
           throw new DataCollectionException(ex);
         }
-        logger.error("Data collection failed. Exception: ", e);
+        log.error("Data collection failed. Exception: ", e);
       }
     }
     return dataCollectionTaskResult;
@@ -114,14 +114,14 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
     Failsafe.with(retryPolicy).run(() -> {
       initializeDataCollector();
       dataCollectionExecutionContext = createDataCollectionExecutionContext();
-      logger.info("Starting init");
+      log.info("Starting init");
       dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
-      logger.info("Finished init and starting collectAndSaveData");
+      log.info("Finished init and starting collectAndSaveData");
       collectAndSaveData((T) dataCollectionInfo);
-      logger.info("Finished collectAndSaveData");
+      log.info("Finished collectAndSaveData");
     });
 
-    logger.info("Data collection task completed {}", dataCollectionInfo.getStateExecutionId());
+    log.info("Data collection task completed {}", dataCollectionInfo.getStateExecutionId());
     activityLogger.info("Finished data collection with status: " + taskResult.getStatus());
 
     return taskResult;

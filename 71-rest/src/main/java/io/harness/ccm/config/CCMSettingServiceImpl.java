@@ -79,7 +79,7 @@ public class CCMSettingServiceImpl implements CCMSettingService {
     String cloudProviderId = clusterRecord.getCluster().getCloudProviderId();
     SettingAttribute settingAttribute = settingsService.get(cloudProviderId);
     if (isNull(settingAttribute)) {
-      logger.error("Failed to find the Cloud Provider associated with the Cluster with id={}", clusterRecord.getUuid());
+      log.error("Failed to find the Cloud Provider associated with the Cluster with id={}", clusterRecord.getUuid());
       return false;
     }
     if (settingAttribute.getValue() instanceof CloudCostAware) {
@@ -93,7 +93,7 @@ public class CCMSettingServiceImpl implements CCMSettingService {
     String cloudProviderId = clusterRecord.getCluster().getCloudProviderId();
     SettingAttribute settingAttribute = settingsService.get(cloudProviderId);
     if (isNull(settingAttribute)) {
-      logger.error("Failed to find the Cloud Provider associated with the Cluster with id={}", clusterRecord.getUuid());
+      log.error("Failed to find the Cloud Provider associated with the Cluster with id={}", clusterRecord.getUuid());
       return false;
     }
 

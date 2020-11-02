@@ -23,7 +23,7 @@ public class CVParallelExecutor {
 
   public <T> List<T> executeParallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(executorService);
-    logger.debug("Parallelizing {} callables", callables.size());
+    log.debug("Parallelizing {} callables", callables.size());
     for (Callable<T> callable : callables) {
       completionService.submit(callable::call);
     }
@@ -36,7 +36,7 @@ public class CVParallelExecutor {
           T result = poll.get();
           rv.add(result);
         } else {
-          logger.info("Timeout. Execution took longer than 1 minutes {}", callables);
+          log.info("Timeout. Execution took longer than 1 minutes {}", callables);
           // TODO: Set monitoring/alert if this happens. We should be using Mongo timeout on queries.
           // Something like: new FindOptions().maxTime(5, TimeUnit.SECONDS);
           // This timeout also cancels queries on the mongo server so database resources are also freed up.
@@ -48,7 +48,7 @@ public class CVParallelExecutor {
         throw new UnexpectedException("Error executing task " + e.getMessage(), e);
       }
     }
-    logger.debug("Done parallelizing callables {} ", callables.size());
+    log.debug("Done parallelizing callables {} ", callables.size());
     return rv;
   }
 }

@@ -33,7 +33,7 @@ public class DatadogCVServiceConfigurationMigration implements Migration {
 
     DBCursor cvConfigurationRecords = collection.find();
 
-    logger.info("will go through " + cvConfigurationRecords.size() + " records");
+    log.info("will go through " + cvConfigurationRecords.size() + " records");
     int updated = 0;
     try {
       while (cvConfigurationRecords.hasNext()) {
@@ -59,9 +59,9 @@ public class DatadogCVServiceConfigurationMigration implements Migration {
         }
       }
     } catch (Exception e) {
-      logger.error("DatadogCVServiceConfigurationMigration failed", e);
+      log.error("DatadogCVServiceConfigurationMigration failed", e);
     }
-    logger.info("Complete. Updated " + updated + " records.");
+    log.info("Complete. Updated " + updated + " records.");
   }
 
   private void update(String uuId, UpdateOperations<CVConfiguration> operations) {

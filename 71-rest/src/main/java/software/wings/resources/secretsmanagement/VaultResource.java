@@ -44,7 +44,7 @@ public class VaultResource {
   public RestResponse<String> saveOrUpdateVaultConfig(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding a vault config");
+      log.info("Adding a vault config");
       return new RestResponse<>(vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true));
     }
   }
@@ -55,7 +55,7 @@ public class VaultResource {
   public RestResponse<Boolean> deleteVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("vaultConfigId") final String vaultConfigId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting a vault config");
+      log.info("Deleting a vault config");
       return new RestResponse<>(vaultService.deleteVaultConfig(accountId, vaultConfigId));
     }
   }

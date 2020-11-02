@@ -28,11 +28,11 @@ public class CESlackNotificationService {
 
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
     if (StringUtils.isEmpty(webhookUrl)) {
-      logger.error("Webhook URL is empty. No message will be sent. Config: {}, Message: {}", slackConfig, message);
+      log.error("Webhook URL is empty. No message will be sent. Config: {}, Message: {}", slackConfig, message);
       return;
     }
 
-    logger.info("Sending message for account {} via manager", accountId);
+    log.info("Sending message for account {} via manager", accountId);
     slackMessageSender.send(
         new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false);
   }

@@ -131,12 +131,12 @@ public class InstallUtils {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
         kubectlPath = configuration.getKubectlPath();
-        logger.info("Found user configured kubectl at {}. Skipping Install.", kubectlPath);
+        log.info("Found user configured kubectl at {}. Skipping Install.", kubectlPath);
         return true;
       }
 
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping kubectl install on Windows");
+        log.info("Skipping kubectl install on Windows");
         return true;
       }
 
@@ -144,24 +144,24 @@ public class InstallUtils {
 
       if (StringUtils.isEmpty(version)) {
         version = defaultKubectlVersion;
-        logger.info("No version configured. Using default kubectl version", version);
+        log.info("No version configured. Using default kubectl version", version);
       }
 
       String kubectlDirectory = kubectlBaseDir + version;
 
       if (validateKubectlExists(kubectlDirectory)) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
-        logger.info("kubectl version {} already installed", version);
+        log.info("kubectl version {} already installed", version);
         return true;
       }
 
-      logger.info("Installing kubectl");
+      log.info("Installing kubectl");
 
       createDirectoryIfDoesNotExist(kubectlDirectory);
 
       String downloadUrl = getKubectlDownloadUrl(configuration, version);
 
-      logger.info("download Url is {}", downloadUrl);
+      log.info("download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./kubectl\n"
@@ -176,21 +176,21 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         if (validateKubectlExists(kubectlDirectory)) {
-          logger.info("kubectl path: {}", kubectlPath);
+          log.info("kubectl path: {}", kubectlPath);
           return true;
         } else {
-          logger.error("kubectl not validated after download: {}", kubectlPath);
+          log.error("kubectl not validated after download: {}", kubectlPath);
           return false;
         }
       } else {
-        logger.error("kubectl install failed");
-        logger.error(result.outputUTF8());
+        log.error("kubectl install failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing kubectl", e);
+      log.error("Error installing kubectl", e);
       return false;
     }
   }
@@ -210,14 +210,14 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error checking kubectl", e);
+      log.error("Error checking kubectl", e);
       return false;
     }
   }
@@ -234,7 +234,7 @@ public class InstallUtils {
   public static boolean installGoTemplateTool(DelegateConfiguration configuration) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping go-template install on Windows");
+        log.info("Skipping go-template install on Windows");
         return true;
       }
 
@@ -243,17 +243,17 @@ public class InstallUtils {
       if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
-        logger.info("go-template version {} already installed", goTemplateClientVersion);
+        log.info("go-template version {} already installed", goTemplateClientVersion);
         return true;
       }
 
-      logger.info("Installing go-template");
+      log.info("Installing go-template");
 
       createDirectoryIfDoesNotExist(goTemplateClientDirectory);
 
       String downloadUrl = getGoTemplateDownloadUrl(configuration, goTemplateClientVersion);
 
-      logger.info("download Url is {}", downloadUrl);
+      log.info("download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./go-template\n"
@@ -269,21 +269,21 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         goTemplateToolPath =
             Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         if (validateGoTemplateClientExists(goTemplateClientDirectory)) {
-          logger.info("go-template path: {}", goTemplateToolPath);
+          log.info("go-template path: {}", goTemplateToolPath);
           return true;
         } else {
-          logger.error("go-template not validated after download: {}", goTemplateToolPath);
+          log.error("go-template not validated after download: {}", goTemplateToolPath);
           return false;
         }
       } else {
-        logger.error("go-template install failed");
-        logger.error(result.outputUTF8());
+        log.error("go-template install failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing go-template", e);
+      log.error("Error installing go-template", e);
       return false;
     }
   }
@@ -291,7 +291,7 @@ public class InstallUtils {
   public static boolean installHarnessPywinrm(DelegateConfiguration configuration) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping harness-pywinrm install on Windows");
+        log.info("Skipping harness-pywinrm install on Windows");
         return true;
       }
 
@@ -300,17 +300,17 @@ public class InstallUtils {
       if (validateHarnessPywinrmExists(harnessPywinrmClientDirectory)) {
         harnessPywinrmToolPath =
             Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm").toAbsolutePath().normalize().toString();
-        logger.info("harness-pywinrm version {} already installed", harnessPywinrmVersion);
+        log.info("harness-pywinrm version {} already installed", harnessPywinrmVersion);
         return true;
       }
 
-      logger.info("Installing harness-pywinrm");
+      log.info("Installing harness-pywinrm");
 
       createDirectoryIfDoesNotExist(harnessPywinrmClientDirectory);
 
       String downloadUrl = getHarnessPywinrmDownloadUrl(configuration, harnessPywinrmVersion);
 
-      logger.info("download Url is {}", downloadUrl);
+      log.info("download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./harness-pywinrm\n";
@@ -325,20 +325,20 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         harnessPywinrmToolPath =
             Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm").toAbsolutePath().normalize().toString();
-        logger.info(format("harness-pywinrm version: %s", result.outputUTF8()));
+        log.info(format("harness-pywinrm version: %s", result.outputUTF8()));
         if (validateHarnessPywinrmExists(harnessPywinrmClientDirectory)) {
-          logger.info("harness-pywinrm path: {}", harnessPywinrmToolPath);
+          log.info("harness-pywinrm path: {}", harnessPywinrmToolPath);
           return true;
         } else {
-          logger.error("harness-pywinrm not validated after download: {}", harnessPywinrmToolPath);
+          log.error("harness-pywinrm not validated after download: {}", harnessPywinrmToolPath);
           return false;
         }
       } else {
-        logger.error("harness-pywinrm install failed\n" + result.outputUTF8());
+        log.error("harness-pywinrm install failed\n" + result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing harness-pywinrm", e);
+      log.error("Error installing harness-pywinrm", e);
       return false;
     }
   }
@@ -358,14 +358,14 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error checking harness-winrm", e);
+      log.error("Error checking harness-winrm", e);
       return false;
     }
   }
@@ -385,14 +385,14 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error checking go-template", e);
+      log.error("Error checking go-template", e);
       return false;
     }
   }
@@ -452,15 +452,15 @@ public class InstallUtils {
 
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
 
     } catch (Exception e) {
-      logger.error("Error checking helm", e);
+      log.error("Error checking helm", e);
       return false;
     }
   }
@@ -485,7 +485,7 @@ public class InstallUtils {
 
   private static boolean initHelmClient(String helmVersion) throws InterruptedException, TimeoutException, IOException {
     if (isHelmV2(helmVersion)) {
-      logger.info("Init helm client only");
+      log.info("Init helm client only");
 
       String helmDirectory = helmBaseDir + helmVersion;
       String script = "./helm init -c --skip-refresh \n";
@@ -497,15 +497,15 @@ public class InstallUtils {
                                             .readOutput(true);
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        logger.info("Successfully init helm client");
+        log.info("Successfully init helm client");
         return true;
       } else {
-        logger.error("Helm client init failed");
-        logger.error(result.outputUTF8());
+        log.error("Helm client init failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } else {
-      logger.info("Init helm not needed for helm v3");
+      log.info("Init helm not needed for helm v3");
       return true;
     }
   }
@@ -533,7 +533,7 @@ public class InstallUtils {
       }
 
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping helm install on Windows");
+        log.info("Skipping helm install on Windows");
         return true;
       }
 
@@ -541,16 +541,16 @@ public class InstallUtils {
       if (validateHelmExists(helmDirectory)) {
         String helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
         helmPaths.put(helmVersion, helmPath);
-        logger.info(format("helm version %s already installed", helmVersion));
+        log.info(format("helm version %s already installed", helmVersion));
 
         return initHelmClient(helmVersion);
       }
 
-      logger.info(format("Installing helm %s", helmVersion));
+      log.info(format("Installing helm %s", helmVersion));
       createDirectoryIfDoesNotExist(helmDirectory);
 
       String downloadUrl = getHelmDownloadUrl(configuration, helmVersion);
-      logger.info("Download Url is " + downloadUrl);
+      log.info("Download Url is " + downloadUrl);
 
       String versionCommand = getHelmVersionCommand(helmVersion);
       String initCommand = getHelmInitCommand(helmVersion);
@@ -567,22 +567,22 @@ public class InstallUtils {
       if (result.getExitValue() == 0) {
         String helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
         helmPaths.put(helmVersion, helmPath);
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
 
         if (validateHelmExists(helmDirectory)) {
-          logger.info("helm path: {}", helmPath);
+          log.info("helm path: {}", helmPath);
           return true;
         } else {
-          logger.error("helm not validated after download: {}", helmPath);
+          log.error("helm not validated after download: {}", helmPath);
           return false;
         }
       } else {
-        logger.error("helm install failed");
-        logger.error(result.outputUTF8());
+        log.error("helm install failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing helm", e);
+      log.error("Error installing helm", e);
       return false;
     }
   }
@@ -610,15 +610,15 @@ public class InstallUtils {
 
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
 
     } catch (Exception e) {
-      logger.error("Error checking chart museum", e);
+      log.error("Error checking chart museum", e);
       return false;
     }
   }
@@ -636,22 +636,22 @@ public class InstallUtils {
   public static boolean installChartMuseum(DelegateConfiguration configuration) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping chart museum install on Windows");
+        log.info("Skipping chart museum install on Windows");
         return true;
       }
 
       String chartMuseumDirectory = chartMuseumBaseDir + chartMuseumVersion;
       if (validateChartMuseumExists(chartMuseumDirectory)) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
-        logger.info("chartmuseum version %s already installed", chartMuseumVersion);
+        log.info("chartmuseum version %s already installed", chartMuseumVersion);
         return true;
       }
 
-      logger.info("Installing chartmuseum");
+      log.info("Installing chartmuseum");
       createDirectoryIfDoesNotExist(chartMuseumDirectory);
 
       String downloadUrl = getChartMuseumDownloadUrl(configuration, chartMuseumVersion);
-      logger.info("Download Url is " + downloadUrl);
+      log.info("Download Url is " + downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./chartmuseum \n"
@@ -666,23 +666,23 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
 
         if (validateChartMuseumExists(chartMuseumDirectory)) {
-          logger.info("chartmuseum path: {}", chartMuseumPath);
+          log.info("chartmuseum path: {}", chartMuseumPath);
           return true;
         } else {
-          logger.error("chartmuseum not validated after download: {}", chartMuseumPath);
+          log.error("chartmuseum not validated after download: {}", chartMuseumPath);
           return false;
         }
       } else {
-        logger.error("chart museum install failed");
-        logger.error(result.outputUTF8());
+        log.error("chart museum install failed");
+        log.error(result.outputUTF8());
         return false;
       }
 
     } catch (Exception e) {
-      logger.error("Error installing chart museum", e);
+      log.error("Error installing chart museum", e);
       return false;
     }
   }
@@ -690,22 +690,22 @@ public class InstallUtils {
   public static boolean installTerraformConfigInspect(DelegateConfiguration configuration) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping terraform-config-inspect install on Windows");
+        log.info("Skipping terraform-config-inspect install on Windows");
         return true;
       }
 
       final String terraformConfigInspectVersionedDirectory =
           Paths.get(getTerraformConfigInspectPath()).getParent().toString();
       if (validateTerraformConfigInspectExists(terraformConfigInspectVersionedDirectory)) {
-        logger.info("terraform-config-inspect already installed at {}", terraformConfigInspectVersionedDirectory);
+        log.info("terraform-config-inspect already installed at {}", terraformConfigInspectVersionedDirectory);
         return true;
       }
 
-      logger.info("Installing terraform-config-inspect");
+      log.info("Installing terraform-config-inspect");
       createDirectoryIfDoesNotExist(terraformConfigInspectVersionedDirectory);
 
       String downloadUrl = getTerraformConfigInspectDownloadUrl(configuration);
-      logger.info("Download Url is {}", downloadUrl);
+      log.info("Download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
           + "chmod +x ./terraform-config-inspect";
@@ -718,15 +718,15 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
         String tfConfigInspectPath = Paths.get(getTerraformConfigInspectPath()).toAbsolutePath().toString();
-        logger.info("terraform config inspect installed at {}", tfConfigInspectPath);
+        log.info("terraform config inspect installed at {}", tfConfigInspectPath);
         return true;
       } else {
-        logger.error("Error installing terraform config inspect");
+        log.error("Error installing terraform config inspect");
         return false;
       }
 
     } catch (Exception ex) {
-      logger.error("Error installing terraform config inspect", ex);
+      log.error("Error installing terraform config inspect", ex);
       return false;
     }
   }
@@ -753,33 +753,33 @@ public class InstallUtils {
     try {
       if (StringUtils.isNotEmpty(configuration.getOcPath())) {
         ocPath = configuration.getOcPath();
-        logger.info("Found user configured oc at {}. Skipping Install.", ocPath);
+        log.info("Found user configured oc at {}. Skipping Install.", ocPath);
         return true;
       }
 
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping oc install on Windows");
+        log.info("Skipping oc install on Windows");
         return true;
       }
 
       String version = System.getenv().get("OC_VERSION");
       if (StringUtils.isEmpty(version)) {
         version = ocVersion;
-        logger.info("No version configured. Using default oc version {}", version);
+        log.info("No version configured. Using default oc version {}", version);
       }
 
       String ocDirectory = ocBaseDir + version;
       if (validateOcExists(ocDirectory)) {
         ocPath = Paths.get(ocDirectory, "oc").toAbsolutePath().normalize().toString();
-        logger.info("oc version {} already installed", version);
+        log.info("oc version {} already installed", version);
         return true;
       }
 
-      logger.info("Installing oc");
+      log.info("Installing oc");
       createDirectoryIfDoesNotExist(ocDirectory);
 
       String downloadUrl = getOcDownloadUrl(configuration, version);
-      logger.info("download url is {}", downloadUrl);
+      log.info("download url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./oc\n"
@@ -794,21 +794,21 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         ocPath = Paths.get(ocDirectory, "oc").toAbsolutePath().normalize().toString();
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         if (validateOcExists(ocDirectory)) {
-          logger.info("oc path: {}", ocPath);
+          log.info("oc path: {}", ocPath);
           return true;
         } else {
-          logger.error("oc not validated after download: {}", ocPath);
+          log.error("oc not validated after download: {}", ocPath);
           return false;
         }
       } else {
-        logger.error("oc install failed");
-        logger.error(result.outputUTF8());
+        log.error("oc install failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing oc", e);
+      log.error("Error installing oc", e);
       return false;
     }
   }
@@ -829,14 +829,14 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error checking oc", e);
+      log.error("Error checking oc", e);
       return false;
     }
   }
@@ -853,12 +853,12 @@ public class InstallUtils {
     try {
       if (StringUtils.isNotEmpty(configuration.getKustomizePath())) {
         kustomizePath = configuration.getKustomizePath();
-        logger.info("Found user configured kustomize at {}. Skipping Install.", kustomizePath);
+        log.info("Found user configured kustomize at {}. Skipping Install.", kustomizePath);
         return true;
       }
 
       if (SystemUtils.IS_OS_WINDOWS) {
-        logger.info("Skipping kustomize install on Windows");
+        log.info("Skipping kustomize install on Windows");
         return true;
       }
 
@@ -866,17 +866,17 @@ public class InstallUtils {
 
       if (validateKustomizeExists(kustomizeDir)) {
         kustomizePath = Paths.get(kustomizeDir + "/kustomize").toAbsolutePath().normalize().toString();
-        logger.info("kustomize version {} already installed", kustomizeVersion);
+        log.info("kustomize version {} already installed", kustomizeVersion);
         return true;
       }
 
-      logger.info("Installing kustomize");
+      log.info("Installing kustomize");
 
       createDirectoryIfDoesNotExist(kustomizeDir);
 
       String downloadUrl = getKustomizeDownloadUrl(configuration, kustomizeVersion);
 
-      logger.info("download Url is {}", downloadUrl);
+      log.info("download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./kustomize\n"
@@ -891,21 +891,21 @@ public class InstallUtils {
 
       if (result.getExitValue() == 0) {
         kustomizePath = Paths.get(kustomizeDir + "/kustomize").toAbsolutePath().normalize().toString();
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         if (validateKustomizeExists(kustomizeDir)) {
-          logger.info("kustomize path: {}", kustomizePath);
+          log.info("kustomize path: {}", kustomizePath);
           return true;
         } else {
-          logger.error("kustomize not validated after download: {}", kustomizePath);
+          log.error("kustomize not validated after download: {}", kustomizePath);
           return false;
         }
       } else {
-        logger.error("kustomize install failed");
-        logger.error(result.outputUTF8());
+        log.error("kustomize install failed");
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error installing kustomize", e);
+      log.error("Error installing kustomize", e);
       return false;
     }
   }
@@ -925,14 +925,14 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        logger.info(result.outputUTF8());
+        log.info(result.outputUTF8());
         return true;
       } else {
-        logger.error(result.outputUTF8());
+        log.error(result.outputUTF8());
         return false;
       }
     } catch (Exception e) {
-      logger.error("Error checking kustomize", e);
+      log.error("Error checking kustomize", e);
       return false;
     }
   }
@@ -943,14 +943,14 @@ public class InstallUtils {
       if (isNotEmpty(configuration.getHelmPath())) {
         String helmPath = configuration.getHelmPath();
         helmPaths.put(helmVersion, helmPath);
-        logger.info("Found user configured helm2 at {}. Skipping Install.", helmPath);
+        log.info("Found user configured helm2 at {}. Skipping Install.", helmPath);
         return true;
       }
     } else if (helm3Version.equals(helmVersion)) {
       if (isNotEmpty(configuration.getHelm3Path())) {
         String helmPath = configuration.getHelm3Path();
         helmPaths.put(helmVersion, helmPath);
-        logger.info("Found user configured helm3 at {}. Skipping Install.", helmPath);
+        log.info("Found user configured helm3 at {}. Skipping Install.", helmPath);
         return true;
       }
     }

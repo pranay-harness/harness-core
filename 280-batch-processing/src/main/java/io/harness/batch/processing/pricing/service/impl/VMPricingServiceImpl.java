@@ -98,13 +98,13 @@ public class VMPricingServiceImpl implements VMPricingService {
         List<VMComputePricingInfo> products = pricingInfo.body().getProducts();
         products.forEach(
             product -> vmPricingInfoCache.put(getVMCacheKey(product.getType(), region, cloudProvider), product));
-        logger.info("Cache size {}", vmPricingInfoCache.asMap().size());
-        logger.info("Pricing response {} {}", pricingInfo.toString(), pricingInfo.body().getProducts());
+        log.info("Cache size {}", vmPricingInfoCache.asMap().size());
+        log.info("Pricing response {} {}", pricingInfo.toString(), pricingInfo.body().getProducts());
       } else {
-        logger.info("Null response for params {} {} {}", region, serviceName, cloudProvider);
+        log.info("Null response for params {} {} {}", region, serviceName, cloudProvider);
       }
     } catch (IOException e) {
-      logger.error("Exception in pricing service ", e);
+      log.error("Exception in pricing service ", e);
     }
   }
 

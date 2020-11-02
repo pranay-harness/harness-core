@@ -34,15 +34,15 @@ public class AddVerifyToRollbackWorkflows implements Migration {
   @Override
   public void migrate() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      logger.info("No applications found");
+      log.info("No applications found");
       return;
     }
-    logger.info("Updating {} applications.", apps.size());
+    log.info("Updating {} applications.", apps.size());
     for (Application app : apps) {
       migrate(app);
     }
@@ -54,7 +54,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
             .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, application.getUuid()).build())
             .getResponse();
 
-    logger.info("Updating {} workflows.", workflows.size());
+    log.info("Updating {} workflows.", workflows.size());
     for (Workflow workflow : workflows) {
       migrate(workflow);
     }
@@ -102,11 +102,11 @@ public class AddVerifyToRollbackWorkflows implements Migration {
 
     if (modified) {
       try {
-        logger.info("--- Workflow updated: {}", workflow.getName());
+        log.info("--- Workflow updated: {}", workflow.getName());
         workflowService.updateWorkflow(workflow, false);
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("Error updating workflow", e);
+        log.error("Error updating workflow", e);
       }
     }
   }

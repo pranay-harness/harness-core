@@ -52,7 +52,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean appendToListInSingleDocument(
       String entityType, String listToUpdate, String documentId, Map<String, Object> newElement) {
-    logger.info(
+    log.info(
         "Add to or create a list with elements {} referenced by key {} in a document having id {} of index type {}",
         newElement, listToUpdate, documentId, entityType);
     Callable<Boolean> appendToListInMultipleDocumentsCallable =
@@ -63,7 +63,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean addTimestamp(
       String entityType, String listToUpdate, String documentId, long createdAt, int daysToRetain) {
-    logger.info(
+    log.info(
         "Add current timestamp to a list with elements referenced by key {} in a document having id {} of index type {} with days to retain {}",
         listToUpdate, documentId, entityType, daysToRetain);
     Callable<Boolean> addTimestampCallable =
@@ -82,7 +82,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean appendToListInSingleDocument(String entityType, String listToUpdate, String documentId,
       Map<String, Object> newElement, int maxElementsInList) {
-    logger.info(
+    log.info(
         "Add to or create list with elements {} referenced by key {} in a document having id {} of index type {} with max documents set to {}",
         newElement, listToUpdate, documentId, entityType, maxElementsInList);
     Callable<Boolean> appendToListInSingleDocumentCallable = ()
@@ -99,11 +99,11 @@ public class SynchronousElasticsearchDao implements SearchDao {
       return nestedQueryFuture.get();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Could not perform the elasticsearch task, interrupted in between", e);
+      log.error("Could not perform the elasticsearch task, interrupted in between", e);
     } catch (ExecutionException e) {
-      logger.error("Could not perform the elasticsearch task, due to exception", e.getCause());
+      log.error("Could not perform the elasticsearch task, due to exception", e.getCause());
     } catch (CancellationException e) {
-      logger.error("Elasticsearch task was cancelled. This should not happen at all", e);
+      log.error("Elasticsearch task was cancelled. This should not happen at all", e);
     }
     return new ArrayList<>();
   }
@@ -111,7 +111,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean appendToListInMultipleDocuments(
       String entityType, String listToUpdate, List<String> documentIds, Map<String, Object> newElement) {
-    logger.info(
+    log.info(
         "Add to or create a list with elements {} referenced by key {} in a document having id {} of index type {}",
         newElement, listToUpdate, documentIds, entityType);
     Callable<Boolean> appendToListInMultipleDocumentsCallable =
@@ -122,7 +122,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean appendToListInMultipleDocuments(String entityType, String listToUpdate, List<String> documentIds,
       Map<String, Object> newElement, int maxElementsInList) {
-    logger.info(
+    log.info(
         "Add to or create a list with elements {} referenced by key {} in a document having id {} of index type {} with max size of {}",
         newElement, listToUpdate, documentIds, entityType, maxElementsInList);
     Callable<Boolean> appendToListInMultipleDocumentsCallable = ()
@@ -134,7 +134,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean removeFromListInMultipleDocuments(
       String entityType, String listToUpdate, List<String> documentIds, String idToBeRemoved) {
-    logger.info("Remove entry in a list with id {} referenced by key {} in a document having idd {} of index type {}",
+    log.info("Remove entry in a list with id {} referenced by key {} in a document having idd {} of index type {}",
         idToBeRemoved, listToUpdate, documentIds, entityType);
     Callable<Boolean> removeFromListInMultipleDocumentsCallable =
         () -> elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, documentIds, idToBeRemoved);
@@ -144,7 +144,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean removeFromListInMultipleDocuments(
       String entityType, String listToUpdate, String documentId, String idToBeRemoved) {
-    logger.info("Remove entry in a list with id {} referenced by key {} in a document having idd {} of index type {}",
+    log.info("Remove entry in a list with id {} referenced by key {} in a document having idd {} of index type {}",
         idToBeRemoved, listToUpdate, documentId, entityType);
     Callable<Boolean> removeFromListInMultipleDocumentsCallable =
         () -> elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, documentId, idToBeRemoved);
@@ -153,7 +153,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
 
   @Override
   public boolean removeFromListInMultipleDocuments(String entityType, String listToUpdate, String idTobeRemoved) {
-    logger.info("Remove entry in a list with id {} referenced by key {} in documents of index type {}", idTobeRemoved,
+    log.info("Remove entry in a list with id {} referenced by key {} in documents of index type {}", idTobeRemoved,
         listToUpdate, entityType);
     Callable<Boolean> removeFromListInMultipleDocumentsCallable =
         () -> elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, idTobeRemoved);
@@ -163,7 +163,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
   @Override
   public boolean updateListInMultipleDocuments(
       String entityType, String listToUpdate, String newElement, String elementId, String elementKeyToChange) {
-    logger.info(
+    log.info(
         "Update key {} with value {} for elements with id {} in list referenced by key {} in multiple documents of index type {}",
         entityType, listToUpdate, newElement, elementId, elementKeyToChange);
     Callable<Boolean> updateListInMultipleDocumentsCallable = ()
@@ -174,7 +174,7 @@ public class SynchronousElasticsearchDao implements SearchDao {
 
   @Override
   public boolean deleteDocument(String entityType, String documentId) {
-    logger.info("Delete document in index type {} with id {}", entityType, documentId);
+    log.info("Delete document in index type {} with id {}", entityType, documentId);
     Callable<Boolean> deleteDocumentCallable = () -> elasticsearchDao.deleteDocument(entityType, documentId);
     return processElasticsearchTask(deleteDocumentCallable);
   }
@@ -194,11 +194,11 @@ public class SynchronousElasticsearchDao implements SearchDao {
       return isSuccessful;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Could not perform the elasticsearch task, interrupted in between", e);
+      log.error("Could not perform the elasticsearch task, interrupted in between", e);
     } catch (ExecutionException e) {
-      logger.error("Could not perform the elasticsearch task, due to exception", e.getCause());
+      log.error("Could not perform the elasticsearch task, due to exception", e.getCause());
     } catch (CancellationException e) {
-      logger.error("Elasticsearch task was cancelled. This should not happen at all", e);
+      log.error("Elasticsearch task was cancelled. This should not happen at all", e);
     }
     return false;
   }

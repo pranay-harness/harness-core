@@ -24,7 +24,7 @@ public class RestCallToNGManagerClientUtils {
         throw new InvalidRequestException("Error occurred while performing this operation");
       }
     } catch (IOException ex) {
-      logger.error("IO error while connecting to manager", ex);
+      log.error("IO error while connecting to manager", ex);
       throw new UnexpectedException("Unable to connect, please try again.");
     }
   }

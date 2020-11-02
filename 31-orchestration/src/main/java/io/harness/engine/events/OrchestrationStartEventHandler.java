@@ -12,6 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationStartEventHandler implements AsyncOrchestrationEventHandler {
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    logger.info("Event Received: {}", event.getEventType());
+    log.info("Event Received: {}", event.getEventType());
   }
 }

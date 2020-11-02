@@ -16,7 +16,7 @@ import software.wings.beans.security.UserGroup;
 public class AddIsDefaultFlagToUserGroup extends AddFieldMigration {
   @Override
   protected org.slf4j.Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

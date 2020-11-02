@@ -54,7 +54,7 @@ public class GenericEventListener extends QueueListener<GenericEvent> implements
       try {
         eventHandler.handleEvent(event.getEvent());
       } catch (Exception ex) {
-        logger.error("Error while handling event for type {}", event.getEvent().getEventType(), ex);
+        log.error("Error while handling event for type {}", event.getEvent().getEventType(), ex);
       }
     });
   }

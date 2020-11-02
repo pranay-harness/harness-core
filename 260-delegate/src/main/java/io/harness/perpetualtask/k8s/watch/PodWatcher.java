@@ -68,7 +68,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     this.controllerFetcher = controllerFetcher;
     this.pvcFetcher = pvcFetcher;
     this.namespaceFetcher = namespaceFetcher;
-    logger.info(
+    log.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.clusterId = params.getClusterId();
     this.publishedPods = new HashSet<>();
@@ -96,7 +96,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
                     callGeneratorParams.resourceVersion, callGeneratorParams.timeoutSeconds, callGeneratorParams.watch,
                     null);
               } catch (ApiException e) {
-                logger.error("Unknown exception occurred", e);
+                log.error("Unknown exception occurred", e);
                 throw e;
               }
             },
@@ -107,33 +107,33 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   @Override
   public void onAdd(V1Pod pod) {
     try {
-      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
+      log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
 
       eventReceived(pod);
     } catch (Exception ex) {
-      logger.error(FAILED_PUBLISH_MSG, EventType.ADDED, ex);
+      log.error(FAILED_PUBLISH_MSG, EventType.ADDED, ex);
     }
   }
 
   @Override
   public void onUpdate(V1Pod oldPod, V1Pod pod) {
     try {
-      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.MODIFIED);
+      log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.MODIFIED);
 
       eventReceived(pod);
     } catch (Exception ex) {
-      logger.error(FAILED_PUBLISH_MSG, EventType.MODIFIED, ex);
+      log.error(FAILED_PUBLISH_MSG, EventType.MODIFIED, ex);
     }
   }
 
   @Override
   public void onDelete(V1Pod pod, boolean deletedFinalStateUnknown) {
     try {
-      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.DELETED);
+      log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.DELETED);
 
       eventReceived(pod);
     } catch (Exception ex) {
-      logger.error(FAILED_PUBLISH_MSG, EventType.DELETED, ex);
+      log.error(FAILED_PUBLISH_MSG, EventType.DELETED, ex);
     }
   }
 
@@ -193,7 +193,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     try {
       return namespaceFetcher.getNamespaceByKey(namespaceName).getMetadata().getLabels();
     } catch (Exception ex) {
-      logger.warn("Failed to fetch namespaceLabels returning default", ex);
+      log.warn("Failed to fetch namespaceLabels returning default", ex);
     }
     return null;
   }
@@ -217,7 +217,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
           }
           // add other volumes here e.g., getAzureDisk, getAwsElasticBlockStore, getGcePersistentDisk
         } catch (Exception ex) {
-          logger.error("Error parsing Volume: {}", volume, ex);
+          log.error("Error parsing Volume: {}", volume, ex);
         }
       }
     }
@@ -263,11 +263,11 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   }
 
   private static void logMessage(Message message) {
-    if (logger.isDebugEnabled()) {
+    if (log.isDebugEnabled()) {
       try {
-        logger.info(JsonFormat.printer().usingTypeRegistry(TYPE_REGISTRY).print(message));
+        log.info(JsonFormat.printer().usingTypeRegistry(TYPE_REGISTRY).print(message));
       } catch (InvalidProtocolBufferException e) {
-        logger.error(e.getMessage());
+        log.error(e.getMessage());
       }
     }
   }

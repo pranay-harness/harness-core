@@ -65,7 +65,7 @@ public class ExceptionLogger {
     return list;
   }
 
-  public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger logger) {
+  public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger log) {
     Exception processedException = null;
     try (AutoLogContext ignore = new AutoLogContext(exception.calcRecursiveContextObjects(), OVERRIDE_ERROR)) {
       ReportTarget target = UNIVERSAL;
@@ -83,22 +83,22 @@ public class ExceptionLogger {
 
       List<ResponseMessage> responseMessages = getResponseMessageList(exception, target);
       if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-        if (logger.isErrorEnabled()) {
-          logger.error(calculateErrorMessage(exception, responseMessages), exception);
+        if (log.isErrorEnabled()) {
+          log.error(calculateErrorMessage(exception, responseMessages), exception);
         }
       } else {
-        if (logger.isInfoEnabled()) {
+        if (log.isInfoEnabled()) {
           responseMessages = getResponseMessageList(exception, UNIVERSAL);
-          logger.info(calculateInfoMessage(responseMessages));
+          log.info(calculateInfoMessage(responseMessages));
         }
       }
     } catch (Exception e) {
       processedException = e;
-      logger.error("Original exception:", exception);
+      log.error("Original exception:", exception);
     }
 
     if (processedException != null) {
-      logger.error("Error processing messages.", processedException);
+      log.error("Error processing messages.", processedException);
     }
   }
 }

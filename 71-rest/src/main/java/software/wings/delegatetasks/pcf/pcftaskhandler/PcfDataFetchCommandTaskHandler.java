@@ -79,7 +79,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfInfraMappingDataResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
-      logger.error("Exception in processing PCF DataFetch task", e);
+      log.error("Exception in processing PCF DataFetch task", e);
       pcfInfraMappingDataResponse.setOrganizations(emptyList());
       pcfInfraMappingDataResponse.setSpaces(emptyList());
       pcfInfraMappingDataResponse.setRouteMaps(emptyList());

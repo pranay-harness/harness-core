@@ -52,7 +52,7 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
         cloudToHarnessMappingService.getDeploymentSummary(accountId, String.valueOf(offset), startTime, endTime);
 
     do {
-      logger.info("deploymentSummaries data size {}", deploymentSummaries.size());
+      log.info("deploymentSummaries data size {}", deploymentSummaries.size());
       offset = offset + deploymentSummaries.size();
       createCostEvent(accountId, deploymentSummaries);
       deploymentSummaries =
@@ -98,10 +98,10 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
                                              .costEventSource(CostEventSource.HARNESS_CD.name())
                                              .startTimestamp(deploymentSummary.getDeployedAt())
                                              .build();
-          logger.debug("cloud event data {}", cloudEventData.toString());
+          log.debug("cloud event data {}", cloudEventData.toString());
           cloudEventDataList.add(cloudEventData);
         } else {
-          logger.warn("Harness service info not found {} infra {}", deploymentSummary.getUuid(),
+          log.warn("Harness service info not found {} infra {}", deploymentSummary.getUuid(),
               deploymentSummary.getInfraMappingId());
         }
       });

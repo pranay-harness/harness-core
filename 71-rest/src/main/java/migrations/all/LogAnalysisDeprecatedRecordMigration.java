@@ -20,17 +20,17 @@ public class LogAnalysisDeprecatedRecordMigration implements Migration {
     try (HIterator<CVConfiguration> iterator =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).fetch())) {
       for (CVConfiguration cvConfiguration : iterator) {
-        logger.info("migrating for {}", cvConfiguration.getUuid());
+        log.info("migrating for {}", cvConfiguration.getUuid());
         final UpdateResults updateResults =
             wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                         .filter("cvConfigId", cvConfiguration.getUuid())
                                         .field("deprecated")
                                         .doesNotExist(),
                 wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class).set("deprecated", false));
-        logger.info("updated {} records", updateResults.getUpdatedCount());
+        log.info("updated {} records", updateResults.getUpdatedCount());
       }
     }
 
-    logger.info("migration done...");
+    log.info("migration done...");
   }
 }

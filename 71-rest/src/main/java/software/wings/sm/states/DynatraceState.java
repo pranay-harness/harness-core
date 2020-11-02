@@ -66,7 +66,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -106,7 +106,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
               resolvedServiceEntityId = validatedServiceId;
             }
           } catch (Exception ex) {
-            logger.info("Exception while trying to resolve dynatrace service name to id");
+            log.info("Exception while trying to resolve dynatrace service name to id");
           }
           if (validatedServiceId == null) {
             boolean isValidId =

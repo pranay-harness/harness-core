@@ -190,7 +190,7 @@ public class CommandStoreResource {
     validateStore(commandStoreName);
 
     final ArchiveFile archiveFile = ArchiveUtils.createArchiveFile(uploadInputStream);
-    logger.info("Files read from the archive are [{}]", getAllFilePaths(archiveFile));
+    log.info("Files read from the archive are [{}]", getAllFilePaths(archiveFile));
 
     final String versionId = commandVersionService.createNewVersionFromArchive(
         createCommandArchiveContext(commandStoreName, archiveFile, accountId));

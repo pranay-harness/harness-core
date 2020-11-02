@@ -424,7 +424,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             || !isEqualCollection(serviceIds, savedData.getServiceIds())
             || !isEqualCollection(envIds, savedData.getEnvIds())
             || !isEqualCollection(serviceVariableIds, savedData.getServiceVariableIds())) {
-          logger.info("updating {}", savedData.getUuid());
+          log.info("updating {}", savedData.getUuid());
           wingsPersistence.save(savedData);
           updateRecords++;
         }
@@ -452,7 +452,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       Application app = appService.get(appId);
       encryptedData.addApplication(appId, app.getName());
     } catch (Exception e) {
-      logger.info("application {} does not exists", appId);
+      log.info("application {} does not exists", appId);
     }
 
     String envId = serviceVariable.getEnvId();

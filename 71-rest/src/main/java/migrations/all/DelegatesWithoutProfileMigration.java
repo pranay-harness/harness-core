@@ -25,7 +25,7 @@ public class DelegatesWithoutProfileMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting migration of delegates without profile.");
+    log.info("Starting migration of delegates without profile.");
 
     Query<Delegate> delegatesQuery =
         wingsPersistence.createQuery(Delegate.class).field(DelegateKeys.delegateProfileId).doesNotExist();
@@ -39,15 +39,15 @@ public class DelegatesWithoutProfileMigration implements Migration {
       }
     }
 
-    logger.info("Migration of delegates without profile finished.");
+    log.info("Migration of delegates without profile finished.");
   }
 
   private void updateDelegate(Delegate delegate) {
     try {
-      logger.info("Fetching primary delegate profile.");
+      log.info("Fetching primary delegate profile.");
       DelegateProfile primaryProfile = delegateProfileService.fetchPrimaryProfile(delegate.getAccountId());
 
-      logger.info("Updating delegate.");
+      log.info("Updating delegate.");
       Query<Delegate> updateQuery = wingsPersistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, delegate.getAccountId())
                                         .field(DelegateKeys.uuid)
@@ -60,9 +60,9 @@ public class DelegatesWithoutProfileMigration implements Migration {
 
       wingsPersistence.findAndModify(updateQuery, updateOperations, new FindAndModifyOptions());
 
-      logger.info("Delegate updated successfully.");
+      log.info("Delegate updated successfully.");
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing delegate.", ex);
+      log.error("Unexpected error occurred while processing delegate.", ex);
     }
   }
 }

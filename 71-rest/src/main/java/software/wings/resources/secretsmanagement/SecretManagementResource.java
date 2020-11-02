@@ -167,7 +167,7 @@ public class SecretManagementResource {
   @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding a secret");
+      log.info("Adding a secret");
       return new RestResponse<>(secretManager.saveSecret(accountId, secretText));
     }
   }
@@ -195,7 +195,7 @@ public class SecretManagementResource {
   public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting a secret");
+      log.info("Deleting a secret");
       return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, new HashMap<>()));
     }
   }
@@ -212,7 +212,7 @@ public class SecretManagementResource {
   public RestResponse<Boolean> deleteSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuId, @Body Map<String, String> runtimeParameters) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting a secret");
+      log.info("Deleting a secret");
       return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, runtimeParameters));
     }
   }
@@ -294,7 +294,7 @@ public class SecretManagementResource {
       return new RestResponse<>(
           secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details, false));
     } catch (IllegalAccessException e) {
-      logger.error("Illegal access exception while trying to get secrets", e);
+      log.error("Illegal access exception while trying to get secrets", e);
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, SRE);
     }
   }
@@ -309,7 +309,7 @@ public class SecretManagementResource {
       pageRequest.addFilter("accountId", Operator.EQ, accountId);
       return new RestResponse<>(secretManager.listSecretsMappedToAccount(accountId, pageRequest, details));
     } catch (IllegalAccessException e) {
-      logger.error("Illegal access exception while trying to get secrets", e);
+      log.error("Illegal access exception while trying to get secrets", e);
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, SRE);
     }
   }

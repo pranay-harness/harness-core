@@ -22,7 +22,7 @@ public class BugsnagErrorReporter implements ErrorReporter {
     String bugsnagApiKey = bugsnagErrorReporterConfiguration.getBugsnagApiKey();
     if (bugsnagErrorReporterConfiguration.isErrorReportingEnabled() && StringUtils.isNotEmpty(bugsnagApiKey)) {
       try (Bugsnag bugsnag = new Bugsnag(bugsnagApiKey)) {
-        logger.info("Sending alert to bugsnag");
+        log.info("Sending alert to bugsnag");
         bugsnag.addCallback(report -> {
           for (BugsnagTab tab : errorData.getTabs()) {
             report.addToTab(tab.getTabName(), tab.getKey(), tab.getValue());
@@ -31,7 +31,7 @@ public class BugsnagErrorReporter implements ErrorReporter {
         });
         bugsnag.notify(errorData.getException());
       } catch (Exception ex) {
-        logger.info("Exception occurred while reporting error to bugsnag", ex);
+        log.info("Exception occurred while reporting error to bugsnag", ex);
       }
     }
   }

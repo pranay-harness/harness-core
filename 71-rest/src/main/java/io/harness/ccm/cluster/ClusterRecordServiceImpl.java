@@ -55,16 +55,16 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     ClusterRecord upsertedClusterRecord = clusterRecordDao.upsertCluster(clusterRecord);
 
     if (!isNull(prevClusterRecord)) {
-      logger.info("Updated the existing {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
+      log.info("Updated the existing {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
           upsertedClusterRecord.getUuid());
     } else {
-      logger.info("Upserted a new {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
+      log.info("Upserted a new {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
           upsertedClusterRecord.getUuid());
     }
     try {
       subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, upsertedClusterRecord);
     } catch (Exception e) {
-      logger.error("Failed to inform the observers for the Cluster with id={}", upsertedClusterRecord.getUuid(), e);
+      log.error("Failed to inform the observers for the Cluster with id={}", upsertedClusterRecord.getUuid(), e);
     }
     return upsertedClusterRecord;
   }
@@ -105,13 +105,13 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     // get the list of Clusters associated with the cloudProvider
     List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
     if (isNull(clusterRecords)) {
-      logger.warn("Cloud Provider with id={} has no Clusters to be deactivated.", cloudProviderId);
+      log.warn("Cloud Provider with id={} has no Clusters to be deactivated.", cloudProviderId);
     } else {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeactivating, clusterRecord);
         } catch (Exception e) {
-          logger.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
+          log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
         }
       }
     }
@@ -123,13 +123,13 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     // get the list of Clusters associated with the cloudProvider
     List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
     if (isNull(clusterRecords)) {
-      logger.warn("Cloud Provider with id={} has no Clusters to be deleted.", cloudProviderId);
+      log.warn("Cloud Provider with id={} has no Clusters to be deleted.", cloudProviderId);
     } else {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeleting, clusterRecord);
         } catch (Exception e) {
-          logger.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
+          log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
         }
       }
     }
@@ -236,8 +236,8 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
                       .clusterName(k8sInfraMapping.getComputeProviderName())
                       .build();
         if (StringUtils.isBlank(k8sInfraMapping.getComputeProviderName())) {
-          logger.warn("ClusterRecord derived from Infrastructure mapping {} is missing cluster name", k8sInfraMapping);
-          logger.warn("Stacktrace:\n", new Throwable());
+          log.warn("ClusterRecord derived from Infrastructure mapping {} is missing cluster name", k8sInfraMapping);
+          log.warn("Stacktrace:\n", new Throwable());
         }
         break;
       case AWS_ECS:

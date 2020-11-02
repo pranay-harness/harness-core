@@ -25,7 +25,7 @@ public class ProcessExecutorCapabilityCheck implements CapabilityCheck {
     } catch (Exception e) {
       StringBuilder msg = new StringBuilder(128).append("Failed to execute command with arguments, ");
       processExecutorCapability.getProcessExecutorArguments().forEach(capability -> msg.append(capability).append(' '));
-      logger.error(msg.toString());
+      log.error(msg.toString());
     }
 
     return CapabilityResponse.builder().delegateCapability(processExecutorCapability).validated(valid).build();

@@ -40,7 +40,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
   @Override
   public List<BuildDetails> getBuilds(String artifactStreamId) {
-    logger.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
+    log.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     notNullCheck("Artifact source does not exist", artifactStream, USER);
     return getBuildDetails((CustomArtifactStream) artifactStream);
@@ -75,7 +75,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
   @Override
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
-    logger.info("Validating artifact source for Custom Repository artifactStreamId {}",
+    log.info("Validating artifact source for Custom Repository artifactStreamId {}",
         artifactStream.fetchArtifactStreamAttributes().getArtifactStreamId());
     notNullCheck("Artifact source does not exist", artifactStream, USER);
 

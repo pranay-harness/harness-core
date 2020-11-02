@@ -54,7 +54,7 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
   @Override
   public Response signUp(final String token) {
     if (DeployMode.isOnPrem(configuration.getDeployMode().name())) {
-      logger.error("GCP MarketPlace is disabled in On-Prem");
+      log.error("GCP MarketPlace is disabled in On-Prem");
       return redirectToErrorPage();
     }
     verifyGcpMarketplaceToken(token);
@@ -78,7 +78,7 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
 
   private void verifyGcpMarketplaceToken(String token) {
     DecodedJWT jwt = JWT.decode(token);
-    logger.info("GCP Marketplace registration request. gcpAccountId: {}", jwt.getSubject());
+    log.info("GCP Marketplace registration request. gcpAccountId: {}", jwt.getSubject());
     try {
       HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
       HttpRequestFactory requestFactory = httpTransport.createRequestFactory();

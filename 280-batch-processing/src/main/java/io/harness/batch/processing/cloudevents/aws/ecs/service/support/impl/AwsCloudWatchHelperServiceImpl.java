@@ -56,7 +56,7 @@ public class AwsCloudWatchHelperServiceImpl implements AwsCloudWatchHelperServic
       AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsCrossAccountAttributes);
       return cloudWatchClient.getMetricData(request);
     } catch (Exception ex) {
-      logger.error("Exception getMetricData ", ex);
+      log.error("Exception getMetricData ", ex);
     }
     return new GetMetricDataResult();
   }

@@ -20,7 +20,7 @@ public class GitCommitStatusMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running migration GitCommitStatusMigration");
+    log.info("Running migration GitCommitStatusMigration");
 
     try {
       UpdateOperations<GitCommit> ops = wingsPersistence.createUpdateOperations(GitCommit.class);
@@ -30,10 +30,10 @@ public class GitCommitStatusMigration implements Migration {
           wingsPersistence.createQuery(GitCommit.class).filter(GitCommitKeys.status, Status.FAILED);
 
       final UpdateResults updateResults = wingsPersistence.update(gitCommitQuery, ops);
-      logger.info("update results = {}", updateResults);
+      log.info("update results = {}", updateResults);
     } catch (Exception e) {
-      logger.error("Error running migration GitCommitStatusMigration", e);
+      log.error("Error running migration GitCommitStatusMigration", e);
     }
-    logger.info("Completed migration:  GitSyncErrorGitDetailsMigration");
+    log.info("Completed migration:  GitSyncErrorGitDetailsMigration");
   }
 }

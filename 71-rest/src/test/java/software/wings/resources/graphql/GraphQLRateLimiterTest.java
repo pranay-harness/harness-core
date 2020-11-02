@@ -114,7 +114,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
     boolean overRateLimit = false;
     int globalRateLimit = isInternalGraphQLCall ? mainConfiguration.getPortal().getCustomDashGraphQLRateLimitPerMinute()
                                                 : mainConfiguration.getPortal().getExternalGraphQLRateLimitPerMinute();
-    logger.info("isInternalGraphQLCall: {}; Global rate limit: {}", isInternalGraphQLCall, globalRateLimit);
+    log.info("isInternalGraphQLCall: {}; Global rate limit: {}", isInternalGraphQLCall, globalRateLimit);
     // One more extra call will over the global limit
     for (int i = 0; i < globalRateLimit + 1; i++) {
       String accountId = UUIDGenerator.generateUuid();

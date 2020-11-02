@@ -51,7 +51,7 @@ public class LogMLClusterGenerator implements Runnable {
         + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
     String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
         + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
-    logger.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
+    log.info("Creating Learning Engine Analysis Task for Log ML clustering with context {}", context);
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
                                                   .accountId(context.getAccountId())
@@ -77,7 +77,7 @@ public class LogMLClusterGenerator implements Runnable {
 
     final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
     if (taskQueued) {
-      logger.info("Clustering queued for {}", logRequest);
+      log.info("Clustering queued for {}", logRequest);
     }
   }
 }

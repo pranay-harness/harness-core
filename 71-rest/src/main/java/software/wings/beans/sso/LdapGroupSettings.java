@@ -35,7 +35,7 @@ public class LdapGroupSettings implements LdapGroupConfig {
     } else {
       filterString = String.format("(&(cn=%s)%s)", additionalFilter, searchFilter);
     }
-    logger.info("LdapGroupSettings filter is {}", filterString);
+    log.info("LdapGroupSettings filter is {}", filterString);
     return filterString;
   }
 

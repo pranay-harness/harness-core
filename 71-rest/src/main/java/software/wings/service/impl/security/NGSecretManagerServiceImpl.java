@@ -124,7 +124,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
             return false;
         }
       } catch (SecretManagementException secretManagementException) {
-        logger.info("Error while validating secret manager config with details: {}, {}, {}, {}, error: ",
+        log.info("Error while validating secret manager config with details: {}, {}, {}, {}, error: ",
             accountIdentifier, orgIdentifier, projectIdentifier, identifier, secretManagementException);
       }
     }

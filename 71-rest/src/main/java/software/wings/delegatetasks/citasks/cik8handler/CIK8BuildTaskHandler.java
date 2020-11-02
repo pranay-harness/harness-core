@@ -98,12 +98,12 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
         if (cik8BuildTaskParams.getServicePodParams() != null) {
           for (CIK8ServicePodParams servicePodParams : cik8BuildTaskParams.getServicePodParams()) {
-            logger.info("Creating service for container: {}", servicePodParams);
+            log.info("Creating service for container: {}", servicePodParams);
             createServicePod(kubernetesClient, namespace, servicePodParams);
           }
         }
         Pod pod = podSpecBuilder.createSpec(podParams).build();
-        logger.info("Creating pod with spec: {}", pod);
+        log.info("Creating pod with spec: {}", pod);
         kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
         PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
         k8sTaskResponse = CiK8sTaskResponse.builder().podStatus(podStatus).podName(podName).build();
@@ -121,7 +121,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
                        .build();
         }
       } catch (TimeoutException timeoutException) {
-        logger.error("Processing CI K8 build timed out: {}", ciBuildSetupTaskParams, timeoutException);
+        log.error("Processing CI K8 build timed out: {}", ciBuildSetupTaskParams, timeoutException);
         String errorMessage = k8sTaskResponse.getPodStatus().getErrorMessage();
         k8sTaskResponse.setPodStatus(PodStatus.builder().status(PENDING).errorMessage(errorMessage).build());
         result = K8sTaskExecutionResponse.builder()
@@ -130,7 +130,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
                      .k8sTaskResponse(k8sTaskResponse)
                      .build();
       } catch (Exception ex) {
-        logger.error("Exception in processing CI K8 build setup task: {}", ciBuildSetupTaskParams, ex);
+        log.error("Exception in processing CI K8 build setup task: {}", ciBuildSetupTaskParams, ex);
         result = K8sTaskExecutionResponse.builder()
                      .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(ex.getMessage())
@@ -144,7 +144,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   private void createServicePod(
       KubernetesClient kubernetesClient, String namespace, CIK8ServicePodParams servicePodParams) {
     Pod pod = podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams()).build();
-    logger.info("Creating service pod with spec: {}", pod);
+    log.info("Creating service pod with spec: {}", pod);
     kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
 
     kubeCtlHandler.createService(kubernetesClient, namespace, servicePodParams.getServiceName(),
@@ -155,20 +155,20 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     if (gitConnector == null) {
       return;
     }
-    logger.info("Creating git secret in namespace: {} for connectorId: {}, ", namespace,
+    log.info("Creating git secret in namespace: {} for connectorId: {}, ", namespace,
         gitConnector.getConnectorDTO().getConnectorInfo().getIdentifier());
     try {
       kubeCtlHandler.createGitSecret(kubernetesClient, namespace, gitConnector);
     } catch (UnsupportedEncodingException e) {
       String errMsg = format("Unknown format for GIT password %s", e.getMessage());
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new InvalidRequestException(errMsg, e, WingsException.USER);
     }
   }
 
   private void createPVCs(
       KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    logger.info("Creating pvc for pod name: {}", podParams.getName());
+    log.info("Creating pvc for pod name: {}", podParams.getName());
     if (podParams.getPvcParamList() == null) {
       return;
     }
@@ -183,7 +183,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private void createImageSecrets(
       KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    logger.info("Creating image secrets for pod name: {}", podParams.getName());
+    log.info("Creating image secrets for pod name: {}", podParams.getName());
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
     Optional.ofNullable(podParams.getContainerParamsList()).ifPresent(containerParamsList::addAll);
     Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
@@ -211,7 +211,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private void createEnvVariablesSecrets(
       KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    logger.info("Creating env variables for pod name: {}", podParams.getName());
+    log.info("Creating env variables for pod name: {}", podParams.getName());
     List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
     String secretName = podParams.getName() + "-" + SECRET;
 

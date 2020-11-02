@@ -29,7 +29,7 @@ public class PerpetualTaskServiceGrpc
   @Override
   public void perpetualTaskList(
       PerpetualTaskListRequest request, StreamObserver<PerpetualTaskListResponse> responseObserver) {
-    logger.info("perpetualTaskList invoked");
+    log.info("perpetualTaskList invoked");
     Instant start = Instant.now();
     List<PerpetualTaskAssignDetails> perpetualTaskAssignDetails =
         perpetualTaskService.listAssignedTasks(request.getDelegateId().getId());
@@ -37,7 +37,7 @@ public class PerpetualTaskServiceGrpc
         PerpetualTaskListResponse.newBuilder().addAllPerpetualTaskAssignDetails(perpetualTaskAssignDetails).build();
     Instant end = Instant.now();
     Duration duration = Duration.between(start, end);
-    logger.info("perpetualTaskList duration:{}", duration);
+    log.info("perpetualTaskList duration:{}", duration);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

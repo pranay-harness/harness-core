@@ -248,7 +248,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     try {
       when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(false)));
     } catch (IOException ex) {
-      logger.info("Encountered exception ", ex);
+      log.info("Encountered exception ", ex);
     }
     when(entitySetupUsageClient.isEntityReferenced(any(), any())).thenReturn(request);
     boolean deleted = connectorService.delete(accountIdentifier, null, null, identifier);

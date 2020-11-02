@@ -59,13 +59,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     // Replacing the Default Table with the Table in the context
     String timeSeriesDataQuery = query.toString();
     timeSeriesDataQuery = timeSeriesDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, tableName);
-    logger.info("getPreAggregateBillingTimeSeriesStats Query {}", timeSeriesDataQuery);
+    log.info("getPreAggregateBillingTimeSeriesStats Query {}", timeSeriesDataQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(timeSeriesDataQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get getPreAggregateBillingTimeSeriesStats. {}", e);
+      log.error("Failed to get getPreAggregateBillingTimeSeriesStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -107,13 +107,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     prevEntityDataQuery = prevEntityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     Map<String, PreAggregatedCostData> idToPrevBillingAmountData = getPrevAggregatedEntityData(prevEntityDataQuery);
 
-    logger.info("getPreAggregateBillingEntityStats Query {}", entityDataQuery);
+    log.info("getPreAggregateBillingEntityStats Query {}", entityDataQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(entityDataQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
+      log.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -122,13 +122,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   private Map<String, PreAggregatedCostData> getPrevAggregatedEntityData(String prevEntityDataQuery) {
-    logger.info("getPreviousPreAggregateBillingEntityStats Query {}", prevEntityDataQuery);
+    log.info("getPreviousPreAggregateBillingEntityStats Query {}", prevEntityDataQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(prevEntityDataQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get getPreviousPreAggregateBillingEntityStats. {}", e);
+      log.error("Failed to get getPreviousPreAggregateBillingEntityStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -173,13 +173,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     // Replacing the Default Table with the Table in the context
     String filterValueQuery = query.toString();
     filterValueQuery = filterValueQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
-    logger.info("getPreAggregateFilterValueStats Query {}", filterValueQuery);
+    log.info("getPreAggregateFilterValueStats Query {}", filterValueQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(filterValueQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
+      log.error("Failed to get getPreAggregateBillingEntityStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -198,13 +198,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     // Replacing the Default Table with the Table in the context
     String trendStatsQuery = query.toString();
     trendStatsQuery = trendStatsQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
-    logger.info("getAggregatedCostData Query {}", trendStatsQuery);
+    log.info("getAggregatedCostData Query {}", trendStatsQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(trendStatsQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get AggregatedCostData. {}", e);
+      log.error("Failed to get AggregatedCostData. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -223,7 +223,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     // Replacing the Default Table with the Table in the context
     String cloudOverviewQuery = query.toString();
     cloudOverviewQuery = cloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
-    logger.info("getPreAggregateBillingOverview Query {}", cloudOverviewQuery);
+    log.info("getPreAggregateBillingOverview Query {}", cloudOverviewQuery);
 
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
@@ -244,7 +244,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get PreAggregateBillingOverview. {}", e);
+      log.error("Failed to get PreAggregateBillingOverview. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -252,13 +252,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   private Map<String, PreAggregatedCostData> getPrevOverviewData(String prevCloudOverviewQuery) {
-    logger.info("getPreviousPreAggregateBillingOverview Query {}", prevCloudOverviewQuery);
+    log.info("getPreviousPreAggregateBillingOverview Query {}", prevCloudOverviewQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(prevCloudOverviewQuery).build();
     TableResult result = null;
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get getPreviousPreAggregateBillingOverview. {}", e);
+      log.error("Failed to get getPreviousPreAggregateBillingOverview. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }

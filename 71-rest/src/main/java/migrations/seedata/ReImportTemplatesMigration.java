@@ -23,15 +23,15 @@ public class ReImportTemplatesMigration implements SeedDataMigration {
     try {
       Account account = wingsPersistence.get(Account.class, ACCOUNT_ID);
       if (account == null) {
-        logger.info("Specified account not found. Not copying templates.");
+        log.info("Specified account not found. Not copying templates.");
         return;
       }
       templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName());
     } catch (WingsException e) {
-      ExceptionLogger.logProcessedMessages(e, MANAGER, logger);
-      logger.error("Migration failed: ", e);
+      ExceptionLogger.logProcessedMessages(e, MANAGER, log);
+      log.error("Migration failed: ", e);
     } catch (Exception e) {
-      logger.error("Migration failed: ", e);
+      log.error("Migration failed: ", e);
     }
   }
 }

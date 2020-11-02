@@ -36,6 +36,7 @@ public class DelegateCVActivityLogServiceImplTest extends CategoryTest {
     delegateCVActivityLogService = new DelegateCVActivityLogServiceImpl();
     FieldUtils.writeField(delegateCVActivityLogService, "delegateLogService", delegateLogService, true);
   }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
@@ -43,9 +44,9 @@ public class DelegateCVActivityLogServiceImplTest extends CategoryTest {
     int dataCollectionMin = 0;
     String stateExecutionId = generateUuid();
     long now = System.currentTimeMillis();
-    DelegateCVActivityLogService.Logger logger = delegateCVActivityLogService.getLogger(
+    DelegateCVActivityLogService.Logger log = delegateCVActivityLogService.getLogger(
         generateUuid(), null, dataCollectionMin, stateExecutionId, "prefix %t, %t", now, now);
-    logger.info("this is a test log");
+    log.info("this is a test log");
     ArgumentCaptor<CVActivityLog> capture = ArgumentCaptor.forClass(CVActivityLog.class);
     verify(delegateLogService).save(any(), capture.capture());
     assertThat(capture.getValue().getLog()).isEqualTo("[Delegate] prefix %t, %t this is a test log");

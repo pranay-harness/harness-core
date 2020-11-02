@@ -59,14 +59,14 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     HelmRepoConfigValidationTaskParams taskParams = (HelmRepoConfigValidationTaskParams) parameters;
 
     try {
-      logger.info("Running HelmRepoConfigValidationTask for account {} app {}", taskParams.getAccountId(),
+      log.info("Running HelmRepoConfigValidationTask for account {} app {}", taskParams.getAccountId(),
           taskParams.getAppId());
 
       tryAddingHelmRepo(taskParams);
 
       return HelmRepoConfigValidationResponse.builder().commandExecutionStatus(SUCCESS).build();
     } catch (Exception e) {
-      logger.warn("HelmRepoConfigValidationTask execution failed with exception " + e);
+      log.warn("HelmRepoConfigValidationTask execution failed with exception " + e);
       return HelmRepoConfigValidationResponse.builder()
           .commandExecutionStatus(FAILURE)
           .errorMessage(ExceptionUtils.getMessage(e))

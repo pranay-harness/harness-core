@@ -45,10 +45,10 @@ public class UserUtils {
     assertThat(userInvitationList.size() == 1).isTrue();
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
-    logger.info("Attempting to retrieve signup mail from inbox : " + emailId);
+    log.info("Attempting to retrieve signup mail from inbox : " + emailId);
     MailinatorMetaMessage message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
-    logger.info("Signup mail retrieved");
-    logger.info("Reading the retrieved email");
+    log.info("Signup mail retrieved");
+    log.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertThat(messageDetails).isNotNull();
@@ -56,10 +56,10 @@ public class UserUtils {
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
     assertThat(inviteUrl).isNotNull();
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
-    logger.info("Email read and Signup URL is available for user signup");
+    log.info("Email read and Signup URL is available for user signup");
 
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
-    logger.info("Email deleted for the inbox : " + emailId);
+    log.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
@@ -69,7 +69,7 @@ public class UserUtils {
   public static UserInvite completeSignupAndValidateLogin(
       Account account, String bearerToken, List<UserInvite> userInvitationList) {
     // Complete registration using the API
-    logger.info("Entering user invite validation");
+    log.info("Entering user invite validation");
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
     UserRestUtils.completePaidUserSignupAndSignin(bearerToken, account.getUuid(), "dummy", incomplete);
@@ -78,7 +78,7 @@ public class UserUtils {
     assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
     // Assert.assertThat("Error : Agreement is false after signup",completed.isAgreement()).isTrue();
-    logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
+    log.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
     assertThat(incomplete.getEmail().equals(completed.getEmail())).isTrue();
     assertThat(incomplete.getName().equals(completed.getName())).isTrue();
     assertThat(incomplete.getAccountId().equals(completed.getAccountId())).isTrue();
@@ -93,17 +93,17 @@ public class UserUtils {
   public static void resetPasswordAndValidateLogin(UserInvite completed, String emailId, String domainName)
       throws IOException, MessagingException {
     UserRestUtils.sendResetPasswordMail(emailId + domainName);
-    logger.info("Attempting to retrieve reset password mail from inbox : " + emailId);
+    log.info("Attempting to retrieve reset password mail from inbox : " + emailId);
     MailinatorMetaMessage message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
-    logger.info("Reset password mail retrieved");
-    logger.info("Reading the retrieved email");
+    log.info("Reset password mail retrieved");
+    log.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertThat(messageDetails).isNotNull();
     String resetUrl =
         HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
     assertThat(StringUtils.isNotBlank(resetUrl)).isTrue();
-    logger.info(""
+    log.info(""
         + " URL is available for user password reset");
     UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
     // Verify if the user can login through the reset password
@@ -113,12 +113,12 @@ public class UserUtils {
     assertThat(statusCode == HttpStatus.SC_OK).isTrue();
     // Delete Email
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
-    logger.info("Email deleted for the inbox : " + emailId);
+    log.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
-    logger.info("All validation completed");
-    logger.info("All validation for reset also done");
+    log.info("All validation completed");
+    log.info("All validation for reset also done");
   }
 
   public static UserInvite createUserInvite(Account account, String emailId) {

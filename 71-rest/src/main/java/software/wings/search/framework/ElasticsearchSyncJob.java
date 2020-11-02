@@ -47,7 +47,7 @@ public class ElasticsearchSyncJob implements Runnable {
       String uuid = UUID.randomUUID().toString();
 
       searchLock = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
-      logger.info("Starting search synchronization now");
+      log.info("Starting search synchronization now");
 
       SearchSyncHeartbeat searchSyncHeartbeat =
           new SearchSyncHeartbeat(wingsPersistence, ElasticsearchSyncJob.class.getName(), uuid);
@@ -58,22 +58,22 @@ public class ElasticsearchSyncJob implements Runnable {
         elasticsearchRealtimeSyncTask.run(elasticsearchBulkSyncTaskResult.getChangeEventsDuringBulkSync());
       }
     } catch (RuntimeException e) {
-      logger.error("Search Sync Job unexpectedly stopped", e);
+      log.error("Search Sync Job unexpectedly stopped", e);
     } catch (InterruptedException e) {
-      logger.error("Search Sync job interrupted", e);
+      log.error("Search Sync job interrupted", e);
       Thread.currentThread().interrupt();
     } finally {
-      logger.info("Search sync job has stopped");
+      log.info("Search sync job has stopped");
       stop();
     }
   }
 
   public void stop() {
-    logger.info("Cancelling search monitor future");
+    log.info("Cancelling search monitor future");
     if (searchLock != null) {
       searchLock.cancel(true);
     }
-    logger.info("Stopping realtime synchronization");
+    log.info("Stopping realtime synchronization");
     elasticsearchRealtimeSyncTask.stop();
     scheduledExecutorService.shutdownNow();
     perpetualSearchLocker.shutdown();

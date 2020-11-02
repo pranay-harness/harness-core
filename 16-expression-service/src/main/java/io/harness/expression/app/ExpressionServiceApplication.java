@@ -28,7 +28,7 @@ public class ExpressionServiceApplication {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
       serviceManager.awaitStopped(); // need to stall main thread since grpc uses daemon-threads.
     } catch (IOException e) {
-      logger.error("Unable to read configuration file", e);
+      log.error("Unable to read configuration file", e);
     }
   }
 }

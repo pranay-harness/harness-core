@@ -45,7 +45,7 @@ public class CliHelper {
             .redirectError(new LogOutputStream() {
               @Override
               protected void processLine(String line) {
-                logger.error(line);
+                log.error(line);
                 executionLogCallback.saveExecutionLog(line, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
               }
             });

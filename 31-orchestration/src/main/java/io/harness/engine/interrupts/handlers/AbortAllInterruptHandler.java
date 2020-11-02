@@ -74,7 +74,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
         nodeExecutionService.fetchNodeExecutionsByStatus(updatedInterrupt.getPlanExecutionId(), DISCONTINUING);
 
     if (isEmpty(discontinuingNodeExecutions)) {
-      logger.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
+      log.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
           updatedInterrupt.getUuid());
       return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
     }

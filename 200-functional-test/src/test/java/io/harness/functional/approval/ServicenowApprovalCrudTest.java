@@ -60,7 +60,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
   @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
-    logger.info("Creating the workflow");
+    log.info("Creating the workflow");
 
     String workflowName = "SERVICE NOW APPROVAL" + System.currentTimeMillis();
     Workflow snowWorkflow =
@@ -70,7 +70,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
         WorkflowRestUtils.createWorkflow(bearerToken, environment.getAccountId(), environment.getAppId(), snowWorkflow);
     assertThat(savedWorkflow).isNotNull();
 
-    logger.info("Checking for Phase Step Addition");
+    log.info("Checking for Phase Step Addition");
     String phaseName = ((CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow())
                            .getPostDeploymentSteps()
                            .getSteps()
@@ -79,7 +79,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(phaseName).isEqualToIgnoringCase("Approval Snow");
 
     // Update Workflow's Approve Stage
-    logger.info("Updating the graph node");
+    log.info("Updating the graph node");
 
     String updatedTicketId = "INC0000022";
     PhaseStep phaseStep = new PhaseStep();
@@ -88,7 +88,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
         workflowService.updatePostDeployment(environment.getAppId(), savedWorkflow.getUuid(), phaseStep);
 
     // Read the updated Value of the issueNumber
-    logger.info("Asserting the issue Number Post update");
+    log.info("Asserting the issue Number Post update");
     HashMap<String, Object> approvalStateParams =
         (HashMap<String, Object>) phaseStepUpdated.getSteps().get(0).getProperties().get("approvalStateParams");
     HashMap<String, Object> serviceNowApprovalParams =
@@ -97,7 +97,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(ticketId).isEqualToIgnoringCase(updatedTicketId);
 
     // Delete the Workflow
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, savedWorkflow.getUuid(), environment.getAppId());
   }
 

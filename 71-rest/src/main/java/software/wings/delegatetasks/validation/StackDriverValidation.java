@@ -62,7 +62,7 @@ public class StackDriverValidation extends AbstractSecretManagerValidation {
       try {
         encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       } catch (Exception e) {
-        logger.info("Failed to decrypt " + gcpConfig, e);
+        log.info("Failed to decrypt " + gcpConfig, e);
         return singletonList(
             DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
       }
@@ -73,7 +73,7 @@ public class StackDriverValidation extends AbstractSecretManagerValidation {
                 Charset.forName("UTF-8").encode(CharBuffer.wrap(gcpConfig.getServiceAccountKeyFileContent())).array()))
             .createScoped(MonitoringScopes.all());
       } catch (IOException e) {
-        logger.info("Failed to connect " + gcpConfig, e);
+        log.info("Failed to connect " + gcpConfig, e);
         return singletonList(
             DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
       }

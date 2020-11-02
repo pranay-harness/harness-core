@@ -48,7 +48,7 @@ public class ArtifactStreamPTaskManager implements ArtifactStreamServiceObserver
          AutoLogContext ignore2 = new ArtifactStreamLogContext(currArtifactStream.getUuid(), OVERRIDE_ERROR)) {
       if (!perpetualTaskService.resetTask(
               currArtifactStream.getAccountId(), currArtifactStream.getPerpetualTaskId(), null)) {
-        logger.error(
+        log.error(
             format("Unable to reset artifact collection perpetual task: %s", currArtifactStream.getPerpetualTaskId()));
       }
     }

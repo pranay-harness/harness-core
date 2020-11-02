@@ -342,7 +342,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     try {
       finalBody = getFinalBody(context);
     } catch (UnsupportedEncodingException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     String finalHeader = getFinalHeader(context);
     String finalMethod = getFinalMethod(context);
@@ -500,14 +500,14 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       // check if the request failed
       boolean assertionStatus = (boolean) context.evaluateExpression(
           assertion, StateExecutionContext.builder().stateExecutionData(executionData).build());
-      logger.info("assertion status: {}", assertionStatus);
+      log.info("assertion status: {}", assertionStatus);
       return assertionStatus;
     } catch (ClassCastException e) {
-      logger.info("Invalid assertion " + ExceptionUtils.getMessage(e), e);
+      log.info("Invalid assertion " + ExceptionUtils.getMessage(e), e);
       executionData.setErrorMsg(ASSERTION_ERROR_MSG);
       throw new InvalidRequestException(ASSERTION_ERROR_MSG, USER);
     } catch (JexlException e) {
-      logger.info("Error in httpStateAssertion", e);
+      log.info("Error in httpStateAssertion", e);
 
       String errorMsg;
       if (e instanceof Parsing) {
@@ -522,7 +522,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       executionData.setErrorMsg(errorMsg);
       throw new InvalidRequestException(errorMsg, USER);
     } catch (Exception e) {
-      logger.info("Error in httpStateAssertion", e);
+      log.info("Error in httpStateAssertion", e);
       executionData.setErrorMsg(getMessage(e));
       throw new InvalidRequestException(getMessage(e), USER);
     }

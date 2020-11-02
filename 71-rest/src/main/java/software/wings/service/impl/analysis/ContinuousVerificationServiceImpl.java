@@ -298,11 +298,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         new LinkedHashMap<>();
     if (user == null) {
       // user is null, we can't validate permissions. Returning empty.
-      logger.warn("Returning empty results from getCVExecutionMetaData since user was null");
+      log.warn("Returning empty results from getCVExecutionMetaData since user was null");
       return results;
     }
     if (isEmpty(getAllowedApplicationsForUser(user, accountId))) {
-      logger.info(
+      log.info(
           "Returning empty results from getCVExecutionMetaData since user does not have permissions for any applications");
       return results;
     }
@@ -472,12 +472,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     List<CVDeploymentData> results = new ArrayList<>();
     if (user == null) {
       // user is null, we can't validate permissions. Returning empty.
-      logger.warn("Returning empty results from getCVDeploymentData since user was null");
+      log.warn("Returning empty results from getCVDeploymentData since user was null");
       return results;
     }
     List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
     if (isEmpty(allowedApplications)) {
-      logger.info(
+      log.info(
           "Returning empty results from getCVDeploymentData since user does not have permissions for any applications");
       return results;
     }
@@ -512,7 +512,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     if (isEmpty(deploymentData)) {
-      logger.info("There are no deployments with CV for service {}", serviceId);
+      log.info("There are no deployments with CV for service {}", serviceId);
       return new ArrayList<>();
     }
     // find the statuses of all the workflows we have.
@@ -551,13 +551,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     List<WorkflowExecution> results = new ArrayList<>();
     if (user == null) {
       // user is null, we can't validate permissions. Returning empty.
-      logger.warn("Returning empty results from getCVDeploymentData since user was null");
+      log.warn("Returning empty results from getCVDeploymentData since user was null");
       return results;
     }
     List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
     Service service = wingsPersistence.get(Service.class, serviceId);
     if (isEmpty(allowedApplications) || service == null || !allowedApplications.contains(service.getAppId())) {
-      logger.info(
+      log.info(
           "Returning empty results from getCVDeploymentData since user {} does not have permissions for any applications",
           user);
       return results;
@@ -613,19 +613,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       servicePermissions = servicePermissionsByApp.get(applicationId);
       envPermissions = envPermissionsByApp.get(applicationId);
-      logger.info("Service permissions for user {} are {}", user.getName(), servicePermissions);
-      logger.info("environment permissions for user {} are {}", user.getName(), envPermissions);
+      log.info("Service permissions for user {} are {}", user.getName(), servicePermissions);
+      log.info("environment permissions for user {} are {}", user.getName(), envPermissions);
 
       if (checkIfPermissionsApproved(servicePermissions, executionMetaData.getServiceId())
           && checkIfPermissionsApproved(envPermissions, executionMetaData.getEnvId())) {
         finalList.add(executionMetaData);
       } else {
-        logger.info("User {} does not have permissions to view the execution data {} and {} and {} and {}",
-            user.getName(), executionMetaData.getServiceName(), executionMetaData.getWorkflowName(),
-            executionMetaData.getEnvName(), executionMetaData.getPipelineName());
-        logger.info("User {} does not have permissions to view the execution data {} and {} and {} and {}",
-            user.getName(), executionMetaData.getServiceId(), executionMetaData.getWorkflowId(),
-            executionMetaData.getEnvId(), executionMetaData.getPipelineId());
+        log.info("User {} does not have permissions to view the execution data {} and {} and {} and {}", user.getName(),
+            executionMetaData.getServiceName(), executionMetaData.getWorkflowName(), executionMetaData.getEnvName(),
+            executionMetaData.getPipelineName());
+        log.info("User {} does not have permissions to view the execution data {} and {} and {} and {}", user.getName(),
+            executionMetaData.getServiceId(), executionMetaData.getWorkflowId(), executionMetaData.getEnvId(),
+            executionMetaData.getPipelineId());
       }
     }
     return finalList;
@@ -667,7 +667,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     if (isEmpty(setToCheck) || !setToCheck.contains(value)) {
-      logger.info("Permissions rejected for value {} in set {}", value, setToCheck);
+      log.info("Permissions rejected for value {} in set {}", value, setToCheck);
       return false;
     }
     return true;
@@ -691,7 +691,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                  .asList();
 
     if (isEmpty(cvConfigurations)) {
-      logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
+      log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
 
@@ -701,7 +701,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .forEach(cvConfig -> callables.add(() -> {
           cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
           String envName = cvConfig.getEnvName();
-          logger.info("Environment name = " + envName);
+          log.info("Environment name = " + envName);
           final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
           rv.add(heatMap);
 
@@ -737,7 +737,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // total number of read units
     int numberOfUnits = (int) ceil((double) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime) / unitDuration);
 
-    logger.info("total small units = {}, number of required units = {}", units.size(), numberOfUnits);
+    log.info("total small units = {}, number of required units = {}", units.size(), numberOfUnits);
 
     for (int i = 0; i < numberOfUnits; i++) {
       // merge [i * eventsPerUnit, (i + 1) * eventsPerUnit)
@@ -894,8 +894,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       if (heatMapUnit != null) {
         long timeDifference = TimeUnit.MILLISECONDS.toSeconds(abs(heatMapUnit.getStartTime() - unitTime));
         if (timeDifference != 0 && timeDifference < 60) {
-          logger.error(
-              "Unexpected state: timeDifference = {}, should have been 0 or > 60, heatmap unit start time = {}",
+          log.error("Unexpected state: timeDifference = {}, should have been 0 or > 60, heatmap unit start time = {}",
               timeDifference, heatMapUnit.getStartTime());
         }
       }
@@ -1056,7 +1055,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case STACK_DRIVER:
         return StackDriverState.getMetricTypeForMetric((StackDriverMetricCVConfiguration) cvConfig, metricName);
       default:
-        logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
+        log.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return null;
     }
   }
@@ -1109,7 +1108,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         try {
           endDate = URLEncoder.encode(endDate, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-          logger.error("Unable to encode the time range : ", durationInMinutes);
+          log.error("Unable to encode the time range : ", durationInMinutes);
           throw new IllegalStateException("UTF-8 is not supported", e);
         }
         String url = ((PrometheusConfig) connectorConfig).getUrl();
@@ -1118,7 +1117,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .replace("{endTime}", endDate)
             .replace("{metricString}", String.valueOf(metricString));
       default:
-        logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
+        log.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return "";
     }
   }
@@ -1194,7 +1193,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(TimeSeriesFilter filter) {
     CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, filter.getCvConfigId());
     if (cvConfiguration == null) {
-      logger.info("No cvConfig found for cvConfigId={}", filter.getCvConfigId());
+      log.info("No cvConfig found for cvConfigId={}", filter.getCvConfigId());
       return new TreeSet<>();
     }
 
@@ -1286,8 +1285,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String tagWithMaxRisk = resp.first().getTag();
       resp.removeIf(timeseries -> !timeseries.getTag().equals(tagWithMaxRisk));
     }
-    // logger.info("Timeseries response = {}", resp);
-    logger.info("TimeSeries response size is : {}", resp.size());
+    // log.info("Timeseries response = {}", resp);
+    log.info("TimeSeries response size is : {}", resp.size());
     return resp;
   }
 
@@ -1358,7 +1357,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     dataCollectionService.executeParrallel(callables);
 
-    logger.info("Size of metric records : {}", metricRecords.size());
+    log.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
       String tag = metricRecord.getTag();
       if (isEmpty(tag)) {
@@ -1500,7 +1499,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       return response;
     } catch (Exception ex) {
-      logger.error("Exception while parsing the APM Response.", ex);
+      log.error("Exception while parsing the APM Response.", ex);
       response.setConfigurationCorrect(false);
       return response;
     }
@@ -1679,11 +1678,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response) {
     try {
-      logger.info("Received state notification for {} data {}", correlationId, response);
+      log.info("Received state notification for {} data {}", correlationId, response);
       waitNotifyEngine.doneWith(correlationId, response);
       return true;
     } catch (Exception ex) {
-      logger.error("Exception while notifying correlationId {}", correlationId, ex);
+      log.error("Exception while notifying correlationId {}", correlationId, ex);
       return false;
     }
   }
@@ -1694,7 +1693,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                 .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
                                                 .get();
     if (analysisContext == null) {
-      logger.error("for app {} could not find context for {}", appId, stateExecutionId);
+      log.error("for app {} could not find context for {}", appId, stateExecutionId);
       return false;
     }
     final User user = UserThreadLocal.get();
@@ -1763,12 +1762,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           VerificationDataAnalysisResponse.builder().stateExecutionData(stateAnalysisExecutionData).build();
       analysisResponse.setExecutionStatus(status);
 
-      logger.info("for {} user triggered notification, data {}", stateExecutionId, analysisResponse);
+      log.info("for {} user triggered notification, data {}", stateExecutionId, analysisResponse);
       final String notificationId = waitNotifyEngine.doneWith(analysisContext.getCorrelationId(), analysisResponse);
-      logger.info("for {} user triggered notification, notification id", stateExecutionId, notificationId);
+      log.info("for {} user triggered notification, notification id", stateExecutionId, notificationId);
       return true;
     } catch (Exception ex) {
-      logger.error("Exception for {} while notifying correlationId {}", stateExecutionId,
+      log.error("Exception for {} while notifying correlationId {}", stateExecutionId,
           analysisContext.getStateExecutionId(), ex);
       return false;
     }
@@ -1836,7 +1835,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         task = createDataCollectionDelegateTask(customLogCVServiceConfiguration, waitId, startTime, endTime);
         break;
       default:
-        logger.error("Calling collect 24x7 data for an unsupported state : {}", stateType);
+        log.error("Calling collect 24x7 data for an unsupported state : {}", stateType);
         return false;
     }
     waitNotifyEngine.waitForAllOn(GENERAL,
@@ -1849,7 +1848,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionEndTime(endTime)
             .build(),
         waitId);
-    logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
+    log.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     cvActivityLogService
         .getLoggerByCVConfigId(
             cvConfiguration.getAccountId(), cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
@@ -1861,7 +1860,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean collectCVDataForWorkflow(String contextId, long collectionMinute) {
     AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class).filter("_id", contextId).get();
-    logger.info("Trigger Data Collection for workflow with stateType {}, stateExecutionId {}, CollectionMinute {}",
+    log.info("Trigger Data Collection for workflow with stateType {}, stateExecutionId {}, CollectionMinute {}",
         context.getStateType(), context.getStateExecutionId(), collectionMinute);
     switch (context.getStateType()) {
       case SUMO:
@@ -1869,7 +1868,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case STACK_DRIVER_LOG:
         return createDataCollectionDelegateTask(context, collectionMinute);
       default:
-        logger.error("Calling collect data for an unsupported state");
+        log.error("Calling collect data for an unsupported state");
         return false;
     }
   }
@@ -2183,8 +2182,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       LogsCVConfiguration config, String waitId, long startTime, long endTime) {
     String stateExecutionId = CV_24x7_STATE_EXECUTION + "-" + config.getUuid();
     long duration = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-    logger.info("Creating data collection delegate task for config : {} startTime : {} endTime : {} duration: {}",
-        config, startTime, endTime, duration);
+    log.info("Creating data collection delegate task for config : {} startTime : {} endTime : {} duration: {}", config,
+        startTime, endTime, duration);
     if (config.isWorkflowConfig()) {
       stateExecutionId = wingsPersistence.get(AnalysisContext.class, config.getContextId()).getStateExecutionId();
     }
@@ -2371,7 +2370,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     for (DelegateTask task : delegateTasks) {
       // This log statement is pretty custom now for LogDataCollectionInfos
       LogDataCollectionInfo info = (LogDataCollectionInfo) task.getData().getParameters()[0];
-      logger.info(
+      log.info(
           "Creating a delegate task for stateExecutionId {} for hosts {}", info.getStateExecutionId(), info.getHosts());
       delegateService.queueTask(task);
     }
@@ -2487,7 +2486,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Object[] dataCollectionInfo, String envId, String cvConfigId, String stateExecutionId, StateType stateType) {
     try (VerificationLogContext ignored =
              new VerificationLogContext(accountId, cvConfigId, stateExecutionId, stateType, OVERRIDE_ERROR)) {
-      logger.info("Triggered delegate task");
+      log.info("Triggered delegate task");
       return DelegateTask.builder()
           .accountId(accountId)
           .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
@@ -2535,7 +2534,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                                      : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(cvConfiguration.getAccountId());
     addHighRiskTxnsIfNecessary(alertData);
-    logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
+    log.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
     alertService.openAlert(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
     return true;
@@ -2552,7 +2551,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                                      : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(cvConfiguration.getAccountId());
     addHighRiskTxnsIfNecessary(alertData);
-    logger.info("Opening alert with riskscore {} for {} and validUntil {}", alertData.getRiskScore(), cvConfiguration,
+    log.info("Opening alert with riskscore {} for {} and validUntil {}", alertData.getRiskScore(), cvConfiguration,
         validUntil);
     Date validUntilDate = Date.from(Instant.ofEpochMilli(validUntil));
     alertService.openAlertWithTTL(cvConfiguration.getAccountId(), cvConfiguration.getAppId(),
@@ -2567,7 +2566,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
     alertData.setAlertStatus(AlertStatus.Closed);
-    logger.info("closing alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
+    log.info("closing alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
     alertService.closeAllAlerts(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
     return true;
@@ -2642,7 +2641,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     if (!(stateExecutionMap.get(stateExecutionInstance.getDisplayName())
                 instanceof VerificationStateAnalysisExecutionData)) {
-      logger.info("The state execution data is not of type VerificationStateAnalysisExecutionData. It is of type: {}",
+      log.info("The state execution data is not of type VerificationStateAnalysisExecutionData. It is of type: {}",
           stateExecutionMap.get(stateExecutionInstance.getDisplayName()).getClass().getName());
       return VerificationStateAnalysisExecutionData.builder().stateExecutionInstanceId(stateExecutionId).build();
     }

@@ -31,7 +31,7 @@ public class AddCommitTimeToGitSyncError implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running migration AddCommitTimeToGitSyncError");
+    log.info("Running migration AddCommitTimeToGitSyncError");
 
     Query<GitSyncError> query = wingsPersistence.createAuthorizedQuery(GitSyncError.class)
                                     .field(GitSyncErrorKeys.gitCommitId)
@@ -46,18 +46,18 @@ public class AddCommitTimeToGitSyncError implements Migration {
             if (commitCreatedAtTime != null) {
               syncError.setCommitTime(commitCreatedAtTime);
             } else {
-              logger.info("The createdAt value is null for the commit {} in account", syncError.getUuid(),
+              log.info("The createdAt value is null for the commit {} in account", syncError.getUuid(),
                   syncError.getAccountId());
               syncError.setCommitTime(syncError.getLastUpdatedAt());
             }
           }
           wingsPersistence.save(syncError);
         } catch (Exception e) {
-          logger.error("Error while processing gitsyncerror id =" + syncError.getUuid(), e);
+          log.error("Error while processing gitsyncerror id =" + syncError.getUuid(), e);
         }
       }
     }
-    logger.info("Completed migration:  AddCommitTimeToGitSyncError");
+    log.info("Completed migration:  AddCommitTimeToGitSyncError");
   }
 
   private Long getCreationTimeOfCommit(String accountId, String gitCommitId) {
@@ -69,7 +69,7 @@ public class AddCommitTimeToGitSyncError implements Migration {
                       .project(GitCommitKeys.createdAt, true)
                       .get();
       if (gitCommit == null) {
-        logger.info("The gitCommitId {} was not found in the db for the account {}", gitCommitId, accountId);
+        log.info("The gitCommitId {} was not found in the db for the account {}", gitCommitId, accountId);
         return null;
       }
       gitCommitTable.put(accountId, gitCommitId, gitCommit);

@@ -40,7 +40,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
   @Override
   public EcsPerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    logger.info("Inside get task params for ecs perpetual task {} ", clientParams);
+    log.info("Inside get task params for ecs perpetual task {} ", clientParams);
     String region = clientParams.get(REGION);
     String settingId = clientParams.get(SETTING_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
@@ -58,7 +58,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .setAwsConfig(awsConfigBytes)
                                                         .build();
-    logger.debug("Get Task params {} ", ecsPerpetualTaskParams.toString());
+    log.debug("Get Task params {} ", ecsPerpetualTaskParams.toString());
     return ecsPerpetualTaskParams;
   }
 

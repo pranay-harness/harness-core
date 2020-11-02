@@ -50,12 +50,12 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     String token = metadata.get(DelegateAuthCallCredentials.TOKEN_METADATA_KEY);
     @SuppressWarnings("unchecked") Listener<ReqT> noopListener = NOOP_LISTENER;
     if (accountId == null) {
-      logger.warn("No account id in metadata. Token verification failed");
+      log.warn("No account id in metadata. Token verification failed");
       call.close(Status.UNAUTHENTICATED.withDescription("Account id missing"), metadata);
       return noopListener;
     }
     if (token == null) {
-      logger.warn("No token in metadata. Token verification failed");
+      log.warn("No token in metadata. Token verification failed");
       call.close(Status.UNAUTHENTICATED.withDescription("Token missing"), metadata);
       return noopListener;
     }
@@ -64,7 +64,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
       tokenAuthenticator.validateToken(accountId, token);
       ctx = GrpcAuthUtils.newAuthenticatedContext().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
-      logger.warn("Token verification failed. Unauthenticated", e);
+      log.warn("Token verification failed. Unauthenticated", e);
       call.close(Status.UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e), metadata);
       return noopListener;
     }

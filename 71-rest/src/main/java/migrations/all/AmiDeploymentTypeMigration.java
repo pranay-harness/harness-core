@@ -42,19 +42,19 @@ public class AmiDeploymentTypeMigration implements Migration {
 
   private void performInfraMappingMigrationForAppId(String appId) {
     try {
-      logger.info("Starting to perform Ami Deployment Type migration for app: [{}]", appId);
+      log.info("Starting to perform Ami Deployment Type migration for app: [{}]", appId);
       PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
       pageRequest.addFilter("appId", Operator.EQ, appId);
       PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
       List<InfrastructureMapping> infraMappingList = response.getResponse();
       if (isEmpty(infraMappingList)) {
-        logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
+        log.info("Done with Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
       List<InfrastructureMapping> aminfraMappingList =
           infraMappingList.stream().filter(mapping -> mapping instanceof AwsAmiInfrastructureMapping).collect(toList());
       if (isEmpty(aminfraMappingList)) {
-        logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
+        log.info("Done with Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
       aminfraMappingList.forEach(amiMapping -> {
@@ -77,13 +77,13 @@ public class AmiDeploymentTypeMigration implements Migration {
             wingsPersistence.update(query, operations);
           }
         } catch (Exception ex) {
-          logger.warn("Error while updating Ami Deployment Types for Aws Ami Infra Mapping: [{}]",
+          log.warn("Error while updating Ami Deployment Types for Aws Ami Infra Mapping: [{}]",
               awsAmiInfrastructureMapping.getUuid(), ex);
         }
       });
-      logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
+      log.info("Done with Ami Deployment Type migration for app: [{}]", appId);
     } catch (Exception ex) {
-      logger.warn("Error while updating Ami Deployment Types for app: [{}]", appId, ex);
+      log.warn("Error while updating Ami Deployment Types for app: [{}]", appId, ex);
     }
   }
 
@@ -94,7 +94,7 @@ public class AmiDeploymentTypeMigration implements Migration {
       PageResponse<InfrastructureDefinition> infraDefResponse = definitionService.list(infraDefRequest);
       List<InfrastructureDefinition> infraDefList = infraDefResponse.getResponse();
       if (isEmpty(infraDefList)) {
-        logger.info("Done with Infra Def Ami Deployment Type migration for app: [{}]", appId);
+        log.info("Done with Infra Def Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
       infraDefList.forEach(def -> {
@@ -121,13 +121,12 @@ public class AmiDeploymentTypeMigration implements Migration {
             wingsPersistence.update(query, operations);
           }
         } catch (Exception ex) {
-          logger.warn(
-              "Error while updating Ami Deployment Types for Aws Ami Infra Definition: [{}]", def.getUuid(), ex);
+          log.warn("Error while updating Ami Deployment Types for Aws Ami Infra Definition: [{}]", def.getUuid(), ex);
         }
       });
-      logger.info("Done with Infradef Ami Deployment Type migration for app: [{}]", appId);
+      log.info("Done with Infradef Ami Deployment Type migration for app: [{}]", appId);
     } catch (Exception ex) {
-      logger.warn("Error while updating Infradef Ami Deployment Types for app: [{}]", appId, ex);
+      log.warn("Error while updating Infradef Ami Deployment Types for app: [{}]", appId, ex);
     }
   }
 
@@ -147,10 +146,10 @@ public class AmiDeploymentTypeMigration implements Migration {
         appIds.forEach(appId -> {
           performInfraMappingMigrationForAppId(appId);
           performInfraDefMigrationForAppId(appId);
-          logger.info("Done with Infradef and Inframapping Ami Deployment Type migration for app: [{}]", appId);
+          log.info("Done with Infradef and Inframapping Ami Deployment Type migration for app: [{}]", appId);
         });
       } catch (Exception ex) {
-        logger.warn("Error while updating Ami Deployment Types for account: [{}]", account.getUuid(), ex);
+        log.warn("Error while updating Ami Deployment Types for account: [{}]", account.getUuid(), ex);
       }
     });
   }

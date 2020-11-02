@@ -41,9 +41,9 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
       try {
         serviceAccount = gcpServiceAccountService.create(serviceAccountId, displayName);
       } catch (GoogleJsonResponseException e) {
-        logger.error("Google was unable to create a service account.", e);
+        log.error("Google was unable to create a service account.", e);
       } catch (IOException ioe) {
-        logger.error("Unable to create service account.", ioe);
+        log.error("Unable to create service account.", ioe);
       }
 
       if (serviceAccount != null) {

@@ -40,7 +40,7 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
 
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
         if (f == null) {
-          logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
+          log.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
           continue;
         }
         f.setAccessible(true);
@@ -53,7 +53,7 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
         throw e;
       } catch (Exception e) {
         // Log the root cause exception of failed decryption attempts.
-        logger.error("Failed to decrypt encrypted settings.", e);
+        log.error("Failed to decrypt encrypted settings.", e);
         throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), USER);
       }
     }

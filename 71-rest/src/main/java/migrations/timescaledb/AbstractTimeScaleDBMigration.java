@@ -19,7 +19,7 @@ public abstract class AbstractTimeScaleDBMigration implements TimeScaleDBMigrati
   private void runMigration(Connection connection, String name) {
     InputStream inputstream = getClass().getClassLoader().getResourceAsStream(name);
     if (inputstream == null) {
-      logger.warn("Skipping migration {} as script not found", name);
+      log.warn("Skipping migration {} as script not found", name);
       return;
     }
     InputStreamReader inputStreamReader = new InputStreamReader(inputstream, StandardCharsets.UTF_8);
@@ -37,11 +37,11 @@ public abstract class AbstractTimeScaleDBMigration implements TimeScaleDBMigrati
         runMigration(connection, getFileName());
         return true;
       } catch (Exception e) {
-        logger.error("Failed to run instance rename migration on db", e);
+        log.error("Failed to run instance rename migration on db", e);
         return false;
       }
     } else {
-      logger.info("TIMESCALEDBSERVICE NOT AVAILABLE");
+      log.info("TIMESCALEDBSERVICE NOT AVAILABLE");
       return false;
     }
   }

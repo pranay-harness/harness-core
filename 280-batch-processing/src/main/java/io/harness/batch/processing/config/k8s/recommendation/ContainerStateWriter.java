@@ -61,7 +61,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       ContainerStateProto containerStateProto = (ContainerStateProto) item.getMessage();
 
       if (!ACCEPTED_VERSIONS.contains(containerStateProto.getVersion())) {
-        logger.warn("Skip incompatible version: {}. Accepted: {}", containerStateProto.getVersion(), ACCEPTED_VERSIONS);
+        log.warn("Skip incompatible version: {}. Accepted: {}", containerStateProto.getVersion(), ACCEPTED_VERSIONS);
         continue;
       }
       String clusterId = containerStateProto.getClusterId();
@@ -78,7 +78,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       // intentional reference equality
       if (workloadId == NOT_FOUND) {
         // pod to workload mapping not found in instanceData. Skip this item.
-        logger.debug("Skipping sample {} as pod to workload mapping not found", containerStateProto);
+        log.debug("Skipping sample {} as pod to workload mapping not found", containerStateProto);
         continue;
       }
       WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this ::getWorkloadState);
@@ -95,7 +95,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     Instant lastSampleStart = HTimestamps.toInstant(containerStateProto.getLastSampleStart());
     if (containerState != null && containerState.getVersion() >= containerStateProto.getVersion()
         && firstSampleStart.isBefore(containerState.getLastSampleStart())) {
-      logger.debug("Skipping sample {} as interval already covered", containerStateProto);
+      log.debug("Skipping sample {} as interval already covered", containerStateProto);
     } else {
       if (containerState == null || containerState.getVersion() < containerStateProto.getVersion()) {
         // First sample seen for this container, or new version of proto for this container
@@ -177,7 +177,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     InstanceData podInstance =
         instanceDataDao.getK8sPodInstance(pod.getAccountId(), pod.getClusterId(), pod.getNamespace(), pod.getName());
     if (podInstance == null) {
-      logger.warn("Could not find pod {}/{} in instanceData for clusterId={}", pod.getNamespace(), pod.getName(),
+      log.warn("Could not find pod {}/{} in instanceData for clusterId={}", pod.getNamespace(), pod.getName(),
           pod.getClusterId());
       return NOT_FOUND;
     }

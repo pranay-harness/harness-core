@@ -68,7 +68,7 @@ public class AddAccountIdToAppEntities implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Entity:{} {} updated", clazz.getSimpleName(), i);
+          log.info("Entity:{} {} updated", clazz.getSimpleName(), i);
         }
         ++i;
 

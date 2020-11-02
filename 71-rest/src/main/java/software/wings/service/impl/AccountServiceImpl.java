@@ -261,10 +261,10 @@ public class AccountServiceImpl implements AccountService {
     account.setAccountName(account.getAccountName().trim());
 
     if (isEmpty(account.getUuid())) {
-      logger.info("Creating a new account '{}'.", account.getAccountName());
+      log.info("Creating a new account '{}'.", account.getAccountName());
       account.setUuid(UUIDGenerator.generateUuid());
     } else {
-      logger.info("Creating a new account '{}' with specified id '{}'.", account.getAccountName(), account.getUuid());
+      log.info("Creating a new account '{}' with specified id '{}'.", account.getAccountName(), account.getUuid());
     }
 
     account.setAppId(GLOBAL_APP_ID);
@@ -279,7 +279,7 @@ public class AccountServiceImpl implements AccountService {
       // When an account is just created for import, no need to create default account entities.
       // As the import process will do all these instead.
       if (account.isForImport()) {
-        logger.info("Creating the account for import only, no default account entities will be created");
+        log.info("Creating the account for import only, no default account entities will be created");
       } else {
         createDefaultAccountEntities(account, shouldCreateSampleApp);
         // Schedule default account level jobs.
@@ -288,7 +288,7 @@ public class AccountServiceImpl implements AccountService {
 
       publishAccountChangeEvent(account);
 
-      logger.info("Successfully created account.");
+      log.info("Successfully created account.");
     }
     return account;
   }
@@ -345,12 +345,12 @@ public class AccountServiceImpl implements AccountService {
   public boolean updatePovFlag(String accountId, boolean isPov) {
     Account account = getFromCache(accountId);
     if (account == null) {
-      logger.warn("accountId={} doesn't exist", accountId);
+      log.warn("accountId={} doesn't exist", accountId);
       return false;
     }
 
     if (account.getLicenseInfo() == null || !AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
-      logger.info("accountId={} does not have license or is not a TRIAL account", accountId);
+      log.info("accountId={} does not have license or is not a TRIAL account", accountId);
       return false;
     }
 
@@ -359,11 +359,11 @@ public class AccountServiceImpl implements AccountService {
     UpdateResults updateResults = wingsPersistence.update(account, updateOperation);
 
     if (updateResults != null && updateResults.getUpdatedCount() > 0) {
-      logger.info("Successfully set isPovAccount to {} for accountId = {} ", isPov, accountId);
+      log.info("Successfully set isPovAccount to {} for accountId = {} ", isPov, accountId);
       return true;
     }
 
-    logger.info("Failed to set isPovAccount to {} for accountId = {} ", isPov, accountId);
+    log.info("Failed to set isPovAccount to {} for accountId = {} ", isPov, accountId);
     return false;
   }
 
@@ -400,12 +400,12 @@ public class AccountServiceImpl implements AccountService {
       try {
         templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName());
       } catch (Exception e) {
-        logger.error("Failed to load default templates", e);
+        log.error("Failed to load default templates", e);
       }
       try {
         templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(account.getUuid(), account.getAccountName());
       } catch (Exception e) {
-        logger.error("Failed to load harness gallery", e);
+        log.error("Failed to load harness gallery", e);
       }
     });
 
@@ -428,7 +428,7 @@ public class AccountServiceImpl implements AccountService {
     try {
       organizationManagerClient.createOrganization(accountId, createOrganizationDTO).execute();
     } catch (IOException ex) {
-      logger.info(String.format("Failed to create Default Organization for account id: [%s]", accountId), ex);
+      log.info(String.format("Failed to create Default Organization for account id: [%s]", accountId), ex);
     }
   }
 
@@ -557,7 +557,7 @@ public class AccountServiceImpl implements AccountService {
     if (!isDuplicateAccountName(accountName)) {
       return accountName;
     }
-    logger.debug("Account name '{}' already in use, generating new unique account name", accountName);
+    log.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
     while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
@@ -703,7 +703,7 @@ public class AccountServiceImpl implements AccountService {
       model.put("monitoringAndLoggingTools", monitoringTools);
       sendEmail(user.getEmail(), WELCOME_EMAIL_TEMPLATE_NAME, model);
     } catch (Exception e) {
-      logger.error("Failed to send welcome email", e);
+      log.error("Failed to send welcome email", e);
     }
   }
 
@@ -729,19 +729,19 @@ public class AccountServiceImpl implements AccountService {
   public Optional<String> getAccountType(String accountId) {
     Account account = getFromCache(accountId);
     if (account == null) {
-      logger.warn("accountId={} doesn't exist", accountId);
+      log.warn("accountId={} doesn't exist", accountId);
       return Optional.empty();
     }
 
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (null == licenseInfo) {
-      logger.warn("License info not present for account. accountId={}", accountId);
+      log.warn("License info not present for account. accountId={}", accountId);
       return Optional.empty();
     }
 
     String accountType = licenseInfo.getAccountType();
     if (!AccountType.isValid(accountType)) {
-      logger.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
+      log.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
       return Optional.empty();
     }
 
@@ -995,12 +995,12 @@ public class AccountServiceImpl implements AccountService {
           user.setDisabled(!enable);
           wingsPersistence.save(user);
           userService.evictUserFromCache(user.getUuid());
-          logger.info("User {} has been set to status disabled: {}", user.getEmail(), !enable);
+          log.info("User {} has been set to status disabled: {}", user.getEmail(), !enable);
           count++;
         }
       }
     }
-    logger.info("{} users in account {} has been set to status disabled: {}", count, accountId, !enable);
+    log.info("{} users in account {} has been set to status disabled: {}", count, accountId, !enable);
   }
 
   @Override
@@ -1025,7 +1025,7 @@ public class AccountServiceImpl implements AccountService {
     assertTrialAccount(accountId);
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";
-      logger.warn(err);
+      log.warn(err);
       throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
     }
 
@@ -1054,17 +1054,17 @@ public class AccountServiceImpl implements AccountService {
       if (exitCode == 0) {
         return "SUCCESS";
       }
-      logger.error("Curl script to generate delegate returned non-zero exit code: {}", exitCode);
+      log.error("Curl script to generate delegate returned non-zero exit code: {}", exitCode);
     } catch (IOException e) {
-      logger.error("Error executing generate delegate curl command", e);
+      log.error("Error executing generate delegate curl command", e);
     } catch (InterruptedException e) {
-      logger.info("Interrupted", e);
+      log.info("Interrupted", e);
     } catch (TimeoutException e) {
-      logger.info("Timed out", e);
+      log.info("Timed out", e);
     }
 
     String err = "Failed to provision";
-    logger.warn(err);
+    log.warn(err);
     throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
   }
 
@@ -1091,17 +1091,17 @@ public class AccountServiceImpl implements AccountService {
 
     if (isBlank(mainConfiguration.getSampleTargetStatusHost())) {
       String err = "Sample target status host not configured";
-      logger.warn(err);
+      log.warn(err);
       throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
     }
 
     try {
       String url = String.format(SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING,
           mainConfiguration.getSampleTargetStatusHost(), getAccountIdentifier(accountId));
-      logger.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
+      log.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
       String result = Http.getResponseStringFromUrl(url, 30, 10).trim();
       if (isNotEmpty(result)) {
-        logger.info("Provisioning progress for account {}: {}", accountId, result);
+        log.info("Provisioning progress for account {}: {}", accountId, result);
         if (result.contains("<title>404 Not Found</title>")) {
           return singletonList(ProvisionStep.builder().step("Provisioning Started").done(false).build());
         }
@@ -1119,7 +1119,7 @@ public class AccountServiceImpl implements AccountService {
           .addParam("message", String.format("Empty provisioning result for account %s", accountId));
     } catch (SocketTimeoutException e) {
       // Timed out for some reason. Return empty list to indicate unknown progress. UI can ignore and try again.
-      logger.info("Timed out getting progress. Returning empty list.");
+      log.info("Timed out getting progress. Returning empty list.");
       return new ArrayList<>();
     } catch (IOException e) {
       throw new WingsException(ErrorCode.GENERAL_ERROR, e)
@@ -1133,7 +1133,7 @@ public class AccountServiceImpl implements AccountService {
 
     if (!AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
       String err = "Not a trial account";
-      logger.warn(err);
+      log.warn(err);
       throw new InvalidRequestException(err);
     }
   }
@@ -1156,7 +1156,7 @@ public class AccountServiceImpl implements AccountService {
     newLicenseInfo.setAccountStatus(accountStatus);
     licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
-    logger.info("Updated status for account {}, new status is {}", accountId, accountStatus);
+    log.info("Updated status for account {}, new status is {}", accountId, accountStatus);
     return true;
   }
 
@@ -1185,7 +1185,7 @@ public class AccountServiceImpl implements AccountService {
       governanceConfig.setDeploymentFreeze(freeze);
       governanceConfigService.upsert(accountId, governanceConfig);
     }
-    logger.info("Set deployment freeze for account {} to: {}", accountId, freeze);
+    log.info("Set deployment freeze for account {} to: {}", accountId, freeze);
   }
 
   private void scheduleAccountLevelJobs(String accountId) {
@@ -1213,7 +1213,7 @@ public class AccountServiceImpl implements AccountService {
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.add(jobScheduler, accountId, ldapSetting.getUuid());
     }
-    logger.info("Started all background quartz jobs for account {}", accountId);
+    log.info("Started all background quartz jobs for account {}", accountId);
   }
 
   private void deleteQuartzJobs(String accountId) {
@@ -1236,7 +1236,7 @@ public class AccountServiceImpl implements AccountService {
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.delete(jobScheduler, ssoSettingService, accountId, ldapSetting.getUuid());
     }
-    logger.info("Stopped all background quartz jobs for account {}", accountId);
+    log.info("Stopped all background quartz jobs for account {}", accountId);
   }
 
   private List<Trigger> getAllScheduledTriggersForAccount(List<String> appIds) {
@@ -1272,7 +1272,7 @@ public class AccountServiceImpl implements AccountService {
     List<NotificationGroup> existingGroups =
         notificationSetupService.listNotificationGroups(account.getUuid(), role, name);
     if (isEmpty(existingGroups)) {
-      logger.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
+      log.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
           account.getAccountName());
       NotificationGroup notificationGroup = aNotificationGroup()
                                                 .withAppId(account.getAppId())
@@ -1290,8 +1290,8 @@ public class AccountServiceImpl implements AccountService {
       // want to first check for any explicitly set default notification group
       notificationSetupService.createNotificationGroup(notificationGroup);
     } else {
-      logger.info("Default notification group already exists for role {} and account {}",
-          ACCOUNT_ADMIN.getDisplayName(), account.getAccountName());
+      log.info("Default notification group already exists for role {} and account {}", ACCOUNT_ADMIN.getDisplayName(),
+          account.getAccountName());
     }
   }
 
@@ -1301,7 +1301,7 @@ public class AccountServiceImpl implements AccountService {
                                       .addFilter(SystemCatalog.APP_ID_KEY, EQ, GLOBAL_APP_ID)
                                       .addFilter("catalogType", EQ, APPSTACK)
                                       .build());
-    logger.debug("Creating default system app containers  ");
+    log.debug("Creating default system app containers  ");
     for (SystemCatalog systemCatalog : systemCatalogs) {
       AppContainer appContainer = anAppContainer()
                                       .withAccountId(account.getUuid())
@@ -1323,7 +1323,7 @@ public class AccountServiceImpl implements AccountService {
       try {
         appContainerService.save(appContainer);
       } catch (Exception e) {
-        logger.warn("Error while creating system app container " + appContainer, e);
+        log.warn("Error while creating system app container " + appContainer, e);
       }
     }
   }
@@ -1359,7 +1359,7 @@ public class AccountServiceImpl implements AccountService {
   public PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId) {
     if (user == null) {
-      logger.info("User is null when requesting for Services info. Returning null");
+      log.info("User is null when requesting for Services info. Returning null");
     }
     int offset = Integer.parseInt(request.getOffset());
     if (isNotEmpty(request.getLimit()) && request.getLimit().equals(UNLIMITED_PAGE_SIZE)) {
@@ -1591,19 +1591,19 @@ public class AccountServiceImpl implements AccountService {
   public Optional<String> getCeAccountType(String accountId) {
     Account account = getFromCache(accountId);
     if (account == null) {
-      logger.warn("accountId={} doesn't exist", accountId);
+      log.warn("accountId={} doesn't exist", accountId);
       return Optional.empty();
     }
 
     CeLicenseInfo licenseInfo = account.getCeLicenseInfo();
     if (null == licenseInfo) {
-      logger.warn("License info not present for account. accountId={}", accountId);
+      log.warn("License info not present for account. accountId={}", accountId);
       return Optional.empty();
     }
 
     String accountType = licenseInfo.getLicenseType().toString();
     if (!licenseInfo.isValidLicenceType()) {
-      logger.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
+      log.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
       return Optional.empty();
     }
 

@@ -25,14 +25,14 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) {
-    logger.info("Published batch size is PodUtilizationMetricsWriter {} ", publishedMessages.size());
+    log.info("Published batch size is PodUtilizationMetricsWriter {} ", publishedMessages.size());
     List<K8sGranularUtilizationData> k8sGranularUtilizationDataList = new ArrayList<>();
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.POD_UTILIZATION))
         .forEach(publishedMessage -> {
           String accountId = publishedMessage.getAccountId();
           PodMetric podUtilizationMetric = (PodMetric) publishedMessage.getMessage();
-          logger.debug("Pod Utilization {} ", podUtilizationMetric);
+          log.debug("Pod Utilization {} ", podUtilizationMetric);
 
           AggregatedUsage aggregatedUsage = podUtilizationMetric.getAggregatedUsage();
 

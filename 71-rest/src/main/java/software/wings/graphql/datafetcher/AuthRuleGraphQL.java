@@ -105,7 +105,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     try {
       authRule = dataFetcherClass.getDeclaredMethod(fetchMethod, parameterTypes).getAnnotation(AuthRule.class);
     } catch (NoSuchMethodException e) {
-      logger.error("No fetch() method found in class: " + dataFetcherClass.getSimpleName());
+      log.error("No fetch() method found in class: " + dataFetcherClass.getSimpleName());
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
@@ -123,13 +123,13 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     GraphQLContext context = (GraphQLContext) contextObj;
     String accountId = context.get("accountId");
     if (isEmpty(accountId)) {
-      logger.error("No user permission info for the given api key");
+      log.error("No user permission info for the given api key");
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
     UserPermissionInfo userPermissionInfo = context.get("permissions");
     if (userPermissionInfo == null) {
-      logger.error("No user permission info for the given api key");
+      log.error("No user permission info for the given api key");
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
@@ -139,13 +139,13 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     ResourceType resourceType;
     AuthRule authRule = getAuthRuleAnnotationOfDataFetcher(dataFetcher);
     if (authRule == null) {
-      logger.error("Missing authRule for the request in class: " + dataFetcher.getClass().getSimpleName());
+      log.error("Missing authRule for the request in class: " + dataFetcher.getClass().getSimpleName());
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
     Scope scope = returnDataClass.getAnnotation(Scope.class);
     if (scope == null) {
-      logger.error("Missing scope for the request in class: " + returnDataClass.getSimpleName());
+      log.error("Missing scope for the request in class: " + returnDataClass.getSimpleName());
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
@@ -183,7 +183,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     if (resourceType == null) {
-      logger.error("Missing resource type in the request");
+      log.error("Missing resource type in the request");
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
 
@@ -212,7 +212,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
             appIdsFromRequest = asList(appId);
           } else {
             String msg = "Could not retrieve appId for entityId: " + entityId;
-            logger.error(msg);
+            log.error(msg);
             throw new WingsException(msg);
           }
           // get api

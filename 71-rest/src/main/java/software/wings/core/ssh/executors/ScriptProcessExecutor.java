@@ -242,7 +242,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       Files.setPosixFilePermissions(scriptFile.toPath(),
           newHashSet(
               PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_WRITE));
-      logger.info("Done setting file permissions for script {}", scriptFile);
+      log.info("Done setting file permissions for script {}", scriptFile);
 
       String[] commandList = new String[] {"/bin/bash", scriptFilename};
       ProcessExecutor processExecutor = new ProcessExecutor()
@@ -304,7 +304,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       CommandExecutionStatus commandExecutionStatus, Exception e, String message) {
     executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
     saveExecutionLog(message, ERROR, commandExecutionStatus);
-    logger.error("Exception in script execution ", e);
+    log.error("Exception in script execution ", e);
   }
 
   @Override
@@ -319,7 +319,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       commandExecutionStatus = SUCCESS;
       saveExecutionLog("File successfully downloaded to " + remoteFilePath);
     } catch (ExecutionException | IOException e) {
-      logger.error("Command execution failed with error", e);
+      log.error("Command execution failed with error", e);
     }
     return commandExecutionStatus;
   }

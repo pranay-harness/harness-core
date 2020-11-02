@@ -49,7 +49,7 @@ public class SlackApprovalUtils {
   @Inject private SecretManager secretManager;
 
   public RestResponse<Boolean> slackApprovalHandler(MultivaluedMap<String, String> body) throws IOException {
-    logger.info("SLACK REQUEST");
+    log.info("SLACK REQUEST");
 
     ObjectMapper mapper = new ObjectMapper();
     Map<String, String> slackUserDetails =
@@ -145,7 +145,7 @@ public class SlackApprovalUtils {
     try {
       loadedTemplate = Resources.toString(templateUrl, Charsets.UTF_8);
     } catch (IOException e) {
-      logger.error("Error in loading given template");
+      log.error("Error in loading given template");
     }
     return sub.replace(loadedTemplate);
   }
@@ -167,7 +167,7 @@ public class SlackApprovalUtils {
 
     try (Response response = client.newCall(request1).execute()) {
       if (!response.isSuccessful()) {
-        logger.error("Slack post request failed with code: {}", response.code());
+        log.error("Slack post request failed with code: {}", response.code());
       }
     }
     return new RestResponse<>(true);

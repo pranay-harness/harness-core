@@ -95,16 +95,16 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
                                   .build()
                                   .resolveCustomer(resolveCustomerRequest);
     } catch (AWSMarketplaceMeteringException e) {
-      logger.error("Failed to resolveCustomer for customerToken:[{}]", token, e);
+      log.error("Failed to resolveCustomer for customerToken:[{}]", token, e);
       return generateMessageResponse("Failed to authenticate user with AWS", "ERROR", null, null);
     }
     if (null == resolveCustomerResult) {
       final String message =
           "Customer order from AWS could not be resolved, please contact Harness at support@harness.io" + token;
-      logger.error(message);
+      log.error(message);
       return generateMessageResponse(message, "ERROR", null, null);
     }
-    logger.info("ResolveCustomerResult=[{}]", resolveCustomerResult);
+    log.info("ResolveCustomerResult=[{}]", resolveCustomerResult);
 
     String customerIdentifierCode = resolveCustomerResult.getCustomerIdentifier();
     String productCode = resolveCustomerResult.getProductCode();
@@ -112,7 +112,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
     if (!marketPlaceConfig.getAwsMarketPlaceProductCode().equals(productCode)) {
       final String message =
           "Customer order from AWS could not be resolved, please contact Harness at support@harness.io";
-      logger.error("Invalid AWS productcode received:[{}],", productCode);
+      log.error("Invalid AWS productcode received:[{}],", productCode);
       return generateMessageResponse(message, "ERROR", null, null);
     }
 
@@ -132,7 +132,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
             .build();
 
     GetEntitlementsResult entitlements = oClient.getEntitlements(entitlementRequest);
-    logger.info("oEntitlementResult=[{}]", entitlements);
+    log.info("oEntitlementResult=[{}]", entitlements);
     Integer orderQuantity = getOrderQuantity(entitlements.getEntitlements().get(0).getDimension());
     Date expirationDate = entitlements.getEntitlements().get(0).getExpirationDate();
     Optional<MarketPlace> marketPlaceMaybe =
@@ -142,11 +142,11 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
     MarketPlace marketPlace;
     if (marketPlaceMaybe.isPresent()) {
       marketPlace = marketPlaceMaybe.get();
-      logger.info("Existing customer, not creating a new account");
+      log.info("Existing customer, not creating a new account");
       if (marketPlace.getAccountId() != null) {
         existingCustomer = true;
       } else {
-        logger.info(
+        log.info(
             "MarketPlace customer:[{}] does not have an account associated with him, will treat him as a new customer",
             customerIdentifierCode);
       }
@@ -163,7 +163,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
 
     if (existingCustomer && (!marketPlace.getOrderQuantity().equals(orderQuantity))
         || (!marketPlace.getExpirationDate().equals(expirationDate))) {
-      logger.info(
+      log.info(
           "This is an existing customer:[{}], updating orderQuantity from [{}] to [{}], updating expirationDate from [{}] to [{}]",
           customerIdentifierCode, marketPlace.getOrderQuantity(), orderQuantity, marketPlace.getExpirationDate(),
           expirationDate);

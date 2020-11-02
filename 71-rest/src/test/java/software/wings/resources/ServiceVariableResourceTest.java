@@ -84,7 +84,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
       FieldUtils.writeField(VARIABLE_RESOURCE, "appService", APP_SERVICE, true);
       FieldUtils.writeField(VARIABLE_RESOURCE, "authHandler", AUTH_HANDLER, true);
     } catch (IllegalAccessException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     SERVICE_VARIABLE.setUuid(WingsTestConstants.SERVICE_VARIABLE_ID);
     SERVICE_VARIABLE.setAppId(APP_ID);

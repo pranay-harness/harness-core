@@ -45,7 +45,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       try {
         createDirectoryIfDoesNotExist(directoryPath);
       } catch (IOException e) {
-        logger.warn("Exception occurred while creating the directory {}. Returning ", directoryPath);
+        log.warn("Exception occurred while creating the directory {}. Returning ", directoryPath);
         shellExecutionResponseBuilder.exitValue(1);
         return shellExecutionResponseBuilder.build();
       }
@@ -74,8 +74,8 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                if (logger.isTraceEnabled()) {
-                                                  logger.trace("std: " + line);
+                                                if (log.isTraceEnabled()) {
+                                                  log.trace("std: " + line);
                                                 }
                                               }
                                             })
@@ -87,12 +87,12 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
                                                   String trimmed = matcher.replaceAll("");
                                                   message[0] = trimmed;
                                                 }
-                                                if (logger.isTraceEnabled()) {
-                                                  logger.trace("err:" + line);
+                                                if (log.isTraceEnabled()) {
+                                                  log.trace("err:" + line);
                                                 }
                                               }
                                             });
-      logger.info("Executing the script ");
+      log.info("Executing the script ");
       ProcessResult processResult = processExecutor.execute();
       shellExecutionResponseBuilder.exitValue(processResult.getExitValue());
       if (processResult.getExitValue() == 0) {
@@ -102,19 +102,19 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
         Map<String, String> scriptData = new HashMap<>();
         scriptData.put(ARTIFACT_RESULT_PATH, scriptOutputFile.getAbsolutePath());
         shellExecutionResponseBuilder.shellExecutionData(scriptData);
-        logger.info("The script execution succeeded");
+        log.info("The script execution succeeded");
       } else {
         throw new ShellExecutionException("Error occurred during script execution, Reason: " + message[0]);
       }
     } catch (IOException | InterruptedException | TimeoutException e) {
-      logger.error("Exception in Script execution ", e);
+      log.error("Exception in Script execution ", e);
       shellExecutionResponseBuilder.message(ExceptionUtils.getMessage(e));
       shellExecutionResponseBuilder.exitValue(1);
     } finally {
       try {
         deleteFileIfExists(scriptFile.getAbsolutePath());
       } catch (IOException e) {
-        logger.warn("Failed to delete file: {} ", scriptFile.getAbsolutePath(), e);
+        log.warn("Failed to delete file: {} ", scriptFile.getAbsolutePath(), e);
       }
     }
 

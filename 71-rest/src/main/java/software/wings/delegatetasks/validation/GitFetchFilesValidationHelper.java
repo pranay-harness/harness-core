@@ -23,7 +23,7 @@ public class GitFetchFilesValidationHelper {
     try {
       encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
-      logger.info("Failed to decrypt " + gitConfig, e);
+      log.info("Failed to decrypt " + gitConfig, e);
       return false;
     }
 

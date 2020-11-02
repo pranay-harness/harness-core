@@ -57,7 +57,7 @@ public class NewRelicResourceIntegrationTest extends IntegrationTestBase {
       }
       return uriBuilder.build().toString();
     } catch (URISyntaxException uriSyntaxException) {
-      logger.error("Either the path or the baseUrl are probably incorrect.");
+      log.error("Either the path or the baseUrl are probably incorrect.");
       throw uriSyntaxException;
     }
   }
@@ -76,7 +76,7 @@ public class NewRelicResourceIntegrationTest extends IntegrationTestBase {
     params.put("accountId", accountId);
     try {
       String url = buildAbsoluteUrl("/api/newrelic/metric-names", params);
-      logger.info(url);
+      log.info(url);
       WebTarget target = client.target(url);
 
       RestResponse<List<Object>> restResponse =
@@ -94,7 +94,7 @@ public class NewRelicResourceIntegrationTest extends IntegrationTestBase {
       }
       assertThat(actualMetricNames).isEqualTo(expectedMetricNames);
     } catch (URISyntaxException uriSyntaxException) {
-      logger.error("Failure while building absolute URL for getting all metric names for NewRelic.");
+      log.error("Failure while building absolute URL for getting all metric names for NewRelic.");
     }
   }
 }

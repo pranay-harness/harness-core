@@ -48,7 +48,7 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                                  .project(Application.ID_KEY, true)) {
         String appId = app.getUuid();
         try {
-          logger.info("Fixing instances for appId:" + appId);
+          log.info("Fixing instances for appId:" + appId);
           PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
           pageRequest.addFilter("appId", Operator.EQ, appId);
           PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
@@ -57,7 +57,7 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
 
           for (InfrastructureMapping infraMapping : infraMappingList) {
             String infraMappingId = infraMapping.getUuid();
-            logger.info("Fixing kubernetes instances for infra mappingId:" + infraMappingId);
+            log.info("Fixing kubernetes instances for infra mappingId:" + infraMappingId);
             try (AcquiredLock ignore = persistentLocker.waitToAcquireLock(
                      InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120), Duration.ofSeconds(120))) {
               try {
@@ -72,12 +72,12 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                 for (Instance instance : instances) {
                   InstanceInfo instanceInfo = instance.getInstanceInfo();
                   if (instanceInfo == null) {
-                    logger.error("instanceInfo is null for instance {}", instance.getUuid());
+                    log.error("instanceInfo is null for instance {}", instance.getUuid());
                     continue;
                   }
 
                   if (!(instanceInfo instanceof KubernetesContainerInfo) && !(instanceInfo instanceof K8sPodInfo)) {
-                    logger.error("instanceInfo is not of type KubernetesContainerInfo or K8sPodInfo for instance {}",
+                    log.error("instanceInfo is not of type KubernetesContainerInfo or K8sPodInfo for instance {}",
                         instance.getUuid());
                     continue;
                   }
@@ -86,12 +86,12 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                     KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) instanceInfo;
 
                     if (isBlank(kubernetesContainerInfo.getNamespace())) {
-                      logger.error("namespace is blank in container info for {}", instance.getUuid());
+                      log.error("namespace is blank in container info for {}", instance.getUuid());
                       continue;
                     }
 
                     if (instance.getContainerInstanceKey() == null) {
-                      logger.error("container key not found for {}", instance.getUuid());
+                      log.error("container key not found for {}", instance.getUuid());
                       continue;
                     }
 
@@ -103,12 +103,12 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                     K8sPodInfo podInfo = (K8sPodInfo) instanceInfo;
 
                     if (isBlank(podInfo.getNamespace())) {
-                      logger.error("namespace is blank in container info for {}", instance.getUuid());
+                      log.error("namespace is blank in container info for {}", instance.getUuid());
                       continue;
                     }
 
                     if (instance.getPodInstanceKey() == null) {
-                      logger.error("pod key not found for {}", instance.getUuid());
+                      log.error("pod key not found for {}", instance.getUuid());
                       continue;
                     }
 
@@ -118,15 +118,15 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
                         Instance.class, instance.getUuid(), InstanceKeys.podInstanceKey, podInstanceKey);
                   }
                 }
-                logger.info("Instance fix completed for Kubernetes instances for infra mapping [{}]", infraMappingId);
+                log.info("Instance fix completed for Kubernetes instances for infra mapping [{}]", infraMappingId);
               } catch (Exception ex) {
-                logger.warn("Kubernetes Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
+                log.warn("Kubernetes Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
               }
             }
           }
-          logger.info("Kubernetes Instance fix done for appId:" + appId);
+          log.info("Kubernetes Instance fix done for appId:" + appId);
         } catch (Exception ex) {
-          logger.warn("Error while fixing Kubernetes instances for app: {}", appId, ex);
+          log.warn("Error while fixing Kubernetes instances for app: {}", appId, ex);
         }
       }
     }

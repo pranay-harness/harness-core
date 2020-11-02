@@ -115,7 +115,7 @@ public class TimeSeriesResource {
       Preconditions.checkNotNull(analysisTask);
       long currentEpoch = currentTimeMillis();
       long timeTaken = currentEpoch - analysisTask.getCreatedAt();
-      logger.info("Finished analysis: Analysis type: {}, time delay: {} seconds", MLAnalysisType.TIME_SERIES.name(),
+      log.info("Finished analysis: Analysis type: {}, time delay: {} seconds", MLAnalysisType.TIME_SERIES.name(),
           TimeUnit.MILLISECONDS.toSeconds(timeTaken));
       return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, appId,
           stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,

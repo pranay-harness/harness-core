@@ -56,7 +56,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     PlanExecution updated = mongoTemplate.findAndModify(
         query, updateOps, new FindAndModifyOptions().upsert(false).returnNew(true), PlanExecution.class);
     if (updated == null) {
-      logger.warn("Cannot update execution status for the PlanExecution {} with {}", planExecutionId, status);
+      log.warn("Cannot update execution status for the PlanExecution {} with {}", planExecutionId, status);
     }
     return updated;
   }
@@ -86,6 +86,6 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    logger.info("State Status Update Callback Fired : {}", stepStatusUpdateInfo);
+    log.info("State Status Update Callback Fired : {}", stepStatusUpdateInfo);
   }
 }

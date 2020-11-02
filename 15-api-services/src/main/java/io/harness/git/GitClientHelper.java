@@ -141,7 +141,7 @@ public class GitClientHelper {
               .replace("{REPO_URL_HASH}", getRepoUrlHash(request.getRepoUrl())));
 
     } catch (IOException e) {
-      logger.error("Failed to created required dir structure for gitFileDownloads", e);
+      log.error("Failed to created required dir structure for gitFileDownloads", e);
       throw new GitClientException("Failed to created required dir structure for gitFileDownloads", SRE, e);
     }
   }
@@ -155,7 +155,7 @@ public class GitClientHelper {
     try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
       stream.forEach(s -> contentBuilder.append(s).append("\n"));
     } catch (IOException e) {
-      logger.error("Failed to read file Content {}", path.toString());
+      log.error("Failed to read file Content {}", path.toString());
       throw new GitClientException("Failed to read file Content {}", SRE, e);
     }
 
@@ -176,14 +176,14 @@ public class GitClientHelper {
       File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
       FileIo.deleteFileIfExists(file.getAbsolutePath());
     } catch (Exception e) {
-      logger.error(new StringBuilder(64)
-                       .append("Failed to delete index.lock file for account: ")
-                       .append(request.getAccountId())
-                       .append(", Repo URL: ")
-                       .append(request.getRepoUrl())
-                       .append(", Branch: ")
-                       .append(request.getBranch())
-                       .toString());
+      log.error(new StringBuilder(64)
+                    .append("Failed to delete index.lock file for account: ")
+                    .append(request.getAccountId())
+                    .append(", Repo URL: ")
+                    .append(request.getRepoUrl())
+                    .append(", Branch: ")
+                    .append(request.getBranch())
+                    .toString());
 
       throw new GitClientException("GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
     }

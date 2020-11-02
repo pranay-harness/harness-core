@@ -294,13 +294,13 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       entries = fetchLogs(dataCollectionInfo, startTime, endTime, false, false);
 
     } catch (Exception e) {
-      logger.error("error fetching logs", e);
+      log.error("error fetching logs", e);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     List<LogElement> logElements = new ArrayList<>();
     int clusterLabel = 0;
     if (isNotEmpty(entries)) {
-      logger.info("Total no. of log records found : {}", entries.size());
+      log.info("Total no. of log records found : {}", entries.size());
       for (LogEntry entry : entries) {
         LogElement logElement;
         try {
@@ -329,7 +329,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
             logElements.add(logElement);
           }
         } catch (Exception e) {
-          logger.warn("Unable to parse logEntry due to exception : ", e);
+          log.warn("Unable to parse logEntry due to exception : ", e);
           continue;
         }
       }
@@ -404,7 +404,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         if (ge.getStatusCode() == RATE_LIMIT_STATUS) {
           hasReachedRateLimit = true;
           int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
-          logger.info("Encountered Rate limiting from stackdriver. Sleeping {} seconds for state {} ", randomNum,
+          log.info("Encountered Rate limiting from stackdriver. Sleeping {} seconds for state {} ", randomNum,
               apiCallLog.getStateExecutionId());
           sleep(ofSeconds(randomNum));
           continue;
@@ -413,7 +413,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
               ErrorCode.STACKDRIVER_ERROR, "error fetching logs from stackdriver", ge);
         }
       } catch (Exception e) {
-        logger.error("Error fetching logs, request {}", request, e);
+        log.error("Error fetching logs, request {}", request, e);
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         apiCallLog.addFieldToResponse(
             HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), ThirdPartyApiCallLog.FieldType.TEXT);

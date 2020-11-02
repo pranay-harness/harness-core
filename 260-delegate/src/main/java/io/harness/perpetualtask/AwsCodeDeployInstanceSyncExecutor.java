@@ -45,7 +45,7 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), awsConfig.getAccountId(), instancesListResponse));
     } catch (Exception ex) {
-      logger.error("Failed to publish instance sync result for task {}", taskId.getId(), ex);
+      log.error("Failed to publish instance sync result for task {}", taskId.getId(), ex);
     }
 
     return getPerpetualTaskResponse(instancesListResponse);
@@ -67,7 +67,7 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
           .instances(ec2InstancesList)
           .build();
     } catch (Exception ex) {
-      logger.error("Error occurred while fetching instances list", ex);
+      log.error("Error occurred while fetching instances list", ex);
       return AwsCodeDeployListDeploymentInstancesResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(ex.getMessage())

@@ -164,7 +164,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           long startTime = getDataCollectionStartMinForAPM(cvConfiguration, endMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CV_DATA_COLLECTION_INTERVAL_IN_MINUTE)) {
-            logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
+            log.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             if (isCVTaskBasedCollectionEnabled(cvConfiguration)) {
               createCVTask(cvConfiguration, startTime, endTime);
@@ -192,20 +192,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if ((!lastDataCollectionTime.isPresent() || lastDataCollectionTime.get() <= 0)
         && Instant.ofEpochMilli(cvConfiguration.getLastUpdatedAt())
                .isBefore(Instant.now().minus(30, ChronoUnit.DAYS))) {
-      logger.info(
+      log.info(
           "The config {} for account {} has not collected any data for the past 30 days. We will be disabling that config now. ",
           cvConfiguration.getUuid(), cvConfiguration.getAccountId());
       cvConfigurationService.disableConfig(cvConfiguration.getUuid());
       return false;
     }
     if (learningEngineService.isTaskRunningOrQueued(cvConfiguration.getUuid())) {
-      logger.info(
+      log.info(
           "For {}, there are learning engine tasks that are still QUEUED or RUNNING. We will skip data collection for now.",
           cvConfiguration.getUuid());
       return false;
     }
     if (!lastDataCollectionTime.isPresent() || lastDataCollectionTime.get() <= 0) {
-      logger.info(
+      log.info(
           "For {}, this is the first collection, so we will go ahead and collect data.", cvConfiguration.getUuid());
       return true;
     }
@@ -215,22 +215,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Optional<Long> allowedDataCollectionTime = Optional.empty();
     long interval = 0;
     if (timeSinceLastCollection <= TimeUnit.MINUTES.toMillis(10)) {
-      logger.info("For {}, the last collected time is less than 10mins ago. We will go ahead and collect data.",
+      log.info("For {}, the last collected time is less than 10mins ago. We will go ahead and collect data.",
           cvConfiguration.getUuid());
       shouldCollectData = true;
     } else if (timeSinceLastCollection < TimeUnit.MINUTES.toMillis(30)) {
       interval = 5;
-      logger.info(
+      log.info(
           "For {}, the lastCollectionTime was more than 10mins and less than 30mins ago. Current Time: {}, lastCollectionTime {}, interval: {}",
           cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
     } else if (timeSinceLastCollection < TimeUnit.MINUTES.toMillis(60)) {
       interval = 10;
-      logger.info(
+      log.info(
           "For {}, the lastCollectionTime was more than 30mins and less than 60mins ago. Current Time: {}, lastCollectionTime {}, interval: {}",
           cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
     } else {
       interval = 15;
-      logger.info(
+      log.info(
           "For {}, the lastCollectionTime was more than 60 ago. Current Time: {}, lastCollectionTime {}, interval: {}",
           cvConfiguration.getUuid(), currentTime, lastDataCollectionTime, interval);
     }
@@ -238,11 +238,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       allowedDataCollectionTime = getNextAllowedTime(currentTime, lastDataCollectionTime.get(), interval);
     }
     if (allowedDataCollectionTime.isPresent() || shouldCollectData) {
-      logger.info("For {}, we can now collect data based on the backoff value. Current Time: {}, lastCollectionTime {}",
+      log.info("For {}, we can now collect data based on the backoff value. Current Time: {}, lastCollectionTime {}",
           cvConfiguration.getUuid(), currentTime, lastDataCollectionTime);
       return true;
     }
-    logger.info("For {}, we cannot collect data due to the backoff value. Current Time: {}, lastCollectionTime {}",
+    log.info("For {}, we cannot collect data due to the backoff value. Current Time: {}, lastCollectionTime {}",
         cvConfiguration.getUuid(), currentTime, lastDataCollectionTime);
     return false;
   }
@@ -269,14 +269,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       // the last collection was more than 2 hours ago.
       // So our analysis is going to start from 2hours (with 2 hours before that as history)
       startTime = TimeUnit.MINUTES.toMillis(endMinute - PREDECTIVE_HISTORY_MINUTES * 2);
-      logger.info(
+      log.info(
           "The last datacollection for {} was more than 2 hours ago, so we will restart from 2hours. Setting start time to {}",
           cvConfiguration.getUuid(), startTime);
     } else {
       // All is well. Happy case.
       startTime = TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
     }
-    logger.info("For {} MaxCollectionMinute: {}, Starttime is {}, endTime is {}", cvConfiguration.getUuid(),
+    log.info("For {} MaxCollectionMinute: {}, Starttime is {}, endTime is {}", cvConfiguration.getUuid(),
         maxCVCollectionMinute > 0 ? Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(maxCVCollectionMinute)) : -1,
         Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMinute)));
     return startTime;
@@ -287,7 +287,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     if (lastCVAnalysisMinute <= 0) {
-      logger.info(
+      log.info(
           "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
           cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
           cvConfiguration.getStateType());
@@ -295,7 +295,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     } else if (lastCVAnalysisMinute + PREDECTIVE_HISTORY_MINUTES < currentMinute) {
       // it has been more than 2 hours since we did analysis, so we should just do for current time - 2hours and take
       // over from there.
-      logger.info("The last analysis was more than 2 hours ago. We're restarting the analysis from minute: {} for {}",
+      log.info("The last analysis was more than 2 hours ago. We're restarting the analysis from minute: {} for {}",
           currentMinute - PREDECTIVE_HISTORY_MINUTES, cvConfiguration.getUuid());
       long restartTime = currentMinute - PREDECTIVE_HISTORY_MINUTES;
       if ((restartTime - lastCVAnalysisMinute) % CRON_POLL_INTERVAL_IN_MINUTES != 0) {
@@ -317,7 +317,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerServiceGuardTimeSeriesAnalysis(String accountId) {
-    logger.info("Triggering Data Analysis for account {} ", accountId);
+    log.info("Triggering Data Analysis for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 
@@ -331,12 +331,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           try (VerificationLogContext ignored = new VerificationLogContext(cvConfiguration.getAccountId(),
                    cvConfiguration.getUuid(), null, cvConfiguration.getStateType(), OVERRIDE_ERROR)) {
             try {
-              logger.info("Executing APM data analysis Job for accountId {} and configId {}", accountId,
+              log.info("Executing APM data analysis Job for accountId {} and configId {}", accountId,
                   cvConfiguration.getUuid());
               long lastCVDataCollectionMinute = timeSeriesAnalysisService.getMaxCVCollectionMinute(
                   cvConfiguration.getAppId(), cvConfiguration.getUuid(), cvConfiguration.getAccountId());
               if (lastCVDataCollectionMinute <= 0) {
-                logger.info(
+                log.info(
                     "For account {} and CV config {} name {} type {} no data has been collected yet. Skipping analysis",
                     cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                     cvConfiguration.getStateType());
@@ -347,14 +347,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   cvConfiguration.getAppId(), cvConfiguration.getUuid());
 
               if (lastCVAnalysisMinute <= 0) {
-                logger.info(
+                log.info(
                     "For account {} and CV config {} name {} type {} no analysis has been done yet. This is going to be first analysis",
                     cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                     cvConfiguration.getStateType());
               }
               long analysisStartMinute = getAnalysisStartMinuteForAPM(cvConfiguration, lastCVDataCollectionMinute);
               if (analysisStartMinute == -1) {
-                logger.info(
+                log.info(
                     "The last analysis was more than 2 hours ago but there is currently a task running for {}. So exiting.",
                     cvConfiguration.getUuid());
                 return;
@@ -374,8 +374,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   if (learningEngineAnalysisTask != null) {
                     learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-                    logger.info("Triggering Data Analysis for account {} ", accountId);
-                    logger.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
+                    log.info("Triggering Data Analysis for account {} ", accountId);
+                    log.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
                         cvConfiguration.getStateType(), cvConfiguration.getUuid(), null, analysisStartMinute);
 
                     for (MLExperiments experiment : experiments) {
@@ -389,7 +389,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 timeSeriesLETask(tags, accountId, cvConfiguration, analysisStartMinute, endMinute, experiments);
               }
             } catch (Exception ex) {
-              logger.error("Exception occurred while triggering metric data collection for cvConfig {}",
+              log.error("Exception occurred while triggering metric data collection for cvConfig {}",
                   cvConfiguration.getUuid(), ex);
             }
           }
@@ -404,15 +404,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       if (learningEngineAnalysisTask != null) {
         learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-        logger.info("Triggering Data Analysis for account {} ", accountId);
-        logger.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
+        log.info("Triggering Data Analysis for account {} ", accountId);
+        log.info("Queuing analysis task for state {} config {} and tag {} with startTime {}",
             cvConfiguration.getStateType(), cvConfiguration.getUuid(), tag, analysisStartMinute);
 
         for (MLExperiments experiment : experiments) {
           LearningEngineExperimentalAnalysisTask task = createLearningEngineAnalysisExperimentalTask(
               accountId, cvConfiguration, analysisStartMinute, endMinute, null, experiment.getExperimentName());
           learningEngineService.addLearningEngineExperimentalAnalysisTask(task);
-          logger.info(
+          log.info(
               "Created experimental analysis task for state {} config {} and tag {} with startTime {}, experimentName {}",
               cvConfiguration.getStateType(), cvConfiguration.getUuid(), tag, analysisStartMinute,
               experiment.getExperimentName());
@@ -703,19 +703,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private long getCollectionStartTimeForLogs(LogsCVConfiguration logsCVConfiguration, long maxCvCollectionMinute) {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     if (maxCvCollectionMinute <= 0) {
-      logger.info("For {} there has been no data collected yet. So starting with baselineStart: {}",
+      log.info("For {} there has been no data collected yet. So starting with baselineStart: {}",
           logsCVConfiguration.getUuid(), logsCVConfiguration.getBaselineStartMinute());
       return logsCVConfiguration.getBaselineStartMinute();
     } else if (maxCvCollectionMinute == logsCVConfiguration.getBaselineEndMinute()) {
       // if baselineEnd is within the past 2 hours, then just continue to nextMinute. Else start from 2 hours ago.
       if (!isBeforeTwoHours(logsCVConfiguration.getBaselineEndMinute(), false)) {
-        logger.info("For {} baselineEnd was within the past 2 hours, continuing to the next minute {}",
+        log.info("For {} baselineEnd was within the past 2 hours, continuing to the next minute {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
       } else {
         long expectedStart = getFlooredStartTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
-        logger.info(
-            "For {} baselineEnd was more than 2 hours ago, we will start the collection from 2hours ago now: {}",
+        log.info("For {} baselineEnd was more than 2 hours ago, we will start the collection from 2hours ago now: {}",
             logsCVConfiguration.getUuid(), expectedStart);
         return expectedStart;
       }
@@ -723,17 +722,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       // 3 cases.
       if (maxCvCollectionMinute > logsCVConfiguration.getBaselineStartMinute()
           && maxCvCollectionMinute < logsCVConfiguration.getBaselineEndMinute()) {
-        logger.info(
-            "We are still collecting in the baseline window. For {}, the collection start time is going to be {}",
+        log.info("We are still collecting in the baseline window. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
       } else if (!isBeforeTwoHours(maxCvCollectionMinute, false)) {
-        logger.info("All is as expected. For {}, the collection start time is going to be {}",
+        log.info("All is as expected. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), maxCvCollectionMinute + 1);
         return maxCvCollectionMinute + 1;
       } else {
         long expectedStart = getFlooredStartTime(currentMinute, PREDECTIVE_HISTORY_MINUTES);
-        logger.info(
+        log.info(
             "It has been more than 2 hours since last collection. For {}, the collection start time is going to be {}",
             logsCVConfiguration.getUuid(), expectedStart);
         return expectedStart;
@@ -778,12 +776,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           try {
             if (!shouldCollectData(
                     cvConfiguration, logAnalysisService.getCreatedTimeOfLastCollection(cvConfiguration))) {
-              logger.info("Not collecting data for {} due to backoff.", cvConfiguration.getUuid());
+              log.info("Not collecting data for {} due to backoff.", cvConfiguration.getUuid());
               return;
             }
             LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
             if (logsCVConfiguration.getBaselineStartMinute() < 0 || logsCVConfiguration.getBaselineEndMinute() < 0) {
-              logger.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());
+              log.error("For {} baseline is not set. Skipping collection", logsCVConfiguration.getUuid());
               return;
             }
             final long maxCVCollectionMinute = logAnalysisService.getMaxCVCollectionMinute(
@@ -801,7 +799,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               if (maxCVCollectionMinute
                   >= logsCVConfiguration.getBaselineEndMinute() + analysisContext.getTimeDuration()) {
-                logger.info("collection for {} is done", analysisContext.getStateExecutionId());
+                log.info("collection for {} is done", analysisContext.getStateExecutionId());
                 return;
               }
             }
@@ -809,7 +807,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               if (isCVTaskBasedCollectionEnabled(cvConfiguration)) {
                 createCVTask(cvConfiguration, startTime, endTime);
               } else {
-                logger.info(
+                log.info(
                     "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                     cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
                 verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
@@ -818,7 +816,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               totalDataCollectionTasks.getAndIncrement();
             }
           } catch (Exception ex) {
-            logger.error(
+            log.error(
                 "Exception occurred while triggering datacollection for cvConfig {}", cvConfiguration.getUuid(), ex);
           }
         });
@@ -866,7 +864,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       lastDataCollectionMinute = logAnalysisService.getLastLogDataCollectedMinute(
           context.getQuery(), context.getAppId(), context.getStateExecutionId(), context.getStateType());
     }
-    logger.info("Inside triggerWorkflowCollection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
+    log.info("Inside triggerWorkflowCollection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
         context.getStateType(), context.getStateExecutionId(), lastDataCollectionMinute);
     boolean isStateValid = verificationManagerClientHelper
                                .callManagerWithRetry(verificationManagerClient.isStateValid(
@@ -881,25 +879,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .getResource();
         } else {
           if (lastDataCollectionMinute - context.getStartDataCollectionMinute() < context.getTimeDuration() - 1) {
-            logger.info("Trigger Data Collection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
+            log.info("Trigger Data Collection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
                 context.getStateType(), context.getStateExecutionId(), lastDataCollectionMinute);
             return verificationManagerClientHelper
                 .callManagerWithRetry(verificationManagerClient.triggerWorkflowDataCollection(
                     context.getUuid(), lastDataCollectionMinute + 1))
                 .getResource();
           } else {
-            logger.info("Completed Data Collection for stateType {}, stateExecutionId {}", context.getStateType(),
+            log.info("Completed Data Collection for stateType {}, stateExecutionId {}", context.getStateType(),
                 context.getStateExecutionId());
             return false;
           }
         }
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Failed to call manager for data collection for workflow with context {} with exception {}", context, e);
       }
       return true;
     } else {
-      logger.info("State is no longer valid for stateType {}, stateExecutionId {}", context.getStateType(),
+      log.info("State is no longer valid for stateType {}, stateExecutionId {}", context.getStateType(),
           context.getStateExecutionId());
       return false;
     }
@@ -909,7 +907,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void markWorkflowDataCollectionDone(AnalysisContext context) {
-    logger.info("for {} markig the data collection to be done", context.getStateExecutionId());
+    log.info("for {} markig the data collection to be done", context.getStateExecutionId());
     wingsPersistence.updateField(
         AnalysisContext.class, context.getUuid(), AnalysisContextKeys.perMinCollectionFinished, true);
   }
@@ -932,12 +930,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           try (VerificationLogContext ignored = new VerificationLogContext(cvConfiguration.getAccountId(),
                    cvConfiguration.getUuid(), null, cvConfiguration.getStateType(), OVERRIDE_ERROR)) {
             long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-            logger.info(
+            log.info(
                 "triggering logs L1 Clustering for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
             long lastCVDataCollectionMinute =
                 logAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
             if (lastCVDataCollectionMinute <= 0) {
-              logger.info(
+              log.info(
                   "For account {} and CV config {} name {} type {} no data has been collected yet. Skipping clustering",
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                   cvConfiguration.getStateType());
@@ -950,13 +948,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 cvConfiguration.getAppId(), cvConfiguration.getUuid(), ClusterLevel.H0, OrderType.DESC);
             if (lastCVDataCollectionMinute > logsCVConfiguration.getBaselineStartMinute()
                 && lastCVDataCollectionMinute <= logsCVConfiguration.getBaselineEndMinute()) {
-              logger.info(
+              log.info(
                   "For account {} and CV config {} name {} type {} We are currently doing L1 clustering in the baseline window.",
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                   cvConfiguration.getStateType());
             } else if (isBeforeTwoHours(lastCVDataCollectionMinute, true)
                 || isBeforeTwoHours(maxLogRecordMinute, false)) {
-              logger.info(
+              log.info(
                   "For account {} and CV config {} name {} type {} There has been no new data in the past 2 hours. Skipping L1 clustering",
                   cvConfiguration.getAccountId(), cvConfiguration.getUuid(), cvConfiguration.getName(),
                   cvConfiguration.getStateType());
@@ -966,10 +964,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             if (isBeforeTwoHours(minLogRecordMinute, false)) {
               if (minLogRecordMinute >= logsCVConfiguration.getBaselineStartMinute()
                   && minLogRecordMinute <= logsCVConfiguration.getBaselineEndMinute()) {
-                logger.info("For {} MinLogRecord minute is {} and it is within the baseline window",
+                log.info("For {} MinLogRecord minute is {} and it is within the baseline window",
                     cvConfiguration.getUuid(), minLogRecordMinute);
               } else {
-                logger.info(
+                log.info(
                     "for {} minLogRecordMinute is more than 2 hours ago but maxLogRecordMinute is less than 2 hours ago. We will start L1 clustering from 2 hours ago.",
                     cvConfiguration.getUuid());
 
@@ -977,7 +975,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
             }
 
-            logger.info("Clustering pending between {} and {}", minLogRecordMinute, lastCVDataCollectionMinute);
+            log.info("Clustering pending between {} and {}", minLogRecordMinute, lastCVDataCollectionMinute);
 
             for (long logRecordMinute = minLogRecordMinute;
                  logRecordMinute > 0 && logRecordMinute <= lastCVDataCollectionMinute; logRecordMinute++) {
@@ -987,7 +985,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               // there can be a race between finding all the host for a min and le finishing the cluster task and
               // deleting L0 data
               if (isEmpty(hosts)) {
-                logger.info("For {} minute {} did not find hosts for level {} continuing...", cvConfiguration.getUuid(),
+                log.info("For {} minute {} did not find hosts for level {} continuing...", cvConfiguration.getUuid(),
                     logRecordMinute, ClusterLevel.L0);
                 logAnalysisService.saveClusteredLogData(cvConfiguration.getAppId(), cvConfiguration.getUuid(),
                     ClusterLevel.L1, (int) logRecordMinute, null, Lists.newArrayList());
@@ -1095,15 +1093,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), ClusterLevel.HF, OrderType.DESC);
     Optional<Long> l2ClusteringMinute;
     if (minLogRecordL1Minute <= 0) {
-      logger.info("For {}, there has been no L1 clustering yet. ", logsCVConfiguration.getUuid());
+      log.info("For {}, there has been no L1 clustering yet. ", logsCVConfiguration.getUuid());
       l2ClusteringMinute = Optional.empty();
     } else if (maxLogRecordL1Minute - minLogRecordL1Minute < CRON_POLL_INTERVAL_IN_MINUTES - 1) {
-      logger.info(
+      log.info(
           "For {} We do not have 15mins worth of L1s yet. So we have nothing to do now", logsCVConfiguration.getUuid());
       l2ClusteringMinute = Optional.empty();
     } else if (previousL2RecordMinute <= 0 && previousHFRecordMinute <= 0) {
       long l2Minute = minLogRecordL1Minute + CRON_POLL_INTERVAL_IN_MINUTES - 1;
-      logger.info(
+      log.info(
           "For {} this is the first ever L2 clustering task. There has been nothing done before this. Returning {}",
           logsCVConfiguration.getUuid(), l2Minute);
 
@@ -1111,18 +1109,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     } else if (previousHFRecordMinute > previousL2RecordMinute) {
       long l2Minute = previousHFRecordMinute + CRON_POLL_INTERVAL_IN_MINUTES;
       l2ClusteringMinute = Optional.of(l2Minute);
-      logger.info("For {} we will follow the previous HF minute The previous minute was {}. The next one will be {}",
+      log.info("For {} we will follow the previous HF minute The previous minute was {}. The next one will be {}",
           logsCVConfiguration.getUuid(), previousHFRecordMinute, l2Minute);
     } else {
       long l2Minute = previousL2RecordMinute + CRON_POLL_INTERVAL_IN_MINUTES;
       l2ClusteringMinute = Optional.of(l2Minute);
-      logger.info("For {} we will follow the previous L2 minute The previous minute was {}. The next one will be {}",
+      log.info("For {} we will follow the previous L2 minute The previous minute was {}. The next one will be {}",
           logsCVConfiguration.getUuid(), previousL2RecordMinute, l2Minute);
     }
 
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Instant.now().toEpochMilli());
     if (l2ClusteringMinute.isPresent() && l2ClusteringMinute.get() > currentMinute) {
-      logger.info("For {}, next l2 minute is in the future {}. Returning empty", logsCVConfiguration.getUuid(),
+      log.info("For {}, next l2 minute is in the future {}. Returning empty", logsCVConfiguration.getUuid(),
           l2ClusteringMinute.get());
       l2ClusteringMinute = Optional.empty();
     } else if (l2ClusteringMinute.isPresent()) {
@@ -1132,14 +1130,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       // make sure it's within 2hours if it's not in the baseline window.
       if (l2MinInBoundary >= logsCVConfiguration.getBaselineStartMinute()
           && l2MinInBoundary <= logsCVConfiguration.getBaselineEndMinute()) {
-        logger.info("The returned L2minute is {} and it is within the baseline window", l2MinInBoundary);
+        log.info("The returned L2minute is {} and it is within the baseline window", l2MinInBoundary);
       } else if (isBeforeTwoHours(l2MinInBoundary, true)) {
         l2MinInBoundary = getFirstAnalysisMinuteInThePast2Hours(logsCVConfiguration, l2MinInBoundary);
       }
 
       l2ClusteringMinute = Optional.of(l2MinInBoundary);
     }
-    logger.info("Returning L2 minute as {}", l2ClusteringMinute);
+    log.info("Returning L2 minute as {}", l2ClusteringMinute);
     return l2ClusteringMinute;
   }
 
@@ -1160,13 +1158,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .forEach(cvConfiguration -> {
           try (VerificationLogContext ignored = new VerificationLogContext(cvConfiguration.getAccountId(),
                    cvConfiguration.getUuid(), null, cvConfiguration.getStateType(), OVERRIDE_ERROR)) {
-            logger.info(
+            log.info(
                 "triggering logs L2 Clustering for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
             try {
               Optional<Long> potentialL2Minute = getL2ClusteringTime((LogsCVConfiguration) cvConfiguration);
 
               if (!potentialL2Minute.isPresent()) {
-                logger.info("For {} it is not time to do L2 clustering yet", cvConfiguration.getUuid());
+                log.info("For {} it is not time to do L2 clustering yet", cvConfiguration.getUuid());
                 return;
               }
 
@@ -1178,7 +1176,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
                         cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0, ClusterLevel.H0);
                 if (isNotEmpty(hosts)) {
-                  logger.info(
+                  log.info(
                       "For CV config {} there is still node data clustering is pending for {} for minute {}. Skipping L2 clustering",
                       cvConfiguration.getUuid(), hosts, logRecordMinute);
                   return;
@@ -1187,14 +1185,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
                     cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L1, ClusterLevel.H1);
                 if (isEmpty(hosts)) {
-                  logger.info(
-                      "For CV config {} there is no clustering data present for minute {}. Skipping L2 clustering",
+                  log.info("For CV config {} there is no clustering data present for minute {}. Skipping L2 clustering",
                       cvConfiguration.getUuid(), logRecordMinute);
                   return;
                 }
               }
 
-              logger.info("for {} for minute from {} to {} everything is in place, proceeding for L2 Clustering",
+              log.info("for {} for minute from {} to {} everything is in place, proceeding for L2 Clustering",
                   cvConfiguration.getUuid(), l2StartMinute, l2ClusteringMinute);
 
               final String taskId = generateUuid();
@@ -1243,7 +1240,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
                 final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
                 if (taskQueued) {
-                  logger.info("L2 Clustering queued for cvConfig {} from minute {} to minute {}",
+                  log.info("L2 Clustering queued for cvConfig {} from minute {} to minute {}",
                       cvConfiguration.getUuid(), l2StartMinute, l2ClusteringMinute);
                 }
                 List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_CLUSTER.name());
@@ -1272,7 +1269,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 }
               }
             } catch (Exception ex) {
-              logger.error("Creating L2 task failed for cvConfig " + cvConfiguration.getUuid());
+              log.error("Creating L2 task failed for cvConfig " + cvConfiguration.getUuid());
             }
           }
         });
@@ -1286,11 +1283,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
     if (lastLogMLAnalysisMinute <= 0) {
-      logger.info("There has been no logML analysis done for this yet. Retuning {}", logsCVConfiguration.getUuid());
+      log.info("There has been no logML analysis done for this yet. Retuning {}", logsCVConfiguration.getUuid());
       return Optional.empty();
     }
     if (lastFeedbackAnalysisMinute <= 0) {
-      logger.info(
+      log.info(
           "There have been no feedback analysis records for this configuration {}. Creating the first one for minute {}",
           logsCVConfiguration.getUuid(), lastLogMLAnalysisMinute);
       return Optional.of(lastLogMLAnalysisMinute);
@@ -1303,18 +1300,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logsCVConfiguration.getUuid(), (int) minuteForFeedbackAnalysis, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
     if (isLogMLAnalysisPresent) {
-      logger.info(
+      log.info(
           "Returning the feedbackAnalysisTime for {} as {}", logsCVConfiguration.getUuid(), minuteForFeedbackAnalysis);
       return Optional.of(minuteForFeedbackAnalysis);
     }
 
     if (lastLogMLAnalysisMinute > lastFeedbackAnalysisMinute) {
-      logger.info(
+      log.info(
           "There has been a mismatch in the log and feedback records for {}. We are self-correcting now. New feedback minute is {}",
           logsCVConfiguration.getUuid(), lastLogMLAnalysisMinute);
       return Optional.of(lastLogMLAnalysisMinute);
     }
-    logger.info("It is not time for a new feedback task yet for {}. Returning -1", logsCVConfiguration.getUuid());
+    log.info("It is not time for a new feedback task yet for {}. Returning -1", logsCVConfiguration.getUuid());
     return Optional.empty();
   }
 
@@ -1323,8 +1320,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
     if (isFeatureFlagEnabled(FeatureName.DISABLE_LOGML_NEURAL_NET, accountId)) {
-      logger.info(
-          "DISABLE_LOGML_NEURAL_NET feature flag is enabled for account {}, not going to create a feedback task",
+      log.info("DISABLE_LOGML_NEURAL_NET feature flag is enabled for account {}, not going to create a feedback task",
           accountId);
       return;
     }
@@ -1337,7 +1333,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .forEach(cvConfiguration -> {
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
           if (logsCVConfiguration.isWorkflowConfig()) {
-            logger.info("{} is a workflow configuration. Not going to trigger feedback tasks for this.",
+            log.info("{} is a workflow configuration. Not going to trigger feedback tasks for this.",
                 logsCVConfiguration.getUuid());
             return;
           }
@@ -1350,7 +1346,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
           if (!logsCVConfiguration.is247LogsV2()
               && minuteForFeedbackAnalysis <= logsCVConfiguration.getBaselineEndMinute()) {
-            logger.info("We are skipping feedback analysis for {} for minute {} since it is in the baseline window.",
+            log.info("We are skipping feedback analysis for {} for minute {} since it is in the baseline window.",
                 logsCVConfiguration.getUuid(), minuteForFeedbackAnalysis);
             return;
           }
@@ -1370,7 +1366,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               return;
             }
             boolean feedbackTask = createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
-            logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
+            log.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
                 minuteForFeedbackAnalysis);
             if (feedbackTask) {
               createExperimentalFeedbackTask(logsCVConfiguration, minuteForFeedbackAnalysis);
@@ -1388,7 +1384,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     try {
       String stateExecutionIdForLETask =
           "LOG_24X7_EXP_FEEDBACK_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + logCollectionMinute;
-      logger.info("Creating Experimental Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
+      log.info("Creating Experimental Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
           logCollectionMinute);
       String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
           + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId();
@@ -1432,13 +1428,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
       }
     } catch (Exception ex) {
-      logger.info("Exception while creating experimental feedback task", ex);
+      log.info("Exception while creating experimental feedback task", ex);
     }
   }
   private boolean createFeedbackAnalysisTask(LogsCVConfiguration logsCVConfiguration, long logCollectionMinute) {
     String stateExecutionIdForLETask =
         "LOG_24X7_FEEDBACK_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + logCollectionMinute;
-    logger.info(
+    log.info(
         "Creating Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(), logCollectionMinute);
     String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
         + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId();
@@ -1529,7 +1525,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     while (logAnalysisMinute < currentMinute - PREDECTIVE_HISTORY_MINUTES - 2 * CRON_POLL_INTERVAL_IN_MINUTES) {
       logAnalysisMinute += CRON_POLL_INTERVAL_IN_MINUTES;
     }
-    logger.info(
+    log.info(
         "For {}, in getFirstAnalysisMinuteInThePast2Hours the lastCVAnalysisMin was {} but within our 2hour interval the new minute is {}",
         logsCVConfiguration.getUuid(), lastCVAnalysisMinute, logAnalysisMinute);
     return logAnalysisMinute;
@@ -1552,13 +1548,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Optional<Long> analysisEndMinute;
 
     if (lastCVAnalysisMinute <= 0 || lastCVAnalysisMinute < logsCVConfiguration.getBaselineStartMinute()) {
-      logger.info(
+      log.info(
           "This is the first ever time we're doing analysis for this configuration {}", logsCVConfiguration.getUuid());
       long analysisEnd = l2RecordMin + CRON_POLL_INTERVAL_IN_MINUTES - 1; // since both are inclusive, we subtract one.
       analysisEndMinute = Optional.of(analysisEnd);
     } else {
-      logger.info("There has been a previous analysis for {} with lastCVAnalysisMinute {}",
-          logsCVConfiguration.getUuid(), lastCVAnalysisMinute);
+      log.info("There has been a previous analysis for {} with lastCVAnalysisMinute {}", logsCVConfiguration.getUuid(),
+          lastCVAnalysisMinute);
       /*
        * Four possibilities here are:
        *   It is within baseline window
@@ -1568,12 +1564,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
        */
 
       if (isLogAnalysisInBaselineWindow(logsCVConfiguration, lastCVAnalysisMinute)) {
-        logger.info("{} is still in baseline window", logsCVConfiguration.getUuid());
+        log.info("{} is still in baseline window", logsCVConfiguration.getUuid());
         long analysisEnd = lastCVAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
         analysisEndMinute = Optional.of(analysisEnd);
       } else {
         if (isBeforeTwoHours(lastCVAnalysisMinute, true)) {
-          logger.info("The last analysis for {} was more than 2 hours ago. We are going to figure out the next minute",
+          log.info("The last analysis for {} was more than 2 hours ago. We are going to figure out the next minute",
               logsCVConfiguration.getUuid());
           // There are 2 possibilities here. One - The last analysisMin is the baselineEndMinute.
           // Two - It has gotten stuck.
@@ -1585,7 +1581,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             analysisEndMinute = Optional.of(analysisEnd);
           }
         } else {
-          logger.info("The last analysis for {} was within a 2 hour window. We're going to continue",
+          log.info("The last analysis for {} was within a 2 hour window. We're going to continue",
               logsCVConfiguration.getUuid());
           long analysisEnd = lastCVAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
           analysisEndMinute = Optional.of(analysisEnd);
@@ -1601,7 +1597,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     if (analysisEndMinute.isPresent() && analysisEndMinute.get() > l2RecordMax) {
-      logger.info("For {} max L2 record is {}, proposed analysisMinute is {}, so we will wait.",
+      log.info("For {} max L2 record is {}, proposed analysisMinute is {}, so we will wait.",
           logsCVConfiguration.getUuid(), l2RecordMax, analysisEndMinute.get());
       analysisEndMinute = Optional.empty();
     }
@@ -1611,7 +1607,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       analysisEndMinute = Optional.of(analysisEnd);
     }
 
-    logger.info("Returning the analysis end minute for {} as {}", logsCVConfiguration.getUuid(),
+    log.info("Returning the analysis end minute for {} as {}", logsCVConfiguration.getUuid(),
         analysisEndMinute.isPresent() ? analysisEndMinute.get() : null);
     return analysisEndMinute;
   }
@@ -1749,7 +1745,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
 
         .forEach(cvConfiguration -> {
-          logger.info(
+          log.info(
               "triggering logs Data Analysis for account {} and cvConfigId {}", accountId, cvConfiguration.getUuid());
           LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
 
@@ -1762,10 +1758,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 long analysisLastMin = logAnalysisService.getLogRecordMinute(
                     logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), ClusterLevel.HF, OrderType.DESC);
                 if (analysisLastMin >= logsCVConfiguration.getBaselineEndMinute() + context.getTimeDuration()) {
-                  logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
+                  log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
                       context.getCorrelationId());
                   sendStateNotification(context, false, "", (int) analysisLastMin);
-                  logger.info("Disabled 24x7 for CV Configuration with id {}", logsCVConfiguration.getUuid());
+                  log.info("Disabled 24x7 for CV Configuration with id {}", logsCVConfiguration.getUuid());
                   wingsPersistence.updateField(
                       LogsCVConfiguration.class, logsCVConfiguration.getUuid(), "enabled24x7", false);
                   return;
@@ -1774,7 +1770,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               Optional<Long> analysisEnd = getAnalysisEndMinForLogsMLAnalysis(logsCVConfiguration);
               if (!analysisEnd.isPresent()) {
-                logger.info("For {}, we dont have enough to do log_ml analysis yet", logsCVConfiguration.getUuid());
+                log.info("For {}, we dont have enough to do log_ml analysis yet", logsCVConfiguration.getUuid());
                 return;
               }
               long analysisMin = analysisEnd.get();
@@ -1792,10 +1788,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 }
 
                 if (analysisMin > logsCVConfiguration.getBaselineEndMinute() + context.getTimeDuration()) {
-                  logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
+                  log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
                       context.getCorrelationId());
                   sendStateNotification(context, false, "", (int) analysisMin);
-                  logger.info("Disabled 24x7 for CV Configuration with id {}", logsCVConfiguration.getUuid());
+                  log.info("Disabled 24x7 for CV Configuration with id {}", logsCVConfiguration.getUuid());
                   wingsPersistence.updateField(
                       LogsCVConfiguration.class, logsCVConfiguration.getUuid(), "enabled24x7", false);
                 }
@@ -1807,14 +1803,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     ClusterLevel.L0, ClusterLevel.H0);
 
                 if (isNotEmpty(hosts)) {
-                  logger.info(
+                  log.info(
                       "For CV config {} there is still lustering pending for {} for minute {}. Skipping Log Data Analysis",
                       cvConfiguration.getUuid(), hosts, l2Min);
                   return;
                 }
               }
 
-              logger.info("for {} for minute from {} to {} everything is in place, proceeding for analysis",
+              log.info("for {} for minute from {} to {} everything is in place, proceeding for analysis",
                   logsCVConfiguration.getUuid(), startMinute, analysisMin);
               String stateExecutionIdForLETask =
                   "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisMin;
@@ -1825,7 +1821,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               learningEngineService.addLearningEngineAnalysisTask(
                   getLogMLAnalysisTask(logsCVConfiguration, analysisMin, nextBackoffCount));
 
-              logger.info("Queuing analysis task for state {} config {} with analysisMin {}",
+              log.info("Queuing analysis task for state {} config {} with analysisMin {}",
                   logsCVConfiguration.getStateType(), logsCVConfiguration.getUuid(), analysisMin);
 
               List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.LOG_ML.name());
@@ -1841,19 +1837,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 if (cvConfiguration.isWorkflowConfig()) {
                   AnalysisContext context =
                       wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
-                  logger.error("Verification L2 -> Log_ML analysis failed", ex);
+                  log.error("Verification L2 -> Log_ML analysis failed", ex);
                   final VerificationStateAnalysisExecutionData executionData =
                       VerificationStateAnalysisExecutionData.builder().build();
                   executionData.setStatus(ExecutionStatus.ERROR);
                   executionData.setErrorMsg(ex.getMessage());
-                  logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
+                  log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(),
                       context.getCorrelationId());
                   verificationManagerClientHelper.notifyManagerForVerificationAnalysis(
                       context, VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build());
                   wingsPersistence.updateField(CVConfiguration.class, cvConfiguration.getUuid(), "enabled24x7", false);
                 }
               } catch (Exception e) {
-                logger.error("Verification cluster manager cleanup failed", e);
+                log.error("Verification cluster manager cleanup failed", e);
               }
             }
           }
@@ -1939,7 +1935,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
     DBCursor lockDataRecords = collection.find();
 
-    logger.info("will go through " + lockDataRecords.size() + " records");
+    log.info("will go through " + lockDataRecords.size() + " records");
 
     List<ObjectId> toBeDeleted = new ArrayList<>();
     while (lockDataRecords.hasNext()) {
@@ -1952,7 +1948,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
     if (isNotEmpty(toBeDeleted)) {
-      logger.info("deleting locks {}", toBeDeleted);
+      log.info("deleting locks {}", toBeDeleted);
       collection.remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", toBeDeleted.toArray())));
     }
   }
@@ -1982,7 +1978,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       final VerificationDataAnalysisResponse response =
           VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
       response.setExecutionStatus(status);
-      logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+      log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
       verificationManagerClientHelper.notifyManagerForVerificationAnalysis(context, response);
     }
   }
@@ -2003,7 +1999,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return;
     }
     if (riskScore <= cvConfiguration.getAlertThreshold()) {
-      logger.info("for {} the risk {} is lower than the threshold {}. All open alerts will be closed.", cvConfigId,
+      log.info("for {} the risk {} is lower than the threshold {}. All open alerts will be closed.", cvConfigId,
           riskScore, cvConfiguration.getAlertThreshold());
 
       verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.closeCVAlert(cvConfigId,
@@ -2024,13 +2020,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       int numOfBreaches = timeSeriesAnalysisService.getNumberOfAnalysisAboveThresholdSince(
           earliestTimeToCheck, cvConfigId, cvConfiguration.getAlertThreshold());
       if (numOfBreaches < cvConfiguration.getNumOfOccurrencesForAlert()) {
-        logger.info("For {}, number of breaches of alert threshold is {} but min number in config is {} ", cvConfigId,
+        log.info("For {}, number of breaches of alert threshold is {} but min number in config is {} ", cvConfigId,
             numOfBreaches, cvConfiguration.getNumOfOccurrencesForAlert());
         return;
       }
     }
 
-    logger.info("triggering alert for {} with risk score {}", cvConfigId, riskScore);
+    log.info("triggering alert for {} with risk score {}", cvConfigId, riskScore);
     verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlert(cvConfigId,
         ContinuousVerificationAlertData.builder()
             .riskScore(riskScore)
@@ -2048,7 +2044,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return;
     }
     if (isEmpty(mlAnalysisResponse.getUnknown_clusters())) {
-      logger.info("No unknown clusters for {} for min {}. No alerts will be triggered");
+      log.info("No unknown clusters for {} for min {}. No alerts will be triggered");
       return;
     }
 
@@ -2059,7 +2055,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return;
     }
 
-    logger.info("triggering alerts for {} with unknown clusters {}", cvConfigId,
+    log.info("triggering alerts for {} with unknown clusters {}", cvConfigId,
         mlAnalysisResponse.getUnknown_clusters().size());
 
     LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
@@ -2134,14 +2130,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private boolean shouldThrowAlert(CVConfiguration cvConfiguration) {
     if (!cvConfiguration.isAlertEnabled()) {
-      logger.info("for {} the alert is not enabled. Returning", cvConfiguration.getUuid());
+      log.info("for {} the alert is not enabled. Returning", cvConfiguration.getUuid());
       return false;
     }
 
     final long currentTime = System.currentTimeMillis();
     if (cvConfiguration.getSnoozeStartTime() > 0 && cvConfiguration.getSnoozeEndTime() > 0
         && currentTime >= cvConfiguration.getSnoozeStartTime() && currentTime <= cvConfiguration.getSnoozeEndTime()) {
-      logger.info("for {} the current time is in the range of snooze time {} to {}. No alerts will be triggered.",
+      log.info("for {} the current time is in the range of snooze time {} to {}. No alerts will be triggered.",
           cvConfiguration.getUuid(), cvConfiguration.getSnoozeStartTime(), cvConfiguration.getSnoozeEndTime());
       return false;
     }

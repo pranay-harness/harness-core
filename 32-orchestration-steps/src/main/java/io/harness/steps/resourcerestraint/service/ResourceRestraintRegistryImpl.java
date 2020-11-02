@@ -102,7 +102,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
     try {
       resourceRestraintService.save(builder.build());
     } catch (DuplicateKeyException e) {
-      logger.info("Failed to add ResourceRestraintInstance", e);
+      log.info("Failed to add ResourceRestraintInstance", e);
       return false;
     }
 
@@ -133,8 +133,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
     try {
       resourceRestraintService.finishInstance(consumerId.getValue(), unit.getValue());
     } catch (InvalidRequestException e) {
-      logger.error(
-          "The attempt to finish Constraint with id {} failed for resource unit {} with Resource restraint id {}",
+      log.error("The attempt to finish Constraint with id {} failed for resource unit {} with Resource restraint id {}",
           id.getValue(), unit.getValue(), consumerId.getValue(), e);
       return false;
     }

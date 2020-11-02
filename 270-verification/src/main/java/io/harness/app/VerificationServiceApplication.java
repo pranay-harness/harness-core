@@ -155,7 +155,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   @Override
   public void initialize(Bootstrap<VerificationServiceConfiguration> bootstrap) {
     initializeLogging();
-    logger.info("bootstrapping ...");
+    log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
@@ -176,14 +176,14 @@ public class VerificationServiceApplication extends Application<VerificationServ
         bootstrap.getObjectMapper().getSerializationConfig().withView(JsonViews.Public.class));
     bootstrap.setMetricRegistry(metricRegistry);
 
-    logger.info("bootstrapping done.");
+    log.info("bootstrapping done.");
   }
 
   @Override
   public void run(VerificationServiceConfiguration configuration, Environment environment) {
-    logger.info("Starting app ...");
+    log.info("Starting app ...");
 
-    logger.info("Entering startup maintenance mode");
+    log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -284,10 +284,10 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     initializeServiceTaskPoll(injector);
 
-    logger.info("Leaving startup maintenance mode");
+    log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
-    logger.info("Starting app done");
+    log.info("Starting app done");
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {

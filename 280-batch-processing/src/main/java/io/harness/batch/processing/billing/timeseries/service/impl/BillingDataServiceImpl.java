@@ -60,26 +60,26 @@ public class BillingDataServiceImpl {
             index++;
 
             if (index % BATCH_SIZE == 0 || index == instanceBillingDataList.size()) {
-              logger.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
+              log.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
               statement.executeBatch();
             }
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save instance data,[{}],retryCount=[{}], Exception: ", instanceBillingDataList.size(),
+          log.error("Failed to save instance data,[{}],retryCount=[{}], Exception: ", instanceBillingDataList.size(),
               retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not processing instance billing data:[{}]", instanceBillingDataList.size());
+      log.warn("Not processing instance billing data:[{}]", instanceBillingDataList.size());
     }
     return successfulInsert;
   }
 
   public boolean purgeOldHourlyBillingData() {
     boolean purgedHourlyBillingData = false;
-    logger.info("Purging old hourly billing data !!");
+    log.info("Purging old hourly billing data !!");
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
       while (retryCount < MAX_RETRY_COUNT && !purgedHourlyBillingData) {
@@ -88,7 +88,7 @@ public class BillingDataServiceImpl {
           statement.execute(PURGE_DATA_QUERY);
           purgedHourlyBillingData = true;
         } catch (SQLException e) {
-          logger.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
+          log.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
           retryCount++;
         }
       }
@@ -105,17 +105,17 @@ public class BillingDataServiceImpl {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(updateStatement)) {
           updateBillingDataUpdateStatement(statement, actualIdleCostWriterData);
-          logger.debug("Prepared Statement in BillingDataServiceImpl for actual idle cost: {} ", statement);
+          log.debug("Prepared Statement in BillingDataServiceImpl for actual idle cost: {} ", statement);
           statement.execute();
           successfulUpdate = true;
         } catch (SQLException e) {
-          logger.error("Failed to update actual idle cost data,[{}],retryCount=[{}], Exception: ",
+          log.error("Failed to update actual idle cost data,[{}],retryCount=[{}], Exception: ",
               actualIdleCostWriterData, retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not processing actual idle cost data:[{}]", actualIdleCostWriterData);
+      log.warn("Not processing actual idle cost data:[{}]", actualIdleCostWriterData);
     }
     return successfulUpdate;
   }
@@ -213,7 +213,7 @@ public class BillingDataServiceImpl {
     ResultSet resultSet = null;
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     int retryCount = 0;
-    logger.debug("ClusterDataToBigQueryTasklet read data query : {}", query);
+    log.debug("ClusterDataToBigQueryTasklet read data query : {}", query);
     while (retryCount < SELECT_MAX_RETRY_COUNT) {
       retryCount++;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -282,7 +282,7 @@ public class BillingDataServiceImpl {
         }
         return instanceBillingDataList;
       } catch (SQLException e) {
-        logger.error("Error while fetching billing Data data : exception", e);
+        log.error("Error while fetching billing Data data : exception", e);
       } finally {
         DBUtils.close(resultSet);
       }

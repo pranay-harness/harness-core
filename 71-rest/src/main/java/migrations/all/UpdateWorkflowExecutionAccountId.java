@@ -36,10 +36,10 @@ public class UpdateWorkflowExecutionAccountId implements Migration {
         count++;
       }
       if (count % 1000 == 0) {
-        logger.info("Completed migrating {} records", count);
+        log.info("Completed migrating {} records", count);
       }
     } catch (Exception e) {
-      logger.error("Failed to complete migration", e);
+      log.error("Failed to complete migration", e);
     }
   }
 
@@ -52,14 +52,14 @@ public class UpdateWorkflowExecutionAccountId implements Migration {
                 .set(WorkflowExecutionKeys.accountId, application.getAccountId());
         wingsPersistence.update(workflowExecution, updateOps);
       } else {
-        logger.info("No app found with appID:[{}]", workflowExecution.getAppId());
+        log.info("No app found with appID:[{}]", workflowExecution.getAppId());
       }
 
     } catch (WingsException exception) {
       exception.addContext(WorkflowExecution.class, workflowExecution.getUuid());
-      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, log);
     } catch (Exception e) {
-      logger.error("Exception occurred while processing workflowExecution:[{}]", workflowExecution.getUuid(), e);
+      log.error("Exception occurred while processing workflowExecution:[{}]", workflowExecution.getUuid(), e);
     }
   }
 }

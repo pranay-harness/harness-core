@@ -84,7 +84,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start getting Virtual Machine Scale Sets by resourceGroupName: {}, subscriptionId: {}",
+    log.debug("Start getting Virtual Machine Scale Sets by resourceGroupName: {}, subscriptionId: {}",
         resourceGroupName, subscriptionId);
     Instant startListingVMSS = Instant.now();
     PagedList<VirtualMachineScaleSet> virtualMachineScaleSets =
@@ -94,7 +94,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     List<VirtualMachineScaleSet> virtualMachineScaleSetsList = new ArrayList<>(virtualMachineScaleSets);
 
     long elapsedTime = Duration.between(startListingVMSS, Instant.now()).toMillis();
-    logger.info(
+    log.info(
         "Obtained Virtual Machine Scale Sets items: {} for elapsed time: {}, resourceGroupName: {}, subscriptionId: {} ",
         virtualMachineScaleSetsList.size(), elapsedTime, resourceGroupName, subscriptionId);
 
@@ -116,7 +116,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     Objects.notNull(azure.virtualMachineScaleSets().getByResourceGroup(resourceGroupName, virtualScaleSetName),
         format("There is no virtual machine scale set with name %s", virtualScaleSetName));
 
-    logger.debug("Start deleting Virtual Machine Scale Sets by resourceGroupName: {}", resourceGroupName);
+    log.debug("Start deleting Virtual Machine Scale Sets by resourceGroupName: {}", resourceGroupName);
     azure.virtualMachineScaleSets().deleteByResourceGroup(resourceGroupName, virtualScaleSetName);
   }
 
@@ -129,7 +129,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start bulk deleting Virtual Machine Scale Sets, ids: {}", vmssIDs);
+    log.debug("Start bulk deleting Virtual Machine Scale Sets, ids: {}", vmssIDs);
     azure.virtualMachineScaleSets().deleteByIds(vmssIDs);
   }
 
@@ -174,7 +174,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     Objects.notNull(azure.virtualMachineScaleSets().getById(virtualMachineScaleSetId),
         format("There is no virtual machine scale set with virtualMachineScaleSetId %s", virtualMachineScaleSetId));
 
-    logger.debug("Start deleting Virtual Machine Scale Sets by virtualMachineScaleSetId: {}", virtualMachineScaleSetId);
+    log.debug("Start deleting Virtual Machine Scale Sets by virtualMachineScaleSetId: {}", virtualMachineScaleSetId);
     azure.virtualMachineScaleSets().deleteById(virtualMachineScaleSetId);
   }
 
@@ -187,7 +187,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start getting Virtual Machine Scale Sets by virtualMachineScaleSetId: {}, subscriptionId: {}",
+    log.debug("Start getting Virtual Machine Scale Sets by virtualMachineScaleSetId: {}, subscriptionId: {}",
         virtualMachineScaleSetId, subscriptionId);
     VirtualMachineScaleSet vmss = azure.virtualMachineScaleSets().getById(virtualMachineScaleSetId);
 
@@ -206,7 +206,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug(
+    log.debug(
         "Start getting Virtual Machine Scale Sets name virtualMachineScaleSetName: {}, subscriptionId: {}, resourceGroupName: {}",
         virtualMachineScaleSetName, subscriptionId, resourceGroupName);
     VirtualMachineScaleSet vmss =
@@ -220,7 +220,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     Azure azure = getAzureClientWithDefaultSubscription(azureConfig);
     Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
-    logger.debug("Start listing subscriptions for tenantId {}", azureConfig.getTenantId());
+    log.debug("Start listing subscriptions for tenantId {}", azureConfig.getTenantId());
     PagedList<Subscription> subscriptions = azure.subscriptions().list();
     return subscriptions.stream().collect(Collectors.toList());
   }
@@ -229,7 +229,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   public List<String> listResourceGroupsNamesBySubscriptionId(AzureConfig azureConfig, String subscriptionId) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    logger.debug("Start listing resource groups names for subscriptionId {}", subscriptionId);
+    log.debug("Start listing resource groups names for subscriptionId {}", subscriptionId);
     List<ResourceGroup> resourceGroupList = azure.resourceGroups().list();
     return resourceGroupList.stream().map(HasName::name).collect(Collectors.toList());
   }
@@ -414,7 +414,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
     }
 
-    logger.debug("Start attaching virtual machine scale set with name {}, to backendPools: {}",
+    log.debug("Start attaching virtual machine scale set with name {}, to backendPools: {}",
         virtualMachineScaleSet.name(), backendPools);
     return virtualMachineScaleSet.update()
         .withExistingPrimaryInternetFacingLoadBalancer(primaryInternetFacingLoadBalancer)
@@ -444,7 +444,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
     }
 
-    logger.debug("Start de-attaching virtual machine scale set with name {}, from backendPools: {}",
+    log.debug("Start de-attaching virtual machine scale set with name {}, from backendPools: {}",
         virtualMachineScaleSet.name(), backendPools);
     return backendPools[0].equals("*")
         ? virtualMachineScaleSet.update()
@@ -464,7 +464,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     }
 
     if (virtualMachineScaleSet.upgradeModel() == UpgradeMode.MANUAL) {
-      logger.debug("Start updating VM instances of virtual machine scale set with name {}, instanceId: {}",
+      log.debug("Start updating VM instances of virtual machine scale set with name {}, instanceId: {}",
           virtualMachineScaleSet.name(), instanceIds);
       virtualMachineScaleSet.virtualMachines().updateInstances(instanceIds);
     }
@@ -478,8 +478,8 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       try {
         Integer.parseInt(id);
       } catch (NumberFormatException e) {
-        logger.error(format("Unable to convert VM instance id to numeric type, id: %s instanceIds: %s", id,
-                         Arrays.toString(instanceIds)),
+        log.error(format("Unable to convert VM instance id to numeric type, id: %s instanceIds: %s", id,
+                      Arrays.toString(instanceIds)),
             e);
         return false;
       }
@@ -547,7 +547,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
     try {
-      logger.debug("Start getting gallery image, imageName {}, galleryName: {}, resourceGroupName: {}", imageName,
+      log.debug("Start getting gallery image, imageName {}, galleryName: {}, resourceGroupName: {}", imageName,
           galleryName, resourceGroupName);
       GalleryImage galleryImage = azure.galleryImages().getByGallery(resourceGroupName, galleryName, imageName);
       if (galleryImage.name() == null || galleryImage.id() == null) {
@@ -555,7 +555,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       }
       return Optional.of(galleryImage);
     } catch (NullPointerException npe) {
-      logger.warn("Image can't be found, imageName{}, galleryName: {}, resourceGroupName: {}", imageName, galleryName,
+      log.warn("Image can't be found, imageName{}, galleryName: {}, resourceGroupName: {}", imageName, galleryName,
           resourceGroupName, npe);
       return Optional.empty();
     }

@@ -39,7 +39,7 @@ public class AddValidUntilToActivity implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("activities: {} updated", i);
+          log.info("activities: {} updated", i);
         }
         ++i;
 

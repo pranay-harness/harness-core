@@ -109,7 +109,7 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
       return;
     }
 
-    logger.error("Update heartbeat failed for {}", message.getId());
+    log.error("Update heartbeat failed for {}", message.getId());
   }
 
   @Override

@@ -55,12 +55,12 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
     // Running harness get services before creating a new service
     String appId = application.getAppId();
     String command = String.format("harness get services -a %s", appId);
-    logger.info("Running harness get services");
+    log.info("Running harness get services");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -76,12 +76,12 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
     application.setServices(Collections.singletonList(testService));
 
     // Running harness get services after creating a new service
-    logger.info("Running harness get services after creating a new service");
+    log.info("Running harness get services after creating a new service");
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -106,12 +106,12 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
   public void getServicesWithInvalidArgumentsTest() {
     // Running harness get services with invalid appId
     String command = String.format("harness get services -a %s", "INVALID_ID");
-    logger.info("Running harness get services with invalid app ID");
+    log.info("Running harness get services with invalid app ID");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();

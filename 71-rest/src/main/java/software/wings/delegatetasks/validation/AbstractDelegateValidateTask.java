@@ -55,7 +55,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
           }
         }
       } catch (Exception exception) {
-        logger.error("Unexpected error validating delegate task.", exception);
+        log.error("Unexpected error validating delegate task.", exception);
       } finally {
         if (consumer != null) {
           consumer.accept(results);
@@ -63,7 +63,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
       }
       return results;
     } catch (Exception e) {
-      logger.error("Unexpected error executing delegate task {}", delegateId, e);
+      log.error("Unexpected error executing delegate task {}", delegateId, e);
     }
     return emptyList();
   }

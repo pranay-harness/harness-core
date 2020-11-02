@@ -455,7 +455,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       sleep(ofSeconds(1));
     }
 
-    stack.getOutputs().forEach(output -> logger.info(output.getOutputKey() + " = " + output.getOutputValue()));
+    stack.getOutputs().forEach(output -> log.info(output.getOutputKey() + " = " + output.getOutputValue()));
   }
 
   /**
@@ -803,7 +803,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       sleep(ofSeconds(1));
     }
 
-    stack.getOutputs().forEach(output -> logger.info(output.getOutputKey() + " = " + output.getOutputValue()));
+    stack.getOutputs().forEach(output -> log.info(output.getOutputKey() + " = " + output.getOutputValue()));
   }
 
   @Override
@@ -815,9 +815,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     String clusterName = (String) params.get("clusterName");
     awsHelperService.createCluster(
         region, awsConfig, encryptedDataDetails, new CreateClusterRequest().withClusterName(clusterName));
-    logger.info("Successfully created empty cluster " + params.get("clusterName"));
+    log.info("Successfully created empty cluster " + params.get("clusterName"));
 
-    logger.info("Creating autoscaling group for cluster...");
+    log.info("Creating autoscaling group for cluster...");
 
     Integer maxSize = (Integer) params.computeIfAbsent("maxSize", s -> 2 * clusterSize); // default 200%
     Integer minSize = (Integer) params.computeIfAbsent("minSize", s -> clusterSize / 2); // default 50%
@@ -825,7 +825,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     String vpcZoneIdentifiers = (String) params.get("vpcZoneIdentifiers");
     List<String> availabilityZones = (List<String>) params.get("availabilityZones");
 
-    logger.info("Creating autoscaling group for cluster...");
+    log.info("Creating autoscaling group for cluster...");
     awsHelperService.createAutoScalingGroup(awsConfig, encryptedDataDetails, region,
         new CreateAutoScalingGroupRequest()
             .withLaunchConfigurationName(launchConfigName)
@@ -837,12 +837,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .withVPCZoneIdentifier(vpcZoneIdentifiers),
         logCallback);
 
-    logger.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
+    log.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
 
     waitForAllInstancesToBeReady(awsConfig, encryptedDataDetails, region, autoScalingGroupName, clusterSize);
     waitForAllInstanceToRegisterWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize);
 
-    logger.info("All instances are ready for deployment");
+    log.info("All instances are ready for deployment");
   }
 
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
@@ -889,7 +889,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .describeClusters(region, awsConfig, encryptedDataDetails, new DescribeClustersRequest().withClusters(name))
             .getClusters()
             .get(0);
-    logger.info("Waiting for instances to register with cluster. {}/{} registered...",
+    log.info("Waiting for instances to register with cluster. {}/{} registered...",
         cluster.getRegisteredContainerInstancesCount(), clusterSize);
 
     return cluster.getRegisteredContainerInstancesCount().equals(clusterSize);
@@ -904,7 +904,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .getAutoScalingGroups()
             .get(0);
     List<Instance> instances = autoScalingGroup.getInstances();
-    logger.info("Waiting for all instances to be ready. {}/{} ready...", instances.size(), clusterSize);
+    log.info("Waiting for all instances to be ready. {}/{} ready...", instances.size(), clusterSize);
     return !instances.isEmpty()
         && instances.stream().allMatch(instance -> "InService".equals(instance.getLifecycleState()));
   }
@@ -919,7 +919,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (IOException ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
-    logger.info("Begin service deployment " + createServiceRequest.getServiceName());
+    log.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult =
         awsHelperService.createService(region, awsConfig, encryptedDataDetails, createServiceRequest);
 
@@ -979,7 +979,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         requestData.getEncryptedDataDetails(), requestData.getCluster(), Arrays.asList(requestData.getServiceName()))
                           .get(0);
 
-    logger.info(
+    log.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
 
     executionLogCallback.saveExecutionLog(format("Waiting for pending tasks to finish. %s/%s running ...",
@@ -1099,11 +1099,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     List<String> taskArns =
         getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
     if (isEmpty(taskArns)) {
-      logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
+      log.info("Downsize complete for ECS deployment, Service: " + serviceName);
       return emptyList();
     }
 
-    logger.info("Task arns = " + taskArns);
+    log.info("Task arns = " + taskArns);
     List<Task> tasks = awsHelperService
                            .describeTasks(region, awsConfig, encryptedDataDetails,
                                new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
@@ -1120,10 +1120,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       }
 
     } else {
-      logger.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
+      log.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
     }
 
-    logger.info("Docker container ids = " + containerInfos);
+    log.info("Docker container ids = " + containerInfos);
     return containerInfos;
   }
 
@@ -1225,8 +1225,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
         // Instance will always have privateIp, but if is null for any reason, this is safeguard not to have NPE
         if (ipAddress == null) {
-          logger.error(
-              "ECS Deployment ALERT:- Ec2Instance is not expected to have NULL PrivateIp, something seems wrong");
+          log.error("ECS Deployment ALERT:- Ec2Instance is not expected to have NULL PrivateIp, something seems wrong");
           ipAddress = StringUtils.EMPTY;
         }
 
@@ -1298,7 +1297,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void processFargateContainerInfo(List<Task> tasks, String region,
       List<EncryptedDataDetail> encryptedDataDetails, AwsConfig awsConfig, List<String> originalTaskArns,
       List<ContainerInfo> containerInfos) {
-    logger.warn("For Fargate tasks, AWS does not expose Container instances and EC2 instances, "
+    log.warn("For Fargate tasks, AWS does not expose Container instances and EC2 instances, "
         + "so those details will not be available");
     for (Task fargateTask : tasks) {
       Container mainContainer = getMainHarnessDeployedContainer(fargateTask, region, awsConfig, encryptedDataDetails);
@@ -1347,7 +1346,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, AwsConfig awsConfig) {
     List<String> containerInstances =
         tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
-    logger.info("Container Instances = " + containerInstances);
+    log.info("Container Instances = " + containerInstances);
     return awsHelperService
         .describeContainerInstances(region, awsConfig, encryptedDataDetails,
             new DescribeContainerInstancesRequest().withCluster(clusterName).withContainerInstances(containerInstances))
@@ -1452,7 +1451,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }, timeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Service update failed {}", service[0]);
+      log.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(
           format("Timed out waiting for service desired count to match. expected: [%s], found [%s]",
               data.getDesiredCount(), service[0].getDesiredCount()),
@@ -1503,7 +1502,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails);
     RunTaskResult runTaskResult =
         awsHelperService.triggerEcsRunTask(region, awsConfig, encryptedDataDetails, runTaskRequest);
-    logger.info("Ecs Run Task with task definition %s Triggered", runTaskRequest.getTaskDefinition());
+    log.info("Ecs Run Task with task definition %s Triggered", runTaskRequest.getTaskDefinition());
     return runTaskResult;
   }
 

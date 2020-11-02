@@ -58,7 +58,7 @@ public class AwsClientImpl implements AwsClient {
   protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isEc2IamCredentials()) {
-      logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
+      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(

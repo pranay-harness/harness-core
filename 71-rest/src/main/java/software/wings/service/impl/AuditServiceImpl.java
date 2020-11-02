@@ -351,9 +351,9 @@ public class AuditServiceImpl implements AuditService {
     final int batchSize = 1000;
     final int limit = 5000;
     final long days = TimeUnit.DAYS.convert(retentionMillis, TimeUnit.MILLISECONDS);
-    logger.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
+    log.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
-      logger.info("Start: Deleting audit records older than {} days", days);
+      log.info("Start: Deleting audit records older than {} days", days);
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
@@ -361,11 +361,11 @@ public class AuditServiceImpl implements AuditService {
                                                .lessThan(currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));
           if (isEmpty(auditHeaders)) {
-            logger.info("No more audit records older than {} days", days);
+            log.info("No more audit records older than {} days", days);
             return true;
           }
           try {
-            logger.info("Deleting {} audit records", auditHeaders.size());
+            log.info("Deleting {} audit records", auditHeaders.size());
 
             List<ObjectId> requestPayloadIds =
                 auditHeaders.stream()
@@ -395,9 +395,9 @@ public class AuditServiceImpl implements AuditService {
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
           } catch (Exception ex) {
-            logger.warn("Failed to delete {} audit records", auditHeaders.size(), ex);
+            log.warn("Failed to delete {} audit records", auditHeaders.size(), ex);
           }
-          logger.info("Successfully deleted {} audit records", auditHeaders.size());
+          log.info("Successfully deleted {} audit records", auditHeaders.size());
           if (auditHeaders.size() < limit) {
             return true;
           }
@@ -405,9 +405,9 @@ public class AuditServiceImpl implements AuditService {
         }
       }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
-      logger.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
+      log.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }
-    logger.info("Deleted audit records older than {} days", days);
+    log.info("Deleted audit records older than {} days", days);
   }
 
   @Override
@@ -434,7 +434,7 @@ public class AuditServiceImpl implements AuditService {
       Optional<String> optionalAuditHeaderId = fetchAuditHeaderIdFromGlobalContext();
 
       if (!optionalAuditHeaderId.isPresent()) {
-        logger.error(
+        log.error(
             "AuditHeaderKey was not found from global context for accountId={} and entity={}", accountId, newEntity);
         return;
       }
@@ -468,8 +468,7 @@ public class AuditServiceImpl implements AuditService {
           entityToQuery = (UuidAccess) oldEntity;
           break;
         default:
-          logger.warn(
-              format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
+          log.warn(format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
           return;
       }
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
@@ -517,8 +516,7 @@ public class AuditServiceImpl implements AuditService {
           break;
         }
         default: {
-          logger.warn(
-              format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
+          log.warn(format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
           return;
         }
       }
@@ -544,9 +542,9 @@ public class AuditServiceImpl implements AuditService {
             wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, log);
     } catch (Exception ex) {
-      logger.error("Exception while auditing records for account {}", accountId, ex);
+      log.error("Exception while auditing records for account {}", accountId, ex);
     }
   }
 
@@ -581,7 +579,7 @@ public class AuditServiceImpl implements AuditService {
       try {
         entityNameCache.invalidateCache(EntityType.valueOf(record.getEntityType()), record.getEntityId());
       } catch (Exception e) {
-        logger.warn("Failed while invalidating EntityNameCache: " + e);
+        log.warn("Failed while invalidating EntityNameCache: " + e);
       }
     }
   }
@@ -591,7 +589,7 @@ public class AuditServiceImpl implements AuditService {
     try {
       globalContextData = GlobalContextManager.get(AUDIT_ID);
     } catch (Exception e) {
-      logger.error("Exception thrown while getting audit header id ", e);
+      log.error("Exception thrown while getting audit header id ", e);
       throw new InvalidActivityException("Audit header Id not found in Global Context");
     }
     if (!(globalContextData instanceof AuditGlobalContextData)) {
@@ -680,7 +678,7 @@ public class AuditServiceImpl implements AuditService {
           format("Exception: [%s] while generating Yamls for entityId: [%s], entityType: [%s], accountId: [%s]",
               ex.getMessage(), record.getEntityId(), record.getEntityType(), accountId);
       yamlPath = EMPTY;
-      logger.error(yamlContent, ex);
+      log.error(yamlContent, ex);
     }
     String entityId;
     String entityType;

@@ -290,7 +290,7 @@ public class HelmDeployState extends State {
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder,
       GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion,
       int expressionFunctorToken) throws InterruptedException {
-    logger.info("Setting new and previous helm release version");
+    log.info("Setting new and previous helm release version");
     int prevVersion = getPreviousReleaseVersion(context, app, releaseName, containerServiceParams, gitConfig,
         encryptedDataDetails, commandFlags, helmVersion, expressionFunctorToken, stateExecutionDataBuilder);
 
@@ -433,7 +433,7 @@ public class HelmDeployState extends State {
         builder.append(" and correct delegate name is selected in the cloud provider");
       }
 
-      logger.info(builder.toString());
+      log.info(builder.toString());
       throw new InvalidRequestException(builder.toString(), WingsException.USER);
     }
 
@@ -1064,7 +1064,7 @@ public class HelmDeployState extends State {
 
     HelmCommandResponse helmCommandResponse = executionResponse.getHelmCommandResponse();
     if (helmCommandResponse == null) {
-      logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
+      log.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
           + " with error message " + executionResponse.getErrorMessage());
 
       return executionResponseBuilder.build();
@@ -1091,7 +1091,7 @@ public class HelmDeployState extends State {
       executionResponseBuilder.contextElement(instanceElementListParam);
       executionResponseBuilder.notifyElement(instanceElementListParam);
     } else {
-      logger.info("Got helm execution response with status "
+      log.info("Got helm execution response with status "
           + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
           + executionResponse.getHelmCommandResponse().getOutput());
     }
@@ -1154,7 +1154,7 @@ public class HelmDeployState extends State {
 
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
-    logger.info("Found Values at following sources: " + valuesFiles.keySet());
+    log.info("Found Values at following sources: " + valuesFiles.keySet());
     List<String> helmValueOverridesYamlFiles = getOrderedValuesYamlList(valuesFiles);
 
     List<String> helmValueOverridesYamlFilesEvaluated = new ArrayList<>();
@@ -1320,7 +1320,7 @@ public class HelmDeployState extends State {
       HelmExecutionSummary summary = helmHelper.prepareHelmExecutionSummary(releaseName, helmChartSpec, repoConfig);
       workflowExecutionService.refreshHelmExecutionSummary(context.getWorkflowExecutionId(), summary);
     } catch (Exception ex) {
-      logger.info("Exception while setting helm execution summary", ex);
+      log.info("Exception while setting helm execution summary", ex);
     }
   }
 
@@ -1365,7 +1365,7 @@ public class HelmDeployState extends State {
         workflowExecutionService.refreshHelmExecutionSummary(context.getWorkflowExecutionId(), summary);
       }
     } catch (Exception ex) {
-      logger.info("Exception while updating helm execution summary", ex);
+      log.info("Exception while updating helm execution summary", ex);
     }
   }
 }

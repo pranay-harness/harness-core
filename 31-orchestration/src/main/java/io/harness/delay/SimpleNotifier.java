@@ -29,7 +29,7 @@ public class SimpleNotifier implements Runnable {
 
   @Override
   public void run() {
-    logger.info("Simple Notifier Notifying on correlation id : {}", correlationId);
+    log.info("Simple Notifier Notifying on correlation id : {}", correlationId);
     waitNotifyEngine.doneWith(correlationId, response);
   }
 }

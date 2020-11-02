@@ -87,7 +87,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       tmpDatadogMetricsYaml = Resources.toString(DATADOG_METRICS_URL, Charsets.UTF_8);
       tmpDatadogYaml = Resources.toString(DATADOG_URL, Charsets.UTF_8);
     } catch (IOException ex) {
-      logger.error("Unable to initialize datadog metrics yaml");
+      log.error("Unable to initialize datadog metrics yaml");
     }
     DATADOG_METRICS_YAML = tmpDatadogMetricsYaml;
     DATADOG_YAML = tmpDatadogYaml;
@@ -99,7 +99,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Attributes(required = true, title = "Datadog Server") private String analysisServerConfigId;
@@ -289,7 +289,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
         }
       }
     } catch (Exception e) {
-      logger.error("Exception occurred while calculating metric type for name: {}", metricName, e);
+      log.error("Exception occurred while calculating metric type for name: {}", metricName, e);
     }
     return null;
   }

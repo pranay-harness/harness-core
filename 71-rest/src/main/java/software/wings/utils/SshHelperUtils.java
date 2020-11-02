@@ -217,30 +217,30 @@ public class SshHelperUtils {
       throws JSchException {
     if (!isValidKeyTabFile(keyTabFilePath)) {
       logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
-      logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
+      log.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
       throw new JSchException(
           "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
     }
-    logger.info("Generating Ticket Granting Ticket(TGT)...");
+    log.info("Generating Ticket Granting Ticket(TGT)...");
     logCallback.saveExecutionLog("Generating Ticket Granting Ticket(TGT) for principal: " + userPrincipal);
     String commandString = !StringUtils.isEmpty(password) ? format("echo \"%s\" | kinit %s", password, userPrincipal)
                                                           : format("kinit -k -t %s %s", keyTabFilePath, userPrincipal);
     boolean ticketGenerated = executeLocalCommand(commandString, logCallback);
     if (ticketGenerated) {
       logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
-      logger.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
+      log.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
     } else {
-      logger.error("Failure: could not generate Ticket Granting Ticket(TGT)");
+      log.error("Failure: could not generate Ticket Granting Ticket(TGT)");
       throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
     }
   }
   private static boolean isValidKeyTabFile(String keyTabFilePath) {
     if (!StringUtils.isEmpty(keyTabFilePath)) {
       if (new File(keyTabFilePath).exists()) {
-        logger.info("Found keytab file at path: [{}]", keyTabFilePath);
+        log.info("Found keytab file at path: [{}]", keyTabFilePath);
         return true;
       } else {
-        logger.error("Invalid keytab file path: [{}].", keyTabFilePath);
+        log.error("Invalid keytab file path: [{}].", keyTabFilePath);
         return false;
       }
     }
@@ -270,7 +270,7 @@ public class SshHelperUtils {
     try {
       processResult = processExecutor.execute();
     } catch (IOException | InterruptedException | TimeoutException e) {
-      logger.error("Failed to execute command ", e);
+      log.error("Failed to execute command ", e);
     }
     return processResult != null && processResult.getExitValue() == 0;
   }

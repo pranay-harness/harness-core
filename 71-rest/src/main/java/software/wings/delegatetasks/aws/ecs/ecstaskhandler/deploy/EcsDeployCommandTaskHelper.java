@@ -355,7 +355,7 @@ public class EcsDeployCommandTaskHelper {
     if (desiredCount < previousCount) {
       String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
           + previousCount + ", desired: " + desiredCount + "}";
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
 

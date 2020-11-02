@@ -74,17 +74,17 @@ public class ScheduledTriggerJob implements Job {
 
     Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
     if (trigger == null || trigger.getCondition().getConditionType() != SCHEDULED) {
-      logger.info("Trigger not found or wrong type. Deleting job associated to it");
+      log.info("Trigger not found or wrong type. Deleting job associated to it");
       jobScheduler.deleteJob(triggerId, GROUP);
       return;
     }
-    logger.info("Triggering scheduled job for appId {} and triggerId {} with the scheduled fire time {}", appId,
-        triggerId, jobExecutionContext.getNextFireTime());
+    log.info("Triggering scheduled job for appId {} and triggerId {} with the scheduled fire time {}", appId, triggerId,
+        jobExecutionContext.getNextFireTime());
     triggerService.triggerScheduledExecutionAsync(trigger, jobExecutionContext.getNextFireTime());
 
     // Old cron jobs doesn't have accountId. Will need to recreate with accountId as part of the job details
     if (isEmpty(accountId)) {
-      logger.info(
+      log.info(
           "Quartz job '{}' in group {} doesn't have accountId in job details. Will recreate with accountId included.",
           triggerId, GROUP);
       jobScheduler.deleteJob(triggerId, GROUP);

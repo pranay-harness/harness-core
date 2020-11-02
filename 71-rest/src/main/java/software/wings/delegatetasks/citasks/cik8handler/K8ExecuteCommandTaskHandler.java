@@ -48,16 +48,16 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
                k8sConnectorHelper.getDefaultKubernetesClient(k8ExecuteCommandTaskParams.getK8sConnector())) {
         ExecCommandStatus status = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);
         if (status == ExecCommandStatus.SUCCESS) {
-          logger.info("Successfully executed commands {} on container {} of pod {}", commands, containerName, podName);
+          log.info("Successfully executed commands {} on container {} of pod {}", commands, containerName, podName);
           result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
         } else {
-          logger.info("Failed to execute commands {} on container {} of pod {} with status {}", commands, containerName,
+          log.info("Failed to execute commands {} on container {} of pod {} with status {}", commands, containerName,
               podName, status);
           result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
         }
 
       } catch (Exception e) {
-        logger.error("Exception in processing CI execute command task: {}", commands, e);
+        log.error("Exception in processing CI execute command task: {}", commands, e);
         result = K8sTaskExecutionResponse.builder()
                      .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(e.getMessage())

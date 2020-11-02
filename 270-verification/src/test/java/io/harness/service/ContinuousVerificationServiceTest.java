@@ -446,7 +446,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFuture() throws IOException {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
-    logger.info("currentMin: {}", currentMinute);
+    log.info("currentMin: {}", currentMinute);
 
     DelegateTask delegateTask = updateBaseline(cvConfigId, currentMinute);
     LogsCVConfiguration logsCVConfiguration =
@@ -477,7 +477,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFutureDatadogLog() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
-    logger.info("currentMin: {}", currentMinute);
+    log.info("currentMin: {}", currentMinute);
 
     DelegateTask delegateTask = updateBaseline(datadogCvConfigId, currentMinute);
     LogsCVConfiguration logsCVConfiguration =

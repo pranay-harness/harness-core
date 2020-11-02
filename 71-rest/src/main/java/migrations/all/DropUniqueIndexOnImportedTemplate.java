@@ -17,7 +17,7 @@ public class DropUniqueIndexOnImportedTemplate implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "importedTemplates").dropIndex("account_command_idx");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
   }
 }

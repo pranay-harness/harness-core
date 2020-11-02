@@ -31,7 +31,7 @@ public class DynatraceCVConfigurationYamlHandler
     yaml.setDynatraceServiceName("");
     yaml.setDynatraceServiceEntityId("");
     if (isEmpty(serviceList)) {
-      logger.info("No dynatrace services found for the connector " + bean.getConnectorId());
+      log.info("No dynatrace services found for the connector " + bean.getConnectorId());
     } else {
       if (isNotEmpty(bean.getServiceEntityId())) {
         for (DynaTraceApplication service : serviceList) {
@@ -42,7 +42,7 @@ public class DynatraceCVConfigurationYamlHandler
           }
         }
         if (isEmpty(yaml.getDynatraceServiceName())) {
-          logger.info("No dynatrace service found for the serviceID " + bean.getServiceEntityId());
+          log.info("No dynatrace service found for the serviceID " + bean.getServiceEntityId());
         }
       }
     }

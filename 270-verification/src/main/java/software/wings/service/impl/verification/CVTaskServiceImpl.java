@@ -199,7 +199,7 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   @Override
   public void updateTaskStatus(String cvTaskId, DataCollectionTaskResult result) {
-    logger.debug("Updating CVTask status for id: {} and DataCollectionTaskResult: {}", cvTaskId, result);
+    log.debug("Updating CVTask status for id: {} and DataCollectionTaskResult: {}", cvTaskId, result);
     CVTask cvTask = getCVTask(cvTaskId);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       Map<String, Object> updateMap =
@@ -234,14 +234,14 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   private void enqueueNextTask(CVTask cvTask) {
     if (cvTask.getNextTaskId() != null) {
-      logger.info("Enqueuing next task {}", cvTask.getUuid());
+      log.info("Enqueuing next task {}", cvTask.getUuid());
       wingsPersistence.updateField(CVTask.class, cvTask.getNextTaskId(), CVTaskKeys.status, ExecutionStatus.QUEUED);
     }
   }
 
   @Override
   public void expireLongRunningTasks(String accountId) {
-    logger.debug("Running expire long running tasks for accountId {}", accountId);
+    log.debug("Running expire long running tasks for accountId {}", accountId);
     UpdateOperations<CVTask> updateOperations = wingsPersistence.createUpdateOperations(CVTask.class)
                                                     .set(CVTaskKeys.status, ExecutionStatus.EXPIRED)
                                                     .set(CVTaskKeys.exception, "Task timed out");
@@ -267,7 +267,7 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   private void markStateFailed(CVTask cvTask) {
     if (isWorkflowTask(cvTask)) {
-      logger.info("Marking stateExecutionId {} as failed", cvTask.getStateExecutionId());
+      log.info("Marking stateExecutionId {} as failed", cvTask.getStateExecutionId());
       VerificationStateAnalysisExecutionData analysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
               .correlationId(cvTask.getCorrelationId())
@@ -287,7 +287,7 @@ public class CVTaskServiceImpl implements CVTaskService {
     if (isWorkflowTask(cvTask)) {
       String exceptionMsg =
           cvTask.getStatus() == ExecutionStatus.EXPIRED ? "Previous task timed out" : "Previous task failed";
-      logger.info("Marking queued task failed for stateExecutionId {}", cvTask.getStateExecutionId());
+      log.info("Marking queued task failed for stateExecutionId {}", cvTask.getStateExecutionId());
       // TODO: this is simple logic with no retry logic for now. This might change based on on retry logic.
       UpdateOperations<CVTask> updateOperations = wingsPersistence.createUpdateOperations(CVTask.class)
                                                       .set(CVTaskKeys.status, ExecutionStatus.FAILED)

@@ -38,11 +38,11 @@ public class HelmReleaseNameSuffixMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       for (Application application : apps) {
-        logger.info("Updating app {}", application.getUuid());
+        log.info("Updating app {}", application.getUuid());
         List<Workflow> workflows =
             workflowService
                 .listWorkflows(
@@ -53,12 +53,12 @@ public class HelmReleaseNameSuffixMigration implements Migration {
           updateWorkflowsWithHelmReleaseNamePrefix(workflow, HELM_DEPLOY);
         }
 
-        logger.info("Completed updating app {}", application.getUuid());
+        log.info("Completed updating app {}", application.getUuid());
       }
     }
 
-    logger.info("Updated all apps");
-    logger.info("Finished running HelmReleaseNameSuffixMigration");
+    log.info("Updated all apps");
+    log.info("Finished running HelmReleaseNameSuffixMigration");
   }
 
   private void updateWorkflowsWithHelmReleaseNamePrefix(Workflow workflow, StateType stateType) {
@@ -103,11 +103,11 @@ public class HelmReleaseNameSuffixMigration implements Migration {
 
     if (workflowModified) {
       try {
-        logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+        log.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
         workflowService.updateWorkflow(workflow, false);
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("Error updating workflow", e);
+        log.error("Error updating workflow", e);
       }
     }
   }

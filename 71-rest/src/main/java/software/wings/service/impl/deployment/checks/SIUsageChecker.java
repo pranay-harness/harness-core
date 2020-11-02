@@ -47,13 +47,12 @@ public class SIUsageChecker implements PreDeploymentChecker {
 
     if (!within3x) {
       if (isCommunityAccount) {
-        logger.info("Customer exceeded 3x the limit of their allowed service instance usage. accountId={}", accountId);
+        log.info("Customer exceeded 3x the limit of their allowed service instance usage. accountId={}", accountId);
         throw new InstanceUsageExceededLimitException(
             accountId, ninetyFifthPercentileUsage, "Instance Usage Limit Exceeded.");
       } else {
         // logging as error to bring it in logger alerts
-        logger.error(
-            "Non-Community customer exceeded 3x the limit of their allowed service instance usage. accountId={}",
+        log.error("Non-Community customer exceeded 3x the limit of their allowed service instance usage. accountId={}",
             accountId);
       }
     }
@@ -61,8 +60,7 @@ public class SIUsageChecker implements PreDeploymentChecker {
     // has the customer's SI usage been greater than allowed usage for > X days?
     Counter counter = counterService.get(new Action(accountId, ActionType.INSTANCE_USAGE_LIMIT_EXCEEDED));
     if (isCommunityAccount && null != counter && counter.getValue() > NUM_DAYS_TO_CHECK_FOR) {
-      logger.info(
-          "SI usage has been over allowed usage for more than {} days. Deployments will be blocked. accountId={}",
+      log.info("SI usage has been over allowed usage for more than {} days. Deployments will be blocked. accountId={}",
           NUM_DAYS_TO_CHECK_FOR, accountId);
       throw new InstanceUsageExceededLimitException(
           accountId, ninetyFifthPercentileUsage, "Instance Usage Limit Exceeded.");

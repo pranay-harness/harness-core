@@ -61,7 +61,7 @@ public class DelegateExecutor {
         if (isHealthy(account.getUuid(), bearerToken)) {
           return;
         }
-        logger.info("Execute the delegate from {}", directory);
+        log.info("Execute the delegate from {}", directory);
         final Path jar = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
         final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");
 
@@ -74,7 +74,7 @@ public class DelegateExecutor {
         addJar(jar, command);
         addConfig(config, command);
 
-        logger.info(Strings.join(command, " "));
+        log.info(Strings.join(command, " "));
 
         ProcessExecutor processExecutor = new ProcessExecutor();
         processExecutor.directory(directory);

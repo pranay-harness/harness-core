@@ -39,7 +39,7 @@ public class CEViewDao {
                                                     .set(CEViewKeys.viewType, ceView.getViewType())
                                                     .set(CEViewKeys.viewState, ViewState.COMPLETED);
     hPersistence.update(query, updateOperations);
-    logger.info(query.toString());
+    log.info(query.toString());
     return (CEView) query.asList().get(0);
   }
 

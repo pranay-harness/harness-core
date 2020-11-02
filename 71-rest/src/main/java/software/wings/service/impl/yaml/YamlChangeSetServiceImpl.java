@@ -87,7 +87,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         yamlSuccessfulChangeService.updateOnHarnessChangeSet(savedYamlChangeSet);
       }
     } catch (Exception e) {
-      logger.error("error while processing onYamlChangeSetSave event", e);
+      log.error("error while processing onYamlChangeSetSave event", e);
     }
   }
   @Override
@@ -100,7 +100,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
         yamlChangeSet.setQueueKey(buildQueueKey(yamlGitConfig));
       } catch (Exception e) {
-        logger.warn("unable to populate git sync metadata. ignoring these fields", e);
+        log.warn("unable to populate git sync metadata. ignoring these fields", e);
       }
     }
   }
@@ -185,26 +185,26 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              YamlChangeSet.class, accountId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
       if (anyChangeSetRunningFoQueueKey(accountId, queueKey)) {
-        logger.info("Found running changeset for queuekey. Returning null");
+        log.info("Found running changeset for queuekey. Returning null");
         return null;
       }
 
       if (accountQuotaMaxedOut(accountId, maxRunningChangesetsForAccount)) {
-        logger.info("Account quota has been reached. Returning null");
+        log.info("Account quota has been reached. Returning null");
         return null;
       }
 
       final YamlChangeSet selectedChangeSet = selectQueuedChangeSetWithPriority(accountId, queueKey);
 
       if (selectedChangeSet == null) {
-        logger.info("No change set found in queued state");
+        log.info("No change set found in queued state");
       }
 
       return selectedChangeSet;
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error seen in fetching changeSet", exception);
+      log.error("Error seen in fetching changeSet", exception);
     }
     return null;
   }
@@ -242,7 +242,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       if (updateStatus) {
         return get(accountId, selectedYamlChangeSet.getUuid());
       } else {
-        logger.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
+        log.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
             selectedYamlChangeSet.getUuid());
       }
     }
@@ -322,7 +322,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       UpdateResults status = wingsPersistence.update(yamlChangeSet, updateOperations);
       return status.getUpdatedCount() != 0;
     } else {
-      logger.warn("No YamlChangeSet found");
+      log.warn("No YamlChangeSet found");
     }
     return false;
   }
@@ -335,7 +335,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
           yamlChangeSet, wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", newStatus));
       return status.getUpdatedCount() != 0;
     } else {
-      logger.warn("No YamlChangeSet found");
+      log.warn("No YamlChangeSet found");
     }
     return false;
   }
@@ -374,7 +374,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                                     .field(YamlChangeSetKeys.retryCount)
                                                     .greaterThan(MAX_RETRY_COUNT);
       UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
-      logger.info(
+      log.info(
           "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getUpdatedCount());
     }
   }
@@ -431,9 +431,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       UpdateResults status = wingsPersistence.update(query, updateOperations);
       return status.getUpdatedCount() != 0;
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error seen in fetching changeSet", exception);
+      log.error("Error seen in fetching changeSet", exception);
     }
 
     return false;

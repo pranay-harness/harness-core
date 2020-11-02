@@ -260,7 +260,7 @@ public class CustomDashboardResource {
         ReconciliationStatus status =
             deploymentReconService.performReconciliation(account.getUuid(), durationStartTs, durationEndTs);
         accountReconStatusMap.put(account.getAccountName(), status.name());
-        logger.info("Reconcilation completed for accountID:[{}],accountName:[{}],status:[{}]", account.getUuid(),
+        log.info("Reconcilation completed for accountID:[{}],accountName:[{}],status:[{}]", account.getUuid(),
             account.getAccountName(), status);
       }
       return Builder.aRestResponse()

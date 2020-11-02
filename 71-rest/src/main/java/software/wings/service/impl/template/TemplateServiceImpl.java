@@ -746,10 +746,10 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public void loadDefaultTemplates(TemplateType templateType, String accountId, String accountName) {
-    logger.info("Loading default templates for template type {}", templateType);
+    log.info("Loading default templates for template type {}", templateType);
     AbstractTemplateProcessor abstractTemplateProcessor = getTemplateProcessor(templateType.name());
     abstractTemplateProcessor.loadDefaultTemplates(accountId, accountName);
-    logger.info("Loading default templates for template type {} success", templateType);
+    log.info("Loading default templates for template type {} success", templateType);
   }
 
   @Override
@@ -794,12 +794,12 @@ public class TemplateServiceImpl implements TemplateService {
         templateKeys.stream().map(templateKey -> templateKey.getId().toString()).collect(Collectors.toList());
 
     if (isEmpty(templateUuids)) {
-      logger.info("No templates under the folder {}", templateFolder.getName());
+      log.info("No templates under the folder {}", templateFolder.getName());
       return true;
     }
     final List<Template> templates = batchGet(templateUuids, accountId);
 
-    logger.info("To be deleted linked template uuids {}", templateUuids);
+    log.info("To be deleted linked template uuids {}", templateUuids);
     // Since the template folder will be deleted only if all the folder inside it are deleted. Hence validating linkage
     // beforehand. Verify if Service Commands contains the given ids
     String errorMessage = String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName());
@@ -848,7 +848,7 @@ public class TemplateServiceImpl implements TemplateService {
           Thread.currentThread().interrupt();
           return false;
         } catch (ExecutionException e) {
-          logger.error("Couldn't delete templates.", e);
+          log.error("Couldn't delete templates.", e);
           return false;
         }
       }
@@ -913,7 +913,7 @@ public class TemplateServiceImpl implements TemplateService {
     StringBuilder templateFolderPath = new StringBuilder("");
     Template template = wingsPersistence.get(Template.class, templateUuid);
     if (template == null) {
-      logger.error("Linked template for http template  {} was deleted ", templateUuid);
+      log.error("Linked template for http template  {} was deleted ", templateUuid);
       return null;
     }
     if (HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(
@@ -941,7 +941,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     String templateUri = fetchTemplateUri(templateUuid);
     if (templateUri == null) {
-      logger.error("Linked template {} was deleted.", templateUuid);
+      log.error("Linked template {} was deleted.", templateUuid);
       return null;
     }
     if (version != null) {
@@ -1296,7 +1296,7 @@ public class TemplateServiceImpl implements TemplateService {
     // First
     templateFiles.forEach(templatePath -> {
       try {
-        logger.info("Loading url file {} for the account {} ", templatePath, accountId);
+        log.info("Loading url file {} for the account {} ", templatePath, accountId);
         loadAndSaveTemplate(templatePath, accountId, accountName);
       } catch (WingsException exception) {
         String msg = "Failed to save template from file [" + templatePath + "] for the account [" + accountId

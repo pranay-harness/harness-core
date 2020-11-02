@@ -106,7 +106,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       fileMetadata.setFileLength(blob.getSize());
       fileMetadata.setFileUuid(gcsFileId);
       saveGcsFileMetadata(fileMetadata, fileBucket, null, gcsFileId);
-      logger.info("File '{}' of type {} is saved in GCS with id {}", fileMetadata.getFileName(), fileBucket, gcsFileId);
+      log.info("File '{}' of type {} is saved in GCS with id {}", fileMetadata.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED, e);
@@ -138,7 +138,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       baseFile.setSize(blob.getSize());
       baseFile.setFileUuid(gcsFileId);
       saveGcsFileMetadata(baseFile, fileBucket, null, gcsFileId);
-      logger.info("File '{}' of type {} is saved in GCS with id {}", baseFile.getFileName(), fileBucket, gcsFileId);
+      log.info("File '{}' of type {} is saved in GCS with id {}", baseFile.getFileName(), fileBucket, gcsFileId);
       return gcsFileId;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.SAVE_FILE_INTO_GCP_STORAGE_FAILED);
@@ -147,13 +147,13 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
-    logger.info("Deleting file {}", fileId);
+    log.info("Deleting file {}", fileId);
     // delete gcs file metadata first.
     deleteGcsFileMetadataByGcsFileId(fileId);
 
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
     getStorage().delete(blobId);
-    logger.info("Deleted file {}", fileId);
+    log.info("Deleted file {}", fileId);
   }
 
   @Override
@@ -311,7 +311,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
     createFileBucketsInGCS();
 
-    logger.info("Google cloud storage based file service has been initialized.");
+    log.info("Google cloud storage based file service has been initialized.");
   }
 
   void saveGcsFileMetadata(BaseFile baseFile, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
@@ -378,14 +378,14 @@ public class GoogleCloudFileServiceImpl implements FileService {
     for (FileBucket fileBucket : fileBuckets) {
       String bucketName = getBucketName(fileBucket);
       if (bucketNames.contains(bucketName)) {
-        logger.info("Bucket with name '{}' exists in Google Cloud Storage already.", bucketName);
+        log.info("Bucket with name '{}' exists in Google Cloud Storage already.", bucketName);
       } else {
         try {
           getStorage().create(
               BucketInfo.newBuilder(bucketName).setStorageClass(StorageClass.NEARLINE).setLocation("us").build());
-          logger.info("Bucket with name '{}' created in Google Cloud Storage.", bucketName);
+          log.info("Bucket with name '{}' created in Google Cloud Storage.", bucketName);
         } catch (Exception e) {
-          logger.warn(
+          log.warn(
               "Creation of bucket in Google Cloud Storage '{}' failed with error: '{}', the bucket may have been created already "
                   + "or the current account doesn't have permission to create bucket.",
               bucketName, e.getMessage());
@@ -413,13 +413,12 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   private boolean updateGcsFileMetadata(
       String gcsFileId, String entityId, Integer version, Map<String, Object> others) {
-    logger.info("Updating GCS file '{}' with parent entity '{}' and version '{}' with {} other metadata entries.",
+    log.info("Updating GCS file '{}' with parent entity '{}' and version '{}' with {} other metadata entries.",
         gcsFileId, entityId, version, others == null ? 0 : others.size());
     GcsFileMetadata gcsFileMetadata =
         wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
     if (gcsFileMetadata == null) {
-      logger.warn(
-          "Can't update GCS file metadata since no corresponding entry is found for file with id '{}'", gcsFileId);
+      log.warn("Can't update GCS file metadata since no corresponding entry is found for file with id '{}'", gcsFileId);
       return false;
     }
 

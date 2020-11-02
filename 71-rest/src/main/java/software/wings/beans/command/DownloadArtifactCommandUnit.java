@@ -148,30 +148,30 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (artifactStreamType) {
       case AMAZON_S3:
         command = constructCommandStringForAmazonS3V4(artifactStreamAttributes, encryptionDetails, metadata);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case ARTIFACTORY:
         command = constructCommandStringForArtifactory(artifactStreamAttributes, encryptionDetails, metadata);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case SMB:
         command = constructCommandStringForSMB(artifactStreamAttributes, encryptionDetails, metadata);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case SFTP:
         command = constructCommandStringForSFTP(artifactStreamAttributes, encryptionDetails, metadata);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case AZURE_ARTIFACTS:
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         List<AzureArtifactsPackageFileInfo> fileInfos = azureArtifactsService.listFiles(
@@ -192,19 +192,19 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         return SUCCESS;
       case NEXUS:
         command = constructCommandStringForNexus(context, artifactStreamAttributes, encryptionDetails);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case JENKINS:
         command = constructCommandStringForJenkins(context, artifactStreamAttributes, encryptionDetails);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case BAMBOO:
         command = constructCommandStringForBamboo(context, artifactStreamAttributes, encryptionDetails);
-        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        log.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
@@ -356,7 +356,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
         if (lastIndexOfSlash > 0) {
           artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
-          logger.info("Got filename: " + artifactFileName);
+          log.info("Got filename: " + artifactFileName);
         }
         command = "curl --fail --progress-bar \""
             + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true) + "\""
@@ -477,7 +477,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
     if (lastIndexOfSlash > 0) {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
-      logger.info("Got filename: " + artifactFileName);
+      log.info("Got filename: " + artifactFileName);
     }
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue();
     encryptionService.decrypt(artifactoryConfig, encryptionDetails, false);
@@ -733,7 +733,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
     if (lastIndexOfSlash > 0) {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
-      logger.info("Got filename: " + artifactFileName);
+      log.info("Got filename: " + artifactFileName);
     }
 
     AzureArtifactsConfig azureArtifactsConfig =

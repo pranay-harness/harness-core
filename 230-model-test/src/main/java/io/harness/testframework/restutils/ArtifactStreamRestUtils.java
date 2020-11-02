@@ -44,7 +44,7 @@ public class ArtifactStreamRestUtils {
         try {
           Thread.sleep(1000 * 5);
         } catch (InterruptedException e) {
-          logger.error("Exception thrown:", e);
+          log.error("Exception thrown:", e);
         }
         continue;
       }

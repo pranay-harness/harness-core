@@ -171,7 +171,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
         Thread.currentThread().interrupt();
         break;
       } catch (Throwable exception) {
-        logger.error("Exception occurred while processing iterator", exception);
+        log.error("Exception occurred while processing iterator", exception);
         sleep(ofSeconds(1));
       }
     }
@@ -209,7 +209,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
       try {
         semaphore.acquire();
       } catch (InterruptedException e) {
-        logger.info("Working on entity was interrupted");
+        log.info("Working on entity was interrupted");
         Thread.currentThread().interrupt();
         return;
       }
@@ -229,9 +229,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
 
         try (DelayLogContext ignore2 = new DelayLogContext(delay, OVERRIDE_ERROR)) {
           if (delay < acceptableNoAlertDelay.toMillis()) {
-            logger.info("Working on entity");
+            log.info("Working on entity");
           } else {
-            logger.error(
+            log.error(
                 "Working on entity but the delay is more than the acceptable {}", acceptableNoAlertDelay.toMillis());
           }
         }
@@ -239,22 +239,22 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
         try {
           handler.handle(entity);
         } catch (RuntimeException exception) {
-          logger.error("Catch and handle all exceptions in the entity handler", exception);
+          log.error("Catch and handle all exceptions in the entity handler", exception);
         }
       } catch (Throwable exception) {
-        logger.error("Exception while processing entity", exception);
+        log.error("Exception while processing entity", exception);
       } finally {
         semaphore.release();
 
         long processTime = currentTimeMillis() - startTime;
         try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
           if (acceptableExecutionTime == null || processTime <= acceptableExecutionTime.toMillis()) {
-            logger.info("Done with entity");
+            log.info("Done with entity");
           } else {
-            logger.error("Done with entity but took too long acceptable {}", acceptableExecutionTime.toMillis());
+            log.error("Done with entity but took too long acceptable {}", acceptableExecutionTime.toMillis());
           }
         } catch (Throwable exception) {
-          logger.error("Exception while recording the processing of entity", exception);
+          log.error("Exception while recording the processing of entity", exception);
         }
       }
     }

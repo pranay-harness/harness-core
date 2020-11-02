@@ -24,7 +24,7 @@ public class ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes 
 
   @Override
   public void migrate() {
-    logger.info("Running ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes migration");
+    log.info("Running ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes migration");
 
     Collection<String> accountsForWhomTagsFeatureIsNotSupported =
         getAllAccountsUsingTags()
@@ -32,7 +32,7 @@ public class ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes 
             .filter(account -> !tagsFeature.isAvailableForAccount(account))
             .collect(toList());
 
-    logger.info(
+    log.info(
         "Converting Restricted Tags To Non Restricted Tags for accounts {} ", accountsForWhomTagsFeatureIsNotSupported);
 
     tagService.convertRestrictedTagsToNonRestrictedTags(accountsForWhomTagsFeatureIsNotSupported);

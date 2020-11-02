@@ -77,7 +77,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
 
   private Set<ContainerMetadata> getContainerMetadataFromInstances(String appId, String infrastructureMappingId) {
     List<Instance> instances = instanceService.getInstancesForAppAndInframapping(appId, infrastructureMappingId);
-    logger.info("Found {} instances for app {}", instances.size(), appId);
+    log.info("Found {} instances for app {}", instances.size(), appId);
 
     return emptyIfNull(instances)
         .stream()

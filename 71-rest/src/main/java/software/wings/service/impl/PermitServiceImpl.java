@@ -56,9 +56,9 @@ public class PermitServiceImpl implements PermitService {
     try (AutoLogContext ignore = new PermitLogContext(permit, OVERRIDE_ERROR)) {
       return wingsPersistence.save(permit);
     } catch (DuplicateKeyException ex) {
-      logger.info("Permit already exists");
+      log.info("Permit already exists");
     } catch (Exception ex) {
-      logger.error("Unexpected error in issuing permit", ex);
+      log.error("Unexpected error in issuing permit", ex);
     }
     return null;
   }
@@ -68,7 +68,7 @@ public class PermitServiceImpl implements PermitService {
     Permit permit = wingsPersistence.createQuery(Permit.class).filter(PERMIT_KEY_ID, key).get();
     if (permit == null) {
       try (AutoLogContext ignore = new PermitLogContext(key, OVERRIDE_ERROR)) {
-        logger.info("Permit already deleted");
+        log.info("Permit already deleted");
       }
       return true;
     }

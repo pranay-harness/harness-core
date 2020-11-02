@@ -49,11 +49,11 @@ public class RemoveDuplicateUserGroupNameMigration implements Migration {
             alreadyUsedNames.add(newUserGroupName);
           });
         } catch (Exception e) {
-          logger.error("Duplicate User Group removal failed for accountId: {}", account.getUuid(), e);
+          log.error("Duplicate User Group removal failed for accountId: {}", account.getUuid(), e);
         }
       });
     } catch (Exception e) {
-      logger.error("Duplicate User Group removal migration failed ", e);
+      log.error("Duplicate User Group removal migration failed ", e);
     }
   }
   private String changeNameOfUserGroup(Set<String> alreadyUsedNames, UserGroup userGroup) {

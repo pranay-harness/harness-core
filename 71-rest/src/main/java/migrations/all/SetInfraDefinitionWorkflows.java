@@ -44,7 +44,7 @@ public class SetInfraDefinitionWorkflows {
   @Inject private WingsPersistence wingsPersistence;
 
   public void migrate(Account account) {
-    logger.info(StringUtils.join(
+    log.info(StringUtils.join(
         DEBUG_LINE, "Starting Infra Definition migration for Workflows, accountId ", account.getUuid()));
 
     List<Workflow> workflows = WorkflowAndPipelineMigrationUtils.fetchAllWorkflowsForAccount(
@@ -52,11 +52,11 @@ public class SetInfraDefinitionWorkflows {
 
     for (Workflow workflow : workflows) {
       try {
-        logger.info(StringUtils.join(
+        log.info(StringUtils.join(
             DEBUG_LINE, "Starting Infra Definition migration for Workflow, workflowId ", workflow.getUuid()));
         migrate(workflow);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Migration failed for WorkflowId: " + workflow.getUuid()
+        log.error("[INFRA_MIGRATION_ERROR] Migration failed for WorkflowId: " + workflow.getUuid()
             + ExceptionUtils.getMessage(e));
       }
     }
@@ -115,16 +115,16 @@ public class SetInfraDefinitionWorkflows {
         }
         break;
       default:
-        logger.error("[INFRA_MIGRATION_ERROR] are you kidding me, workflowId " + workflow.getUuid());
+        log.error("[INFRA_MIGRATION_ERROR] are you kidding me, workflowId " + workflow.getUuid());
     }
 
     if (modified) {
       try {
         workflowService.updateWorkflow(workflow, true);
-        logger.info("--- Workflow updated: {}, {}", workflow.getUuid(), workflow.getName());
+        log.info("--- Workflow updated: {}, {}", workflow.getUuid(), workflow.getName());
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Error updating workflow " + workflow.getUuid(), e);
+        log.error("[INFRA_MIGRATION_ERROR] Error updating workflow " + workflow.getUuid(), e);
       }
     }
   }
@@ -144,7 +144,7 @@ public class SetInfraDefinitionWorkflows {
     infraMappingTemplateExpression.getMetadata().put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION.name());
 
     if (workflowPhase.checkServiceTemplatized()) {
-      logger.info("Service is also tempaltised. Updating relatedField");
+      log.info("Service is also tempaltised. Updating relatedField");
       TemplateExpression serviceExpression = workflowPhase.getTemplateExpressions()
                                                  .stream()
                                                  .filter(t -> t.getFieldName().equals(WorkflowKeys.serviceId))
@@ -174,19 +174,18 @@ public class SetInfraDefinitionWorkflows {
                                                .findFirst()
                                                .orElse(null);
     if (serviceExpression != null) {
-      logger.info("Service is also tempaltised. Updating relatedField");
+      log.info("Service is also tempaltised. Updating relatedField");
       serviceExpression.getMetadata().put(Variable.RELATED_FIELD, infraDefExpression);
     }
   }
 
   private boolean migrateWorkflowPhases(Workflow workflow, List<WorkflowPhase> workflowPhases, String appId) {
     List<Boolean> modified = new ArrayList<>();
-    logger.info(StringUtils.join(DEBUG_LINE, "Migrating workflowPhases, ", workflowPhases.size()));
+    log.info(StringUtils.join(DEBUG_LINE, "Migrating workflowPhases, ", workflowPhases.size()));
     for (WorkflowPhase workflowPhase : workflowPhases) {
-      logger.info(StringUtils.join(DEBUG_LINE, "Starting Migration for  workflowPhase ", workflowPhase.getUuid()));
+      log.info(StringUtils.join(DEBUG_LINE, "Starting Migration for  workflowPhase ", workflowPhase.getUuid()));
       if (workflowPhase.getInfraDefinitionId() != null) {
-        logger.info(
-            "[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed, WorkflowId: "
+        log.info("[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed, WorkflowId: "
             + workflow.getUuid());
         continue;
       }
@@ -201,13 +200,12 @@ public class SetInfraDefinitionWorkflows {
   private boolean migrateRollbackWorkflowPhaseIdMap(
       Workflow workflow, Map<String, WorkflowPhase> workflowPhases, String appId) {
     List<Boolean> modified = new ArrayList<>();
-    logger.info(StringUtils.join(DEBUG_LINE, "Migrating Rollback workflowPhases, ", workflowPhases.size()));
+    log.info(StringUtils.join(DEBUG_LINE, "Migrating Rollback workflowPhases, ", workflowPhases.size()));
     for (WorkflowPhase workflowPhase : workflowPhases.values()) {
-      logger.info(
+      log.info(
           StringUtils.join(DEBUG_LINE, "Starting Migration for  rollback workflowPhase ", workflowPhase.getUuid()));
       if (workflowPhase.getInfraDefinitionId() != null) {
-        logger.info(
-            "[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed. WorkfLowId: "
+        log.info("[INFRA_MIGRATION_INFO]WorkflowPhase already has infraDefinitionId, no migration needed. WorkfLowId: "
             + workflow.getUuid());
         continue;
       }
@@ -223,7 +221,7 @@ public class SetInfraDefinitionWorkflows {
     String infraMappingId = workflowPhase.getInfraMappingId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
     if (infrastructureMapping == null) {
-      logger.error("[INFRA_MIGRATION_INFO] Infra Mapping does not exist " + infraMappingId
+      log.error("[INFRA_MIGRATION_INFO] Infra Mapping does not exist " + infraMappingId
           + " skipping migration, WorkflowId: " + workflow.getUuid());
 
       // This workflow is not usable.Should i remove infraMapping ID here from workflow phase? Which should ideally mark
@@ -236,7 +234,7 @@ public class SetInfraDefinitionWorkflows {
 
     if (infraDef == null) {
       // Manual intervention needed
-      logger.error("[INFRA_MIGRATION_ERROR]Infra Definition does not exist " + infraDefId
+      log.error("[INFRA_MIGRATION_ERROR]Infra Definition does not exist " + infraDefId
           + "skipping migration, WorkflowId: " + workflow.getUuid());
       return false;
     }

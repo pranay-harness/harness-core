@@ -41,7 +41,7 @@ public class NotifyResponseCleaner implements Runnable {
     try {
       execute();
     } catch (Exception e) {
-      logger.error("Exception happened in Notifier execute", e);
+      log.error("Exception happened in Notifier execute", e);
     }
   }
 
@@ -49,14 +49,14 @@ public class NotifyResponseCleaner implements Runnable {
     try {
       executeInternal();
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {
-      logger.error("Error seen in the Notifier call", exception);
+      log.error("Error seen in the Notifier call", exception);
     }
   }
 
   public void executeInternal() {
-    logger.debug("Execute Notifier response processing");
+    log.debug("Execute Notifier response processing");
 
     // Sometimes response might arrive before we schedule the wait. Do not remove responses that are very new.
     final long limit = System.currentTimeMillis() - Duration.ofSeconds(15).toMillis();
@@ -105,7 +105,7 @@ public class NotifyResponseCleaner implements Runnable {
 
   private void deleteObsoleteResponses(List<String> deleteResponses) {
     if (isNotEmpty(deleteResponses)) {
-      logger.info("Deleting {} not needed responses", deleteResponses.size());
+      log.info("Deleting {} not needed responses", deleteResponses.size());
       persistence.deleteOnServer(persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                      .field(NotifyResponseKeys.uuid)
                                      .in(deleteResponses));

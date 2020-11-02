@@ -83,7 +83,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       try {
         Instant now = Instant.now();
         String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-        logger.info("Ensured watch exists with id {}.", watchId);
+        log.info("Ensured watch exists with id {}.", watchId);
         K8sClusterConfig k8sClusterConfig =
             (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
 
@@ -128,7 +128,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                          .build(),
             taskId);
       } catch (Exception ex) {
-        logger.error("Unknown error occured from {} while collecting metrics.", taskId, ex);
+        log.error("Unknown error occured from {} while collecting metrics.", taskId, ex);
       }
       return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
     }
@@ -136,7 +136,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
 
   private void logIfNotSeenRecently(Exception ex, String msg) {
     recentlyLoggedExceptions.get(ex.getClass(), k -> {
-      logger.error(msg, ex);
+      log.error(msg, ex);
       return Boolean.TRUE;
     });
   }
@@ -146,7 +146,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       eventPublisher.publishMessage(
           ceExceptionMessage, HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
     } catch (Exception ex) {
-      logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+      log.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
     }
   }
 
@@ -177,7 +177,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                            .map(V1ObjectMeta::getUid)
                            .collect(Collectors.toList()));
     } catch (ApiException ex) {
-      logger.warn("ListPersistentVolume failed: code=[{}], headers=[{}]", ex.getCode(), ex.getResponseHeaders(), ex);
+      log.warn("ListPersistentVolume failed: code=[{}], headers=[{}]", ex.getCode(), ex.getResponseHeaders(), ex);
     }
 
     Timestamp timestamp = HTimestamps.fromInstant(pollTime);
@@ -202,7 +202,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         return false;
       }
       String watchId = taskWatchIdMap.get(taskId.getId());
-      logger.info("Stopping the watch with id {}", watchId);
+      log.info("Stopping the watch with id {}", watchId);
       k8sWatchServiceDelegate.delete(watchId);
       taskWatchIdMap.remove(taskId.getId());
 

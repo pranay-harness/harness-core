@@ -74,7 +74,7 @@ public class VaultManuallyEnteredSecretEngineFlagHandler implements Handler<Secr
 
   @Override
   public void handle(SecretManagerConfig secretManagerConfig) {
-    logger.info("Setting vault manually entered flag for config id {}", secretManagerConfig.getUuid());
+    log.info("Setting vault manually entered flag for config id {}", secretManagerConfig.getUuid());
     VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
     vaultConfig.setSecretId(SECRET_MASK);
     vaultConfig.setAuthToken(SECRET_MASK);
@@ -84,7 +84,7 @@ public class VaultManuallyEnteredSecretEngineFlagHandler implements Handler<Secr
       engineManuallyEntered = isSecretEngineManuallyEntered(
           secretEngines, vaultConfig.getSecretEngineName(), vaultConfig.getSecretEngineVersion());
     } catch (Exception e) {
-      logger.error("Cannot list secret engine, permission is not present.", e);
+      log.error("Cannot list secret engine, permission is not present.", e);
       engineManuallyEntered = true;
     }
     if (engineManuallyEntered != vaultConfig.isEngineManuallyEntered()) {

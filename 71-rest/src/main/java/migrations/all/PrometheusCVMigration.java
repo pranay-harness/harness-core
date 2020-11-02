@@ -31,9 +31,9 @@ public class PrometheusCVMigration implements Migration {
           final PrometheusCVServiceConfiguration prometheusCVConfiguration =
               (PrometheusCVServiceConfiguration) iterator.next();
 
-          logger.info("running migration for {} ", prometheusCVConfiguration);
+          log.info("running migration for {} ", prometheusCVConfiguration);
           if (isEmpty(prometheusCVConfiguration.getTimeSeriesToAnalyze())) {
-            logger.error("Empty timeseries list for prometheus {}", prometheusCVConfiguration);
+            log.error("Empty timeseries list for prometheus {}", prometheusCVConfiguration);
             continue;
           }
 
@@ -48,18 +48,17 @@ public class PrometheusCVMigration implements Migration {
             updatedUrl = updatedUrl.replace("step=60s", "");
             updatedUrl = updatedUrl.replace("query=", "");
             updatedUrl = updatedUrl.replaceAll("&", "");
-            logger.info(
-                "for {} \nreplacing: {} \nwith: {}", prometheusCVConfiguration.getUuid(), originalUrl, updatedUrl);
+            log.info("for {} \nreplacing: {} \nwith: {}", prometheusCVConfiguration.getUuid(), originalUrl, updatedUrl);
             timeSeries.setUrl(updatedUrl);
           });
           wingsPersistence.save(prometheusCVConfiguration);
           updated++;
         } catch (Exception e) {
-          logger.info("Error while running migration", e);
+          log.info("Error while running migration", e);
         }
       }
     }
 
-    logger.info("Complete. updated " + updated + " records.");
+    log.info("Complete. updated " + updated + " records.");
   }
 }

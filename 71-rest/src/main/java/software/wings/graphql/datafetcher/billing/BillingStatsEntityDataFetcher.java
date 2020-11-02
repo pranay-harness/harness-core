@@ -104,7 +104,7 @@ public class BillingStatsEntityDataFetcher
     if (groupByTagList.isEmpty() && groupByLabelList.isEmpty()) {
       queryData.setQuery(queryData.getQuery() + format(OFFSET_AND_LIMIT_QUERY, offset, limit));
     }
-    logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
+    log.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
 
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
@@ -119,11 +119,11 @@ public class BillingStatsEntityDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsEntityDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsEntityDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
@@ -367,7 +367,7 @@ public class BillingStatsEntityDataFetcher
         billingDataQueryBuilder.prepareFiltersForUnallocatedCostData(filters), aggregateFunction, groupBy, groupByTime,
         sortCriteria, true);
     String query = queryData.getQuery();
-    logger.info("Unallocated cost data query {}", query);
+    log.info("Unallocated cost data query {}", query);
     ResultSet resultSet = null;
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {

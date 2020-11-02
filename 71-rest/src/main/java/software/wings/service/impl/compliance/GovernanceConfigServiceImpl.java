@@ -48,7 +48,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   public GovernanceConfig get(String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Getting Deployment Freeze window");
+      log.info("Getting Deployment Freeze window");
       GovernanceConfig governanceConfig =
           wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId).get();
       if (governanceConfig == null) {
@@ -66,7 +66,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @RestrictedApi(GovernanceFeature.class)
   public GovernanceConfig upsert(@AccountId String accountId, @Nonnull GovernanceConfig governanceConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Updating Deployment Freeze window");
+      log.info("Updating Deployment Freeze window");
       GovernanceConfig oldSetting = get(accountId);
 
       Query<GovernanceConfig> query =
@@ -83,7 +83,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         EmbeddedUser embeddedUser = new EmbeddedUser(user.getUuid(), user.getName(), user.getEmail());
         updateOperations.set(GovernanceConfigKeys.lastUpdatedBy, embeddedUser);
       } else {
-        logger.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
+        log.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
       }
 
       GovernanceConfig updatedSetting =
@@ -123,8 +123,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   private void publishToSegment(String accountId, User user, EventType eventType) {
     if (null == user) {
-      logger.error(
-          "User is null when trying to publish to segment. Event will be skipped. Event Type: {}, accountId={}",
+      log.error("User is null when trying to publish to segment. Event will be skipped. Event Type: {}, accountId={}",
           eventType, accountId);
       return;
     }
@@ -145,7 +144,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   public void deleteByAccountId(String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting Deployment Freeze window(s)");
+      log.info("Deleting Deployment Freeze window(s)");
       Query<GovernanceConfig> query =
           wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
       GovernanceConfig config = query.get();

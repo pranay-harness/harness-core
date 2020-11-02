@@ -65,7 +65,7 @@ public class TokenGenerator {
     try {
       jwt.encrypt(encrypter);
     } catch (JOSEException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     return jwt.serialize();
   }

@@ -50,12 +50,12 @@ public class GetApprovalsFunctionalTest extends AbstractFunctionalTest {
   public void getApprovalsTest() {
     // Running harness get approvals before executing a pipeline with approval step
     String command = String.format("harness get approvals");
-    logger.info("Running command " + command);
+    log.info("Running command " + command);
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     int outputSize = cliOutput.size();
@@ -67,19 +67,19 @@ public class GetApprovalsFunctionalTest extends AbstractFunctionalTest {
     assertThat(testPipeline).isNotNull();
     harnesscliHelper.deployPipeline(testPipeline, application);
     String approvalId = harnesscliHelper.getApprovalID(pipelineName);
-    logger.info(approvalId);
+    log.info(approvalId);
     if (approvalId == null) {
-      logger.info("No approval Exists for the given ID");
+      log.info("No approval Exists for the given ID");
       assertThat(false).isTrue();
     }
 
     // Running harness get approvals after executing a pipeline with approval step
-    logger.info("Running command " + command);
+    log.info("Running command " + command);
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     int newOutputSize = cliOutput.size();
@@ -101,11 +101,11 @@ public class GetApprovalsFunctionalTest extends AbstractFunctionalTest {
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     if (cliOutput == null || cliOutput.size() != 3) {
-      logger.info("The approve command output has " + cliOutput.size() + " lines");
+      log.info("The approve command output has " + cliOutput.size() + " lines");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput.get(0).contains("Execution status: SUCCESS")).isTrue();

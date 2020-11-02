@@ -24,7 +24,7 @@ public class AwsCallTracker {
   private static final String CLASSIC_ELB_MARKER = "CLASSIC_ELB";
 
   private void trackAWSCall(String marker, String callType) {
-    logger.info("AWS CALL:[{}] {}", marker, callType);
+    log.info("AWS CALL:[{}] {}", marker, callType);
   }
 
   public void trackS3Call(String callType) {

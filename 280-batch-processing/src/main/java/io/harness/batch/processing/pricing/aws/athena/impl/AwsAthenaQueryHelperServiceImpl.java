@@ -74,7 +74,7 @@ public class AwsAthenaQueryHelperServiceImpl implements AwsAthenaQueryHelperServ
       String database, String outputBucket, String athenaQuery, AthenaClient athenaClient) {
     QueryExecutionContext queryExecutionContext = QueryExecutionContext.builder().database(database).build();
     ResultConfiguration resultConfiguration = ResultConfiguration.builder().outputLocation(outputBucket).build();
-    logger.info("Athena Query {}", athenaQuery);
+    log.info("Athena Query {}", athenaQuery);
     StartQueryExecutionRequest startQueryExecutionRequest = StartQueryExecutionRequest.builder()
                                                                 .queryString(athenaQuery)
                                                                 .queryExecutionContext(queryExecutionContext)
@@ -111,7 +111,7 @@ public class AwsAthenaQueryHelperServiceImpl implements AwsAthenaQueryHelperServ
       } else {
         Thread.sleep(SLEEP_AMOUNT_IN_MS);
       }
-      logger.info("Current Status is: {} ", queryState);
+      log.info("Current Status is: {} ", queryState);
     }
   }
 
@@ -158,7 +158,7 @@ public class AwsAthenaQueryHelperServiceImpl implements AwsAthenaQueryHelperServ
                                                                 .memPerVm(getMemoryValue(resultData, 9))
                                                                 .build();
       accountComputePricingDataList.add(accountComputePricingData);
-      logger.info("Account pricing data {} ", accountComputePricingData.toString());
+      log.info("Account pricing data {} ", accountComputePricingData.toString());
     });
     return accountComputePricingDataList;
   }
@@ -179,7 +179,7 @@ public class AwsAthenaQueryHelperServiceImpl implements AwsAthenaQueryHelperServ
                                                                 .memoryPriceType(getBooleanValue(resultData, 6))
                                                                 .build();
       accountFargatePricingDataList.add(accountFargatePricingData);
-      logger.info("Account pricing data {} ", accountFargatePricingData.toString());
+      log.info("Account pricing data {} ", accountFargatePricingData.toString());
     });
     return accountFargatePricingDataList;
   }

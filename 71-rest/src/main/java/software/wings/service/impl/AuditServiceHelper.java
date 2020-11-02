@@ -25,7 +25,7 @@ public class AuditServiceHelper {
       entityCrudSubject.fireInform(
           EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, entity, null, Type.DELETE);
     } catch (Exception e) {
-      logger.warn("Failed to Audit \"Delete\" purge record");
+      log.warn("Failed to Audit \"Delete\" purge record");
     }
   }
 
@@ -34,7 +34,7 @@ public class AuditServiceHelper {
       entityCrudSubject.fireInform(
           EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, entity, null, Type.DELETE);
     } catch (Exception e) {
-      logger.warn("Failed to Audit \"Delete\" purge record");
+      log.warn("Failed to Audit \"Delete\" purge record");
     }
   }
 
@@ -44,7 +44,7 @@ public class AuditServiceHelper {
       entityCrudSubject.fireInform(
           EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, oldEntity, newEntity, type);
     } catch (Exception e) {
-      logger.warn("Failed to Audit Record for Type: " + type, e);
+      log.warn("Failed to Audit Record for Type: " + type, e);
     }
   }
 
@@ -53,14 +53,14 @@ public class AuditServiceHelper {
       entityCrudSubject.fireInform(
           EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, oldEntity, newEntity, type);
     } catch (Exception e) {
-      logger.warn("Failed to Audit Record for Type: " + type, e);
+      log.warn("Failed to Audit Record for Type: " + type, e);
     }
   }
 
   public void addEntityOperationIdentifierDataToAuditContext(EntityOperationIdentifier entityOperationIdentifier) {
     AuditGlobalContextData auditGlobalContextData = GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
     if (auditGlobalContextData == null) {
-      logger.warn("auditGlobalContextData Was found Null in addEntityOperationIdentifierDataToAuditContext(): "
+      log.warn("auditGlobalContextData Was found Null in addEntityOperationIdentifierDataToAuditContext(): "
           + entityOperationIdentifier.toString());
       return;
     }

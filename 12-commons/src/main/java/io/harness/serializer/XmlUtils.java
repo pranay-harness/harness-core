@@ -40,7 +40,7 @@ public class XmlUtils {
    */
   public static String xpath(String content, String expression)
       throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-    logger.debug("xpath request - expression: {}, content: {}", expression, content);
+    log.debug("xpath request - expression: {}, content: {}", expression, content);
     Document document = parse(content);
     return xpath(document, expression);
   }
@@ -56,7 +56,7 @@ public class XmlUtils {
   public static String xpath(Document document, String expression) throws XPathExpressionException {
     XPath xpath = XPathFactory.newInstance().newXPath();
     String retValue = xpath.evaluate(expression, document);
-    logger.debug("xpath request - return value: {}", retValue);
+    log.debug("xpath request - return value: {}", retValue);
     return retValue;
   }
 

@@ -92,9 +92,9 @@ public abstract class KubernetesCertificateIntegrationTestBase extends CategoryT
                                .withClientKeyData(clientKeyData);
 
     try (KubernetesClient client = new DefaultKubernetesClient(config.build())) {
-      logger.info("Version: " + client.getApiVersion());
+      log.info("Version: " + client.getApiVersion());
       client.replicationControllers().list().getItems().forEach(
-          replicationController -> logger.info(replicationController.getMetadata().getName()));
+          replicationController -> log.info(replicationController.getMetadata().getName()));
     }
   }
 }

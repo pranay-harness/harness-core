@@ -79,7 +79,7 @@ public class WingsMongoExportImport {
               collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
               importedRecords++;
             } catch (DuplicateKeyException e) {
-              logger.warn("Skip importing a record with conflicting key with existing record in db.", e);
+              log.warn("Skip importing a record with conflicting key with existing record in db.", e);
             }
           }
           break;
@@ -90,7 +90,7 @@ public class WingsMongoExportImport {
             importedRecords++;
           } catch (DuplicateKeyException e) {
             // PL-2536: Skip conflicting user entries when import account data exported from free into paid cluster.
-            logger.warn("Skip importing a record with conflicting key with existing record in db.", e);
+            log.warn("Skip importing a record with conflicting key with existing record in db.", e);
           }
           break;
         default:
@@ -99,9 +99,9 @@ public class WingsMongoExportImport {
     }
 
     if (importedRecords + idClashCount > 0) {
-      logger.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
-      logger.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords,
-          totalRecords, collectionName, mode);
+      log.info("{} '{}' records have the same ID as existing records.", idClashCount, collectionName);
+      log.info("{} out of {} '{}' records have been imported successfully in {} mode.", importedRecords, totalRecords,
+          collectionName, mode);
     }
     return ImportStatus.builder()
         .collectionName(collectionName)

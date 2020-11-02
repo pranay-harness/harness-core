@@ -25,7 +25,7 @@ public class SecretTextFilterMigration implements Migration {
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       for (Account account : records) {
         int updatedRecords = serviceVariableService.updateSearchTagsForSecrets(account.getUuid());
-        logger.info("updated {} for account {}", updatedRecords, account.getUuid());
+        log.info("updated {} for account {}", updatedRecords, account.getUuid());
       }
     }
   }

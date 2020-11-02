@@ -58,7 +58,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
 
     String appRoleVaultId = VaultRestUtils.addVault(bearerToken, vaultConfigWithAppRoleSecret);
     assertThat(appRoleVaultId).isNotNull();
-    logger.info("AppRole based Vault secret manager created.");
+    log.info("AppRole based Vault secret manager created.");
     List<VaultConfig> vaultConfigs = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     assertThat(SecretsUtils.isVaultAvailable(vaultConfigs, APPROLE_VAULT_NAME)).isTrue();
 
@@ -93,7 +93,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
       assertThat(isDeletionDone).isTrue();
     } finally {
       VaultRestUtils.deleteVault(getAccount().getUuid(), bearerToken, appRoleVaultId);
-      logger.info("AppRole based Vault secret manager deleted.");
+      log.info("AppRole based Vault secret manager deleted.");
     }
   }
 }

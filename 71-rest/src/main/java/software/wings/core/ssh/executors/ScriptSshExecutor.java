@@ -80,7 +80,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
    */
   public static final String LINE_BREAK_PATTERN = "\\R+";
   /**
-   * The constant logger.
+   * The constant log.
    */
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
@@ -114,15 +114,15 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
    * @param hostName    the host name
    */
   public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
-    logger.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
+    log.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
     String key = executionId + "~" + hostName.trim();
     Session session = sessions.remove(key);
     if (session != null && session.isConnected()) {
-      logger.info("Found cached session. disconnecting the session");
+      log.info("Found cached session. disconnecting the session");
       session.disconnect();
-      logger.info("Session disconnected successfully");
+      log.info("Session disconnected successfully");
     } else {
-      logger.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
+      log.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
     }
   }
 
@@ -134,7 +134,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
       channel = getCachedSession(this.config).openChannel("exec");
-      logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
+      log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
@@ -186,12 +186,12 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       }
     } catch (RuntimeException | JSchException | IOException ex) {
       handleException(ex);
-      logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
-      logger.error("Command execution failed with error", ex);
+      log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+      log.error("Command execution failed with error", ex);
       return commandExecutionStatus;
     } finally {
       if (channel != null && !channel.isClosed()) {
-        logger.info("Disconnect channel if still open post execution command");
+        log.info("Disconnect channel if still open post execution command");
         channel.disconnect();
       }
     }
@@ -208,7 +208,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
       channel = getCachedSession(this.config).openChannel("exec");
-      logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
+      log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
 
@@ -267,7 +267,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                 br = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
                 processScriptOutputFile(envVariablesMap, br);
               } catch (JSchException | SftpException | IOException e) {
-                logger.error("Exception occurred during reading file from SFTP server due to " + e.getMessage(), e);
+                log.error("Exception occurred during reading file from SFTP server due to " + e.getMessage(), e);
               } finally {
                 if (br != null) {
                   br.close();
@@ -275,7 +275,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                 try {
                   ((ChannelSftp) channel).rm(directoryPath + envVariablesFilename);
                 } catch (SftpException e) {
-                  logger.error("Failed to delete file " + envVariablesFilename, e);
+                  log.error("Failed to delete file " + envVariablesFilename, e);
                 }
               }
             }
@@ -289,15 +289,15 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       }
     } catch (RuntimeException | JSchException | IOException ex) {
       handleException(ex);
-      logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
-      logger.error("Command execution failed with error", ex);
+      log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+      log.error("Command execution failed with error", ex);
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       commandExecutionResult.status(commandExecutionStatus);
       commandExecutionResult.commandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
     } finally {
       if (channel != null && !channel.isClosed()) {
-        logger.info("Disconnect channel if still open post execution command");
+        log.info("Disconnect channel if still open post execution command");
         channel.disconnect();
       }
     }
@@ -333,7 +333,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     if (ex instanceof JSchException) {
       saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
     } else if (ex instanceof IOException) {
-      logger.error("Exception in reading InputStream", ex);
+      log.error("Exception in reading InputStream", ex);
     } else if (ex instanceof RuntimeException) {
       rethrow = (RuntimeException) ex;
     }
@@ -436,10 +436,10 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
    */
   public synchronized Session getCachedSession(SshSessionConfig config) {
     String key = config.getExecutionId() + "~" + config.getHost().trim();
-    logger.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
+    log.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
 
     Session cachedSession = sessions.computeIfAbsent(key, s -> {
-      logger.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
+      log.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
           config.getHost());
       return getSession(this.config);
     });
@@ -451,9 +451,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       testChannel.setCommand("true");
       testChannel.connect(this.config.getSocketConnectTimeout());
       testChannel.disconnect();
-      logger.info("Session connection test successful");
+      log.info("Session connection test successful");
     } catch (Exception exception) {
-      logger.error("Session connection test failed. Reopen new session", exception);
+      log.error("Session connection test failed. Reopen new session", exception);
       cachedSession = sessions.merge(key, cachedSession, (session1, session2) -> getSession(this.config));
     }
     return cachedSession;
@@ -508,7 +508,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       if (ex instanceof FileNotFoundException) {
         saveExecutionLogError("File not found");
       } else if (ex instanceof JSchException) {
-        logger.error("Command execution failed with error", ex);
+        log.error("Command execution failed with error", ex);
         saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
       } else {
         throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS, ex);
@@ -516,7 +516,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       return commandExecutionStatus;
     } finally {
       if (channel != null && !channel.isClosed()) {
-        logger.info("Disconnect channel if still open post execution command");
+        log.info("Disconnect channel if still open post execution command");
         channel.disconnect();
       }
     }
@@ -561,7 +561,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
         saveExecutionLogError(sb.toString());
         return 1;
       }
-      logger.error(sb.toString());
+      log.error(sb.toString());
       return 0;
     }
   }

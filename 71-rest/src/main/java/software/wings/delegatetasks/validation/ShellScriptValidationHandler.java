@@ -77,7 +77,7 @@ public class ShellScriptValidationHandler {
 
           return true;
         } catch (Exception ex) {
-          logger.info("Exception in sshSession Validation", ex);
+          log.info("Exception in sshSession Validation", ex);
           return false;
         }
 
@@ -85,14 +85,14 @@ public class ShellScriptValidationHandler {
         try {
           WinRmSessionConfig winrmConfig = parameters.winrmSessionConfig(encryptionService);
           winrmConfig.setTimeout(timeout);
-          logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
+          log.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
               winrmConfig.getPort(), winrmConfig.isUseSSL());
 
           try (WinRmSession ignore = new WinRmSession(winrmConfig, new NoopExecutionCallback())) {
             return true;
           }
         } catch (Exception e) {
-          logger.info("Exception in WinrmSession Validation", e);
+          log.info("Exception in WinrmSession Validation", e);
           return false;
         }
 

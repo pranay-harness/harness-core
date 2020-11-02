@@ -28,7 +28,7 @@ public class AddCeFullTrialLicenseToCurrentAccounts implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("License Migration - Start adding CE Full Trial licenses for existing accounts");
+    log.info("License Migration - Start adding CE Full Trial licenses for existing accounts");
 
     CeLicenseInfo fullTrialLicense = CeLicenseInfo.builder()
                                          .licenseType(CeLicenseType.FULL_TRIAL)
@@ -67,11 +67,11 @@ public class AddCeFullTrialLicenseToCurrentAccounts implements Migration {
             }
           }
         } catch (Exception ex) {
-          logger.error("Error while adding CE license for account {}", account.getUuid(), ex);
+          log.error("Error while adding CE license for account {}", account.getUuid(), ex);
         }
       }
     }
-    logger.info("License Migration - Completed adding CE Full Trial licenses for existing accounts");
+    log.info("License Migration - Completed adding CE Full Trial licenses for existing accounts");
   }
 
   private long getExpiryTime(String expiryDate) {

@@ -23,19 +23,19 @@ public class AddAccountIdToArtifactStreamsMigration implements Migration {
   @SuppressWarnings("deprecation")
   public void migrate() {
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "artifactStream");
-    logger.info("Starting migration - Adding accountId to Artifact Streams");
+    log.info("Starting migration - Adding accountId to Artifact Streams");
     try (HIterator<Application> applicationHIterator =
              new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       while (applicationHIterator.hasNext()) {
         Application application = applicationHIterator.next();
-        logger.info("Adding accountId to artifact streams for application {}", application.getUuid());
+        log.info("Adding accountId to artifact streams for application {}", application.getUuid());
         final WriteResult result =
             collection.updateMulti(new BasicDBObject(ArtifactStreamKeys.appId, application.getUuid())
                                        .append(ArtifactStreamKeys.accountId, null),
                 new BasicDBObject("$set", new BasicDBObject(ArtifactStreamKeys.accountId, application.getAccountId())));
-        logger.info("Updated {} artifact streams for application {}", result.getN(), application.getUuid());
+        log.info("Updated {} artifact streams for application {}", result.getN(), application.getUuid());
       }
     }
-    logger.info("Adding accountIds to Artifact Streams completed for all applications");
+    log.info("Adding accountIds to Artifact Streams completed for all applications");
   }
 }

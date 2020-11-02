@@ -30,18 +30,18 @@ public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration 
 
   @Override
   public void migrate() {
-    logger.info(debugLog + "Starting UpdateInstanceInfoWithLastArtifactId migration");
+    log.info(debugLog + "Starting UpdateInstanceInfoWithLastArtifactId migration");
 
     try (HIterator<Account> accounts =
              new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
         if (account == null) {
-          logger.info(debugLog + "Account is null,  continuing");
+          log.info(debugLog + "Account is null,  continuing");
           continue;
         }
 
-        logger.info(debugLog + "Starting migration  for account {}", account.getAccountName());
+        log.info(debugLog + "Starting migration  for account {}", account.getAccountName());
         try (HIterator<Application> applications =
                  new HIterator<>(wingsPersistence.createQuery(Application.class)
                                      .filter(ApplicationKeys.accountId, account.getUuid())
@@ -49,11 +49,11 @@ public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration 
           while (applications.hasNext()) {
             Application application = applications.next();
             if (application == null) {
-              logger.info(debugLog + "Application is null, skipping");
+              log.info(debugLog + "Application is null, skipping");
               continue;
             }
 
-            logger.info(debugLog + "Starting migration for  application {}", application.getName());
+            log.info(debugLog + "Starting migration for  application {}", application.getName());
             try (HIterator<Instance> instances = new HIterator<>(wingsPersistence.createQuery(Instance.class)
                                                                      .filter(InstanceKeys.appId, application.getUuid())
                                                                      .filter(InstanceKeys.isDeleted, false)
@@ -82,7 +82,7 @@ public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration 
                       if (!artifactUuid.equals(instance.getLastArtifactId())) {
                         instance.setLastArtifactId(artifactUuid);
                         wingsPersistence.save(instance);
-                        logger.info(debugLog + "Updated instance {}", instance.getUuid());
+                        log.info(debugLog + "Updated instance {}", instance.getUuid());
                         break;
                       }
                     }
@@ -92,9 +92,9 @@ public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration 
             }
           }
         }
-        logger.info(debugLog + "Migration done for account {}", account.getAccountName());
+        log.info(debugLog + "Migration done for account {}", account.getAccountName());
       }
     }
-    logger.info(debugLog + "Completed UpdateInstanceInfoWithLastArtifactId migration");
+    log.info(debugLog + "Completed UpdateInstanceInfoWithLastArtifactId migration");
   }
 }

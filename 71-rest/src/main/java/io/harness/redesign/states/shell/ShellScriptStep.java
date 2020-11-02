@@ -295,7 +295,7 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
           FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
       return stepResponseBuilder.build();
     } else {
-      logger.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
+      log.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     StepResponse stepResponse = stepResponseBuilder.build();

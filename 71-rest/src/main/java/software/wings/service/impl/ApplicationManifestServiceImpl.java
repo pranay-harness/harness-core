@@ -411,7 +411,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onSaved, applicationManifest);
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Encountered exception while informing the observers of Application Manifest on save for app manifest: {}",
           applicationManifest.getUuid(), e);
     }
@@ -421,7 +421,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onUpdated, applicationManifest);
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Encountered exception while informing the observers of Application Manifest on resetfor app manifest: {}",
           applicationManifest.getUuid(), e);
     }
@@ -431,7 +431,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onDeleted, applicationManifest);
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Encountered exception while informing the observers of Application Manifest on delete for app manifest: {}",
           applicationManifest.getUuid(), e);
     }

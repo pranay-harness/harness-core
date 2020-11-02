@@ -527,7 +527,7 @@ public class KubernetesHelperService {
             .clientKeyAlgo(config.getClientKeyAlgo())
             .build();
       } catch (IOException e) {
-        logger.error("Could not load Kubernetes config file from {}", kubeConfigFile.getPath(), e);
+        log.error("Could not load Kubernetes config file from {}", kubeConfigFile.getPath(), e);
       }
     }
     return kubernetesConfigBuilder.build();

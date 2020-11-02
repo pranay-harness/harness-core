@@ -26,7 +26,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
       DelegateResponseData data = (DelegateResponseData) response.entrySet().iterator().next().getValue();
       CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
       if (collaborationProviderResponse.getStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.info("Email sending succeeded. Response : [{}]", data);
+        log.info("Email sending succeeded. Response : [{}]", data);
         alertService.closeAlertsOfType(
             collaborationProviderResponse.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
         alertService.closeAlertsOfType(
@@ -35,7 +35,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
         openEmailNotSentAlert(data, collaborationProviderResponse);
       }
     } catch (Exception e) {
-      logger.warn("Failed on notify for response=[{}]", response.toString(), e);
+      log.warn("Failed on notify for response=[{}]", response.toString(), e);
     }
   }
 
@@ -47,10 +47,10 @@ public class EmailNotificationCallBack implements NotifyCallback {
         CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
         openEmailNotSentAlert(data, collaborationProviderResponse);
       } else {
-        logger.warn("Failed to send Email, errorResponse=[{}] ", data);
+        log.warn("Failed to send Email, errorResponse=[{}] ", data);
       }
     } catch (Exception e) {
-      logger.warn("Failed on notifyError for response=[{}]", response.toString(), e);
+      log.warn("Failed on notifyError for response=[{}]", response.toString(), e);
     }
   }
 
@@ -58,6 +58,6 @@ public class EmailNotificationCallBack implements NotifyCallback {
       DelegateResponseData data, CollaborationProviderResponse collaborationProviderResponse) {
     alertService.openAlert(collaborationProviderResponse.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
         EmailSendingFailedAlert.builder().emailAlertData(collaborationProviderResponse.getErrorMessage()).build());
-    logger.warn("Email Sending failed : Delegate Response : [{}]", data);
+    log.warn("Email Sending failed : Delegate Response : [{}]", data);
   }
 }

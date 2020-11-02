@@ -30,7 +30,7 @@ public class QueueModule extends AbstractModule implements ServersModule {
       try {
         queueListenerController.stop();
       } catch (Exception exception) {
-        logger.error("", exception);
+        log.error("", exception);
       }
     }, () -> injector.getInstance(TimerScheduledExecutorService.class).shutdownNow());
   }

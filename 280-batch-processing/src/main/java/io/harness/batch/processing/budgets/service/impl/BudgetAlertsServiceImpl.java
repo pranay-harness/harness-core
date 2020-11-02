@@ -76,7 +76,7 @@ public class BudgetAlertsServiceImpl {
         try {
           checkAndSendAlerts(budget);
         } catch (Exception e) {
-          logger.error("Can't send alert for budget : {}, Exception: ", budget.getUuid(), e);
+          log.error("Can't send alert for budget : {}, Exception: ", budget.getUuid(), e);
         }
       });
     });
@@ -92,7 +92,7 @@ public class BudgetAlertsServiceImpl {
     emailAddresses.addAll(getEmailsForUserGroup(budget.getAccountId(), userGroupIds));
     CESlackWebhook slackWebhook = ceSlackWebhookService.getByAccountId(budget.getAccountId());
     if (slackWebhook == null && isEmpty(emailAddresses) && isEmpty(userGroupIds)) {
-      logger.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
+      log.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
       return;
     }
 
@@ -121,9 +121,9 @@ public class BudgetAlertsServiceImpl {
           currentCost = budgetUtils.getForecastCost(budget);
           costType = FORECASTED_COST_BUDGET;
         }
-        logger.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
+        log.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
       } catch (Exception e) {
-        logger.error(e.getMessage());
+        log.error(e.getMessage());
         break;
       }
 
@@ -131,7 +131,7 @@ public class BudgetAlertsServiceImpl {
         try {
           sendBudgetAlertViaSlack(budget, alertThresholds[i], slackWebhook);
         } catch (Exception e) {
-          logger.error("Notification via slack not send : ", e);
+          log.error("Notification via slack not send : ", e);
         }
         sendBudgetAlertMail(budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(),
             alertThresholds[i], currentCost, costType);
@@ -202,7 +202,7 @@ public class BudgetAlertsServiceImpl {
         emailNotificationService.send(emailData);
       });
     } catch (URISyntaxException e) {
-      logger.error(BUDGET_MAIL_ERROR, e);
+      log.error(BUDGET_MAIL_ERROR, e);
     }
   }
 

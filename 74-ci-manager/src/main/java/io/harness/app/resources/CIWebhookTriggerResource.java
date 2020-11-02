@@ -66,7 +66,7 @@ public class CIWebhookTriggerResource {
           webhookTriggerProcessor.generateExecutionArgs(pipelineId, eventPayload, httpHeaders, buildNumber);
       ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, buildNumber.getBuildNumber());
     } catch (Exception e) {
-      logger.error("Failed to run input pipeline ", e);
+      log.error("Failed to run input pipeline ", e);
     }
 
     return null;

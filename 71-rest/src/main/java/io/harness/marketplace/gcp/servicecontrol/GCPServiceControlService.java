@@ -34,7 +34,7 @@ public class GCPServiceControlService {
     Optional<ServiceControl> serviceControlApiMaybe = serviceControlAPIClientBuilder.getInstance();
     ServiceControl serviceControl;
     if (!serviceControlApiMaybe.isPresent()) {
-      logger.error("GCP_MKT_PLACE couldn't get service control api client !!");
+      log.error("GCP_MKT_PLACE couldn't get service control api client !!");
       return false;
     } else {
       serviceControl = serviceControlApiMaybe.get();
@@ -50,7 +50,7 @@ public class GCPServiceControlService {
     Optional<ServiceControl> serviceControlApiMaybe = serviceControlAPIClientBuilder.getInstance();
     ServiceControl serviceControl;
     if (!serviceControlApiMaybe.isPresent()) {
-      logger.error("GCP_MKT_PLACE couldn't get service control api client !!");
+      log.error("GCP_MKT_PLACE couldn't get service control api client !!");
       return false;
     } else {
       serviceControl = serviceControlApiMaybe.get();
@@ -65,12 +65,12 @@ public class GCPServiceControlService {
     try {
       CheckResponse checkResponse =
           serviceControl.services().check(GcpMarketPlaceConstants.SERVICE_NAME, checkRequest).execute();
-      logger.info("GCP_MKT_PLACE check response {} for operation {} ", checkResponse.toString(), operation.toString());
+      log.info("GCP_MKT_PLACE check response {} for operation {} ", checkResponse.toString(), operation.toString());
       if (CollectionUtils.isEmpty(checkResponse.getCheckErrors())) {
         return true;
       }
     } catch (IOException e) {
-      logger.error("GCP_MKT_PLACE exception in check request {} ", e);
+      log.error("GCP_MKT_PLACE exception in check request {} ", e);
     }
     return false;
   }
@@ -81,13 +81,13 @@ public class GCPServiceControlService {
     try {
       ReportResponse reportResponse =
           serviceControl.services().report(GcpMarketPlaceConstants.SERVICE_NAME, reportRequest).execute();
-      logger.info(
+      log.info(
           "GCP_MKT_PLACE report request {} report response {} ", reportRequest.toString(), reportResponse.toString());
       if (CollectionUtils.isEmpty(reportResponse.getReportErrors())) {
         return true;
       }
     } catch (IOException e) {
-      logger.error("GCP_MKT_PLACE exception in report request {} ", e);
+      log.error("GCP_MKT_PLACE exception in report request {} ", e);
     }
     return false;
   }

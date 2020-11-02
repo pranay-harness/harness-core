@@ -36,13 +36,13 @@ public class RemoveResizeFromStatefulSetWorkflows implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Removing resize steps from stateful set workflows");
+    log.info("Removing resize steps from stateful set workflows");
     List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority).asList();
-    logger.info("Checking {} accounts", accounts.size());
+    log.info("Checking {} accounts", accounts.size());
     for (Account account : accounts) {
       List<Application> apps =
           wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, account.getUuid()).asList();
-      logger.info("Checking {} applications in account {}", apps.size(), account.getAccountName());
+      log.info("Checking {} applications in account {}", apps.size(), account.getAccountName());
       for (Application app : apps) {
         List<Workflow> workflows =
             workflowService
@@ -57,7 +57,7 @@ public class RemoveResizeFromStatefulSetWorkflows implements Migration {
                 boolean isStatefulSet = isStatefulSet(app.getUuid(), workflowPhase.getServiceId());
                 if (isStatefulSet) {
                   workflowModified = true;
-                  logger.info("Found stateful set");
+                  log.info("Found stateful set");
                   workflowPhase.setStatefulSet(true);
                   for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                     if (CONTAINER_DEPLOY == phaseStep.getPhaseStepType()) {
@@ -76,14 +76,14 @@ public class RemoveResizeFromStatefulSetWorkflows implements Migration {
                               }
                             }
                             if (removeRollbackNode != null) {
-                              logger.info("Removing deploy rollback step");
+                              log.info("Removing deploy rollback step");
                               rollbackPhaseStep.getSteps().remove(removeRollbackNode);
                             }
                           }
                         }
                       }
                       if (removeNode != null) {
-                        logger.info("Removing deploy step");
+                        log.info("Removing deploy step");
                         phaseStep.getSteps().remove(removeNode);
                       }
                     }
@@ -94,11 +94,11 @@ public class RemoveResizeFromStatefulSetWorkflows implements Migration {
           }
           if (workflowModified) {
             try {
-              logger.info("--- Workflow updated: {}", workflow.getName());
+              log.info("--- Workflow updated: {}", workflow.getName());
               workflowService.updateWorkflow(workflow, false);
               Thread.sleep(100);
             } catch (Exception e) {
-              logger.error("Error updating workflow", e);
+              log.error("Error updating workflow", e);
             }
           }
         }

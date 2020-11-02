@@ -10,16 +10,16 @@ import org.springframework.stereotype.Service;
 public class LoggingStepSkipListener implements SkipListener<PublishedMessage, PublishedMessage> {
   @Override
   public void onSkipInRead(Throwable throwable) {
-    logger.error("Skip in read", throwable);
+    log.error("Skip in read", throwable);
   }
 
   @Override
   public void onSkipInWrite(PublishedMessage publishedMessage, Throwable throwable) {
-    logger.error("Skip in write for message {} ", publishedMessage.getUuid(), throwable);
+    log.error("Skip in write for message {} ", publishedMessage.getUuid(), throwable);
   }
 
   @Override
   public void onSkipInProcess(PublishedMessage publishedMessage, Throwable throwable) {
-    logger.error("Skip in process for message {}", publishedMessage.getUuid(), throwable);
+    log.error("Skip in process for message {}", publishedMessage.getUuid(), throwable);
   }
 }

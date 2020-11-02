@@ -100,7 +100,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         return instanceData;
       }
     } else {
-      logger.debug("Instance Event received before info event {}", instanceEvent.getInstanceId());
+      log.debug("Instance Event received before info event {}", instanceEvent.getInstanceId());
     }
     return null;
   }
@@ -189,13 +189,13 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         try {
           updateDeploymentEvent(savedInstanceData);
         } catch (Exception e) {
-          logger.error("Exception while updating deployment event ", e);
+          log.error("Exception while updating deployment event ", e);
         }
       }
       return savedInstanceData;
 
     } else {
-      logger.trace("Instance data found {} ", instanceData);
+      log.trace("Instance data found {} ", instanceData);
       Map<String, String> oldInstanceMetaData = instanceData.getMetaData();
       Map<String, String> newInstanceMetaData = instanceInfo.getMetaData();
 

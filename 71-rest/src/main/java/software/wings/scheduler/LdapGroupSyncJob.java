@@ -149,7 +149,7 @@ public class LdapGroupSyncJob implements Job {
       // do nothing. Only one manager should acquire the lock.
     } catch (Exception e) {
       // Catching all exceptions to prevent immediate job retry.
-      logger.error("Error while trying to sync user group for ldap sso provider", e);
+      log.error("Error while trying to sync user group for ldap sso provider", e);
     }
   }
 
@@ -262,10 +262,10 @@ public class LdapGroupSyncJob implements Job {
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());
     if (null == groupResponse) {
       String message = String.format(LdapConstants.USER_GROUP_SYNC_INVALID_REMOTE_GROUP, userGroup.getName());
-      logger.info("LDAP : Group Response from delegate is null");
+      log.info("LDAP : Group Response from delegate is null");
       throw new WingsException(ErrorCode.USER_GROUP_SYNC_FAILURE, message);
     }
-    logger.info("LDAP : Group Response from delegate {}", groupResponse);
+    log.info("LDAP : Group Response from delegate {}", groupResponse);
     return groupResponse;
   }
 
@@ -306,7 +306,7 @@ public class LdapGroupSyncJob implements Job {
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
         updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
       } catch (Exception e) {
-        logger.error("LDAP sync failed for userGroup {}", userGroup.getName(), e);
+        log.error("LDAP sync failed for userGroup {}", userGroup.getName(), e);
         userGroupsFailedToSync.add(userGroup);
       }
     }
@@ -328,7 +328,7 @@ public class LdapGroupSyncJob implements Job {
 
   private void executeInternal(String accountId, String ssoId) {
     if (!ldapFeature.isAvailableForAccount(accountId)) {
-      logger.info("Skipping LDAP sync. ssoId {} accountId {}", ssoId, accountId);
+      log.info("Skipping LDAP sync. ssoId {} accountId {}", ssoId, accountId);
       return;
     }
 
@@ -340,7 +340,7 @@ public class LdapGroupSyncJob implements Job {
     }
 
     try (AutoLogContext ignore = new LdapGroupSyncJobLogContext(accountId, ssoId, OVERRIDE_ERROR)) {
-      logger.info("Executing ldap group sync job for ssoId: {} and accountId: {}", ssoId, accountId);
+      log.info("Executing ldap group sync job for ssoId: {} and accountId: {}", ssoId, accountId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
       if (ldapTestResponse.getStatus() == Status.FAILURE) {
@@ -356,7 +356,7 @@ public class LdapGroupSyncJob implements Job {
       List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
       syncUserGroups(accountId, ldapSettings, userGroupsToSync, ssoId);
 
-      logger.info("Ldap group sync job done for ssoId {} accountId {}", ssoId, accountId);
+      log.info("Ldap group sync job done for ssoId {} accountId {}", ssoId, accountId);
     } catch (WingsException exception) {
       if (exception.getCode() == ErrorCode.USER_GROUP_SYNC_FAILURE) {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId, exception.getMessage());
@@ -365,11 +365,11 @@ public class LdapGroupSyncJob implements Job {
             String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ldapSettings.getDisplayName())
                 + exception.getMessage());
       }
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception ex) {
       ssoSettingService.raiseSyncFailureAlert(accountId, ssoId,
           String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ldapSettings.getDisplayName()) + ex.getMessage());
-      logger.error("Error while syncing ssoId {} in accountId {}", ssoId, accountId, ex);
+      log.error("Error while syncing ssoId {} in accountId {}", ssoId, accountId, ex);
     }
   }
 }

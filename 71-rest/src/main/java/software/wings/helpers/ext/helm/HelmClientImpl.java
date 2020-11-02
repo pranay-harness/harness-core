@@ -309,7 +309,7 @@ public class HelmClientImpl implements HelmClient {
                                           .redirectOutput(new LogOutputStream() {
                                             @Override
                                             protected void processLine(String line) {
-                                              logger.info(line);
+                                              log.info(line);
                                             }
                                           });
 
@@ -365,7 +365,7 @@ public class HelmClientImpl implements HelmClient {
 
     if (executionLogCallback != null) {
       String msg = "Executing command - " + helmCommand + "\n";
-      logger.info(msg);
+      log.info(msg);
       executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
     }
   }

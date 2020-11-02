@@ -49,7 +49,7 @@ public class AzureClient {
   }
 
   private void handleAzureAuthenticationException(Exception e) {
-    logger.error("HandleAzureAuthenticationException: Exception:" + e);
+    log.error("HandleAzureAuthenticationException: Exception:" + e);
 
     Throwable e1 = e;
     while (e1.getCause() != null) {

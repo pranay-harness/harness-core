@@ -46,7 +46,7 @@ public class InstanceUtils {
       instanceType = InstanceType.AZURE_VMSS_INSTANCE;
     } else {
       String msg = "Unsupported infraMapping type:" + infraMappingType;
-      logger.error(msg);
+      log.error(msg);
       throw new WingsException(msg);
     }
 

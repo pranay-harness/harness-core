@@ -109,7 +109,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
             .decrypt(data, secretsManagerConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
+        log.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
             failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
@@ -222,7 +222,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
     }
-    logger.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
+    log.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
   }
 
   @Override
@@ -291,7 +291,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
     if (isNotEmpty(secretsManagerConfig.getSecretKey())) {
       wingsPersistence.delete(EncryptedData.class, secretsManagerConfig.getSecretKey());
-      logger.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
+      log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
           secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
     }
 

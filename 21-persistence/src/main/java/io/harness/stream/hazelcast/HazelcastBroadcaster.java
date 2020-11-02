@@ -52,7 +52,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
     if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null) {
       messageListenerRegistrationId =
           topic.addMessageListener(message -> broadcastReceivedMessage(message.getMessageObject()));
-      logger.info("Added message listener to topic");
+      log.info("Added message listener to topic");
     }
   }
 
@@ -60,7 +60,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
     if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
       topic.removeMessageListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
-      logger.info("Removed message listener from topic");
+      log.info("Removed message listener from topic");
     }
   }
 
@@ -95,7 +95,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
 
   @Override
   public void incomingBroadcast() {
-    logger.info("Subscribing to: {}", getID());
+    log.info("Subscribing to: {}", getID());
   }
 
   @Override

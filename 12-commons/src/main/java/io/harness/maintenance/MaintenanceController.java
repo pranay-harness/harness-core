@@ -28,17 +28,17 @@ public class MaintenanceController implements Managed {
   private static final AtomicBoolean shutdown = new AtomicBoolean(false);
 
   public static void forceMaintenance(boolean force) {
-    synchronized (logger) {
+    synchronized (log) {
       if (forceMaintenance == null || forceMaintenance != force) {
-        logger.info("Setting forced maintenance {}", force);
+        log.info("Setting forced maintenance {}", force);
         forceMaintenance = force;
       }
     }
   }
 
   public static void resetForceMaintenance() {
-    synchronized (logger) {
-      logger.info("Un-setting forced maintenance");
+    synchronized (log) {
+      log.info("Un-setting forced maintenance");
       forceMaintenance = null;
     }
   }
@@ -67,7 +67,7 @@ public class MaintenanceController implements Managed {
         boolean isMaintenance =
             forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE_FILENAME).exists() || isShutdown;
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
-          logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
+          log.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
           maintenanceListenerSubject.fireInform(
               isMaintenance ? MaintenanceListener::onEnterMaintenance : MaintenanceListener::onLeaveMaintenance);
         }

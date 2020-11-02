@@ -27,7 +27,7 @@ public abstract class LogAnalysisState extends AnalysisState {
     workerTaskId = scheduleAnalysis(getInputs());
     Preconditions.checkNotNull(workerTaskId, "workerId can not be null");
     this.setStatus(AnalysisStatus.RUNNING);
-    logger.info("Executing service guard log analysis for {}", getInputs());
+    log.info("Executing service guard log analysis for {}", getInputs());
     return this;
   }
 
@@ -62,7 +62,7 @@ public abstract class LogAnalysisState extends AnalysisState {
     // clean up state in underlying worker and then execute
 
     this.setRetryCount(getRetryCount() + 1);
-    logger.info("In serviceguard log analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
+    log.info("In serviceguard log analysis for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
         workerTaskId);
     workerTaskId = null;
     this.execute();
@@ -92,7 +92,7 @@ public abstract class LogAnalysisState extends AnalysisState {
       this.setStatus(AnalysisStatus.FAILED);
     } else {
       setRetryCount(getRetryCount() + 1);
-      logger.info("In serviceguard log analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
+      log.info("In serviceguard log analysis state, for Inputs {}, cleaning up worker task. Old taskID: {}",
           getInputs(), workerTaskId);
       workerTaskId = null;
       execute();

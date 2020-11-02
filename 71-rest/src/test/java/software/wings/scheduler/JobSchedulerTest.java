@@ -30,11 +30,11 @@ public class JobSchedulerTest extends WingsBaseTest {
           try {
             jobScheduler.getScheduler().deleteJob(jobKey);
           } catch (SchedulerException e) {
-            logger.error("", e);
+            log.error("", e);
           }
         });
       } catch (SchedulerException e) {
-        logger.error("", e);
+        log.error("", e);
       }
     });
   }
@@ -42,7 +42,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   public static class JobA implements Job {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-      logger.info("Job a execution");
+      log.info("Job a execution");
     }
   }
 
@@ -53,6 +53,6 @@ public class JobSchedulerTest extends WingsBaseTest {
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
     jobScheduler.getScheduler().resumeAll();
     Thread.sleep(100000);
-    logger.info("Completed");
+    log.info("Completed");
   }
 }

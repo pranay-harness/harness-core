@@ -46,7 +46,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
     if (ExecutionStatus.QUEUED == analysisContext.getExecutionStatus()) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
     }
-    logger.info(
+    log.info(
         "Handling the clustering for stateExecutionId {} using the iterators", analysisContext.getStateExecutionId());
     new WorkflowLogClusterJob
         .LogClusterTask(analysisService, managerClientHelper, Optional.empty(), analysisContext, learningEngineService,
@@ -69,14 +69,14 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
         Set<String> nodes = analysisService.getCollectedNodes(context, ClusterLevel.L0);
         // TODO handle pause
         for (String node : nodes) {
-          logger.info("Running cluster task for {}, node {}", context.getStateExecutionId(), node);
+          log.info("Running cluster task for {}, node {}", context.getStateExecutionId(), node);
           /*
            * Work flow is invalid
            * exit immediately
            */
 
           if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-            logger.info("Log Cluster : State no longer valid. skipping." + context.getStateExecutionId());
+            log.info("Log Cluster : State no longer valid. skipping." + context.getStateExecutionId());
             break;
           }
           analysisService
@@ -88,7 +88,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
                 boolean hasDataRecords = analysisService.hasDataRecords(logObject.getQuery(), context.getAppId(),
                     context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(logObject.getHost()),
                     ClusterLevel.L0, logObject.getLogCollectionMinute());
-                logger.info("In WorkflowLogClusterJob For {} hasDataRecords is {}", context.getStateExecutionId(),
+                log.info("In WorkflowLogClusterJob For {} hasDataRecords is {}", context.getStateExecutionId(),
                     hasDataRecords);
                 LogRequest logRequest = LogRequest.builder()
                                             .query(logObject.getQuery())
@@ -101,7 +101,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
                                             .build();
 
                 if (hasDataRecords) {
-                  logger.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
+                  log.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
                       context.getStateExecutionId(), logRequest.getLogCollectionMinute(), context.getStateType());
                   if (PER_MINUTE_CV_STATES.contains(context.getStateType())
                       || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
@@ -113,11 +113,11 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
                         ClusterLevel.L1, logRequest, 0)
                         .run();
                   }
-                  logger.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
+                  log.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
                       + logRequest.getLogCollectionMinute());
 
                 } else {
-                  logger.info("Skipping cluster task no data found. for " + context.getStateExecutionId() + " , minute "
+                  log.info("Skipping cluster task no data found. for " + context.getStateExecutionId() + " , minute "
                       + logRequest.getLogCollectionMinute());
                   analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
                       context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
@@ -128,7 +128,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
               });
         }
       } catch (Exception ex) {
-        logger.info("Verification L0 => L1 cluster failed for {}", context.getStateExecutionId(), ex);
+        log.info("Verification L0 => L1 cluster failed for {}", context.getStateExecutionId(), ex);
       } finally {
         // Delete cron.
         try {
@@ -137,7 +137,7 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
             jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
           }
         } catch (SchedulerException e) {
-          logger.error("", e);
+          log.error("", e);
         }
       }
     }
@@ -164,26 +164,25 @@ public class WorkflowLogClusterJob implements MongoPersistenceIterator.Handler<A
           default:
             if (jobExecutionContext.isPresent()) {
               jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
-              logger.error("Verification invalid state: " + context.getStateType());
+              log.error("Verification invalid state: " + context.getStateType());
             }
         }
       } catch (Exception ex) {
         try {
-          logger.error("Verification L0 => L1 cluster failed", ex);
+          log.error("Verification L0 => L1 cluster failed", ex);
           if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             final VerificationStateAnalysisExecutionData executionData =
                 VerificationStateAnalysisExecutionData.builder().build();
             executionData.setStatus(ExecutionStatus.ERROR);
             executionData.setErrorMsg(ex.getMessage());
-            logger.info(
-                "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+            log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
             final VerificationDataAnalysisResponse analysisResponse =
                 VerificationDataAnalysisResponse.builder().stateExecutionData(executionData).build();
             analysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
             managerClientHelper.notifyManagerForVerificationAnalysis(context, analysisResponse);
           }
         } catch (Exception e) {
-          logger.error("Verification cluster manager cleanup failed", e);
+          log.error("Verification cluster manager cleanup failed", e);
         }
       }
     }

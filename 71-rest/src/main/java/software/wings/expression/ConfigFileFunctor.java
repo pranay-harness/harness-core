@@ -41,14 +41,14 @@ public class ConfigFileFunctor implements ExpressionFunctor {
   }
 
   private byte[] getConfigFileContent(String relativeFilePath) {
-    logger.info("Get content for file: {}", relativeFilePath);
+    log.info("Get content for file: {}", relativeFilePath);
     ConfigFile configFile =
         serviceTemplateService.computedConfigFileByRelativeFilePath(appId, envId, serviceTemplateId, relativeFilePath);
     if (configFile == null) {
       throw new FunctorException("Config file " + relativeFilePath + " not found");
     }
 
-    logger.info("ConfigFile details: relativePath:{}, encrypted:{}, encryptedFileId:{}, fileId:{}",
+    log.info("ConfigFile details: relativePath:{}, encrypted:{}, encryptedFileId:{}, fileId:{}",
         configFile.getRelativeFilePath(), configFile.isEncrypted(), configFile.getEncryptedFileId(),
         configFile.getUuid());
 

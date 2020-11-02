@@ -9,12 +9,12 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 
 public interface LdapValidator {
-  default void validate(Logger logger) {
+  default void validate(Logger log) {
     Set<ConstraintViolation<Object>> violations =
         Validation.buildDefaultValidatorFactory().getValidator().validate(this);
     if (CollectionUtils.isNotEmpty(violations)) {
       for (ConstraintViolation violation : violations) {
-        logger.error("{}.{} {}", violation.getRootBeanClass().getSimpleName(), violation.getPropertyPath(),
+        log.error("{}.{} {}", violation.getRootBeanClass().getSimpleName(), violation.getPropertyPath(),
             violation.getMessage());
       }
       throw new ConstraintViolationException(violations);

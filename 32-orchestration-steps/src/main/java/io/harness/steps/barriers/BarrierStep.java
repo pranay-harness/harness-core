@@ -43,7 +43,7 @@ public class BarrierStep
   public StepResponse executeSync(Ambiance ambiance, BarrierStepParameters barrierStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     final String identifier = barrierStepParameters.getIdentifier();
-    logger.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
+    log.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
         ambiance.getPlanExecutionId(), identifier);
     BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
@@ -68,7 +68,7 @@ public class BarrierStep
     BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
 
-    logger.info(
+    log.info(
         "Barrier Step getting executed. RuntimeId: [{}], barrierUuid [{}], barrierIdentifier [{}], barrierGroupId [{}]",
         ambiance.obtainCurrentLevel().getRuntimeId(), barrierExecutionInstance.getUuid(),
         barrierStepParameters.getIdentifier(), barrierExecutionInstance.getBarrierGroupId());

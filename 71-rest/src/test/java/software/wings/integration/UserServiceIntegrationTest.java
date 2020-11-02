@@ -498,7 +498,7 @@ public class UserServiceIntegrationTest extends IntegrationTestBase {
                                            APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
     } catch (BadRequestException e) {
-      logger.info(new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity())));
+      log.info(new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity())));
       Assert.fail();
     }
     assertThat(response.getResponseMessages()).isEmpty();

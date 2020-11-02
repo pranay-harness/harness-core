@@ -54,7 +54,7 @@ public class KubernetesActivitiesStoreService {
   private void dispatchKubernetesActivities(
       String accountId, List<KubernetesActivityDTO> activityDTOS, RemovalCause removalCause) {
     if (accountId == null || isEmpty(activityDTOS)) {
-      logger.error("Unexpected Cache eviction accountId={}, activityDTOS={}, removalCause={}", accountId, activityDTOS,
+      log.error("Unexpected Cache eviction accountId={}, activityDTOS={}, removalCause={}", accountId, activityDTOS,
           removalCause);
       return;
     }
@@ -65,8 +65,7 @@ public class KubernetesActivitiesStoreService {
             return;
           }
           try {
-            logger.info(
-                "Dispatching {} activities for [{}] [{}]", activities.size(), accountId, activitySourceConfigId);
+            log.info("Dispatching {} activities for [{}] [{}]", activities.size(), accountId, activitySourceConfigId);
             RestResponse<Boolean> restResponse = timeLimiter.callWithTimeout(
                 ()
                     -> execute(
@@ -75,13 +74,13 @@ public class KubernetesActivitiesStoreService {
             if (restResponse == null) {
               return;
             }
-            logger.info("Dispatched {} activities for [{}] [{}]",
+            log.info("Dispatched {} activities for [{}] [{}]",
                 restResponse.getResource() != null ? activities.size() : 0, accountId, activitySourceConfigId);
           } catch (Exception e) {
-            logger.error(
+            log.error(
                 "Dispatch activities failed for {}. printing lost activities[{}]", accountId, activities.size(), e);
-            activities.forEach(logObject -> logger.error(logObject.toString()));
-            logger.error("Finished printing lost activities");
+            activities.forEach(logObject -> log.error(logObject.toString()));
+            log.error("Finished printing lost activities");
           }
         });
   }

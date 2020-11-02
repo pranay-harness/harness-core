@@ -292,7 +292,7 @@ public class BillingDataHelper {
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(accountId, trendFilters, aggregateFunction,
         groupByEntityList, groupByTime, sortCriteria, addInstanceTypeFilter, true, isEfficiencyStats);
     String query = queryData.getQuery();
-    logger.info("Billing data query for cost trend {}", query);
+    log.info("Billing data query for cost trend {}", query);
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
@@ -305,11 +305,11 @@ public class BillingDataHelper {
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingDataHelper for cost trend, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingDataHelper for cost trend, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

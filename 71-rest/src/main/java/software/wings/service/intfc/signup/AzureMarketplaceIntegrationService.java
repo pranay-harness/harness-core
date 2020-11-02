@@ -70,7 +70,7 @@ public class AzureMarketplaceIntegrationService {
         Base64.decodeBase64(marketPlaceConfig.getAzureMarketplaceSecretKey().getBytes(StandardCharsets.UTF_8)),
         StandardCharsets.UTF_8);
     // todo remove it once verified in dev
-    logger.info("Azure client id is {} and secret id is {}", clientId, secretKey);
+    log.info("Azure client id is {} and secret id is {}", clientId, secretKey);
   }
 
   private static final String AUTH_URL =
@@ -85,7 +85,7 @@ public class AzureMarketplaceIntegrationService {
   private void validateAzureToken(String authenticationToken, String azureToken) {
     JSONObject jsonObject = getResolveTokenResponse(authenticationToken, azureToken);
     if (!jsonObject.getString(OFFER_ID_KEY).equals(HARNESS_OFFER_ID)) {
-      logger.error("The offerId received in the Azure marketplace is not expected {}", jsonObject.toString());
+      log.error("The offerId received in the Azure marketplace is not expected {}", jsonObject.toString());
       throw new SignupException("Failed to validate the azure marketplace token");
     }
   }
@@ -104,7 +104,7 @@ public class AzureMarketplaceIntegrationService {
       return new JSONObject(response.body().string());
 
     } catch (IOException e) {
-      logger.error("Failed to process Azure marketplace signup", e);
+      log.error("Failed to process Azure marketplace signup", e);
       throw new SignupException("Failed to process azure signup token");
     }
   }
@@ -121,7 +121,7 @@ public class AzureMarketplaceIntegrationService {
       JSONObject jsonObject = new JSONObject(response.body().string());
       return getAuthToken(jsonObject);
     } catch (Exception ex) {
-      logger.error("Getting azure authentication token failed", ex);
+      log.error("Getting azure authentication token failed", ex);
       throw new SignupException("Failed to signup for azure marketplace");
     }
   }
@@ -138,12 +138,12 @@ public class AzureMarketplaceIntegrationService {
                           .build();
     try (okhttp3.Response response = client.newCall(request).execute()) {
       if (response.code() != HttpStatus.SC_OK) {
-        logger.info("Failed to activate azure subscription: {}", response.toString());
+        log.info("Failed to activate azure subscription: {}", response.toString());
         throw new SignupException("Azure activate API failed");
       }
-      logger.info("Azure subscription successful for subscriptionId: {}", subscriptionId);
+      log.info("Azure subscription successful for subscriptionId: {}", subscriptionId);
     } catch (IOException ex) {
-      logger.error("Getting azure authentication token failed", ex);
+      log.error("Getting azure authentication token failed", ex);
       throw new SignupException("Failed to signup for azure marketplace");
     }
   }

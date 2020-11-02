@@ -49,7 +49,7 @@ public class SetInfraDefinitionPipelines {
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
 
   public void migrate(Account account) {
-    logger.info(StringUtils.join(
+    log.info(StringUtils.join(
         DEBUG_LINE, "Starting Infra Definition migration for Pipelines, accountId ", account.getUuid()));
 
     List<Pipeline> pipelines = WorkflowAndPipelineMigrationUtils.fetchAllPipelinesForAccount(
@@ -59,7 +59,7 @@ public class SetInfraDefinitionPipelines {
       try {
         migrate(pipeline);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Migration failed for PipelineId: " + pipeline.getUuid()
+        log.error("[INFRA_MIGRATION_ERROR] Migration failed for PipelineId: " + pipeline.getUuid()
             + ExceptionUtils.getMessage(e));
       }
     }
@@ -75,12 +75,12 @@ public class SetInfraDefinitionPipelines {
 
       // No migration needed for approval stage. Hence continue
       if (stageElement.getType().equals(StateType.APPROVAL.name())) {
-        logger.info("Approval state needs no migration");
+        log.info("Approval state needs no migration");
         continue;
       }
 
       if (isEmpty(stageElement.getWorkflowVariables())) {
-        logger.info("No workflow variables, so no migration needed");
+        log.info("No workflow variables, so no migration needed");
         continue;
       }
 
@@ -88,8 +88,7 @@ public class SetInfraDefinitionPipelines {
       try {
         modifiedCurrentPhase = migrateWorkflowVariables(pipeline, stageElement, workflowCache);
       } catch (Exception e) {
-        logger.error(
-            "[INFRA_MIGRATION_ERROR] Skipping migration.Exception in migrating workflowVariables for Pipeline: "
+        log.error("[INFRA_MIGRATION_ERROR] Skipping migration.Exception in migrating workflowVariables for Pipeline: "
                 + pipeline.getUuid(),
             e);
         modifiedCurrentPhase = false;
@@ -100,10 +99,10 @@ public class SetInfraDefinitionPipelines {
     if (modified) {
       try {
         updatePipelineInMigration(pipeline);
-        logger.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
+        log.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Error updating pipeline " + pipeline.getUuid(), e);
+        log.error("[INFRA_MIGRATION_ERROR] Error updating pipeline " + pipeline.getUuid(), e);
       }
     }
   }
@@ -138,7 +137,7 @@ public class SetInfraDefinitionPipelines {
     }
 
     if (isEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
-      logger.info(
+      log.info(
           "[INFRA_MIGRATION_INFO] Skipping migration. Pipeline stage has workflow variables but workflow does not have userVariables.PipelineId: "
           + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
       return false;
@@ -154,7 +153,7 @@ public class SetInfraDefinitionPipelines {
     }
 
     if (isEmpty(infraUserVariables)) {
-      logger.info(
+      log.info(
           "[INFRA_MIGRATION_INFO] Pipeline stage with workflow where infraMapping not templatised. skipping migration. PipelineId: "
           + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
       return false;
@@ -165,7 +164,7 @@ public class SetInfraDefinitionPipelines {
 
       if (!stageElement.getWorkflowVariables().containsKey(infraMappingVariableName)) {
         // Workflow has infraMapping templatised but pipeline doesn't have infraMapping variable. Invalid pipeline
-        logger.info(
+        log.info(
             "[INFRA_MIGRATION_INFO] Workflow has infra Mapping templatised but pipeline stage does not have infra mapping variable. PipelineId: "
             + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
         continue;
@@ -185,8 +184,7 @@ public class SetInfraDefinitionPipelines {
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(pipeline.getAppId(), infraMappingId);
         if (infrastructureMapping == null) {
-          logger.info(
-              "[INFRA_MIGRATION_INFO] Couldn't fetch infraMapping for pipeline. Pipeline:  " + pipeline.getUuid()
+          log.info("[INFRA_MIGRATION_INFO] Couldn't fetch infraMapping for pipeline. Pipeline:  " + pipeline.getUuid()
               + " infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
           // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
           // incomplete and later user can complete the workflow
@@ -196,7 +194,7 @@ public class SetInfraDefinitionPipelines {
 
         String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
         if (isEmpty(infraDefId)) {
-          logger.error(
+          log.error(
               "[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for pipeline. Pipeline:  " + pipeline.getUuid()
               + "infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());
           continue;

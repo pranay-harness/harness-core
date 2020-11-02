@@ -22,18 +22,18 @@ public class AddAccountIdToArtifactsMigration implements Migration {
   @SuppressWarnings("deprecation")
   public void migrate() {
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "artifacts");
-    logger.info("Adding accountId to Artifacts");
+    log.info("Adding accountId to Artifacts");
     try (HIterator<Application> applicationHIterator =
              new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       while (applicationHIterator.hasNext()) {
         Application application = applicationHIterator.next();
-        logger.info("Adding accountId to artifacts for application {}", application.getUuid());
+        log.info("Adding accountId to artifacts for application {}", application.getUuid());
         final WriteResult result = collection.updateMulti(
             new BasicDBObject(ArtifactKeys.appId, application.getUuid()).append(ArtifactKeys.accountId, null),
             new BasicDBObject("$set", new BasicDBObject(ArtifactKeys.accountId, application.getAccountId())));
-        logger.info("updated {} artifacts for application {} ", result.getN(), application.getUuid());
+        log.info("updated {} artifacts for application {} ", result.getN(), application.getUuid());
       }
     }
-    logger.info("Adding accountIds to Artifacts completed for all applications");
+    log.info("Adding accountIds to Artifacts completed for all applications");
   }
 }

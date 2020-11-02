@@ -393,8 +393,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             break;
 
           default:
-            logger.warn(
-                format("Unhandled type %s while finding config variables to update", serviceVariable.getType()));
+            log.warn(format("Unhandled type %s while finding config variables to update", serviceVariable.getType()));
         }
       }
     }
@@ -486,13 +485,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                 accountId, configVar.getAllowedList(), configVar.getName());
             serviceVariable.setAllowedList(allowedList);
           } else {
-            logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
+            log.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
             continue;
           }
           break;
 
         default:
-          logger.warn("Yaml doesn't support {} type service variables", serviceVariable.getType());
+          log.warn("Yaml doesn't support {} type service variables", serviceVariable.getType());
           continue;
       }
 
@@ -561,10 +560,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             accountId, overrideYaml.getAllowedList(), overrideYaml.getName());
         variableBuilder.allowedList(allowedList);
       } else {
-        logger.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
+        log.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
       }
     } else {
-      logger.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
+      log.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
       variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
     }
 

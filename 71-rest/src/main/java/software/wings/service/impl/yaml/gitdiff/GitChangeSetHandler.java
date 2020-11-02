@@ -81,7 +81,7 @@ public class GitChangeSetHandler {
 
     try {
       final List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
-      logger.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
+      log.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
 
       saveProcessedCommit(gitDiffResult, accountId, COMPLETED);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
@@ -89,7 +89,7 @@ public class GitChangeSetHandler {
       removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, emptySet(), accountId);
 
     } catch (YamlProcessingException ex) {
-      logger.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
+      log.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
       // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
       // webhook invocation
       final Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = ex.getFailedYamlFileChangeMap();
@@ -157,7 +157,7 @@ public class GitChangeSetHandler {
       List<GitFileChange> gitFileChangeList, Set<String> failedFilePathSet, String accountId) {
     final List<GitFileChange> successfullyProcessedFileList =
         emptyIfNull(getSuccessfullyProcessedFiles(gitFileChangeList, failedFilePathSet));
-    logger.info("Successfully processed files =[{}]",
+    log.info("Successfully processed files =[{}]",
         successfullyProcessedFileList.stream().map(GitFileChange::getFilePath).collect(toList()));
 
     yamlGitService.removeGitSyncErrors(accountId, successfullyProcessedFileList, true);
@@ -190,8 +190,7 @@ public class GitChangeSetHandler {
         // Handles application
 
         if (!yamlGitService.checkApplicationNameIsValid(gitFileChange)) {
-          logger.info(
-              "Skipping the file {} from processing as it contains invalid app name", gitFileChange.getFilePath());
+          log.info("Skipping the file {} from processing as it contains invalid app name", gitFileChange.getFilePath());
           continue;
         }
 
@@ -291,11 +290,11 @@ public class GitChangeSetHandler {
       yamlGitService.saveCommit(gitCommit);
     } catch (Exception e) {
       if (e instanceof DuplicateKeyException) {
-        logger.info("This was already persisted in DB. May Happens when 2 successive commits"
+        log.info("This was already persisted in DB. May Happens when 2 successive commits"
             + " are made to git in short duration, and when 2nd commit is done before gitDiff"
             + " for 1st one is in progress");
       } else {
-        logger.warn("Failed to save gitCommit", e);
+        log.warn("Failed to save gitCommit", e);
         // Try again without gitChangeSet and CommandResults.
         gitCommit.getYamlChangeSet().setGitFileChanges(null);
         gitCommit.setGitCommandResult(null);

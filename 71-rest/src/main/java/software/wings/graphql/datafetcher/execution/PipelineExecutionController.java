@@ -196,7 +196,7 @@ public class PipelineExecutionController {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
     if (templatizedEnvName == null) {
-      logger.info("Environment is Not templatized in pipeline {} ", pipeline.getUuid());
+      log.info("Environment is Not templatized in pipeline {} ", pipeline.getUuid());
       return null;
     }
     if (!isEmpty(variableInputs)) {
@@ -396,7 +396,7 @@ public class PipelineExecutionController {
             return artifactNeededServiceIds;
           }
         }
-        logger.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
+        log.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
         return new ArrayList<>();
       }
     }

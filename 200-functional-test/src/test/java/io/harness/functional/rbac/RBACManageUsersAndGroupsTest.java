@@ -40,7 +40,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
 
   @Before
   public void rbacManageUsersAndGroupsSetup() {
-    logger.info("Running RBAC setup");
+    log.info("Running RBAC setup");
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER).getUser();
     assertThat(readOnlyUser).isNotNull();
     userGroupManagementId = readOnlyUser.getUuid();
@@ -52,7 +52,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
-    logger.info("Logging in as a rbac2 user");
+    log.info("Logging in as a rbac2 user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     AccessManagementUtils.runUserAndGroupsListTest(getAccount(), roBearerToken, HttpStatus.SC_OK);
     // AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, userGroupManagementId);
@@ -72,7 +72,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
-    logger.info("Check if create application test fails");
+    log.info("Check if create application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
@@ -93,7 +93,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
-    logger.info("Check if delete application test fails");
+    log.info("Check if delete application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
@@ -121,12 +121,12 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateMembersAndPermissionsInUserGroup() {
-    logger.info("Logging in as a rbac2 user");
+    log.info("Logging in as a rbac2 user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     UserGroupUtils.createUserGroup(
         getAccount(), roBearerToken, userGroupManagementId, PermissionTypes.ACCOUNT_ADMIN.toString());
     Setup.signOut(userGroupManagementId, roBearerToken);
-    logger.info("Logging out as a rbac2 user");
+    log.info("Logging out as a rbac2 user");
   }
 
   //  @Test
@@ -136,7 +136,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  public void amNoPermissionToPostForIPWhitelisting() {
   //    AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
   //        getAccount(), bearerToken, RBAC_USER, "readonlyuser", HttpStatus.SC_BAD_REQUEST);
-  //    logger.info("Logging out as a rbac2 user");
+  //    log.info("Logging out as a rbac2 user");
   //  }
   //
   //  @Test
@@ -144,11 +144,11 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateNotificationSettingsInUserGroup() {
-  //    logger.info("Logging in as a rbac2 user");
+  //    log.info("Logging in as a rbac2 user");
   //    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
   //    UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), roBearerToken);
   //    Setup.signOut(userGroupManagementId, roBearerToken);
-  //    logger.info("Logging out as a rbac2 user");
+  //    log.info("Logging out as a rbac2 user");
   //  }
   //
   //  @Test
@@ -156,7 +156,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForAPIKeys() {
-  //    logger.info("Logging in as a rbac2 user");
+  //    log.info("Logging in as a rbac2 user");
   //    AccessManagementUtils.runAPIKeyPostTest(
   //        getAccount(), bearerToken, RBAC_USER, "rbac2", HttpStatus.SC_BAD_REQUEST, userGroup);
   //  }
@@ -186,7 +186,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  public void updateIPWhitelistingTest() {
   //    AccessManagementUtils.updateIPWhiteListing(
   //        getAccount(), bearerToken, RBAC_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
-  //    logger.info("Test Completed");
+  //    log.info("Test Completed");
   //  }
   //
   //  @Test
@@ -196,7 +196,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  public void deleteIPWhitelistingTest() {
   //    AccessManagementUtils.deleteIPWhitelisting(
   //        getAccount(), bearerToken, RBAC_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
-  //    logger.info("Logging out as a rbac2 user");
+  //    log.info("Logging out as a rbac2 user");
   //  }
   //
   //  @Test
@@ -206,12 +206,12 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  public void updateAndDeleteApiKeysTest() {
   //    AccessManagementUtils.updateAndDeleteAPIKeys(
   //        getAccount(), bearerToken, RBAC_USER, "rbac2", userGroup, HttpStatus.SC_BAD_REQUEST);
-  //    logger.info("Test completed successfully");
+  //    log.info("Test completed successfully");
   //  }
 
   @After
   public void rbacCleanup() {
-    logger.info("Running RBAC cleanup");
+    log.info("Running RBAC cleanup");
     UserGroupUtils.deleteMembers(getAccount(), bearerToken, userGroup);
     UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid());
   }

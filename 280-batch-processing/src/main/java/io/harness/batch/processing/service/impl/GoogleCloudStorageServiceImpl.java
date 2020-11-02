@@ -40,6 +40,6 @@ public class GoogleCloudStorageServiceImpl {
     BlobId blobId = BlobId.of(bucketName, objectName);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
     storage.create(blobInfo, Files.readAllBytes(Paths.get(filePath)));
-    logger.info("File " + filePath + " uploaded to bucket " + bucketName + " as " + objectName);
+    log.info("File " + filePath + " uploaded to bucket " + bucketName + " as " + objectName);
   }
 }

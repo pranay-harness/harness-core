@@ -32,7 +32,7 @@ public class OrchestrationAliasUtils {
         if (CodeUtils.isTestClass(clazz)) {
           continue;
         }
-        logger.info("Checking registrar {}", clazz.getName());
+        log.info("Checking registrar {}", clazz.getName());
         Map<String, Class<?>> orchestrationElements = new HashMap<>();
         aliasRegistrar.register(orchestrationElements);
 

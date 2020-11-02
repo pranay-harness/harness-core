@@ -136,7 +136,7 @@ public class InstanceTimeSeriesDataHelper {
     }
 
     if (isEmpty(from) && isEmpty(to)) {
-      logger.info("No time filter set in Instance time series stats query. Setting default to 7 days");
+      log.info("No time filter set in Instance time series stats query. Setting default to 7 days");
       Instant now = Instant.now();
       from = now.minus(7, ChronoUnit.DAYS).toString();
       to = now.toString();
@@ -226,9 +226,9 @@ public class InstanceTimeSeriesDataHelper {
         return;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to execute query=[{}],accountId=[{}]", query, accountId, e);
+          log.error("Failed to execute query=[{}],accountId=[{}]", query, accountId, e);
         } else {
-          logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
+          log.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
         }
         retryCount++;
       } finally {
@@ -239,7 +239,7 @@ public class InstanceTimeSeriesDataHelper {
 
   public void purgeOldInstances() {
     if (!timeScaleDBService.isValid()) {
-      logger.info("Skipping purge of old instances from time scale db since time scale db is not initialized");
+      log.info("Skipping purge of old instances from time scale db since time scale db is not initialized");
       return;
     }
 
@@ -260,9 +260,9 @@ public class InstanceTimeSeriesDataHelper {
         return;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to execute query=[{}]", query, e);
+          log.error("Failed to execute query=[{}]", query, e);
         } else {
-          logger.warn("Failed to execute query=[{}], retryCount=[{}]", query, retryCount);
+          log.warn("Failed to execute query=[{}], retryCount=[{}]", query, retryCount);
         }
         retryCount++;
       }
@@ -312,9 +312,9 @@ public class InstanceTimeSeriesDataHelper {
         return;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Failed to execute query=[{}],accountId=[{}]", query, accountId, e);
+          log.error("Failed to execute query=[{}],accountId=[{}]", query, accountId, e);
         } else {
-          logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
+          log.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", query, accountId, retryCount);
         }
         retryCount++;
       } finally {

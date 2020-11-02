@@ -270,7 +270,7 @@ public class HeatMapApiIntegrationTest extends IntegrationTestBase {
     // Add time series analysis records for each minute in 30 days
     int currentMinute = (int) TimeUnit.MILLISECONDS.toMinutes(start2HoursAgo);
     int minutesIn2Hours = (int) TimeUnit.HOURS.toMinutes(2);
-    logger.info("Creating {} units", minutesIn2Hours);
+    log.info("Creating {} units", minutesIn2Hours);
 
     List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
     for (int i = 0; i < minutesIn2Hours; i++) {

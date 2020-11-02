@@ -58,7 +58,7 @@ public class ApplicationSearchEntitySyncTest extends AbstractFunctionalTest {
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isApplicationInSearchResponse, booleanMatcher, true);
-    logger.info("New application with id {} and name {} synced.", application.getUuid(), application.getName());
+    log.info("New application with id {} and name {} synced.", application.getUuid(), application.getName());
 
     application.setName(EDITED_APP_NAME);
     application = ApplicationRestUtils.updateApplication(
@@ -69,7 +69,7 @@ public class ApplicationSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(application.getName()).isEqualTo(EDITED_APP_NAME);
 
     retry.executeWithRetry(this ::isApplicationInSearchResponse, booleanMatcher, true);
-    logger.info("Updated application with id {} and name {} synced", application.getUuid(), application.getName());
+    log.info("Updated application with id {} and name {} synced", application.getUuid(), application.getName());
 
     int statusCode =
         ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());

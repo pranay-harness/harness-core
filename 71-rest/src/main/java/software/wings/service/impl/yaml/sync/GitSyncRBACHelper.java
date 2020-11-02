@@ -145,10 +145,10 @@ public class GitSyncRBACHelper {
           if (yamlType == GLOBAL_TEMPLATE_LIBRARY) {
             filesBelongingToTemplateLibrary.add(filePath);
           } else {
-            logger.info(GIT_SETUP_RBAC_PREFIX + " Cannot found account level yamlType for the file [{}]", filePath);
+            log.info(GIT_SETUP_RBAC_PREFIX + " Cannot found account level yamlType for the file [{}]", filePath);
           }
         } else {
-          logger.info(GIT_SETUP_RBAC_PREFIX + " Cannot found account level yamlType for the file [{}]", filePath);
+          log.info(GIT_SETUP_RBAC_PREFIX + " Cannot found account level yamlType for the file [{}]", filePath);
         }
       }
     }

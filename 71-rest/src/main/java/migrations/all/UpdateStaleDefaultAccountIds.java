@@ -46,11 +46,11 @@ public class UpdateStaleDefaultAccountIds implements Migration {
           Set<String> accountIds = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
 
           if (!accountIds.contains(user.getDefaultAccountId())) {
-            logger.info("User {} has stale default account id: {}", user.getEmail(), user.getDefaultAccountId());
+            log.info("User {} has stale default account id: {}", user.getEmail(), user.getDefaultAccountId());
 
             userService.setNewDefaultAccountId(user);
 
-            logger.info("New default account for user {} set to: {}", user.getEmail(), user.getDefaultAccountId());
+            log.info("New default account for user {} set to: {}", user.getEmail(), user.getDefaultAccountId());
 
             UpdateOperations<User> updateOp = persistence.createUpdateOperations(User.class)
                                                   .set(UserKeys.defaultAccountId, user.getDefaultAccountId());

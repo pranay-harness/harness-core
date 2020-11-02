@@ -32,11 +32,11 @@ public class Retry<T> {
   }
 
   private T retry(Supplier<T> function, Matcher<T> matcher, T expected) throws RuntimeException {
-    logger.info("Execution will be retried : " + maxRetries + " times.");
+    log.info("Execution will be retried : " + maxRetries + " times.");
     retryCounter = 0;
     T actual;
     while (retryCounter < maxRetries) {
-      logger.info("Retry Attempt : " + retryCounter);
+      log.info("Retry Attempt : " + retryCounter);
       try {
         TimeUnit.MILLISECONDS.sleep(this.introduceDelayInMS);
         actual = function.get();
@@ -44,9 +44,9 @@ public class Retry<T> {
           return actual;
         }
       } catch (Exception ex) {
-        logger.info("Execution failed on retry " + retryCounter + " of " + maxRetries + " error: " + ex);
+        log.info("Execution failed on retry " + retryCounter + " of " + maxRetries + " error: " + ex);
         if (retryCounter >= maxRetries) {
-          logger.warn("Max retries exceeded.");
+          log.warn("Max retries exceeded.");
           break;
         }
       }

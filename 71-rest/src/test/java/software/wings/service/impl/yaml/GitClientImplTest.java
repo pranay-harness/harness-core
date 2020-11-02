@@ -263,7 +263,7 @@ public class GitClientImplTest extends WingsBaseTest {
         try {
           session = getSSHSession(newConfig);
         } catch (JSchException jse) {
-          logger.info("Could not get SSH session : " + jse.getMessage());
+          log.info("Could not get SSH session : " + jse.getMessage());
         }
       }
 
@@ -290,7 +290,7 @@ public class GitClientImplTest extends WingsBaseTest {
                    sshTransport.setSshSessionFactory(sshSessionFactory);
                  })
                  .call();
-    logger.info("Cloning repository to directory: " + result.getRepository().getDirectory());
+    log.info("Cloning repository to directory: " + result.getRepository().getDirectory());
     return result;
   }
 
@@ -441,7 +441,7 @@ public class GitClientImplTest extends WingsBaseTest {
     for (int i = 0; i < 10; i += 3) {
       gitFileChanges.add(aGitFileChange().withChangeType(ChangeType.DELETE).withFilePath(buildFileName(i)).build());
     }
-    logger.info(gitFileChanges.toString());
+    log.info(gitFileChanges.toString());
     return gitFileChanges;
   }
 
@@ -472,7 +472,7 @@ public class GitClientImplTest extends WingsBaseTest {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                logger.info(line);
+                                                log.info(line);
                                               }
                                             });
 

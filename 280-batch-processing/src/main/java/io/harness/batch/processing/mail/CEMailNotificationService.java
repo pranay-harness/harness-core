@@ -26,11 +26,11 @@ public class CEMailNotificationService {
 
     boolean mailSentSuccessFully = false;
     if (!isDefaultSMTPConfigValid) {
-      logger.warn("Mail not sent, : {}", getErrorString(emailData));
+      log.warn("Mail not sent, : {}", getErrorString(emailData));
     } else {
       mailSentSuccessFully = true;
       if (!sendMail(defaultSMTPConfig, emailData)) {
-        logger.warn("Mail not sent, : {}", getErrorString(emailData));
+        log.warn("Mail not sent, : {}", getErrorString(emailData));
         mailSentSuccessFully = false;
       }
     }
@@ -52,11 +52,11 @@ public class CEMailNotificationService {
         return true;
       } catch (WingsException e) {
         String errorString = getErrorString(emailData);
-        logger.warn(errorString, e);
+        log.warn(errorString, e);
         return false;
       }
     } else {
-      logger.warn("Mail not sent in sendMail");
+      log.warn("Mail not sent in sendMail");
       return false;
     }
   }

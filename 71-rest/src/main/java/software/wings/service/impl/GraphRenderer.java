@@ -240,7 +240,7 @@ public class GraphRenderer {
       if (parentIdElementsMap.get(instance.getUuid()) != null) {
         GraphGroup group = new GraphGroup();
         group.setId(node.getId() + "-group");
-        logger.debug("generateNodeTree group attached - group: {}, node: {}", group, node);
+        log.debug("generateNodeTree group attached - group: {}, node: {}", group, node);
         node.setGroup(group);
 
         Collection<String> elements = null;
@@ -266,7 +266,7 @@ public class GraphRenderer {
           }
         }
 
-        logger.debug("generateNodeTree processing group - node: {}", elements);
+        log.debug("generateNodeTree processing group - node: {}", elements);
         if (elements == null) {
           elements = parentIdElementsMap.get(instance.getUuid()).keySet();
         }
@@ -427,8 +427,8 @@ public class GraphRenderer {
 
       StateExecutionInstance origin = null;
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("generateSubworkflows request received - instanceIdMap: {}", instanceIdMap);
+      if (log.isDebugEnabled()) {
+        log.debug("generateSubworkflows request received - instanceIdMap: {}", instanceIdMap);
       }
 
       for (StateExecutionInstance instance : instanceIdMap.values()) {
@@ -438,8 +438,8 @@ public class GraphRenderer {
         populateParentAndPrevious(instance);
       }
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("generateNodeTree invoked - instanceIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}",
+      if (log.isDebugEnabled()) {
+        log.debug("generateNodeTree invoked - instanceIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}",
             instanceIdMap, prevInstanceIdMap, parentIdElementsMap);
       }
 
@@ -565,13 +565,13 @@ public class GraphRenderer {
       try {
         builder.executionSummary(executionData.getExecutionSummary());
       } catch (RuntimeException e) {
-        logger.error("Failed to get state execution summary for state instance id {} and state name {}",
+        log.error("Failed to get state execution summary for state instance id {} and state name {}",
             instance.getUuid(), instance.getDisplayName(), e);
       }
       try {
         builder.executionDetails(executionData.getExecutionDetails());
       } catch (RuntimeException e) {
-        logger.error("Failed to get state execution details for state instance id {} and state name {}",
+        log.error("Failed to get state execution details for state instance id {} and state name {}",
             instance.getUuid(), instance.getDisplayName(), e);
       }
 
@@ -580,7 +580,7 @@ public class GraphRenderer {
         try {
           builder.elementStatusSummary(elementStateExecutionData.getElementStatusSummary());
         } catch (RuntimeException e) {
-          logger.error("Failed to get state element status summary for state instance id {} and state name {}",
+          log.error("Failed to get state element status summary for state instance id {} and state name {}",
               instance.getUuid(), instance.getDisplayName(), e);
         }
       }

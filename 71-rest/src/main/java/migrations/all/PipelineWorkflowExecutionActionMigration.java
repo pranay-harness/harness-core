@@ -57,7 +57,7 @@ public class PipelineWorkflowExecutionActionMigration implements Migration {
         }
       }
     } catch (Exception e) {
-      logger.error("Could not run workflow/pipeline execution right migration", e);
+      log.error("Could not run workflow/pipeline execution right migration", e);
     }
   }
 }

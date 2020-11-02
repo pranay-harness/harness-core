@@ -155,7 +155,7 @@ public class ExecutionQueryHelper {
             query.field(WorkflowExecutionKeys.uuid).in(entityIds);
             break;
           default:
-            logger.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
+            log.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling execution query", WingsException.USER);
         }
       }
@@ -173,7 +173,7 @@ public class ExecutionQueryHelper {
       case DEPLOYMENT:
         return EntityType.DEPLOYMENT;
       default:
-        logger.error("Unsupported entity type {} for tag ", entityType);
+        log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);
     }
   }

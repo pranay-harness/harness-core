@@ -261,7 +261,7 @@ public class EcsServiceSetup extends State {
       EcsSetUpDataBag ecsSetUpDataBag) {
     Application app = appService.get(context.getAppId());
 
-    setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, logger);
+    setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, log);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()
@@ -405,7 +405,7 @@ public class EcsServiceSetup extends State {
         artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
     ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
         setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),
-        getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), logger);
+        getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), log);
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
@@ -451,7 +451,7 @@ public class EcsServiceSetup extends State {
           ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
         }
       } else {
-        logger.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
+        log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
         throw new InvalidRequestException("Manifest does not contain the proper git file config");
       }
     }

@@ -47,7 +47,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
                        .filter(LogKeys.activityId, logObject.getActivityId())
                        .count();
       if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
-        logger.warn(
+        log.warn(
             "Number of logObject rows per activity threshold [{}] crossed. [{}] logObject lines truncated for activityId: [{}], commandUnitName: [{}]",
             MAX_LOG_ROWS_PER_ACTIVITY, logObject.getLinesCount(), logObject.getActivityId(),
             logObject.getCommandUnitName());

@@ -26,7 +26,7 @@ class CustomPropertyUtils extends PropertyUtils {
 
       return result;
     } catch (Exception e) {
-      logger.error("Error while converting the object to yaml string: " + ExceptionUtils.getMessage(e), e);
+      log.error("Error while converting the object to yaml string: " + ExceptionUtils.getMessage(e), e);
     }
 
     return null;

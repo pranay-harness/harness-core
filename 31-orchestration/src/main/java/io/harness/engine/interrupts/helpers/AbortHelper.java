@@ -51,7 +51,7 @@ public class AbortHelper {
         TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskMode().name());
         boolean aborted = executor.abortTask(ambiance.getSetupAbstractions(), taskExecutableResponse.getTaskId());
         if (!aborted) {
-          logger.error("Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}",
+          log.error("Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}",
               taskExecutableResponse.getTaskId(), nodeExecution.getUuid());
         }
       }
@@ -69,7 +69,7 @@ public class AbortHelper {
               + "for NodeExecutionId: " + nodeExecution.getUuid(),
           ex);
     } catch (Exception e) {
-      logger.error("Error in discontinuing", e);
+      log.error("Error in discontinuing", e);
     }
   }
 
@@ -78,7 +78,7 @@ public class AbortHelper {
     List<NodeExecution> allNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatuses(interrupt.getPlanExecutionId(), statuses);
     if (isEmpty(allNodeExecutions)) {
-      logger.warn(
+      log.warn(
           "No Node Executions could be marked as DISCONTINUING - planExecutionId: {}", interrupt.getPlanExecutionId());
       return false;
     }

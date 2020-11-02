@@ -72,14 +72,14 @@ public class PruneFileJob implements Job {
 
       if (!className.equals(AppContainer.class.getCanonicalName())
           && !className.equals(Artifact.class.getCanonicalName())) {
-        logger.error("Unsupported class [{}] was scheduled for pruning.", className);
+        log.error("Unsupported class [{}] was scheduled for pruning.", className);
       } else if (wingsPersistence.get(cls, entityId) != null) {
         // If this is the first try the job might of being started way to soon before the entity was
         // deleted. We would like to give at least one more try to pruning.
         if (jobExecutionContext.getPreviousFireTime() == null) {
           return;
         }
-        logger.warn("This warning should be happening very rarely. If you see this often, please investigate.\n"
+        log.warn("This warning should be happening very rarely. If you see this often, please investigate.\n"
             + "The only case this warning should show is if there was a crash or network disconnect in the race of "
             + "the prune job schedule and the parent entity deletion.");
       } else {
@@ -87,9 +87,9 @@ public class PruneFileJob implements Job {
         fileService.deleteAllFilesForEntity(entityId, FileBucket.valueOf(bucket));
       }
     } catch (ClassNotFoundException e) {
-      logger.error("The class this job is for no longer exists!!!", e);
+      log.error("The class this job is for no longer exists!!!", e);
     } catch (Exception e) {
-      logger.error("PruneFileJob will have to retry to delete the files", e);
+      log.error("PruneFileJob will have to retry to delete the files", e);
       return;
     }
 

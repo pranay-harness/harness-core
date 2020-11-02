@@ -54,7 +54,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     final AwsLambdaInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AwsLambdaInstanceSyncPerpetualTaskParams.class);
 
@@ -77,7 +77,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), awsConfig.getAccountId(), awsLambdaDetailsWithMetricsResponse));
     } catch (Exception e) {
-      logger.error(
+      log.error(
           String.format("Failed to publish instance sync result for aws lambda. Function [%s] and PerpetualTaskId [%s]",
               taskParams.getFunctionName(), taskId.getId()),
           e);
@@ -131,7 +131,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
                      .build())
           .collect(Collectors.toList());
     } catch (Exception exception) {
-      logger.error(String.format("Failed to get the invocation count for function: [%s],  exception: %s",
+      log.error(String.format("Failed to get the invocation count for function: [%s],  exception: %s",
           taskParams.getFunctionName(), exception.getMessage()));
       return emptyList();
     }
@@ -175,7 +175,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     try {
       return awsCloudWatchHelperServiceDelegate.getMetricStatistics(request);
     } catch (Exception ex) {
-      logger.error(String.format("Failed to execute aws CloudWatch statistics: [%s], exception: %s",
+      log.error(String.format("Failed to execute aws CloudWatch statistics: [%s], exception: %s",
           taskParams.getFunctionName(), ex.getMessage()));
       return AwsCloudWatchStatisticsResponse.builder().executionStatus(FAILED).errorMessage(ex.getMessage()).build();
     }
@@ -221,7 +221,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     try {
       return awsLambdaHelperServiceDelegate.getFunctionDetails(request);
     } catch (Exception ex) {
-      logger.error(String.format(
+      log.error(String.format(
           "Failed to execute aws function: [%s], exception: %s", taskParams.getFunctionName(), ex.getMessage()));
       return AwsLambdaDetailsResponse.builder().executionStatus(FAILED).errorMessage(ex.getMessage()).build();
     }

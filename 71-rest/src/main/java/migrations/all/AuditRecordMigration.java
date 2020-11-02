@@ -84,7 +84,7 @@ public class AuditRecordMigration implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("AuditRecords: {} updated", i);
+          log.info("AuditRecords: {} updated", i);
         }
         ++i;
 
@@ -120,7 +120,7 @@ public class AuditRecordMigration implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("AuditRecords: {} updated", i);
+          log.info("AuditRecords: {} updated", i);
         }
         ++i;
 
@@ -133,7 +133,7 @@ public class AuditRecordMigration implements Migration {
             .updateOne(new BasicDBObject("$set", new BasicDBObject(AuditHeaderKeys.entityAuditRecords, basicDBList)));
       }
     } catch (Exception e) {
-      logger.warn("something failed", e);
+      log.warn("something failed", e);
     }
 
     if (i % 1000 != 1) {
@@ -193,7 +193,7 @@ public class AuditRecordMigration implements Migration {
     } else if (connectionAttributeTypes.contains(entityType)) {
       record.setAffectedResourceType(ResourceType.CONNECTION_ATTRIBUTES.name());
     } else {
-      logger.warn("Following entity type was not handled in migration: " + entityType);
+      log.warn("Following entity type was not handled in migration: " + entityType);
     }
   }
 

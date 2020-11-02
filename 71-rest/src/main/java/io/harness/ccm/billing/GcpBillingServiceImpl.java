@@ -67,7 +67,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
       result = bigQueryService.get().query(queryConfig);
       return toTotalCost(result);
     } catch (InterruptedException e) {
-      logger.error("Failed to get GCP billing Entity stats.", e);
+      log.error("Failed to get GCP billing Entity stats.", e);
       Thread.currentThread().interrupt();
       return BigDecimal.ZERO;
     }
@@ -143,7 +143,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get GCP billing Entity stats.", e);
+      log.error("Failed to get GCP billing Entity stats.", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -178,7 +178,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get GCP billing Entity stats.", e);
+      log.error("Failed to get GCP billing Entity stats.", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -188,7 +188,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
   private GcpBillingEntityStatsDTO toGcpBillingEntityStats(TableResult result) {
     Preconditions.checkNotNull(result);
     if (result.getTotalRows() == 0) {
-      logger.warn("No result from this query");
+      log.warn("No result from this query");
       return null;
     }
 
@@ -267,7 +267,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
     try {
       result = bigQueryService.get().query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to get GCP billing time series stats.", e);
+      log.error("Failed to get GCP billing time series stats.", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -277,7 +277,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
   private static GcpBillingTimeSeriesStatsDTO toGcpBillingTimeSeriesStats(TableResult result) {
     Preconditions.checkNotNull(result);
     if (result.getTotalRows() == 0) {
-      logger.warn("No result from this query");
+      log.warn("No result from this query");
       return null;
     }
     Map<Timestamp, List<QLBillingDataPoint>> timeSeriesDataPointsMap = new HashMap();

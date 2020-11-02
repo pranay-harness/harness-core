@@ -33,7 +33,7 @@ public class PcfConnectivityCapabilityCheck implements CapabilityCheck {
           .validated(PCF_CONNECTIVITY_SUCCESS.equals(validationErrorMsg))
           .build();
     } catch (Exception e) {
-      logger.error("Failed to Decrypt pcfConfig, RepoUrl: {}", pcfConfig.getEndpointUrl());
+      log.error("Failed to Decrypt pcfConfig, RepoUrl: {}", pcfConfig.getEndpointUrl());
       return CapabilityResponse.builder().delegateCapability(pcfConnectivityCapability).validated(false).build();
     }
   }

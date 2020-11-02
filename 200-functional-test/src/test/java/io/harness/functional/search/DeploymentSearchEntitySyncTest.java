@@ -95,8 +95,7 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isDeploymentInSearchResponse, booleanMatcher, true);
     assertThat(workflowExecution).isNotNull();
-    logger.info(
-        "New deployment with id {} and name {} synced.", workflowExecution.getUuid(), workflowExecution.getName());
+    log.info("New deployment with id {} and name {} synced.", workflowExecution.getUuid(), workflowExecution.getName());
 
     WorkflowRestUtils.deleteWorkflow(bearerToken, workflow.getUuid(), workflow.getAppId());
     EnvironmentRestUtils.deleteEnvironment(

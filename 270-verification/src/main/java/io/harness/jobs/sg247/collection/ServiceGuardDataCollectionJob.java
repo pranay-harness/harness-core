@@ -21,14 +21,14 @@ public class ServiceGuardDataCollectionJob implements Handler<Account> {
       return;
     }
     final String accountId = account.getUuid();
-    logger.info("Executing APM & Logs Data collection for {}", accountId);
+    log.info("Executing APM & Logs Data collection for {}", accountId);
     long startTime = System.currentTimeMillis();
     continuousVerificationService.triggerAPMDataCollection(accountId);
-    logger.info("[triggerAPMDataCollection] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerAPMDataCollection] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogDataCollection(accountId);
-    logger.info("[triggerLogDataCollection] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerLogDataCollection] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
   }
 }

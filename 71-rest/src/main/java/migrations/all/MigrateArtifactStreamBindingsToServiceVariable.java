@@ -40,15 +40,15 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Migration Started - move artifact stream bindings to service variable");
+    log.info("Migration Started - move artifact stream bindings to service variable");
     Account account = wingsPersistence.get(Account.class, ACCOUNT_ID);
     if (account == null) {
-      logger.info("Specified account not found. Not migrating artifact stream bindings to service variable.");
+      log.info("Specified account not found. Not migrating artifact stream bindings to service variable.");
       return;
     }
 
     migrateAccount(account.getUuid());
-    logger.info("Migration Completed - move artifact stream bindings to service variable");
+    log.info("Migration Completed - move artifact stream bindings to service variable");
   }
 
   private void migrateAccount(String accountId) {
@@ -61,7 +61,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
                              .map(Application::getUuid)
                              .collect(Collectors.toSet());
     if (EmptyPredicate.isEmpty(appIds)) {
-      logger.info("No applications found for account " + accountId
+      log.info("No applications found for account " + accountId
           + ". Not migrating artifact stream bindings to service variable.");
       return;
     }
@@ -107,7 +107,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
             ServiceVariable serviceVariable = serviceVariableMap.get(serviceId);
             if (Type.ARTIFACT != serviceVariable.getType()) {
               // A non-artifact service variable exists with the same name. Logging and skipping.
-              logger.info(
+              log.info(
                   "Service variable with name " + ARTIFACT_VARIABLE_NAME + " already exists for service: " + serviceId);
               continue;
             }
@@ -123,7 +123,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
             artifactStreamServiceBindingService.create(service.getAppId(), service.getUuid(), artifactStreamBinding);
           }
         } catch (Exception e) {
-          logger.error("Migration Error - could not migrate service: [{}]", serviceId, e);
+          log.error("Migration Error - could not migrate service: [{}]", serviceId, e);
         }
       }
     }

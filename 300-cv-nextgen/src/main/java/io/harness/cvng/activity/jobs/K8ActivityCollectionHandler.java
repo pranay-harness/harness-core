@@ -12,8 +12,8 @@ public class K8ActivityCollectionHandler implements MongoPersistenceIterator.Han
   @Inject private KubernetesActivitySourceService activityService;
   @Override
   public void handle(KubernetesActivitySource activitySource) {
-    logger.info("Enqueuing activitySource {}", activitySource.getUuid());
+    log.info("Enqueuing activitySource {}", activitySource.getUuid());
     activityService.enqueueDataCollectionTask(activitySource);
-    logger.info("Done enqueuing activitySource {}", activitySource.getUuid());
+    log.info("Done enqueuing activitySource {}", activitySource.getUuid());
   }
 }

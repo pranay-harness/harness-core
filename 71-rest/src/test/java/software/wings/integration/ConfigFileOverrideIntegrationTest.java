@@ -222,7 +222,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(createRandomFile());
     configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
-    logger.info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
+    log.info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
         entityId);
   }
 

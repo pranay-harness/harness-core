@@ -166,8 +166,7 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public List<OrganizationSummary> getOrganizations(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(
-        new StringBuilder().append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX).append("Fetching Organizations ").toString());
+    log.info(new StringBuilder().append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX).append("Fetching Organizations ").toString());
 
     List<OrganizationSummary> organizations = new ArrayList<>();
 
@@ -197,7 +196,7 @@ public class PcfClientImpl implements PcfClient {
       throws PivotalClientApiException, InterruptedException {
     List<OrganizationDetail> organizationDetails = new ArrayList<>();
     List<String> spaces = new ArrayList<>();
-    logger.info(new StringBuilder().append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX).append("Fetching Spaces ").toString());
+    log.info(new StringBuilder().append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX).append("Fetching Spaces ").toString());
 
     CountDownLatch latch = new CountDownLatch(1);
 
@@ -237,7 +236,7 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public List<ApplicationSummary> getApplications(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(
+    log.info(
         new StringBuilder().append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX).append("Fetching PCF Applications: ").toString());
     CountDownLatch latch = new CountDownLatch(1);
     List<ApplicationSummary> applicationSummaries = new ArrayList<>();
@@ -267,13 +266,13 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void scaleApplications(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Scaling Applications: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .append(", to count: ")
-                    .append(pcfRequestConfig.getDesiredCount())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Scaling Applications: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .append(", to count: ")
+                 .append(pcfRequestConfig.getDesiredCount())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
 
@@ -308,11 +307,11 @@ public class PcfClientImpl implements PcfClient {
 
   @Override
   public void getTasks(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting Tasks for Applications: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Getting Tasks for Applications: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     List<Task> tasks = new ArrayList<>();
@@ -347,14 +346,14 @@ public class PcfClientImpl implements PcfClient {
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException {
     PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
 
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Creating Application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Creating Application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     if (pcfRequestConfig.isUseCFCLI()) {
-      logger.info("Using CLI to create application");
+      log.info("Using CLI to create application");
       performCfPushUsingCli(requestData, executionLogCallback);
       return;
     } else {
@@ -901,14 +900,14 @@ public class PcfClientImpl implements PcfClient {
       content = new String(Files.readAllBytes(Paths.get(finalFilePath)), Charsets.UTF_8);
       executionLogCallback.saveExecutionLog(
           new StringBuilder(128).append("# Manifest File Content: \n").append(content).append('\n').toString());
-      logger.info(new StringBuilder(128)
-                      .append("Manifest File at Path: ")
-                      .append(finalFilePath)
-                      .append(", contents are \n")
-                      .append(content)
-                      .toString());
+      log.info(new StringBuilder(128)
+                   .append("Manifest File at Path: ")
+                   .append(finalFilePath)
+                   .append(", contents are \n")
+                   .append(content)
+                   .toString());
     } catch (Exception e) {
-      logger.warn("Failed to log manifest file contents at path : " + finalFilePath);
+      log.warn("Failed to log manifest file contents at path : " + finalFilePath);
     }
   }
 
@@ -985,11 +984,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void stopApplication(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Stopping Application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Stopping Application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1018,11 +1017,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Getting application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
     CountDownLatch latch = new CountDownLatch(1);
 
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1054,11 +1053,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public ApplicationEnvironments getApplicationEnvironmentsByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Getting application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
     CountDownLatch latch = new CountDownLatch(1);
 
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1097,11 +1096,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void deleteApplication(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Deleting application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Deleting application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
@@ -1133,11 +1132,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void startApplication(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Starting application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Starting application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
 
@@ -1200,11 +1199,11 @@ public class PcfClientImpl implements PcfClient {
 
   private List<Route> getAllRoutesForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting routeMaps for Application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Getting routeMaps for Application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1236,11 +1235,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Getting Domains for Space: ")
-                    .append(pcfRequestConfig.getSpaceName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Getting Domains for Space: ")
+                 .append(pcfRequestConfig.getSpaceName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1269,19 +1268,19 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
       boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("creating routeMap: ")
-                    .append(host + "." + domain)
-                    .append(" for Endpoint: ")
-                    .append(pcfRequestConfig.getEndpointUrl())
-                    .append(", Organization: ")
-                    .append(pcfRequestConfig.getOrgName())
-                    .append(", for Space: ")
-                    .append(pcfRequestConfig.getSpaceName())
-                    .append(", AppName: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("creating routeMap: ")
+                 .append(host + "." + domain)
+                 .append(" for Endpoint: ")
+                 .append(pcfRequestConfig.getEndpointUrl())
+                 .append(", Organization: ")
+                 .append(pcfRequestConfig.getOrgName())
+                 .append(", for Space: ")
+                 .append(pcfRequestConfig.getSpaceName())
+                 .append(", AppName: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     // create routeMap
     final CountDownLatch latch2 = new CountDownLatch(1);
@@ -1481,13 +1480,13 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Unmapping route maps for : ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .append(", Paths: ")
-                    .append(routes)
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Unmapping route maps for : ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .append(", Paths: ")
+                 .append(routes)
+                 .toString());
 
     List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
     for (Route route : routeList) {
@@ -1656,7 +1655,7 @@ public class PcfClientImpl implements PcfClient {
           exitcode = executeCommand(command, env, logCallback);
           if (exitcode != 0) {
             String message = format("Failed to set env var: <%s>", entry.getKey() + ':' + entry.getValue());
-            logger.error(message);
+            log.error(message);
             logCallback.saveExecutionLog(message, ERROR);
             throw new PivotalClientApiException(message);
           }
@@ -1706,7 +1705,7 @@ public class PcfClientImpl implements PcfClient {
           exitcode = executeCommand(command, env, logCallback);
           if (exitcode != 0) {
             String message = "Failed to unset env var: " + var;
-            logger.error(message);
+            log.error(message);
             logCallback.saveExecutionLog(message, ERROR);
             throw new PivotalClientApiException(message);
           }
@@ -1723,13 +1722,13 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void mapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Mapping route maps for Application : ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .append(", Paths: ")
-                    .append(routes)
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Mapping route maps for Application : ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .append(", Paths: ")
+                 .append(routes)
+                 .toString());
 
     List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
     List<String> routesNeedToBeCreated = findRoutesNeedToBeCreated(routes, routeList);
@@ -1813,11 +1812,11 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void unmapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Unmapping routeMap for Application: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Unmapping routeMap for Application: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
@@ -1854,13 +1853,13 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public void mapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
-    logger.info(new StringBuilder()
-                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                    .append("Mapping routeMap: ")
-                    .append(route)
-                    .append(", AppName: ")
-                    .append(pcfRequestConfig.getApplicationName())
-                    .toString());
+    log.info(new StringBuilder()
+                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                 .append("Mapping routeMap: ")
+                 .append(route)
+                 .append(", AppName: ")
+                 .append(pcfRequestConfig.getApplicationName())
+                 .toString());
 
     CountDownLatch latch = new CountDownLatch(1);
     MapRouteRequest.Builder builder = MapRouteRequest.builder()
@@ -1919,7 +1918,7 @@ public class PcfClientImpl implements PcfClient {
       if (pcfRequestConfig.isLimitPcfThreads()) {
         builder.threadPoolSize(1);
       } else {
-        logger.info(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Not limiting Pcf threads for Connection Context");
+        log.info(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Not limiting Pcf threads for Connection Context");
       }
       return builder.build();
     } catch (Exception t) {
@@ -1948,12 +1947,12 @@ public class PcfClientImpl implements PcfClient {
   }
 
   private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
     errorBuilder.append(t.getMessage());
   }
 
   private void handleExceptionForGetOraganizationsAPI(Throwable t, String apiName, StringBuilder errorBuilder) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName
         + " EXCEPTION: " + t.toString());
     errorBuilder.append(t.getMessage());
   }

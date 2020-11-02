@@ -19,12 +19,12 @@ public class DeleteStaleSecretUsageLogs implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Deleting stale secret usage log");
+    log.info("Deleting stale secret usage log");
     Query<Account> query = wingsPersistence.createQuery(Account.class);
     long toBeDeleted = OffsetDateTime.now().minusMonths(6).toInstant().toEpochMilli();
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       for (Account account : records) {
-        logger.info("Deleting stale secret usage log for {} id {}", account.getAccountName(), account.getUuid());
+        log.info("Deleting stale secret usage log for {} id {}", account.getAccountName(), account.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(SecretUsageLog.class)
                                     .filter(SecretUsageLogKeys.accountId, account.getUuid())
                                     .field(SecretUsageLogKeys.createdAt)

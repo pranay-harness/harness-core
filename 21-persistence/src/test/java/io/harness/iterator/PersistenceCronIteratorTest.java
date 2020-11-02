@@ -49,7 +49,7 @@ public class PersistenceCronIteratorTest extends PersistenceTestBase {
     @Override
     public void handle(TestCronIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
-      logger.info("Handle {}", entity.getUuid());
+      log.info("Handle {}", entity.getUuid());
     }
   }
 

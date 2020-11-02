@@ -97,7 +97,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     switch (jenkinsTaskParams.getSubTaskType()) {
       case START_TASK:
         try {
-          logger.info("In Jenkins Task Triggering Job {}", jenkinsTaskParams.getJobName());
+          log.info("In Jenkins Task Triggering Job {}", jenkinsTaskParams.getJobName());
           logService.save(getAccountId(),
               constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
                   jenkinsTaskParams.getAppId(), LogLevel.INFO,
@@ -113,7 +113,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
               queueReference = createQueueReference(queueItemUrl);
             }
 
-            logger.info("Triggered Job successfully with queued Build URL {} ", queueItemUrl);
+            log.info("Triggered Job successfully with queued Build URL {} ", queueItemUrl);
 
             jenkinsExecutionResponse.setQueuedBuildUrl(queueItemUrl);
 
@@ -126,7 +126,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                             / 1000,
                     RUNNING));
           } else {
-            logger.error("The Job was not triggered successfully with queued Build URL {} ", queueItemUrl);
+            log.error("The Job was not triggered successfully with queued Build URL {} ", queueItemUrl);
             executionStatus = ExecutionStatus.FAILED;
             jenkinsExecutionResponse.setErrorMessage(msg);
           }
@@ -139,14 +139,14 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           logService.save(getAccountId(),
               constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
                   jenkinsTaskParams.getAppId(), LogLevel.ERROR, msg + e.toString(), FAILURE));
-          ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
+          ExceptionLogger.logProcessedMessages(e, DELEGATE, log);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
           logService.save(getAccountId(),
               constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
                   jenkinsTaskParams.getAppId(), LogLevel.ERROR, msg + e.toString(), FAILURE));
-          logger.error(msg, e);
+          log.error(msg, e);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         }
@@ -166,10 +166,10 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             queuedBuildUrl = updateQueueItemUrl(queuedBuildUrl, jenkinsConfig.getJenkinsUrl());
           }
 
-          logger.info("The Jenkins queued url {} and retrieving build information", queuedBuildUrl);
+          log.info("The Jenkins queued url {} and retrieving build information", queuedBuildUrl);
           Build jenkinsBuild = jenkins.getBuild(new QueueReference(queuedBuildUrl), jenkinsConfig);
           if (jenkinsBuild == null) {
-            logger.error(
+            log.error(
                 "Error occurred while retrieving the build {} status.  Job might have been deleted between poll intervals",
                 queuedBuildUrl);
             logService.save(getAccountId(),
@@ -231,7 +231,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           try {
             jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
           } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE, unexpected exception
-            logger.error("Error occurred while retrieving build parameters for build number {}",
+            log.error("Error occurred while retrieving build parameters for build number {}",
                 jenkinsBuildWithDetails.getNumber(), e);
             jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
           }
@@ -241,11 +241,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             executionStatus = ExecutionStatus.FAILED;
           }
         } catch (WingsException e) {
-          ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
+          ExceptionLogger.logProcessedMessages(e, DELEGATE, log);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
-          logger.error("Error occurred while running Jenkins task", e);
+          log.error("Error occurred while running Jenkins task", e);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         }
@@ -270,7 +270,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     customBuildWithDetails.setUrl(buildUrl);
 
     do {
-      logger.info("Waiting for Job {} to finish execution", buildUrl);
+      log.info("Waiting for Job {} to finish execution", buildUrl);
       sleep(Duration.ofSeconds(5));
       Future<CustomBuildWithDetails> jenkinsBuildWithDetailsFuture = null;
       Future<Void> saveConsoleLogs = null;
@@ -292,10 +292,10 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         saveConsoleLogs.get(180, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        logger.error("Thread interrupted while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
+        log.error("Thread interrupted while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
             ExceptionUtils.getMessage(e));
       } catch (ExecutionException | TimeoutException e) {
-        logger.error("Exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
+        log.error("Exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.", buildUrl,
             ExceptionUtils.getMessage(e));
       } finally {
         if (jenkinsBuildWithDetailsFuture != null) {
@@ -307,7 +307,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       }
 
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
-    logger.info("Job {} execution completed. Status: {}", jenkinsBuildWithDetails.getNumber(),
+    log.info("Job {} execution completed. Status: {}", jenkinsBuildWithDetails.getNumber(),
         jenkinsBuildWithDetails.getResult());
     return jenkinsBuildWithDetails;
   }
@@ -352,18 +352,18 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     try {
       saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, stateName, RUNNING, appId);
     } catch (SocketTimeoutException | ConnectTimeoutException e) {
-      logger.error("Timeout exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+      log.error("Timeout exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
           jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
     } catch (HttpResponseException e) {
       if (e.getStatusCode() == 404) {
-        logger.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+        log.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
             jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e), e);
         throw new HttpResponseException(e.getStatusCode(),
             "Job [" + jenkinsBuild.getUrl()
                 + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
       }
     } catch (IOException e) {
-      logger.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+      log.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
           jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
     }
   }
@@ -372,15 +372,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       Jenkins jenkins, QueueReference queueReference, JenkinsConfig jenkinsConfig) {
     Build jenkinsBuild = null;
     do {
-      logger.info("Waiting for job {} to start execution", queueReference);
+      log.info("Waiting for job {} to start execution", queueReference);
       sleep(Duration.ofSeconds(1));
       try {
         jenkinsBuild = jenkins.getBuild(queueReference, jenkinsConfig);
         if (jenkinsBuild != null) {
-          logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
+          log.info("Job started and Build No {}", jenkinsBuild.getNumber());
         }
       } catch (IOException e) {
-        logger.error("Error occurred while waiting for Job to start execution.", e);
+        log.error("Error occurred while waiting for Job to start execution.", e);
         if (e instanceof HttpResponseException) {
           if (((HttpResponseException) e).getStatusCode() == 401) {
             throw new InvalidCredentialsException("Invalid Jenkins credentials", WingsException.USER);

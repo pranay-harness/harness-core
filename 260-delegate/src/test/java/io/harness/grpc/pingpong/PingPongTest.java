@@ -49,8 +49,8 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
   public void setUp() throws Exception {
     mockClientLogger = mock(Logger.class);
     mockServerLogger = mock(Logger.class);
-    setStaticFieldValue(PingPongClient.class, "logger", mockClientLogger);
-    setStaticFieldValue(PingPongService.class, "logger", mockServerLogger);
+    setStaticFieldValue(PingPongClient.class, "log", mockClientLogger);
+    setStaticFieldValue(PingPongService.class, "log", mockServerLogger);
     setStaticFieldValue(DelegateAgentServiceImpl.class, "delegateId", "DELEGATE_ID");
     String serverName = InProcessServerBuilder.generateName();
     Channel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).build());

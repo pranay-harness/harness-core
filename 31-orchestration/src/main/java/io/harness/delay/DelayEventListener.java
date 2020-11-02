@@ -22,7 +22,7 @@ public class DelayEventListener extends QueueListener<DelayEvent> {
 
   @Override
   public void onMessage(DelayEvent message) {
-    logger.info("Notifying for DelayEvent with resumeId {}", message.getResumeId());
+    log.info("Notifying for DelayEvent with resumeId {}", message.getResumeId());
 
     waitNotifyEngine.doneWith(
         message.getResumeId(), DelayEventNotifyData.builder().context(message.getContext()).build());

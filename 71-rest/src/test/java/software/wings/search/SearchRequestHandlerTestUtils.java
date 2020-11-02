@@ -148,7 +148,7 @@ public class SearchRequestHandlerTestUtils {
 
       return new SearchHit[] {searchHit, searchHit1};
     } catch (IOException e) {
-      logger.error("Error", e);
+      log.error("Error", e);
       return new SearchHit[] {};
     }
   }
@@ -163,7 +163,7 @@ public class SearchRequestHandlerTestUtils {
 
       return new SearchHit[] {searchHit};
     } catch (IOException e) {
-      logger.error("Error", e);
+      log.error("Error", e);
       return new SearchHit[] {};
     }
   }

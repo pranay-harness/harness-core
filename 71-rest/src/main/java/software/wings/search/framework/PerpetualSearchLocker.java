@@ -58,7 +58,7 @@ public class PerpetualSearchLocker {
     int retryIntervalinMS = 1000;
     int readinessWaitTimeinMS = 5000;
     if (!isLockAcquired(lockName, uuid)) {
-      logger.info("Attempting to acquire lock");
+      log.info("Attempting to acquire lock");
       boolean isLockAcquired = false;
       while (!isLockAcquired) {
         Thread.sleep(retryIntervalinMS);
@@ -69,7 +69,7 @@ public class PerpetualSearchLocker {
         }
       }
     }
-    logger.info("Search lock acquired");
+    log.info("Search lock acquired");
     SearchHeartbeatMonitor searchHeartbeatMonitor =
         new SearchHeartbeatMonitor(wingsPersistence, lockTimeoutCallback, lockName, uuid, configurationController);
     return scheduledExecutorService.scheduleAtFixedRate(searchHeartbeatMonitor, 0, 10, TimeUnit.SECONDS);

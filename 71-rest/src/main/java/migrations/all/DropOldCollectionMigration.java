@@ -21,7 +21,7 @@ public class DropOldCollectionMigration implements Migration {
       try {
         wingsPersistence.getCollection(DEFAULT_STORE, collection).drop();
       } catch (RuntimeException ex) {
-        logger.error("Drop collection {} error", collection, ex);
+        log.error("Drop collection {} error", collection, ex);
       }
     }
   }

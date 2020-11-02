@@ -24,7 +24,7 @@ public class InstanceLimitProviderImpl implements InstanceLimitProvider {
   public long getAllowedInstances(String accountId) {
     final LicenseInfo licenseInfo = accountService.get(accountId).getLicenseInfo();
     if (null == licenseInfo) {
-      logger.error(
+      log.error(
           "License Information not present. Will assume a PAID account. Update license info in DB to prevent this. accountId={}",
           accountId);
       return InstanceLimitProvider.defaults(AccountType.PAID);

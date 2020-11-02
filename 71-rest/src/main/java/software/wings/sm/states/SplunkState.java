@@ -52,7 +52,7 @@ public class SplunkState extends HttpState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String evaluatedQuery = context.renderExpression(query);
-    logger.info("evaluatedQuery: {}", evaluatedQuery);
+    log.info("evaluatedQuery: {}", evaluatedQuery);
 
     ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
@@ -168,7 +168,7 @@ public class SplunkState extends HttpState {
   @Override
   protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
     String evaluatedQuery = context.renderExpression(query);
-    logger.info("evaluatedQuery: {}", evaluatedQuery);
+    log.info("evaluatedQuery: {}", evaluatedQuery);
     return toPostBody(of("search", "search " + evaluatedQuery, "exec_mode", "oneshot"));
   }
 

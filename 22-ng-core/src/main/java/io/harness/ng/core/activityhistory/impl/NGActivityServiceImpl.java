@@ -139,7 +139,7 @@ public class NGActivityServiceImpl implements NGActivityService {
     try {
       savedActivityEntity = activityRepository.save(activityEntity);
     } catch (DuplicateKeyException ex) {
-      logger.info(String.format("Error while saving the activity history [%s] for [%s]", ex.getMessage(),
+      log.info(String.format("Error while saving the activity history [%s] for [%s]", ex.getMessage(),
           activityEntity.getReferredEntityFQN()));
       throw new UnexpectedException(
           String.format("Error while creating the activity history for [%s]", activityEntity.getReferredEntityFQN()));

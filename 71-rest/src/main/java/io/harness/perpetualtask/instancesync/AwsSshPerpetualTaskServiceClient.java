@@ -94,7 +94,7 @@ public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceCli
     if (!(infraMapping instanceof AwsInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting AwsInfraMapping type. Found:"
           + infraMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
 

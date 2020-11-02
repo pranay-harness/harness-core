@@ -45,7 +45,7 @@ public class SearchModule extends AbstractModule {
       URI uri = new URIBuilder(mainConfiguration.getElasticsearchConfig().getUri()).build();
       return new RestHighLevelClient(RestClient.builder(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme())));
     } catch (URISyntaxException e) {
-      logger.error(
+      log.error(
           String.format("Elasticsearch URI %s is invalid", mainConfiguration.getElasticsearchConfig().getUri()), e);
     }
     return null;

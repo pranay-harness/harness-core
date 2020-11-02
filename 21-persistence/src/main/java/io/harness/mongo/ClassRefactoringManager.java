@@ -40,7 +40,7 @@ public class ClassRefactoringManager {
       try {
         return !CodeUtils.thirdPartyOrBelongsToModule(CodeUtils.location(location), Class.forName(e.getValue()));
       } catch (ClassNotFoundException exception) {
-        logger.error("", exception);
+        log.error("", exception);
       }
       return false;
     });
@@ -60,7 +60,7 @@ public class ClassRefactoringManager {
       });
     } catch (MongoCommandException exception) {
       if (exception.getErrorCode() == 13) {
-        logger.warn("The user has read only access.");
+        log.warn("The user has read only access.");
         return;
       }
       throw exception;

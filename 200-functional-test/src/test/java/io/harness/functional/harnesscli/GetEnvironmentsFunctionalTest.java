@@ -55,12 +55,12 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
     // Running harness get environments before creating a new environment
     String appId = application.getAppId();
     String command = String.format("harness get environments -a %s", appId);
-    logger.info("Running harness get environments");
+    log.info("Running harness get environments");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -75,12 +75,12 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
     application.setEnvironments(Collections.singletonList(testEnvironment));
 
     // Running harness get environments after creating a new environment
-    logger.info("Running harness get environments after creating a new environment");
+    log.info("Running harness get environments after creating a new environment");
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
@@ -105,12 +105,12 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
   public void getEnvironmentsWithInvalidArgumentsTest() {
     // Running harness get environment with invalid appId
     String command = String.format("harness get environments -a %s", "INVALID_ID");
-    logger.info("Running harness get environments with invalid app ID");
+    log.info("Running harness get environments with invalid app ID");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();

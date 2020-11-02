@@ -74,7 +74,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
     if (data.getResult().size() > 1) {
       String msg = "Multiple time series values are returned for metric name " + metricName + " and group name "
           + transactionName + ". Please add more filters to your query to return only one time series.";
-      logger.error("Validation failed for state {} appId: {} error message: {}", stateExecutionId, appId, msg);
+      log.error("Validation failed for state {} appId: {} error message: {}", stateExecutionId, appId, msg);
       activityLogger.error(msg);
       // TODO: Once all the customers with this problem are identified and notified by CS team we need to throw the
       // exception.
@@ -113,7 +113,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
           if (metricDataRecord.getTimeStamp() >= collectionStartTime) {
             rv.put(transactionName, timeStamp, metricDataRecord);
           } else {
-            logger.info("Ignoring a record that was before dataCollectionStartTime.");
+            log.info("Ignoring a record that was before dataCollectionStartTime.");
           }
         }
 

@@ -94,7 +94,7 @@ public class InstanceStatsDataFetcher
                 filter.setEnvironment(getMergedIdFilter(entityIds, filter.getEnvironment()));
                 break;
               default:
-                logger.error("EntityType {} not supported in query", tagFilter.getEntityType());
+                log.error("EntityType {} not supported in query", tagFilter.getEntityType());
                 throw new InvalidRequestException("Error while compiling query", WingsException.USER);
             }
           } else {
@@ -173,7 +173,7 @@ public class InstanceStatsDataFetcher
               nameService, aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());
 
         } else {
-          logger.warn("Only one or two level aggregations supported right now");
+          log.warn("Only one or two level aggregations supported right now");
           throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
         }
       } else {
@@ -241,7 +241,7 @@ public class InstanceStatsDataFetcher
       case InstanceType:
         return "instanceType";
       default:
-        logger.warn("Unknown aggregation type" + aggregation);
+        log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
@@ -259,7 +259,7 @@ public class InstanceStatsDataFetcher
       case InstanceType:
         return "instanceType";
       default:
-        logger.warn("Unknown aggregation type" + aggregation);
+        log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
@@ -289,7 +289,7 @@ public class InstanceStatsDataFetcher
       case ENVIRONMENT:
         return QLInstanceEntityAggregation.Environment;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

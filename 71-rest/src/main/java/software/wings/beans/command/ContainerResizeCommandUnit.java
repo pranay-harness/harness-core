@@ -126,9 +126,9 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
       status = CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
-      logger.error("Completed operation with errors");
+      log.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(
           format("Completed operation with errors%n%s%n", DASH_STRING), LogLevel.ERROR);
     } finally {
@@ -169,7 +169,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       }
       containerInfos.forEach(executionDataBuilder::allContainerInfo);
       logContainerInfos(containerInfos, executionLogCallback);
-      logger.info("Successfully completed resize operation");
+      log.info("Successfully completed resize operation");
       executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));
     }
   }
@@ -217,7 +217,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     if (desiredCount < previousCount) {
       String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
           + previousCount + ", desired: " + desiredCount + "}";
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
 

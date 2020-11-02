@@ -66,7 +66,7 @@ public class AsyncStrategy implements ExecuteStrategy {
         Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
-      logger.error("StepResponse has no callbackIds - currentState : " + node.getName()
+      log.error("StepResponse has no callbackIds - currentState : " + node.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }

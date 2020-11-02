@@ -69,11 +69,11 @@ public class LogVerificationServiceImpl implements LogVerificationService {
 
   @Override
   public VerificationNodeDataSetupResponse getTestLogData(String accountId, BugsnagSetupTestData bugsnagSetupTestData) {
-    logger.info(
+    log.info(
         "Starting Log Data collection for account Id : {}, BugsnagSetupTestData : {}", accountId, bugsnagSetupTestData);
     // gets the settings attributes for given settings id
     final SettingAttribute settingAttribute = settingsService.get(bugsnagSetupTestData.getSettingId());
-    logger.info("Settings attribute : " + settingAttribute);
+    log.info("Settings attribute : " + settingAttribute);
     if (settingAttribute == null) {
       throw new WingsException(
           "No " + StateType.BUG_SNAG + " setting with id: " + bugsnagSetupTestData.getSettingId() + " found");
@@ -92,7 +92,7 @@ public class LogVerificationServiceImpl implements LogVerificationService {
                          encryptedDataDetails,
                          createApiCallLog(settingAttribute.getAccountId(), bugsnagSetupTestData.getGuid()));
     } catch (IOException ex) {
-      logger.info("Error while getting data ", ex);
+      log.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     return VerificationNodeDataSetupResponse.builder()

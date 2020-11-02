@@ -33,11 +33,11 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running HelmValuesYamlToManifestFileMigration");
+    log.info("Running HelmValuesYamlToManifestFileMigration");
 
     migrateHelmValuesInEnvironment();
 
-    logger.info("Completed HelmValuesYamlToManifestFileMigration");
+    log.info("Completed HelmValuesYamlToManifestFileMigration");
   }
 
   private void migrateHelmValuesInEnvironment() {
@@ -46,7 +46,7 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
   }
 
   private void migrateEnvironmentOverrides() {
-    logger.info("Migrating environment overrides");
+    log.info("Migrating environment overrides");
 
     List<Environment> environments =
         wingsPersistence.createQuery(Environment.class, excludeAuthority).field(HELM_VALUE_YAML_KEY).exists().asList();
@@ -65,11 +65,11 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
       }
     }
 
-    logger.info("Completed migrating environment overrides");
+    log.info("Completed migrating environment overrides");
   }
 
   private void migrateEnvironmentServiceOverrides() {
-    logger.info("Migrating environment service overrides");
+    log.info("Migrating environment service overrides");
 
     List<Environment> environments = wingsPersistence.createQuery(Environment.class, excludeAuthority)
                                          .field(HELM_VALUE_YAML_BY_SERVICE_TEMPLATE_ID_KEY)
@@ -101,6 +101,6 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
       }
     }
 
-    logger.info("Completed migrating environment service overrides");
+    log.info("Completed migrating environment service overrides");
   }
 }

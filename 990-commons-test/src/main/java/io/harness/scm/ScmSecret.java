@@ -45,7 +45,7 @@ public class ScmSecret {
 
       return new Vault(config);
     } catch (VaultException e) {
-      logger.error("Unable to connect to Vault", e);
+      log.error("Unable to connect to Vault", e);
     }
     return null;
   }

@@ -29,7 +29,7 @@ public class DataCollectionExecutorService {
 
   public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
-    logger.debug("Parallelizing callables {} ", callables.size());
+    log.debug("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
       completionService.submit(callable::call);
     }
@@ -42,7 +42,7 @@ public class DataCollectionExecutorService {
           T result = poll.get();
           rv.add(result == null ? Optional.empty() : Optional.of(result));
         } else {
-          logger.info("Timeout. Execution took longer than 3 minutes {}", callables);
+          log.info("Timeout. Execution took longer than 3 minutes {}", callables);
           throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
       } catch (ExecutionException ee) {
@@ -51,7 +51,7 @@ public class DataCollectionExecutorService {
         throw new UnexpectedException("Error executing task " + e.getMessage(), e);
       }
     }
-    logger.debug("Done parallelizing callables {} ", callables.size());
+    log.debug("Done parallelizing callables {} ", callables.size());
     return rv;
   }
 }

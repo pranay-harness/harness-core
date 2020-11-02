@@ -101,7 +101,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandResponse.setOutput(StringUtils.EMPTY);
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     } catch (Exception e) {
-      logger.error("Exception in processing PCF Route Update task", e);
+      log.error("Exception in processing PCF Route Update task", e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Update failed to complete successfully");
       executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
       pcfCommandResponse.setOutput(e.getMessage());
@@ -112,7 +112,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
           FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
         }
       } catch (IOException e) {
-        logger.warn("Failed to delete temp directory created for CF CLI login", e);
+        log.warn("Failed to delete temp directory created for CF CLI login", e);
       }
     }
 
@@ -206,7 +206,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
           pcfDeploymentManager.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, true);
         }
       } catch (Exception e) {
-        logger.error("Failed to downsize PCF application: " + appNameBeingDownsized, e);
+        log.error("Failed to downsize PCF application: " + appNameBeingDownsized, e);
         executionLogCallback.saveExecutionLog("Failed while downsizing old application: " + appNameBeingDownsized);
       }
     }

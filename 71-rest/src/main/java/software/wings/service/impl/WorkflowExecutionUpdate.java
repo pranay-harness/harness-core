@@ -226,13 +226,13 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
       } catch (Exception exception) {
         // Failing to send notification is not considered critical to interrupt the status update.
-        logger.error("Failed to send notification.", exception);
+        log.error("Failed to send notification.", exception);
       }
       if (needToNotifyPipeline) {
         try {
           waitNotifyEngine.doneWith(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
         } catch (WingsException exception) {
-          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
         }
       }
     } else {
@@ -245,7 +245,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
         alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
         if (workflowExecution == null) {
-          logger.warn("No workflowExecution for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
+          log.warn("No workflowExecution for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId);
           return;
         }
         final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
@@ -264,7 +264,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
             usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
           } else {
-            logger.warn("Workflow [{}] has executionStatus:[{}], different status:[{}]", workflowExecutionId,
+            log.warn("Workflow [{}] has executionStatus:[{}], different status:[{}]", workflowExecutionId,
                 workflowExecution.getStatus(), status);
           }
         }
@@ -275,7 +275,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           Account account = accountService.getFromCache(accountID);
           // The null check is in case the account has been physical deleted.
           if (account == null) {
-            logger.warn("Workflow execution in application {} is associated with deleted account {}", applicationName,
+            log.warn("Workflow execution in application {} is associated with deleted account {}", applicationName,
                 accountID);
           }
         }
@@ -288,8 +288,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
         reportDeploymentEventToSegment(workflowExecution);
       } catch (Exception e) {
-        logger.error(
-            "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
+        log.error("Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
       }
     }
   }
@@ -341,7 +340,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                           .addToSet(WorkflowExecutionKeys.tags, resolvedTags);
       wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions);
-      logger.info(format("[%d] tags added to workflow execution: [%s]", resolvedTags.size(), workflowExecutionId));
+      log.info(format("[%d] tags added to workflow execution: [%s]", resolvedTags.size(), workflowExecutionId));
     }
   }
 
@@ -421,11 +420,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       if (deploymentEvent != null) {
         segmentHandler.reportTrackEvent(account, deploymentEvent, userId, properties, integrations);
       } else {
-        logger.info("Skipping the deployment track event since the status {} doesn't need to be reported",
+        log.info("Skipping the deployment track event since the status {} doesn't need to be reported",
             workflowExecution.getStatus());
       }
     } catch (Exception e) {
-      logger.error("Exception while reporting track event for deployment {}", workflowExecutionId, e);
+      log.error("Exception while reporting track event for deployment {}", workflowExecutionId, e);
     }
   }
 
@@ -460,7 +459,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       barrierService.updateAllActiveBarriers(context.getAppId());
     } catch (RuntimeException exception) {
       // Do not block the execution for possible exception in the barrier update
-      logger.error("Something wrong with barrier update", exception);
+      log.error("Something wrong with barrier update", exception);
     }
 
     // TODO: this is temporary. this should be part of its own callback and with more precise filter
@@ -472,14 +471,14 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     } catch (RuntimeException exception) {
       // Do not block the execution for possible exception in the barrier update
-      logger.error("Something wrong with resource constraints update", exception);
+      log.error("Something wrong with resource constraints update", exception);
     }
     try {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
-      logger.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
+      log.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
     } catch (Exception e) {
-      logger.error("Error in breakdown refresh", e);
+      log.error("Error in breakdown refresh", e);
     }
   }
 

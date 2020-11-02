@@ -27,6 +27,6 @@ public class TimeSeriesThresholdsMigration implements Migration {
         updated++;
       }
     }
-    logger.info("Complete. updated " + updated + " records.");
+    log.info("Complete. updated " + updated + " records.");
   }
 }

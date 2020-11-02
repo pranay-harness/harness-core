@@ -103,7 +103,7 @@ public class ServiceClassLocator {
             descendings.add(descending);
           }
         } catch (IllegalAccessException e) {
-          logger.error("", e);
+          log.error("", e);
         } finally {
           if (!originalAccessible) {
             field.setAccessible(false);

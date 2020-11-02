@@ -42,7 +42,7 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
     if (podParams.getType() == PodParams.Type.K8) {
       cik8PodParams = (CIK8PodParams) podParams;
     } else {
-      logger.error("Type mismatch: pod parameters is not of type: {}", PodParams.Type.K8);
+      log.error("Type mismatch: pod parameters is not of type: {}", PodParams.Type.K8);
       throw new InvalidRequestException("Type miss matched");
     }
 

@@ -81,7 +81,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) stepExecutionSummary;
         CodeDeployParams codeDeployParams = commandStepExecutionSummary.getCodeDeployParams();
         if (codeDeployParams == null) {
-          logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
+          log.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
               workflowExecution.normalizedName());
           return Optional.empty();
         }
@@ -125,7 +125,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
     if (!(infraMapping instanceof CodeDeployInfrastructureMapping)) {
       String msg =
           "Incompatible infra mapping type. Expecting code deploy type. Found:" + infraMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 
@@ -184,11 +184,11 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
           if (oldInstance != null) {
             instanceService.update(instance, oldInstance.getUuid());
           } else {
-            logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
+            log.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
           }
         });
 
-        logger.info("Instances to be updated {}", instancesToBeUpdated.size());
+        log.info("Instances to be updated {}", instancesToBeUpdated.size());
 
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
@@ -204,7 +204,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
             instanceService.save(instance);
           });
 
-          logger.info("Instances to be added {}", instancesToBeAdded.size());
+          log.info("Instances to be added {}", instancesToBeAdded.size());
         }
       });
     }

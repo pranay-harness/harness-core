@@ -70,7 +70,7 @@ public class GenericDbCache {
     try {
       return (T) cache.get(makeCacheKey(cls, objKey));
     } catch (Exception ex) {
-      logger.warn("Exception occurred in fetching key {}, {}", cls.getSimpleName(), objKey, ex);
+      log.warn("Exception occurred in fetching key {}, {}", cls.getSimpleName(), objKey, ex);
     }
     return null;
   }

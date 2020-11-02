@@ -37,7 +37,7 @@ public class DelegateAuthCallCredentials extends CallCredentials {
   public void applyRequestMetadata(RequestInfo info, Executor appExecutor, MetadataApplier applier) {
     SecurityLevel security = info.getSecurityLevel();
     if (requirePrivacy && security != SecurityLevel.PRIVACY_AND_INTEGRITY) {
-      logger.warn("Not adding token on insecure channel");
+      log.warn("Not adding token on insecure channel");
       applier.fail(Status.UNAUTHENTICATED.withDescription(
           "Including delegate credentials require channel with PRIVACY_AND_INTEGRITY security level. Observed security level: "
           + security));

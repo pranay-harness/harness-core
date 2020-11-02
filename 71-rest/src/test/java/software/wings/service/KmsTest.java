@@ -2187,7 +2187,7 @@ public class KmsTest extends WingsBaseTest {
     Thread listenerThread = startTransitionListener();
     try {
       final long seed = System.currentTimeMillis();
-      logger.info("seed: " + seed);
+      log.info("seed: " + seed);
       Random r = new Random(seed);
       Account randomAccount = getAccount(AccountType.PAID);
       String randomAccountId = randomAccount.getUuid();
@@ -2308,7 +2308,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveUpdateConfigFileNoKms() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
+    log.info("seed: " + seed);
     Random r = new Random(seed);
     final String renameAccountId = UUID.randomUUID().toString();
     final String renameAppId = UUID.randomUUID().toString();
@@ -2415,7 +2415,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileNoEncryption() throws IOException {
     final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
+    log.info("seed: " + seed);
     Random r = new Random(seed);
     Account renameAccount = getAccount(AccountType.PAID);
     String renameAccountId = renameAccount.getUuid();
@@ -2469,7 +2469,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
+    log.info("seed: " + seed);
     Random r = new Random(seed);
     Account randomAccount = getAccount(AccountType.PAID);
     String randomAccountId = randomAccount.getUuid();
@@ -2602,7 +2602,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileTemplateWithEncryption() throws IOException {
     final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
+    log.info("seed: " + seed);
     Random r = new Random(seed);
     Account renameAccount = getAccount(AccountType.PAID);
     String renameAccountId = renameAccount.getUuid();

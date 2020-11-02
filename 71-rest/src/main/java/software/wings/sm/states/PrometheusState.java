@@ -157,6 +157,6 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 }

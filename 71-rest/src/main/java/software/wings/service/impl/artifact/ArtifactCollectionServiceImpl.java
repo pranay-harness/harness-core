@@ -87,11 +87,11 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     try (AcquiredLock ignored = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
       if (artifactStream == null) {
-        logger.info("Artifact stream: [{}] does not exist. Returning", artifactStreamId);
+        log.info("Artifact stream: [{}] does not exist. Returning", artifactStreamId);
         return new ArrayList<>();
       }
 
-      logger.info("Collecting build details for artifact stream: [{}], type: [{}] and source name: [{}]",
+      log.info("Collecting build details for artifact stream: [{}], type: [{}] and source name: [{}]",
           artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(
           artifactStream.fetchAppId(), artifactStream.getUuid(), artifactStream.getSettingId());

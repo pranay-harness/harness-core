@@ -40,7 +40,7 @@ public class ServiceHelper {
         }
       }
     } catch (Exception e) {
-      logger.error("", e);
+      log.error("", e);
     }
     pcfServiceSpecification.setManifestYaml(sb.toString());
   }

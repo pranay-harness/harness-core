@@ -135,7 +135,7 @@ public class YamlFunctionalTestHelper {
     try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
       stream.forEach(s -> contentBuilder.append(s).append("\n"));
     } catch (IOException e) {
-      logger.error("Failed to read file Content {}", path.toString());
+      log.error("Failed to read file Content {}", path.toString());
       throw new InvalidRequestException("Failed to read file Content {}", e);
     }
 
@@ -153,14 +153,14 @@ public class YamlFunctionalTestHelper {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                logger.info(line);
+                                                log.info(line);
                                               }
                                             });
 
       ProcessResult processResult = processExecutor.execute();
       assertThat(processResult.getExitValue()).isEqualTo(0);
     } catch (InterruptedException | TimeoutException | IOException ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
+      log.error(ExceptionUtils.getMessage(ex));
       assertThat(false).isTrue();
     }
   }
@@ -181,10 +181,10 @@ public class YamlFunctionalTestHelper {
           .filter(path -> !path.toString().contains(".git"))
           .forEach(path -> addFilesToMap(path, clonedRepoPath + "/" + repoName, map));
     } catch (IOException ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
+      log.error(ExceptionUtils.getMessage(ex));
       assertThat(false).isTrue();
     } catch (Exception e) {
-      logger.error(ExceptionUtils.getMessage(e));
+      log.error(ExceptionUtils.getMessage(e));
     }
 
     return map;
@@ -221,9 +221,9 @@ public class YamlFunctionalTestHelper {
       String filePath = entry.getKey();
 
       if (!entry.getValue().equals(filesFromGit.get(filePath))) {
-        logger.info("File path: " + filePath);
-        logger.info("File Content in harness: " + entry.getValue());
-        logger.info("File Content in git: " + filesFromGit.get(filePath));
+        log.info("File path: " + filePath);
+        log.info("File Content in harness: " + entry.getValue());
+        log.info("File Content in git: " + filesFromGit.get(filePath));
         count++;
       }
     }
@@ -257,7 +257,7 @@ public class YamlFunctionalTestHelper {
     try {
       file = ResourceUtils.getFile("classpath:io/harness/yaml/" + oldAppName + ".zip");
     } catch (FileNotFoundException ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
+      log.error(ExceptionUtils.getMessage(ex));
       assertThat(false).isTrue();
     }
 
@@ -316,7 +316,7 @@ public class YamlFunctionalTestHelper {
 
       FileIo.deleteDirectoryAndItsContentIfExists(harnessYamPath);
     } catch (IOException ex) {
-      logger.error("Exception during cleaning up harness repo " + ExceptionUtils.getMessage(ex));
+      log.error("Exception during cleaning up harness repo " + ExceptionUtils.getMessage(ex));
     }
   }
 

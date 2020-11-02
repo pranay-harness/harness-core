@@ -165,7 +165,7 @@ public class DelegateAgentResource {
       long startTime = System.currentTimeMillis();
       DelegateRegisterResponse registerResponse =
           delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
-      logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
+      log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
     }
   }
@@ -373,7 +373,7 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       if (executionResponse.getBuildSourceResponse() != null) {
-        logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+        log.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
       }
       artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
@@ -389,7 +389,7 @@ public class DelegateAgentResource {
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       instanceHelper.processInstanceSyncResponseFromPerpetualTask(perpetualTaskId.replaceAll("[\r\n]", ""), response);
     } catch (Exception e) {
-      logger.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
+      log.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
     }
     return new RestResponse<>(true);
   }
@@ -403,8 +403,7 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       if (executionResponse.getManifestCollectionResponse() != null) {
-        logger.info(
-            "Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+        log.info("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
       }
       manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
     }

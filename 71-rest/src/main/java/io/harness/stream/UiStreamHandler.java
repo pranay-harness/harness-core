@@ -52,7 +52,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
     AtmosphereRequest req = resource.getRequest();
-    logger.info("Received request with  Broadcaster Id {}", resource.getBroadcaster().getID());
+    log.info("Received request with  Broadcaster Id {}", resource.getBroadcaster().getID());
     if (req.getMethod().equals("GET")) {
       if (isBlank(req.getParameter("token"))) {
         sendError(resource, INVALID_TOKEN);
@@ -60,9 +60,9 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       }
 
       try {
-        logger.info("Verifying Delegate token");
+        log.info("Verifying Delegate token");
         AuthToken authToken = authService.validateToken(req.getParameter("token"));
-        logger.info("Delegate token verified");
+        log.info("Delegate token verified");
 
         List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
         if (pathSegments.size() <= 5) {
@@ -79,9 +79,9 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         }
         PermissionAttribute permissionAttribute =
             new PermissionAttribute(channel.getPermission(), channel.getScope(), "GET");
-        logger.info("Verifying authorization");
+        log.info("Verifying authorization");
         authService.authorize(accountId, appId, envId, authToken.getUser(), asList(permissionAttribute), null);
-        logger.info("Authorization successful");
+        log.info("Authorization successful");
 
       } catch (WingsException e) {
         sendError(resource, e.getCode(), e.getParams());

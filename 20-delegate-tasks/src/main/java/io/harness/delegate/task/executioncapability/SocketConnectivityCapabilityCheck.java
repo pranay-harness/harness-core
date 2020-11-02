@@ -27,7 +27,7 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
       }
       return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(valid).build();
     } catch (Exception ex) {
-      logger.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
+      log.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
       return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(false).build();
     }
   }
@@ -35,10 +35,10 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
-      logger.info("[Delegate Capability] Socket Connection Succeeded for url " + host + "on port" + port);
+      log.info("[Delegate Capability] Socket Connection Succeeded for url " + host + "on port" + port);
       return true;
     } catch (IOException ignored) {
-      logger.error("[Delegate Capability] Socket Connection Failed for url " + host + "on port" + port);
+      log.error("[Delegate Capability] Socket Connection Failed for url " + host + "on port" + port);
     }
     return false; // Either timeout or unreachable or failed DNS lookup.
   }

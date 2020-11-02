@@ -42,7 +42,7 @@ public class SecretsDelegateCacheServiceImpl implements SecretsDelegateCacheServ
     try {
       return secretsCache.get(key, mappingFunction);
     } catch (Exception e) {
-      logger.error("Cache get operation failed unexpectedly", e);
+      log.error("Cache get operation failed unexpectedly", e);
       return mappingFunction.apply(key);
     }
   }
@@ -52,7 +52,7 @@ public class SecretsDelegateCacheServiceImpl implements SecretsDelegateCacheServ
     try {
       secretsCache.put(key, value);
     } catch (Exception e) {
-      logger.error("Cache put operation failed unexpectedly", e);
+      log.error("Cache put operation failed unexpectedly", e);
     }
   }
 
@@ -61,7 +61,7 @@ public class SecretsDelegateCacheServiceImpl implements SecretsDelegateCacheServ
     try {
       secretsCache.invalidate(key);
     } catch (Exception e) {
-      logger.error("Cache invalidation failed for key {}", key, e);
+      log.error("Cache invalidation failed for key {}", key, e);
     }
   }
 }

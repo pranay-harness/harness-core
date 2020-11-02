@@ -130,7 +130,7 @@ public class GitServiceImpl implements GitService {
       SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
       generateTGTUsingSshConfig(sshSessionConfig, new NoopExecutionCallback());
     } catch (Exception e) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
+      log.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
           gitConfig.getRepoUrl(), getMessage(e));
       throw new InvalidRequestException("Failed to do Kerberos authentication");
     }

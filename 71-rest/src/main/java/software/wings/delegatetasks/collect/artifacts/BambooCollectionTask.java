@@ -56,7 +56,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
       bambooService.downloadArtifacts(bambooConfig, encryptionDetails, artifactStreamAttributes,
           arguments.get(ArtifactMetadataKeys.buildNo), getDelegateId(), getTaskId(), getAccountId(), res);
     } catch (Exception e) {
-      logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Exception: " + ExceptionUtils.getMessage(e), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

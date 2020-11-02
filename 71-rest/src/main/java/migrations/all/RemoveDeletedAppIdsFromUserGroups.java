@@ -33,7 +33,7 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Start - Deleting orphan app ids from user groups");
+      log.info("Start - Deleting orphan app ids from user groups");
 
       Set<String> existingAppIds = persistence.createQuery(Application.class)
                                        .project(ApplicationKeys.appId, true)
@@ -54,9 +54,9 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
           userGroupService.removeAppIdsFromAppPermissions(userGroup, deletedAppIds);
         }
       }
-      logger.info("Deleting orphan app ids from user groups finished successfully");
+      log.info("Deleting orphan app ids from user groups finished successfully");
     } catch (Exception ex) {
-      logger.error("Error while deleting orphan app ids from user groups", ex);
+      log.error("Error while deleting orphan app ids from user groups", ex);
     }
   }
 

@@ -14,14 +14,13 @@ import java.util.List;
 @OwnedBy(PL)
 public class RetryUtils {
   public RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage,
-      List<Class> exceptionClasses, Duration retrySleepDuration, int maxAttempts, Logger logger) {
+      List<Class> exceptionClasses, Duration retrySleepDuration, int maxAttempts, Logger log) {
     RetryPolicy<Object> retryPolicy =
         new RetryPolicy<>()
             .withDelay(retrySleepDuration)
             .withMaxAttempts(maxAttempts)
-            .onFailedAttempt(
-                event -> logger.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
-            .onFailure(event -> logger.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+            .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+            .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
     exceptionClasses.forEach(retryPolicy::handle);
     return retryPolicy;
   }

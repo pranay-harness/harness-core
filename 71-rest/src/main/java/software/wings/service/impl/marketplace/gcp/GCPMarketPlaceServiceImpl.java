@@ -51,14 +51,14 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
       Instant usageReportEndTime = this.usageReportEndTime(accountId);
 
       if (null != usageReportStartTime && null != usageReportEndTime) {
-        logger.info("GCP_MKT_PLACE Usage report time {} {}", usageReportStartTime, usageReportEndTime);
+        log.info("GCP_MKT_PLACE Usage report time {} {}", usageReportStartTime, usageReportEndTime);
         createGCPUsageReport(accountId, entitlement, usageReportStartTime, usageReportEndTime);
       } else {
-        logger.warn("GCP_MKT_PLACE start or end time is null : {} {}", usageReportStartTime, usageReportEndTime);
+        log.warn("GCP_MKT_PLACE start or end time is null : {} {}", usageReportStartTime, usageReportEndTime);
       }
 
     } else {
-      logger.error("GCP_MKT_PLACE No active entitlement present for account {} ", accountId);
+      log.error("GCP_MKT_PLACE No active entitlement present for account {} ", accountId);
     }
   }
 
@@ -67,7 +67,7 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
     Instant entitlementUpdatedTime = fetchEntitlementUpdatedTime(entitlement);
 
     if (null == usageReportStartTime || entitlementUpdatedTime.isAfter(usageReportStartTime)) {
-      logger.info("GCP_MKT_PLACE Entitlement update time {} and usage report time {}", entitlementUpdatedTime,
+      log.info("GCP_MKT_PLACE Entitlement update time {} and usage report time {}", entitlementUpdatedTime,
           usageReportStartTime);
       return entitlementUpdatedTime;
     }
@@ -78,7 +78,7 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
     try {
       return Instant.parse(entitlement.getUpdateTime());
     } catch (DateTimeParseException ex) {
-      logger.error("GCP_MKT_PLACE DateTimeParseException ", ex);
+      log.error("GCP_MKT_PLACE DateTimeParseException ", ex);
     }
     return null;
   }
@@ -90,7 +90,7 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
   private void createGCPUsageReport(String accountId, Entitlement entitlement, Instant startTime, Instant endTime) {
     Preconditions.checkArgument(endTime.isAfter(startTime), "'endTime' timestamp should be after 'startTime'");
 
-    logger.info("GCP_MKT_PLACE start time {} and end time {} for execution", startTime, endTime);
+    log.info("GCP_MKT_PLACE start time {} and end time {} for execution", startTime, endTime);
     GCPUsageReportTimeProvider gcpUsageReportTimeProvider =
         new GCPUsageReportTimeProvider(startTime, endTime, SYNC_INTERVAL, SYNC_CHRONO_UNIT);
 
@@ -109,12 +109,12 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
       GCPUsageReport gcpUsageReport = new GCPUsageReport(
           accountId, consumerId, operationId, entitlementName, reportStartTime, reportEndTime, instanceUsage);
 
-      logger.info("GCP_MKT_PLACE Gcp usage report data {} ", gcpUsageReport.toString());
+      log.info("GCP_MKT_PLACE Gcp usage report data {} ", gcpUsageReport.toString());
 
       if (this.gcpServiceControlService.reportUsageDataToGCP(gcpUsageReport)) {
         this.gcpUsageReportService.create(gcpUsageReport);
       } else {
-        logger.error("GCP_MKT_PLACE Exception while sending data to GCP, accountId {} start time {} end time {} ",
+        log.error("GCP_MKT_PLACE Exception while sending data to GCP, accountId {} start time {} end time {} ",
             accountId, reportStartTime, reportEndTime);
         break;
       }
@@ -128,7 +128,7 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
                                 .filter(GCPMarketplaceCustomerKeys.harnessAccountId, accountId)
                                 .get());
     if (!gcpMarketplaceCustomer.isPresent()) {
-      logger.error("GCP_MKT_PLACE Error marketplace entity not present {} ", accountId);
+      log.error("GCP_MKT_PLACE Error marketplace entity not present {} ", accountId);
       return Optional.empty();
     } else {
       GCPMarketplaceCustomer marketPlace = gcpMarketplaceCustomer.get();
@@ -148,10 +148,10 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
   private long getGCPInstanceUsage(String accountId, Instant startTime, Instant endTime) {
     double percentile = this.statService.percentile(accountId, startTime, endTime, DEFAULT_PERCENTILE);
     if (percentile < 0) {
-      logger.info("GCP_MKT_PLACE percentile value {}", percentile);
+      log.info("GCP_MKT_PLACE percentile value {}", percentile);
       percentile = 0;
     }
-    logger.info("GCP_MKT_PLACE Usage start time {} end time {} instance count {} ", startTime, endTime, percentile);
+    log.info("GCP_MKT_PLACE Usage start time {} end time {} instance count {} ", startTime, endTime, percentile);
     long instanceTime = (endTime.toEpochMilli() - startTime.toEpochMilli()) / 60000;
     return (long) (percentile * instanceTime);
   }

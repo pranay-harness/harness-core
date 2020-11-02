@@ -52,7 +52,7 @@ public class GitChangeSetRunnableHelper {
   }
 
   public void handleOldQueuedChangeSets(WingsPersistence wingsPersistence) {
-    logger.info("Marking obsolete queued changesets as skipped");
+    log.info("Marking obsolete queued changesets as skipped");
     try {
       final UpdateResults update =
           wingsPersistence.update(wingsPersistence.createAuthorizedQuery(YamlChangeSet.class)
@@ -62,9 +62,9 @@ public class GitChangeSetRunnableHelper {
               wingsPersistence.createUpdateOperations(YamlChangeSet.class)
                   .set(YamlChangeSetKeys.status, Status.SKIPPED)
                   .set(YamlChangeSetKeys.messageCode, MAX_QUEUE_DURATION_EXCEEDED_CODE));
-      logger.info("Successfully marked obsolete queued changesets with update results = [{}]", update);
+      log.info("Successfully marked obsolete queued changesets with update results = [{}]", update);
     } catch (Exception e) {
-      logger.error("Error while marking obsolete queued changesets as skipped", e);
+      log.error("Error while marking obsolete queued changesets as skipped", e);
     }
   }
 }

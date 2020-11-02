@@ -25,19 +25,19 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Add artifactStreamIds to Services");
+    log.info("Add artifactStreamIds to Services");
     final DBCollection collection = wingsPersistence.getCollection(Service.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 0;
     int total = 0;
-    logger.info("Adding artifactServiceIds to Services");
+    log.info("Adding artifactServiceIds to Services");
     try (HIterator<Service> services = new HIterator<>(wingsPersistence.createQuery(Service.class).fetch())) {
       while (services.hasNext()) {
         Service service = services.next();
         if (i >= 50) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Services: {} updated", total);
+          log.info("Services: {} updated", total);
           i = 0;
         }
 
@@ -62,8 +62,8 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
     }
     if (i != 0) {
       bulkWriteOperation.execute();
-      logger.info("Services: {} updated", total);
+      log.info("Services: {} updated", total);
     }
-    logger.info("Adding artifactServiceIds to Services completed");
+    log.info("Adding artifactServiceIds to Services completed");
   }
 }

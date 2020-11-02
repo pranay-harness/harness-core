@@ -20,7 +20,7 @@ public class StaticLimitVicinityCheckerMongoImpl implements StaticLimitVicinityC
     long allowed = limit.getCount();
 
     boolean crossed = used > (percentage / 100.0) * allowed;
-    logger.info("Static Limit Check. Used: {} , Allowed: {}, Percent: {}, Crossed Percent Limit?: {}", used, allowed,
+    log.info("Static Limit Check. Used: {} , Allowed: {}, Percent: {}, Crossed Percent Limit?: {}", used, allowed,
         percentage, crossed);
 
     return crossed;

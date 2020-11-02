@@ -53,7 +53,7 @@ public class SampleDataProviderServiceImpl implements SampleDataProviderService 
 
       createK8sSampleApp(account, kubernetesClusterConfig, dockerConnector);
     } catch (Exception ex) {
-      logger.error("Failed to create Sample Application for the account [" + account.getUuid()
+      log.error("Failed to create Sample Application for the account [" + account.getUuid()
               + "]. Reason: " + ExceptionUtils.getMessage(ex),
           ex);
     }

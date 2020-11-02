@@ -56,7 +56,7 @@ public class ElkResource implements LogAnalysisResource {
           accountId, analysisServerConfigId, index, StateType.ELK, -1);
       return new RestResponse<>(result.get("hits").get("hits").get(0).get("_source"));
     } catch (Exception ex) {
-      logger.warn("Failed to get elk sample record " + result, ex);
+      log.warn("Failed to get elk sample record " + result, ex);
     }
     return new RestResponse<>();
   }
@@ -85,7 +85,7 @@ public class ElkResource implements LogAnalysisResource {
     try {
       return new RestResponse<>(analysisService.getIndices(accountId, analysisServerConfigId));
     } catch (Exception ex) {
-      logger.warn("Unable to get indices", ex);
+      log.warn("Unable to get indices", ex);
     }
     return new RestResponse<>(null);
   }
@@ -104,7 +104,7 @@ public class ElkResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
       @QueryParam("accountId") String accountId, @Valid ElkSetupTestNodeData elkSetupTestNodeData) {
-    logger.info("Fetching log Records for verification for accountId : " + accountId
+    log.info("Fetching log Records for verification for accountId : " + accountId
         + " and ElkSetupTestNodeData :" + elkSetupTestNodeData);
     return new RestResponse<>(analysisService.getLogDataByHost(accountId, elkSetupTestNodeData));
   }

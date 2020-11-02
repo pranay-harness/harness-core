@@ -59,7 +59,7 @@ public class BillingDataGenerationValidator {
       generateData = true;
     }
     if (!generateData) {
-      logger.info("Not generating biling data for {} {} {} ", accountId, clusterId, startTime);
+      log.info("Not generating biling data for {} {} {} ", accountId, clusterId, startTime);
     }
     return generateData;
   }

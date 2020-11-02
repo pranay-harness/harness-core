@@ -73,7 +73,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         return true;
       } catch (WingsException e) {
         String errorString = emailUtils.getErrorString(emailData);
-        logger.warn(errorString, e);
+        log.warn(errorString, e);
         return false;
       }
     } else {
@@ -113,7 +113,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       return true;
     } catch (Exception e) {
       String errorString = emailUtils.getErrorString(emailData);
-      logger.warn(errorString, e);
+      log.warn(errorString, e);
       return false;
     }
   }

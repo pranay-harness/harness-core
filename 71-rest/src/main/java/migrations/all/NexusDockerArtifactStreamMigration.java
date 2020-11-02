@@ -30,7 +30,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
     final DBCollection collection = wingsPersistence.getCollection(ArtifactStream.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
-    logger.info("Migrating Nexus Docker Artifact Streams");
+    log.info("Migrating Nexus Docker Artifact Streams");
     try (HIterator<ArtifactStream> nexusArtifactStreams =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
                                  .filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.NEXUS.name())
@@ -40,7 +40,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
         if (i % 50 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Artifact Streams: {} updated", i);
+          log.info("Artifact Streams: {} updated", i);
         }
         if (isEmpty(nexusArtifactStream.getArtifactPaths())) {
           SettingAttribute settingAttribute = settingsService.get(nexusArtifactStream.getSettingId());
@@ -62,8 +62,8 @@ public class NexusDockerArtifactStreamMigration implements Migration {
     }
     if (i % 50 != 1) {
       bulkWriteOperation.execute();
-      logger.info("Artifact Streams: {} updated", i);
+      log.info("Artifact Streams: {} updated", i);
     }
-    logger.info("Migrating Nexus Docker Artifact Streams completed");
+    log.info("Migrating Nexus Docker Artifact Streams completed");
   }
 }

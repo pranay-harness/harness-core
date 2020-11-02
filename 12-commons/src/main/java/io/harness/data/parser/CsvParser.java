@@ -31,7 +31,7 @@ public class CsvParser {
         list.add(record.get(i));
       }
     } catch (IOException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     return list;
   }

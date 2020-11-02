@@ -60,7 +60,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup step. Workflow execution: [%s]",
               spotInstTaskParameters.getClass().getSimpleName(), spotInstTaskParameters.getWorkflowExecutionId());
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
 
@@ -329,7 +329,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
         awsElbHelperServiceDelegate.getTargetGroup(awsConfig, emptyList(), region, targetGroupArn);
     if (!targetGroup.isPresent()) {
       String message = format("Did not find any target group with arn: [%s]. ", targetGroupArn);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }

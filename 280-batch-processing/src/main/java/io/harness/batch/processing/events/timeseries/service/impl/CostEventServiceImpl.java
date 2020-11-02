@@ -58,18 +58,18 @@ public class CostEventServiceImpl implements CostEventService {
             index++;
 
             if (index % BATCH_SIZE == 0 || index == costEventDataList.size()) {
-              logger.debug("statement is {}", statement);
+              log.debug("statement is {}", statement);
               statement.executeBatch();
             }
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save cost event retryCount=[{}]", retryCount, e);
+          log.error("Failed to save cost event retryCount=[{}]", retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not processing cost event data:[{}]", costEventDataList.size());
+      log.warn("Not processing cost event data:[{}]", costEventDataList.size());
     }
     return successfulInsert;
   }
@@ -82,11 +82,11 @@ public class CostEventServiceImpl implements CostEventService {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = dbConnection.prepareStatement(UPDATE_DEPLOYMENT_STATEMENT)) {
         updateDeploymentStatement(statement, costEventData);
-        logger.debug("deployment update {}", statement);
+        log.debug("deployment update {}", statement);
         statement.executeUpdate();
         successfulUpdate = true;
       } catch (SQLException e) {
-        logger.error("Failed to update deployment cost event retryCount=[{}]", retryCount, e);
+        log.error("Failed to update deployment cost event retryCount=[{}]", retryCount, e);
         retryCount++;
       }
     }
@@ -106,7 +106,7 @@ public class CostEventServiceImpl implements CostEventService {
         statement.setString(3, instanceId);
         statement.setString(4, costEventType);
         statement.setTimestamp(5, new Timestamp(startTimeMillis));
-        logger.debug("getEventsForWorkload query {}", statement);
+        log.debug("getEventsForWorkload query {}", statement);
         try (ResultSet resultSet = statement.executeQuery()) {
           while (resultSet.next()) {
             costEventDataList.add(
@@ -123,7 +123,7 @@ public class CostEventServiceImpl implements CostEventService {
           return costEventDataList;
         }
       } catch (SQLException e) {
-        logger.error("Failed getEventsForWorkload retryCount=[{}]", retryCount, e);
+        log.error("Failed getEventsForWorkload retryCount=[{}]", retryCount, e);
         retryCount++;
       }
     }

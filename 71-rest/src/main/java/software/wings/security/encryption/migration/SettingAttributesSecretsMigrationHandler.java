@@ -104,10 +104,10 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
         isMigrationSuccess = updateSettingAttribute(settingAttribute);
       }
       if (!isMigrationSuccess) {
-        logger.error("Could not migrate the setting attribute {} secrets.", settingAttribute.getUuid());
+        log.error("Could not migrate the setting attribute {} secrets.", settingAttribute.getUuid());
       }
     } catch (Exception e) {
-      logger.error("Could not migrate the setting attribute {} due to error", settingAttribute.getUuid(), e);
+      log.error("Could not migrate the setting attribute {} due to error", settingAttribute.getUuid(), e);
     }
   }
 
@@ -146,7 +146,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
               && migrateSecret(secretId, EncryptionReflectUtils.getEncryptedFieldTag(encryptedField), settingAttribute);
         }
       } catch (IllegalAccessException e) {
-        logger.error("Unable to access encrypted field {} for settingAttribute {}", encryptedField.getName(),
+        log.error("Unable to access encrypted field {} for settingAttribute {}", encryptedField.getName(),
             settingAttribute.getUuid(), e);
       }
     }
@@ -186,7 +186,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
   }
 
   private boolean migrateApmConnector(SettingAttribute settingAttribute) {
-    logger.info("migrating apm connector {}", settingAttribute.getUuid());
+    log.info("migrating apm connector {}", settingAttribute.getUuid());
     APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
     final AtomicBoolean isMigrated = new AtomicBoolean(true);
     if (apmVerificationConfig.getHeadersList() != null) {

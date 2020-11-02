@@ -82,7 +82,7 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
     retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, true);
-    logger.info("New workflow with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
+    log.info("New workflow with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
 
     workflow.setName(EDITED_WORKFLOW_NAME);
     workflow = WorkflowRestUtils.updateWorkflow(bearerToken, application.getAccountId(), workflow.getAppId(), workflow);
@@ -91,12 +91,12 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(workflow.getName()).isEqualTo(EDITED_WORKFLOW_NAME);
 
     retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, true);
-    logger.info("Workflow update with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
+    log.info("Workflow update with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
 
     assertThat(WorkflowRestUtils.deleteWorkflow(bearerToken, workflow.getUuid(), workflow.getAppId())).isNull();
 
     retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, false);
-    logger.info("Workflow delete with id {} synced", workflow.getUuid());
+    log.info("Workflow delete with id {} synced", workflow.getUuid());
 
     EnvironmentRestUtils.deleteEnvironment(
         bearerToken, application.getUuid(), application.getAccountId(), environment.getUuid());

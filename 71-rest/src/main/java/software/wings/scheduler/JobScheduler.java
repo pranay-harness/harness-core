@@ -48,7 +48,7 @@ public class JobScheduler extends HQuartzScheduler implements ConfigChangeListen
 
   @Override
   public void onConfigChange(List<ConfigChangeEvent> events) {
-    logger.info("onConfigChange {}", events);
+    log.info("onConfigChange {}", events);
 
     if (scheduler != null) {
       if (events.contains(ConfigChangeEvent.PrimaryChanged)) {
@@ -60,7 +60,7 @@ public class JobScheduler extends HQuartzScheduler implements ConfigChangeListen
             scheduler.standby();
           }
         } catch (SchedulerException e) {
-          logger.error("Error updating scheduler.", e);
+          log.error("Error updating scheduler.", e);
         }
       }
     }

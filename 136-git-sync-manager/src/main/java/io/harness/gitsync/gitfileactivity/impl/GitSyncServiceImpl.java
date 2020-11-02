@@ -137,7 +137,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         gitFileActivityRepository.save(newFileActivity);
       }
     } else {
-      logger.info(
+      log.info(
           "Unexpected Behaviour while processing extra error in commit: No file activity found for file {}", filePath);
     }
   }
@@ -196,7 +196,7 @@ public class GitSyncServiceImpl implements GitSyncService {
     try {
       return change.isSyncFromGit() && isNotEmpty(change.getProcessingCommitId());
     } catch (Exception ex) {
-      logger.error(format("Error while checking if change is from git: %s", ex));
+      log.error(format("Error while checking if change is from git: %s", ex));
     }
     return false;
   }
@@ -227,7 +227,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(
             change, accountId, yamlGitConfig.getOrganizationId(), yamlGitConfig.getProjectId());
       } catch (Exception e) {
-        logger.error(format("error while updating successful change for file [%s]", change.getFilePath()), e);
+        log.error(format("error while updating successful change for file [%s]", change.getFilePath()), e);
       }
     }
   }
@@ -276,7 +276,7 @@ public class GitSyncServiceImpl implements GitSyncService {
     try {
       gitFileActivityRepository.updateGitFileActivityStatus(status, errorMessage, accountId, commitId, fileNames, null);
     } catch (Exception ex) {
-      logger.error(format("Error while saving activities for commitId: %s", "commitId"), ex);
+      log.error(format("Error while saving activities for commitId: %s", "commitId"), ex);
     }
   }
 

@@ -33,7 +33,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       case WINRM:
         return validateWinrmConnection(capability, parameters);
       default:
-        logger.error("This should Not happen");
+        log.error("This should Not happen");
         return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
   }
@@ -44,7 +44,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       int timeout = (int) ofSeconds(15L).toMillis();
       WinRmSessionConfig winrmConfig = parameters.winrmSessionConfig(encryptionService);
       winrmConfig.setTimeout(timeout);
-      logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
+      log.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
           winrmConfig.getPort(), winrmConfig.isUseSSL());
 
       try (WinRmSession ignore = new WinRmSession(winrmConfig, new NoopExecutionCallback())) {
@@ -52,7 +52,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       }
 
     } catch (Exception ex) {
-      logger.info("Exception in sshSession Validation", ex);
+      log.info("Exception in sshSession Validation", ex);
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
   }
@@ -68,7 +68,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       performTest(expectedSshConfig);
       return CapabilityResponse.builder().validated(true).delegateCapability(capability).build();
     } catch (Exception ex) {
-      logger.info("Exception in sshSession Validation", ex);
+      log.info("Exception in sshSession Validation", ex);
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
   }

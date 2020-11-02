@@ -57,7 +57,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
     }
 
     PcfConfig pcfConfig = commandRequest.getPcfConfig();
-    logger.info("Running validation for task {} ", delegateTaskId);
+    log.info("Running validation for task {} ", delegateTaskId);
 
     try {
       if (encryptionDetails != null) {
@@ -75,7 +75,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
                             .append("RepoUrl: ")
                             .append(pcfConfig.getEndpointUrl())
                             .toString();
-      logger.error(errorMsg);
+      log.error(errorMsg);
     }
 
     if (validated && pcfCliValidationRequired(commandRequest)) {
@@ -105,12 +105,12 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
                            .toString());
         }
       } catch (Exception e) {
-        logger.error("Failed to Validate App-Autoscalar Plugin installed");
+        log.error("Failed to Validate App-Autoscalar Plugin installed");
         validated = false;
       }
     }
     if (!validated) {
-      logger.warn("This delegate failed to verify Pivotal Task Execution");
+      log.warn("This delegate failed to verify Pivotal Task Execution");
     }
 
     return singletonList(
@@ -118,7 +118,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   }
 
   private void printWarning(String message) {
-    logger.warn(message);
+    log.warn(message);
   }
 
   @VisibleForTesting

@@ -143,7 +143,7 @@ public abstract class NodeSelectState extends State {
       }
       selectionParams.withHostNames(hostNames);
       instancesToAdd = hostNames.size();
-      logger.info("Selecting specific hosts: {}", hostNames);
+      log.info("Selecting specific hosts: {}", hostNames);
     } else {
       int instanceCountTotal = getCount(context, totalAvailableInstances);
       if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
@@ -161,7 +161,7 @@ public abstract class NodeSelectState extends State {
     boolean nodesOverriddenFromExecutionHosts = processExecutionHosts(
         appId, selectionParams, workflowStandardParams, message, context.getWorkflowExecutionId());
 
-    logger.info("Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
+    log.info("Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
         appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
 

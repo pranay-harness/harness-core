@@ -65,7 +65,7 @@ public class HostValidationServiceImpl implements HostValidationService {
         return true;
       }, 1, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException ex) {
-      logger.warn("Host validation timed out", ex);
+      log.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts
       for (int idx = hostValidationResponses.size(); idx < hostNames.size(); idx++) {
         hostValidationResponses.add(HostValidationResponse.Builder.aHostValidationResponse()
@@ -76,7 +76,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                                         .build());
       }
     } catch (Exception ex) {
-      logger.warn("Host validation failed", ex);
+      log.warn("Host validation failed", ex);
       // populate error for rest of the hosts
       for (int idx = hostValidationResponses.size(); idx < hostNames.size(); idx++) {
         hostValidationResponses.add(HostValidationResponse.Builder.aHostValidationResponse()
@@ -112,7 +112,7 @@ public class HostValidationServiceImpl implements HostValidationService {
       response.setStatus(ExecutionStatus.FAILED.name());
       response.setErrorCode(errorCode.name());
       response.setErrorDescription(errorCode.getDescription());
-      logger.error("Failed to validate Host: ", jschEx);
+      log.error("Failed to validate Host: ", jschEx);
     }
     return response;
   }

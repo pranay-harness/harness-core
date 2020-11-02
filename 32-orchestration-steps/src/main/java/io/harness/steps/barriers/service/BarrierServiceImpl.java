@@ -129,7 +129,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       case STANDING:
         return barrierExecutionInstance;
       case DOWN:
-        logger.info("The barrier [{}] was done with", barrierExecutionInstance.getUuid());
+        log.info("The barrier [{}] was done with", barrierExecutionInstance.getUuid());
         waitNotifyEngine.doneWith(
             barrierExecutionInstance.getBarrierGroupId(), BarrierResponseData.builder().failed(false).build());
         break;
@@ -178,7 +178,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       try {
         planExecution = planExecutionService.get(forcerId.getValue());
       } catch (InvalidRequestException e) {
-        logger.error("Plan Execution was not found. State set to APPROACHING", e);
+        log.error("Plan Execution was not found. State set to APPROACHING", e);
         return APPROACHING;
       }
 
@@ -195,22 +195,22 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           barrierExecutionInstance.getPlanExecutionId(), barrierExecutionInstance.getIdentifier());
 
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.SUCCEEDED)) {
-        logger.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(), nodeExecutions);
+        log.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(), nodeExecutions);
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(
               node -> node.getStatus() == ABORTED || node.getStatus() == Status.DISCONTINUING)) {
-        logger.info("Barrier {} was aborted", forcerId.getValue());
+        log.info("Barrier {} was aborted", forcerId.getValue());
         return ABANDONED;
       }
       if (barrierExecutionInstancesSize == nodeExecutions.size()
           && nodeExecutions.stream().allMatch(node -> node.getStatus() == Status.ASYNC_WAITING)) {
-        logger.info(
+        log.info(
             "Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(), nodeExecutions);
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == EXPIRED)) {
-        logger.info("Barrier {} was timed out", forcerId.getValue());
+        log.info("Barrier {} was timed out", forcerId.getValue());
         return Forcer.State.TIMED_OUT;
       }
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.FAILED)) {

@@ -69,7 +69,7 @@ public class AWSAccountServiceImpl implements AWSAccountService {
         ceCloudAccounts.add(cloudAccount);
       }
     });
-    logger.info("CE cloud account {}", ceCloudAccounts);
+    log.info("CE cloud account {}", ceCloudAccounts);
     return ceCloudAccounts;
   }
 

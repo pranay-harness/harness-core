@@ -563,7 +563,7 @@ public class SettingValidationService {
     }
 
     if (CommandExecutionStatus.FAILURE == repoConfigValidationResponse.getCommandExecutionStatus()) {
-      logger.warn(repoConfigValidationResponse.getErrorMessage());
+      log.warn(repoConfigValidationResponse.getErrorMessage());
       throw new InvalidRequestException(repoConfigValidationResponse.getErrorMessage());
     }
   }

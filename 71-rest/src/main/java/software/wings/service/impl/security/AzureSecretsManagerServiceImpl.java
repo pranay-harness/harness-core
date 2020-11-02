@@ -184,7 +184,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
     if (isNotEmpty(azureVaultConfig.getSecretKey())) {
       wingsPersistence.delete(EncryptedData.class, azureVaultConfig.getSecretKey());
-      logger.info("Deleted encrypted auth token record {} associated with Azure Secrets Manager '{}'",
+      log.info("Deleted encrypted auth token record {} associated with Azure Secrets Manager '{}'",
           azureVaultConfig.getSecretKey(), azureVaultConfig.getName());
     }
     return deleteSecretManagerAndGenerateAudit(accountId, azureVaultConfig);

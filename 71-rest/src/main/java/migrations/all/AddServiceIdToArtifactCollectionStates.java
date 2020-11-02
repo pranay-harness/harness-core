@@ -38,7 +38,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Migration Started - add service id to artifact collection states");
+    log.info("Migration Started - add service id to artifact collection states");
 
     List<String> accountIds = wingsPersistence.createQuery(Account.class, excludeAuthority)
                                   .asList()
@@ -49,7 +49,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
       migrateAccount(accountId);
     }
 
-    logger.info("Migration Completed - add service id to artifact collection states");
+    log.info("Migration Completed - add service id to artifact collection states");
   }
 
   private void migrateAccount(String accountId) {
@@ -86,7 +86,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
     try {
       workflow = workflowService.readWorkflow(initialWorkflow.getAppId(), initialWorkflow.getUuid());
     } catch (Exception e) {
-      logger.error("Migration Error - could not read workflow: [{}]", initialWorkflow.getUuid(), e);
+      log.error("Migration Error - could not read workflow: [{}]", initialWorkflow.getUuid(), e);
       return;
     }
     // Skip if the workflow is not a BUILD workflow.
@@ -151,7 +151,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
         try {
           workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
         } catch (Exception e) {
-          logger.error("Migration Error - could not migrate workflow: [{}]", workflow.getUuid(), e);
+          log.error("Migration Error - could not migrate workflow: [{}]", workflow.getUuid(), e);
         }
       }
     }

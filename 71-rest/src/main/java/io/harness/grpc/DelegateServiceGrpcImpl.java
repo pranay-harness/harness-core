@@ -141,7 +141,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onCompleted();
 
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing submit task request.", ex);
+      log.error("Unexpected error occurred while processing submit task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -157,7 +157,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                                   .build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing execute parked task request.", ex);
+      log.error("Unexpected error occurred while processing execute parked task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -178,7 +178,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       }
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing fetch parked task status request.", ex);
+      log.error("Unexpected error occurred while processing fetch parked task status request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -198,7 +198,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onNext(SendTaskStatusResponse.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing send parked task status request.", ex);
+      log.error("Unexpected error occurred while processing send parked task status request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -221,7 +221,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
           CancelTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.TYPE_UNSPECIFIED).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing cancel task request.", ex);
+      log.error("Unexpected error occurred while processing cancel task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -245,7 +245,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
           TaskProgressResponse.newBuilder().setCurrentlyAtStage(TaskExecutionStage.TYPE_UNSPECIFIED).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing task progress request.", ex);
+      log.error("Unexpected error occurred while processing task progress request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -267,7 +267,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                                   .build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing register callback request.", ex);
+      log.error("Unexpected error occurred while processing register callback request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -302,7 +302,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                                   .build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing create perpetual task request.", ex);
+      log.error("Unexpected error occurred while processing create perpetual task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -316,7 +316,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onNext(DeletePerpetualTaskResponse.newBuilder().build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing delete perpetual task request.", ex);
+      log.error("Unexpected error occurred while processing delete perpetual task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }
@@ -331,7 +331,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onNext(ResetPerpetualTaskResponse.newBuilder().build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
-      logger.error("Unexpected error occurred while processing reset perpetual task request.", ex);
+      log.error("Unexpected error occurred while processing reset perpetual task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

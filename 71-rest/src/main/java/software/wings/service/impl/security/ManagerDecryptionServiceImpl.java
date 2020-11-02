@@ -71,7 +71,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             try {
               f.set(object, decryptChars);
             } catch (IllegalAccessException e) {
-              logger.error("Decryption failed for {}", encryptedDataDetail.toString(), e);
+              log.error("Decryption failed for {}", encryptedDataDetail.toString(), e);
             }
           }
         });
@@ -111,7 +111,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       return;
     }
 
-    logger.info("Batch decrypting {} encrypted settings", encryptableSettingWithEncryptionDetailsList.size());
+    log.info("Batch decrypting {} encrypted settings", encryptableSettingWithEncryptionDetailsList.size());
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build();
     try {

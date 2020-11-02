@@ -60,13 +60,13 @@ public class UpdateGitSyncErrorMigration implements Migration {
         syncError.setAppId(applicationId);
 
         wingsPersistence.saveAndGet(GitSyncError.class, syncError);
-        logger.info(new StringBuilder()
-                        .append("Updated GitSyncError with Id:< ")
-                        .append(syncError.getUuid())
-                        .append(">, with appId: <")
-                        .append(applicationId)
-                        .append(" >")
-                        .toString());
+        log.info(new StringBuilder()
+                     .append("Updated GitSyncError with Id:< ")
+                     .append(syncError.getUuid())
+                     .append(">, with appId: <")
+                     .append(applicationId)
+                     .append(" >")
+                     .toString());
       }
     }
   }

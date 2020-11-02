@@ -42,7 +42,7 @@ public class VerificationEventHandler implements EventHandler {
         handleCVMetaDataEvent(event);
         break;
       default:
-        logger.error("Invalid event type, dropping event : [{}]", event);
+        log.error("Invalid event type, dropping event : [{}]", event);
     }
   }
 

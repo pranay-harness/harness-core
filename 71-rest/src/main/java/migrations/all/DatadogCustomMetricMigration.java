@@ -27,7 +27,7 @@ public class DatadogCustomMetricMigration implements Migration {
         wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
             .filter(CVConfigurationKeys.stateType, StateType.DATA_DOG)
             .asList();
-    logger.info("Found {} datadogCVConfigurations to potentially migrate.", datadogCVServiceConfigurations.size());
+    log.info("Found {} datadogCVConfigurations to potentially migrate.", datadogCVServiceConfigurations.size());
     try {
       List<DatadogCVServiceConfiguration> configsToSave = new ArrayList<>();
       if (isNotEmpty(datadogCVServiceConfigurations)) {
@@ -39,11 +39,11 @@ public class DatadogCustomMetricMigration implements Migration {
           }
           configsToSave.add(datadogCVServiceConfiguration);
         }
-        logger.info("Total number of Datadog configs with Custom Metrics {}", configsToSave.size());
+        log.info("Total number of Datadog configs with Custom Metrics {}", configsToSave.size());
         wingsPersistence.save(configsToSave);
       }
     } catch (Exception ex) {
-      logger.error("DatadogCustomMetricMigration failed", ex);
+      log.error("DatadogCustomMetricMigration failed", ex);
     }
   }
 }

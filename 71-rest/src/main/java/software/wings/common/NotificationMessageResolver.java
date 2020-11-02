@@ -370,7 +370,7 @@ public class NotificationMessageResolver {
       uriBuilder.setFragment(fragment);
       return uriBuilder.toString();
     } catch (URISyntaxException e) {
-      logger.error("Bad URI syntax", e);
+      log.error("Bad URI syntax", e);
       return baseUrl;
     }
   }
@@ -408,7 +408,7 @@ public class NotificationMessageResolver {
               baseUrl);
         }
       } else {
-        logger.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
+        log.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
         return "";
       }
     } else if (alertType == AlertType.ManualInterventionNeeded) {
@@ -422,7 +422,7 @@ public class NotificationMessageResolver {
               context.getWorkflowExecutionId()),
           baseUrl);
     } else {
-      logger.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
+      log.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
       return "";
     }
   }

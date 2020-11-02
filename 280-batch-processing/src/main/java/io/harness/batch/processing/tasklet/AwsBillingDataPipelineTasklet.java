@@ -81,7 +81,7 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
                   .build();
           billingDataPipelineRecordDao.create(dataPipelineRecord);
         } catch (IOException e) {
-          logger.error("Error while creating Billing Data Pipeline {}", e);
+          log.error("Error while creating Billing Data Pipeline {}", e);
         }
       }
     });

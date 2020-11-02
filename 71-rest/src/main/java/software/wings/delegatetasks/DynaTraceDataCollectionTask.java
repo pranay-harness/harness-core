@@ -66,7 +66,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (DynaTraceDataCollectionInfo) parameters;
-    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.DYNA_TRACE)
@@ -80,7 +80,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -126,7 +126,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           List<DynaTraceMetricDataResponse> metricsData = getMetricsData();
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
           if (isMultiService) {
-            logger.info("Collecting multiservice data from dynatrace for stateExecutionId: {}",
+            log.info("Collecting multiservice data from dynatrace for stateExecutionId: {}",
                 dataCollectionInfo.getStateExecutionId());
           }
           // Heartbeat
@@ -150,10 +150,10 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
           if (!saveMetrics(dynaTraceConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+            log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           } else {
-            logger.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
+            log.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
                 dataCollectionMinute);
           }
 
@@ -161,7 +161,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           collectionStartTime += TimeUnit.MINUTES.toMillis(1);
           if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.info(
+            log.info(
                 "Completed Dynatrace collection task. So setting task status to success and quitting. StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
@@ -171,7 +171,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 dataCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
@@ -182,7 +182,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                 taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
               }
             }
-            logger.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "
+            log.warn("error fetching Dynatrace metrics for minute " + dataCollectionMinute + ". retrying in "
                     + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
@@ -191,7 +191,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       }
 
       if (completed.get()) {
-        logger.info("Shutting down Dynatrace data collection");
+        log.info("Shutting down Dynatrace data collection");
         shutDownCollection();
         return;
       }
@@ -336,10 +336,10 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
           throw new WingsException("invalid strategy " + dataCollectionInfo.getAnalysisComparisonStrategy());
       }
 
-      logger.info("fetching dynatrace metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
+      log.info("fetching dynatrace metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
           dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
       List<Optional<DynaTraceMetricDataResponse>> results = executeParallel(callables);
-      logger.info("done fetching dynatrace metrics for {} strategy {} for min {}",
+      log.info("done fetching dynatrace metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
           dataCollectionMinute);
       results.forEach(result -> {
@@ -391,7 +391,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                     || dataCollectionInfo.getAnalysisComparisonStrategy() == COMPARE_WITH_CURRENT) {
                   records.put(btName, timeStamp.longValue(), metricDataRecord);
                 } else {
-                  logger.info("Metric record for stateExecutionId {} is before the startTime. Ignoring.",
+                  log.info("Metric record for stateExecutionId {} is before the startTime. Ignoring.",
                       dataCollectionInfo.getStateExecutionId());
                 }
               }

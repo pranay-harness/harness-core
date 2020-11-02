@@ -82,7 +82,7 @@ public class ShellScriptApprovalService {
     try {
       responseData = delegateService.executeTask(delegateTask);
     } catch (Exception e) {
-      logger.error("Failed to fetch Approval Status from Script", e);
+      log.error("Failed to fetch Approval Status from Script", e);
       return true;
     }
 
@@ -92,12 +92,12 @@ public class ShellScriptApprovalService {
         try {
           approveWorkflow(approvalId, appId, executionData.getExecutionStatus());
         } catch (Exception e) {
-          logger.error("Failed to Approve/Reject Status", e);
+          log.error("Failed to Approve/Reject Status", e);
         }
         return true;
       }
     } else if (responseData instanceof ErrorNotifyResponseData) {
-      logger.error("Shell Script Approval task failed unexpectedly {}", responseData);
+      log.error("Shell Script Approval task failed unexpectedly {}", responseData);
       return true;
     }
     return false;

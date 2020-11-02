@@ -78,7 +78,7 @@ public class MicrosoftTeamsMessageDispatcher {
     for (String message : messages) {
       int responseCode = microsoftTeamsNotificationService.sendMessage(message, microsoftTeamsWebhookUrl);
       if (responseCode >= 200 && responseCode < 300) {
-        logger.info("Successfully sent message to Microsoft Teams");
+        log.info("Successfully sent message to Microsoft Teams");
       }
     }
   }
@@ -89,7 +89,7 @@ public class MicrosoftTeamsMessageDispatcher {
     String templateFileName = getTemplateFileName(notification);
     String template = getTemplateFile(templateFileName);
     if (StringUtils.isEmpty(template)) {
-      logger.info("No template found in file {}", templateFileName);
+      log.info("No template found in file {}", templateFileName);
     }
     return template;
   }
@@ -113,7 +113,7 @@ public class MicrosoftTeamsMessageDispatcher {
     try {
       template = Resources.toString(url, Charsets.UTF_8);
     } catch (Exception e) {
-      logger.info("Exception occurred at getTemplate() for file {}", templateFileName, e);
+      log.info("Exception occurred at getTemplate() for file {}", templateFileName, e);
     }
     return template;
   }
@@ -187,7 +187,7 @@ public class MicrosoftTeamsMessageDispatcher {
   String getUpdatedValue(String[] names, String[] urls) {
     List<String> updatedValue = new ArrayList<>();
     if (names.length != urls.length) {
-      logger.info("Name and URL array has length mismatch. Names={} Urls={}", names, urls);
+      log.info("Name and URL array has length mismatch. Names={} Urls={}", names, urls);
     } else {
       for (int index = 0; index < names.length; index++) {
         if (StringUtils.isNotEmpty(urls[index])) {

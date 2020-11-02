@@ -21,7 +21,7 @@ public class SmbConnectionCapabilityCheck implements CapabilityCheck {
       boolean validated = smbHelperService.isConnectibleSOBServer(host);
       return CapabilityResponse.builder().validated(validated).delegateCapability(capability).build();
     } catch (Exception exception) {
-      logger.error("Cannot Connect to SMB xxxxxxxx {}, Reason: {}", capability.getSmbUrl(), exception.getMessage());
+      log.error("Cannot Connect to SMB xxxxxxxx {}, Reason: {}", capability.getSmbUrl(), exception.getMessage());
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
   }

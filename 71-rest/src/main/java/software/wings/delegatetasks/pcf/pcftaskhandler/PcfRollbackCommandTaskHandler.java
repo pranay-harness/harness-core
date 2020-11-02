@@ -155,7 +155,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
           FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
           executionLogCallback.saveExecutionLog("Temporary Files Successfully deleted", INFO, SUCCESS);
         } catch (IOException e) {
-          logger.warn("Failed to delete temp cf home folder", e);
+          log.warn("Failed to delete temp cf home folder", e);
         }
       }
     }
@@ -175,7 +175,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void logExceptionMessage(ExecutionLogCallback executionLogCallback,
       PcfCommandRollbackRequest commandRollbackRequest, Exception exception) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
         commandRollbackRequest, exception);
     executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback failed to complete successfully", ERROR, FAILURE);
     Misc.logAllMessages(exception, executionLogCallback);

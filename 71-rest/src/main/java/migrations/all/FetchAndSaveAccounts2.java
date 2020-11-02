@@ -26,14 +26,14 @@ public class FetchAndSaveAccounts2 implements Migration {
     List<Account> allAccounts = accountService.listAllAccounts();
     for (Account account : allAccounts) {
       try {
-        logger.info("Updating account. accountId={}", account.getUuid());
+        log.info("Updating account. accountId={}", account.getUuid());
         if (null == account.getLicenseInfo()) {
-          logger.info("license info is null. accountId={}", account.getUuid());
+          log.info("license info is null. accountId={}", account.getUuid());
         } else {
           accountService.update(account);
         }
       } catch (Exception e) {
-        logger.error("Error updating account", e);
+        log.error("Error updating account", e);
       }
     }
   }

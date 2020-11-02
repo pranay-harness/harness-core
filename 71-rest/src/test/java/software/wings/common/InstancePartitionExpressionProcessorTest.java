@@ -207,7 +207,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
                .thenReturn(aHost().withUuid(instance.getHostId()).withHostName(instance.getHostName()).build()));
 
-    List<PartitionElement> partitions = processor.partitions(logger, "2", "30 %", "50 %");
+    List<PartitionElement> partitions = processor.partitions(log, "2", "30 %", "50 %");
     assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();
     assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull();
     assertThat(partitions.get(1).getPartitionElements()).hasSize(3).doesNotContainNull();

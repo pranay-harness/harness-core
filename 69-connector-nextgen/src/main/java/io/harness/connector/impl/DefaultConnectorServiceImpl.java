@@ -156,7 +156,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       isEntityReferenced =
           execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(), referredEntityFQN));
     } catch (Exception ex) {
-      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           connector.getIdentifier(), ex);
       throw new UnexpectedException("Error while deleting the connector");
     }
@@ -209,7 +209,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       validationResult = connectionValidator.validate(
           connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
     } catch (Exception ex) {
-      logger.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
+      log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
       validationResult = ConnectorValidationResult.builder().valid(false).build();
     }

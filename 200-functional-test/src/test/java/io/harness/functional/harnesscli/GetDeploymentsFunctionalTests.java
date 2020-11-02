@@ -59,18 +59,18 @@ public class GetDeploymentsFunctionalTests extends AbstractFunctionalTest {
     // Running harness get deployments before deploying a workflow
     String appId = application.getAppId();
     String command = String.format("harness get deployments");
-    logger.info("Running harness get deployments");
+    log.info("Running harness get deployments");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
 
     // Creating and deploying a workflow
-    logger.info("Creating the workflow");
+    log.info("Creating the workflow");
     String workflowName = "Test Workflow harnessCli - " + System.currentTimeMillis();
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
@@ -83,12 +83,12 @@ public class GetDeploymentsFunctionalTests extends AbstractFunctionalTest {
     assertThat(workflowExecution).isNotNull();
 
     // Running harness get deployments after deploying a workflow
-    logger.info("Running harness get deployments after creating a new workflow");
+    log.info("Running harness get deployments after creating a new workflow");
     cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();

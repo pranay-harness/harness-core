@@ -129,7 +129,7 @@ public class GoogleCloudMonitoring {
         client.createTimeSeries(request);
       });
     } catch (Exception ex) {
-      logger.error(String.format("Exception while uploading failed tests data: [%s]", ex.getMessage()), ex);
+      log.error(String.format("Exception while uploading failed tests data: [%s]", ex.getMessage()), ex);
     }
   }
 
@@ -139,14 +139,14 @@ public class GoogleCloudMonitoring {
     }
     switch (args[1]) {
       case PR: {
-        logger.info("Uploading: " + CHECK_EXECUTION_TIME_KEY);
+        log.info("Uploading: " + CHECK_EXECUTION_TIME_KEY);
         addBnTDevDisruptionVariables(CHECK_EXECUTION_TIME_METRIC_NAME, CHECK_EXECUTION_TIME_KEY);
-        logger.info("Uploading: " + CHECK_TOTAL_TIME_KEY);
+        log.info("Uploading: " + CHECK_TOTAL_TIME_KEY);
         addBnTDevDisruptionVariables(CHECK_TOTAL_TIME_METRIC_NAME, CHECK_TOTAL_TIME_KEY);
         break;
       }
       default: { throw new UnsupportedOperationException("Did not recognise option: " + args[1]); }
     }
-    logger.info("Finished uploading metrics");
+    log.info("Finished uploading metrics");
   }
 }

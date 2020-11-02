@@ -42,7 +42,7 @@ public class PersistentLockCleanup implements Runnable {
 
   @Override
   public void run() {
-    logger.info("Running PersistentLockCleanup Job asynchronously and returning");
+    log.info("Running PersistentLockCleanup Job asynchronously and returning");
 
     executorService.submit(this ::executeInternal);
   }
@@ -63,11 +63,11 @@ public class PersistentLockCleanup implements Runnable {
         }
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
+      log.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }
-    logger.info("Destroyed {} locks out of {} outdated", destroyed, total);
+    log.info("Destroyed {} locks out of {} outdated", destroyed, total);
   }
 
   private boolean delete(Object lock) {

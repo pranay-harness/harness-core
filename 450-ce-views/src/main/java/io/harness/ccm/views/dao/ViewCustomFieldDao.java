@@ -68,7 +68,7 @@ public class ViewCustomFieldDao {
             .set(ViewCustomFieldKeys.description, viewCustomField.getDescription())
             .set(ViewCustomFieldKeys.userDefinedExpression, viewCustomField.getUserDefinedExpression());
     hPersistence.update(query, updateOperations);
-    logger.info(query.toString());
+    log.info(query.toString());
     return (ViewCustomField) query.asList().get(0);
   }
 }

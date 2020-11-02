@@ -22,7 +22,7 @@ public class DeleteInvalidServiceGuardConfigs implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Delete invalid cv configurations");
+    log.info("Delete invalid cv configurations");
     Set<String> configsToBeDeleted = new HashSet<>();
     try (HIterator<CVConfiguration> cvConfigurationHIterator =
              new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class).fetch())) {
@@ -30,13 +30,13 @@ public class DeleteInvalidServiceGuardConfigs implements Migration {
         CVConfiguration cvConfiguration = cvConfigurationHIterator.next();
         SettingAttribute settingAttribute = settingsService.get(cvConfiguration.getConnectorId());
         if (settingAttribute == null) {
-          logger.info("Deleting cv configuration {}", cvConfiguration);
+          log.info("Deleting cv configuration {}", cvConfiguration);
           configsToBeDeleted.add(cvConfiguration.getUuid());
         }
       }
     }
     wingsPersistence.delete(
         wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).field("_id").in(configsToBeDeleted));
-    logger.info("Finished deleting invalid cv configs");
+    log.info("Finished deleting invalid cv configs");
   }
 }

@@ -22,7 +22,7 @@ public class UuidValidator implements ConstraintValidator<Uuid, String> {
       String uuidStr = base64StrToUuid(value);
       isValidBase64EncodedUuid = isValidUuidStr(uuidStr);
     } catch (BufferUnderflowException | BufferOverflowException | IllegalArgumentException e) {
-      logger.info("{} is not a valid Base64 encoded UUID", value);
+      log.info("{} is not a valid Base64 encoded UUID", value);
     }
     return isValidBase64EncodedUuid;
   }

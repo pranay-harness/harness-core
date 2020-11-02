@@ -50,11 +50,11 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
     K8ActivityCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), K8ActivityCollectionPerpetualTaskParams.class);
     String activitySourceConfigId = taskParams.getActivitySourceConfigId();
-    logger.info("Executing for !! activitySourceId: {}", activitySourceConfigId);
+    log.info("Executing for !! activitySourceId: {}", activitySourceConfigId);
     k8ActivityCollectionWatches.getWatchMap().computeIfAbsent(activitySourceConfigId, id -> {
       K8ActivityDataCollectionInfo dataCollectionInfo =
           (K8ActivityDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
-      logger.info("DataCollectionInfo {} ", dataCollectionInfo);
+      log.info("DataCollectionInfo {} ", dataCollectionInfo);
       KubernetesClusterConfigDTO kubernetesClusterConfig =
           (KubernetesClusterConfigDTO) dataCollectionInfo.getConnectorConfigDTO();
       KubernetesAuthCredentialDTO kubernetesCredentialAuth =

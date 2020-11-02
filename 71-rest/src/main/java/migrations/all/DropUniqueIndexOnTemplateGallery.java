@@ -17,7 +17,7 @@ public class DropUniqueIndexOnTemplateGallery implements Migration {
     try {
       wingsPersistence.getCollection(DEFAULT_STORE, "templateGalleries").dropIndex("yaml");
     } catch (RuntimeException ex) {
-      logger.error("Drop index error", ex);
+      log.error("Drop index error", ex);
     }
   }
 }

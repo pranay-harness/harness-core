@@ -89,15 +89,14 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
       boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo,
       PcfCommandExecutionResponse pcfCommandExecutionResponse, InstanceSyncFlow instanceSyncFlow) {
-    logger.info(
-        "Performing PCF Instance sync via [{}], Infrastructure Mapping : [{}]", instanceSyncFlow, infraMappingId);
+    log.info("Performing PCF Instance sync via [{}], Infrastructure Mapping : [{}]", instanceSyncFlow, infraMappingId);
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Objects.requireNonNull(infrastructureMapping);
 
     if (!(infrastructureMapping instanceof PcfInfrastructureMapping)) {
       String msg =
           "Incompatible infra mapping type. Expecting PCF type. Found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw WingsException.builder().message(msg).build();
     }
 
@@ -116,8 +115,8 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
     // This is to handle the case of the instances stored in the new schema.
     if (pcfAppNameInstanceMap.size() > 0) {
       pcfAppNameInstanceMap.keySet().forEach(pcfApplicationName -> {
-        logger.info("Performing Instance sync for PCF Application : [{}], Harness Application : [{}]",
-            pcfApplicationName, appId);
+        log.info("Performing Instance sync for PCF Application : [{}], Harness Application : [{}]", pcfApplicationName,
+            appId);
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         boolean failedToRetrieveData = false;
@@ -127,17 +126,17 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
               pcfHelperService.getApplicationDetails(pcfApplicationName, pcfInfrastructureMapping.getOrganization(),
                   pcfInfrastructureMapping.getSpace(), pcfConfig, pcfCommandExecutionResponse);
         } catch (NoDelegatesException e) {
-          logger.warn("Delegates are not available", e.getMessage());
+          log.warn("Delegates are not available", e.getMessage());
           failedToRetrieveData = true;
         } catch (Exception e) {
-          logger.warn("Error while fetching application details for PCFApplication", e);
+          log.warn("Error while fetching application details for PCFApplication", e);
 
           if (e instanceof PcfAppNotFoundException) {
-            logger.info("PCF Application Name : [{}] is not found, Infrastructure Mapping Id : [{}]",
-                pcfApplicationName, infraMappingId);
+            log.info("PCF Application Name : [{}] is not found, Infrastructure Mapping Id : [{}]", pcfApplicationName,
+                infraMappingId);
             latestpcfInstanceInfoList = new ArrayList<>();
           } else {
-            logger.info("Failed to retrieve data for PCF Application Name : [{}]. Infrastructure Mapping Id : [{}]",
+            log.info("Failed to retrieve data for PCF Application Name : [{}]. Infrastructure Mapping Id : [{}]",
                 pcfApplicationName, infraMappingId);
             // skip processing this time, as app exists but we could not fetch data
             failedToRetrieveData = true;
@@ -146,8 +145,8 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
 
         if (!failedToRetrieveData) {
           notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
-          logger.info("Received Instance details for PCF Application : [{}]. Instance count : [{}] ",
-              pcfApplicationName, latestpcfInstanceInfoList.size());
+          log.info("Received Instance details for PCF Application : [{}]. Instance count : [{}] ", pcfApplicationName,
+              latestpcfInstanceInfoList.size());
 
           Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap =
               latestpcfInstanceInfoList.stream().collect(Collectors.toMap(PcfInstanceInfo::getId, identity()));
@@ -184,7 +183,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
               instanceIdsToBeDeleted.add(instance.getUuid());
             }
           });
-          logger.info("Flow : [{}], PCF Application : [{}], "
+          log.info("Flow : [{}], PCF Application : [{}], "
                   + "DB Instance Count : [{}], Running Instance Count: [{}], "
                   + "Instances To Add : [{}], Instances To Delete: [{}]",
               instanceSyncFlow, pcfApplicationName, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(),
@@ -194,7 +193,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
             return;
           }
 
-          logger.info("Updating Instances in DB via Flow : [{}]", instanceSyncFlow);
+          log.info("Updating Instances in DB via Flow : [{}]", instanceSyncFlow);
 
           if (isNotEmpty(instanceIdsToBeDeleted)) {
             instanceService.delete(instanceIdsToBeDeleted);
@@ -207,7 +206,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
                 && isNotEmpty(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
-                logger.warn("Couldn't find an instance from a previous deployment for infra mapping");
+                log.warn("Couldn't find an instance from a previous deployment for infra mapping");
                 return;
               }
               DeploymentSummary deploymentSummaryFromPrevious =
@@ -227,7 +226,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
                   buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentSummary);
               instanceService.save(instance);
             });
-            logger.info("Instances to be added {}", instancesToBeAdded.size());
+            log.info("Instances to be added {}", instancesToBeAdded.size());
           }
         }
       });
@@ -311,8 +310,8 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
     if (phaseStepExecutionSummary == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      if (log.isDebugEnabled()) {
+        log.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
       }
       return Optional.empty();
     }
@@ -321,8 +320,8 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
     // This was observed when the "deploy containers" step was executed in rollback and no commands were
     // executed since setup failed.
     if (stepExecutionSummaryList == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      if (log.isDebugEnabled()) {
+        log.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
       }
       return Optional.empty();
     }
@@ -382,7 +381,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     if (isSuccess && getInstanceCount(response) == 0) {
-      logger.info("Got 0 instances. Infrastructure Mapping : [{}]. Application Name : [{}]",
+      log.info("Got 0 instances. Infrastructure Mapping : [{}]. Application Name : [{}]",
           infrastructureMapping.getUuid(), pcfInstanceSyncResponse.getName());
       canRetry = false;
     } else {
@@ -390,10 +389,10 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
         pcfHelperService.validatePcfInstanceSyncResponse(pcfInstanceSyncResponse.getName(),
             pcfInstanceSyncResponse.getOrganization(), pcfInstanceSyncResponse.getSpace(), pcfCommandExecutionResponse);
       } catch (PcfAppNotFoundException ex) {
-        logger.info(String.format("PCF Application : [%s] not found", pcfInstanceSyncResponse.getName()), ex);
+        log.info(String.format("PCF Application : [%s] not found", pcfInstanceSyncResponse.getName()), ex);
         canRetry = false;
       } catch (Exception ex) {
-        logger.info(String.format("Unexpected Error. PCF Application : [%s]", pcfInstanceSyncResponse.getName()), ex);
+        log.info(String.format("Unexpected Error. PCF Application : [%s]", pcfInstanceSyncResponse.getName()), ex);
       }
     }
 

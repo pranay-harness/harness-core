@@ -27,23 +27,23 @@ public class LoginFunctionalTest extends AbstractFunctionalTest {
     // Will the domain be localhost:9090 always ?
     String command = String.format("harness login -u  %s -p  admin  -d %s", adminUserEmail, domain);
 
-    logger.info("Logging to localhost");
+    log.info("Logging to localhost");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 1) {
-      logger.info("The login command output has %d lines", cliOutput.size());
+      log.info("The login command output has %d lines", cliOutput.size());
       assertThat(false).isTrue();
     } else {
       loginOutput = cliOutput.get(0);
     }
     // Asserting that the output is good
-    logger.info("Comparing the output of login command");
+    log.info("Comparing the output of login command");
     assertThat(loginOutput).isEqualTo("Logged in Successfully to " + domain);
   }
 
@@ -57,23 +57,23 @@ public class LoginFunctionalTest extends AbstractFunctionalTest {
     // Will the domain be localhost:9090 always ?
     String command = String.format("harness login -u  %s -p  wrongPassword  -d %s", adminUserEmail, domain);
 
-    logger.info("Logging to localhost");
+    log.info("Logging to localhost");
     List<String> cliOutput = null;
     try {
       cliOutput = harnesscliHelper.getCLICommandError(command);
     } catch (Exception IOException) {
-      logger.info("Could not read output of terminal command");
+      log.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
 
     if (cliOutput == null || cliOutput.size() != 1) {
-      logger.info("The login command output has %d lines", cliOutput.size());
+      log.info("The login command output has %d lines", cliOutput.size());
       assertThat(false).isTrue();
     } else {
       loginOutput = cliOutput.get(0);
     }
     // Asserting that the output is good
-    logger.info("Comparing the output of login command");
+    log.info("Comparing the output of login command");
     String[] errorMessage = loginOutput.split(" ", 3);
     assertThat(errorMessage[2]).isEqualTo("Invalid Credentials ");
   }

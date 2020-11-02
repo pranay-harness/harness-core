@@ -18,10 +18,10 @@ public class MigrateDelegateScopes implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
+    log.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
     Account account = accountService.get(accountId);
     if (account == null) {
-      logger.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
+      log.info(StringUtils.join(DEBUG_LINE, "Account does not exist, accountId ", accountId));
       return;
     }
     migrateDelegateScopesToInfraDefinition.migrate(account);

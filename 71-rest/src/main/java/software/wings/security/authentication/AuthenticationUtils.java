@@ -54,14 +54,14 @@ public class AuthenticationUtils {
   public User getUser(String userName, EnumSet<ReportTarget> reportTargets) {
     User user = isNotEmpty(userName) ? getUserByEmail(userName) : null;
     if (user == null) {
-      logger.info("User {} does not exists.", userName);
+      log.info("User {} does not exists.", userName);
       if (reportTargets == null) {
         throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
       } else {
         throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, reportTargets);
       }
     } else if (user.isDisabled()) {
-      logger.info("User {} is disabled.", userName);
+      log.info("User {} is disabled.", userName);
       throw new WingsException(USER_DISABLED, USER);
     }
     return user;

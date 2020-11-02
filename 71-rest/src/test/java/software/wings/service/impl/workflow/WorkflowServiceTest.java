@@ -836,7 +836,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void stencils() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
-    logger.debug(JsonUtils.asJson(stencils));
+    log.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(4).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS,
         StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE, StateTypeScope.COMMON);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
@@ -850,7 +850,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void stencilsForPipeline() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, null, null, StateTypeScope.PIPELINE_STENCILS);
-    logger.debug(JsonUtils.asJson(stencils));
+    log.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.PIPELINE_STENCILS);
     assertThat(stencils.get(StateTypeScope.PIPELINE_STENCILS))
         .extracting(Stencil::getType)
@@ -864,7 +864,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void stencilsForOrchestration() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, null, null, StateTypeScope.ORCHESTRATION_STENCILS);
-    logger.debug(JsonUtils.asJson(stencils));
+    log.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
@@ -881,7 +881,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, workflow2.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
 
-    logger.debug(JsonUtils.asJson(stencils));
+    log.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
@@ -1427,7 +1427,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(workflow.getName().toLowerCase())
         .contains(WorkflowType.ORCHESTRATION.name().toLowerCase());
 
-    logger.info(JsonUtils.asJson(workflow2));
+    log.info(JsonUtils.asJson(workflow2));
   }
 
   @Test
@@ -2390,7 +2390,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
       fail("No Constraint violation detected");
     } catch (ConstraintViolationException e) {
-      logger.info("Expected constraintViolationException", e);
+      log.info("Expected constraintViolationException", e);
     }
 
     try {
@@ -2405,7 +2405,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
       workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
       fail("No Constraint violation detected");
     } catch (ConstraintViolationException e) {
-      logger.info("Expected constraintViolationException", e);
+      log.info("Expected constraintViolationException", e);
     }
 
     try {
@@ -2420,7 +2420,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
       fail("No Constraint violation detected");
     } catch (ConstraintViolationException e) {
-      logger.info("Expected constraintViolationException", e);
+      log.info("Expected constraintViolationException", e);
     }
 
     try {

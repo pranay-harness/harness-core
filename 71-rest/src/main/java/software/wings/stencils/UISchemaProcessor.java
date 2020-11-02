@@ -56,6 +56,6 @@ public class UISchemaProcessor {
   }
 
   public static void main(String... args) throws IntrospectionException {
-    logger.info(JsonUtils.asJson(UISchemaProcessor.generate(JenkinsArtifactStream.class)));
+    log.info(JsonUtils.asJson(UISchemaProcessor.generate(JenkinsArtifactStream.class)));
   }
 }

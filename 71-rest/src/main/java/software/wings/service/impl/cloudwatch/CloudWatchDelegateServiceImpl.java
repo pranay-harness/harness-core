@@ -69,7 +69,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(final AwsConfig config,
       List<EncryptedDataDetail> encryptionDetails, CloudWatchSetupTestNodeData setupTestNodeData,
       ThirdPartyApiCallLog thirdPartyApiCallLog, String hostName) {
-    logger.info("Initiating getDataForNode for hostname : " + hostName + " setupTestNodeData : " + setupTestNodeData);
+    log.info("Initiating getDataForNode for hostname : " + hostName + " setupTestNodeData : " + setupTestNodeData);
     List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
     setupTestNodeData.setFromTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime()));

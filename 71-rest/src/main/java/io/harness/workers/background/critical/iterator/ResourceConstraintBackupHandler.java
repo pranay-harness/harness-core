@@ -64,13 +64,13 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
     boolean toUnblock = false;
     try {
       if (State.BLOCKED.name().equals(instance.getState())) {
-        if (logger.isWarnEnabled()) {
-          logger.error("This is a completely blocked constraint: {}", constraintId);
+        if (log.isWarnEnabled()) {
+          log.error("This is a completely blocked constraint: {}", constraintId);
         }
         toUnblock = true;
       } else if (State.ACTIVE.name().equals(instance.getState())) {
         if (resourceConstraintService.updateActiveConstraintForInstance(instance)) {
-          logger.info("The following resource constrained need to be unblocked: {}", constraintId);
+          log.info("The following resource constrained need to be unblocked: {}", constraintId);
           toUnblock = true;
         }
       }
@@ -79,9 +79,9 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
         resourceConstraintService.updateBlockedConstraints(Sets.newHashSet(constraintId));
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException e) {
-      logger.error("", e);
+      log.error("", e);
     }
   }
 }

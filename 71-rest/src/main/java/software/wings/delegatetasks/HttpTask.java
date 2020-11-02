@@ -82,13 +82,13 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     try {
       builder.loadTrustMaterial((x509Certificates, s) -> true);
     } catch (NoSuchAlgorithmException | KeyStoreException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     SSLConnectionSocketFactory sslsf = null;
     try {
       sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     RequestConfig.Builder requestBuilder = RequestConfig.custom();
@@ -114,7 +114,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         }
         httpClientBuilder.setProxy(proxyHost);
       } else {
-        logger.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+        log.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
       }
     }
 
@@ -141,7 +141,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
       httpStateExecutionResponse.setHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "");
     } catch (IOException e) {
-      logger.error("Exception occurred during HTTP task execution", e);
+      log.error("Exception occurred during HTTP task execution", e);
       httpStateExecutionResponse.setHttpResponseCode(500);
       httpStateExecutionResponse.setHttpResponseBody(getMessage(e));
       httpStateExecutionResponse.setErrorMessage(getMessage(e));

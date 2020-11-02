@@ -34,7 +34,7 @@ public class BuildEnvSetupStep implements Step, SyncExecutable<BuildEnvSetupStep
       buildSetupUtils.executeCISetupTask(buildEnvSetupStepInfo, ambiance);
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } catch (Exception e) {
-      logger.error("state execution failed", e);
+      log.error("state execution failed", e);
     }
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }

@@ -30,7 +30,7 @@ public class Project {
         return someFile.getParentFile().getParentFile().getParentFile().getAbsolutePath();
       }
     } catch (URISyntaxException e) {
-      logger.error("This should never happen", e);
+      log.error("This should never happen", e);
     }
 
     return null;

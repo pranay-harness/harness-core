@@ -151,7 +151,7 @@ public class PageController {
           List<Criteria> criteria = new ArrayList<>();
           for (Object opFilter : filter.getFieldValues()) {
             if (!(opFilter instanceof SearchFilter)) {
-              logger.error("OR/AND operator can only be used with SearchFilter values");
+              log.error("OR/AND operator can only be used with SearchFilter values");
               throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
             }
             SearchFilter opSearchFilter = (SearchFilter) opFilter;
@@ -258,7 +258,7 @@ public class PageController {
 
   private static void assertNone(Object[] values) {
     if (isNotEmpty(values)) {
-      logger.error(
+      log.error(
           "Unexpected number of arguments {} in expression when none are expected", values.length, new Exception(""));
     }
   }
@@ -269,7 +269,7 @@ public class PageController {
       throw new InvalidRequestException("Not enough arguments provided");
     }
     if (length > 1) {
-      logger.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
+      log.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
     }
   }
 }

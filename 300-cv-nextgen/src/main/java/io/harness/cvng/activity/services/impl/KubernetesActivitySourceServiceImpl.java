@@ -76,7 +76,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
 
   @Override
   public void enqueueDataCollectionTask(KubernetesActivitySource activitySource) {
-    logger.info("Enqueuing activitySourceId for the first time: {}", activitySource.getUuid());
+    log.info("Enqueuing activitySourceId for the first time: {}", activitySource.getUuid());
 
     Map<String, String> params = new HashMap<>();
     params.put(CVConfigKeys.connectorIdentifier, activitySource.getConnectorIdentifier());
@@ -96,6 +96,6 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
                                                 .filter(KubernetesActivitySourceKeys.uuid, activitySource.getUuid());
     hPersistence.update(query, updateOperations);
 
-    logger.info("Enqueued activity source successfully: {}", activitySource.getUuid());
+    log.info("Enqueued activity source successfully: {}", activitySource.getUuid());
   }
 }

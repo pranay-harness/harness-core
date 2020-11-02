@@ -26,12 +26,12 @@ import java.util.Map;
 public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
-    logger.info("Published batch size is EcsContainerInstanceInfoWriter {} ", publishedMessages.size());
+    log.info("Published batch size is EcsContainerInstanceInfoWriter {} ", publishedMessages.size());
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_CONTAINER_INSTANCE_INFO))
         .forEach(publishedMessage -> {
           EcsContainerInstanceInfo ecsContainerInstanceInfo = (EcsContainerInstanceInfo) publishedMessage.getMessage();
-          logger.debug("Message {} ", ecsContainerInstanceInfo);
+          log.debug("Message {} ", ecsContainerInstanceInfo);
           EcsContainerInstanceDescription ecsContainerInstanceDescription =
               ecsContainerInstanceInfo.getEcsContainerInstanceDescription();
           ReservedResource ecsContainerInstanceResource = ecsContainerInstanceInfo.getEcsContainerInstanceResource();
@@ -77,7 +77,7 @@ public class EcsContainerInstanceInfoWriter extends EventWriter implements ItemW
                                .allocatableResource(resource)
                                .metaData(metaData)
                                .build();
-            logger.info("Creating container instance {} ", containerInstanceId);
+            log.info("Creating container instance {} ", containerInstanceId);
             instanceDataService.create(instanceData);
           }
         });

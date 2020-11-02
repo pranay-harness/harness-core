@@ -31,20 +31,19 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     AzureVmssInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AzureVmssInstanceSyncPerpetualTaskParams.class);
     software.wings.beans.AzureConfig azureConfig =
         (software.wings.beans.AzureConfig) kryoSerializer.asObject(taskParams.getAzureConfig().toByteArray());
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse = executeSyncTask(taskParams, azureConfig);
     try {
-      logger.info("Publish instance sync result to manager for VMSS id {} and perpetual task {}",
-          taskParams.getVmssId(), taskId.getId());
+      log.info("Publish instance sync result to manager for VMSS id {} and perpetual task {}", taskParams.getVmssId(),
+          taskId.getId());
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), azureConfig.getAccountId(), azureVMSSTaskExecutionResponse));
     } catch (Exception ex) {
-      logger.error(
-          "Failed to publish the instance sync collection result to manager for VMSS id {} and perpetual task {}",
+      log.error("Failed to publish the instance sync collection result to manager for VMSS id {} and perpetual task {}",
           taskParams.getVmssId(), taskId.getId(), ex);
     }
     return getPerpetualTaskResponse(azureVMSSTaskExecutionResponse);
@@ -76,7 +75,7 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
     try {
       return azureVMSSSyncTaskHandler.executeTask(parameters, createAzureConfigForDelegateTask(azureConfig));
     } catch (Exception ex) {
-      logger.error("Failed to execute instance sync task for VMSS id {}", taskParams.getVmssId(), ex);
+      log.error("Failed to execute instance sync task for VMSS id {}", taskParams.getVmssId(), ex);
       return AzureVMSSTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ex.getMessage())

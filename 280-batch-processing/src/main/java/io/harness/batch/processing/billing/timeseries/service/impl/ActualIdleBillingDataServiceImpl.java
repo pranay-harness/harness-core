@@ -64,7 +64,7 @@ public class ActualIdleBillingDataServiceImpl {
       }
       return actualIdleCostDataList;
     } catch (SQLException e) {
-      logger.error("Error while fetching Actual Idle Cost Data List for Nodes : exception", e);
+      log.error("Error while fetching Actual Idle Cost Data List for Nodes : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }
@@ -103,7 +103,7 @@ public class ActualIdleBillingDataServiceImpl {
       }
       return actualIdleCostDataList;
     } catch (SQLException e) {
-      logger.error("Error while fetching Actual Idle Cost Data List for Pods : exception", e);
+      log.error("Error while fetching Actual Idle Cost Data List for Pods : exception", e);
     } finally {
       DBUtils.close(resultSet);
     }

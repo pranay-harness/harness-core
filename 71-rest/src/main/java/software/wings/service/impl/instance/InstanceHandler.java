@@ -242,7 +242,7 @@ public abstract class InstanceHandler {
       deploymentSummary.setArtifactSourceName(deploymentSummaryFromDB.getArtifactSourceName());
       deploymentSummary.setArtifactStreamId(deploymentSummaryFromDB.getArtifactStreamId());
     } else {
-      logger.info("Unable to find DeploymentSummary while rolling back " + deploymentSummary);
+      log.info("Unable to find DeploymentSummary while rolling back " + deploymentSummary);
     }
     return deploymentSummary;
   }
@@ -321,7 +321,7 @@ public abstract class InstanceHandler {
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
-      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
   }
 

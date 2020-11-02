@@ -41,12 +41,12 @@ public class SetInfraDefinitionTriggers {
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
 
   public void migrate(Account account) {
-    logger.info(StringUtils.join(
+    log.info(StringUtils.join(
         DEBUG_LINE, "Starting Infra Definition migration for triggers, accountId ", account.getUuid()));
     List<String> apps = appService.getAppIdsByAccountId(account.getUuid());
 
     if (isEmpty(apps)) {
-      logger.info(StringUtils.join(DEBUG_LINE, "No applications found for accountId: ", account.getUuid()));
+      log.info(StringUtils.join(DEBUG_LINE, "No applications found for accountId: ", account.getUuid()));
       return;
     }
     for (String appId : apps) {
@@ -59,12 +59,12 @@ public class SetInfraDefinitionTriggers {
         triggerService.list(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).build(), false, null)
             .getResponse();
 
-    logger.info("Updating {} triggers.", triggers.size());
+    log.info("Updating {} triggers.", triggers.size());
     for (Trigger trigger : triggers) {
       try {
         migrate(trigger);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Migration failed for triggerId: " + trigger.getUuid()
+        log.error("[INFRA_MIGRATION_ERROR] Migration failed for triggerId: " + trigger.getUuid()
             + ExceptionUtils.getMessage(e));
       }
     }
@@ -74,7 +74,7 @@ public class SetInfraDefinitionTriggers {
     boolean modified = false;
 
     if (isEmpty(trigger.getWorkflowVariables())) {
-      logger.info("No migration required for as no workflow variables present. TriggerId: " + trigger.getUuid());
+      log.info("No migration required for as no workflow variables present. TriggerId: " + trigger.getUuid());
       return;
     }
 
@@ -83,10 +83,10 @@ public class SetInfraDefinitionTriggers {
     if (modified) {
       try {
         triggerService.update(trigger, true);
-        logger.info("--- Trigger updated: {}, {}", trigger.getUuid(), trigger.getName());
+        log.info("--- Trigger updated: {}, {}", trigger.getUuid(), trigger.getName());
         Thread.sleep(100);
       } catch (Exception e) {
-        logger.error("[INFRA_MIGRATION_ERROR] Error updating trigger: " + trigger.getUuid(), e);
+        log.error("[INFRA_MIGRATION_ERROR] Error updating trigger: " + trigger.getUuid(), e);
       }
     }
   }
@@ -95,7 +95,7 @@ public class SetInfraDefinitionTriggers {
     String workflowId = trigger.getWorkflowId();
 
     if (trigger.getWorkflowType() == WorkflowType.PIPELINE) {
-      logger.info("[INFRA_MIGRATION_INFO] No migration should be needed for pipelines variables in trigger: "
+      log.info("[INFRA_MIGRATION_INFO] No migration should be needed for pipelines variables in trigger: "
           + trigger.getUuid());
       return false;
     }
@@ -105,7 +105,7 @@ public class SetInfraDefinitionTriggers {
     notNullCheck("orchestrationWorkflow is null in workflow: " + workflowId, workflow.getOrchestrationWorkflow());
 
     if (isEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
-      logger.info(
+      log.info(
           "[INFRA_MIGRATION_INFO] Trigger has workflow variables but workflow does not have userVariables. TriggerId: "
           + trigger.getUuid());
       return false;
@@ -126,7 +126,7 @@ public class SetInfraDefinitionTriggers {
 
       if (!trigger.getWorkflowVariables().containsKey(variableName)) {
         // Workflow has infraMapping templatised but trigger doesn't have infraMapping variable. Invalid trigger
-        logger.info(
+        log.info(
             "[INFRA_MIGRATION_INFO]Workflow has infra Mapping templatised but trigger does not have infra mapping variable. TriggerId: "
             + trigger.getUuid());
         continue;
@@ -150,7 +150,7 @@ public class SetInfraDefinitionTriggers {
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(trigger.getAppId(), infraMappingId);
         if (infrastructureMapping == null) {
-          logger.info("[INFRA_MIGRATION_INFO]Couldn't fetch infraMapping for trigger. Trigger:  " + trigger.getUuid()
+          log.info("[INFRA_MIGRATION_INFO]Couldn't fetch infraMapping for trigger. Trigger:  " + trigger.getUuid()
               + "infraMappingId: " + infraMappingId);
 
           // Removing infraMapping variable as it does not have a valid infraMappingId. removing will mark workflow
@@ -162,7 +162,7 @@ public class SetInfraDefinitionTriggers {
         String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
         if (isEmpty(infraDefId)) {
           // infra definition migration might have failed.Needs manual intervention
-          logger.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for trigger. Trigger:  "
+          log.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for trigger. Trigger:  "
               + trigger.getUuid() + "infraMappingId: " + infraMappingId);
 
           continue;

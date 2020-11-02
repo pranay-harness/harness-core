@@ -32,7 +32,7 @@ public class LogAnalysisAddExecutionIdMigration implements Migration {
       while (iterator.hasNext()) {
         final LogMLAnalysisRecord logMLAnalysisRecord = iterator.next();
         if (isNotEmpty(logMLAnalysisRecord.getWorkflowExecutionId())) {
-          logger.info("For analysis {} wqrkflow execution id is already set to {}", logMLAnalysisRecord.getUuid(),
+          log.info("For analysis {} wqrkflow execution id is already set to {}", logMLAnalysisRecord.getUuid(),
               logMLAnalysisRecord.getWorkflowExecutionId());
           continue;
         }
@@ -40,14 +40,14 @@ public class LogAnalysisAddExecutionIdMigration implements Migration {
         final StateExecutionInstance stateExecutionInstance =
             wingsPersistence.get(StateExecutionInstance.class, logMLAnalysisRecord.getStateExecutionId());
         if (stateExecutionInstance == null) {
-          logger.info("For analysis {} no state execution found for id {}", logMLAnalysisRecord.getUuid(),
+          log.info("For analysis {} no state execution found for id {}", logMLAnalysisRecord.getUuid(),
               logMLAnalysisRecord.getStateExecutionId());
           continue;
         }
 
         final String workflowExecutionId = stateExecutionInstance.getExecutionUuid();
         if (isEmpty(workflowExecutionId)) {
-          logger.info("For analysis {} and state {} no workflow execution was set", logMLAnalysisRecord.getUuid(),
+          log.info("For analysis {} and state {} no workflow execution was set", logMLAnalysisRecord.getUuid(),
               logMLAnalysisRecord.getStateExecutionId());
           continue;
         }
@@ -56,10 +56,10 @@ public class LogAnalysisAddExecutionIdMigration implements Migration {
             LogMLAnalysisRecordKeys.workflowExecutionId, workflowExecutionId);
         sleep(ofMillis(100));
         if (++updatedCount % 1000 == 0) {
-          logger.info("processed {} records", updatedCount);
+          log.info("processed {} records", updatedCount);
         }
       }
     }
-    logger.info("Updated {} logMLAnalysisRecords with workflow execution id", updatedCount);
+    log.info("Updated {} logMLAnalysisRecords with workflow execution id", updatedCount);
   }
 }

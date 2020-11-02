@@ -28,7 +28,7 @@ public class NonWorkflowCVConfigurationMigration implements Migration {
 
     DBCursor cvConfigurationRecords = collection.find();
 
-    logger.info("will go through " + cvConfigurationRecords.size() + " records");
+    log.info("will go through " + cvConfigurationRecords.size() + " records");
     int updated = 0;
     try {
       while (cvConfigurationRecords.hasNext()) {
@@ -43,9 +43,9 @@ public class NonWorkflowCVConfigurationMigration implements Migration {
         }
       }
     } catch (Exception e) {
-      logger.error("NonWorkflowCVConfigurationMigration failed", e);
+      log.error("NonWorkflowCVConfigurationMigration failed", e);
     }
-    logger.info("Complete. Updated " + updated + " records.");
+    log.info("Complete. Updated " + updated + " records.");
   }
 
   private void update(String uuId, UpdateOperations<CVConfiguration> operations) {

@@ -196,7 +196,7 @@ public class UserGroupPermissionsController {
         return MANAGE_CUSTOM_DASHBOARDS;
 
       default:
-        logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
     throw new InvalidRequestException("Invalid Account Permission Type Given by the user");
   }
@@ -219,7 +219,7 @@ public class UserGroupPermissionsController {
       case EXECUTE_PIPELINE:
         return EXECUTE_PIPELINE;
       default:
-        logger.error("Invalid Action {} given by the user", action.toString());
+        log.error("Invalid Action {} given by the user", action.toString());
     }
     throw new InvalidRequestException("Invalid action given by the user");
   }
@@ -242,7 +242,7 @@ public class UserGroupPermissionsController {
       case PROVISIONER:
         return PROVISIONER;
       default:
-        logger.error("Invalid Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
     throw new InvalidRequestException("Invalid Permission Type given by the user");
   }
@@ -385,7 +385,7 @@ public class UserGroupPermissionsController {
         entityFilter = GenericEntityFilter.builder().filterType(filterType).ids(provisionerIds).build();
         break;
       default:
-        logger.error("Invalid Application Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Application Permission Type {} given by the user", permissionType.toString());
         throw new InvalidRequestException("Invalid Application Permission type given by the user");
     }
 
@@ -495,7 +495,7 @@ public class UserGroupPermissionsController {
       case CREATE_CUSTOM_DASHBOARDS:
         return QLAccountPermissionType.CREATE_CUSTOM_DASHBOARDS;
       default:
-        logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
     throw new InvalidRequestException("Invalid Account Permission Type Given by the user");
   }
@@ -518,7 +518,7 @@ public class UserGroupPermissionsController {
       case EXECUTE_WORKFLOW:
         return QLActions.EXECUTE_WORKFLOW;
       default:
-        logger.error("Invalid Action {} given by the user", action.toString());
+        log.error("Invalid Action {} given by the user", action.toString());
     }
     throw new InvalidRequestException("Invalid action given by the user");
   }
@@ -541,7 +541,7 @@ public class UserGroupPermissionsController {
       case PROVISIONER:
         return QLPermissionType.PROVISIONER;
       default:
-        logger.error("Invalid Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
     throw new InvalidRequestException("Invalid Permission Type given by the user");
   }
@@ -686,7 +686,7 @@ public class UserGroupPermissionsController {
         }
         return builder.permissionType(appPermissionType).provisioners(provisionerPermissions).build();
       default:
-        logger.error("Invalid Application Permission Type {} given by the user", permissionType.toString());
+        log.error("Invalid Application Permission Type {} given by the user", permissionType.toString());
         throw new InvalidRequestException("Invalid Application Permission type given by the user");
     }
   }

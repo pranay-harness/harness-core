@@ -35,7 +35,7 @@ public class GCPMarketplaceCustomerMigration implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Starting migration of all GCP marketplace entities");
+      log.info("Starting migration of all GCP marketplace entities");
 
       // We first need to do cleanup. NOTE: This should be done only once!
       deleteAllGcpMarketplaceCustomers();
@@ -46,9 +46,9 @@ public class GCPMarketplaceCustomerMigration implements Migration {
         migrateGcpMarketplace(marketPlace);
       }
     } catch (Exception e) {
-      logger.error("Failure occurred in GCPMarketplaceCustomerMigration", e);
+      log.error("Failure occurred in GCPMarketplaceCustomerMigration", e);
     }
-    logger.info("GCPMarketplaceCustomerMigration has completed");
+    log.info("GCPMarketplaceCustomerMigration has completed");
   }
 
   private void deleteAllGcpMarketplaceCustomers() {
@@ -56,7 +56,7 @@ public class GCPMarketplaceCustomerMigration implements Migration {
   }
 
   private void migrateGcpMarketplace(MarketPlace marketPlace) {
-    logger.info("Migrating GCP marketPlace : {}", marketPlace.getUuid());
+    log.info("Migrating GCP marketPlace : {}", marketPlace.getUuid());
     try {
       if (marketPlace.getAccountId() == null) {
         return;
@@ -87,7 +87,7 @@ public class GCPMarketplaceCustomerMigration implements Migration {
                                                           .build();
       wingsPersistence.save(gcpMarketplaceCustomer);
     } catch (Exception e) {
-      logger.error("Error occurred while migrating marketPlace: {} ", marketPlace.getUuid(), e);
+      log.error("Error occurred while migrating marketPlace: {} ", marketPlace.getUuid(), e);
     }
   }
 }

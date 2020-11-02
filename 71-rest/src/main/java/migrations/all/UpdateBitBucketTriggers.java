@@ -60,7 +60,7 @@ public class UpdateBitBucketTriggers implements Migration {
         if (processedDocsCount % BATCH_SIZE == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("triggers: {} updated", processedDocsCount);
+          log.info("triggers: {} updated", processedDocsCount);
         }
         processedDocsCount = processedDocsCount + 1;
       }
@@ -102,7 +102,7 @@ public class UpdateBitBucketTriggers implements Migration {
         if (processedDocsCount % BATCH_SIZE == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("triggers: {} updated", processedDocsCount);
+          log.info("triggers: {} updated", processedDocsCount);
         }
         processedDocsCount = processedDocsCount + 1;
       }

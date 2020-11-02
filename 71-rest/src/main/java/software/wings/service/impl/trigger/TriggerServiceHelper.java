@@ -270,7 +270,7 @@ public class TriggerServiceHelper {
         scheduledTriggerCondition.setCronDescription(getCronDescription(scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
-      logger.warn("Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(),
+      log.warn("Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(),
           ExceptionUtils.getMessage(ex));
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
@@ -456,24 +456,24 @@ public class TriggerServiceHelper {
         pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
       }
     } catch (PatternSyntaxException pe) {
-      logger.warn("Invalid Build/Tag Filter {} for triggerId {}", artifactFilter, triggerId, pe);
+      log.warn("Invalid Build/Tag Filter {} for triggerId {}", artifactFilter, triggerId, pe);
       throw new WingsException("Invalid Build/Tag Filter", USER);
     }
 
     if (isEmpty(artifact.getArtifactFiles())) {
       if (pattern.matcher(artifact.getBuildNo()).find()) {
-        logger.info(
+        log.info(
             "Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter, artifact.getBuildNo());
         return true;
       }
     } else {
-      logger.info("Comparing artifact file name matches with the given artifact filter");
+      log.info("Comparing artifact file name matches with the given artifact filter");
       List<ArtifactFile> artifactFiles = artifact.getArtifactFiles()
                                              .stream()
                                              .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
                                              .collect(toList());
       if (isNotEmpty(artifactFiles)) {
-        logger.info("Artifact file names matches with the given artifact filter");
+        log.info("Artifact file names matches with the given artifact filter");
         artifact.setArtifactFiles(artifactFiles);
         return true;
       }
@@ -498,10 +498,10 @@ public class TriggerServiceHelper {
   public boolean checkManifestMatchesFilter(String triggerId, HelmChart helmChart, String versionRegex) {
     try {
       Pattern pattern = compile(versionRegex);
-      logger.info("Comparing artifact file name matches with the given artifact filter");
+      log.info("Comparing artifact file name matches with the given artifact filter");
       return pattern.matcher(helmChart.getVersion()).find();
     } catch (PatternSyntaxException pe) {
-      logger.warn("Invalid manifest version regex {} for triggerId {}", versionRegex, triggerId, pe);
+      log.warn("Invalid manifest version regex {} for triggerId {}", versionRegex, triggerId, pe);
       throw new WingsException("Invalid Manifest Version Regex", USER);
     }
   }

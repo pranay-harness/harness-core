@@ -59,7 +59,7 @@ public class FileUtils {
       }
       out.close();
     } catch (RuntimeException | IOException e) {
-      logger.error("Error thrown in framework", e);
+      log.error("Error thrown in framework", e);
     }
   }
 
@@ -67,9 +67,9 @@ public class FileUtils {
     final Path config = Paths.get(Project.rootDirectory(clazz), "71-rest", "modified_config.yml");
     File file = new File(config.toString());
     if (file.exists()) {
-      logger.info("Deleting the config file as all the tests are completed : " + file.getName());
+      log.info("Deleting the config file as all the tests are completed : " + file.getName());
       if (!file.delete()) {
-        logger.error("Configuration files was not deleted");
+        log.error("Configuration files was not deleted");
       }
     }
   }

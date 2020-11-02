@@ -29,7 +29,7 @@ public class ShellScriptTemplateMigration implements SeedDataMigration {
 
   @Override
   public void migrate() {
-    logger.info("Migration: Loading new shell script templates..");
+    log.info("Migration: Loading new shell script templates..");
     // 1. Create Shell Scripts folder in Global account
     if (addShellScriptFolderInGlobalAccount()) {
       // 2. Add the new shell script templates to Global account
@@ -53,10 +53,10 @@ public class ShellScriptTemplateMigration implements SeedDataMigration {
         templateFolderService.save(shellScriptsTemplateFolder, templateGallery.getUuid());
         success = true;
       } else {
-        logger.error("Folder [{}] does not exist for account [{}]", HARNESS_GALLERY, GLOBAL_ACCOUNT_ID);
+        log.error("Folder [{}] does not exist for account [{}]", HARNESS_GALLERY, GLOBAL_ACCOUNT_ID);
       }
     } else {
-      logger.error("Harness gallery does not exist for account [{}].", GLOBAL_ACCOUNT_ID);
+      log.error("Harness gallery does not exist for account [{}].", GLOBAL_ACCOUNT_ID);
     }
     return success;
   }

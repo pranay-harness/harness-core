@@ -92,7 +92,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     DelegateResponseData responseData = null;
 
-    logger.info("Executing JiraTask. Action: {}", jiraAction);
+    log.info("Executing JiraTask. Action: {}", jiraAction);
 
     switch (jiraAction) {
       case AUTH:
@@ -136,10 +136,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
 
     if (responseData != null) {
-      logger.info("Done executing JiraTask. Action: {},  ExecutionStatus: {}", jiraAction,
+      log.info("Done executing JiraTask. Action: {},  ExecutionStatus: {}", jiraAction,
           ((JiraExecutionData) responseData).getExecutionStatus());
     } else {
-      logger.error("JiraTask Action: {}. null response.", jiraAction);
+      log.error("JiraTask Action: {}. null response.", jiraAction);
     }
 
     return responseData;
@@ -151,7 +151,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       jiraClient.getProjects();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
 
@@ -161,10 +161,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   private DelegateResponseData getCreateMetadata(JiraTaskParameters parameters) {
     URI uri = null;
     try {
-      logger.info("Getting decrypted jira client configs for GET_CREATE_METADATA");
+      log.info("Getting decrypted jira client configs for GET_CREATE_METADATA");
       JiraClient jiraClient = getJiraClient(parameters);
 
-      logger.info("Building URI for GET_CREATE_METADATA");
+      log.info("Building URI for GET_CREATE_METADATA");
       Map<String, String> queryParams = new HashMap<>();
       if (EmptyPredicate.isNotEmpty(parameters.getCreatemetaExpandParam())) {
         queryParams.put("expand", parameters.getCreatemetaExpandParam());
@@ -178,25 +178,25 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
 
-      logger.info(" Fetching metadata from jira for GET_CREATE_METADATA");
+      log.info(" Fetching metadata from jira for GET_CREATE_METADATA");
       JSON response = jiraClient.getRestClient().get(uri);
 
-      logger.info(" Response received from jira for GET_CREATE_METADATA");
+      log.info(" Response received from jira for GET_CREATE_METADATA");
       JiraCreateMetaResponse jiraCreateMetaResponse = new JiraCreateMetaResponse((JSONObject) response);
 
-      logger.info(" Fetching resolutions from jira for GET_CREATE_METADATA");
+      log.info(" Fetching resolutions from jira for GET_CREATE_METADATA");
       URI resolutionUri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + RESOLUTION);
       JSONArray resolutions = (JSONArray) jiraClient.getRestClient().get(resolutionUri);
       insertResolutionsInCreateMeta(resolutions, jiraCreateMetaResponse);
 
-      logger.info(" Returning response to manager for GET_CREATE_METADATA");
+      log.info(" Returning response to manager for GET_CREATE_METADATA");
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
           .createMetadata(jiraCreateMetaResponse)
           .build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch issue metadata from Jira server.";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
@@ -234,7 +234,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch statuses from Jira server.";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
@@ -249,7 +249,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       issues = jiraClient.searchIssues(jqlQuery, 1);
     } catch (JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch issues from Jira server for project - " + parameters.getProject();
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
 
@@ -266,7 +266,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder().fields((JSONObject) response).executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (URISyntaxException | IOException | RestException | RuntimeException e) {
       String errorMessage = "Failed to fetch editmeta from Jira server. Issue - " + issueKey;
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
@@ -280,7 +280,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder().projects(projectsArray).executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch projects from Jira server.";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
   }
@@ -291,7 +291,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       jiraClient = getJiraClient(parameters);
     } catch (JiraException j) {
       String errorMessage = "Failed to create jira client while trying to update : " + parameters.getUpdateIssueIds();
-      logger.error(errorMessage, j);
+      log.error(errorMessage, j);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(errorMessage)
@@ -356,7 +356,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           updateStatus(issue, parameters.getStatus());
         }
 
-        logger.info("Successfully updated ticket : " + issueId);
+        log.info("Successfully updated ticket : " + issueId);
         issueKeys.add(issue.getKey());
         issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue.getKey()));
 
@@ -365,7 +365,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         }
       } catch (JiraException j) {
         String errorMessage = "Failed to update Jira Issue for Id: " + issueId + ". " + extractResponseMessage(j);
-        logger.error(errorMessage, j);
+        log.error(errorMessage, j);
         return JiraExecutionData.builder()
             .executionStatus(ExecutionStatus.FAILED)
             .errorMessage(errorMessage)
@@ -410,7 +410,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     try {
       allTransitions = issue.getTransitions(); // gives all transitions available for that issue
     } catch (JiraException e) {
-      logger.error("Failed to get all transitions from the Jira");
+      log.error("Failed to get all transitions from the Jira");
       throw e;
     }
 
@@ -420,11 +420,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       try {
         issue.transition().execute(transition);
       } catch (JiraException e) {
-        logger.error("Exception while trying to update status to {}", status);
+        log.error("Exception while trying to update status to {}", status);
         throw e;
       }
     } else {
-      logger.error("No transition found from {} to {}", issue.getStatus(), status);
+      log.error("No transition found from {} to {}", issue.getStatus(), status);
       throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
     }
   }
@@ -456,7 +456,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         String errorsKey = (String) errorsKeys[0];
         return errorsKey + " : " + (String) errors.get((String) errorsKey);
       } catch (Exception ex) {
-        logger.error("Failed to parse json response from Jira", ex);
+        log.error("Failed to parse json response from Jira", ex);
       }
     }
 
@@ -488,7 +488,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       Issue issue = fluentCreate.execute();
 
-      logger.info("Script execution finished with status SUCCESS");
+      log.info("Script execution finished with status SUCCESS");
 
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
@@ -500,7 +500,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
           .build();
     } catch (JiraException e) {
-      logger.error("Unable to create a new Jira ticket", e);
+      log.error("Unable to create a new Jira ticket", e);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(
@@ -570,7 +570,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   @VisibleForTesting
   protected DelegateResponseData checkJiraApproval(JiraTaskParameters parameters) {
     Issue issue;
-    logger.info("Checking approval for IssueId = {}", parameters.getIssueId());
+    log.info("Checking approval for IssueId = {}", parameters.getIssueId());
     try {
       JiraClient jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
@@ -580,15 +580,15 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         errorMessage += " Reason: " + e.getCause().getMessage();
         if (e.getCause() instanceof RestException && ((RestException) e.getCause()).getHttpStatusCode() == 404) {
           // Fail if the jira issue is not returned
-          logger.error(errorMessage, e);
+          log.error(errorMessage, e);
           return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
         }
       }
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.PAUSED).errorMessage(errorMessage).build();
     }
 
-    logger.info("Issue fetched successfully for {}", parameters.getIssueId());
+    log.info("Issue fetched successfully for {}", parameters.getIssueId());
     String approvalFieldValue = null;
     if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
       Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
@@ -601,13 +601,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       rejectionFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
     }
 
-    logger.info("IssueId: {}, approvalField: {}, approvalFieldValue: {}, rejectionField: {}, rejectionFieldValue: {}",
+    log.info("IssueId: {}, approvalField: {}, approvalFieldValue: {}, rejectionField: {}, rejectionFieldValue: {}",
         parameters.getIssueId(), parameters.getApprovalField(), approvalFieldValue, parameters.getRejectionField(),
         rejectionFieldValue);
 
     if (EmptyPredicate.isNotEmpty(approvalFieldValue)
         && StringUtils.equalsIgnoreCase(approvalFieldValue, parameters.getApprovalValue())) {
-      logger.info("IssueId: {} Approved", parameters.getIssueId());
+      log.info("IssueId: {} Approved", parameters.getIssueId());
       return JiraExecutionData.builder()
           .currentStatus(approvalFieldValue)
           .executionStatus(ExecutionStatus.SUCCESS)
@@ -616,7 +616,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
         && StringUtils.equalsIgnoreCase(rejectionFieldValue, parameters.getRejectionValue())) {
-      logger.info("IssueId: {} Rejected", parameters.getIssueId());
+      log.info("IssueId: {} Rejected", parameters.getIssueId());
       return JiraExecutionData.builder()
           .currentStatus(rejectionFieldValue)
           .executionStatus(ExecutionStatus.REJECTED)
@@ -636,7 +636,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       return issueUrl.toString();
     } catch (MalformedURLException e) {
-      logger.info("Incorrect url: " + e.getMessage());
+      log.info("Incorrect url: " + e.getMessage());
     }
 
     return null;
@@ -677,7 +677,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .build();
     } catch (JiraException e) {
       String error = "Unable to fetch Jira Issue for Id: " + parameters.getIssueId() + "  " + extractResponseMessage(e);
-      logger.error(error, e);
+      log.error(error, e);
       return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(error).build();
     }
   }

@@ -102,13 +102,13 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
                     .useNoProfile(connectionAttributes.isUseNoProfile())
                     .build();
 
-            logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),
+            log.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),
                 config.getPort(), config.isUseSSL());
 
             try (WinRmSession ignore = new WinRmSession(config, new NoopExecutionCallback())) {
               resultBuilder.validated(true);
             } catch (Exception e) {
-              logger.info("Exception in WinrmSession Validation: {}", e);
+              log.info("Exception in WinrmSession Validation: {}", e);
               resultBuilder.validated(false);
             }
           } else {

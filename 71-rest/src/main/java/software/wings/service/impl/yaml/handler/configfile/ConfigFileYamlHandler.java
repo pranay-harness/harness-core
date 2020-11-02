@@ -160,7 +160,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
           String fileContent = fileContext.getChange().getFileContent();
           inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes(Charsets.UTF_8)));
         } else {
-          logger.error("Could not locate file: " + yaml.getFileName());
+          log.error("Could not locate file: " + yaml.getFileName());
           throw new WingsException("Could not locate file: " + yaml.getFileName());
         }
       }

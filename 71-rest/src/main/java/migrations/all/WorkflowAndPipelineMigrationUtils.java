@@ -32,7 +32,7 @@ public final class WorkflowAndPipelineMigrationUtils {
   public static List<Workflow> fetchAllWorkflowsForAccount(
       WingsPersistence wingsPersistence, WorkflowService workflowService, String accountId) {
     long workflowsSize = wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.accountId, accountId).count();
-    logger.info("Total workflows for account = " + workflowsSize);
+    log.info("Total workflows for account = " + workflowsSize);
 
     int numberOfPages = (int) ((workflowsSize + 999) / 1000);
     List<Workflow> workflows = new ArrayList<>();
@@ -54,7 +54,7 @@ public final class WorkflowAndPipelineMigrationUtils {
   public static List<Pipeline> fetchAllPipelinesForAccount(
       WingsPersistence wingsPersistence, PipelineService pipelineService, String accountId) {
     long pipelineSize = wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.accountId, accountId).count();
-    logger.info("Total pipelines for account = " + pipelineSize);
+    log.info("Total pipelines for account = " + pipelineSize);
 
     int numberOfPages = (int) ((pipelineSize + 999) / 1000);
     List<Pipeline> pipelines = new ArrayList<>();
@@ -72,7 +72,7 @@ public final class WorkflowAndPipelineMigrationUtils {
       }
     }
 
-    logger.info("Updating {} pipelines.", pipelines.size());
+    log.info("Updating {} pipelines.", pipelines.size());
     return pipelines;
   }
 

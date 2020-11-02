@@ -165,14 +165,14 @@ public class OrchestrationEngine {
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      logger.info("Checking Interrupts before Node Start");
+      log.info("Checking Interrupts before Node Start");
       InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
           ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
       if (!check.isProceed()) {
-        logger.info("Suspending Execution. Reason : {}", check.getReason());
+        log.info("Suspending Execution. Reason : {}", check.getReason());
         return;
       }
-      logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
+      log.info("Proceeding with  Execution. Reason : {}", check.getReason());
 
       PlanNode node = nodeExecution.getNode();
       // Facilitate and execute
@@ -256,7 +256,7 @@ public class OrchestrationEngine {
       TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
       timeoutInstanceIds.add(instance.getUuid());
     }
-    logger.info(format("Registered node execution timeouts: %s", timeoutInstanceIds.toString()));
+    log.info(format("Registered node execution timeouts: %s", timeoutInstanceIds.toString()));
     return timeoutInstanceIds;
   }
 
@@ -349,7 +349,7 @@ public class OrchestrationEngine {
                                                 .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
-      logger.info("Ending Execution");
+      log.info("Ending Execution");
       concludePlanExecution(nodeExecution.getAmbiance());
     }
   }
@@ -382,7 +382,7 @@ public class OrchestrationEngine {
     } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
       return EXPIRED;
     } else {
-      logger.error("This should not Happen. PlanExecutionId : {}", planExecutionId);
+      log.error("This should not Happen. PlanExecutionId : {}", planExecutionId);
       return ERRORED;
     }
   }
@@ -398,7 +398,7 @@ public class OrchestrationEngine {
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
       if (!resumableStatuses().contains(nodeExecution.getStatus())) {
-        logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
+        log.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
             nodeExecution.getStatus());
         return;
       }
@@ -428,7 +428,7 @@ public class OrchestrationEngine {
                                   .build();
       handleStepResponse(ambiance.obtainCurrentRuntimeId(), response);
     } catch (RuntimeException ex) {
-      logger.error("Error when trying to obtain the advice ", ex);
+      log.error("Error when trying to obtain the advice ", ex);
     }
   }
 }

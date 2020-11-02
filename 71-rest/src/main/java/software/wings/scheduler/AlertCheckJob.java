@@ -106,7 +106,7 @@ public class AlertCheckJob implements Job {
 
   @VisibleForTesting
   void executeInternal(String accountId) {
-    logger.info("Checking account " + accountId + " for alert conditions.");
+    log.info("Checking account " + accountId + " for alert conditions.");
     List<Delegate> delegates = getDelegatesForAccount(accountId);
 
     if (isEmpty(delegates)) {

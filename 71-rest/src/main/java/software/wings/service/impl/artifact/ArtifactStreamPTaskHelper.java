@@ -47,15 +47,15 @@ public class ArtifactStreamPTaskHelper {
          AutoLogContext ignore2 = new ArtifactStreamLogContext(artifactStream.getUuid(), OVERRIDE_ERROR)) {
       ArtifactCollectionPTaskClientParams artifactCollectionPTaskClientParams =
           ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getUuid()).build();
-      logger.info("Creating perpetual task");
+      log.info("Creating perpetual task");
 
       String perpetualTaskId = create(artifactStream.getAccountId(), artifactCollectionPTaskClientParams);
-      logger.info("Created perpetual task: {}", perpetualTaskId);
+      log.info("Created perpetual task: {}", perpetualTaskId);
 
       boolean updated = false;
       try {
         updated = artifactStreamService.attachPerpetualTaskId(artifactStream, perpetualTaskId);
-        logger.info("Attaching perpetual task: {} to artifact stream: {}", perpetualTaskId, artifactStream.getUuid());
+        log.info("Attaching perpetual task: {} to artifact stream: {}", perpetualTaskId, artifactStream.getUuid());
       } finally {
         if (!updated) {
           // If artifact stream is not updated, it doesn't know about the perpetual task. So the perpetual task becomes
@@ -67,7 +67,7 @@ public class ArtifactStreamPTaskHelper {
     } catch (Exception ex) {
       // This is background-type operation. Artifact stream can be created but perpetual task creation can fail. We
       // should not fail the save operation and try assigning to perpetual task later.
-      logger.error(format("Unable to create perpetual task for artifact stream: %s", artifactStream.getUuid()), ex);
+      log.error(format("Unable to create perpetual task for artifact stream: %s", artifactStream.getUuid()), ex);
     }
   }
 
@@ -93,7 +93,7 @@ public class ArtifactStreamPTaskHelper {
   public void deletePerpetualTask(String accountId, String perpetualTaskId) {
     artifactStreamService.detachPerpetualTaskId(perpetualTaskId);
     if (!perpetualTaskService.deleteTask(accountId, perpetualTaskId)) {
-      logger.error(format("Unable to delete artifact collection perpetual task: %s", perpetualTaskId));
+      log.error(format("Unable to delete artifact collection perpetual task: %s", perpetualTaskId));
     }
   }
 }

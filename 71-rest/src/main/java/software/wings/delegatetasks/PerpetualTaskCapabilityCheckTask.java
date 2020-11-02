@@ -45,12 +45,12 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
         Arrays.stream(parameters).map(param -> (ExecutionCapability) param).collect(toList());
 
     executionCapabilities.forEach(delegateCapability -> {
-      logger.info("Checking Capability: " + delegateCapability.toString());
+      log.info("Checking Capability: " + delegateCapability.toString());
       CapabilityCheck capabilityCheck =
           capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType());
 
       if (capabilityCheck == null) {
-        logger.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
+        log.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
         return;
       }
 

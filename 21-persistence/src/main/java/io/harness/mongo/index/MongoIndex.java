@@ -18,13 +18,13 @@ public interface MongoIndex {
   boolean isUnique();
   List<String> getFields();
 
-  default void checks(Logger logger) {
+  default void checks(Logger log) {
     if (getFields().size() == 1 && !getFields().get(0).contains(".")) {
-      logger.error("Composite index with only one field {}", getFields().get(0));
+      log.error("Composite index with only one field {}", getFields().get(0));
     }
 
     if (isUnique() && !getName().startsWith("unique")) {
-      logger.error("Index {} is unique indexes and its name is not prefixed with unique", getName());
+      log.error("Index {} is unique indexes and its name is not prefixed with unique", getName());
     }
   }
 

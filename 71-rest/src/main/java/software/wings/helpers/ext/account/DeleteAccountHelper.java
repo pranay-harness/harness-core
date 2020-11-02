@@ -136,14 +136,13 @@ public class DeleteAccountHelper {
     String collectionName = getCollectionName(entity);
     try {
       if (!isAbstract(entity.getModifiers()) && PersistentEntity.class.isAssignableFrom(entity)) {
-        logger.info("Deleting account level collection {}", collectionName);
+        log.info("Deleting account level collection {}", collectionName);
         Class<? extends PersistentEntity> persistentEntity = entity.asSubclass(PersistentEntity.class);
         hPersistence.delete(
             hPersistence.createQuery(persistentEntity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
       }
     } catch (Exception e) {
-      logger.error(
-          "Exception while deleting AccountAccess collection {} for accountId {}", collectionName, accountId, e);
+      log.error("Exception while deleting AccountAccess collection {} for accountId {}", collectionName, accountId, e);
       return false;
     }
     return true;
@@ -156,10 +155,10 @@ public class DeleteAccountHelper {
     for (OwnedByAccount service : services) {
       String collectionName = getCollectionName(service.getClass());
       try {
-        logger.info("Deleting OwnedByAccount collection {}", collectionName);
+        log.info("Deleting OwnedByAccount collection {}", collectionName);
         service.deleteByAccountId(accountId);
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Exception while deleting OwnedByAccount collection {} for accountId {}", collectionName, accountId, e);
         remainingEntities.add(collectionName);
       }
@@ -175,30 +174,30 @@ public class DeleteAccountHelper {
         hPersistence.delete(hPersistence.createQuery(entry).filter(APP_ID, application.getUuid()));
       }
     } catch (Exception e) {
-      logger.error("Issue while deleting app level documents for this collection {}", entry.getName(), e);
+      log.error("Issue while deleting app level documents for this collection {}", entry.getName(), e);
       return false;
     }
     return true;
   }
 
   public boolean deleteExportableAccountData(String accountId) {
-    logger.info("Deleting exportable data for account {}", accountId);
+    log.info("Deleting exportable data for account {}", accountId);
     if (accountService.get(accountId) == null) {
       throw new InvalidRequestException("The account to be deleted doesn't exist");
     }
 
     Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
-    logger.info("The exportable entities are {}", toBeExported);
+    log.info("The exportable entities are {}", toBeExported);
 
     toBeExported.forEach(entry -> {
       try {
         deleteAppLevelDocuments(accountId, entry);
-        logger.info(
+        log.info(
             "Deleting account level documents from collection {} and count of account level records deleted are {}",
             entry.getName(), hPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
         hPersistence.delete(hPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
       } catch (Exception e) {
-        logger.error("Issue while deleting account level documents this collection {}", entry.getName(), e);
+        log.error("Issue while deleting account level documents this collection {}", entry.getName(), e);
       }
     });
     List<User> users = userService.getUsersOfAccount(accountId);
@@ -217,7 +216,7 @@ public class DeleteAccountHelper {
       if (PersistentEntity.class.isAssignableFrom(mc.getClazz()) && mc.getEntityAnnotation() != null
           && isAnnotatedExportable(clazz) && !separateDeletionEntities.contains(clazz)) {
         // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
-        logger.info("Collection '{}' is exportable", clazz.getName());
+        log.info("Collection '{}' is exportable", clazz.getName());
         toBeExported.add(clazz.asSubclass(PersistentEntity.class));
       }
     });
@@ -236,18 +235,18 @@ public class DeleteAccountHelper {
 
   /** With any change of deletion logic CURRENT_DELETION_ALGO_NUM value should be incremented **/
   public boolean deleteAccount(String accountId) {
-    logger.info("Deleting data for account {}. Deletion algo version: {}", accountId, CURRENT_DELETION_ALGO_NUM);
+    log.info("Deleting data for account {}. Deletion algo version: {}", accountId, CURRENT_DELETION_ALGO_NUM);
     deleteQuartzJobsForAccount(accountId);
     deletePerpetualTasksForAccount(accountId);
     delegateService.deleteByAccountId(accountId);
     List<String> entitiesRemainingForDeletion = deleteAllEntities(accountId);
     if (isEmpty(entitiesRemainingForDeletion)) {
-      logger.info("Deleting account entry {}", accountId);
+      log.info("Deleting account entry {}", accountId);
       hPersistence.delete(Account.class, accountId);
       upsertDeletedEntity(accountId);
       return true;
     } else {
-      logger.info("Not all entities are deleted for account {}", accountId);
+      log.info("Not all entities are deleted for account {}", accountId);
       reportToBugsnag(accountId, entitiesRemainingForDeletion);
       return false;
     }
@@ -272,17 +271,17 @@ public class DeleteAccountHelper {
 
   private void deleteQuartzJobsForAccount(String accountId) {
     try {
-      logger.info("Deleting all Quartz Jobs for account {}", accountId);
+      log.info("Deleting all Quartz Jobs for account {}", accountId);
       persistentScheduler.deleteAllQuartzJobsForAccount(accountId);
-      logger.info("Deleted all Quartz Jobs for account {}", accountId);
+      log.info("Deleted all Quartz Jobs for account {}", accountId);
     } catch (SchedulerException e) {
-      logger.error("Exception occurred at deleteQuartzJobsForAccount() for account {}", accountId, e);
+      log.error("Exception occurred at deleteQuartzJobsForAccount() for account {}", accountId, e);
     }
   }
 
   private void deletePerpetualTasksForAccount(String accountId) {
     perpetualTaskService.deleteAllTasksForAccount(accountId);
-    logger.info("Deleted all Perpetual Tasks for account {}", accountId);
+    log.info("Deleted all Perpetual Tasks for account {}", accountId);
   }
 
   private void removeAccountFromFeatureFlagsCollection(String accountId) {
@@ -317,7 +316,7 @@ public class DeleteAccountHelper {
     String accountStatus = accountService.getAccountStatus(accountId);
     String message =
         String.format("Could not delete collections: [%s] for accountId: %s", entitiesRemainingForDeletion, accountId);
-    logger.info(message);
+    log.info(message);
     Exception exception = new GeneralException(message);
     List<BugsnagTab> bugsnagTabs = getBugsnagTabs(accountId, entitiesRemainingForDeletion, accountStatus);
     ErrorData errorData = ErrorData.builder().exception(exception).tabs(bugsnagTabs).build();

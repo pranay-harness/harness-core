@@ -32,7 +32,7 @@ public class HostConnectionTypeMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(DEBUG_LINE + "Starting migration for host connection type migration");
+    log.info(DEBUG_LINE + "Starting migration for host connection type migration");
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
@@ -75,7 +75,7 @@ public class HostConnectionTypeMigration implements Migration {
         }
       }
     }
-    logger.info(DEBUG_LINE + "Ended migration for Host Connection Type");
+    log.info(DEBUG_LINE + "Ended migration for Host Connection Type");
   }
 
   private void updateInfraMapping(@Nonnull AwsInfrastructureMapping infrastructureMapping) {
@@ -89,10 +89,10 @@ public class HostConnectionTypeMigration implements Migration {
 
       wingsPersistence.updateFields(AwsInfrastructureMapping.class, infrastructureMapping.getUuid(),
           Collections.singletonMap(AwsInfrastructureMappingKeys.hostConnectionType, hostConnectionType));
-      logger.info(format("%s Updated hostConnectionType to %s for infra mapping Id : %s", DEBUG_LINE,
-          hostConnectionType, infrastructureMapping.getUuid()));
+      log.info(format("%s Updated hostConnectionType to %s for infra mapping Id : %s", DEBUG_LINE, hostConnectionType,
+          infrastructureMapping.getUuid()));
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           format("%s Failure occurred in updating infra mapping id : %s", DEBUG_LINE, infrastructureMapping.getUuid()),
           ex);
     }
@@ -114,11 +114,11 @@ public class HostConnectionTypeMigration implements Migration {
           Collections.singletonMap(
               InfrastructureDefinitionKeys.infrastructure + "." + AwsInstanceInfrastructureKeys.hostConnectionType,
               hostConnectionType));
-      logger.info(format("%s Updated hostConnectionType to %s for infra definition Id : %s", DEBUG_LINE,
+      log.info(format("%s Updated hostConnectionType to %s for infra definition Id : %s", DEBUG_LINE,
           hostConnectionType, infrastructureDefinition.getUuid()));
     } catch (Exception ex) {
-      logger.error(format("%s Failure occurred in updating infra definition id : %s", DEBUG_LINE,
-                       infrastructureDefinition.getUuid()),
+      log.error(format("%s Failure occurred in updating infra definition id : %s", DEBUG_LINE,
+                    infrastructureDefinition.getUuid()),
           ex);
     }
   }

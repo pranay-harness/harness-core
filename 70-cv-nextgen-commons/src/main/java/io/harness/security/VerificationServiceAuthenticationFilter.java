@@ -204,19 +204,19 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
         throw new WingsException(EXPIRED_TOKEN, USER_ADMIN);
       }
     } catch (JWTVerificationException ex) {
-      logger.warn("Error in verifying JWT token ", ex);
+      log.warn("Error in verifying JWT token ", ex);
       throw new WingsException(INVALID_TOKEN);
     } catch (Exception ex) {
-      logger.warn("Error in verifying JWT token ", ex);
+      log.warn("Error in verifying JWT token ", ex);
       throw new WingsException(ex);
     }
   }
 
   protected void validateDelegateToken(String accountId, String tokenString) {
-    logger.info("Delegate token validation, account id [{}] token requested", accountId);
+    log.info("Delegate token validation, account id [{}] token requested", accountId);
     String accountKey = cvNextGenCache.getAccountKey(accountId);
     if (accountKey == null) {
-      logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
+      log.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
       throw new WingsException(ACCESS_DENIED);
     }
 
@@ -224,7 +224,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     try {
       encryptedJWT = EncryptedJWT.parse(tokenString);
     } catch (ParseException e) {
-      logger.error("Invalid token for delegate " + tokenString, e);
+      log.error("Invalid token for delegate " + tokenString, e);
       throw new WingsException(INVALID_TOKEN);
     }
 
@@ -232,7 +232,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     try {
       encodedKey = Hex.decodeHex(accountKey.toCharArray());
     } catch (DecoderException e) {
-      logger.error("Invalid hex account key {}", accountKey, e);
+      log.error("Invalid hex account key {}", accountKey, e);
       throw new WingsException(DEFAULT_ERROR_CODE); // ShouldNotHappen
     }
 
@@ -240,7 +240,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     try {
       decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      logger.error("Invalid account key {}", accountKey, e);
+      log.error("Invalid account key {}", accountKey, e);
       throw new WingsException(DEFAULT_ERROR_CODE);
     }
 

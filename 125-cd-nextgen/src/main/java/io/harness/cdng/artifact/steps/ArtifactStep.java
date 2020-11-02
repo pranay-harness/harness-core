@@ -51,7 +51,7 @@ public class ArtifactStep {
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
   public Task getTask(Ambiance ambiance, ArtifactStepParameters stepParameters) {
-    logger.info("Executing deployment stage with params [{}]", stepParameters);
+    log.info("Executing deployment stage with params [{}]", stepParameters);
     ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     ArtifactSourceDelegateRequest artifactSourceDelegateRequest =

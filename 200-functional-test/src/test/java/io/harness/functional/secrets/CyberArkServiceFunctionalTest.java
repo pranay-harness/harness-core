@@ -64,7 +64,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
     try {
       secretsManagerId = addSecretsManager(cyberArkConfig);
       assertThat(secretsManagerId).isNotNull();
-      logger.info("CyberArk Secret Manager config created.");
+      log.info("CyberArk Secret Manager config created.");
 
       cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, secretsManagerId);
       cyberArkConfig.setDefault(true);
@@ -92,17 +92,17 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       char[] decrypted = secretManagementDelegateService.decrypt(data, cyberArkConfig);
       assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
       String decryptedSecret = String.valueOf(decrypted);
-      logger.info("Decrypted value: {}", decryptedSecret);
+      log.info("Decrypted value: {}", decryptedSecret);
       assertThat(decryptedSecret).isEqualTo(":m23LF6f");
     } finally {
       if (secretId != null) {
         boolean deleted = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
         assertThat(deleted).isTrue();
-        logger.info("Secret with id {} has been deleted: {}", secretId, deleted);
+        log.info("Secret with id {} has been deleted: {}", secretId, deleted);
       }
       if (secretsManagerId != null) {
         deleteSecretsManager(getAccount().getUuid(), secretsManagerId);
-        logger.info("CyberArk Secrets Manager deleted.");
+        log.info("CyberArk Secrets Manager deleted.");
       }
     }
   }

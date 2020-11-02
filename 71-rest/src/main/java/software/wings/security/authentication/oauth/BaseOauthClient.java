@@ -26,17 +26,17 @@ public class BaseOauthClient {
 
   public URI appendStateToURL(URIBuilder uriBuilder) throws URISyntaxException {
     String jwtSecret = secretManager.generateJWTToken(null, JWT_CATEGORY.OAUTH_REDIRECT);
-    logger.info("Status appending to oauth url is [{}]", jwtSecret);
+    log.info("Status appending to oauth url is [{}]", jwtSecret);
     uriBuilder.addParameter(STATE_KEY, jwtSecret);
     return uriBuilder.build();
   }
 
   public void verifyState(String state) {
     try {
-      logger.info("The status received is: [{}]", state);
+      log.info("The status received is: [{}]", state);
       secretManager.verifyJWTToken(state, JWT_CATEGORY.OAUTH_REDIRECT);
     } catch (Exception ex) {
-      logger.warn("State verification failed in oauth.", ex);
+      log.warn("State verification failed in oauth.", ex);
       throw new WingsException("Oauth failed because of state mismatch");
     }
   }
@@ -44,7 +44,7 @@ public class BaseOauthClient {
   protected void populateEmptyFields(OauthUserInfo oauthUserInfo) {
     String email = oauthUserInfo.getEmail();
     String handle = email.substring(0, email.indexOf('@'));
-    logger.info("Populating the name, from email. Email is {} and the new name is {} ", email, handle);
+    log.info("Populating the name, from email. Email is {} and the new name is {} ", email, handle);
     oauthUserInfo.setLogin(Strings.isNullOrBlank(oauthUserInfo.getLogin()) ? handle : oauthUserInfo.getEmail());
     oauthUserInfo.setName(Strings.isNullOrBlank(oauthUserInfo.getName()) ? handle : oauthUserInfo.getName());
   }

@@ -28,7 +28,7 @@ public class MigrateLogDataRecordsToGoogle implements Migration {
   @Override
   public void migrate() {
     if (dataStoreService instanceof MongoDataStoreServiceImpl) {
-      logger.info("Datastore service is an instance of MongoDataStoreServiceImpl. Not migrating the records now.");
+      log.info("Datastore service is an instance of MongoDataStoreServiceImpl. Not migrating the records now.");
       return;
     }
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(7);
@@ -45,13 +45,13 @@ public class MigrateLogDataRecordsToGoogle implements Migration {
         recordsFromMongo.add(records.next());
         if (recordsFromMongo.size() == 1000) {
           dataStoreService.save(LogDataRecord.class, recordsFromMongo, true);
-          logger.info("Copied 1000 L2 records from Mongo to GoogleDataStore");
+          log.info("Copied 1000 L2 records from Mongo to GoogleDataStore");
           recordsFromMongo = new ArrayList<>();
           sleep(ofMillis(1500));
         }
       }
     }
     dataStoreService.save(LogDataRecord.class, recordsFromMongo, true);
-    logger.info("Copied {} L2 records from Mongo to GoogleDataStore", recordsFromMongo.size());
+    log.info("Copied {} L2 records from Mongo to GoogleDataStore", recordsFromMongo.size());
   }
 }

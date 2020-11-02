@@ -415,7 +415,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
           templateFolder.setNodeType(FOLDER.name());
           templateFolder.addChild(folder);
         } else {
-          logger.error("Failed to construct tree from partial list");
+          log.error("Failed to construct tree from partial list");
         }
       } else {
         folder.setNodeType(FOLDER.name());

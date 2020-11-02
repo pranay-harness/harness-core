@@ -129,12 +129,12 @@ public class MorphiaModule extends AbstractModule {
       return;
     }
 
-    logger.info("Checking {} classes", morphia.getMapper().getMappedClasses().size());
+    log.info("Checking {} classes", morphia.getMapper().getMappedClasses().size());
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
       if (!classesProvider.get().contains(cls.getClazz())) {
-        logger.error("Class {} is missing in the registrars", cls.getClazz().getName());
+        log.error("Class {} is missing in the registrars", cls.getClazz().getName());
         success = false;
       }
     }
@@ -155,7 +155,7 @@ public class MorphiaModule extends AbstractModule {
           continue;
         }
 
-        logger.info("Checking registrar {}", clazz.getName());
+        log.info("Checking registrar {}", clazz.getName());
         morphiaRegistrar.testClassesModule();
         morphiaRegistrar.testImplementationClassesModule();
       }

@@ -32,19 +32,19 @@ public class DeploymentReconTask implements Runnable {
           try {
             ReconciliationStatus reconciliationStatus =
                 deploymentReconService.performReconciliation(account.getUuid(), durationStartTs, durationEndTs);
-            logger.info(
+            log.info(
                 "Completed reconciliation for accountID:[{}],accountName:[{}] durationStart:[{}],durationEnd:[{}],status:[{}]",
                 account.getUuid(), account.getAccountName(), new Date(durationStartTs), new Date(durationEndTs),
                 reconciliationStatus);
           } catch (Exception e) {
-            logger.error(
+            log.error(
                 "Error while performing reconciliation for accountID:[{}],accountName:[{}] durationStart:[{}],durationEnd:[{}]",
                 account.getUuid(), account.getAccountName(), new Date(durationStartTs), new Date(durationEndTs), e);
           }
         });
       }
     } catch (Exception e) {
-      logger.error("Failed to run reconcilation", e);
+      log.error("Failed to run reconcilation", e);
     }
   }
 }

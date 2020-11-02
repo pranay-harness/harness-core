@@ -44,13 +44,13 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
   public List<DelegateConnectionResult> validate() {
     HelmCommandRequest commandRequest = (HelmCommandRequest) getParameters()[0];
     ContainerServiceParams params = commandRequest.getContainerServiceParams();
-    logger.info("Running validation for task {} for cluster {}", delegateTaskId, params.getClusterName());
+    log.info("Running validation for task {} for cluster {}", delegateTaskId, params.getClusterName());
 
     boolean validated = false;
     try {
       String errorMsg = validateGitConnectivity(commandRequest);
       if (EmptyPredicate.isNotEmpty(errorMsg)) {
-        logger.warn("This delegate doesn't have Git connectivity, cannot perform helm deployment");
+        log.warn("This delegate doesn't have Git connectivity, cannot perform helm deployment");
         return singletonList(
             DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
       }
@@ -62,13 +62,13 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
         validated = containerValidationHelper.validateContainerServiceParams(params);
-        logger.info("Helm containerServiceParams validation result. Validated: " + validated);
+        log.info("Helm containerServiceParams validation result. Validated: " + validated);
       }
     } catch (Exception e) {
-      logger.error("Helm validation failed", e);
+      log.error("Helm validation failed", e);
     }
 
-    logger.info("HelmCommandValidation result. Validated: " + validated);
+    log.info("HelmCommandValidation result. Validated: " + validated);
 
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
@@ -100,7 +100,7 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       encryptionService.decrypt(gitConfig, encryptionDetails, false);
     } catch (Exception e) {
       String errorMsg = "Failed to Decrypt gitConfig, RepoUrl: " + gitConfig.getRepoUrl();
-      logger.error(errorMsg, e);
+      log.error(errorMsg, e);
       return errorMsg;
     }
 

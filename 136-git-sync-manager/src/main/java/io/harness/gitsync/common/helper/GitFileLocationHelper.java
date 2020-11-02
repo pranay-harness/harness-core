@@ -20,7 +20,7 @@ public class GitFileLocationHelper {
       final String pathWithoutIdentifier = filePath.substring(0, filePath.lastIndexOf(PATH_DELIMITER));
       return pathWithoutIdentifier.substring(0, pathWithoutIdentifier.lastIndexOf(PATH_DELIMITER));
     } catch (Exception e) {
-      logger.error("Not able to find root path for {}", filePath);
+      log.error("Not able to find root path for {}", filePath);
       return "";
     }
   }

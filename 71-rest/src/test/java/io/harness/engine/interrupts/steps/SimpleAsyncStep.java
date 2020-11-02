@@ -36,7 +36,7 @@ public class SimpleAsyncStep implements Step, AsyncExecutable<SimpleStepAsyncPar
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, SimpleStepAsyncParams simpleStepAsyncParams, StepInputPackage inputPackage) {
     String uuid = generateUuid();
-    logger.info("Executing ..." + SimpleAsyncStep.class.getName() + "..duration=" + simpleStepAsyncParams.getDuration()
+    log.info("Executing ..." + SimpleAsyncStep.class.getName() + "..duration=" + simpleStepAsyncParams.getDuration()
         + ", uuid=" + uuid);
     AsyncExecutableResponseBuilder executionResponseBuilder = AsyncExecutableResponse.builder();
     executionResponseBuilder.callbackId(uuid);

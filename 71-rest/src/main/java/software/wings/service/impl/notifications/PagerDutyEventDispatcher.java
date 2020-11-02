@@ -29,8 +29,7 @@ public class PagerDutyEventDispatcher {
 
   public void dispatch(String accountId, List<Notification> notifications, String pagerDutyKey) {
     if (!pagerDutyNotificationFeature.isAvailableForAccount(accountId)) {
-      logger.info(
-          "PagerDuty notification will be ignored since it's an unavailable feature for accountId={}", accountId);
+      log.info("PagerDuty notification will be ignored since it's an unavailable feature for accountId={}", accountId);
       return;
     }
 
@@ -40,13 +39,13 @@ public class PagerDutyEventDispatcher {
 
     for (Notification notification : notifications) {
       if (EventType.CLOSE_ALERT == notification.getEventType()) {
-        logger.info("ignoring close alert for pager duty {}", notification);
+        log.info("ignoring close alert for pager duty {}", notification);
         continue;
       }
       PagerDutyTemplate pagerDutySummaryTemplate =
           notificationMessageResolver.getPagerDutyTemplate(notification.getNotificationTemplateId());
       if (pagerDutySummaryTemplate == null) {
-        logger.error("No pagerDuty template found for templateId {}", notification.getNotificationTemplateId());
+        log.error("No pagerDuty template found for templateId {}", notification.getNotificationTemplateId());
         return;
       }
       pagerDutyService.sendPagerDutyEvent(notification, pagerDutyKey, pagerDutySummaryTemplate);

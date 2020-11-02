@@ -73,7 +73,7 @@ public class InvitesServiceImpl implements InvitesService {
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
           "[Failed]: Failed to mark previous invites as stale; attempt: {}",
-          ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, logger);
+          ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificatonSecret") String jwtPasswordSecret,
@@ -243,9 +243,9 @@ public class InvitesServiceImpl implements InvitesService {
 
     Optional<Invite> returnInviteOptional = Optional.empty();
     if (!inviteOptional.isPresent()) {
-      logger.warn("Invite token {} for usermail expired. Retry", jwtToken);
+      log.warn("Invite token {} for usermail expired. Retry", jwtToken);
     } else if (!inviteOptional.get().getInviteToken().equals(jwtToken)) {
-      logger.warn("Invite token {} is invalid", jwtToken);
+      log.warn("Invite token {} is invalid", jwtToken);
     } else {
       Invite invite = inviteOptional.get();
       Optional<User> userOptional = ngUserService.getUserFromEmail(invite.getAccountIdentifier(), invite.getEmail());

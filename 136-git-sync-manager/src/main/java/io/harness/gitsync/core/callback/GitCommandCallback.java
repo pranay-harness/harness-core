@@ -91,7 +91,7 @@ public class GitCommandCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new GitCommandCallbackLogContext(getContext(), OVERRIDE_ERROR)) {
-      logger.info("Git command response [{}]", response);
+      log.info("Git command response [{}]", response);
 
       DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
       if (notifyResponseData instanceof GitCommandExecutionResponse) {
@@ -103,13 +103,13 @@ public class GitCommandCallback implements NotifyCallback {
             handleDiffCommandFailure(gitCommandExecutionResponse.getErrorCode(), accountId);
           }
           if (changeSetId != null) {
-            logger.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
+            log.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
           }
           return;
         }
 
-        logger.info("Git command [type: {}] request completed with status [{}]", gitCommandType,
+        log.info("Git command [type: {}] request completed with status [{}]", gitCommandType,
             gitCommandExecutionResponse.getGitCommandStatus());
 
         if (gitCommandType == GitCommandType.COMMIT_AND_PUSH) {
@@ -117,11 +117,11 @@ public class GitCommandCallback implements NotifyCallback {
         } else if (gitCommandType == DIFF) {
           handleGitDiff((DiffResult) gitCommandResult);
         } else {
-          logger.warn("Unexpected commandType result: [{}]", gitCommandExecutionResponse.getErrorMessage());
+          log.warn("Unexpected commandType result: [{}]", gitCommandExecutionResponse.getErrorMessage());
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
         }
       } else {
-        logger.warn("Unexpected notify response data: [{}]", notifyResponseData);
+        log.warn("Unexpected notify response data: [{}]", notifyResponseData);
         updateChangeSetFailureStatusSafely();
       }
     }
@@ -134,11 +134,11 @@ public class GitCommandCallback implements NotifyCallback {
       if (isNotEmpty(gitDiffResult.getGitFileChanges())) {
         addActiveGitSyncErrorsToProcessAgain(gitCommandResult, accountId);
       } else {
-        logger.info("No file changes found in git diff. Skip adding active errors for processing");
+        log.info("No file changes found in git diff. Skip adding active errors for processing");
       }
       gitChangeSetProcessor.processGitChangeSet(accountId, gitDiffResult, gitConnectorId, repo, branchName);
     } catch (Exception e) {
-      logger.error("error while processing diff request", e);
+      log.error("error while processing diff request", e);
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
       handleDiffCommandFailure(null, accountId);
     }
@@ -198,7 +198,7 @@ public class GitCommandCallback implements NotifyCallback {
     final List<GitFileChange> activeGitSyncErrorFiles =
         emptyIfNull(getActiveGitSyncErrorFiles(accountId, branchName, repo, gitConnectorId));
 
-    logger.info("Active git sync error files =[{}]",
+    log.info("Active git sync error files =[{}]",
         activeGitSyncErrorFiles.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
 
     if (isNotEmpty(activeGitSyncErrorFiles)) {
@@ -210,7 +210,7 @@ public class GitCommandCallback implements NotifyCallback {
               .filter(gitFileChange -> !filesAlreadyInDiffSet.contains(gitFileChange.getFilePath()))
               .collect(Collectors.toList());
 
-      logger.info("Active git sync error files not in diff =[{}]",
+      log.info("Active git sync error files not in diff =[{}]",
           activeErrorsNotInDiff.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
       activeErrorsNotInDiff.forEach(gitDiffResult::addChangeFile);
     }
@@ -238,11 +238,11 @@ public class GitCommandCallback implements NotifyCallback {
       gitCommitSaved = gitCommitService.save(gitCommit);
     } catch (Exception e) {
       if (e instanceof DuplicateKeyException) {
-        logger.info("This was already persisted in DB. May Happens when 2 successive commits"
+        log.info("This was already persisted in DB. May Happens when 2 successive commits"
             + " are made to git in short duration, and when 2nd commit is done before gitDiff"
             + " for 1st one is in progress");
       } else {
-        logger.warn("Failed to save gitCommit", e);
+        log.warn("Failed to save gitCommit", e);
         // Try again without gitChangeSet and CommandResults.
         gitCommitSaved = gitCommitService.save(gitCommit);
       }
@@ -252,7 +252,7 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
+    log.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
         changeSetId, accountId, response);
     updateChangeSetFailureStatusSafely();
     updateGitCommitFailureSafely();
@@ -285,7 +285,7 @@ public class GitCommandCallback implements NotifyCallback {
     if (isNotEmpty(changeSetId)) {
       final Optional<YamlChangeSet> yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
       if (!yamlChangeSet.isPresent()) {
-        logger.error("no changeset found with id =[{}]", changeSetId);
+        log.error("no changeset found with id =[{}]", changeSetId);
         return;
       }
       final GitWebhookRequestAttributes gitWebhookRequestAttributes =

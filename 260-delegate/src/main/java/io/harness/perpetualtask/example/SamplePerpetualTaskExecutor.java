@@ -25,10 +25,10 @@ public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
     try {
       sleep(10000);
     } catch (InterruptedException e) {
-      logger.error("The Sample PTask is interrupted", e);
+      log.error("The Sample PTask is interrupted", e);
       Thread.currentThread().interrupt();
     }
-    logger.info("The country {} has a population of {}", sampleParams.getCountry(), sampleParams.getPopulation());
+    log.info("The country {} has a population of {}", sampleParams.getCountry(), sampleParams.getPopulation());
     return PerpetualTaskResponse.builder()
         .responseCode(ThreadLocalRandom.current().nextInt(1, 200))
         .responseMessage("success")

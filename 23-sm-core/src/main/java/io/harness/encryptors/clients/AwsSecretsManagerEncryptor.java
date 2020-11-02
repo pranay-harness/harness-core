@@ -75,7 +75,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
             () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig), 10, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "Secret creation failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
@@ -98,7 +98,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
             10, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "Secret update failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
@@ -119,7 +119,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
             () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig), 10, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "Secret update failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
@@ -139,7 +139,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
         new DeleteSecretRequest().withSecretId(existingRecord.getEncryptionKey()).withForceDeleteWithoutRecovery(true);
     DeleteSecretResult result = client.deleteSecret(request);
 
-    logger.info("Done deleting AWS secret {} in {}ms", existingRecord.getEncryptionKey(),
+    log.info("Done deleting AWS secret {} in {}ms", existingRecord.getEncryptionKey(),
         System.currentTimeMillis() - startTime);
     return result != null;
   }
@@ -162,7 +162,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
             () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "Fetching secret failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
@@ -186,7 +186,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
       String name, String value, EncryptedRecord existingSecret, AwsSecretsManagerConfig secretsManagerConfig) {
     final String fullSecretName = getFullPath(secretsManagerConfig.getSecretNamePrefix(), name);
     long startTime = System.currentTimeMillis();
-    logger.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
+    log.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
     AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
 
     boolean secretExists = false;
@@ -216,12 +216,12 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     if (existingSecret != null) {
       final String oldFullSecretName = existingSecret.getEncryptionKey();
       if (!oldFullSecretName.equals(fullSecretName)) {
-        logger.info("Old path of the secret {} is different than the current one {}. Deleting the old secret",
+        log.info("Old path of the secret {} is different than the current one {}. Deleting the old secret",
             oldFullSecretName, fullSecretName);
         deleteSecret(secretsManagerConfig.getAccountId(), existingSecret, secretsManagerConfig);
       }
     }
-    logger.info("Done saving secret {} into AWS Secrets Manager in {} ms", fullSecretName,
+    log.info("Done saving secret {} into AWS Secrets Manager in {} ms", fullSecretName,
         System.currentTimeMillis() - startTime);
     return encryptedRecordDataBuilder.build();
   }
@@ -256,7 +256,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
       decryptedValue = secretValue.toCharArray();
     }
 
-    logger.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
+    log.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
     return decryptedValue;
   }
 

@@ -58,15 +58,15 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
                 .collect(Collectors.toList()));
       }
     });
-    logger.info("Saving " + newRelicMetrics.size() + " metrics");
+    log.info("Saving " + newRelicMetrics.size() + " metrics");
     Map<String, List<NewRelicMetricDataRecord>> group =
         newRelicMetrics.stream().collect(Collectors.groupingBy(NewRelicMetricDataRecord::getHost, Collectors.toList()));
     group.forEach((host, records) -> {
-      logger.info("Saving metric for host {}, number of records {}", host, records.size());
+      log.info("Saving metric for host {}, number of records {}", host, records.size());
       save(dataCollectionInfo, records);
     });
     if (dataCollectionInfo.isShouldSendHeartbeat()) {
-      logger.info("Saving heartbeat");
+      log.info("Saving heartbeat");
       save(dataCollectionInfo, getHeartbeat(dataCollectionInfo));
     }
   }
@@ -112,7 +112,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
     for (Map.Entry<String, String> entry : metricsDataCollectionInfo.getHostsToGroupNameMap().entrySet()) {
       if (!groups.contains(entry.getValue())) {
         int dataCollectionMinute = heartbeatMin;
-        logger.info("Heartbeat min: " + heartbeatMin);
+        log.info("Heartbeat min: " + heartbeatMin);
         if (metricsDataCollectionInfo.getDataCollectionStartTime() != null) {
           // unfortunately there is a inconsistency between how heartbeat is created for workflow and how it's created
           // for service guard.
@@ -121,7 +121,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
                          - TimeUnit.MILLISECONDS.toMinutes(
                                metricsDataCollectionInfo.getDataCollectionStartTime().toEpochMilli()))
                   - 1);
-          logger.info("dataCollectionMinute min: " + dataCollectionMinute);
+          log.info("dataCollectionMinute min: " + dataCollectionMinute);
         }
         newRelicMetrics.add(NewRelicMetricDataRecord.builder()
                                 .stateType(metricsDataCollectionInfo.getStateType())

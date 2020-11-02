@@ -204,7 +204,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       if (bigQueryEx.getCode() == 409) {
         return dataSetName;
       }
-      logger.error("BQ Data Set was not created {} " + bigQueryEx);
+      log.error("BQ Data Set was not created {} " + bigQueryEx);
     }
     return null;
   }

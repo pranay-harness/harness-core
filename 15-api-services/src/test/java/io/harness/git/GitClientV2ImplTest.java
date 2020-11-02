@@ -565,7 +565,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     for (int i = 0; i < 10; i += 3) {
       gitFileChanges.add(GitFileChange.builder().changeType(DELETE).filePath(buildFileName(i)).build());
     }
-    logger.info(gitFileChanges.toString());
+    log.info(gitFileChanges.toString());
     return gitFileChanges;
   }
 

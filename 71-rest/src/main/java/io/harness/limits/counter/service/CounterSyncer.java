@@ -36,7 +36,7 @@ public class CounterSyncer {
 
   public void syncServiceCount(String accountId) {
     if (StringUtils.isEmpty(accountId)) {
-      logger.error("[service-sync] Invalid args: Empty accountId");
+      log.error("[service-sync] Invalid args: Empty accountId");
       return;
     }
 
@@ -50,7 +50,7 @@ public class CounterSyncer {
 
   public void syncPipelineCount(String accountId) {
     if (StringUtils.isEmpty(accountId)) {
-      logger.error("[pipeline-sync] Invalid args: Empty accountId");
+      log.error("[pipeline-sync] Invalid args: Empty accountId");
       return;
     }
 
@@ -64,7 +64,7 @@ public class CounterSyncer {
 
   public void syncWorkflowCount(String accountId) {
     if (StringUtils.isEmpty(accountId)) {
-      logger.error("[workflow-sync] Invalid args: Empty accountId");
+      log.error("[workflow-sync] Invalid args: Empty accountId");
       return;
     }
 

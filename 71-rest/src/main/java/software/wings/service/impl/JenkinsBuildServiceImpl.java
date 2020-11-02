@@ -200,7 +200,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      logger.info("Retrieving Job with details for Job: {}", jobName);
+      log.info("Retrieving Job with details for Job: {}", jobName);
       encryptionService.decrypt(jenkinsConfig, encryptionDetails, false);
       Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
       JobWithDetails jobWithDetails = jenkins.getJobWithDetails(jobName);
@@ -213,11 +213,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
               .map(JobProperty::getParameterDefinitions)
               .filter(Objects::nonNull)
               .forEach((List<ParametersDefinitionProperty> pds) -> {
-                logger.info("Job Properties definitions {}", pds.toArray());
+                log.info("Job Properties definitions {}", pds.toArray());
                 pds.forEach((ParametersDefinitionProperty pdProperty) -> parameters.add(getJobParameter(pdProperty)));
               });
         }
-        logger.info("Retrieving Job with details for Job: {} success", jobName);
+        log.info("Retrieving Job with details for Job: {} success", jobName);
         return new JobDetails(jobWithDetails.getName(), jobWithDetails.getUrl(), parameters);
       }
       return null;

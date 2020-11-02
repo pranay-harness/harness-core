@@ -34,40 +34,40 @@ public class OAuthAllowedProvidersListMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Started OAuthAllowedProvidersListMigration ...");
+    log.info("Started OAuthAllowedProvidersListMigration ...");
     try (HIterator<SSOSettings> ssoSettingsHIterator =
              new HIterator<>(wingsPersistence.createQuery(SSOSettings.class)
                                  .filter(SSOSettingsKeys.type, SSOType.OAUTH.name())
                                  .fetch())) {
       while (ssoSettingsHIterator.hasNext()) {
         SSOSettings ssoSettings = ssoSettingsHIterator.next();
-        logger.info("Updating SSOSetting with UUID {}", ssoSettings.getUuid());
+        log.info("Updating SSOSetting with UUID {}", ssoSettings.getUuid());
         String displayNameInUpperCase;
         UpdateOperations<SSOSettings> operations;
         try {
           if (isEmpty(ssoSettings.getDisplayName())) {
-            logger.warn("Expected displayName to be non-empty");
+            log.warn("Expected displayName to be non-empty");
             continue;
           }
           displayNameInUpperCase = ssoSettings.getDisplayName().toUpperCase();
           operations = wingsPersistence.createUpdateOperations(SSOSettings.class);
         } catch (Exception e) {
-          logger.error("Failed to create Update Operations for SSOSetting with UUID {}", ssoSettings.getUuid());
+          log.error("Failed to create Update Operations for SSOSetting with UUID {}", ssoSettings.getUuid());
           continue;
         }
         try {
-          logger.info("Setting allowedProviders for SSOSetting with UUID {} to {}", ssoSettings.getUuid(),
+          log.info("Setting allowedProviders for SSOSetting with UUID {} to {}", ssoSettings.getUuid(),
               Sets.newHashSet(displayNameInUpperCase));
           operations.set("allowedProviders", Sets.newHashSet(displayNameInUpperCase));
           wingsPersistence.update(ssoSettings, operations);
-          logger.info("Completed updating SSOSetting with UUID {}", ssoSettings.getUuid());
+          log.info("Completed updating SSOSetting with UUID {}", ssoSettings.getUuid());
         } catch (Exception e) {
-          logger.error("Failed to update SSOSetting with UUID {}", ssoSettings.getUuid());
+          log.error("Failed to update SSOSetting with UUID {}", ssoSettings.getUuid());
         }
       }
-      logger.info("Finished OAuthAllowedProvidersListMigration ...");
+      log.info("Finished OAuthAllowedProvidersListMigration ...");
     } catch (Exception ex) {
-      logger.error("OAuthAllowedProvidersListMigration failed.", ex);
+      log.error("OAuthAllowedProvidersListMigration failed.", ex);
     }
   }
 }

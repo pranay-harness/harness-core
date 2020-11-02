@@ -77,7 +77,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
     logsCVConfiguration.setQuery("query1");
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});

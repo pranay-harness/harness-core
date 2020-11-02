@@ -26,15 +26,15 @@ public class TrimURLsForAPMVerificationSettings implements Migration {
                 Arrays.asList("BUG_SNAG", "APM_VERIFICATION", "PROMETHEUS", "DATA_DOG", "DATA_DOG_LOG"))
             .filter("value.url", Pattern.compile("^\\s+|\\s+$"))
             .asList();
-    logger.info("settingAttribute found {}", settingAttributes.size());
+    log.info("settingAttribute found {}", settingAttributes.size());
     settingAttributes.forEach(settingAttribute -> {
       try {
-        logger.info("Updating settingAttribute: {}", settingAttribute.getUuid());
+        log.info("Updating settingAttribute: {}", settingAttribute.getUuid());
         String url = (String) FieldUtils.readField(
             settingAttribute.getValue().getClass().getDeclaredField("url"), settingAttribute.getValue(), true);
-        logger.info("URL is {}", url);
+        log.info("URL is {}", url);
         wingsPersistence.updateField(SettingAttribute.class, settingAttribute.getUuid(), "value.url", url.trim());
-        logger.info("Updated settingAttribute: {} url to {}", settingAttribute.getUuid(), url.trim());
+        log.info("Updated settingAttribute: {} url to {}", settingAttribute.getUuid(), url.trim());
       } catch (IllegalAccessException | NoSuchFieldException e) {
         throw new IllegalStateException(e);
       }

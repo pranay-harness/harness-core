@@ -30,7 +30,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Attributes(required = true, title = "Search Keywords")

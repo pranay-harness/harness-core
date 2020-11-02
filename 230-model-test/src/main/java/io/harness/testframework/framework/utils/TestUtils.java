@@ -40,8 +40,8 @@ public class TestUtils {
       if (inbox.getMessages().size() == 0) {
         return finalEmailId;
       } else {
-        logger.info("Email id collission detected : " + emailId);
-        logger.info("Recreating email id");
+        log.info("Email id collission detected : " + emailId);
+        log.info("Recreating email id");
         emailId = UUID.randomUUID().toString() + System.currentTimeMillis();
       }
     }

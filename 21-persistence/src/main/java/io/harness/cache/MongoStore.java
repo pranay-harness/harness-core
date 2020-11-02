@@ -73,7 +73,7 @@ public class MongoStore implements DistributedStore {
 
       return (T) kryoSerializer.asInflatedObject(cacheEntity.getEntity());
     } catch (RuntimeException ex) {
-      logger.error("Failed to obtain from cache", ex);
+      log.error("Failed to obtain from cache", ex);
     }
     return null;
   }
@@ -118,7 +118,7 @@ public class MongoStore implements DistributedStore {
       hPersistence.upsert(query, updateOperations);
     } catch (MongoCommandException exception) {
       if (ErrorCategory.fromErrorCode(exception.getErrorCode()) != DUPLICATE_KEY) {
-        logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, exception);
+        log.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, exception);
       } else {
         new Exception().addSuppressed(exception);
       }
@@ -127,7 +127,7 @@ public class MongoStore implements DistributedStore {
       // prevent second record being stored, but competing calls will occasionally throw duplicate exception
       IgnoreThrowable.ignoredOnPurpose(ignore);
     } catch (RuntimeException ex) {
-      logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, ex);
+      log.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, ex);
     }
   }
 }

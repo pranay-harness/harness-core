@@ -93,7 +93,7 @@ public class WorkflowStatsDataFetcher
       case APPLICATION:
         return QLWorkflowEntityAggregation.Application;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

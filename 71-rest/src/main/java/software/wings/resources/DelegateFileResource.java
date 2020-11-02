@@ -77,7 +77,7 @@ public class DelegateFileResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("fileBucket") FileBucket fileBucket,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
+    log.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
         delegateId.replaceAll("[\r\n]", ""), taskId.replaceAll("[\r\n]", ""), accountId.replaceAll("[\r\n]", ""),
         fileDetail.toString().replaceAll("[\r\n]", ""));
 
@@ -98,7 +98,7 @@ public class DelegateFileResource {
       String fileId = fileService.saveFile(fileMetadata,
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
           fileBucket);
-      logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
+      log.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
 
       idempotent.succeeded(DelegateFileResource.FileIdempotentResult.builder().fileId(fileId).build());
       return new RestResponse<>(fileId);
@@ -113,7 +113,7 @@ public class DelegateFileResource {
   public RestResponse<String> getFileId(@QueryParam("entityId") @NotEmpty String entityId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") int version,
       @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId.replaceAll("[\r\n]", ""),
+    log.debug("entityId: {}, fileBucket: {}, version: {}", entityId.replaceAll("[\r\n]", ""),
         fileBucket.toString().replaceAll("[\r\n]", ""), version);
     return new RestResponse<>(fileService.getFileIdByVersion(entityId, version, fileBucket));
   }
@@ -141,7 +141,7 @@ public class DelegateFileResource {
   @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.info(
+    log.info(
         "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
     return output -> fileService.downloadToStream(fileId, output, fileBucket);
   }
@@ -153,7 +153,7 @@ public class DelegateFileResource {
   @ExceptionMetered
   public RestResponse<DelegateFile> getFileInfo(@QueryParam("fileId") String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.info(
+    log.info(
         "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
 
     FileMetadata fileMetadata = fileService.getFileMetadata(fileId, fileBucket);

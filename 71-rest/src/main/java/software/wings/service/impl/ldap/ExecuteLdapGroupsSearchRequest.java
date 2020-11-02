@@ -31,8 +31,8 @@ public class ExecuteLdapGroupsSearchRequest implements Function<LdapListGroupsRe
     try {
       searchResult = ldapSearch.execute(ldapListGroupsRequest.getReturnArguments());
     } catch (LdapException le) {
-      logger.error("LdapException occurred while searchGroupbyName for base {} and searchQuery {}",
-          ldapSearch.getBaseDN(), ldapSearch.getSearchFilter(), le);
+      log.error("LdapException occurred while searchGroupbyName for base {} and searchQuery {}", ldapSearch.getBaseDN(),
+          ldapSearch.getSearchFilter(), le);
       searchStatusMessage = le.getResultCode().toString();
     }
 

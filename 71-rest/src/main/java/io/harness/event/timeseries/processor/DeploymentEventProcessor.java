@@ -67,28 +67,28 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           queryResult = queryDataInTimescaleDB(eventInfo, queryStatement);
 
           if (queryResult != null && queryResult.next()) {
-            logger.info(
+            log.info(
                 "WorkflowExecution found:[{}],updating it", eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
             deleteDataInTimescaleDB(eventInfo, deleteStatement);
             insertDataInTimescaleDB(eventInfo, connection, insertStatement);
           } else {
-            logger.info("WorkflowExecution not found:[{}],inserting it",
+            log.info("WorkflowExecution not found:[{}],inserting it",
                 eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
             insertDataInTimescaleDB(eventInfo, connection, insertStatement);
           }
           successful = true;
         } catch (SQLException e) {
-          logger.error("Failed to save deployment data,[{}],retryCount=[{}] ", eventInfo, retryCount++, e);
+          log.error("Failed to save deployment data,[{}],retryCount=[{}] ", eventInfo, retryCount++, e);
         } catch (Exception e) {
-          logger.error("Failed to save deployment data,[{}]", eventInfo, e);
+          log.error("Failed to save deployment data,[{}]", eventInfo, e);
           retryCount = MAX_RETRY_COUNT + 1;
         } finally {
           DBUtils.close(queryResult);
-          logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
+          log.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
-      logger.trace("Not processing deployment time series data:[{}]", eventInfo);
+      log.trace("Not processing deployment time series data:[{}]", eventInfo);
     }
   }
 
@@ -127,7 +127,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
     insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.STATUS));
 
     if (eventInfo.getListData() == null) {
-      logger.warn("TimeSeriesEventInfo has listData=null:[{}]", eventInfo);
+      log.warn("TimeSeriesEventInfo has listData=null:[{}]", eventInfo);
     }
 
     insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.SERVICE_LIST), ++index);

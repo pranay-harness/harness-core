@@ -41,7 +41,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
       ObjectMapper mapper = new ObjectMapper();
       yamlOperationResponse = mapper.readValue(resource.toString(), YamlOperationResponse.class);
     } catch (JSONException | IOException err) {
-      logger.error(err.toString());
+      log.error(err.toString());
     }
     return yamlOperationResponse;
   }
@@ -51,7 +51,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
     try {
       file = ResourceUtils.getFile("classpath:io/harness/yaml/" + appName + ".zip");
     } catch (FileNotFoundException ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
+      log.error(ExceptionUtils.getMessage(ex));
       assertThat(false).isTrue();
     }
     return Setup.portal()
@@ -183,7 +183,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
       assertThat(fileOperationStatus.getYamlFilePath().equals(yamlFilePath));
       assertThat(fileOperationStatus.getStatus().equals(FileOperationStatus.Status.SUCCESS));
     } catch (JSONException | IOException err) {
-      logger.error(err.toString());
+      log.error(err.toString());
     }
   }
 }

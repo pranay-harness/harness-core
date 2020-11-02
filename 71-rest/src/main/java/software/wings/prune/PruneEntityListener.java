@@ -75,11 +75,11 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
     boolean succeeded = true;
     for (T descending : descendingServices) {
       try {
-        logger.info("Pruning descending entities for {} ", descending.getClass());
+        log.info("Pruning descending entities for {} ", descending.getClass());
         lambda.accept(descending);
       } catch (WingsException exception) {
         succeeded = false;
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (RuntimeException e) {
         succeeded = false;
         causeCollection.addCause(e);
@@ -91,10 +91,10 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   }
 
   private boolean prune(Class clz, String appId, String entityId) {
-    logger.info("Pruning Entity {} {} for appId {}", clz.getCanonicalName(), entityId, appId);
+    log.info("Pruning Entity {} {} for appId {}", clz.getCanonicalName(), entityId, appId);
     if (clz.equals(Application.class)) {
       if (!appId.equals(entityId)) {
-        logger.warn("Prune job is incorrectly initialized with entityId: " + entityId + " and appId: " + appId
+        log.warn("Prune job is incorrectly initialized with entityId: " + entityId + " and appId: " + appId
             + " being different for the application class");
         return true;
       }
@@ -135,7 +135,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         pruneTagLinks = true;
         settingsService.pruneBySettingAttribute(appId, entityId);
       } else {
-        logger.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
+        log.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
       }
 
       if (pruneTagLinks) {
@@ -144,10 +144,10 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         } // TODO: ASR check how to handle the feature flag enabled case
       }
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       return false;
     } catch (RuntimeException e) {
-      logger.error("", e);
+      log.error("", e);
       return false;
     }
     return true;
@@ -163,7 +163,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         if (message.getRetries() == MAX_RETRIES) {
           throw new WingsException("The object still exist, lets try later");
         }
-        logger.warn("This warning should be happening very rarely. If you see this often, please investigate.\n"
+        log.warn("This warning should be happening very rarely. If you see this often, please investigate.\n"
             + "The only case this warning should show is if there was a crash or network disconnect in the race of "
             + "the prune job schedule and the parent entity deletion.");
 

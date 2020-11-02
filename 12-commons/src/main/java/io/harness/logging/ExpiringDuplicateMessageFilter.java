@@ -110,8 +110,8 @@ public class ExpiringDuplicateMessageFilter extends TurboFilter {
     return listOfMarkers.stream().map(MarkerFactory::getMarker).collect(toList());
   }
 
-  private String paramsAsString(final Object[] params, final Logger logger) {
-    if (params != null && startsWith(logger.getName(), "com.example")) {
+  private String paramsAsString(final Object[] params, final Logger log) {
+    if (params != null && startsWith(log.getName(), "com.example")) {
       return Arrays.stream(params).map(Object::toString).collect(joining("_"));
     }
 

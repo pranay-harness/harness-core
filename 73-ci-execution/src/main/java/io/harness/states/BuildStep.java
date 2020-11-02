@@ -94,19 +94,19 @@ public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
                                                     .taskDescription("Execute command task")
                                                     .build();
 
-      logger.info("Sending execute command task");
+      log.info("Sending execute command task");
       K8sTaskExecutionResponse k8sTaskExecutionResponse =
           (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.info("Execute command task completed successfully");
+        log.info("Execute command task completed successfully");
         return StepResponse.builder().status(Status.SUCCEEDED).build();
       } else {
-        logger.error(
+        log.error(
             "Execute command task completed with status {}", k8sTaskExecutionResponse.getCommandExecutionStatus());
         return StepResponse.builder().status(Status.FAILED).build();
       }
     } catch (Exception e) {
-      logger.error("Execute command task errored", e);
+      log.error("Execute command task errored", e);
       return StepResponse.builder().status(Status.ERRORED).build();
     }
   }

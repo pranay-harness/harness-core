@@ -44,7 +44,7 @@ public class AppManifestPTaskHelper {
     final String accountId = appManifest.getAccountId();
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ApplicationManifestLogContext(appManifestId, OVERRIDE_ERROR)) {
-      logger.info("Creating perpetual task ");
+      log.info("Creating perpetual task ");
 
       PerpetualTaskClientContext clientContext =
           PerpetualTaskClientContext.builder()
@@ -58,31 +58,31 @@ public class AppManifestPTaskHelper {
 
       Validator.notNullCheck("Error in creating perpetual task for app manifest " + appManifestId, perpetualTaskId);
       if (!applicationManifestService.attachPerpetualTask(accountId, appManifestId, perpetualTaskId)) {
-        logger.error("Unable to attach perpetual task {}", perpetualTaskId);
+        log.error("Unable to attach perpetual task {}", perpetualTaskId);
         deletePerpetualTask(perpetualTaskId, appManifestId, accountId);
       }
 
-      logger.info("Perpetual task created successfully");
+      log.info("Perpetual task created successfully");
     } catch (Exception e) {
-      logger.error("Unable to create perpetual task for app manifest: {}", appManifestId, e);
+      log.error("Unable to create perpetual task for app manifest: {}", appManifestId, e);
     }
   }
 
   public void deletePerpetualTask(String perpetualTaskId, String appManifestId, String accountId) {
     if (!applicationManifestService.detachPerpetualTask(perpetualTaskId, accountId)) {
-      logger.error("Unable to detach perpetual task {} for application manifest {}", perpetualTaskId, appManifestId);
+      log.error("Unable to detach perpetual task {} for application manifest {}", perpetualTaskId, appManifestId);
     }
     if (!perpetualTaskService.deleteTask(accountId, perpetualTaskId)) {
-      logger.error("Unable to delete perpetual task {} for application manifest {}", perpetualTaskId, appManifestId);
+      log.error("Unable to delete perpetual task {} for application manifest {}", perpetualTaskId, appManifestId);
     }
-    logger.info("Successfully deleted perpetual task {}", perpetualTaskId);
+    log.info("Successfully deleted perpetual task {}", perpetualTaskId);
   }
 
   public void resetPerpetualTask(ApplicationManifest appManifest) {
     try (AutoLogContext ignore1 = new AccountLogContext(appManifest.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ApplicationManifestLogContext(appManifest.getUuid(), OVERRIDE_ERROR)) {
       if (!perpetualTaskService.resetTask(appManifest.getAccountId(), appManifest.getPerpetualTaskId(), null)) {
-        logger.error("Unable to reset manifest collection perpetual task: {} ", appManifest.getPerpetualTaskId());
+        log.error("Unable to reset manifest collection perpetual task: {} ", appManifest.getPerpetualTaskId());
       }
     }
   }

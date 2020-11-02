@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 class SonarQubeCoverageReportPrinter {
-  private static final Logger logger = Logger.getLogger(SonarQubeCoverageReportPrinter.class.getName());
+  private static final Logger log = Logger.getLogger(SonarQubeCoverageReportPrinter.class.getName());
   private final BufferedWriter bufferedWriter;
 
   private SonarQubeCoverageReportPrinter(BufferedWriter bufferedWriter) {
@@ -28,7 +28,7 @@ class SonarQubeCoverageReportPrinter {
       printer.print(coverage);
       bufferedWriter.close();
     } catch (IOException exception) {
-      logger.log(Level.SEVERE, "Could not write to output file.");
+      log.log(Level.SEVERE, "Could not write to output file.");
       return false;
     }
     return true;
@@ -67,7 +67,7 @@ class SonarQubeCoverageReportPrinter {
 
       bufferedWriter.write("</coverage>");
     } catch (IOException exception) {
-      logger.log(Level.SEVERE, "Could not write to output file.");
+      log.log(Level.SEVERE, "Could not write to output file.");
       return false;
     }
     return true;

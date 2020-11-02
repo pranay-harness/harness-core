@@ -74,12 +74,12 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
     addMap(HARNESS, true, event.getMDCPropertyMap(), map);
     addThrowableInfo(event, map);
 
-    if (logger.isDebugEnabled() && event.getLevel().toInt() >= Level.INFO.toInt()) {
+    if (log.isDebugEnabled() && event.getLevel().toInt() >= Level.INFO.toInt()) {
       for (Entry<String, String> entry : event.getMDCPropertyMap().entrySet()) {
         if (formattedMessage.contains(entry.getValue())) {
           try (AutoLogContext ignore = new MessagePatternLogContext(event.getMessage(), OVERRIDE_ERROR);
                AutoLogContext ignore2 = new MdcKeyLogContext(entry.getKey(), OVERRIDE_ERROR)) {
-            logger.debug("MDC table and the logging message have the same value {}", entry.getValue());
+            log.debug("MDC table and the logging message have the same value {}", entry.getValue());
           }
         }
       }

@@ -139,7 +139,7 @@ public class ExperimentalMetricResource {
     try {
       analysisService.updateMismatchStatusForExperimentalRecord(stateExecutionId, analysisMinute);
     } catch (Exception e) {
-      logger.info("Exception while updating experimental record {}", stateExecutionId, e);
+      log.info("Exception while updating experimental record {}", stateExecutionId, e);
     }
     return new RestResponse<>(true);
   }

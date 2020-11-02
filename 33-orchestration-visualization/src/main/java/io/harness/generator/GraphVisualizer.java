@@ -129,7 +129,7 @@ public class GraphVisualizer {
       }
 
       visited.add(graphVertex);
-      logger.info(graphVertex.getName() + " ");
+      log.info(graphVertex.getName() + " ");
 
       List<String> childIds = adjacencyList.getAdjacencyMap().get(graphVertex.getUuid()).getEdges();
       String nextId = adjacencyList.getAdjacencyMap().get(graphVertex.getUuid()).getNextIds().get(0);
@@ -165,7 +165,7 @@ public class GraphVisualizer {
     }
 
     visited.add(graphVertex.getUuid());
-    logger.info(graphVertex.getName() + " ");
+    log.info(graphVertex.getName() + " ");
 
     EdgeList edgeList = adjacencyList.getAdjacencyMap().get(nodeId);
     for (String child : edgeList.getEdges()) {

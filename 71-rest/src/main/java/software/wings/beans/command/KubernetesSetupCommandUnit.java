@@ -474,7 +474,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           // This should not halt workflow execution.
           downsizeOldOrUnhealthy(kubernetesConfig, containerServiceName, setupParams, executionLogCallback);
         } catch (Exception e) {
-          logger.warn("Cleaning up of old or unhealthy instances failed while setting up Kubernetes service: ", e);
+          log.warn("Cleaning up of old or unhealthy instances failed while setting up Kubernetes service: ", e);
         }
         if (setupParams.isUseNewLabelMechanism()) {
           cleanupWithLabels(kubernetesConfig, executionLogCallback);
@@ -504,7 +504,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       return CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex), ex);
+      log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       return CommandExecutionStatus.FAILURE;
     } finally {
@@ -717,7 +717,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
           }
         } catch (Exception e) {
-          logger.error("Couldn't delete service {}", kubernetesServiceName, e);
+          log.error("Couldn't delete service {}", kubernetesServiceName, e);
         }
       }
       return null;
@@ -757,7 +757,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceToCreate.getMetadata().getName());
-    logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
+    log.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
     service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceToCreate);
     serviceClusterIP = service.getSpec().getClusterIP();
 
@@ -851,7 +851,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           kubernetesContainerService.deleteIstioDestinationRule(kubernetesConfig, virtualServiceName);
         }
       } catch (Exception e) {
-        logger.error("Error checking for previous istio route", e);
+        log.error("Error checking for previous istio route", e);
         Misc.logAllMessages(e, executionLogCallback);
       }
     }
@@ -995,7 +995,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         return toYaml(controller);
       } catch (IOException e) {
-        logger.error("Error converting controller to yaml: {}", containerServiceName);
+        log.error("Error converting controller to yaml: {}", containerServiceName);
       }
     }
     return null;
@@ -1007,7 +1007,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         return toYaml(configMap);
       } catch (IOException e) {
-        logger.error("Error converting configMap to yaml: {}", containerServiceName);
+        log.error("Error converting configMap to yaml: {}", containerServiceName);
       }
     }
     return null;
@@ -1019,7 +1019,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         return toYaml(secretMap);
       } catch (IOException e) {
-        logger.error("Error converting secretMap to yaml: {}", containerServiceName);
+        log.error("Error converting secretMap to yaml: {}", containerServiceName);
       }
     }
     return null;
@@ -1031,7 +1031,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         return toYaml(hpa);
       } catch (IOException e) {
-        logger.error("Error converting horizontal pod autoscaler to yaml: {}", containerServiceName);
+        log.error("Error converting horizontal pod autoscaler to yaml: {}", containerServiceName);
       }
     }
     return null;
@@ -1807,7 +1807,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             String controllerName = ctrl.getMetadata().getName();
             Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName);
             if (ctrlRevision.isPresent()) {
-              logger.info("Deleting old version: " + controllerName);
+              log.info("Deleting old version: " + controllerName);
               executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
               try {
                 kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
@@ -1836,7 +1836,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .forEach(ctrl -> {
           String controllerName = ctrl.getMetadata().getName();
-          logger.info("Deleting old version: " + controllerName);
+          log.info("Deleting old version: " + controllerName);
           executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
           try {
             kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
@@ -1861,7 +1861,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             service -> isEmpty(kubernetesContainerService.getPods(kubernetesConfig, service.getSpec().getSelector())))
         .forEach(service -> {
           String serviceName = service.getMetadata().getName();
-          logger.info("Deleting old service: " + serviceName);
+          log.info("Deleting old service: " + serviceName);
           executionLogCallback.saveExecutionLog("Deleting old service: " + serviceName);
           try {
             kubernetesContainerService.deleteService(kubernetesConfig, serviceName);
@@ -1939,7 +1939,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             format("%nIngress Rule: %s : %s %s → %s", isNotBlank(host) ? host : "", port, path, serviceName));
       }
     } catch (Exception e) {
-      logger.error("Couldn't get path from ingress rule.", e);
+      log.error("Couldn't get path from ingress rule.", e);
       executionLogCallback.saveExecutionLog(
           "Error getting Ingress rule - " + ExceptionUtils.getMessage(e), LogLevel.WARN);
     }

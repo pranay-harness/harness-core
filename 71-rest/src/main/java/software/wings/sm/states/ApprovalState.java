@@ -248,7 +248,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           new HashMap<>(placeholderValues), context, approvalStateType);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
-      logger.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
+      log.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
     }
 
     WorkflowExecution workflowExecution =
@@ -326,7 +326,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .build();
       }
     } catch (JexlException je) {
-      logger.error("Skip Assertion Evaluation Failed", je);
+      log.error("Skip Assertion Evaluation Failed", je);
       String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
       if (jexlError.contains(":")) {
         jexlError = jexlError.split(":")[1];
@@ -337,7 +337,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage("Skip Assertion Evaluation Failed : " + jexlError)
               .stateExecutionData(executionData));
     } catch (Exception e) {
-      logger.error("Skip Assertion Evaluation Failed", e);
+      log.error("Skip Assertion Evaluation Failed", e);
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -507,7 +507,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       try {
         validateRequiredFields(context, jiraApprovalParams);
       } catch (HarnessJiraException e) {
-        logger.error("Failing Approval Step due to: ", e);
+        log.error("Failing Approval Step due to: ", e);
         return respondWithStatus(context, executionData, null,
             ExecutionResponse.builder()
                 .executionStatus(FAILED)
@@ -554,7 +554,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
 
     // Create a cron job which polls JIRA for approval status
-    logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
+    log.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
     ApprovalPollingJobEntity approvalPollingJobEntity =
         ApprovalPollingJobEntity.builder()
             .accountId(app.getAccountId())
@@ -676,8 +676,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       if (we.getParams() != null && we.getParams().get("message") != null) {
         errorMessage = we.getParams().get("message").toString();
       }
-      logger.error(
-          "Exception while executing service now approval in workflow: {}", context.getWorkflowExecutionId(), we);
+      log.error("Exception while executing service now approval in workflow: {}", context.getWorkflowExecutionId(), we);
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -690,7 +689,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private ExecutionResponse createApprovalPollingJob(ExecutionContext context, ApprovalStateExecutionData executionData,
       String approvalId, ServiceNowApprovalParams servicenowApprovalParams, Application app) {
     // Create a cron job which polls ServiceNow for approval status
-    logger.info("IssueId = {} while creating ServiceNow polling Job", servicenowApprovalParams.getIssueNumber());
+    log.info("IssueId = {} while creating ServiceNow polling Job", servicenowApprovalParams.getIssueNumber());
     ApprovalPollingJobEntity approvalPollingJobEntity =
         ApprovalPollingJobEntity.builder()
             .accountId(app.getAccountId())
@@ -968,7 +967,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       case SHELL_SCRIPT:
         break;
       default:
-        logger.warn("Unsupported approval type ", executionData.getApprovalStateType());
+        log.warn("Unsupported approval type ", executionData.getApprovalStateType());
     }
 
     // Slack Approval
@@ -1012,7 +1011,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     setPipelineVariables(context);
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
-    logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
+    log.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
     approvalPolingService.delete(executionData.getApprovalId());
 
@@ -1028,7 +1027,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
 
-    logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
+    log.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
     approvalPolingService.delete(executionData.getApprovalId());
 

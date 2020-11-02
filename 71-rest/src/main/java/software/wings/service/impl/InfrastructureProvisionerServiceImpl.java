@@ -377,8 +377,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     PageResponse<InfrastructureProvisioner> pageResponse =
         resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PROVISIONER, withTags);
 
-    logger.info(
-        format("Time taken in fetching listWithTagFilters : [%s] ms", System.currentTimeMillis() - apiStartTime));
+    log.info(format("Time taken in fetching listWithTagFilters : [%s] ms", System.currentTimeMillis() - apiStartTime));
     long startTime = System.currentTimeMillis();
 
     Set<String> settingAttributeIds = new HashSet<>();
@@ -399,18 +398,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     Map<String, SettingAttribute> idToSettingAttributeMapping =
         getIdToSettingAttributeMapping(appService.getAccountIdByAppId(appId), settingAttributeIds);
 
-    logger.info(
-        format("Time taken in getIdToSettingAttributeMapping : [%s] ms", System.currentTimeMillis() - startTime));
+    log.info(format("Time taken in getIdToSettingAttributeMapping : [%s] ms", System.currentTimeMillis() - startTime));
     startTime = System.currentTimeMillis();
 
-    logger.info("Time taken in idToServiceMapping : [{}] ms", System.currentTimeMillis() - startTime);
+    log.info("Time taken in idToServiceMapping : [{}] ms", System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
 
     PageResponse<InfrastructureProvisionerDetails> infrastructureProvisionerDetails = new PageResponse<>();
     infrastructureProvisionerDetails.setResponse(
         pageResponse.getResponse().stream().map(item -> details(item, idToSettingAttributeMapping)).collect(toList()));
-    logger.info("Time taken in setting details : [{}] ms", System.currentTimeMillis() - startTime);
-    logger.info("Time taken by details api : [{}] ms", System.currentTimeMillis() - apiStartTime);
+    log.info("Time taken in setting details : [{}] ms", System.currentTimeMillis() - startTime);
+    log.info("Time taken by details api : [{}] ms", System.currentTimeMillis() - apiStartTime);
     return infrastructureProvisionerDetails;
   }
 
@@ -556,7 +554,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         if (!infraRefactor || property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
           throw new InvalidRequestException(format("Unable to resolve \"%s\" ", property.getValue()), USER);
         }
-        logger.info("Unresolved expression \"{}\" ", property.getValue());
+        log.info("Unresolved expression \"{}\" ", property.getValue());
         evaluated = property.getValue();
       }
       propertyNameEvaluatedMap.put(property.getName(), evaluated);

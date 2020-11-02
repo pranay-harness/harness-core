@@ -24,6 +24,6 @@ public class ExceptionMessageProcessor implements MessageProcessor {
                                      .clusterId(exceptionMessage.getClusterId())
                                      .message(exceptionMessage.getMessage())
                                      .build());
-    logger.info("Saved CE exception messages.");
+    log.info("Saved CE exception messages.");
   }
 }

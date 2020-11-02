@@ -69,7 +69,7 @@ public class ExportExecutionsNotificationHelper {
 
   private Notification prepareNotification(@NotNull ExportExecutionsRequest request) {
     if (request.getStatus() != Status.READY && request.getStatus() != Status.FAILED) {
-      logger.warn(
+      log.warn(
           format("Invalid status [%s] found while notifying users of export executions request", request.getStatus()));
       return null;
     }

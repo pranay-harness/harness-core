@@ -81,7 +81,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
     owners = ownerManager.create();
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AZURE_HELM);
-    logger.info("Ensured Infra def");
+    log.info("Ensured Infra def");
     resetCache(owners.obtainAccount().getUuid());
   }
 
@@ -91,20 +91,20 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
   @Ignore("Working locally, need to install helm on Jenkins box")
   public void testHelmS3WorkflowExecution() {
     Service helmS3Service = createHelm3S3Service();
-    logger.info("Created Service");
+    log.info("Created Service");
     addValuesYamlToService(helmS3Service);
-    logger.info("Added values.yaml to service");
+    log.info("Added values.yaml to service");
     workflow = ensureWorkflow(helmS3Service, infrastructureDefinition);
-    logger.info("Ensured workflow");
+    log.info("Ensured workflow");
     workflow = updateReleaseNameInWorkflow(workflow);
-    logger.info("Updated release name in workflow");
+    log.info("Updated release name in workflow");
 
     resetCache(owners.obtainAccount().getUuid());
     ExecutionArgs executionArgs = getExecutionArgs();
 
     WorkflowExecution workflowExecution = WorkflowRestUtils.startWorkflow(
         bearerToken, helmS3Service.getAppId(), infrastructureDefinition.getEnvId(), executionArgs);
-    logger.info("Started workflow execution");
+    log.info("Started workflow execution");
     resetCache(owners.obtainAccount().getUuid());
 
     workflowUtils.checkForWorkflowSuccess(workflowExecution);

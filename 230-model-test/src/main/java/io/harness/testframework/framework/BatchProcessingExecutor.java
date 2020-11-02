@@ -52,7 +52,7 @@ public class BatchProcessingExecutor {
         if (isHealthy()) {
           return;
         }
-        logger.info("Execute the batch-processing from {}", directory);
+        log.info("Execute the batch-processing from {}", directory);
         Path jar = Paths.get(directory.getPath(), "280-batch-processing", "target", "batch-processing-capsule.jar");
         Path config = Paths.get(directory.getPath(), "280-batch-processing", "batch-processing-config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
@@ -70,7 +70,7 @@ public class BatchProcessingExecutor {
         FileUtils.deleteQuietly(livenessMarker.toFile());
 
         for (int i = 0; i < 10; i++) {
-          logger.info("***");
+          log.info("***");
         }
 
         List<String> command = new ArrayList<>();
@@ -88,14 +88,14 @@ public class BatchProcessingExecutor {
         command.add("--config-file=" + config.toString());
         command.add("--ensure-timescale=false");
 
-        logger.info(Strings.join(command, " "));
+        log.info(Strings.join(command, " "));
 
         ProcessExecutor processExecutor = new ProcessExecutor();
         processExecutor.directory(directory);
         processExecutor.command(command);
 
-        processExecutor.redirectOutput(Slf4jStream.of(logger).asInfo());
-        processExecutor.redirectError(Slf4jStream.of(logger).asError());
+        processExecutor.redirectOutput(Slf4jStream.of(log).asInfo());
+        processExecutor.redirectError(Slf4jStream.of(log).asError());
 
         final StartedProcess startedProcess = processExecutor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(startedProcess.getProcess()::destroy));
@@ -114,7 +114,7 @@ public class BatchProcessingExecutor {
       return false;
     }
     File livenessFile = livenessMarker.toFile();
-    logger.info("Checking for liveness marker {}", livenessFile.getAbsolutePath());
+    log.info("Checking for liveness marker {}", livenessFile.getAbsolutePath());
     return livenessFile.exists();
   }
 

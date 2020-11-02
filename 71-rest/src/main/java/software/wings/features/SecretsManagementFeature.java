@@ -55,7 +55,7 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
   public boolean isAvailable(String accountType) {
     boolean result = (boolean) getRestrictions(accountType).getOrDefault("isCustomSecretManagerAllowed", true);
 
-    logger.info("Is custom secret manager usage allowed for account type {}? {}", accountType, result);
+    log.info("Is custom secret manager usage allowed for account type {}? {}", accountType, result);
     return result;
   }
 
@@ -79,7 +79,7 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
                                    .map(SecretsManagementFeature::toUsage)
                                    .collect(Collectors.toList());
 
-    logger.info("Secret manager usages in account {} are: {}", accountId, usages);
+    log.info("Secret manager usages in account {} are: {}", accountId, usages);
     return usages;
   }
 

@@ -24,7 +24,7 @@ public class DummyStep implements Step, SyncExecutable<DummyStepParameters> {
   @Override
   public StepResponse executeSync(Ambiance ambiance, DummyStepParameters dummyStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
-    logger.info("Dummy Step getting executed. Identifier: {}", ambiance.obtainCurrentLevel().getIdentifier());
+    log.info("Dummy Step getting executed. Identifier: {}", ambiance.obtainCurrentLevel().getIdentifier());
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

@@ -331,7 +331,7 @@ public class ArtifactCollectionUtils {
   }
 
   private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {
-    logger.info("Entering getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
+    log.info("Entering getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
 
     try {
       ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
@@ -444,7 +444,7 @@ public class ArtifactCollectionUtils {
         String repositoryName =
             ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(),
                 nexusArtifactStream.getDockerRegistryUrl(), nexusArtifactStream.getImageName());
-        logger.info("Nexus Registry url: " + registryUrl);
+        log.info("Nexus Registry url: " + registryUrl);
         if (nexusConfig.hasCredentials()) {
           imageDetailsBuilder.name(repositoryName)
               .sourceName(nexusArtifactStream.getSourceName())
@@ -464,7 +464,7 @@ public class ArtifactCollectionUtils {
       }
       return imageDetailsBuilder.build();
     } finally {
-      logger.info("Exiting getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
+      log.info("Exiting getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
     }
   }
 
@@ -868,7 +868,7 @@ public class ArtifactCollectionUtils {
     String action = isCollection ? "collection" : "cleanup";
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
       if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
-        logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
+        log.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
             artifactStream.getUuid(), action);
         return true;
       }
@@ -879,7 +879,7 @@ public class ArtifactCollectionUtils {
     }
 
     if (artifactStream.getFailedCronAttempts() > ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS) {
-      logger.warn(
+      log.warn(
           "{}: Artifact {} disabled for artifactStream due to too many failures, type: {}, id: {}, failed count: {}",
           prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
           artifactStream.getFailedCronAttempts());
@@ -888,8 +888,7 @@ public class ArtifactCollectionUtils {
 
     if (EmptyPredicate.isEmpty(artifactStream.getAccountId())) {
       // Ideally, we should clean up these artifact streams.
-      logger.warn(
-          "{}: Artifact {} disabled for artifactStream due to empty accountId, type: {}, id: {}, failed count: {}",
+      log.warn("{}: Artifact {} disabled for artifactStream due to empty accountId, type: {}, id: {}, failed count: {}",
           prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
           artifactStream.getFailedCronAttempts());
       return true;
@@ -902,8 +901,7 @@ public class ArtifactCollectionUtils {
             format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()), USER);
       }
       if (isNotBlank(settingAttribute.getConnectivityError())) {
-        logger.info(
-            "{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
+        log.info("{}: Skipping {} for artifact stream: {}, because of connectivity error in setting: {} and error: {}",
             prefix, action, artifactStream.getUuid(), artifactStream.getSettingId(),
             settingAttribute.getConnectivityError());
         return true;
@@ -911,7 +909,7 @@ public class ArtifactCollectionUtils {
     }
 
     if (artifactStream.isArtifactStreamParameterized()) {
-      logger.info(
+      log.info(
           format("Skipping artifact collection through iterator for artifact stream [%s] since it is parameterized",
               artifactStream.getUuid()));
       return true;
@@ -967,7 +965,7 @@ public class ArtifactCollectionUtils {
       return new ArrayList<>();
     }
     if (artifactStream == null) {
-      logger.info("Artifact stream does not exist. Returning");
+      log.info("Artifact stream does not exist. Returning");
       return new ArrayList<>();
     }
 

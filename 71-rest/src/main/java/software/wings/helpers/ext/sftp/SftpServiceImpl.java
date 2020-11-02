@@ -49,7 +49,7 @@ public class SftpServiceImpl implements SftpService {
     try {
       buildDetailsList = sftpHelperService.getArtifactDetails(sftpConfig, encryptionDetails, artifactPaths);
     } catch (Exception e) {
-      logger.error("Error while retrieving artifacts build details from SFTP Server : {}", sftpConfig.getSftpUrl());
+      log.error("Error while retrieving artifacts build details from SFTP Server : {}", sftpConfig.getSftpUrl());
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
     return buildDetailsList;

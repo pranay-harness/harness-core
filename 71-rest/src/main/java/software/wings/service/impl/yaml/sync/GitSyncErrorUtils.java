@@ -22,7 +22,7 @@ public class GitSyncErrorUtils {
       GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
       return gitToHarnessErrorDetails.getGitCommitId();
     }
-    logger.warn("The commitId is specific to the git to harness error, it should not be called for harness to git");
+    log.warn("The commitId is specific to the git to harness error, it should not be called for harness to git");
     return EMPTY_STR;
   }
 
@@ -31,7 +31,7 @@ public class GitSyncErrorUtils {
       GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
       return gitToHarnessErrorDetails.getYamlContent();
     }
-    logger.warn("The yaml content is specific to the git to harness error, it should not be called for harness to git");
+    log.warn("The yaml content is specific to the git to harness error, it should not be called for harness to git");
     return EMPTY_STR;
   }
 
@@ -41,7 +41,7 @@ public class GitSyncErrorUtils {
       return gitToHarnessErrorDetails.getCommitTime();
     }
 
-    logger.warn("The commitTime is specific to the git to harness error, it should not be called for harness to git");
+    log.warn("The commitTime is specific to the git to harness error, it should not be called for harness to git");
     return DEFAULT_COMMIT_TIME;
   }
 
@@ -51,8 +51,7 @@ public class GitSyncErrorUtils {
       return gitToHarnessErrorDetails.getCommitMessage();
     }
 
-    logger.warn(
-        "The commitMessage is specific to the git to harness error, it should not be called for harness to git");
+    log.warn("The commitMessage is specific to the git to harness error, it should not be called for harness to git");
     return EMPTY_STR;
   }
 

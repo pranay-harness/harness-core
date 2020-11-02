@@ -38,7 +38,7 @@ public class SplunkTestConnectionDelegateTask extends AbstractDelegateRunnableTa
       validCredentails = splunkDelegateService.validateConfig(
           taskParameters.getSplunkConnectorDTO(), taskParameters.getEncryptionDetails());
     } catch (Exception ex) {
-      logger.info("Exception while validating appdynamics credentials", ex);
+      log.info("Exception while validating appdynamics credentials", ex);
       execptionInProcessing = ex;
     }
 

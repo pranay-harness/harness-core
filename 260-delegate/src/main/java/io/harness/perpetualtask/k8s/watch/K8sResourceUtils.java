@@ -162,7 +162,7 @@ public class K8sResourceUtils {
           ofNullable(resources.getRequests().get(K8S_STORAGE_RESOURCE)).map(x -> x.getNumber().longValue()).orElse(0L));
       return storageRequestBuilder.setUnit("B").build();
     }
-    logger.warn("Returning default storge value");
+    log.warn("Returning default storge value");
     // no unit when the value is default.
     return storageRequestBuilder.setAmount(0L).build();
   }
@@ -174,7 +174,7 @@ public class K8sResourceUtils {
           ofNullable(spec.getCapacity().get(K8S_STORAGE_RESOURCE)).map(x -> x.getNumber().longValue()).orElse(0L));
       return storageRequestBuilder.setUnit("B").build();
     }
-    logger.warn("Returning default storge value");
+    log.warn("Returning default storge value");
     // no unit when the value is default.
     return storageRequestBuilder.setAmount(0L).build();
   }

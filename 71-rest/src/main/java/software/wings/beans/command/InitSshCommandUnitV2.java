@@ -117,13 +117,13 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
-      logger.error("Error in InitCommandUnit", e);
+      log.error("Error in InitCommandUnit", e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
     try {
       createPreparedCommands(command);
     } catch (IOException | TemplateException e) {
-      logger.error("Failed in preparing commands ", e);
+      log.error("Failed in preparing commands ", e);
     }
     context.addEnvVariables(envVariables);
     return commandExecutionStatus;

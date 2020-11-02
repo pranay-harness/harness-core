@@ -36,7 +36,7 @@ public class InviteRepositoryCustomImpl implements InviteRepositoryCustom {
   private final RetryPolicy<Object> updateRetryPolicy = RetryUtils.getRetryPolicy(
       "[Retrying]: Failed updating Invite; attempt: {}", "[Failed]: Failed updating Invite; attempt: {}",
       ImmutableList.of(OptimisticLockingFailureException.class, DuplicateKeyException.class), Duration.ofSeconds(1), 3,
-      logger);
+      log);
 
   @Override
   public Page<Invite> findAll(Criteria criteria, Pageable pageable) {

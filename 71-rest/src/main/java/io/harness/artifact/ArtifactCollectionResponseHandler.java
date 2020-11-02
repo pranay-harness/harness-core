@@ -61,7 +61,7 @@ public class ArtifactCollectionResponseHandler {
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       ArtifactStream artifactStream = artifactStreamService.get(buildSourceExecutionResponse.getArtifactStreamId());
       if (artifactStream == null) {
-        logger.warn("Got empty artifact stream in buildSourceExecutionResponse");
+        log.warn("Got empty artifact stream in buildSourceExecutionResponse");
         artifactStreamPTaskHelper.deletePerpetualTask(accountId, perpetualTaskId);
         return;
       }
@@ -82,7 +82,7 @@ public class ArtifactCollectionResponseHandler {
           handleResponseInternal(artifactStream, buildSourceExecutionResponse);
           onSuccess(artifactStream);
         } catch (Exception ex) {
-          logger.error("Error while processing artifact collection", ex);
+          log.error("Error while processing artifact collection", ex);
         }
       }
     }
@@ -108,11 +108,11 @@ public class ArtifactCollectionResponseHandler {
     }
 
     if (artifacts.size() > MAX_ARTIFACTS_COLLECTION_FOR_WARN) {
-      logger.warn("Collected {} artifacts in single collection", artifacts.size());
+      log.warn("Collected {} artifacts in single collection", artifacts.size());
     }
 
     artifacts.stream().limit(MAX_LOGS).forEach(
-        artifact -> logger.info("New build number [{}] collected", artifact.getBuildNo()));
+        artifact -> log.info("New build number [{}] collected", artifact.getBuildNo()));
 
     if (buildSourceResponse.isStable()) {
       triggerService.triggerExecutionPostArtifactCollectionAsync(
@@ -126,7 +126,7 @@ public class ArtifactCollectionResponseHandler {
       return;
     }
 
-    logger.info("Artifact cleanup started");
+    log.info("Artifact cleanup started");
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
             featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifactStream.getAccountId()));
@@ -134,7 +134,7 @@ public class ArtifactCollectionResponseHandler {
     Set<String> artifactKeys = buildSourceResponse.getToBeDeletedKeys();
     boolean deleted =
         artifactService.deleteArtifactsByUniqueKey(artifactStream, artifactStreamAttributes, artifactKeys);
-    logger.info("Artifact cleanup completed: deleted = {}, count = {}", deleted, artifactKeys.size());
+    log.info("Artifact cleanup completed: deleted = {}, count = {}", deleted, artifactKeys.size());
   }
 
   private void onSuccess(ArtifactStream artifactStream) {
@@ -142,7 +142,7 @@ public class ArtifactCollectionResponseHandler {
       return;
     }
 
-    logger.info("Successfully fetched builds after {} failures", artifactStream.getFailedCronAttempts());
+    log.info("Successfully fetched builds after {} failures", artifactStream.getFailedCronAttempts());
     artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifactStream.getUuid(), 0);
     alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
         ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
@@ -156,7 +156,7 @@ public class ArtifactCollectionResponseHandler {
 
     artifactStreamService.updateFailedCronAttempts(
         artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
-    logger.warn("Failed to fetch/process builds, total failed attempts: {}", failedCronAttempts);
+    log.warn("Failed to fetch/process builds, total failed attempts: {}", failedCronAttempts);
     if (failedCronAttempts != MAX_FAILED_ATTEMPTS) {
       return;
     }

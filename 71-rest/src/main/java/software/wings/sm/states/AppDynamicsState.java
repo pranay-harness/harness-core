@@ -182,7 +182,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
           "Invalid expression for tier", "If application is an expression then tier should be an expression as well");
     }
 
-    logger.info("AppDynamics State Validated");
+    log.info("AppDynamics State Validated");
     return results;
   }
 
@@ -305,7 +305,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     List<DelegateTask> delegateTasks = new ArrayList<>();
     String[] waitIds = new String[dependentTiers.size() + 1];
-    logger.info("Creating AppDynamics Delegate Task for AppD applicationId : {} Tier Id : {}", applicationId, tierId);
+    log.info("Creating AppDynamics Delegate Task for AppD applicationId : {} Tier Id : {}", applicationId, tierId);
     waitIds[0] = createDelegateTask(context, analyzedTierAnalysisType == PREDICTIVE ? Collections.emptyMap() : hosts,
         envId, applicationId, Long.parseLong(tierId), appDynamicsConfig, dataCollectionStartTimeStamp,
         analyzedTierAnalysisType, delegateTasks);
@@ -424,7 +424,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   @SchemaIgnore
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -504,7 +504,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     if (appDMetrics.containsKey(metricName)) {
       return appDMetrics.get(metricName).getMetricType().name();
     }
-    logger.error("Invalid metricName in AppDynamics {}", metricName);
+    log.error("Invalid metricName in AppDynamics {}", metricName);
     return null;
   }
 

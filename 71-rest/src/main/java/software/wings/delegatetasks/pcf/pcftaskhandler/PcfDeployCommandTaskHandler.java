@@ -166,7 +166,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
           FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
         }
       } catch (IOException e) {
-        logger.warn("Failed to delete Temp Directory created for CF CLI login", e);
+        log.warn("Failed to delete Temp Directory created for CF CLI login", e);
       }
     }
 
@@ -187,7 +187,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void logException(
       ExecutionLogCallback executionLogCallback, PcfCommandDeployRequest pcfCommandDeployRequest, Exception exception) {
-    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Deploy task [{}]",
         pcfCommandDeployRequest, exception);
 
     executionLogCallback.saveExecutionLog("\n\n--------- PCF Resize failed to complete successfully", ERROR, FAILURE);

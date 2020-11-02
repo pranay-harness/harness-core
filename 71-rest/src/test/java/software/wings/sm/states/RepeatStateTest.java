@@ -127,8 +127,8 @@ public class RepeatStateTest extends WingsBaseTest {
     assertThat(response.getCorrelationIds()).isNotNull();
     assertThat(response.getCorrelationIds().size()).as("correlationIds").isEqualTo(corrIdsExpected);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("correlationIds: " + response.getCorrelationIds());
+    if (log.isDebugEnabled()) {
+      log.debug("correlationIds: " + response.getCorrelationIds());
     }
   }
 

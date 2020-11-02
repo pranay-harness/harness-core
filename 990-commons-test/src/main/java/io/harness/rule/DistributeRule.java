@@ -24,7 +24,7 @@ public class DistributeRule implements TestRule {
       if (worker >= 0 && worker < workers) {
         CURRENT_WORKER = worker;
         TOTAL_WORKERS = workers;
-        logger.info("Distributed test execution on {} workers", TOTAL_WORKERS);
+        log.info("Distributed test execution on {} workers", TOTAL_WORKERS);
       }
     }
   }

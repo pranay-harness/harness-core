@@ -14,6 +14,6 @@ import javax.sql.DataSource;
 public class NoPersistenceBatchConfigurer extends DefaultBatchConfigurer {
   @Override
   public void setDataSource(DataSource dataSource) {
-    logger.debug("Using in memory job repository");
+    log.debug("Using in memory job repository");
   }
 }

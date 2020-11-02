@@ -65,7 +65,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    logger.info("Running BillingDataGeneratedMailTasklet for accountId : {}", accountId);
+    log.info("Running BillingDataGeneratedMailTasklet for accountId : {}", accountId);
     boolean notificationSend = notificationDao.isMailSent(accountId);
     if (!notificationSend) {
       long firstEventTime = getFirstDataRecordTime(accountId);
@@ -73,7 +73,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
       if (cutoffTime >= firstEventTime) {
         notificationSend = true;
         notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
-        logger.info("Old account, accountId : {} , First event time : {}", accountId, firstEventTime);
+        log.info("Old account, accountId : {} , First event time : {}", accountId, firstEventTime);
       }
     }
     if (!notificationSend) {
@@ -83,9 +83,9 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
         if (!users.isEmpty()) {
           sendMail(users, clusters, accountId);
           notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
-          logger.info("Data generated mail sent, accountId : {}", accountId);
+          log.info("Data generated mail sent, accountId : {}", accountId);
         } else {
-          logger.info("No users found in BillingDataGeneratedMailTasklet, accountId : {}", accountId);
+          log.info("No users found in BillingDataGeneratedMailTasklet, accountId : {}", accountId);
         }
       }
     }
@@ -109,14 +109,14 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
           }
           successful = true;
         } catch (SQLException e) {
-          logger.error("Failed to get clusters in BillingDataGeneratedMailTasklet, Exception: ", e);
+          log.error("Failed to get clusters in BillingDataGeneratedMailTasklet, Exception: ", e);
           retryCount++;
         } finally {
           DBUtils.close(resultSet);
         }
       }
     } else {
-      logger.info("Not able to fetch clusters in BillingDataGeneratedMailTasklet");
+      log.info("Not able to fetch clusters in BillingDataGeneratedMailTasklet");
     }
     return clusters;
   }
@@ -146,7 +146,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
       templateModel.put(
           "EXPLORER_URL", emailNotificationService.buildAbsoluteUrl(String.format(CE_EXPLORER_URL, accountId)));
     } catch (URISyntaxException e) {
-      logger.error("Can't build explorer url : ", e);
+      log.error("Can't build explorer url : ", e);
     }
     users.forEach(user -> {
       templateModel.put("USER", user.getName());
@@ -172,7 +172,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
       try {
         link = emailNotificationService.buildAbsoluteUrl(String.format(CE_CLUSTER_URL, accountId, cluster));
       } catch (URISyntaxException e) {
-        logger.error("Can't build cluster url : ", e);
+        log.error("Can't build cluster url : ", e);
       }
       joiner.add(String.format(htmlLinkTag, link, clusterToClusterName.get(cluster)));
     }
@@ -194,14 +194,14 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
           }
           successful = true;
         } catch (SQLException e) {
-          logger.error("Failed to get FirstDataRecordTime in BillingDataGeneratedMailTasklet, Exception: ", e);
+          log.error("Failed to get FirstDataRecordTime in BillingDataGeneratedMailTasklet, Exception: ", e);
           retryCount++;
         } finally {
           DBUtils.close(resultSet);
         }
       }
     } else {
-      logger.info("Not able to fetch FirstDataRecordTime in BillingDataGeneratedMailTasklet");
+      log.info("Not able to fetch FirstDataRecordTime in BillingDataGeneratedMailTasklet");
     }
     return time;
   }

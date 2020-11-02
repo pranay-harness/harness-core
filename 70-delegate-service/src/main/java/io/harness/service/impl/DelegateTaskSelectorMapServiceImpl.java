@@ -35,9 +35,9 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
 
   @Override
   public TaskSelectorMap add(TaskSelectorMap taskSelectorMap) {
-    logger.info("Adding task selector map:" + taskSelectorMap);
+    log.info("Adding task selector map:" + taskSelectorMap);
     if (isEmpty(taskSelectorMap.getSelectors())) {
-      logger.warn("Task selector list cannot be empty.");
+      log.warn("Task selector list cannot be empty.");
       throw new IllegalArgumentException("Task selector list cannot be empty.");
     }
 
@@ -48,13 +48,13 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
       throw new InvalidRequestException("Task selector map with given task group already exists for this account");
     }
 
-    logger.info("Added task selector map: {}", taskSelectorMap.getUuid());
+    log.info("Added task selector map: {}", taskSelectorMap.getUuid());
     return taskSelectorMap;
   }
 
   @Override
   public TaskSelectorMap update(TaskSelectorMap taskSelectorMap) {
-    logger.info("Updating task selector map:" + taskSelectorMap);
+    log.info("Updating task selector map:" + taskSelectorMap);
     if (isEmpty(taskSelectorMap.getSelectors())) {
       hPersistence.delete(TaskSelectorMap.class, taskSelectorMap.getUuid());
       return null;
@@ -74,13 +74,13 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
                                       .get();
     if (existingMap == null) {
       String errorMessage = String.format("Task selector map with id: %s not found", taskSelectorMapUuid);
-      logger.warn(errorMessage);
+      log.warn(errorMessage);
       throw NoResultFoundException.newBuilder().code(ErrorCode.RESOURCE_NOT_FOUND).message(errorMessage).build();
     }
     if (!existingMap.getSelectors().contains(taskSelector)) {
       existingMap.getSelectors().add(taskSelector);
       hPersistence.save(existingMap);
-      logger.info("Updated task selector map {} for task category {} with new task selector", taskSelectorMapUuid,
+      log.info("Updated task selector map {} for task category {} with new task selector", taskSelectorMapUuid,
           existingMap.getTaskGroup(), taskSelector);
     }
     return existingMap;
@@ -94,7 +94,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
                                       .get();
     if (existingMap == null) {
       String errorMessage = String.format("Task selector map with id: %s not found", taskSelectorMapUuid);
-      logger.warn(errorMessage);
+      log.warn(errorMessage);
       throw NoResultFoundException.newBuilder().code(ErrorCode.RESOURCE_NOT_FOUND).message(errorMessage).build();
     }
     if (isNotEmpty(existingMap.getSelectors()) && existingMap.getSelectors().contains(taskSelector)) {
@@ -102,10 +102,10 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
       if (existingMap.getSelectors().isEmpty()) {
         hPersistence.delete(TaskSelectorMap.class, taskSelectorMapUuid);
         existingMap = null;
-        logger.info("Delegate task selector map {} deleted", taskSelectorMapUuid);
+        log.info("Delegate task selector map {} deleted", taskSelectorMapUuid);
       } else {
         hPersistence.save(existingMap);
-        logger.info("Delegate task selector map {} updated", taskSelectorMapUuid);
+        log.info("Delegate task selector map {} updated", taskSelectorMapUuid);
       }
     }
     return existingMap;

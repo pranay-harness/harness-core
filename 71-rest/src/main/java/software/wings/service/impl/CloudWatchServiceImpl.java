@@ -67,7 +67,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     try {
       tmpCloudwatchYaml = Resources.toString(CLOUDWATCH_METRICS_URL, Charsets.UTF_8);
     } catch (IOException ex) {
-      logger.info("Exception while reading cloudwatch yaml", ex);
+      log.info("Exception while reading cloudwatch yaml", ex);
     }
     CLOUDWATCH_YAML = tmpCloudwatchYaml;
   }
@@ -216,7 +216,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
               createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()), hostName);
     } catch (Exception e) {
-      logger.info("error getting metric data for node", e);
+      log.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.CLOUDWATCH_ERROR)
           .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
@@ -316,7 +316,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       }
     }
 
-    logger.error("No statistics found for {} metric {}", awsNameSpace, cloudWatchMetric);
+    log.error("No statistics found for {} metric {}", awsNameSpace, cloudWatchMetric);
     return null;
   }
 
@@ -327,7 +327,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       }
     }
 
-    logger.error("No unit found for {} metric {}", awsNameSpace, cloudWatchMetric);
+    log.error("No unit found for {} metric {}", awsNameSpace, cloudWatchMetric);
     return null;
   }
 }

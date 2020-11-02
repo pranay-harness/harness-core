@@ -109,11 +109,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
                                     .setTimestamp(System.currentTimeMillis())
                                     .build())) {
               logQueue.clear();
-              logger.error("No space left in log queue. Cleared.");
+              log.error("No space left in log queue. Cleared.");
             }
           }
         } catch (Exception ex) {
-          logger.error("Error appending log entry", ex);
+          log.error("Error appending log entry", ex);
         }
       });
     }
@@ -174,7 +174,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
         int attempts = failedAttempts.incrementAndGet();
         if (attempts >= 50 && attempts % 10 == 0) {
           logQueue.clear();
-          logger.error("Failed to initialize logging after {} attempts. Cleared log queue.", attempts);
+          log.error("Failed to initialize logging after {} attempts. Cleared log queue.", attempts);
         }
         // Exponential backoff. Delay by 2 ^ (attempts / 2) seconds, max 60. (12 attempts to reach the max)
         long delayMillis = (long) (Math.min(Math.pow(2, (double) attempts / 2d), 60d) * 1000d);
@@ -200,11 +200,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
               WriteOption.resource(MonitoredResource.newBuilder("global").build()), WriteOption.labels(getLogLabels()));
         }
       } catch (LoggingException ex) {
-        logger.error("Failed to submit logs. Stack driver logging will be temporarily disabled.", ex);
+        log.error("Failed to submit logs. Stack driver logging will be temporarily disabled.", ex);
         markStackDriverUnreachable();
         logQueue.clear();
       } catch (Exception ex) {
-        logger.error("Failed to submit logs.", ex);
+        log.error("Failed to submit logs.", ex);
       } finally {
         logLines.clear();
       }
@@ -217,11 +217,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       GoogleCredentials credentials = (GoogleCredentials) logging.getOptions().getCredentials();
       Date expirationTime = credentials.getAccessToken().getExpirationTime();
       if (expirationTime.before(nineMinutesFromNow)) {
-        logger.info("Logging token expires {}. Refreshing.", expirationTime);
+        log.info("Logging token expires {}. Refreshing.", expirationTime);
         try {
           logging.close();
         } catch (Exception e) {
-          logger.error("Error closing logging", e);
+          log.error("Error closing logging", e);
         }
         logging = null;
       } else {
@@ -260,7 +260,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     try {
       logging = loggingOptionsBuilder.build().getService();
     } catch (Exception e) {
-      logger.error("Failed to build Logging client for StackdriverLogging", e);
+      log.error("Failed to build Logging client for StackdriverLogging", e);
     }
 
     testStackDriverConnectivity();
@@ -282,12 +282,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
         logging.setWriteSynchronicity(Synchronicity.ASYNC);
         markStackDriverReachable();
       } catch (LoggingException ex) {
-        logger.warn(
-            "Connectivity test for Stack Driver failed. Stack driver logging will be temporarily disabled.", ex);
+        log.warn("Connectivity test for Stack Driver failed. Stack driver logging will be temporarily disabled.", ex);
         markStackDriverUnreachable();
         logQueue.clear();
       } catch (Exception ex) {
-        logger.warn("Connectivity test for Stack Driver failed.", ex);
+        log.warn("Connectivity test for Stack Driver failed.", ex);
       }
     }
   }

@@ -75,13 +75,13 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
     AwsLambdaContextElement awsLambdaContextElement =
         context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
     if (awsLambdaContextElement == null) {
-      logger.error("AwsLambdaContextElement is null in the context");
+      log.error("AwsLambdaContextElement is null in the context");
       return null;
     }
 
     List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();
     if (isEmpty(awsLambdaContextElement.getFunctionArns())) {
-      logger.error("awsLambdaContextElement.getFunctionArns() is null or empty in the context");
+      log.error("awsLambdaContextElement.getFunctionArns() is null or empty in the context");
       return awsLambdaFunctionElementList;
     }
     awsLambdaContextElement.getFunctionArns().forEach(functionMeta -> {

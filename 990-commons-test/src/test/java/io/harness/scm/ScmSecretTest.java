@@ -67,15 +67,15 @@ public class ScmSecretTest extends CategoryTest {
     String test = scmSecret.encrypt(bytes);
 
     for (int i = 0; i < test.length() / 118; i++) {
-      logger.info(test.substring(i * 118, (i + 1) * 118) + "\\");
+      log.info(test.substring(i * 118, (i + 1) * 118) + "\\");
     }
 
     int skip = (test.length() / 118) * 118;
     if (test.length() - skip != 0) {
-      logger.info(test.substring(skip));
+      log.info(test.substring(skip));
     }
 
-    logger.info(test);
+    log.info(test);
     assertThat(scmSecret.decrypt(test)).isEqualTo(bytes);
   }
 
@@ -109,7 +109,7 @@ public class ScmSecretTest extends CategoryTest {
           final SecretName secretName = SecretName.builder().value((String) key).build();
           final byte[] decrypt = scmSecret.decrypt(secretName);
 
-          // logger.info("{} = {}", secretName, new String(decrypt));
+          // log.info("{} = {}", secretName, new String(decrypt));
 
           final String secret = ScmSecret.encrypt(decrypt, passphrase);
 

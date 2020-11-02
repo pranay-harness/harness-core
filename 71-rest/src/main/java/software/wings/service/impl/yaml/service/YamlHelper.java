@@ -889,7 +889,7 @@ public class YamlHelper {
       case VERIFICATION_PROVIDER:
         return SettingAttribute.SettingCategory.CONNECTOR;
       default:
-        logger.info(GIT_YAML_LOG_PREFIX + " Cannot determine the type of setting attribute category for yamlType [{}]",
+        log.info(GIT_YAML_LOG_PREFIX + " Cannot determine the type of setting attribute category for yamlType [{}]",
             yamlType);
         return null;
     }

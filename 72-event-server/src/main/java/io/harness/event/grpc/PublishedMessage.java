@@ -89,7 +89,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
       @SuppressWarnings("unchecked") Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(type);
       this.message = any.unpack(clazz);
     } catch (ClassNotFoundException | InvalidProtocolBufferException e) {
-      logger.error("message type is {} createdAt {} occuredAt {} attr {}", type, createdAt, occurredAt, attributes);
+      log.error("message type is {} createdAt {} occuredAt {} attr {}", type, createdAt, occurredAt, attributes);
       throw new DataFormatException("Unable to parse message for type: " + type, e);
     }
   }

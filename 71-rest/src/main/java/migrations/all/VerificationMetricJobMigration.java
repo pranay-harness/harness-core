@@ -26,7 +26,7 @@ public class VerificationMetricJobMigration implements Migration {
     final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_triggers");
     final WriteResult result = collection.updateMulti(new BasicDBObject("keyGroup", "VERIFICATION_METRIC_CRON_GROUP"),
         new BasicDBObject("$set", new BasicDBObject("repeatInterval", Long.valueOf(60000))));
-    logger.info("updated {} records", result.getN());
-    logger.info("VerificationMetricJob Migration Completed");
+    log.info("updated {} records", result.getN());
+    log.info("VerificationMetricJob Migration Completed");
   }
 }

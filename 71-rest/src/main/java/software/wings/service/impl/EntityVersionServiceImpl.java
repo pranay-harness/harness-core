@@ -92,8 +92,8 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         wingsPersistence.save(entityVersion);
         done = true;
       } catch (Exception e) {
-        logger.warn("EntityVersion save failed for entityType: {}, entityUuid: {} - attemptNo: {}", entityType,
-            entityUuid, i, e);
+        log.warn("EntityVersion save failed for entityType: {}, entityUuid: {} - attemptNo: {}", entityType, entityUuid,
+            i, e);
         i++;
         // If we exception out then done is still 'false' and we will retry again
         entityVersion.setCreatedAt(0);
@@ -119,7 +119,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     updateOps.set("entityData", entityData);
     UpdateResults updated = wingsPersistence.update(query, updateOps);
     if (updated == null || updated.getUpdatedCount() != 1) {
-      logger.error("updateEntityData failed for appId: {}, entityVersionUuid: {}- entityData: {}", appId,
+      log.error("updateEntityData failed for appId: {}, entityVersionUuid: {}- entityData: {}", appId,
           entityVersionUuid, entityData);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }

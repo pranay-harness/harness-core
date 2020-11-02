@@ -107,8 +107,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
     try {
       JsonNode tree1 = objectMapper.readTree(expectedResult);
       JsonNode tree2 = objectMapper.readTree(connectorString);
-      logger.info("Expected Connector String: {}", tree1.toString());
-      logger.info("Actual Connector String: {}", tree2.toString());
+      log.info("Expected Connector String: {}", tree1.toString());
+      log.info("Actual Connector String: {}", tree2.toString());
       assertThat(tree1.equals(tree2)).isTrue();
     } catch (Exception ex) {
       Assert.fail("Encountered exception while checking the two k8s json value connector" + ex.getMessage());
@@ -148,8 +148,8 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
     try {
       JsonNode tree1 = objectMapper.readTree(expectedResult);
       JsonNode tree2 = objectMapper.readTree(connectorString);
-      logger.info("Expected Connector String: {}", tree1.toString());
-      logger.info("Actual Connector String: {}", tree2.toString());
+      log.info("Expected Connector String: {}", tree1.toString());
+      log.info("Actual Connector String: {}", tree2.toString());
       assertThat(tree1.equals(tree2)).isTrue();
     } catch (Exception ex) {
       Assert.fail("Encountered exception while checking the two k8s json value connector" + ex.getMessage());

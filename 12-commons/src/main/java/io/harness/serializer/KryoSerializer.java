@@ -67,7 +67,7 @@ public class KryoSerializer {
 
     } catch (
         NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-      logger.error("Unexpected exception", exception);
+      log.error("Unexpected exception", exception);
     }
 
     return kryo;

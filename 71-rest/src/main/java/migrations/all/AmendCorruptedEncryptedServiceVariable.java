@@ -24,8 +24,7 @@ public class AmendCorruptedEncryptedServiceVariable implements Migration {
   @Override
   public void migrate() {
     int updations = 0;
-    logger.info(
-        HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Starting amending corrupted service variables"));
+    log.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Starting amending corrupted service variables"));
     try (HIterator<ServiceVariable> serviceVariableHIterator =
              new HIterator<>(wingsPersistence.createQuery(ServiceVariable.class)
                                  .field(ServiceVariableKeys.accountId)
@@ -42,7 +41,7 @@ public class AmendCorruptedEncryptedServiceVariable implements Migration {
             && !serviceVariable.getEncryptedValue().startsWith("hashicorpvault:")) {
           String corruptedValue = serviceVariable.getEncryptedValue();
           String correctValue = yamlHelper.extractEncryptedRecordId(corruptedValue, serviceVariable.getAccountId());
-          logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
+          log.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
               format("Updating Service Variable from %s-> %s", corruptedValue, correctValue)));
           serviceVariable.setEncryptedValue(correctValue);
           wingsPersistence.save(serviceVariable);
@@ -50,7 +49,7 @@ public class AmendCorruptedEncryptedServiceVariable implements Migration {
         }
       }
     }
-    logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
+    log.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
         "Finished amending corrupted "
             + "service variables total:",
         String.valueOf(updations)));

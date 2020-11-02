@@ -23,7 +23,7 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
 
   @Override
   public Response toResponse(NotFoundException exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     return Response.status(Response.Status.NOT_FOUND)
         .entity(ResponseMessage.builder().message(exception.toString()).code(ErrorCode.RESOURCE_NOT_FOUND).build())
         .type(MediaType.APPLICATION_JSON)

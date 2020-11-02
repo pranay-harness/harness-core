@@ -33,7 +33,7 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
   @Override
   public String create(String accountId, String countryName, int population) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Creating a Sample Perpetual Task.");
+      log.info("Creating a Sample Perpetual Task.");
       countryMap.putIfAbsent(countryName, population);
       Map<String, String> clientParamMap = new HashMap<>();
       clientParamMap.put(COUNTRY_NAME, countryName);

@@ -34,22 +34,22 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
-    logger.info("Updating the alerts notification rule");
+    log.info("Updating the alerts notification rule");
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(
         getAccount().getUuid(), userGroups, AlertCategory.Setup, AlertType.DelegateProfileError);
     AlertNotificationRule updatedAlert =
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
-    logger.info("Verifying the updated alerts notification rule");
+    log.info("Verifying the updated alerts notification rule");
     assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
     assertThat(
         updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
         .isFalse();
 
-    logger.info("Delete the alert");
+    log.info("Delete the alert");
     AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
-    logger.info("Verify if the deleted alert does not exist");
+    log.info("Verify if the deleted alert does not exist");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isFalse();
   }
@@ -68,7 +68,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     cvAlertTypes.remove(AlertType.CONTINUOUS_VERIFICATION_ALERT);
     String previous = AlertType.CONTINUOUS_VERIFICATION_ALERT.name();
 
-    logger.info("Running update test to see if all alert types are updateable");
+    log.info("Running update test to see if all alert types are updateable");
     AlertNotificationRule updatedAlert = updateAndVerifyAllTypes(cvAlertTypes, previous, userGroups, createdAlert);
     deleteAlertNotificationRules(createdAlert, updatedAlert);
 
@@ -78,7 +78,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     setupAlertTypes.remove(AlertType.DelegatesDown);
     previous = AlertType.DelegatesDown.name();
 
-    logger.info("Running update test to see if all alert types are updateable");
+    log.info("Running update test to see if all alert types are updateable");
     updatedAlert = updateAndVerifyAllTypes(setupAlertTypes, previous, userGroups, createdAlert);
     deleteAlertNotificationRules(createdAlert, updatedAlert);
   }
@@ -93,13 +93,13 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
-    logger.info("Updating the alerts notification rule");
+    log.info("Updating the alerts notification rule");
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRuleWithConditions(getAccount().getUuid(),
         userGroups, AlertCategory.Setup, AlertType.DelegatesDown, new Conditions(Operator.NOT_MATCHING, null, null));
     AlertNotificationRule updatedAlert =
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
-    logger.info("Verifying the updated alerts notification rule");
+    log.info("Verifying the updated alerts notification rule");
     assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
     assertThat(
@@ -121,13 +121,13 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
-    logger.info("Updating the alerts notification rule");
+    log.info("Updating the alerts notification rule");
     AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(getAccount().getUuid(), userGroups,
         AlertCategory.ContinuousVerification, AlertType.CONTINUOUS_VERIFICATION_ALERT);
     AlertNotificationRule updatedAlert =
         AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
-    logger.info("Verifying the updated alerts notification rule");
+    log.info("Verifying the updated alerts notification rule");
     assertThat(updatedAlert).isNotNull();
     assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isFalse();
     assertThat(updatedAlert.getAlertCategory().name().equals(AlertCategory.ContinuousVerification.name())).isTrue();
@@ -143,13 +143,13 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
 
   private AlertNotificationRule createAndVerifyAlerts(
       Set<String> userGroups, AlertCategory alertCategory, AlertType alertType) {
-    logger.info("Create a Setup Alert with Type : DelegatesDown");
+    log.info("Create a Setup Alert with Type : DelegatesDown");
     AlertNotificationRule alertNotificationRule =
         AlertsUtils.createAlertNotificationRule(getAccount().getUuid(), userGroups, alertCategory, alertType);
 
     AlertNotificationRule createdAlert =
         AlertsRestUtils.createAlert(getAccount().getUuid(), bearerToken, alertNotificationRule);
-    logger.info("Verify if the created alert exists");
+    log.info("Verify if the created alert exists");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertThat(alertsList.size() > 0).isTrue();
     assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isTrue();
@@ -157,9 +157,9 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   private void deleteAlertNotificationRules(AlertNotificationRule createdAlert, AlertNotificationRule updatedAlert) {
-    logger.info("Delete the alert");
+    log.info("Delete the alert");
     AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
-    logger.info("Verify if the deleted alert does not exist");
+    log.info("Verify if the deleted alert does not exist");
     List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
     assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isFalse();
   }
@@ -168,14 +168,14 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
       List<AlertType> alertTypeList, String previous, Set<String> userGroups, AlertNotificationRule createdAlert) {
     AlertNotificationRule updatedAlert = null;
     for (AlertType alertType : alertTypeList) {
-      logger.info("Updating the alert type from : " + previous + ": to : " + alertType.name());
+      log.info("Updating the alert type from : " + previous + ": to : " + alertType.name());
       AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(
           getAccount().getUuid(), userGroups, createdAlert.getAlertCategory(), alertType);
 
       updatedAlert =
           AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
 
-      logger.info("Verifying the updated alerts notification rule");
+      log.info("Verifying the updated alerts notification rule");
       assertThat(updatedAlert).isNotNull();
       assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
       assertThat(updatedAlert.getAlertFilter().getAlertType().name().equals(

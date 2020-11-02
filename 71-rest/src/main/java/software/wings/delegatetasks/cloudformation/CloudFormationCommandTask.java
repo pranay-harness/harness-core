@@ -67,7 +67,7 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
     try {
       return handler.execute(request, details);
     } catch (Exception ex) {
-      logger.error("Exception in processing cloud formation task [{}]", request.toString(), ex);
+      log.error("Exception in processing cloud formation task [{}]", request.toString(), ex);
       return CloudFormationCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

@@ -47,7 +47,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   @Inject
   public PVWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
       @Assisted SharedInformerFactory sharedInformerFactory, EventPublisher eventPublisher) {
-    logger.info(
+    log.info(
         "Creating new PVWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
 
     this.clusterId = params.getClusterId();
@@ -81,20 +81,20 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   @Override
   public void onAdd(V1PersistentVolume persistentVolume) {
     try {
-      logger.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.ADDED);
+      log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.ADDED);
 
       publishPVInfo(persistentVolume);
 
       publishedPVs.add(persistentVolume.getMetadata().getUid());
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_LOG_MSG, EventType.ADDED, ex);
+      log.error(ERROR_PUBLISH_LOG_MSG, EventType.ADDED, ex);
     }
   }
 
   @Override
   public void onUpdate(V1PersistentVolume oldPersistentVolume, V1PersistentVolume persistentVolume) {
     try {
-      logger.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.MODIFIED);
+      log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.MODIFIED);
 
       if (!publishedPVs.contains(persistentVolume.getMetadata().getUid())) {
         publishPVInfo(persistentVolume);
@@ -104,18 +104,18 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
       long newVolSize = K8sResourceUtils.getStorageCapacity(persistentVolume.getSpec()).getAmount();
 
       if (oldVolSize != newVolSize) {
-        logger.debug("Volume change observed from {} to {}", oldVolSize, newVolSize);
+        log.debug("Volume change observed from {} to {}", oldVolSize, newVolSize);
         publishPVEvent(persistentVolume, HTimestamps.fromMillis(DateTime.now().getMillis()), EVENT_TYPE_EXPANSION);
       }
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_LOG_MSG, EventType.MODIFIED, ex);
+      log.error(ERROR_PUBLISH_LOG_MSG, EventType.MODIFIED, ex);
     }
   }
 
   @Override
   public void onDelete(V1PersistentVolume persistentVolume, boolean deletedFinalStateUnknown) {
     try {
-      logger.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.DELETED);
+      log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.DELETED);
 
       publishPVEvent(persistentVolume,
           HTimestamps.fromMillis(
@@ -124,7 +124,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
 
       publishedPVs.remove(persistentVolume.getMetadata().getUid());
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_LOG_MSG, EventType.DELETED, ex);
+      log.error(ERROR_PUBLISH_LOG_MSG, EventType.DELETED, ex);
     }
   }
 
@@ -171,7 +171,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
                           .setTimestamp(timestamp)
                           .build();
 
-    logger.debug("Publishing : {}", pvEvent.getEventType());
+    log.debug("Publishing : {}", pvEvent.getEventType());
     eventPublisher.publishMessage(pvEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
   }
 
@@ -191,7 +191,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
             .getParameters()
             .getOrDefault("type", defaultValue);
       } catch (Exception ex) {
-        logger.warn("Failed to get storageClassName {}", persistentVolume.getSpec().getStorageClassName(), ex);
+        log.warn("Failed to get storageClassName {}", persistentVolume.getSpec().getStorageClassName(), ex);
       }
     }
     return defaultValue;

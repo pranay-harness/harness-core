@@ -101,7 +101,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       logDataByTagList.add(logDataByTag);
     });
     SortedSet<LogDataByTag> sortedReturnSet = new TreeSet<>(logDataByTagList);
-    logger.info("In getLogCountByTag, returning a set of size {}", sortedReturnSet.size());
+    log.info("In getLogCountByTag, returning a set of size {}", sortedReturnSet.size());
     return sortedReturnSet;
   }
 

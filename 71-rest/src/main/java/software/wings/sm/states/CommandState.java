@@ -324,7 +324,7 @@ public class CommandState extends State {
       try {
         actualCommand = context.renderExpression(commandName);
       } catch (Exception e) {
-        logger.error("", e);
+        log.error("", e);
       }
 
       executionDataBuilder.withCommandName(actualCommand);
@@ -488,7 +488,7 @@ public class CommandState extends State {
 
       delegateTaskId = queueDelegateTask(
           activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
-      logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
+      log.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
@@ -564,7 +564,7 @@ public class CommandState extends State {
   private void getArtifactDetails(ExecutionContext context, CommandStateExecutionData.Builder executionDataBuilder,
       Service service, String accountId, Artifact artifact,
       CommandExecutionContext.Builder commandExecutionContextBuilder) {
-    logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
+    log.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
         context.getStateExecutionInstanceId());
     commandExecutionContextBuilder.metadata(artifact.getMetadata());
     // Observed NPE in alerts
@@ -612,7 +612,7 @@ public class CommandState extends State {
     if (isNotEmpty(map)) {
       for (Entry<String, Artifact> entry : map.entrySet()) {
         Artifact artifact = entry.getValue();
-        logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
+        log.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
             context.getStateExecutionInstanceId());
         // Observed NPE in alerts
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
@@ -962,7 +962,7 @@ public class CommandState extends State {
 
       delegateTaskId = queueDelegateTask(
           activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
-      logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
+      log.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       return handleException(context, executionDataBuilder, activityId, appId, e);
     }
@@ -985,10 +985,10 @@ public class CommandState extends State {
   private ExecutionResponse handleException(ExecutionContext context,
       CommandStateExecutionData.Builder executionDataBuilder, String activityId, String appId, Exception e) {
     if (e instanceof WingsException) {
-      logger.warn("Exception in command execution", e);
+      log.warn("Exception in command execution", e);
     } else {
       // unhandled exception
-      logger.error("Exception in command execution", e);
+      log.error("Exception in command execution", e);
     }
     handleCommandException(context, activityId, appId);
     updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);

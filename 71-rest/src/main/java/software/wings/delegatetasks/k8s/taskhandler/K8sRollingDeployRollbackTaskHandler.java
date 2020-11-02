@@ -151,7 +151,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       try {
         printManagedWorkloads(executionLogCallback);
       } catch (Exception e) {
-        logger.error("Failed to get latest release", e);
+        log.error("Failed to get latest release", e);
       }
     }
 

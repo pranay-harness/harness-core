@@ -53,8 +53,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
     TriggerCommandType triggerCommandType = triggerRequest.getTriggerCommandType();
     TriggerResponse triggerResponse;
 
-    logger.info(
-        "Executing trigger task for account {} and type is {}", triggerRequest.getAccountId(), triggerCommandType);
+    log.info("Executing trigger task for account {} and type is {}", triggerRequest.getAccountId(), triggerCommandType);
 
     try {
       switch (triggerCommandType) {
@@ -70,7 +69,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
 
       return triggerResponse;
     } catch (Exception ex) {
-      logger.error("Exception in processing trigger task for account {}, triggerCommandType {}",
+      log.error("Exception in processing trigger task for account {}, triggerCommandType {}",
           triggerRequest.getAccountId(), triggerCommandType, ex);
       return new TriggerResponse(null, ExecutionStatus.FAILED, ExceptionUtils.getMessage(ex));
     }
@@ -84,7 +83,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
     List<String> filePaths = triggerRequest.getFilePaths();
     List<EncryptedDataDetail> encryptionDetails = triggerRequest.getEncryptionDetails();
 
-    logger.info("Checking if deployment needed - gitConnectorId {}, currentCommitId {}, oldCommitId {}", gitConnectorId,
+    log.info("Checking if deployment needed - gitConnectorId {}, currentCommitId {}, oldCommitId {}", gitConnectorId,
         currentCommitId, oldCommitId);
 
     try {
@@ -100,7 +99,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
           .deploymentNeeded(deploymentNeeded)
           .build();
     } catch (Exception ex) {
-      logger.error("Exception in checking if deployment needed " + ExceptionUtils.getMessage(ex));
+      log.error("Exception in checking if deployment needed " + ExceptionUtils.getMessage(ex));
       throw ex;
     }
   }

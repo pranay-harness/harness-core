@@ -76,7 +76,7 @@ public class AlertNotificationHandler implements EventHandler {
   private void handleAlert(Alert alert, EventType alertEventType) {
     String accountId = alert.getAccountId();
 
-    logger.info("Got an alert event. alertType={} , category={} , accountId={}", alert.getType(), alert.getCategory(),
+    log.info("Got an alert event. alertType={} , category={} , accountId={}", alert.getType(), alert.getCategory(),
         accountId);
 
     List<AlertNotificationRule> allRules = ruleService.getAll(accountId);
@@ -93,7 +93,7 @@ public class AlertNotificationHandler implements EventHandler {
     }
 
     if (defaultRules.size() != 1) {
-      logger.error(
+      log.error(
           "Every account should have one default rule. accountId={} defaultRules={}", accountId, defaultRules.size());
     }
 
@@ -102,7 +102,7 @@ public class AlertNotificationHandler implements EventHandler {
       if (ruleChecker.doesAlertSatisfyRule(alert, rule)) {
         notificationSent = sendNotification(accountId, alert, rule, alertEventType);
       } else {
-        logger.debug("Alert did not satisfy rule. accountId={} rule={} alert={}", accountId, rule, alert);
+        log.debug("Alert did not satisfy rule. accountId={} rule={} alert={}", accountId, rule, alert);
       }
     }
 
@@ -130,7 +130,7 @@ public class AlertNotificationHandler implements EventHandler {
       notificationDispatcher.dispatch(notification, Collections.singletonList(rule));
       return true;
     } catch (Exception e) {
-      logger.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule, e);
+      log.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule, e);
       return false;
     }
   }
@@ -145,8 +145,7 @@ public class AlertNotificationHandler implements EventHandler {
 
     EventData eventData = event.getEventData();
     if (null == eventData || null == eventData.getEventInfo()) {
-      logger.error(
-          "Expected some alert event data. Check with the publisher to see why data was not sent. eventType={}",
+      log.error("Expected some alert event data. Check with the publisher to see why data was not sent. eventType={}",
           eventType);
       return INVALID_EVENT;
     }
@@ -157,14 +156,14 @@ public class AlertNotificationHandler implements EventHandler {
       String accountId = alert.getAccountId();
 
       if (StringUtils.isEmpty(accountId)) {
-        logger.error("Account ID not present in alert. Can't send notification for it. alertType={}, category={}",
+        log.error("Account ID not present in alert. Can't send notification for it. alertType={}, category={}",
             alert.getType(), alert.getCategory());
         return INVALID_EVENT;
       } else {
         return new Pair<>(true, alert);
       }
     } else {
-      logger.error("Invalid event. Could not cast. eventType={}, class={}", eventType,
+      log.error("Invalid event. Could not cast. eventType={}, class={}", eventType,
           eventData.getEventInfo().getClass().getCanonicalName());
       return INVALID_EVENT;
     }

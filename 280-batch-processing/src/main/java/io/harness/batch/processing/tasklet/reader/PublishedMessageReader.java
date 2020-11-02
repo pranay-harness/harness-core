@@ -32,7 +32,7 @@ public class PublishedMessageReader {
       Long firstStartTime = publishedMessageList.get(0).getCreatedAt();
       startTime = publishedMessageList.get(publishedMessageList.size() - 1).getCreatedAt();
       if (firstStartTime.equals(startTime)) {
-        logger.info("Incrementing start Date by 1ms {} {} {} {}", publishedMessageList.size(), startTime, endTime,
+        log.info("Incrementing start Date by 1ms {} {} {} {}", publishedMessageList.size(), startTime, endTime,
             messageType, accountId);
         startTime = startTime + 1;
       }

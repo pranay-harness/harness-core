@@ -26,24 +26,24 @@ public class ServiceVariableReferentialIntegrity implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Checking service variables for invalid parent references");
+    log.info("Checking service variables for invalid parent references");
 
     UpdateOperations<ServiceVariable> updateOperations =
         wingsPersistence.createUpdateOperations(ServiceVariable.class).unset("parentServiceVariableId");
 
     List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority).asList();
-    logger.info("Checking {} accounts", accounts.size());
+    log.info("Checking {} accounts", accounts.size());
     for (Account account : accounts) {
       List<Application> apps =
           wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, account.getUuid()).asList();
-      logger.info("Checking {} applications in account {}", apps.size(), account.getAccountName());
+      log.info("Checking {} applications in account {}", apps.size(), account.getAccountName());
       for (Application app : apps) {
         List<ServiceVariable> refVariables = wingsPersistence.createQuery(ServiceVariable.class)
                                                  .filter(APP_ID_KEY, app.getUuid())
                                                  .field("parentServiceVariableId")
                                                  .exists()
                                                  .asList();
-        logger.info("  Checking {} variables in application {}", refVariables.size(), app.getName());
+        log.info("  Checking {} variables in application {}", refVariables.size(), app.getName());
         for (ServiceVariable var : refVariables) {
           String parentId = var.getParentServiceVariableId();
           ServiceVariable parent = wingsPersistence.createQuery(ServiceVariable.class)
@@ -51,7 +51,7 @@ public class ServiceVariableReferentialIntegrity implements Migration {
                                        .filter(ID_KEY, parentId)
                                        .get();
           if (parent == null) {
-            logger.info("    Clearing invalid parent reference in {}", var.getName());
+            log.info("    Clearing invalid parent reference in {}", var.getName());
             wingsPersistence.update(var, updateOperations);
           }
         }

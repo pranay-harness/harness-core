@@ -79,7 +79,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     try {
       result = bigQuery.query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to getViewFilterValueStats. {}", e);
+      log.error("Failed to getViewFilterValueStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -96,7 +96,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     try {
       result = bigQuery.query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to getEntityStatsDataPoints. {}", e);
+      log.error("Failed to getEntityStatsDataPoints. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -112,7 +112,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     try {
       return bigQuery.query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to getTimeSeriesStats. {}", e);
+      log.error("Failed to getTimeSeriesStats. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }
@@ -146,7 +146,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     try {
       result = bigQuery.query(queryConfig);
     } catch (InterruptedException e) {
-      logger.error("Failed to getTrendStatsData. {}", e);
+      log.error("Failed to getTrendStatsData. {}", e);
       Thread.currentThread().interrupt();
       return null;
     }

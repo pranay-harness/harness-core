@@ -118,7 +118,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // Filter the list of executions by the correct infra mapping ID also.
     for (WorkflowExecution execution : executions) {
       if (execution.getInfraMappingIds().contains(infraMappingId) && execution.getEnvId().equals(envId)) {
-        logger.info("Execution {} contains infraMappingID {} and envId {}. So adding to successfulExecutions.",
+        log.info("Execution {} contains infraMappingID {} and envId {}. So adding to successfulExecutions.",
             execution.getUuid(), infraMappingId, envId);
         successfulExecutions.add(execution.getUuid());
       }
@@ -143,7 +143,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return successfulExecution;
       }
     }
-    logger.warn(
+    log.warn(
         "Could not get a successful workflow to find control nodes for workflow {}, service {}", workflowId, serviceId);
     return null;
   }
@@ -175,7 +175,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
     if (stateExecutionInstance == null) {
-      logger.error("State execution instance not found for {}", stateExecutionId);
+      log.error("State execution instance not found for {}", stateExecutionId);
       throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
     SettingAttribute settingAttribute =
@@ -321,8 +321,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
     if (isNotEmpty(thresholds)) {
       validateCustomThresholdsBeforeSaving(thresholds);
-      logger.info(
-          "Saving custom threshold list for cvConfigId {} , serviceId {} : {}", cvConfigId, serviceId, thresholds);
+      log.info("Saving custom threshold list for cvConfigId {} , serviceId {} : {}", cvConfigId, serviceId, thresholds);
       wingsPersistence.save(thresholds);
     }
     return true;
@@ -484,7 +483,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public boolean deleteCustomThreshold(List<String> thresholdIdsToBeDeleted) {
     if (isNotEmpty(thresholdIdsToBeDeleted)) {
-      logger.info("Deleting the custom thresholds with the IDs {}", thresholdIdsToBeDeleted);
+      log.info("Deleting the custom thresholds with the IDs {}", thresholdIdsToBeDeleted);
       thresholdIdsToBeDeleted.forEach(
           thresholdId -> wingsPersistence.delete(TimeSeriesMLTransactionThresholds.class, thresholdId));
     }
@@ -533,11 +532,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public DeploymentTimeSeriesAnalysis getMetricsAnalysisForDemo(
       String stateExecutionId, Optional<Integer> offset, Optional<Integer> pageSize) {
-    logger.info("Creating analysis summary for demo {}", stateExecutionId);
+    log.info("Creating analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
     if (stateExecutionInstance == null) {
-      logger.error("State execution instance not found for {}", stateExecutionId);
+      log.error("State execution instance not found for {}", stateExecutionId);
       throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
     StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
@@ -563,11 +562,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public Set<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
-    logger.info("Creating analysis summary for demo {}", stateExecutionId);
+    log.info("Creating analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
     if (stateExecutionInstance == null) {
-      logger.error("State execution instance not found for {}", stateExecutionId);
+      log.error("State execution instance not found for {}", stateExecutionId);
       throw new VerificationOperationException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
 
@@ -624,7 +623,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .get()
         : null;
     if (timeSeriesMLAnalysisRecord == null && newRelicMetricAnalysisRecord == null) {
-      logger.info("No analysis found for {}", stateExecutionId);
+      log.info("No analysis found for {}", stateExecutionId);
       return null;
     }
 
@@ -992,7 +991,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       timeSeriesMlAnalysisGroupInfo.setGroupName(groupName);
       toSave.put(groupName, timeSeriesMlAnalysisGroupInfo);
     });
-    logger.info("Creating groups for appId {}, stateType {}, groups {}", appId, stateType, toSave);
+    log.info("Creating groups for appId {}, stateType {}, groups {}", appId, stateType, toSave);
     wingsPersistence.save(TimeSeriesMetricGroup.builder()
                               .appId(appId)
                               .stateType(stateType)
@@ -1096,9 +1095,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         rawDataMap.values().forEach(metricMap -> rawDataList.addAll(metricMap.values()));
 
         dataStoreService.save(TimeSeriesRawData.class, rawDataList, true);
-        logger.info("Saved {} raw data time series records to GoogleDataStore", rawDataList.size());
+        log.info("Saved {} raw data time series records to GoogleDataStore", rawDataList.size());
       } catch (Exception e) {
-        logger.error("Exception while saving time series raw data to Google DataStore", e);
+        log.error("Exception while saving time series raw data to Google DataStore", e);
       }
     }
   }

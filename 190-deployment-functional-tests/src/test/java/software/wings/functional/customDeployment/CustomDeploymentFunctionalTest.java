@@ -171,7 +171,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
         getExecutionArgs(savedWorkflow, environment.getUuid(), service.getUuid()));
 
-    logger.info("Custom Deployment's Execution status: " + workflowExecution.getStatus());
+    log.info("Custom Deployment's Execution status: " + workflowExecution.getStatus());
     logStateExecutionInstanceErrors(workflowExecution);
     assertInstanceCount(workflowExecution.getStatus(), application.getUuid(),
         workflowExecution.getInfraMappingIds().get(0), workflowExecution.getInfraDefinitionIds().get(0));
@@ -237,7 +237,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
         getExecutionArgs(savedWorkflow, environment.getUuid(), service.getUuid()));
 
     logStateExecutionInstanceErrors(workflowExecution);
-    logger.info("Custom Deployment's Execution status: " + workflowExecution.getStatus());
+    log.info("Custom Deployment's Execution status: " + workflowExecution.getStatus());
 
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(workflowExecution.getRollbackDuration()).isNotNull();

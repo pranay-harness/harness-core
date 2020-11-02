@@ -55,9 +55,9 @@ public class GcpProcurementService {
     approvalRequest.setApprovalName(GcpMarketPlaceConstants.APPROVAL_SIGNUP_NAME);
     try {
       getProcurementService().providers().accounts().approve(accountName, approvalRequest).execute();
-      logger.info("Account approved. GCP Account ID: {}", gcpAccountId);
+      log.info("Account approved. GCP Account ID: {}", gcpAccountId);
     } catch (IOException e) {
-      logger.error("Exception occurred while approving GCP Marketplace Account: {}", gcpAccountId, e);
+      log.error("Exception occurred while approving GCP Marketplace Account: {}", gcpAccountId, e);
     }
   }
 
@@ -66,7 +66,7 @@ public class GcpProcurementService {
         MessageFormatter.format(ENTITLEMENT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, id).getMessage();
     ApproveEntitlementRequest request = new ApproveEntitlementRequest();
     getProcurementService().providers().entitlements().approve(entitlementName, request).execute();
-    logger.info("Entitlement approved. Entitlement ID: {}", id);
+    log.info("Entitlement approved. Entitlement ID: {}", id);
   }
 
   public void approveEntitlementPlanChange(String id, String newPlan) throws IOException {
@@ -76,7 +76,7 @@ public class GcpProcurementService {
     request.setPendingPlanName(newPlan);
 
     getProcurementService().providers().entitlements().approvePlanChange(entitlementName, request).execute();
-    logger.info("EntitlementPlanChangeRequest approved. Entitlement ID: {}", id);
+    log.info("EntitlementPlanChangeRequest approved. Entitlement ID: {}", id);
   }
 
   public List<Entitlement> listEntitlementsForGcpAccountId(String gcpAccountId) {
@@ -96,7 +96,7 @@ public class GcpProcurementService {
                                .filter(entitlement -> entitlement.getAccount().equals(accountName))
                                .collect(Collectors.toList());
     } catch (IOException e) {
-      logger.error("Exception listing entitlement for GCP account: {}", gcpAccountId, e);
+      log.error("Exception listing entitlement for GCP account: {}", gcpAccountId, e);
     }
     return accountEntitlement;
   }

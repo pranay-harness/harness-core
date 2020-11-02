@@ -72,7 +72,7 @@ public class WorkflowConcurrencyHelper {
       }
       return canaryOrchestrationWorkflow;
     } catch (Exception e) {
-      logger.error("Failed to enhance workflow with concurrency steps: {}", e.getMessage());
+      log.error("Failed to enhance workflow with concurrency steps: {}", e.getMessage());
       return workflow.getOrchestrationWorkflow();
     }
   }
@@ -141,7 +141,7 @@ public class WorkflowConcurrencyHelper {
         resourceConstraintAdded = true;
       }
     } else {
-      logger.info("No Provisioner Step for Dynamic Infra. Skipping Adding Steps for Concurrency");
+      log.info("No Provisioner Step for Dynamic Infra. Skipping Adding Steps for Concurrency");
     }
     return resourceConstraintAdded;
   }

@@ -66,7 +66,7 @@ public class EventServerExecutor {
         if (isHealthy()) {
           return;
         }
-        logger.info("Execute the event-server from {}", directory);
+        log.info("Execute the event-server from {}", directory);
         final Path jar = Paths.get(directory.getPath(), "72-event-server", "target", "event-server-capsule.jar");
         final Path config = Paths.get(directory.getPath(), "72-event-server", "event-service-config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
@@ -80,7 +80,7 @@ public class EventServerExecutor {
         }
 
         for (int i = 0; i < 10; i++) {
-          logger.info("***");
+          log.info("***");
         }
 
         List<String> command = new ArrayList<>();
@@ -97,14 +97,14 @@ public class EventServerExecutor {
         addJar(jar, command);
         addConfig(config, command);
 
-        logger.info(Strings.join(command, " "));
+        log.info(Strings.join(command, " "));
 
         ProcessExecutor processExecutor = new ProcessExecutor();
         processExecutor.directory(directory);
         processExecutor.command(command);
 
-        processExecutor.redirectOutput(Slf4jStream.of(logger).asInfo());
-        processExecutor.redirectError(Slf4jStream.of(logger).asError());
+        processExecutor.redirectOutput(Slf4jStream.of(log).asInfo());
+        processExecutor.redirectError(Slf4jStream.of(log).asError());
 
         final StartedProcess startedProcess = processExecutor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(startedProcess.getProcess()::destroy));
@@ -133,14 +133,14 @@ public class EventServerExecutor {
       }
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
-        logger.info("not healthy");
+        log.info("not healthy");
       } else {
-        logger.info("not healthy - {}", exception.getMessage());
+        log.info("not healthy - {}", exception.getMessage());
         previous = exception;
       }
       return false;
     }
-    logger.info("healthy");
+    log.info("healthy");
     return true;
   }
 }

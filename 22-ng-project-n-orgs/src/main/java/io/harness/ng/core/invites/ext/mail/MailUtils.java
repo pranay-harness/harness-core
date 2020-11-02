@@ -59,7 +59,7 @@ public class MailUtils {
       try {
         email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
       } catch (AddressException e) {
-        logger.error(ExceptionUtils.getMessage(e), e);
+        log.error(ExceptionUtils.getMessage(e), e);
       }
       email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
@@ -99,7 +99,7 @@ public class MailUtils {
       email.send();
       return true;
     } catch (EmailException e) {
-      logger.error("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
+      log.error("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
     } catch (IOException | TemplateException e) {
       throw new InvalidArgumentsException("Failed to send email.", e, null);
     }
@@ -150,7 +150,7 @@ public class MailUtils {
       try {
         email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
       } catch (AddressException e) {
-        logger.error(ExceptionUtils.getMessage(e), e);
+        log.error(ExceptionUtils.getMessage(e), e);
       }
       email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
@@ -172,7 +172,7 @@ public class MailUtils {
       }
       email.send();
     } catch (EmailException e) {
-      logger.error("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
+      log.error("Failed to send email. Reason: " + ExceptionUtils.getMessage(e));
     }
   }
 }

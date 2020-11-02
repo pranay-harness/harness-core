@@ -22,7 +22,7 @@ public class SwitchTest extends CategoryTest implements MockableTestMixin {
   @Category(UnitTests.class)
   public void unhandled() throws IllegalAccessException {
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(Switch.class, "logger", mockLogger);
+    setStaticFieldValue(Switch.class, "log", mockLogger);
 
     int a = 5;
     Switch.unhandled(a);

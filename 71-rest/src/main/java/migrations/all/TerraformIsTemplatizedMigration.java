@@ -53,12 +53,12 @@ public class TerraformIsTemplatizedMigration implements Migration {
             infrastructureProvisionerService.update(provisioner);
           }
         } catch (Exception ex) {
-          logger.error("Error while updating isTemplatized field for provisioner: {}",
+          log.error("Error while updating isTemplatized field for provisioner: {}",
               provisioner != null ? provisioner.getName() : "", ex);
         }
       }
     } catch (Exception ex) {
-      logger.error("Failed - Populating templatized field in TerraformInfrastructureProvisioner", ex);
+      log.error("Failed - Populating templatized field in TerraformInfrastructureProvisioner", ex);
     }
   }
 }

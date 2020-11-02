@@ -29,7 +29,7 @@ public class SetDummyTechStackForOldAccounts implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("SetDummyTechStack - Start");
+    log.info("SetDummyTechStack - Start");
     Query<Account> accountsQuery = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(accountsQuery.fetch())) {
       while (records.hasNext()) {
@@ -38,7 +38,7 @@ public class SetDummyTechStackForOldAccounts implements Migration {
           account = records.next();
           Set<TechStack> techStacks = account.getTechStacks();
           if (isNotEmpty(techStacks)) {
-            logger.info("SetDummyTechStack - skip for account {}", account.getUuid());
+            log.info("SetDummyTechStack - skip for account {}", account.getUuid());
             continue;
           }
 
@@ -46,16 +46,16 @@ public class SetDummyTechStackForOldAccounts implements Migration {
           techStacks.add(TechStack.builder().technology("NONE").category("NONE").build());
 
           accountService.updateTechStacks(account.getUuid(), techStacks);
-          logger.info("SetDummyTechStack - Updated dummy tech stacks for account {}", account.getUuid());
+          log.info("SetDummyTechStack - Updated dummy tech stacks for account {}", account.getUuid());
         } catch (Exception ex) {
-          logger.error("SetDummyTechStack - Error while updating dummy tech stacks for account: {}",
+          log.error("SetDummyTechStack - Error while updating dummy tech stacks for account: {}",
               account != null ? account.getAccountName() : "", ex);
         }
       }
 
-      logger.info("SetDummyTechStack - Done - Updated dummy tech stacks ");
+      log.info("SetDummyTechStack - Done - Updated dummy tech stacks ");
     } catch (Exception ex) {
-      logger.error("SetDummyTechStack - Failed - Updated dummy tech stacks ", ex);
+      log.error("SetDummyTechStack - Failed - Updated dummy tech stacks ", ex);
     }
   }
 }

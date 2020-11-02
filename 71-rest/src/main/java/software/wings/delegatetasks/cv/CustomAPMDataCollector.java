@@ -194,7 +194,7 @@ public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDat
       try {
         initialUrl = initialUrl.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
       } catch (Exception e) {
-        logger.warn("Unsupported exception caught when encoding a back-tick", e);
+        log.warn("Unsupported exception caught when encoding a back-tick", e);
       }
     }
     return initialUrl;

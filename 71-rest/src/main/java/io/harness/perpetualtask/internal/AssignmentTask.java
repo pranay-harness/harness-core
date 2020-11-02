@@ -24,7 +24,7 @@ public class AssignmentTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AssignmentTaskResponse run(TaskParameters parameters) {
-    logger.debug("Delegate id: {}", getDelegateId());
+    log.debug("Delegate id: {}", getDelegateId());
     return AssignmentTaskResponse.builder().delegateId(getDelegateId()).build();
   }
 }

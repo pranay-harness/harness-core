@@ -99,7 +99,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
 
     DockerImageTagResponse dockerImageTagResponse = response.body();
     if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
-      logger.warn("There are no tags available for the imageName {}", imageName);
+      log.warn("There are no tags available for the imageName {}", imageName);
       return buildDetails;
     }
     buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
@@ -113,8 +113,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
         return buildDetails;
       } else {
-        logger.info(
-            "Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
+        log.info("Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
       }
       int queryParamIndex = nextLink.indexOf('?');
       String nextPageUrl =
@@ -126,12 +125,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       dockerImageTagResponse = response.body();
       if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
-        logger.info("There are no more tags available for the imageName {}. Returning tags", imageName);
+        log.info("There are no more tags available for the imageName {}. Returning tags", imageName);
         return buildDetails;
       }
       buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
       if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
-        logger.warn(
+        log.warn(
             "Image name {} has more than {} tags. We might miss some new tags", imageName, MAX_NO_OF_TAGS_PER_IMAGE);
         buildDetails.subList(0, buildDetails.size() - MAX_NO_OF_TAGS_PER_IMAGE).clear();
         break;
@@ -282,7 +281,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
         return isSuccessful(response);
       } catch (IOException e) {
-        logger.warn("Failed to fetch apiversion with credentials" + e);
+        log.warn("Failed to fetch apiversion with credentials" + e);
         try {
           // This is special case for repositories that require "/v2/" path for getting API version . Eg. Harbor docker
           // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
@@ -340,7 +339,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
       }
     } catch (IOException e) {
-      logger.warn("Exception occurred while fetching token", e);
+      log.warn("Exception occurred while fetching token", e);
     }
     return null;
   }
@@ -354,7 +353,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       return true;
     }
 
-    logger.error("Request not successful. Reason: {}", response);
+    log.error("Request not successful. Reason: {}", response);
     int code = response.code();
     switch (code) {
       case 404:

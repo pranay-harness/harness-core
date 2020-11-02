@@ -49,11 +49,11 @@ public class LicenseCheckHandler implements Handler<Account> {
   @Override
   public void handle(Account account) {
     try {
-      logger.info("Running license check job");
+      log.info("Running license check job");
       licenseService.checkForLicenseExpiry(account);
-      logger.info("License check job complete");
+      log.info("License check job complete");
     } catch (Exception ex) {
-      logger.error("Error while checking license", ex);
+      log.error("Error while checking license", ex);
     }
   }
 }

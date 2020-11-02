@@ -184,14 +184,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   protected boolean canAssignDelegateProfileScopes(
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
     if (isEmpty(taskSetupAbstractions)) {
-      logger.warn(
+      log.warn(
           "No setup abstractions have been passed in from delegate task. Considering this delegate profile matched");
       return true;
     }
 
     DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
     if (delegateProfile == null) {
-      logger.warn(
+      log.warn(
           "Delegate profile {} not found. Considering this delegate profile matched", delegate.getDelegateProfileId());
       return true;
     }
@@ -302,7 +302,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   private boolean scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
     if (!scope.isValid()) {
-      logger.error("Delegate scope cannot be empty.");
+      log.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
     boolean match = true;
@@ -311,7 +311,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       if (isNotBlank(appId) && isNotBlank(envId)) {
         Environment environment = environmentService.get(appId, envId, false);
         if (environment == null) {
-          logger.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+          log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
         }
         match = environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType());
       } else {
@@ -368,7 +368,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       }
       return matching;
     } catch (Exception e) {
-      logger.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
+      log.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
     }
     return false;
   }
@@ -391,7 +391,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error("Error checking whether delegate should validate task {}", task.getUuid(), e);
+      log.error("Error checking whether delegate should validate task {}", task.getUuid(), e);
     }
     return false;
   }
@@ -429,7 +429,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error("Error checking for whitelisted delegates", e);
+      log.error("Error checking for whitelisted delegates", e);
     }
     return delegateIds;
   }
@@ -451,7 +451,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public String pickFirstAttemptDelegate(DelegateTask task) {
     List<String> delegates = connectedWhitelistedDelegates(task);
     if (delegates.isEmpty()) {
-      logger.info("No first attempt delegate was picked");
+      log.info("No first attempt delegate was picked");
       return null;
     }
     return delegates.get(random.nextInt(delegates.size()));
@@ -480,15 +480,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             DelegateConnectionResult result =
                 wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
-              logger.info("Whitelist entry refreshed");
+              log.info("Whitelist entry refreshed");
             } else {
-              logger.info("Whitelist entry was not updated");
+              log.info("Whitelist entry was not updated");
             }
           }
         }
       }
     } catch (Exception e) {
-      logger.error("Error refreshing whitelist entry for task {}", task.getUuid(), e);
+      log.error("Error refreshing whitelist entry for task {}", task.getUuid(), e);
     }
   }
 
@@ -511,7 +511,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         try {
           wingsPersistence.save(result);
         } catch (DuplicateKeyException e) {
-          logger.warn("Result has already been saved. ", e);
+          log.warn("Result has already been saved. ", e);
         }
       }
     }
@@ -532,7 +532,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask) {
-    logger.info("Delegate task is terminated");
+    log.info("Delegate task is terminated");
 
     String errorMessage = "Unknown";
 
@@ -553,7 +553,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
 
-      logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+      log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
@@ -592,7 +592,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         errorMessage = "Delegate task was never assigned and timed out.";
       }
     } catch (Exception e) {
-      logger.error("Execution exception", e);
+      log.error("Execution exception", e);
     }
     return errorMessage;
   }
@@ -602,7 +602,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       return accountDelegatesCache.get(accountId).isEmpty();
     } catch (ExecutionException ex) {
-      logger.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      log.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return true;
     }
   }
@@ -621,7 +621,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       return identifyActiveDelegateIds(accountDelegates, accountId, batch);
     } catch (ExecutionException ex) {
-      logger.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      log.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return emptyList();
     }
   }

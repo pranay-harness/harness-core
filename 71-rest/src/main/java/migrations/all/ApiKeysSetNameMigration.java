@@ -29,7 +29,7 @@ public class ApiKeysSetNameMigration implements Migration {
     DBCollection collection = wingsPersistence.getCollection(ApiKeyEntry.class);
     DBCursor apiKeys = collection.find();
 
-    logger.info("will go through " + apiKeys.size() + " api keys");
+    log.info("will go through " + apiKeys.size() + " api keys");
 
     while (apiKeys.hasNext()) {
       DBObject next = apiKeys.next();
@@ -46,12 +46,12 @@ public class ApiKeysSetNameMigration implements Migration {
         UpdateOperations<ApiKeyEntry> operations = wingsPersistence.createUpdateOperations(ApiKeyEntry.class);
         setUnset(operations, "name", apiKeyEntry.getDecryptedKey().substring(0, 5));
         wingsPersistence.update(wingsPersistence.createQuery(ApiKeyEntry.class).filter("_id", uuId).get(), operations);
-        logger.info("updated api key: {}", uuId);
+        log.info("updated api key: {}", uuId);
       } catch (Exception ex) {
-        logger.warn("Failed to update api key: {}", uuId, ex);
+        log.warn("Failed to update api key: {}", uuId, ex);
       }
     }
 
-    logger.info("Completed setting name to api keys");
+    log.info("Completed setting name to api keys");
   }
 }

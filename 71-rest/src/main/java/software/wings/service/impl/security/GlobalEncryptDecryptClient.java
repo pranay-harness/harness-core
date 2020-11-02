@@ -150,7 +150,7 @@ public class GlobalEncryptDecryptClient {
           }
         }
       } catch (Exception e) {
-        logger.error("Migration failed for encrypted data {} due to error", encryptedData.getUuid(), e);
+        log.error("Migration failed for encrypted data {} due to error", encryptedData.getUuid(), e);
       }
     }
     return plainTextSecret;
@@ -174,7 +174,7 @@ public class GlobalEncryptDecryptClient {
     try {
       return gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
     } catch (Exception e) {
-      logger.error("Decryption failed using primary global kms due to the following error", e);
+      log.error("Decryption failed using primary global kms due to the following error", e);
     }
 
     KmsConfig kmsConfig = getAWSGlobalSecretManager();
@@ -220,8 +220,7 @@ public class GlobalEncryptDecryptClient {
           .base64Encoded(encryptedRecord.isBase64Encoded())
           .build();
     } catch (DelegateRetryableException | SecretManagementDelegateException e) {
-      logger.warn(
-          "Failed to decrypt secret {} with secret manager {}. Falling back to decrypt this secret using delegate",
+      log.warn("Failed to decrypt secret {} with secret manager {}. Falling back to decrypt this secret using delegate",
           encryptedRecord.getUuid(), encryptionConfig.getUuid(), e);
       // This means we are falling back to use delegate to decrypt.
       return SecretManager.buildRecordData(encryptedRecord);

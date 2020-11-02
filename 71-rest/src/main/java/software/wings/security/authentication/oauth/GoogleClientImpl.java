@@ -101,7 +101,7 @@ public class GoogleClientImpl extends BaseOauthClient implements OauthClient {
 
   private OAuth2AccessToken getAccessToken(final String code)
       throws InterruptedException, ExecutionException, IOException {
-    logger.info("Access token received is: {}", code);
+    log.info("Access token received is: {}", code);
     return service.getAccessToken(code);
   }
 }

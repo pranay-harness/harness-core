@@ -45,7 +45,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
 
   @Override
   public void cleanupArtifactsAsync(ArtifactStream artifactStream) {
-    logger.info("Cleaning build details for artifact stream type {} and source name {} ",
+    log.info("Cleaning build details for artifact stream type {} and source name {} ",
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
@@ -68,7 +68,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
-        logger.warn("Artifact Server {} was deleted", artifactStream.getSettingId());
+        log.warn("Artifact Server {} was deleted", artifactStream.getSettingId());
         // TODO:: mark inactive maybe
         return;
       }
@@ -84,8 +84,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     }
 
     waitNotifyEngine.waitForAllOn(GENERAL, new BuildSourceCleanupCallback(accountId, artifactStream.getUuid()), waitId);
-    logger.info("Queuing delegate task with waitId {}", waitId);
+    log.info("Queuing delegate task with waitId {}", waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
-    logger.info("Queued delegate taskId {}", taskId);
+    log.info("Queued delegate taskId {}", taskId);
   }
 }

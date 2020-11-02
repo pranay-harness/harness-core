@@ -45,7 +45,7 @@ public class SlackValidation extends AbstractDelegateValidateTask {
       String baseUrl = url.getProtocol() + "://" + url.getHost();
       return singletonList(baseUrl);
     } catch (MalformedURLException e) {
-      logger.error("Slack URL is incorrect", e);
+      log.error("Slack URL is incorrect", e);
       throw new InvalidRequestException("Could not create slack webhook url for validation");
     }
   }

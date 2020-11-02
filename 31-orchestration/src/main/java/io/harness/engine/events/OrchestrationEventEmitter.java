@@ -23,7 +23,7 @@ public class OrchestrationEventEmitter {
       subject.handleEventSync(event);
       orchestrationEventQueue.send(event);
     } catch (Exception ex) {
-      logger.error("Failed to create orchestration event", ex);
+      log.error("Failed to create orchestration event", ex);
     }
   }
 }

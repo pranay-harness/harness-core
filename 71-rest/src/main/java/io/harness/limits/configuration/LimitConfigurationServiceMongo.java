@@ -110,7 +110,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
     Limit limit = defaultLimits.get(actionType, accountType.toUpperCase());
     if (null == limit) {
-      logger.error(
+      log.error(
           "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",
           actionType, accountType);
       return null;
@@ -158,13 +158,13 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
     UpdateResults results = ds.update(query, updateOp, options);
     if (results.getUpdatedCount() < 1 && results.getInsertedCount() < 1) {
-      logger.error(
+      log.error(
           "Both inserted and updated count are less than 1. UpdateCount: {}, InsertCount: {}, Account ID: {}, actionType: {}, Limit: {}",
           results.getUpdatedCount(), results.getInsertedCount(), accountId, actionType, limit);
       return false;
     }
 
-    logger.info("Set the new limit for account: {}, action type: {}, limit: {}", accountId, actionType.name(),
+    log.info("Set the new limit for account: {}, action type: {}, limit: {}", accountId, actionType.name(),
         limit.getLimitType().name());
     return true;
   }
@@ -173,7 +173,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   public void deleteByAccountId(String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId));
-      logger.info("deleted limits for account {}", accountId);
+      log.info("deleted limits for account {}", accountId);
     }
   }
 }

@@ -47,7 +47,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   public GitFetchResponse run(TaskParameters parameters) {
     GitFetchRequest gitFetchRequest = (GitFetchRequest) parameters;
 
-    logger.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
+    log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
     LogCallback executionLogCallback = getLogCallBack();
 
@@ -65,13 +65,13 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
         // Values.yaml in service spec is optional.
         if (ex.getCause() instanceof NoSuchFileException && gitFetchFilesConfig.isSucceedIfFileNotFound()) {
-          logger.info("file not found. " + exceptionMsg, ex);
+          log.info("file not found. " + exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
           continue;
         }
 
         String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
-        logger.error(msg, ex);
+        log.error(msg, ex);
         executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitFetchResponse.builder().errorMessage(exceptionMsg).taskStatus(TaskStatus.FAILURE).build();
       }

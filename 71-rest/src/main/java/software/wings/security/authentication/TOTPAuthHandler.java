@@ -43,7 +43,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
     String accountId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
-      logger.info("Authenticating via Two Factor Authenication");
+      log.info("Authenticating via Two Factor Authenication");
       String passcode = credentials[0];
       String totpSecret = user.getTotpSecretKey();
       if (isBlank(totpSecret)) {

@@ -112,7 +112,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
     } catch (Exception exception) {
       throw new InvalidRequestException(EXCEPTION_MSG, exception, WingsException.USER_SRE);
     } finally {
-      logger.info("Time taken for the stats call (abstractStatsDataFetcherWithAggregationList) {}",
+      log.info("Time taken for the stats call (abstractStatsDataFetcherWithAggregationList) {}",
           System.currentTimeMillis() - startTime);
     }
 

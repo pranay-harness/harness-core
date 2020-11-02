@@ -225,7 +225,7 @@ public class AuthHandler {
 
       appPermissions.forEach(appPermission -> {
         if (isEmpty(appPermission.getActions())) {
-          logger.error("Actions empty for apps: {}", appPermission.getAppFilter());
+          log.error("Actions empty for apps: {}", appPermission.getAppFilter());
           return;
         }
 
@@ -957,7 +957,7 @@ public class AuthHandler {
           .collect(Collectors.toSet());
     } else {
       String msg = "Unknown service filter type: " + serviceFilter.getFilterType();
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
   }
@@ -980,7 +980,7 @@ public class AuthHandler {
           .collect(Collectors.toSet());
     } else {
       String msg = "Unknown service filter type: " + provisionerFilter.getFilterType();
-      logger.error(msg);
+      log.error(msg);
       throw new InvalidRequestException(msg);
     }
   }
@@ -1129,7 +1129,7 @@ public class AuthHandler {
     if (environments != null) {
       Set<String> envIds = getEnvIdsByFilter(environments, envFilter);
       if (CollectionUtils.isEmpty(envIds)) {
-        logger.info("No environments matched the filter for app {}. Returning empty set of deployments", appId);
+        log.info("No environments matched the filter for app {}. Returning empty set of deployments", appId);
         return new HashSet<>();
       }
     }
@@ -1308,7 +1308,7 @@ public class AuthHandler {
     if (workflowCache.containsKey(workflowId)) {
       workflow = workflowCache.get(workflowId);
     } else {
-      logger.info("Workflow not found in cache: {}", workflowId);
+      log.info("Workflow not found in cache: {}", workflowId);
       workflow = workflowService.readWorkflowWithoutOrchestration(appId, workflowId);
       if (workflow == null) {
         return null;
@@ -1579,7 +1579,7 @@ public class AuthHandler {
 
   public void addUserToDefaultAccountAdminUserGroup(User user, Account account, boolean sendNotification) {
     if (account == null) {
-      logger.info("account is null, continuing....");
+      log.info("account is null, continuing....");
       return;
     }
 
@@ -1596,14 +1596,14 @@ public class AuthHandler {
     }
 
     if (userGroup == null) {
-      logger.info("UserGroup doesn't exist in account {}", accountId);
+      log.info("UserGroup doesn't exist in account {}", accountId);
       userGroup = buildDefaultAdminUserGroup(accountId, user);
 
       UserGroup savedUserGroup = userGroupService.save(userGroup);
-      logger.info("Created default user group {} for account {}", savedUserGroup.getUuid(), accountId);
+      log.info("Created default user group {} for account {}", savedUserGroup.getUuid(), accountId);
     } else {
-      logger.info("UserGroup already exists in account {}", accountId);
-      logger.info(
+      log.info("UserGroup already exists in account {}", accountId);
+      log.info(
           "Checking if user {} exists in user group {} in account {}", user.getName(), userGroup.getUuid(), accountId);
 
       List<String> memberIds = userGroup.getMemberIds();
@@ -1615,7 +1615,7 @@ public class AuthHandler {
       }
 
       if (!userMemberOfGroup) {
-        logger.info("User {} is not part of the user group in account {}, adding now ", user.getName(), accountId);
+        log.info("User {} is not part of the user group in account {}, adding now ", user.getName(), accountId);
         List<String> members = userGroup.getMemberIds();
         if (members == null) {
           members = new ArrayList<>();
@@ -1625,7 +1625,7 @@ public class AuthHandler {
 
         userGroupService.updateMembers(userGroup, sendNotification, true);
 
-        logger.info("User {} is added to the user group in account {}", user.getName(), accountId);
+        log.info("User {} is added to the user group in account {}", user.getName(), accountId);
       }
     }
   }
@@ -1695,7 +1695,7 @@ public class AuthHandler {
 
     UserPermissionInfo userPermissionInfo = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
 
-    logger.info("SCIM: Permissions {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
+    log.info("SCIM: Permissions {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
     if (!userPermissionInfo.getAccountPermissionSummary().getPermissions().contains(USER_PERMISSION_MANAGEMENT)) {
       throw new InvalidRequestException(USER_NOT_AUTHORIZED, USER);
     }

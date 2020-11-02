@@ -124,7 +124,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
-      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
+      log.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
@@ -209,7 +209,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
-      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
+      log.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
@@ -243,7 +243,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, errorAccumulator);
       }
       if (exitCode != 0) {
-        logger.error("Powershell script collecting output environment Variables failed with exitCode {}", exitCode);
+        log.error("Powershell script collecting output environment Variables failed with exitCode {}", exitCode);
         return envVariablesMap;
       }
 
@@ -272,7 +272,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      logger.error("Exception while trying to collectOutputEnvironmentVariables", e);
+      log.error("Exception while trying to collectOutputEnvironmentVariables", e);
     }
     return envVariablesMap;
   }
@@ -296,7 +296,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      logger.error("Exception while trying to remove file {} {}", file, e);
+      log.error("Exception while trying to remove file {} {}", file, e);
     }
   }
 
@@ -404,7 +404,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
         fileBytes = buffer.toByteArray();
       } catch (Exception e) {
-        logger.error("Error while downloading config file.", e);
+        log.error("Error while downloading config file.", e);
       }
 
       int exitCode;
@@ -435,13 +435,13 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
         exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
       }
-      logger.info("Execute Command String returned exit code.", exitCode);
+      log.info("Execute Command String returned exit code.", exitCode);
       commandExecutionStatus = SUCCESS;
       cleanupFiles(session, psScriptFile);
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
+      log.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
@@ -457,7 +457,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       return CommandExecutionStatus.SUCCESS;
     }
     commandExecutionStatus = downloadConfigFile(configFileMetaData);
-    logger.info("Copy Config command execution returned.", commandExecutionStatus);
+    log.info("Copy Config command execution returned.", commandExecutionStatus);
     return commandExecutionStatus;
   }
 

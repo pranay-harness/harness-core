@@ -66,7 +66,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    logger.info("Running validation for task {}", delegateTaskId);
+    log.info("Running validation for task {}", delegateTaskId);
 
     HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
@@ -146,7 +146,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean isConnectableHttpUrl(String url) {
     if (!connectableHttpUrl(url)) {
-      logger.info("Unreachable URL {} for task {} from delegate", url, delegateTaskId);
+      log.info("Unreachable URL {} for task {} from delegate", url, delegateTaskId);
       return false;
     }
 
@@ -156,7 +156,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean isChartMuseumInstalled() {
     String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
     if (isBlank(chartMuseumPath)) {
-      logger.info("chartmuseum not installed in delegate for task {}", delegateTaskId);
+      log.info("chartmuseum not installed in delegate for task {}", delegateTaskId);
       return false;
     }
 
@@ -169,7 +169,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean isHelmInstalled() {
     String helmPath = k8sGlobalConfigService.getHelmPath(defaultHelmVersion);
     if (isBlank(helmPath)) {
-      logger.info("Helm not installed in delegate for task {}", delegateTaskId);
+      log.info("Helm not installed in delegate for task {}", delegateTaskId);
       return false;
     }
 
@@ -188,7 +188,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
     StringBuilder builder = new StringBuilder(200);
     if (helmVersion == null) {
-      logger.error("Unexpected null helm version in Values Fetch Task");
+      log.error("Unexpected null helm version in Values Fetch Task");
     }
     builder.append(format("DIRECT_HELM_%s_REPO: ", helmVersion));
     if (isNotBlank(helmChartConfigTaskParams.getChartName())) {
@@ -228,7 +228,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean executeCommand(String command) {
     try {
-      logger.info("Executing command: " + command);
+      log.info("Executing command: " + command);
 
       ProcessExecutor processExecutor =
           new ProcessExecutor().timeout(2, TimeUnit.MINUTES).commandSplit(command).readOutput(true);
@@ -236,13 +236,13 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       ProcessResult processResult = processExecutor.execute();
 
       if (processResult.getExitValue() != 0) {
-        logger.info("Failed to execute command: " + command + ". Error: " + processResult.getOutput().getUTF8());
+        log.info("Failed to execute command: " + command + ". Error: " + processResult.getOutput().getUTF8());
         return false;
       }
 
       return true;
     } catch (Exception ex) {
-      logger.error("Error executing command: " + command, ex);
+      log.error("Error executing command: " + command, ex);
       return false;
     }
   }
@@ -251,7 +251,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     HelmValuesFetchTaskParameters valuesTaskParams = getHelmValuesFetchTaskParameters();
     ContainerServiceParams containerServiceParams = valuesTaskParams.getContainerServiceParams();
 
-    logger.info("Running validation for empty helm repo config ");
+    log.info("Running validation for empty helm repo config ");
 
     boolean validated = false;
     try {
@@ -267,13 +267,13 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
         validated = validateContainerParams();
-        logger.info("Helm containerServiceParams validation result. Validated: " + validated);
+        log.info("Helm containerServiceParams validation result. Validated: " + validated);
       }
     } catch (Exception e) {
-      logger.error("Helm validation failed", e);
+      log.error("Helm validation failed", e);
     }
 
-    logger.info("HelmRepoConfigValidation result. Validated: " + validated);
+    log.info("HelmRepoConfigValidation result. Validated: " + validated);
 
     return validated;
   }

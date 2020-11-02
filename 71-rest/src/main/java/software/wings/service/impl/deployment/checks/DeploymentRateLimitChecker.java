@@ -69,7 +69,7 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
         RateLimitChecker shortDurationChecker = shortDurationChecker(checker, deployAction);
 
         if (null != shortDurationChecker && !shortDurationChecker.checkAndConsume()) {
-          logger.info("Short Duration Deployment Limit Reached. accountId={}, Limit: {}", accountId,
+          log.info("Short Duration Deployment Limit Reached. accountId={}, Limit: {}", accountId,
               shortDurationChecker.getLimit());
           throw new UsageLimitExceededException(ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER,
               shortDurationChecker.getLimit(), accountId);
@@ -77,7 +77,7 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
 
         if (!checker.checkAndConsume()) {
           RateLimit limit = checker.getLimit();
-          logger.info("Deployment Limit Reached. accountId={}, Limit: {}", accountId, limit.getCount());
+          log.info("Deployment Limit Reached. accountId={}, Limit: {}", accountId, limit.getCount());
           throw new UsageLimitExceededException(
               ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER, limit, accountId);
         }
@@ -85,11 +85,11 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
         RateLimitVicinityChecker vicinityChecker = (RateLimitVicinityChecker) checker;
         if (vicinityChecker.crossed(warningPercentage)) {
           RateLimit limit = vicinityChecker.getLimit();
-          logger.info("Deployment vicinity reached. accountId={}, Limit: {}", accountId, limit.getCount());
+          log.info("Deployment vicinity reached. accountId={}, Limit: {}", accountId, limit.getCount());
           throw new LimitApproachingException(limit, accountId, warningPercentage);
         }
       } catch (NoLimitConfiguredException e) {
-        logger.error(
+        log.error(
             "No limit is configured for action: {} for account {}. Deployments will be allowed to maintain backward compatibility. But deployments are NOT being rate limited.",
             deployAction, accountId, e);
       }
@@ -102,8 +102,7 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
       try {
         return Integer.parseInt(percent);
       } catch (NumberFormatException e) {
-        logger.error(
-            "Error reading DEPLOYMENT_RATE_LIMIT_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
+        log.error("Error reading DEPLOYMENT_RATE_LIMIT_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
         return PERCENT_TO_WARN_ON_DEFAULT;
       }
     }

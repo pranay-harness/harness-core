@@ -33,13 +33,13 @@ public class RestClientUtils {
             errorMessage = responseMessageList.get(0).getMessage();
           }
         } catch (Exception e) {
-          logger.debug("Error while converting error received from 71 rest manager", e);
+          log.debug("Error while converting error received from 71 rest manager", e);
         }
         throw new InvalidRequestException(
             StringUtils.isEmpty(errorMessage) ? "Error occurred while performing this operation" : errorMessage);
       }
     } catch (IOException ex) {
-      logger.error("IO error while connecting to manager", ex);
+      log.error("IO error while connecting to manager", ex);
       throw new UnexpectedException("Unable to connect, please try again.");
     }
   }

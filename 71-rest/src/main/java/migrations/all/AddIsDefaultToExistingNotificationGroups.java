@@ -28,13 +28,13 @@ public class AddIsDefaultToExistingNotificationGroups implements Migration {
   @Override
   public void migrate() {
     PageRequest<NotificationGroup> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    logger.info("Retrieving notificationGroups");
+    log.info("Retrieving notificationGroups");
     PageResponse<NotificationGroup> pageResponse =
         wingsPersistence.query(NotificationGroup.class, pageRequest, excludeAuthority);
 
     List<NotificationGroup> notificationGroups = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(notificationGroups)) {
-      logger.info("No NotificationGroups found");
+      log.info("No NotificationGroups found");
       return;
     }
 
@@ -44,7 +44,7 @@ public class AddIsDefaultToExistingNotificationGroups implements Migration {
       // so we dont want to mark all as false.
       if (notificationGroup.isEditable() && !notificationGroup.isDefaultNotificationGroupForAccount()) {
         notificationGroup.setDefaultNotificationGroupForAccount(false);
-        logger.info("... Updating notificationGroup, Id:[{}], Name:[{}]", notificationGroup.getUuid(),
+        log.info("... Updating notificationGroup, Id:[{}], Name:[{}]", notificationGroup.getUuid(),
             notificationGroup.getName());
         notificationSetupService.updateNotificationGroup(notificationGroup);
       }

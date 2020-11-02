@@ -75,7 +75,7 @@ public class ResourceLookupMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting ResourceLookupMigration migration for all accounts.");
+    log.info("Starting ResourceLookupMigration migration for all accounts.");
     try {
       // existing ResourceLoop records
       initializeExistingResourceLookupSet();
@@ -109,7 +109,7 @@ public class ResourceLookupMigration implements Migration {
       }
 
     } catch (Exception ex) {
-      logger.error("ResourceLookupMigration migration failed.", ex);
+      log.error("ResourceLookupMigration migration failed.", ex);
     }
   }
 
@@ -375,7 +375,7 @@ public class ResourceLookupMigration implements Migration {
       if (i % 1000 == 0) {
         bulkWriteOperation.execute();
         bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-        logger.info("ResourceLookup: {} updated", i);
+        log.info("ResourceLookup: {} updated", i);
       }
       ++i;
 
@@ -386,7 +386,7 @@ public class ResourceLookupMigration implements Migration {
 
     if (i % 1000 != 1) {
       bulkWriteOperation.execute();
-      logger.info("ResourceLookup: {} updated", i);
+      log.info("ResourceLookup: {} updated", i);
     }
   }
 }

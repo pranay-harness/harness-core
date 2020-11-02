@@ -61,7 +61,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
     evictWhitelistConfigCache(whitelist.getAccountId());
     eventPublishHelper.publishSetupIPWhitelistingEvent(savedWhitelist.getAccountId(), savedWhitelist.getUuid());
-    logger.info("Created whitelist config {} for account {}", savedWhitelist.getUuid(), savedWhitelist.getAccountId());
+    log.info("Created whitelist config {} for account {}", savedWhitelist.getUuid(), savedWhitelist.getAccountId());
     auditServiceHelper.reportForAuditingUsingAccountId(whitelist.getAccountId(), null, whitelist, Type.CREATE);
     return savedWhitelist;
   }
@@ -76,13 +76,13 @@ public class WhitelistServiceImpl implements WhitelistService {
         new SubnetUtils(filterCondition);
       } catch (IllegalArgumentException ex) {
         String msg = "Invalid cidr notation : " + filterCondition;
-        logger.warn(msg);
+        log.warn(msg);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
       }
     } else {
       if (!InetAddressValidator.getInstance().isValid(filterCondition)) {
         String msg = "Invalid ip address : " + filterCondition;
-        logger.warn(msg);
+        log.warn(msg);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
       }
     }
@@ -177,7 +177,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             SubnetUtils subnetUtils = new SubnetUtils(condition);
             return subnetUtils.getInfo().isInRange(ipAddress);
           } catch (Exception ex) {
-            logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, condition);
+            log.warn("Exception while checking if the ip {} is in range: {}", ipAddress, condition);
             return false;
           }
         }
@@ -200,17 +200,17 @@ public class WhitelistServiceImpl implements WhitelistService {
           SubnetUtils subnetUtils = new SubnetUtils(filter);
           boolean inRange = subnetUtils.getInfo().isInRange(ipAddress);
           if (!inRange) {
-            logger.warn("ip {} is not in range: {}", ipAddress, filter);
+            log.warn("ip {} is not in range: {}", ipAddress, filter);
           }
           return inRange;
         } catch (Exception ex) {
-          logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, filter);
+          log.warn("Exception while checking if the ip {} is in range: {}", ipAddress, filter);
           return false;
         }
       } else {
         boolean matches = ipAddress.equals(filter);
         if (!matches) {
-          logger.warn("ip {} does not match configured ip filter: {}", ipAddress, filter);
+          log.warn("ip {} does not match configured ip filter: {}", ipAddress, filter);
         }
         return matches;
       }
@@ -232,7 +232,7 @@ public class WhitelistServiceImpl implements WhitelistService {
                                  .filter(Whitelist.ACCOUNT_ID_KEY, whitelist.getAccountId());
     wingsPersistence.update(query, operations);
     evictWhitelistConfigCache(whitelist.getAccountId());
-    logger.info("Updated whitelist config {} for account {}", whitelist.getUuid(), whitelist.getAccountId());
+    log.info("Updated whitelist config {} for account {}", whitelist.getUuid(), whitelist.getAccountId());
     auditServiceHelper.reportForAuditingUsingAccountId(whitelist.getAccountId(), null, whitelist, Type.UPDATE);
     return get(whitelist.getAccountId(), whitelist.getUuid());
   }
@@ -247,7 +247,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     boolean delete = wingsPersistence.delete(whitelistQuery);
     if (delete) {
       evictWhitelistConfigCache(whitelist.getAccountId());
-      logger.info("Deleted whitelist config {} for account {}", whitelistId, accountId);
+      log.info("Deleted whitelist config {} for account {}", whitelistId, accountId);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(whitelist.getAccountId(), whitelist);
     }
     return delete;

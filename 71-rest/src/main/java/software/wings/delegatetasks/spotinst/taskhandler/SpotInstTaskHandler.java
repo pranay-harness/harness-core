@@ -81,9 +81,8 @@ public abstract class SpotInstTaskHandler {
         String message = ex.getMessage();
         ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);
         logCallback.saveExecutionLog(message, ERROR, FAILURE);
-        logger.error(
-            format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
-                spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),
+        log.error(format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
+                      spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),
             ex);
         return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
       }
@@ -105,7 +104,7 @@ public abstract class SpotInstTaskHandler {
     if (!elastiGroupIntialOptional.isPresent()) {
       String message = format(
           "Did not find Elastigroup with id: [%s]. Workflow execution: [%s]", elastiGroup.getId(), workflowExecutionId);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }
@@ -190,7 +189,7 @@ public abstract class SpotInstTaskHandler {
       List<AwsElbListener> listeners, int port, String loadBalancerName, ExecutionLogCallback logCallback) {
     if (isEmpty(listeners)) {
       String message = format("Did not find any listeners for load balancer: [%s]", loadBalancerName);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }
@@ -199,7 +198,7 @@ public abstract class SpotInstTaskHandler {
     if (!optionalListener.isPresent()) {
       String message =
           format("Did not find any listeners on port: [%d] for load balancer: [%s].", port, loadBalancerName);
-      logger.error(message);
+      log.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }

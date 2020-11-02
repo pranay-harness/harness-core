@@ -62,7 +62,7 @@ public class K8sPVInfoTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
       // change logger to debug in future
-      logger.info("Processing publishedMessage of size: {}", publishedMessageList.size());
+      log.info("Processing publishedMessage of size: {}", publishedMessageList.size());
       publishedMessageList.stream()
           .map(this ::processPVInfoMessage)
           .filter(instanceInfo -> instanceInfo.getAccountId() != null)
@@ -75,7 +75,7 @@ public class K8sPVInfoTasklet implements Tasklet {
     try {
       return process(publishedMessage);
     } catch (Exception ex) {
-      logger.error("K8sPVInfoTasklet Exception ", ex);
+      log.error("K8sPVInfoTasklet Exception ", ex);
     }
     return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
   }

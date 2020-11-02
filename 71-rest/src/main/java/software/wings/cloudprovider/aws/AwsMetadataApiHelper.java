@@ -106,7 +106,7 @@ public class AwsMetadataApiHelper {
       dockerId = getDockerIdUsingEc2MetadataEndpointApi(
           ec2Instance, taskRunningContainer, containerName, executionLogCallback);
     } catch (Exception e) {
-      logger.error("Exception Occured in fetching dockerId using Metadata Api", e);
+      log.error("Exception Occured in fetching dockerId using Metadata Api", e);
       printToExecutionLog(executionLogCallback, e.getMessage(), ERROR);
       dockerId = EMPTY;
     }

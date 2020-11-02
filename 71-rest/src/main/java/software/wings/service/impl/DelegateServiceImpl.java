@@ -666,13 +666,13 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegate != null && (delegate.getAccountId() == null || !delegate.getAccountId().equals(accountId))) {
         // TODO: this is serious, we should not return the delegate if the account is not the expected one
         //       just to be on the safe side, make sure that all such scenarios are first fixed
-        logger.error("Delegate account id mismatch", new Exception(""));
+        log.error("Delegate account id mismatch", new Exception(""));
       }
       return delegate;
     } catch (ExecutionException e) {
-      logger.error("Execution exception", e);
+      log.error("Execution exception", e);
     } catch (UncheckedExecutionException e) {
-      logger.error("Delegate not found exception", e);
+      log.error("Delegate not found exception", e);
     }
     return null;
   }
@@ -684,7 +684,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (ECS.equals(delegate.getDelegateType())) {
       return updateEcsDelegate(delegate, true);
     } else {
-      logger.info("Updating delegate : {}", delegate.getUuid());
+      log.info("Updating delegate : {}", delegate.getUuid());
       return updateDelegate(delegate, updateOperations);
     }
   }
@@ -694,7 +694,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (updateEntireEcsCluster) {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "ALL");
     } else {
-      logger.info("Updating ECS delegate : {}", delegate.getUuid());
+      log.info("Updating ECS delegate : {}", delegate.getUuid());
       if (isDelegateWithoutPollingEnabled(delegate)) {
         // This updates delegates, as well as delegateConnection and taksBeingExecuted on delegate
         return updateDelegate(delegate, updateOperations);
@@ -729,7 +729,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
-    logger.info("Updating delegate description", delegateId);
+    log.info("Updating delegate description", delegateId);
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, accountId)
                                 .filter(DelegateKeys.uuid, delegateId),
@@ -755,7 +755,7 @@ public class DelegateServiceImpl implements DelegateService {
     UpdateOperations<Delegate> updateOperations =
         wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, newDelegateStatus);
 
-    logger.debug("Updating approval status from {} to {}", currentDelegate.getStatus(), newDelegateStatus);
+    log.debug("Updating approval status from {} to {}", currentDelegate.getStatus(), newDelegateStatus);
     Delegate updatedDelegate =
         wingsPersistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
 
@@ -808,10 +808,10 @@ public class DelegateServiceImpl implements DelegateService {
   public Delegate updateTags(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, DelegateKeys.tags, delegate.getTags());
-    logger.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
+    log.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
 
     auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE_TAG);
-    logger.info("Auditing updation of Tags for delegate={} in account={}", delegate.getUuid(), delegate.getAccountId());
+    log.info("Auditing updation of Tags for delegate={} in account={}", delegate.getUuid(), delegate.getAccountId());
 
     if (ECS.equals(delegate.getDelegateType())) {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "TAGS");
@@ -831,11 +831,11 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateKeys.includeScopes, delegate.getIncludeScopes());
     setUnset(updateOperations, DelegateKeys.excludeScopes, delegate.getExcludeScopes());
 
-    logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
+    log.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
 
     auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE_SCOPE);
-    logger.info(
+    log.info(
         "Auditing updation of scope for delegateId={} in accountId={}", delegate.getUuid(), delegate.getAccountId());
 
     if (ECS.equals(delegate.getDelegateType())) {
@@ -868,7 +868,7 @@ public class DelegateServiceImpl implements DelegateService {
         try {
           fileService.deleteFile(previousDelegate.getProfileResult(), FileBucket.PROFILE_RESULTS);
         } catch (MongoGridFSException e) {
-          logger.warn("Didn't find profile result file: {}", previousDelegate.getProfileResult());
+          log.warn("Didn't find profile result file: {}", previousDelegate.getProfileResult());
         }
       }
     }
@@ -907,7 +907,7 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
-      logger.info("Upgrading delegate to version: {}", upgradeToVersion);
+      log.info("Upgrading delegate to version: {}", upgradeToVersion);
       boolean doUpgrade;
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         doUpgrade = true;
@@ -931,7 +931,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       delegateMatadata = delegateVersionCache.get(accountId);
     } catch (ExecutionException e) {
-      logger.error("Execution exception", e);
+      log.error("Execution exception", e);
     }
     return substringBefore(delegateMatadata, " ").trim();
   }
@@ -939,12 +939,12 @@ public class DelegateServiceImpl implements DelegateService {
   private String fetchDelegateMetadataFromStorage() {
     String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(null, null, null);
     try {
-      logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
+      log.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
       String result = Http.getResponseStringFromUrl(delegateMetadataUrl, 10, 10).trim();
-      logger.info("Received from storage: {}", result);
+      log.info("Received from storage: {}", result);
       return result;
     } catch (IOException e) {
-      logger.warn("Exception in fetching delegate version", e);
+      log.warn("Exception in fetching delegate version", e);
     }
     return null;
   }
@@ -986,18 +986,18 @@ public class DelegateServiceImpl implements DelegateService {
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
-        logger.info("Multi-Version is enabled");
+        log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
         String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
-          logger.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
+          log.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
         }
       } else {
-        logger.info("Delegate metadata URL is " + delegateMetadataUrl);
+        log.info("Delegate metadata URL is " + delegateMetadataUrl);
         String delegateMatadata = delegateVersionCache.get(inquiry.getAccountId());
-        logger.info("Delegate metadata: [{}]", delegateMatadata);
+        log.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
@@ -1011,17 +1011,17 @@ public class DelegateServiceImpl implements DelegateService {
                                      .execute()) {
           responseCode = response.code();
         }
-        logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
+        log.info("HEAD on downloadUrl got statusCode {}", responseCode);
         jarFileExists = responseCode == 200;
-        logger.info("jarFileExists [{}]", jarFileExists);
+        log.info("jarFileExists [{}]", jarFileExists);
       }
     } catch (IOException | ExecutionException e) {
-      logger.warn("Unable to fetch delegate version information", e);
-      logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
+      log.warn("Unable to fetch delegate version information", e);
+      log.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
           latestVersion, delegateJarDownloadUrl);
     }
 
-    logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
+    log.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
     if (jarFileExists) {
       String watcherMetadataUrl;
       String watcherStorageUrl;
@@ -1109,7 +1109,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     String msg = "Failed to get jar and script runtime params. jarFileExists: " + jarFileExists;
-    logger.warn(msg);
+    log.warn(msg);
     return null;
   }
 
@@ -1279,7 +1279,7 @@ public class DelegateServiceImpl implements DelegateService {
         gzipOS.write(buffer, 0, len);
       }
     } catch (IOException e) {
-      logger.error("Error gzipping file.", e);
+      log.error("Error gzipping file.", e);
     }
   }
 
@@ -1609,7 +1609,7 @@ public class DelegateServiceImpl implements DelegateService {
       savedDelegate = saveDelegate(delegate);
     }
 
-    logger.info("Delegate saved: {}", savedDelegate);
+    log.info("Delegate saved: {}", savedDelegate);
 
     // When polling is enabled for delegate, do not perform these event publishing
     if (isDelegateWithoutPollingEnabled(delegate)) {
@@ -1625,7 +1625,7 @@ public class DelegateServiceImpl implements DelegateService {
         subject.fireInform(DelegateObxxxxxxxx:onAdded, savedDelegate);
       }
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Delegate.", e);
+      log.error("Encountered exception while informing the observers of Delegate.", e);
     }
     return savedDelegate;
   }
@@ -1635,15 +1635,15 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private Delegate saveDelegate(Delegate delegate) {
-    logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
+    log.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
     wingsPersistence.save(delegate);
-    logger.info("Delegate saved: {}", delegate);
+    log.info("Delegate saved: {}", delegate);
     return delegate;
   }
 
   @Override
   public void delete(String accountId, String delegateId) {
-    logger.info("Deleting delegate: {}", delegateId);
+    log.info("Deleting delegate: {}", delegateId);
     Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -1680,7 +1680,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .field(DelegateKeys.uuid)
                                   .notIn(delegatesToRetain));
     } else {
-      logger.info("List of delegates to retain is empty. In order to delete delegates, pass a list of delegate IDs");
+      log.info("List of delegates to retain is empty. In order to delete delegates, pass a list of delegate IDs");
     }
   }
 
@@ -1698,7 +1698,7 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
     StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
-    logger.debug("Sending message to delegate: {}", jreMessage);
+    log.debug("Sending message to delegate: {}", jreMessage);
 
     if (accountService.isAccountMigrated(delegate.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
@@ -1729,7 +1729,7 @@ public class DelegateServiceImpl implements DelegateService {
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
-    logger.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
+    log.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
 
     if (ECS.equals(delegate.getDelegateType())) {
       return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
@@ -1752,7 +1752,7 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateTargetJreVersion = getTargetJreVersion(delegateParams.getAccountId());
     StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
     broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(jreMessage.toString());
-    logger.info("Sending message to delegate: {}", jreMessage);
+    log.info("Sending message to delegate: {}", jreMessage);
 
     if (accountService.isAccountMigrated(delegateParams.getAccountId())) {
       String migrateMsg = MIGRATE + accountService.get(delegateParams.getAccountId()).getMigratedToClusterUrl();
@@ -1783,7 +1783,7 @@ public class DelegateServiceImpl implements DelegateService {
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
-    logger.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
+    log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
 
     Delegate delegate = Delegate.builder()
                             .uuid(delegateParams.getDelegateId())
@@ -1819,17 +1819,17 @@ public class DelegateServiceImpl implements DelegateService {
     long now = clock.millis();
     long skew = Math.abs(now - delegateHeartbeat);
     if (skew > TimeUnit.MINUTES.toMillis(2L)) {
-      logger.warn("Delegate {} has clock skew of {}", delegate.getUuid(), Misc.getDurationString(skew));
+      log.warn("Delegate {} has clock skew of {}", delegate.getUuid(), Misc.getDurationString(skew));
     }
     delegate.setLastHeartBeat(now);
     delegate.setValidUntil(Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
     Delegate registeredDelegate;
     if (existingDelegate == null) {
-      logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
+      log.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
           delegate.getHostName(), delegate.getIp());
       registeredDelegate = add(delegate);
     } else {
-      logger.info("Delegate exists, updating: {}", delegate.getUuid());
+      log.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
@@ -1872,7 +1872,7 @@ public class DelegateServiceImpl implements DelegateService {
           .append("[SEQ]")
           .append(sequenceConfig.getSequenceNum());
 
-      logger.info("^^^^SEQ: " + message.toString());
+      log.info("^^^^SEQ: " + message.toString());
     }
   }
 
@@ -1912,7 +1912,7 @@ public class DelegateServiceImpl implements DelegateService {
       return null;
     }
 
-    logger.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
+    log.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
     if (delegate == null || Status.ENABLED != delegate.getStatus()) {
@@ -2014,7 +2014,7 @@ public class DelegateServiceImpl implements DelegateService {
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
-      logger.info("Queueing async task");
+      log.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -2033,7 +2033,7 @@ public class DelegateServiceImpl implements DelegateService {
       saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
-        logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
+        log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
           throw new NoInstalledDelegatesException();
         } else {
@@ -2041,7 +2041,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }
 
-      logger.info("Processing sync task");
+      log.info("Processing sync task");
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
@@ -2203,7 +2203,7 @@ public class DelegateServiceImpl implements DelegateService {
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
-      logger.info("Queueing parked task");
+      log.info("Queueing parked task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -2229,7 +2229,7 @@ public class DelegateServiceImpl implements DelegateService {
             : delegateTaskPackage.getEncryptionConfigs().values());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
-      logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
+      log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
     }
   }
 
@@ -2279,18 +2279,18 @@ public class DelegateServiceImpl implements DelegateService {
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
     if (task == null) {
-      logger.warn("Delegate task is null");
+      log.warn("Delegate task is null");
       throw new InvalidArgumentsException(Pair.of("args", "Delegate task is null"));
     }
     if (task.getAccountId() == null) {
-      logger.warn("Delegate task has null account ID");
+      log.warn("Delegate task has null account ID");
       throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
     }
 
     BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-    logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+    log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
     List<String> eligibleDelegates = activeDelegates.stream()
                                          .filter(delegateId -> assignDelegateService.canAssign(batch, delegateId, task))
@@ -2300,16 +2300,16 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (activeDelegates.isEmpty()) {
       if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-        logger.info("No installed delegates found for the account");
+        log.info("No installed delegates found for the account");
         alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
             NoInstalledDelegatesAlert.builder().accountId(task.getAccountId()).build());
       } else {
-        logger.info("No delegates are active for the account");
+        log.info("No delegates are active for the account");
         alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
             NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
       }
     } else if (eligibleDelegates.isEmpty()) {
-      logger.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
+      log.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
 
       List<ExecutionCapability> selectorCapabilities =
           task.getExecutionCapabilities().stream().filter(c -> c instanceof SelectorCapability).collect(toList());
@@ -2326,7 +2326,7 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    logger.info("{} delegates {} eligible to execute task", eligibleDelegates.size(), eligibleDelegates);
+    log.info("{} delegates {} eligible to execute task", eligibleDelegates.size(), eligibleDelegates);
     return eligibleDelegates;
   }
 
@@ -2341,7 +2341,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      logger.info("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+      log.info("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
 
       UpdateOperations<DelegateTask> updateOperations =
           wingsPersistence.createUpdateOperations(DelegateTask.class)
@@ -2377,11 +2377,11 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       Delegate delegate = get(accountId, delegateId, false);
       if (delegate == null || Status.ENABLED != delegate.getStatus()) {
-        logger.warn("Delegate rejected to acquire task, because it was not found to be in {} status.", Status.ENABLED);
+        log.warn("Delegate rejected to acquire task, because it was not found to be in {} status.", Status.ENABLED);
         return null;
       }
 
-      logger.info("Acquiring delegate task");
+      log.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
         return null;
@@ -2394,7 +2394,7 @@ public class DelegateServiceImpl implements DelegateService {
         delegateSelectionLogsService.save(batch);
 
         if (!canAssign) {
-          logger.info("Delegate is not scoped for task");
+          log.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
         }
@@ -2410,12 +2410,12 @@ public class DelegateServiceImpl implements DelegateService {
           // Directly assign task only when FF is off and task is already whitelisted.
           return assignTask(delegateId, taskId, delegateTask);
         } else {
-          logger.info("Delegate is blacklisted for task");
+          log.info("Delegate is blacklisted for task");
           return null;
         }
       }
     } finally {
-      logger.info("Done with acquire delegate task method");
+      log.info("Done with acquire delegate task method");
     }
   }
 
@@ -2423,25 +2423,25 @@ public class DelegateServiceImpl implements DelegateService {
   public void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
-      logger.info("Task not found or was already assigned");
+      log.info("Task not found or was already assigned");
       return;
     }
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (!isValidationComplete(delegateTask)) {
-        logger.info("Task is still being validated");
+        log.info("Task is still being validated");
         return;
       }
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
       if (isNotEmpty(whitelistedDelegates)) {
-        logger.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
+        log.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
         return;
       }
 
-      logger.info("No connected whitelisted delegates found for task");
+      log.info("No connected whitelisted delegates found for task");
       String errorMessage = generateValidationError(delegateTask);
-      logger.info(errorMessage);
+      log.info(errorMessage);
       DelegateResponseData response;
       if (delegateTask.getData().isAsync()) {
         response = ErrorNotifyResponseData.builder()
@@ -2508,7 +2508,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   void setValidationStarted(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+    log.info("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -2530,12 +2530,12 @@ public class DelegateServiceImpl implements DelegateService {
     boolean allDelegatesFinished = isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
         && completeDelegates.containsAll(validatingDelegates);
     if (allDelegatesFinished) {
-      logger.info("Validation attempts are complete for task", delegateTask.getUuid());
+      log.info("Validation attempts are complete for task", delegateTask.getUuid());
     }
     boolean validationTimedOut = delegateTask.getValidationStartedAt() != null
         && clock.millis() - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT;
     if (validationTimedOut) {
-      logger.info("Validation timed out for task", delegateTask.getUuid());
+      log.info("Validation timed out for task", delegateTask.getUuid());
     }
     return allDelegatesFinished || validationTimedOut;
   }
@@ -2563,17 +2563,17 @@ public class DelegateServiceImpl implements DelegateService {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
-          logger.info("Found unassigned delegate task");
+          log.info("Found unassigned delegate task");
           return delegateTask;
         } else if (delegateId.equals(delegateTask.getDelegateId())) {
-          logger.info("Returning already assigned task to delegate from getUnassigned");
+          log.info("Returning already assigned task to delegate from getUnassigned");
           return delegateTask;
         }
-        logger.info("Task not available for delegate - it was assigned to {} and has status {}",
+        log.info("Task not available for delegate - it was assigned to {} and has status {}",
             delegateTask.getDelegateId(), delegateTask.getStatus());
       }
     } else {
-      logger.info("Task no longer exists", taskId);
+      log.info("Task no longer exists", taskId);
     }
     return null;
   }
@@ -2611,8 +2611,7 @@ public class DelegateServiceImpl implements DelegateService {
             delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
           }
         } catch (ExecutionException e) {
-          logger.warn(
-              "Unable to retrieve the log streaming service account token, while preparing delegate task package");
+          log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
         }
       }
 
@@ -2652,7 +2651,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       return delegateTaskPackageBuilder.build();
     } catch (CriticalExpressionEvaluationException exception) {
-      logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
+      log.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
@@ -2686,7 +2685,7 @@ public class DelegateServiceImpl implements DelegateService {
             .build();
       }
     } catch (CriticalExpressionEvaluationException exception) {
-      logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
+      log.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
@@ -2707,7 +2706,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (waitId != null) {
         waitNotifyEngine.doneWith(waitId, response.getResponse());
       } else {
-        logger.error("Async task has no wait ID");
+        log.error("Async task has no wait ID");
       }
     } else {
       wingsPersistence.save(DelegateSyncTaskResponse.builder()
@@ -2746,16 +2745,16 @@ public class DelegateServiceImpl implements DelegateService {
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
       if (delegateTask.getData().isAsync()) {
-        logger.info("Publishing async task response...");
+        log.info("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       } else {
-        logger.info("Publishing sync task response...");
+        log.info("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }
     } catch (Exception ex) {
-      logger.error("Failed publishing task response for task", ex);
+      log.error("Failed publishing task response for task", ex);
     }
   }
 
@@ -2782,7 +2781,7 @@ public class DelegateServiceImpl implements DelegateService {
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    logger.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+    log.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.uuid, taskId)
@@ -2802,7 +2801,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (task != null) {
       try (
           DelayLogContext ignore = new DelayLogContext(task.getLastUpdatedAt() - task.getCreatedAt(), OVERRIDE_ERROR)) {
-        logger.info("Task assigned to delegate");
+        log.info("Task assigned to delegate");
       }
       task.getData().setParameters(delegateTask.getData().getParameters());
 
@@ -2820,12 +2819,12 @@ public class DelegateServiceImpl implements DelegateService {
                .project(DelegateTaskKeys.data_parameters, false)
                .get();
     if (task == null) {
-      logger.info("Task no longer available for delegate");
+      log.info("Task no longer available for delegate");
       return null;
     }
 
     task.getData().setParameters(delegateTask.getData().getParameters());
-    logger.info("Returning previously assigned task to delegate");
+    log.info("Returning previously assigned task to delegate");
     return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
   }
 
@@ -2841,7 +2840,7 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
-    logger.info("Response received for task with responseCode [{}]", response.getResponseCode());
+    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
 
     Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())
@@ -2853,12 +2852,12 @@ public class DelegateServiceImpl implements DelegateService {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          logger.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
               delegateTask.getVersion());
         }
 
         if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
-          logger.info("Delegate returned retryable error for task");
+          log.info("Delegate returned retryable error for task");
 
           Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
           List<String> remainingConnectedDelegates =
@@ -2869,7 +2868,7 @@ public class DelegateServiceImpl implements DelegateService {
                   .collect(toList());
 
           if (!remainingConnectedDelegates.isEmpty()) {
-            logger.info("Requeueing task");
+            log.info("Requeueing task");
 
             wingsPersistence.update(taskQuery,
                 wingsPersistence.createUpdateOperations(DelegateTask.class)
@@ -2883,14 +2882,14 @@ public class DelegateServiceImpl implements DelegateService {
                     .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
             return;
           } else {
-            logger.info("Task has been tried on all the connected delegates. Proceeding with error.");
+            log.info("Task has been tried on all the connected delegates. Proceeding with error.");
           }
         }
         handleResponse(delegateTask, taskQuery, response);
         assignDelegateService.refreshWhitelist(delegateTask, delegateId);
       }
     } else {
-      logger.warn("No delegate task found");
+      log.warn("No delegate task found");
     }
   }
 
@@ -2916,10 +2915,10 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
-        logger.warn("Delegate task id was null", new IllegalArgumentException());
+        log.warn("Delegate task id was null", new IllegalArgumentException());
         return errorMessage;
       }
-      logger.info("Expiring delegate task");
+      log.info("Expiring delegate task");
       Query<DelegateTask> delegateTaskQuery = getRunningTaskQuery(accountId, delegateTaskId);
 
       DelegateTask delegateTask = delegateTaskQuery.get();
@@ -2927,7 +2926,7 @@ public class DelegateServiceImpl implements DelegateService {
         try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           errorMessage = "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
-          logger.info("Marking task as expired: {}", errorMessage);
+          log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
             waitNotifyEngine.doneWith(
@@ -2946,10 +2945,10 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
-        logger.warn("Delegate task id was null", new IllegalArgumentException());
+        log.warn("Delegate task id was null", new IllegalArgumentException());
         return null;
       }
-      logger.info("Aborting delegate task");
+      log.info("Aborting delegate task");
 
       wingsPersistence.save(
           DelegateSyncTaskResponse.builder()
@@ -2993,7 +2992,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
     }
 
-    logger.info("Dispatched delegateTaskIds: {}",
+    log.info("Dispatched delegateTaskIds: {}",
         join(",", delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())));
 
     return delegateTaskEvents;
@@ -3098,16 +3097,16 @@ public class DelegateServiceImpl implements DelegateService {
               && (isEmpty(heartbeat.getLocation()) || isEmpty(existingConnection.getLocation())
                      || heartbeat.getLocation().equals(existingConnection.getLocation()));
           if (!sameShellScriptDelegateLocation) {
-            logger.error(
+            log.error(
                 "Newer delegate connection found for the delegate id! Will initiate self destruct sequence for the current delegate.");
             destroyTheCurrentDelegate(accountId, delegateId, heartbeat.getDelegateConnectionId(), connectionMode);
             delegateConnectionDao.replaceWithNewerConnection(heartbeat.getDelegateConnectionId(), existingConnection);
           } else {
-            logger.error("Delegate restarted");
+            log.error("Delegate restarted");
           }
 
         } else {
-          logger.error("Delegate restarted");
+          log.error("Delegate restarted");
         }
       }
     }
@@ -3123,7 +3122,7 @@ public class DelegateServiceImpl implements DelegateService {
    */
   @VisibleForTesting
   void handleEcsDelegateKeepAlivePacket(Delegate delegate) {
-    logger.info("Handling Keep alive packet ");
+    log.info("Handling Keep alive packet ");
     if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
         || isBlank(delegate.getSequenceNum())) {
       return;
@@ -3209,7 +3208,7 @@ public class DelegateServiceImpl implements DelegateService {
    */
   @VisibleForTesting
   Delegate handleECSRegistrationUsingSeqNumAndToken(Delegate delegate) {
-    logger.info("Delegate sent seqNum : " + delegate.getSequenceNum() + ", and DelegateToken"
+    log.info("Delegate sent seqNum : " + delegate.getSequenceNum() + ", and DelegateToken"
         + delegate.getDelegateRandomToken());
 
     DelegateSequenceConfig sequenceConfig = getDelegateSequenceConfig(
@@ -3243,7 +3242,7 @@ public class DelegateServiceImpl implements DelegateService {
 
         return upsertDelegateOperation(null, delegate);
       } catch (DuplicateKeyException e) {
-        logger.warn(
+        log.warn(
             "SequenceNum passed by delegate has been assigned to a new delegate. will regenerate new sequenceNum.");
       }
     } else {
@@ -3343,7 +3342,7 @@ public class DelegateServiceImpl implements DelegateService {
 
         return upsertDelegateOperation(null, delegate);
       } catch (Exception e) {
-        logger.warn("Attempt: " + i + " failed with DuplicateKeyException. Trying again" + e);
+        log.warn("Attempt: " + i + " failed with DuplicateKeyException. Trying again" + e);
       }
     }
     // All 3 attempts of sequenceNum generation for delegate failed. Registration can not be completed.
@@ -3443,7 +3442,7 @@ public class DelegateServiceImpl implements DelegateService {
         return config;
       }
     } catch (Exception e) {
-      logger.warn("Failed while updating delegateSequenceConfig with delegateToken: {}, DelegateId: {}",
+      log.warn("Failed while updating delegateSequenceConfig with delegateToken: {}, DelegateId: {}",
           delegate.getDelegateRandomToken(), delegate.getUuid());
     }
 
@@ -3451,7 +3450,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private DelegateSequenceConfig generateNewSeqenceConfig(Delegate delegate, Integer seqNum) {
-    logger.info("Adding delegateSequenceConfig For delegate.hostname: {}, With SequenceNum: {}, for account:  {}",
+    log.info("Adding delegateSequenceConfig For delegate.hostname: {}, With SequenceNum: {}, for account:  {}",
         delegate.getHostName(), delegate.getSequenceNum(), delegate.getAccountId());
 
     DelegateSequenceConfig sequenceConfig = aDelegateSequenceBuilder()
@@ -3463,7 +3462,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                 .build();
 
     wingsPersistence.save(sequenceConfig);
-    logger.info("DelegateSequenceConfig saved: {}", sequenceConfig);
+    log.info("DelegateSequenceConfig saved: {}", sequenceConfig);
 
     return sequenceConfig;
   }
@@ -3498,12 +3497,12 @@ public class DelegateServiceImpl implements DelegateService {
     for (Delegate delegateToBeUpdated : delegates) {
       try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_NESTS)) {
         if ("SCOPES".equals(fieldBeingUpdate)) {
-          logger.info("Updating delegate scopes: includeScopes:{} excludeScopes:{}", delegate.getIncludeScopes(),
+          log.info("Updating delegate scopes: includeScopes:{} excludeScopes:{}", delegate.getIncludeScopes(),
               delegate.getExcludeScopes());
         } else if ("TAGS".equals(fieldBeingUpdate)) {
-          logger.info("Updating delegate tags : tags:{}", delegate.getTags());
+          log.info("Updating delegate tags : tags:{}", delegate.getTags());
         } else {
-          logger.info("Updating ECS delegate");
+          log.info("Updating ECS delegate");
         }
 
         Delegate updatedDelegate = updateDelegate(delegateToBeUpdated, updateOperations);
@@ -3599,20 +3598,20 @@ public class DelegateServiceImpl implements DelegateService {
         Optional<String> delegateToRetain = selectDelegateToRetain(accountId);
 
         if (delegateToRetain.isPresent()) {
-          logger.info("Deleting all delegates for account : {} except {}", accountId, delegateToRetain.get());
+          log.info("Deleting all delegates for account : {} except {}", accountId, delegateToRetain.get());
 
           retainOnlySelectedDelegatesAndDeleteRestByUuid(
               accountId, Collections.singletonList(delegateToRetain.get()), shutdownInterval);
 
-          logger.info("Deleted all delegates for account : {} except {}", accountId, delegateToRetain.get());
+          log.info("Deleted all delegates for account : {} except {}", accountId, delegateToRetain.get());
         } else {
-          logger.info("No delegate found to retain for account : {}", accountId);
+          log.info("No delegate found to retain for account : {}", accountId);
         }
 
         break;
       } catch (Exception ex) {
         if (retryCount >= MAX_RETRIES) {
-          logger.error("Couldn't delete delegates for account: {}. Current Delegate Count : {}", accountId,
+          log.error("Couldn't delete delegates for account: {}. Current Delegate Count : {}", accountId,
               getDelegates(accountId).size(), ex);
           break;
         }
@@ -3679,7 +3678,7 @@ public class DelegateServiceImpl implements DelegateService {
       return SafeHttpCall.executeWithExceptions(logStreamingServiceRestClient.retrieveAccountToken(
           mainConfiguration.getLogStreamingServiceConfig().getServiceToken(), accountId));
     } catch (Exception ex) {
-      logger.error("Unable to retrieve log streaming authentication token", ex);
+      log.error("Unable to retrieve log streaming authentication token", ex);
       return null;
     }
   }

@@ -101,11 +101,11 @@ public class OverviewPageStatsDataFetcher
     if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0) {
       isClusterDataPresent = true;
     } else if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
-      logger.info("Sample data generation enabled for accountId:{}", accountId);
+      log.info("Sample data generation enabled for accountId:{}", accountId);
       if (utils.isSampleClusterDataPresent()) {
         isClusterDataPresent = true;
         isCeEnabledCloudProviderPresent = true;
-        logger.info("sample data is present");
+        log.info("sample data is present");
       }
     }
     overviewStatsDataBuilder.clusterDataPresent(isClusterDataPresent)
@@ -134,7 +134,7 @@ public class OverviewPageStatsDataFetcher
         overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE).gcpConnectorsPresent(Boolean.FALSE);
       }
     } catch (InterruptedException e) {
-      logger.error("Failed to get OverviewPageStatsDataFetcher {}", e);
+      log.error("Failed to get OverviewPageStatsDataFetcher {}", e);
       Thread.currentThread().interrupt();
     }
 
@@ -170,7 +170,7 @@ public class OverviewPageStatsDataFetcher
           count = 1;
         }
       } catch (SQLException e) {
-        logger.warn("Failed to execute query in OverviewPageStatsDataFetcher, query=[{}], accountId=[{}], {}", query,
+        log.warn("Failed to execute query in OverviewPageStatsDataFetcher, query=[{}], accountId=[{}], {}", query,
             accountId, e);
       } finally {
         DBUtils.close(resultSet);

@@ -46,7 +46,7 @@ public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     if (workflowStandardParams != null && workflowStandardParams.isContinueWithDefaultValues()) {
-      logger.info(String.format(
+      log.info(String.format(
           "Continue With defaults option is selection for execution: %s. Hence not pausing the stage for inputs",
           workflowExecution.getUuid()));
       return null;
@@ -56,7 +56,7 @@ public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
     if (stateExecutionInstance.isContinued()) {
       return null;
     }
-    ExecutionResponse executionResponse = workflowState.checkDisableAssertion(context, workflowService, logger);
+    ExecutionResponse executionResponse = workflowState.checkDisableAssertion(context, workflowService, log);
     if (executionResponse != null) {
       return anExecutionEventAdvice().withExecutionResponse(executionResponse).build();
     }

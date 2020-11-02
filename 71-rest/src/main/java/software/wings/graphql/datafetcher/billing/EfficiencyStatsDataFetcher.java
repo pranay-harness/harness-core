@@ -53,7 +53,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
         throw new InvalidRequestException("Error while connecting to the TimeScale DB in EfficiencyStats Data Fetcher");
       }
     } catch (Exception e) {
-      logger.error("Cannot Process Request in EfficiencyStats Data Fetcher", e);
+      log.error("Cannot Process Request in EfficiencyStats Data Fetcher", e);
     }
     return null;
   }
@@ -70,7 +70,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
         groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, true, true, true);
-    logger.info("getSunburstGridData query: {}", queryData.getQuery());
+    log.info("getSunburstGridData query: {}", queryData.getQuery());
 
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
@@ -89,12 +89,11 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in EfficiencyStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
-              "Failed to execute query in EfficiencyStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+          log.warn("Failed to execute query in EfficiencyStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
       } finally {

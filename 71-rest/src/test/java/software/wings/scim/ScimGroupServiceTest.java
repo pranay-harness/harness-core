@@ -455,7 +455,7 @@ public class ScimGroupServiceTest extends WingsBaseTest {
       OktaReplaceOperation replaceOperation = new OktaReplaceOperation(MEMBERS, jsonNode);
       return new PatchRequest(Collections.singletonList(replaceOperation));
     } catch (IOException ioe) {
-      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
+      log.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
     return null;
   }

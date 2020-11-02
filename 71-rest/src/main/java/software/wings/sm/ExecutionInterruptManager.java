@@ -254,7 +254,7 @@ public class ExecutionInterruptManager {
           unhandled(executionInterruptType);
       }
     } catch (Exception e) {
-      logger.error("Failed to close the ManualNeededAlert/ ApprovalNeededAlert  for appId, executionId  ", appId,
+      log.error("Failed to close the ManualNeededAlert/ ApprovalNeededAlert  for appId, executionId  ", appId,
           executionId, e);
     }
   }
@@ -275,7 +275,7 @@ public class ExecutionInterruptManager {
       PageResponse<StateExecutionInstance> pageResponse =
           wingsPersistence.query(StateExecutionInstance.class, pageRequest);
       if (isEmpty(pageResponse)) {
-        logger.error("No StateExecutionInstance found for sendNotification");
+        log.error("No StateExecutionInstance found for sendNotification");
         return;
       }
       final StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
@@ -285,9 +285,9 @@ public class ExecutionInterruptManager {
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
     } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException exception) {
-      logger.error("Unknown runtime exception: ", exception);
+      log.error("Unknown runtime exception: ", exception);
     }
   }
 

@@ -15,7 +15,7 @@ public class DBUtils {
         resultSet.close();
       }
     } catch (SQLException e) {
-      logger.warn("Error while closing result set", e);
+      log.warn("Error while closing result set", e);
     }
   }
 }

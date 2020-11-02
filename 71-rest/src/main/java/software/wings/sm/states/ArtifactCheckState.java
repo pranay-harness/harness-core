@@ -113,7 +113,7 @@ public class ArtifactCheckState extends State {
     List<String> correlationIds = new ArrayList<>();
     List<Artifact> failedArtifacts = new ArrayList<>();
 
-    logger.info("Received handleAsyncResponse - response: {}", response);
+    log.info("Received handleAsyncResponse - response: {}", response);
     response.values().forEach(notifyResponseData -> {
       String artifactId = "";
       if (notifyResponseData instanceof DelayEventNotifyData) {

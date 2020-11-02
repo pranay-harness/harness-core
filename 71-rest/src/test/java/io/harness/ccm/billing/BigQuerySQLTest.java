@@ -42,7 +42,7 @@ public class BigQuerySQLTest {
     BigQuerySQL bigQuerySQL =
         BigQuerySQL.builder().groupbyObjects(Arrays.asList(groupbyObject)).conditions(conditions).build();
     String query = bigQuerySQL.getQuery().validate().toString();
-    logger.info(query);
+    log.info(query);
   }
 
   @Test
@@ -68,6 +68,6 @@ public class BigQuerySQLTest {
                        .getQuery()
                        .validate()
                        .toString();
-    logger.info(query);
+    log.info(query);
   }
 }

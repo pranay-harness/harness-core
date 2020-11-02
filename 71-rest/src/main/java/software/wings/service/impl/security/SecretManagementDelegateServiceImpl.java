@@ -125,10 +125,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     Throwable t = e.getCause() == null ? e : e.getCause();
 
     if (t instanceof AWSSecretsManagerException) {
-      logger.info("Got AWSSecretsManagerException {}: {}", t.getClass().getName(), t.getMessage());
+      log.info("Got AWSSecretsManagerException {}: {}", t.getClass().getName(), t.getMessage());
       return !(t instanceof ResourceNotFoundException);
     } else if (t instanceof AWSKMSException) {
-      logger.info("Got AWSKMSException {}: {}", t.getClass().getName(), t.getMessage());
+      log.info("Got AWSKMSException {}: {}", t.getClass().getName(), t.getMessage());
       return t instanceof KMSInternalException || t instanceof DependencyTimeoutException
           || t instanceof KeyUnavailableException;
     } else {
@@ -170,7 +170,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -197,7 +197,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, vaultConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else if (isRetryable(e)) {
@@ -281,18 +281,18 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     int failedAttempts = 0;
     while (true) {
       try {
-        logger.info("renewing token for vault {}", vaultConfig);
+        log.info("renewing token for vault {}", vaultConfig);
         boolean isSuccessful = VaultRestClientFactory.create(vaultConfig).renewToken(vaultConfig.getAuthToken());
         if (isSuccessful) {
           return true;
         } else {
           String errorMsg = "Request not successful.";
-          logger.error(errorMsg);
+          log.error(errorMsg);
           throw new IOException(errorMsg);
         }
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("renewal failed. trial num: {}", failedAttempts, e);
+        log.warn("renewal failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "renewal failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -321,7 +321,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
-        logger.info("Found Vault sys mount points: {}", sysMountMap.keySet());
+        log.info("Found Vault sys mount points: {}", sysMountMap.keySet());
 
         for (Entry<String, SysMount> entry : sysMountMap.entrySet()) {
           String secretEngineName = StringUtils.removeEnd(entry.getKey(), "/");
@@ -352,7 +352,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       String message =
           String.format("Failed to list secret engines for %s due to unexpected network error. Please try again.",
               vaultConfig.getVaultUrl());
-      logger.error(message, e);
+      log.error(message, e);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
     }
 
@@ -400,7 +400,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             10, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -428,7 +428,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             () -> decryptInternal(data, secretsManagerConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
@@ -452,7 +452,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         new DeleteSecretRequest().withSecretId(secretName).withForceDeleteWithoutRecovery(true);
     DeleteSecretResult result = client.deleteSecret(request);
 
-    logger.info("Done deleting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
+    log.info("Done deleting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
     return result != null;
   }
 
@@ -472,7 +472,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
 
     long startTime = System.currentTimeMillis();
-    logger.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
+    log.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
 
     EncryptedData encryptedData = savedEncryptedData != null ? (EncryptedData) savedEncryptedData
                                                              : EncryptedData.builder()
@@ -553,8 +553,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                            .build()
                                            .getIdentifier());
 
-    logger.info("Done saving secret {} into AWS Secrets Manager for {} in {}ms", fullSecretName,
-        encryptedData.getUuid(), System.currentTimeMillis() - startTime);
+    log.info("Done saving secret {} into AWS Secrets Manager for {} in {}ms", fullSecretName, encryptedData.getUuid(),
+        System.currentTimeMillis() - startTime);
     return encryptedData;
   }
 
@@ -588,7 +588,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       decryptedValue = secretValue.toCharArray();
     }
 
-    logger.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
+    log.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
     return decryptedValue;
   }
 
@@ -607,7 +607,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     char[] encryptedValue = keyUrl.toCharArray();
 
     long startTime = System.currentTimeMillis();
-    logger.info("Saving secret {} into Vault {}", name, keyUrl);
+    log.info("Saving secret {} into Vault {}", name, keyUrl);
 
     EncryptedData encryptedData = (EncryptedData) savedEncryptedData;
     if (savedEncryptedData == null) {
@@ -641,7 +641,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
 
     // With existing encrypted value. Need to delete it first and rewrite with new value.
-    logger.info("Deleting vault secret {} for {} in {} ms.", keyUrl, encryptedData.getUuid(),
+    log.info("Deleting vault secret {} for {} in {} ms.", keyUrl, encryptedData.getUuid(),
         System.currentTimeMillis() - startTime);
     String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
     VaultRestClientFactory.create(vaultConfig)
@@ -652,7 +652,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                    vaultConfig.getSecretEngineName(), fullPath, value);
 
     if (isSuccessful) {
-      logger.info("Done saving vault secret {} for {}", keyUrl, encryptedData.getUuid());
+      log.info("Done saving vault secret {} for {}", keyUrl, encryptedData.getUuid());
       encryptedData.setEncryptionKey(keyUrl);
       encryptedData.setEncryptedValue(encryptedValue);
       secretsDelegateCacheService.remove(EncryptedDataDetail.builder()
@@ -663,7 +663,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       return encryptedData;
     } else {
       String errorMsg = "Encryption request for " + name + " was not successful.";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }
@@ -672,19 +672,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String fullPath =
         isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
     long startTime = System.currentTimeMillis();
-    logger.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
+    log.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
     String value =
         VaultRestClientFactory.create(vaultConfig)
             .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
 
     if (isNotEmpty(value)) {
-      logger.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
+      log.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
           System.currentTimeMillis() - startTime);
       return value.toCharArray();
     } else {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
     }
   }
@@ -701,7 +701,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -725,11 +725,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     int failedAttempts = 0;
     while (true) {
       try {
-        logger.info("Trying to decrypt record {} by {}", data.getEncryptionKey(), azureConfig.getVaultName());
+        log.info("Trying to decrypt record {} by {}", data.getEncryptionKey(), azureConfig.getVaultName());
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, azureConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
@@ -746,7 +746,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   private EncryptedRecord encryptInternal(String fullSecretName, String value, String accountId,
       SettingVariableTypes type, AzureVaultConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
-    logger.info("Saving secret '{}' into Azure Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
+    log.info("Saving secret '{}' into Azure Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
     long startTime = System.currentTimeMillis();
 
     boolean pathReference = false;
@@ -779,7 +779,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         secret = azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(),
             parsedSecretReference.getSecretName(), parsedSecretReference.getSecretVersion());
       } catch (Exception ex) {
-        logger.error("Couldn't retrieve referenced secret", ex);
+        log.error("Couldn't retrieve referenced secret", ex);
       }
 
       if (secret == null) {
@@ -814,7 +814,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                            .encryptionConfig(secretsManagerConfig)
                                            .build()
                                            .getIdentifier());
-    logger.info("Done saving secret {} into Azure Secrets Manager for {} in {} ms", fullSecretName,
+    log.info("Done saving secret {} into Azure Secrets Manager for {} in {} ms", fullSecretName,
         encryptedData.getUuid(), System.currentTimeMillis() - startTime);
     return encryptedData;
   }
@@ -831,11 +831,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       SecretBundle secret = azureVaultClient.getSecret(azureConfig.getEncryptionServiceUrl(),
           parsedSecretReference.getSecretName(), parsedSecretReference.getSecretVersion());
 
-      logger.info("Done decrypting Azure secret {} in {} ms", parsedSecretReference.getSecretName(),
+      log.info("Done decrypting Azure secret {} in {} ms", parsedSecretReference.getSecretName(),
           System.currentTimeMillis() - startTime);
       return secret.value().toCharArray();
     } catch (Exception ex) {
-      logger.error("Failed to decrypt azure secret in vault due to exception", ex);
+      log.error("Failed to decrypt azure secret in vault due to exception", ex);
       String message = format("Failed to decrypt Azure secret %s in vault %s in account %s due to error %s",
           parsedSecretReference.getSecretName(), azureConfig.getName(), azureConfig.getAccountId(), ex.getMessage());
       throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER);
@@ -847,10 +847,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     KeyVaultClient azureVaultClient = getAzureVaultClient(config);
     try {
       azureVaultClient.deleteSecret(config.getEncryptionServiceUrl(), key);
-      logger.info("deletion of key {} in azure vault {} was successful.", key, config.getVaultName());
+      log.info("deletion of key {} in azure vault {} was successful.", key, config.getVaultName());
       return true;
     } catch (Exception ex) {
-      logger.error("Failed to delete key {} from azure vault: {}", key, config.getVaultName(), ex);
+      log.error("Failed to delete key {} from azure vault: {}", key, config.getVaultName(), ex);
       return false;
     }
   }
@@ -863,7 +863,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, cyberArkConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else if (isRetryable(e)) {
@@ -949,7 +949,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
 
     long startTime = System.currentTimeMillis();
-    logger.info(
+    log.info(
         "Reading secret CyberArk {} using AppID '{}' and query '{}'", cyberArkConfig.getCyberArkUrl(), appId, query);
 
     String secretValue = null;
@@ -960,16 +960,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         secretValue = response.body().getContent();
       }
     } catch (IOException e) {
-      logger.error("Failed to read secret from CyberArk", e);
+      log.error("Failed to read secret from CyberArk", e);
     }
 
     if (isNotEmpty(secretValue)) {
-      logger.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
+      log.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
           System.currentTimeMillis() - startTime);
       return secretValue.toCharArray();
     } else {
       String errorMsg = "CyberArk query '" + query + "' is invalid in application '" + appId + "'";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMsg, USER);
     }
   }

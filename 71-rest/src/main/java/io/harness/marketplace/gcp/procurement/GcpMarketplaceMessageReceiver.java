@@ -51,7 +51,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-    logger.info("Received GCP marketplace message: {}", message.getData().toStringUtf8());
+    log.info("Received GCP marketplace message: {}", message.getData().toStringUtf8());
 
     boolean ack;
     try {
@@ -101,7 +101,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     if (account == null) {
       // GCP account doesn't exist anymore so we should delete Harness account mapped to this GCP account
       if (gcpMarketplaceCustomer != null) {
-        logger.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
+        log.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
             gcpMarketplaceCustomer.getHarnessAccountId(), gcpAccountId);
         accountService.deleteAccount(gcpMarketplaceCustomer.getHarnessAccountId());
         wingsPersistence.delete(GCPMarketplaceCustomer.class, gcpMarketplaceCustomer.getUuid());
@@ -120,7 +120,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     Entitlement entitlement = gcpProcurementService.getEntitlement(entitlementId);
 
     if (entitlement == null) {
-      logger.warn(
+      log.warn(
           "Received '{}' event from GCP marketplace for entitlement that doesn't exists anymore, entitlementId: {}",
           eventType, entitlementId);
       return true;

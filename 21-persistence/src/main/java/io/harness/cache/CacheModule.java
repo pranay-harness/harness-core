@@ -135,7 +135,7 @@ public class CacheModule extends AbstractModule implements ServersModule {
       Config config = Config.fromYAML(uri.toURL());
       config.setCodec(new RedissonKryoCodec());
       Files.write(config.toYAML().getBytes(StandardCharsets.UTF_8), file);
-      logger.info("Found the redisson config in the working directory {}", uri);
+      log.info("Found the redisson config in the working directory {}", uri);
     }
     return provider.getCacheManager(uri, provider.getDefaultClassLoader(), new Properties());
   }

@@ -56,7 +56,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
-    logger.info("Saving {} data records", dataRecords.size());
+    log.info("Saving {} data records", dataRecords.size());
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
     Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> timeSeriesRecordMap = bucketTimeSeriesRecords(dataRecords);
@@ -189,7 +189,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
         });
       }
     });
-    logger.info("Updating the risk in {} timeseries records", records.size());
+    log.info("Updating the risk in {} timeseries records", records.size());
     hPersistence.save(records);
 
     return false;

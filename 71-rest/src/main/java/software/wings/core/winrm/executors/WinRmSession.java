@@ -103,7 +103,7 @@ public class WinRmSession implements AutoCloseable {
             ? 0
             : 1;
       } catch (IOException e) {
-        logger.error(format("Error while creating temporary file: %s", e));
+        log.error(format("Error while creating temporary file: %s", e));
         logCallback.saveExecutionLog("Error while creating temporary file");
         return 1;
       }

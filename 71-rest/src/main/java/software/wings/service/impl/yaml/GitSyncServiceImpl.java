@@ -242,7 +242,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         wingsPersistence.save(newFileActivity);
       }
     } else {
-      logger.info(
+      log.info(
           "Unexpected Behaviour while processing extra error in commit: No file activity found for file {}", filePath);
     }
   }
@@ -297,7 +297,7 @@ public class GitSyncServiceImpl implements GitSyncService {
           && isNotEmpty(((GitFileChange) change).getCommitId())
           && isNotEmpty(((GitFileChange) change).getProcessingCommitId());
     } catch (Exception ex) {
-      logger.error(format("Error while checking if change is from git: %s", ex));
+      log.error(format("Error while checking if change is from git: %s", ex));
     }
     return false;
   }
@@ -316,7 +316,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       try {
         yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(gitFileChange, accountId);
       } catch (Exception e) {
-        logger.error(format("error while updating successful change for file [%s]", gitFileChange.getFilePath()), e);
+        log.error(format("error while updating successful change for file [%s]", gitFileChange.getFilePath()), e);
       }
     }
   }
@@ -491,7 +491,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                    .collect(toList());
       wingsPersistence.save(activities);
     } catch (Exception ex) {
-      logger.error(format("Error while saving activities: %s", ex));
+      log.error(format("Error while saving activities: %s", ex));
     }
   }
 
@@ -541,7 +541,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                   .in(fileNames),
           op);
     } catch (Exception ex) {
-      logger.error(format("Error while saving activities for commitId: %s", "commitId"));
+      log.error(format("Error while saving activities for commitId: %s", "commitId"));
     }
   }
 
@@ -627,7 +627,7 @@ public class GitSyncServiceImpl implements GitSyncService {
             appIdFileChangeEntry.getKey(), appIdFileChangeEntry.getValue(), gitToHarness, status);
       }
     } catch (Exception ex) {
-      logger.error(format("Error while saving git file processing summary for commitId: %s", commitId), ex);
+      log.error(format("Error while saving git file processing summary for commitId: %s", commitId), ex);
     }
   }
 
@@ -660,7 +660,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   public void markRemainingFilesAsSkipped(String commitId, String accountId) {
     try {
-      logger.warn(format("Few files still in QUEUED status after git processing of commitId: %s", commitId));
+      log.warn(format("Few files still in QUEUED status after git processing of commitId: %s", commitId));
       UpdateOperations<GitFileActivity> op = wingsPersistence.createUpdateOperations(GitFileActivity.class)
                                                  .set(GitFileActivityKeys.status, Status.SKIPPED);
       wingsPersistence.update(wingsPersistence.createQuery(GitFileActivity.class)
@@ -669,7 +669,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                   .filter(GitFileActivityKeys.status, Status.QUEUED),
           op);
     } catch (Exception ex) {
-      logger.error(format("Error while saving activities for commitId: %s", "commitId"), ex);
+      log.error(format("Error while saving activities for commitId: %s", "commitId"), ex);
     }
   }
 
@@ -809,7 +809,7 @@ public class GitSyncServiceImpl implements GitSyncService {
             op);
       }
     } catch (Exception ex) {
-      logger.error(format("Error while updating appId for commitId: %s, appSet: %s, exception: %s", processingCommitId,
+      log.error(format("Error while updating appId for commitId: %s, appSet: %s, exception: %s", processingCommitId,
           nameOfNewAppsInCommit.toString(), ex.getMessage()));
     }
   }

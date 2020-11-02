@@ -61,7 +61,7 @@ public class K8sTrafficSplitState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      logger.info("Executing K8sTrafficSplitState");
+      log.info("Executing K8sTrafficSplitState");
       sanitizeStateParameters();
 
       ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);

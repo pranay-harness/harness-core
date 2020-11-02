@@ -425,7 +425,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
       OktaReplaceOperation replaceOperation = new OktaReplaceOperation(MEMBERS, jsonNode);
       return new PatchRequest(Collections.singletonList(replaceOperation));
     } catch (IOException ioe) {
-      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
+      log.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
     return null;
   }
@@ -441,7 +441,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
       jsonNode = mapper.readTree(jsonObject.toString());
       scimUser.setName(jsonNode);
     } catch (IOException ioe) {
-      logger.error("IO Exception while creating okta replace operation in SCIM", ioe);
+      log.error("IO Exception while creating okta replace operation in SCIM", ioe);
     }
   }
 }

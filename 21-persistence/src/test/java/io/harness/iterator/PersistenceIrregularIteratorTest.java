@@ -53,7 +53,7 @@ public class PersistenceIrregularIteratorTest extends PersistenceTestBase {
     @Override
     public void handle(TestIrregularIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
-      logger.info("Handle {}", entity.getUuid());
+      log.info("Handle {}", entity.getUuid());
     }
   }
 

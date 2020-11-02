@@ -63,7 +63,7 @@ public class MetricUtilHelper {
       // Iterate over the metrics present in the YAML file
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
         if (entry == null) {
-          logger.error("Found a null entry in the NewRelic Metrics YAML file.");
+          log.error("Found a null entry in the NewRelic Metrics YAML file.");
         } else {
           entry.getValue().forEach(metric -> {
             /*
@@ -88,7 +88,7 @@ public class MetricUtilHelper {
       metric names were spelt incorrectly.
        */
       if (!isEmpty(metricNames) && metricMap.isEmpty()) {
-        logger.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
+        log.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
         throw new WingsException("Incorrect Metric Names received.");
       }
 
@@ -112,7 +112,7 @@ public class MetricUtilHelper {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       return yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
     } catch (IOException ioex) {
-      logger.error("Could not read " + yamlPath);
+      log.error("Could not read " + yamlPath);
       throw new WingsException("Unable to load New Relic metrics", ioex);
     }
   }

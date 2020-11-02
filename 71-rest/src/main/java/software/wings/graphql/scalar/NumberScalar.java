@@ -51,19 +51,19 @@ public class NumberScalar {
                   val = Integer.parseInt(input.toString());
                   return val;
                 } catch (NumberFormatException e) {
-                  logger.debug("Cannot parse [{}] to integer", input, e);
+                  log.debug("Cannot parse [{}] to integer", input, e);
                 }
                 try {
                   val = Long.parseLong(input.toString());
                   return val;
                 } catch (NumberFormatException e) {
-                  logger.debug("Cannot parse [{}] to long", input, e);
+                  log.debug("Cannot parse [{}] to long", input, e);
                 }
                 try {
                   val = Double.parseDouble(input.toString());
                   return val;
                 } catch (NumberFormatException e) {
-                  logger.debug("Cannot parse [{}] to integer", input, e);
+                  log.debug("Cannot parse [{}] to integer", input, e);
                 }
                 return val;
               }

@@ -172,27 +172,27 @@ public class MarketoHandler implements EventHandler {
   @Override
   public void handleEvent(Event event) {
     if (event == null) {
-      logger.error("Event is null");
+      log.error("Event is null");
       return;
     }
 
     EventType eventType = event.getEventType();
     if (eventType == null) {
-      logger.error("Event type is null");
+      log.error("Event type is null");
       return;
     }
 
     try {
       EventData eventData = event.getEventData();
       if (eventData == null) {
-        logger.error("Event data is null");
+        log.error("Event data is null");
         return;
       }
 
       Map<String, String> properties = eventData.getProperties();
 
       if (isEmpty(properties)) {
-        logger.error("Event data properties are null");
+        log.error("Event data properties are null");
         return;
       }
 
@@ -201,7 +201,7 @@ public class MarketoHandler implements EventHandler {
       if (NEW_TRIAL_SIGNUP == eventType) {
         String email = properties.get(EMAIL_ID);
         if (isEmpty(email)) {
-          logger.error("User email is empty");
+          log.error("User email is empty");
           return;
         }
 
@@ -221,7 +221,7 @@ public class MarketoHandler implements EventHandler {
 
       String accountId = properties.get(ACCOUNT_ID);
       if (isEmpty(accountId)) {
-        logger.error("Account is empty");
+        log.error("Account is empty");
         return;
       }
 
@@ -262,7 +262,7 @@ public class MarketoHandler implements EventHandler {
       }
 
     } catch (Exception ex) {
-      logger.error("Error while sending event to marketo for event {}", eventType, ex);
+      log.error("Error while sending event to marketo for event {}", eventType, ex);
     }
   }
 
@@ -289,7 +289,7 @@ public class MarketoHandler implements EventHandler {
       try {
         reportLead(account, user, accessToken, false, user.getUtmInfo());
       } catch (IOException | URISyntaxException e) {
-        logger.error("Error while updating license to all users in marketo", e);
+        log.error("Error while updating license to all users in marketo", e);
       }
     });
   }
@@ -320,7 +320,7 @@ public class MarketoHandler implements EventHandler {
         try {
           Thread.sleep(10000);
         } catch (InterruptedException ex) {
-          logger.warn("Exception while waiting 10 seconds for marketo to catchup");
+          log.warn("Exception while waiting 10 seconds for marketo to catchup");
         }
       }
     }
@@ -337,7 +337,7 @@ public class MarketoHandler implements EventHandler {
       try {
         Thread.sleep(10000);
       } catch (InterruptedException ex) {
-        logger.warn("Exception while waiting 10 seconds for marketo to catchup");
+        log.warn("Exception while waiting 10 seconds for marketo to catchup");
       }
     }
     return marketoLeadId;
@@ -368,15 +368,15 @@ public class MarketoHandler implements EventHandler {
   }
 
   public boolean reportCampaignEvent(EventType eventType, String accessToken, List<Id> leadIdList) throws IOException {
-    logger.info("Reporting campaign for event {} with leads {}", eventType, leadIdList);
+    log.info("Reporting campaign for event {} with leads {}", eventType, leadIdList);
     if (isEmpty(leadIdList)) {
-      logger.error("No Leads reported for event {}", eventType);
+      log.error("No Leads reported for event {}", eventType);
       return false;
     }
 
     long campaignId = campaignRegistry.get(eventType);
     if (campaignId == 0) {
-      logger.warn("No Campaign found for event type {}", eventType);
+      log.warn("No Campaign found for event type {}", eventType);
       return false;
     }
 
@@ -386,7 +386,7 @@ public class MarketoHandler implements EventHandler {
         retrofit.create(MarketoRestClient.class).triggerCampaign(campaignId, accessToken, campaign).execute();
 
     if (!response.isSuccessful()) {
-      logger.error("Error while triggering campaign to Marketo for eventType {}. Response code is {}", eventType,
+      log.error("Error while triggering campaign to Marketo for eventType {}. Response code is {}", eventType,
           response.code());
       return false;
     }
@@ -394,17 +394,17 @@ public class MarketoHandler implements EventHandler {
     Response campaignResponse = response.body();
 
     if (campaignResponse == null) {
-      logger.error("Marketo trigger campaign response was null for eventType {}", eventType);
+      log.error("Marketo trigger campaign response was null for eventType {}", eventType);
       return false;
     }
 
     if (!campaignResponse.isSuccess()) {
-      logger.error("Marketo http response reported failure for eventType {}, {}", eventType,
+      log.error("Marketo http response reported failure for eventType {}, {}", eventType,
           utils.getErrorMsg(campaignResponse.getErrors()));
       return false;
     }
 
-    logger.info("Reported campaign for event {} with leads {}", eventType, leadIdList);
+    log.info("Reported campaign for event {} with leads {}", eventType, leadIdList);
     return true;
   }
 
@@ -415,7 +415,7 @@ public class MarketoHandler implements EventHandler {
     if (marketoLeadId == 0L) {
       marketoLeadId = reportLead(account, user, accessToken, true, utmInfo);
       if (marketoLeadId == 0L) {
-        logger.error("Invalid lead id reported for user {}", userId);
+        log.error("Invalid lead id reported for user {}", userId);
         return;
       }
 

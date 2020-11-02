@@ -16,7 +16,7 @@ public class ServiceGuardCleanUpAlertsJob implements MongoPersistenceIterator.Ha
   @Override
   public void handle(Alert alert) {
     if (alert != null) {
-      logger.info("Deleting service guard alert with UUID: {}", alert.getUuid());
+      log.info("Deleting service guard alert with UUID: {}", alert.getUuid());
       wingsPersistence.delete(Alert.class, alert.getUuid());
     }
   }

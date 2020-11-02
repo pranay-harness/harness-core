@@ -89,7 +89,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
 
   @Override
   public Response toResponse(ConstraintViolationException exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     Set<ConstraintViolation<?>> constraintViolations = exception.getConstraintViolations();
 
     List<ValidationError> errors = new ArrayList<>();

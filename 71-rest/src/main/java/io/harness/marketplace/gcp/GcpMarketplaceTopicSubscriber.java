@@ -59,7 +59,7 @@ public class GcpMarketplaceTopicSubscriber {
       try {
         subscriptionAdminClient.createSubscription(sub);
       } catch (AlreadyExistsException e) {
-        logger.info("Subscription Already Exists. Subscription Name: {} Exception: {}", FULL_SUBSCRIPTION_NAME, e);
+        log.info("Subscription Already Exists. Subscription Name: {} Exception: {}", FULL_SUBSCRIPTION_NAME, e);
       }
     }
 
@@ -71,7 +71,7 @@ public class GcpMarketplaceTopicSubscriber {
                      .setCredentialsProvider(credentialsProvider)
                      .build();
 
-    logger.info("Starting listening to pub/sub topic: {}", FULL_TOPIC_NAME);
+    log.info("Starting listening to pub/sub topic: {}", FULL_TOPIC_NAME);
     subscriber.startAsync();
   }
 

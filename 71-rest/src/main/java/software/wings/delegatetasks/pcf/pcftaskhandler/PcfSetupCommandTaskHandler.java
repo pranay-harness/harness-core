@@ -207,7 +207,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .build();
 
     } catch (RuntimeException | PivotalClientApiException | IOException | ExecutionException e) {
-      logger.error(
+      log.error(
           PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Setup task [{}]", pcfCommandSetupRequest, e);
       executionLogCallback.saveExecutionLog(
           "\n\n ----------  PCF Setup process failed to complete successfully", ERROR, CommandExecutionStatus.FAILURE);
@@ -402,7 +402,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       }
     } catch (Exception e) {
-      logger.warn("Failed to remove temp files created", e);
+      log.warn("Failed to remove temp files created", e);
     }
   }
 

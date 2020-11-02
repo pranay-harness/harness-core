@@ -99,7 +99,7 @@ public class LogMLAnalysisGenerator implements Runnable {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
           && !analysisService.isLogDataCollected(
                  applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
-        logger.warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
+        log.warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
             + " stateExecution: " + context.getStateExecutionId() + ". No ML analysis will be run this minute");
         return;
       }
@@ -256,7 +256,7 @@ public class LogMLAnalysisGenerator implements Runnable {
   }
 
   private void generateFeedbackAnalysis() {
-    logger.info("Creating Feedback analysis task for {}", context.getStateExecutionId());
+    log.info("Creating Feedback analysis task for {}", context.getStateExecutionId());
     String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
         + "?stateExecutionId=" + context.getStateExecutionId() + "&appId=" + context.getAppId();
     final String taskId = generateUuid();
@@ -302,7 +302,7 @@ public class LogMLAnalysisGenerator implements Runnable {
     feedbackTask.setUuid(taskId);
 
     learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
-    logger.info("Created feedback task for state {} and minute {}", context.getStateExecutionId(), logAnalysisMinute);
+    log.info("Created feedback task for state {} and minute {}", context.getStateExecutionId(), logAnalysisMinute);
   }
 
   public void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
@@ -330,7 +330,7 @@ public class LogMLAnalysisGenerator implements Runnable {
       final VerificationDataAnalysisResponse response =
           VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
       response.setExecutionStatus(status);
-      logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+      log.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
       managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
     }
   }

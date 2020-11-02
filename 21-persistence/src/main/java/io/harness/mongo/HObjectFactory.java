@@ -66,7 +66,7 @@ public class HObjectFactory extends DefaultCreator {
         }
       }
     }
-    logger.error("Class {} is not prerecorded in the known morphia classes", name);
+    log.error("Class {} is not prerecorded in the known morphia classes", name);
     return null;
   }
 
@@ -105,7 +105,7 @@ public class HObjectFactory extends DefaultCreator {
       try {
         return Class.forName(name, true, getClassLoaderForClass());
       } catch (ClassNotFoundException e) {
-        logger.warn("Class not found defined in dbObj: ", e);
+        log.warn("Class not found defined in dbObj: ", e);
       }
       return NotFoundClass.class;
     });
@@ -124,14 +124,14 @@ public class HObjectFactory extends DefaultCreator {
     }
     final String collectionName = MDC.get(CollectionLogContext.ID);
     if (collectionName == null) {
-      logger.error("The collection was not initialized", new Exception());
+      log.error("The collection was not initialized", new Exception());
       return;
     }
 
     final Set<String> collections = alerted.computeIfAbsent(className, cn -> new ConcurrentHashSet<>());
     if (!collections.contains(collectionName)) {
       collections.add(collectionName);
-      logger.error("Need migration for class from {} to {}", className, actualClassName);
+      log.error("Need migration for class from {} to {}", className, actualClassName);
     }
   }
 
@@ -231,7 +231,7 @@ public class HObjectFactory extends DefaultCreator {
     classes.values()
         .stream()
         .filter(clazz -> baseClasses.stream().noneMatch(base -> base.isAssignableFrom(clazz)))
-        .forEach(clazz -> logger.info("The class {} has no base registered", clazz.getName()));
+        .forEach(clazz -> log.info("The class {} has no base registered", clazz.getName()));
 
     Reflections reflections = new Reflections("software.wings", "io.harness");
 

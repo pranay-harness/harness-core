@@ -45,9 +45,9 @@ public class ElasticsearchIndexManager {
       if (createIndexResponse != null && createIndexResponse.isAcknowledged()) {
         return true;
       }
-      logger.error("Could not create index {}", indexName);
+      log.error("Could not create index {}", indexName);
     } catch (IOException e) {
-      logger.error("Failed to create index", e);
+      log.error("Failed to create index", e);
     }
     return false;
   }
@@ -57,17 +57,17 @@ public class ElasticsearchIndexManager {
       GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
       boolean exists = elasticsearchClient.indexExists(getIndexRequest);
       if (exists) {
-        logger.info("{} index exists. Deleting the index", indexName);
+        log.info("{} index exists. Deleting the index", indexName);
         DeleteIndexRequest request = new DeleteIndexRequest(indexName);
         AcknowledgedResponse deleteIndexResponse = elasticsearchClient.deleteIndex(request);
         if (deleteIndexResponse == null || !deleteIndexResponse.isAcknowledged()) {
-          logger.error("Could not delete index {}", indexName);
+          log.error("Could not delete index {}", indexName);
           return false;
         }
       }
       return true;
     } catch (IOException e) {
-      logger.error("Failed to delete index {}", indexName, e);
+      log.error("Failed to delete index {}", indexName, e);
       return false;
     }
   }
@@ -77,22 +77,22 @@ public class ElasticsearchIndexManager {
       GetIndexRequest getIndexRequest = new GetIndexRequest(indexName);
       boolean exists = elasticsearchClient.indexExists(getIndexRequest);
       if (exists) {
-        logger.info("{} index exists. Deleting the index", indexName);
+        log.info("{} index exists. Deleting the index", indexName);
         IndicesAliasesRequest request = new IndicesAliasesRequest();
         AliasActions aliasActions = new AliasActions(Type.REMOVE_INDEX).index(indexName);
         request.addAliasAction(aliasActions);
 
         AcknowledgedResponse indicesAliasesResponse = elasticsearchClient.updateAliases(request);
         if (indicesAliasesResponse == null || !indicesAliasesResponse.isAcknowledged()) {
-          logger.error("Could not delete index {}", indexName);
+          log.error("Could not delete index {}", indexName);
           return false;
         } else {
-          logger.info("{} index removed from alias", indexName);
+          log.info("{} index removed from alias", indexName);
         }
       }
       return true;
     } catch (IOException e) {
-      logger.error("Failed to delete index {}", indexName, e);
+      log.error("Failed to delete index {}", indexName, e);
       return false;
     }
   }
@@ -102,11 +102,11 @@ public class ElasticsearchIndexManager {
     AliasActions aliasAction = new AliasActions(Type.ADD).index(indexName).alias(aliasName);
     request.addAliasAction(aliasAction);
     try {
-      logger.info("Attaching index {} to alias {}", indexName, aliasName);
+      log.info("Attaching index {} to alias {}", indexName, aliasName);
       AcknowledgedResponse indicesAliasesResponse = elasticsearchClient.updateAliases(request);
       return indicesAliasesResponse.isAcknowledged();
     } catch (IOException e) {
-      logger.error("Could not connect to elasticsearch", e);
+      log.error("Could not connect to elasticsearch", e);
     }
     return false;
   }

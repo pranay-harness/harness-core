@@ -296,7 +296,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                                    // and artifacts
 
         if (workflowExecution == null) {
-          logger.error("ERROR: Last Good Deployment ID is not found - lastGoodDeploymentUuid: {}",
+          log.error("ERROR: Last Good Deployment ID is not found - lastGoodDeploymentUuid: {}",
               workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
           throw new InvalidRequestException("Last Good Deployment ID is not found");
         }

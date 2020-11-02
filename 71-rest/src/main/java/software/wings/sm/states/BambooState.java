@@ -151,7 +151,7 @@ public class BambooState extends State {
 
     BambooConfig bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId);
     if (bambooConfig == null) {
-      logger.warn("BamboodConfig Id {} does not exist. It might have been deleted", bambooConfigId);
+      log.warn("BamboodConfig Id {} does not exist. It might have been deleted", bambooConfigId);
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage("Bamboo Server was deleted. Please update with an appropriate server")

@@ -19,7 +19,7 @@ public class PcfServiceDeploymentMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving PCF Services");
+    log.info("Retrieving PCF Services");
     final DBCollection collection = wingsPersistence.getCollection(Service.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
@@ -35,7 +35,7 @@ public class PcfServiceDeploymentMigration implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Pcf Service: {} updated", i);
+          log.info("Pcf Service: {} updated", i);
         }
         ++i;
 
@@ -52,7 +52,7 @@ public class PcfServiceDeploymentMigration implements Migration {
       }
 
     } catch (Exception e) {
-      logger.warn("Something failed in PcfServiceDeploymentType Migration", e);
+      log.warn("Something failed in PcfServiceDeploymentType Migration", e);
     }
   }
 }

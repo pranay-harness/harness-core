@@ -128,35 +128,35 @@ public class SegmentHandler implements EventHandler {
   @Override
   public void handleEvent(Event event) {
     if (event == null) {
-      logger.error("Event is null");
+      log.error("Event is null");
       return;
     }
     EventType eventType = event.getEventType();
     if (eventType == null) {
-      logger.error("Event type is null");
+      log.error("Event type is null");
       return;
     }
     EventData eventData = event.getEventData();
     if (eventData == null) {
-      logger.error("Event data is null");
+      log.error("Event data is null");
       return;
     }
     Map<String, String> properties = eventData.getProperties();
     if (isEmpty(properties)) {
-      logger.error("Event data properties are null");
+      log.error("Event data properties are null");
       return;
     }
 
     boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
     if (!isSegmentEnabled() || !validApiUrl) {
-      logger.info("Segment not enabled or incorrect URL. Config: {}", segmentConfig);
+      log.info("Segment not enabled or incorrect URL. Config: {}", segmentConfig);
     }
 
     try {
       if (NEW_TRIAL_SIGNUP == eventType || JOIN_ACCOUNT_REQUEST == eventType) {
         String email = properties.get(EMAIL_ID);
         if (isEmpty(email)) {
-          logger.error("User email is empty");
+          log.error("User email is empty");
           return;
         }
 
@@ -164,14 +164,14 @@ public class SegmentHandler implements EventHandler {
         if (isNotEmpty(identity)) {
           reportTrackEvent(eventType, Arrays.asList(identity));
         } else {
-          logger.error("identity is null");
+          log.error("identity is null");
         }
         return;
       }
 
       String accountId = properties.get(ACCOUNT_ID);
       if (isEmpty(accountId)) {
-        logger.error("Account is empty");
+        log.error("Account is empty");
         return;
       }
 
@@ -227,7 +227,7 @@ public class SegmentHandler implements EventHandler {
       }
 
     } catch (Exception ex) {
-      logger.error("Error while sending event to segment for event {}", eventType, ex);
+      log.error("Error while sending event to segment for event {}", eventType, ex);
     }
   }
 
@@ -251,7 +251,7 @@ public class SegmentHandler implements EventHandler {
       try {
         reportIdentity(account, user, false);
       } catch (URISyntaxException e) {
-        logger.error("Error while updating license to all users in segment", e);
+        log.error("Error while updating license to all users in segment", e);
       }
     });
   }
@@ -284,7 +284,7 @@ public class SegmentHandler implements EventHandler {
       try {
         Thread.sleep(10000);
       } catch (InterruptedException ex) {
-        logger.warn("Exception while waiting 10 seconds for segment to catchup");
+        log.warn("Exception while waiting 10 seconds for segment to catchup");
       }
     }
     return identity;
@@ -331,15 +331,15 @@ public class SegmentHandler implements EventHandler {
   }
 
   public boolean reportTrackEvent(EventType eventType, List<String> identityList) {
-    logger.info("Reporting track for event {} with leads {}", eventType, identityList);
+    log.info("Reporting track for event {} with leads {}", eventType, identityList);
     if (isEmpty(identityList)) {
-      logger.error("No identities reported for event {}", eventType);
+      log.error("No identities reported for event {}", eventType);
       return false;
     }
     Map<String, String> properties = new HashMap<>();
     properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
     segmentHelper.reportTrackEvent(identityList, eventType.name(), properties);
-    logger.info("Reported track for event {} with leads {}", eventType, identityList);
+    log.info("Reported track for event {} with leads {}", eventType, identityList);
     return true;
   }
 
@@ -355,11 +355,11 @@ public class SegmentHandler implements EventHandler {
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       String userId = user.getUuid();
       String identity = user.getSegmentIdentity();
-      logger.info("Reporting track for event {} with lead {}", event, userId);
+      log.info("Reporting track for event {} with lead {}", event, userId);
       if (isEmpty(identity) || !identity.equals(userId)) {
         identity = reportIdentity(account, user, true);
         if (isEmpty(identity)) {
-          logger.error("Invalid identity id reported for user {}", userId);
+          log.error("Invalid identity id reported for user {}", userId);
           return;
         }
 
@@ -376,7 +376,7 @@ public class SegmentHandler implements EventHandler {
       if (reported) {
         updateUserEvents(user, event);
       }
-      logger.info("Reported track for event {} with lead {}", event, userId);
+      log.info("Reported track for event {} with lead {}", event, userId);
     }
   }
 
@@ -387,15 +387,15 @@ public class SegmentHandler implements EventHandler {
     if (isNotEmpty(userId)) {
       user = userService.get(userId);
       if (user == null) {
-        logger.warn("User is null. Skipping reporting of track event {}", event);
+        log.warn("User is null. Skipping reporting of track event {}", event);
         return;
       }
       identity = user.getSegmentIdentity();
-      logger.info("Reporting track for event {} with lead {}", event, userId);
+      log.info("Reporting track for event {} with lead {}", event, userId);
       if (isEmpty(identity) || !identity.equals(userId)) {
         identity = reportIdentity(account, user, true);
         if (isEmpty(identity)) {
-          logger.error("Invalid identity id reported for user {}", userId);
+          log.error("Invalid identity id reported for user {}", userId);
           return;
         }
 
@@ -415,6 +415,6 @@ public class SegmentHandler implements EventHandler {
     if (user != null && reported) {
       updateUserEvents(user, event);
     }
-    logger.info("Reported track for event {} with lead {}", event, identity);
+    log.info("Reported track for event {} with lead {}", event, identity);
   }
 }

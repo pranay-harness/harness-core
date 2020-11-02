@@ -165,7 +165,7 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
                      .queryParam("accountId", application.getAccountId())
                      .queryParam("settingId", azureArtifactsSetting.getUuid())
                      .get("/build-sources/projects");
-      logger.info("List projects response: {}, ", response.prettyPrint());
+      log.info("List projects response: {}, ", response.prettyPrint());
       if (response.getStatusCode() < 400) {
         break;
       }
@@ -196,7 +196,7 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
                      .queryParam("settingId", azureArtifactsSetting.getUuid())
                      .queryParam("project", projectId)
                      .get("/build-sources/feeds");
-      logger.info("List feeds response: {}, ", response.prettyPrint());
+      log.info("List feeds response: {}, ", response.prettyPrint());
       if (response.getStatusCode() < 400) {
         break;
       }
@@ -229,7 +229,7 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
                      .queryParam("project", projectId)
                      .queryParam("protocolType", protocolType)
                      .get(format("/build-sources/feeds/%s/packages", feed));
-      logger.info("List packages response: {}, ", response.prettyPrint());
+      log.info("List packages response: {}, ", response.prettyPrint());
       if (response.getStatusCode() < 400) {
         break;
       }
@@ -278,7 +278,7 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
                      .body(azureArtifactsArtifactStream, ObjectMapperType.GSON)
                      .contentType(ContentType.JSON)
                      .post("/artifactstreams");
-      logger.info("Save artifact stream response: {}, ", response.prettyPrint());
+      log.info("Save artifact stream response: {}, ", response.prettyPrint());
       if (response.getStatusCode() < 400) {
         break;
       }

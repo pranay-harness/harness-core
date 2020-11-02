@@ -85,7 +85,7 @@ public class K8CommandExecutorTest extends WingsBaseTest {
       outputStream.flush();
       outputStream.close();
     } catch (IOException e) {
-      logger.info("Output stream error: ", e);
+      log.info("Output stream error: ", e);
     }
     return K8ExecCommandResponse.builder().execCommandStatus(status).outputStream(outputStream).build();
   }

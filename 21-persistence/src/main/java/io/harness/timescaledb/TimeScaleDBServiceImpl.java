@@ -50,13 +50,13 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     try (Connection connection = DriverManager.getConnection(timeScaleDBConfig.getTimescaledbUrl(), dbProperties);
          Statement st = connection.createStatement(); ResultSet rs = st.executeQuery("SELECT VERSION()")) {
       if (rs.next()) {
-        logger.info(rs.getString(1));
+        log.info(rs.getString(1));
         initializeTimeScaleDB(timeScaleDBConfig);
         validDB = true;
       }
 
     } catch (SQLException ex) {
-      logger.info("No Valid TimeScaleDB found", ex);
+      log.info("No Valid TimeScaleDB found", ex);
     }
   }
 
@@ -73,7 +73,7 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
   }
 
   private void initializeTimeScaleDB(TimeScaleDBConfig config) throws SQLException {
-    logger.info("Initializing TimeScaleDB extension");
+    log.info("Initializing TimeScaleDB extension");
     ds.setUrl(config.getTimescaledbUrl());
     ds.setUsername(config.getTimescaledbUsername());
     ds.setPassword(config.getTimescaledbPassword());
@@ -95,9 +95,9 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
 
     try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) {
       statement.execute("CREATE EXTENSION IF NOT EXISTS TIMESCALEDB CASCADE;");
-      logger.info("Completed initializing TimeScaleDB extension");
+      log.info("Completed initializing TimeScaleDB extension");
       statement.execute("CREATE EXTENSION IF NOT EXISTS hstore;");
-      logger.info("Completed initializing hstore extension");
+      log.info("Completed initializing hstore extension");
     }
   }
 
@@ -111,7 +111,7 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     if (!validDB) {
       throw new SQLException("Invalid timescale db.");
     }
-    logger.debug("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
+    log.debug("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
     return ds.getConnection();
   }
 }

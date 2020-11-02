@@ -151,7 +151,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @Override
   @SchemaIgnore
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Attributes(title = "Execute with previous steps")

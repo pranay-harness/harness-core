@@ -42,7 +42,7 @@ public class MarketoLeadDataMigration implements Migration {
   @Override
   public void migrate() {
     if (!marketoConfig.isEnabled()) {
-      logger.info("MarketoMigration - Marketo config is disabled. skipping...");
+      log.info("MarketoMigration - Marketo config is disabled. skipping...");
       return;
     }
 
@@ -52,14 +52,14 @@ public class MarketoLeadDataMigration implements Migration {
                             .client(Http.getUnsafeOkHttpClient(marketoConfig.getUrl()))
                             .build();
 
-    logger.info("MarketoMigration - Start - registering all users of trial accounts as leads");
+    log.info("MarketoMigration - Start - registering all users of trial accounts as leads");
 
     String accessToken;
     try {
       accessToken =
           marketoHelper.getAccessToken(marketoConfig.getClientId(), marketoConfig.getClientSecret(), retrofit);
     } catch (IOException e) {
-      logger.error("MarketoMigration - Error while getting the access token", e);
+      log.error("MarketoMigration - Error while getting the access token", e);
       return;
     }
     Query<Account> accountsQuery = wingsPersistence.createQuery(Account.class, excludeAuthority);
@@ -82,7 +82,7 @@ public class MarketoLeadDataMigration implements Migration {
           String accountType = licenseInfo.getAccountType();
 
           if (!AccountType.isValid(accountType)) {
-            logger.error(
+            log.error(
                 "MarketoMigration - Invalid accountType {} for account {}", accountType, account.getAccountName());
             continue;
           }
@@ -99,24 +99,24 @@ public class MarketoLeadDataMigration implements Migration {
               marketoHelper.createOrUpdateLead(
                   finalAccount, user.getName(), user.getEmail(), accessToken, null, retrofit, null);
             } catch (IOException e) {
-              logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
+              log.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
                   accountId, e);
             } catch (URISyntaxException e) {
-              logger.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
+              log.error("MarketoMigration - Error while registering lead for user {} in account: {}", user.getUuid(),
                   accountId, e);
             }
           });
 
-          logger.info("MarketoMigration - Created leads for account {}", account.getAccountName());
+          log.info("MarketoMigration - Created leads for account {}", account.getAccountName());
         } catch (Exception ex) {
-          logger.error("MarketoMigration - Error while updating license info for account: {}",
+          log.error("MarketoMigration - Error while updating license info for account: {}",
               account != null ? account.getAccountName() : "", ex);
         }
       }
 
-      logger.info("MarketoMigration - Done - registering all users of trial accounts as leads");
+      log.info("MarketoMigration - Done - registering all users of trial accounts as leads");
     } catch (Exception ex) {
-      logger.error("MarketoMigration - Failed - registering all users of trial accounts as leads", ex);
+      log.error("MarketoMigration - Failed - registering all users of trial accounts as leads", ex);
     }
   }
 }

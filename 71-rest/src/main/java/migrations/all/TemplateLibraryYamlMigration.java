@@ -17,16 +17,16 @@ public class TemplateLibraryYamlMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(String.join(DEBUG_LINE, " Starting Migration For Template Library Yaml"));
+    log.info(String.join(DEBUG_LINE, " Starting Migration For Template Library Yaml"));
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
-        logger.info(String.join(
+        log.info(String.join(
             DEBUG_LINE, " Starting Migration For Template Library Yaml for account", account.getAccountName()));
         yamlService.syncYamlTemplate(account.getUuid());
       }
     }
 
-    logger.info(String.join(DEBUG_LINE, " Completed triggering migration for Template Library Yaml"));
+    log.info(String.join(DEBUG_LINE, " Completed triggering migration for Template Library Yaml"));
   }
 }

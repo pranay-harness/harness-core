@@ -36,12 +36,12 @@ class ChangeEventProcessor {
 
   boolean processChangeEvent(ChangeEvent<?> changeEvent) {
     try {
-      logger.info(
+      log.info(
           "Adding change event of type {}:{} in the queue", changeEvent.getEntityType(), changeEvent.getChangeType());
       changeEventQueue.put(changeEvent);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Interrupted while waiting to add a change event in the queue", e.getCause());
+      log.error("Interrupted while waiting to add a change event in the queue", e.getCause());
       return false;
     }
     return true;

@@ -161,7 +161,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Before
   public void setup() throws IOException, IllegalAccessException {
     long seed = System.currentTimeMillis();
-    logger.info("random seed: " + seed);
+    log.info("random seed: " + seed);
     r = new Random(seed);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
@@ -1157,19 +1157,19 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void formatDate() {
     ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
-    logger.info("" + zdt.toEpochSecond());
+    log.info("" + zdt.toEpochSecond());
 
     zdt = ZonedDateTime.parse("2018-04-27T23:11:23.628Z");
-    logger.info("" + zdt.toEpochSecond());
+    log.info("" + zdt.toEpochSecond());
 
     DateTimeFormatter df1 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
-    logger.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628Z")).toEpochMilli());
+    log.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628Z")).toEpochMilli());
 
     df1 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSX");
-    logger.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628456789Z")).toEpochMilli());
+    log.info("" + Instant.from(df1.parse("2018-04-27T23:11:23.628456789Z")).toEpochMilli());
 
     DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX");
-    logger.info("" + Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
+    log.info("" + Instant.from(df.parse("2018-05-03T00:15:12.618905414+00:00")).toEpochMilli());
   }
 
   @Test
@@ -1842,7 +1842,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     int numOfL0Records = 1 + r.nextInt(10);
     int numOfMinutes = 1 + r.nextInt(5);
     int logCollectionMinuteBase = 1 + r.nextInt(5000);
-    logger.info("numOfHosts: {}, numOfL0Records: {} numOfMinutes: {}", numOfHosts, numOfL0Records, numOfMinutes);
+    log.info("numOfHosts: {}, numOfL0Records: {} numOfMinutes: {}", numOfHosts, numOfL0Records, numOfMinutes);
 
     for (int logCollectionMinute = logCollectionMinuteBase;
          logCollectionMinute < logCollectionMinuteBase + numOfMinutes; logCollectionMinute++) {
@@ -1929,7 +1929,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     int numOfL1Records = 1 + r.nextInt(10);
     int numOfMinutes = 1 + r.nextInt(5);
     int logCollectionMinuteBase = 1 + r.nextInt(5000);
-    logger.info("numOfHosts: {}, numOfL0Records: {} numOfL1Records: {} numOfMinutes: {}", numOfHosts, numOfL1Records,
+    log.info("numOfHosts: {}, numOfL0Records: {} numOfL1Records: {} numOfMinutes: {}", numOfHosts, numOfL1Records,
         numOfMinutes);
 
     for (int logCollectionMinute = logCollectionMinuteBase;

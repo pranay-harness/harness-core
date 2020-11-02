@@ -42,7 +42,7 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
   @Override
   public HelmValuesFetchTaskResponse run(TaskParameters parameters) {
     HelmValuesFetchTaskParameters taskParams = (HelmValuesFetchTaskParameters) parameters;
-    logger.info(
+    log.info(
         format("Running HelmValuesFetchTask for account %s app %s", taskParams.getAccountId(), taskParams.getAppId()));
 
     ExecutionLogCallback executionLogCallback = getExecutionLogCallback(taskParams, FetchFiles);
@@ -66,7 +66,7 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
           .valuesFileContent(valuesFileContent)
           .build();
     } catch (Exception e) {
-      logger.error("HelmValuesFetchTask execution failed with exception ", e);
+      log.error("HelmValuesFetchTask execution failed with exception ", e);
       executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
 
       return HelmValuesFetchTaskResponse.builder()

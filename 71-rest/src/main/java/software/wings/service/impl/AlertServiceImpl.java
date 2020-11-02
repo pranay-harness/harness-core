@@ -206,7 +206,7 @@ public class AlertServiceImpl implements AlertService {
         injector.injectMembers(alertData);
         alert = createAlertObject(accountId, appId, alertType, alertData, validUntil);
         wingsPersistence.save(alert);
-        logger.info("Alert created: {}", alert.getUuid());
+        log.info("Alert created: {}", alert.getUuid());
       }
       postProcessAlertAfterCreating(accountId, alert, alertType);
     }
@@ -229,15 +229,15 @@ public class AlertServiceImpl implements AlertService {
     alert.setTriggerCount(alert.getTriggerCount() + 1);
     alert.setStatus(status);
     if (alertOpened) {
-      logger.info("Alert opened: {}", alert.getUuid());
+      log.info("Alert opened: {}", alert.getUuid());
 
       if (notificationStatusService.get(accountId).isEnabled()) {
         publishEvent(alert);
       } else {
-        logger.info("No alert event will be published.");
+        log.info("No alert event will be published.");
       }
     } else if (status == Pending) {
-      logger.info("Alert pending: {}", alert.getUuid());
+      log.info("Alert pending: {}", alert.getUuid());
     }
   }
 
@@ -248,7 +248,7 @@ public class AlertServiceImpl implements AlertService {
         injector.injectMembers(alertData);
         alert = createAlertObject(accountId, appId, alertType, alertData, null);
         wingsPersistence.save(alert);
-        logger.info("Alert created: {}", alert.getUuid());
+        log.info("Alert created: {}", alert.getUuid());
       }
       postProcessAlertAfterCreating(accountId, alert, alertType);
     }
@@ -260,10 +260,10 @@ public class AlertServiceImpl implements AlertService {
         eventPublisher.publishEvent(
             Event.builder().eventData(alertEventData(alert)).eventType(EventType.OPEN_ALERT).build());
       } else {
-        logger.info("No alert event will be published in event queue. Type: {}", alert.getType());
+        log.info("No alert event will be published in event queue. Type: {}", alert.getType());
       }
     } catch (Exception e) {
-      logger.error("Could not publish alert event. Alert: {}", alert);
+      log.error("Could not publish alert event. Alert: {}", alert);
     }
   }
 
@@ -273,10 +273,10 @@ public class AlertServiceImpl implements AlertService {
         eventPublisher.publishEvent(
             Event.builder().eventData(alertEventData(alert)).eventType(EventType.CLOSE_ALERT).build());
       } else {
-        logger.info("No close alert event will be published in event queue. Type: {}", alert.getType());
+        log.info("No close alert event will be published in event queue. Type: {}", alert.getType());
       }
     } catch (Exception e) {
-      logger.error("Could not publish alert event. Alert: {}", alert);
+      log.error("Could not publish alert event. Alert: {}", alert);
     }
   }
 
@@ -306,7 +306,7 @@ public class AlertServiceImpl implements AlertService {
   @Override
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
-      logger.info("Finding existing alerts for accountId {}", accountId);
+      log.info("Finding existing alerts for accountId {}", accountId);
       Query<Alert> query = getAlertsQuery(accountId, appId, alertType, alertData);
       try (HIterator<Alert> iterator = new HIterator<>(query.fetch())) {
         for (Alert alert : iterator) {
@@ -322,7 +322,7 @@ public class AlertServiceImpl implements AlertService {
 
   private List<Alert> findAllExistingAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
-      logger.info("Finding all existing alerts");
+      log.info("Finding all existing alerts");
       Query<Alert> query = getAlertsQuery(accountId, appId, alertType, alertData);
       List<Alert> alerts = new ArrayList<>();
       try (HIterator<Alert> iterator = new HIterator<>(query.fetch())) {
@@ -341,7 +341,7 @@ public class AlertServiceImpl implements AlertService {
     if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
       String errorMsg = format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
     Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
@@ -382,7 +382,7 @@ public class AlertServiceImpl implements AlertService {
             .set(AlertKeys.validUntil, expiration));
 
     if (updateResults.getUpdatedCount() > 0) {
-      logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert.getUuid());
+      log.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert.getUuid());
       alert.setStatus(Closed);
       alert.setClosedAt(now);
       alert.setValidUntil(expiration);

@@ -27,7 +27,7 @@ public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigration implements Mig
 
   @Override
   public void migrate() {
-    logger.info("Start - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
+    log.info("Start - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
 
     try {
       Query<DirectKubernetesInfrastructureMapping> filterQuery =
@@ -41,11 +41,11 @@ public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigration implements Mig
       ENCRYPTED_FIELDS.forEach(updates::unset);
 
       UpdateResults updateResults = wingsPersistence.update(filterQuery, updates);
-      logger.info("Cleaned up encrypted fields for {} entities", updateResults.getUpdatedCount());
+      log.info("Cleaned up encrypted fields for {} entities", updateResults.getUpdatedCount());
     } catch (Exception e) {
-      logger.error("Error running migration CleanUpDirectK8sInfraMappingEncryptedFieldsMigration", e);
+      log.error("Error running migration CleanUpDirectK8sInfraMappingEncryptedFieldsMigration", e);
     }
 
-    logger.info("Completed - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
+    log.info("Completed - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
   }
 }

@@ -815,26 +815,26 @@ public class EventPublishHelper {
       EmbeddedUser createdBy = workflowExecution.getCreatedBy();
 
       if (createdBy == null) {
-        logger.info("CreatedBy is null for execution id {}", workflowExecutionId);
+        log.info("CreatedBy is null for execution id {}", workflowExecutionId);
         return;
       }
 
       String userEmail = createdBy.getEmail();
 
       if (isEmpty(userEmail)) {
-        logger.info("CreatedBy user email is null for execution id {}", workflowExecutionId);
+        log.info("CreatedBy user email is null for execution id {}", workflowExecutionId);
         return;
       }
 
       String userId = createdBy.getUuid();
       if (isEmpty(userId)) {
-        logger.info("CreatedBy user id is null for execution id {}", workflowExecutionId);
+        log.info("CreatedBy user id is null for execution id {}", workflowExecutionId);
         return;
       }
 
       User user = userService.getUserFromCacheOrDB(userId);
       if (!shouldPublishEventForUser(user)) {
-        logger.info("Skipping publish event for user {} and execution id {}", userEmail, workflowExecutionId);
+        log.info("Skipping publish event for user {} and execution id {}", userEmail, workflowExecutionId);
         return;
       }
 

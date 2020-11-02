@@ -94,7 +94,7 @@ public class GraphQLResource {
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
       @QueryParam("accountId") String accountId, String query, @Context HttpServletRequest httpServletRequest) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Executing graphql query");
+      log.info("Executing graphql query");
       GraphQLQuery graphQLQuery = new GraphQLQuery();
       graphQLQuery.setQuery(query);
       return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
@@ -116,7 +116,7 @@ public class GraphQLResource {
       @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery,
       @Context HttpServletRequest httpServletRequest) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Executing graphql query");
+      log.info("Executing graphql query");
       return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
     }
   }
@@ -172,16 +172,16 @@ public class GraphQLResource {
       }
 
       if (accountId == null) {
-        logger.info(GraphQLConstants.INVALID_API_KEY);
+        log.info(GraphQLConstants.INVALID_API_KEY);
         throw graphQLUtils.getInvalidApiKeyException();
       }
     } else {
-      logger.info(GraphQLConstants.INVALID_API_KEY);
+      log.info(GraphQLConstants.INVALID_API_KEY);
       throw graphQLUtils.getInvalidApiKeyException();
     }
 
     if (!restApiFeature.isAvailableForAccount(accountId)) {
-      logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
+      log.info(GraphQLConstants.FEATURE_NOT_ENABLED);
       throw graphQLUtils.getFeatureNotEnabledException();
     }
 
@@ -223,7 +223,7 @@ public class GraphQLResource {
   private ExecutionResult handleException(String accountId, Exception ex) {
     String errorMsg = String.format(
         "Error while handling api request for Graphql api for accountId %s : %s", accountId, ex.getMessage());
-    logger.warn(errorMsg);
+    log.warn(errorMsg);
     throw graphQLUtils.getException(errorMsg, ex);
   }
 

@@ -53,7 +53,7 @@ class FileDeletionManager {
    * Delete files older than the file sentTailer is on.
    */
   void deleteOlderFiles() {
-    logger.info("Checking for old queue files to be deleted");
+    log.info("Checking for old queue files to be deleted");
     long cycle = sentTailer.cycle();
     boolean anyFilesDeleted = deleteOlderFilesInternal(cycle);
     // This method needs to be called to update internal caches whenever we delete any queue files.
@@ -76,12 +76,12 @@ class FileDeletionManager {
                                 .sorted()
                                 .collect(Collectors.toList());
     if (!olderFiles.isEmpty()) {
-      logger.info("Deleting files {}", olderFiles);
+      log.info("Deleting files {}", olderFiles);
       for (File file : olderFiles) {
         try {
           anyFilesDeleted = Files.deleteIfExists(file.toPath()) || anyFilesDeleted;
         } catch (Exception e) {
-          logger.error("Failed to delete {}", file.toPath(), e);
+          log.error("Failed to delete {}", file.toPath(), e);
         }
       }
     }

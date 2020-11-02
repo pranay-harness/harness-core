@@ -15,7 +15,7 @@ public abstract class CacheUtils {
         LoadingCache loadingCache = (LoadingCache) field.get(this);
         try (AutoLogContext ignore1 = new LoadingCacheLogContext(field.getName(),
                  String.valueOf(loadingCache.estimatedSize()), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-          logger.info(loadingCache.stats().toString());
+          log.info(loadingCache.stats().toString());
         }
       }
     }

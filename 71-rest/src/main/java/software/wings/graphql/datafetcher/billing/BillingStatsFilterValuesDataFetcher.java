@@ -126,7 +126,7 @@ public class BillingStatsFilterValuesDataFetcher
 
     queryData = billingDataQueryBuilder.formFilterValuesQuery(
         accountId, filters, groupByEntityListExcludingNodeAndPod, sortCriteria, limit, offset);
-    logger.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
+    log.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -138,11 +138,11 @@ public class BillingStatsFilterValuesDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
@@ -161,7 +161,7 @@ public class BillingStatsFilterValuesDataFetcher
     int retryCount = 0;
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formFilterValuesQuery(
         accountId, filters, groupByNodeAndPodList, sortCriteria, limit, offset);
-    logger.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
+    log.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
     Map<String, String> instanceIds = new HashMap<>();
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -183,11 +183,11 @@ public class BillingStatsFilterValuesDataFetcher
         return instanceIds;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher to get InstanceIds, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher to get InstanceIds, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
@@ -204,7 +204,7 @@ public class BillingStatsFilterValuesDataFetcher
     boolean successful = false;
     int retryCount = 0;
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formTotalCountQuery(accountId, filters, groupBy);
-    logger.info("BillingStatsFilterValuesDataFetcher query to get total count!! {}", queryData.getQuery());
+    log.info("BillingStatsFilterValuesDataFetcher query to get total count!! {}", queryData.getQuery());
     long totalCount = 0L;
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -225,11 +225,11 @@ public class BillingStatsFilterValuesDataFetcher
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher to get total count!, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
+          log.warn(
               "Failed to execute query in BillingStatsFilterValuesDataFetcher to get total count!, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }

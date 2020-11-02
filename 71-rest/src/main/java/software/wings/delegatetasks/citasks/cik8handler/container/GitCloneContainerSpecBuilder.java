@@ -75,7 +75,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     ConnectorDetails gitConnectorDetails = gitCloneContainerParams.getGitConnectorDetails();
     if (gitConnectorDetails == null || gitConnectorDetails.getConnectorDTO() == null
         || gitConnectorDetails.getConnectorDTO().getConnectorInfo().getConnectorType() != ConnectorType.GIT) {
-      logger.info("Git repository information not provided. Skipping git clone container.");
+      log.info("Git repository information not provided. Skipping git clone container.");
       return null;
     }
 
@@ -133,7 +133,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     if (containerParams.getType() == ContainerParams.Type.K8_GIT_CLONE) {
       gitCloneContainerParams = (GitCloneContainerParams) containerParams;
     } else {
-      logger.error("Type mismatch: container parameters is not of type: {}", ContainerParams.Type.K8_GIT_CLONE);
+      log.error("Type mismatch: container parameters is not of type: {}", ContainerParams.Type.K8_GIT_CLONE);
       throw new InvalidRequestException("Type miss matched");
     }
 
@@ -194,7 +194,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
                     .withName(LOG_SERVICE_ENDPOINT_VARIABLE)
                     .withValue(LOG_SERVICE_ENDPOINT_VARIABLE_VALUE)
                     .build());
-    logger.info(envVars.toString());
+    log.info(envVars.toString());
     return envVars;
   }
 
@@ -217,7 +217,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     } else {
       String errMsg =
           String.format("Invalid GIT authentication scheme %s for repo %s", gitConfigDTO.getGitAuthType(), repoUrl);
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new InvalidArgumentsException(errMsg, WingsException.USER);
     }
 

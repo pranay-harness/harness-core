@@ -66,7 +66,7 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   public MorphiaIterator<T, T> iterator() {
-    logger.error("Do not use the query as iterator directly.", new Exception(""));
+    log.error("Do not use the query as iterator directly.", new Exception(""));
     return this.fetch();
   }
 
@@ -76,8 +76,8 @@ public class HQuery<T> extends QueryImpl<T> {
     }
 
     if (list.size() > 5000) {
-      if (logger.isErrorEnabled()) {
-        logger.error("Key list query returns {} items.", list.size(), new Exception(""));
+      if (log.isErrorEnabled()) {
+        log.error("Key list query returns {} items.", list.size(), new Exception(""));
       }
     }
   }
@@ -88,8 +88,8 @@ public class HQuery<T> extends QueryImpl<T> {
     }
 
     if (list.size() > 1000) {
-      if (logger.isErrorEnabled()) {
-        logger.error("List query returns {} items.", list.size(), new Exception(""));
+      if (log.isErrorEnabled()) {
+        log.error("List query returns {} items.", list.size(), new Exception(""));
       }
     }
   }
@@ -176,7 +176,7 @@ public class HQuery<T> extends QueryImpl<T> {
     }
 
     if (!this.getChildren().stream().map(Criteria::getFieldName).anyMatch(requiredFilterArgs::contains)) {
-      logger.error("QUERY-ENFORCEMENT: appId or accountId must be present in List(Object/Key)/Get/Count/Search query",
+      log.error("QUERY-ENFORCEMENT: appId or accountId must be present in List(Object/Key)/Get/Count/Search query",
           new Exception(""));
     }
   }

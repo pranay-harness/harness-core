@@ -56,53 +56,52 @@ public class InstancesPurgeJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.info("Triggering instances and instance stats purge job asynchronously");
+    log.info("Triggering instances and instance stats purge job asynchronously");
     executorService.submit(this ::purge);
   }
 
   @VisibleForTesting
   void purge() {
-    logger.info("Starting execution of instances and instance stats purge job");
+    log.info("Starting execution of instances and instance stats purge job");
     Stopwatch sw = Stopwatch.createStarted();
 
     purgeOldStats();
     purgeOldDeletedInstances();
     purgeOldInstancesFromTimeScaleDB();
 
-    logger.info("Execution of instances and instance stats purge job completed. Time taken: {} millis",
+    log.info("Execution of instances and instance stats purge job completed. Time taken: {} millis",
         sw.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private void purgeOldStats() {
-    logger.info("Starting purge of instance stats");
+    log.info("Starting purge of instance stats");
     Stopwatch sw = Stopwatch.createStarted();
 
     boolean purged = instanceStatsService.purgeUpTo(getStartingInstantOfRetentionOfInstanceStats());
     if (purged) {
-      logger.info(
+      log.info(
           "Purge of instance stats completed successfully. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
     } else {
-      logger.info("Purge of instance stats failed. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
+      log.info("Purge of instance stats failed. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
   private void purgeOldDeletedInstances() {
-    logger.info("Starting purge of instances");
+    log.info("Starting purge of instances");
     Stopwatch sw = Stopwatch.createStarted();
 
     boolean purged = instanceService.purgeDeletedUpTo(getStartingInstantOfRetentionOfInstances());
     if (purged) {
-      logger.info(
-          "Purge of instances completed successfully. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
+      log.info("Purge of instances completed successfully. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
     } else {
-      logger.info("Purge of instances failed. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
+      log.info("Purge of instances failed. Time taken: {} millis", sw.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
   private void purgeOldInstancesFromTimeScaleDB() {
-    logger.info("Starting purge of instances from timescaledb");
+    log.info("Starting purge of instances from timescaledb");
     instanceTimeSeriesDataHelper.purgeOldInstances();
-    logger.info("Completed purge of instances from timescaledb");
+    log.info("Completed purge of instances from timescaledb");
   }
 
   public Instant getStartingInstantOfRetentionOfInstances() {

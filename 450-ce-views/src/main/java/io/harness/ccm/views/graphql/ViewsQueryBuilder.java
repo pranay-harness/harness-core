@@ -106,7 +106,7 @@ public class ViewsQueryBuilder {
       decorateQueryWithSortCriteria(selectQuery, sortCriteriaList);
     }
 
-    logger.info("Query for view {}", selectQuery.toString());
+    log.info("Query for view {}", selectQuery.toString());
     return selectQuery;
   }
 
@@ -235,7 +235,7 @@ public class ViewsQueryBuilder {
       }
       fields.add(filter.getField());
     }
-    logger.info("Query for view filter {}", query.toString());
+    log.info("Query for view filter {}", query.toString());
 
     return ViewsQueryMetadata.builder().query(query).fields(fields).build();
   }

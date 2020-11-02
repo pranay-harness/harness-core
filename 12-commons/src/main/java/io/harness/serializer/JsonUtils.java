@@ -307,7 +307,7 @@ public class JsonUtils {
    */
   public static <T> T clone(T t, Class<T> cls) {
     String json = asJson(t, mapperForCloning);
-    logger.debug("Cloning Object - json: {}", json);
+    log.debug("Cloning Object - json: {}", json);
     return asObject(json, cls, mapperForCloning);
   }
 
@@ -376,7 +376,7 @@ public class JsonUtils {
       return objectMapper.readTree(json);
     } catch (Exception e) {
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
+        log.error("Trace: {}", elem);
       }
       throw new RuntimeException(e);
     }

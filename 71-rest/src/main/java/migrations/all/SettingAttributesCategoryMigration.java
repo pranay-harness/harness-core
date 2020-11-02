@@ -43,7 +43,7 @@ public class SettingAttributesCategoryMigration implements Migration {
                   .set(SettingAttributeKeys.category, category.name());
           wingsPersistence.update(settingAttribute, updateOperations);
 
-          logger.info("Setting attribute '{}' with id {} has been updated to category {}", settingAttribute.getName(),
+          log.info("Setting attribute '{}' with id {} has been updated to category {}", settingAttribute.getName(),
               settingAttribute.getUuid(), category);
           updateCount++;
         }
@@ -51,7 +51,7 @@ public class SettingAttributesCategoryMigration implements Migration {
       }
     }
 
-    logger.info("Found {} setting attributes with category from database. Updated {} of them with proper categories",
+    log.info("Found {} setting attributes with category from database. Updated {} of them with proper categories",
         count, updateCount);
   }
 }

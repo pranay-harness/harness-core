@@ -226,7 +226,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private void handleExecutionLog(AzureVMSSDeployTaskParameters deployTaskParameters, String message,
       String scaleCommandUnit, String waitCommandUnit) {
-    logger.warn(message);
+    log.warn(message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, scaleCommandUnit, message);
     createAndFinishEmptyExecutionLog(deployTaskParameters, waitCommandUnit, message);
   }
@@ -309,7 +309,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private AzureVMSSTaskExecutionResponse logAndGenerateSFailureResponse(Exception ex) {
     String errorMessage = ExceptionUtils.getMessage(ex);
-    logger.error(errorMessage, ex);
+    log.error(errorMessage, ex);
     return AzureVMSSTaskExecutionResponse.builder().errorMessage(errorMessage).commandExecutionStatus(FAILURE).build();
   }
 }

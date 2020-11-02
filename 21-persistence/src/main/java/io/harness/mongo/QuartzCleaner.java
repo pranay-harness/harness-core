@@ -42,7 +42,7 @@ public class QuartzCleaner {
         } catch (ClassNotFoundException e) {
           Object id = job.get("_id");
           collection.remove(new BasicDBObject("_id", id));
-          logger.warn("Removing invalid job: {}, class: {}", id.toString(), jobClass);
+          log.warn("Removing invalid job: {}, class: {}", id.toString(), jobClass);
           continue;
         }
 
@@ -73,7 +73,7 @@ public class QuartzCleaner {
         if (job == null) {
           Object id = trigger.get("_id");
           collection.remove(new BasicDBObject("_id", id));
-          logger.warn("Removing invalid trigger: {}", id.toString());
+          log.warn("Removing invalid trigger: {}", id.toString());
         }
       }
     } finally {

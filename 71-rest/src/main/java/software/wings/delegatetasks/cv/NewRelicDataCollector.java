@@ -86,10 +86,10 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     this.dataCollectionExecutionContext = dataCollectionExecutionContext;
     this.dataCollectionInfo = dataCollectionInfo;
     transactionsToCollect = getTransactionsToCollect();
-    logger.info("Found total new relic metrics " + transactionsToCollect.size());
+    log.info("Found total new relic metrics " + transactionsToCollect.size());
     if (!dataCollectionInfo.getHosts().isEmpty()) {
       instances = getApplicationInstances();
-      logger.info("Got {} new relic nodes.", instances.size());
+      log.info("Got {} new relic nodes.", instances.size());
     }
   }
 
@@ -132,7 +132,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
                   getMetricData(node, batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     } catch (Exception e) {
       // ignoring the exception because we don't know what is causing this yet. We want to find out and fix this bug.
-      logger.error("Data collection failed when special chars are present in metric name {}",
+      log.error("Data collection failed when special chars are present in metric name {}",
           getTxnsWithSpecialChars(transactionsToCollect), e);
     }
     return getAllMetricRecords(records);
@@ -161,7 +161,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
                   getMetricData(batch.stream().map(NewRelicMetric::getName).collect(Collectors.toSet()))));
     } catch (Exception e) {
       // ignoring the exception because we don't know what is causing this yet. We want to find out and fix this bug.
-      logger.error("Data collection failed when special chars are present in metric name {}",
+      log.error("Data collection failed when special chars are present in metric name {}",
           getTxnsWithSpecialChars(transactionsToCollect), e);
     }
     return getAllMetricRecords(records);
@@ -180,7 +180,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   private MetricElementTable getMetricData(NewRelicApplicationInstance node, Set<String> metricNames) {
     MetricElementTable records = MetricElementTable.create();
 
-    logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node,
+    log.info("Fetching for host {} for stateExecutionId {} for metrics {}", node,
         dataCollectionInfo.getStateExecutionId(), metricNames);
     try {
       getWebTransactionMetrics(node, metricNames, records);
@@ -190,17 +190,17 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
       throw new DataCollectionException(e);
     }
 
-    logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
+    log.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
         dataCollectionInfo.getStateExecutionId(), metricNames);
 
-    logger.debug(records.toString());
+    log.debug(records.toString());
     return records;
   }
 
   private MetricElementTable getMetricData(Set<String> metricNames) {
     MetricElementTable records = MetricElementTable.create();
 
-    logger.info("Fetching metrics names {}", metricNames);
+    log.info("Fetching metrics names {}", metricNames);
     try {
       getWebTransactionMetrics(metricNames, records);
       getErrorMetrics(metricNames, records);
@@ -208,8 +208,8 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     } catch (IOException e) {
       throw new DataCollectionException(e);
     }
-    logger.info("Finished fetching. Metrics names {}", metricNames);
-    logger.debug(records.toString());
+    log.info("Finished fetching. Metrics names {}", metricNames);
+    log.debug(records.toString());
     return records;
   }
 
@@ -331,11 +331,11 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   }
 
   private Set<NewRelicMetric> getTransactionsToCollect() {
-    logger.info("Collecting txn names ");
+    log.info("Collecting txn names ");
     Set<NewRelicMetric> transactions = getTxnNameToCollect();
-    logger.info("new txns {}", transactions.size());
+    log.info("new txns {}", transactions.size());
     Set<NewRelicMetric> txnsWithData = getTransactionsWithDataInLastHour(transactions);
-    logger.info("txns with data {}", txnsWithData.size());
+    log.info("txns with data {}", txnsWithData.size());
     return txnsWithData;
   }
 
@@ -428,7 +428,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     try {
       results.addAll(dataCollectionService.executeParrallel(metricDataCallabels));
     } catch (Exception e) {
-      logger.error("Ignoring exception for special chars in the metric name {}", getTxnsWithSpecialChars(metrics), e);
+      log.error("Ignoring exception for special chars in the metric name {}", getTxnsWithSpecialChars(metrics), e);
     }
     results.forEach(result -> {
       if (result.isPresent()) {

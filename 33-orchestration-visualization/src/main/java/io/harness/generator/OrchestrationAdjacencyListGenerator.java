@@ -43,7 +43,7 @@ public class OrchestrationAdjacencyListGenerator {
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
     if (isEmpty(startingNodeExId)) {
-      logger.warn("Starting node cannot be null");
+      log.warn("Starting node cannot be null");
       return null;
     }
     return generateList(startingNodeExId, nodeExecutions, isOutcomePresent);

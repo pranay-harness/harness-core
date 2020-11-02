@@ -25,7 +25,7 @@ public class IISInstallCommandMigration implements SeedDataMigration {
 
   @Override
   public void migrate() {
-    logger.info("Migrating Install Command for IIS");
+    log.info("Migrating Install Command for IIS");
     loadNewIISTemplatesToAccounts();
   }
 
@@ -35,7 +35,7 @@ public class IISInstallCommandMigration implements SeedDataMigration {
           asList(POWER_SHELL_IIS_WEBSITE_INSTALL_PATH, POWER_SHELL_IIS_APP_INSTALL_PATH), GLOBAL_ACCOUNT_ID,
           HARNESS_GALLERY);
     } catch (WingsException e) {
-      logger.info("Default Template already exists in global gallery", e);
+      log.info("Default Template already exists in global gallery", e);
     }
 
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(POWER_SHELL_COMMANDS, TemplateType.SSH,

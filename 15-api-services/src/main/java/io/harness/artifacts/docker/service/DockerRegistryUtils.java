@@ -60,13 +60,13 @@ public class DockerRegistryUtils {
               getSingleTagLabels(registryRestClient, finalAuthHeader, imageName, tagInternal);
           labelsMap.put(i, newLabels);
         } catch (Exception e) {
-          logger.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
+          log.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
         }
       }
 
     } catch (Exception e) {
       // Ignore error until we understand why fetching labels is failing sometimes.
-      logger.error("Failed to fetch docker image labels", e);
+      log.error("Failed to fetch docker image labels", e);
       return Collections.emptyList();
     }
 

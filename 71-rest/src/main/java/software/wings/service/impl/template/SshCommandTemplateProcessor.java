@@ -220,7 +220,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   public void updateLinkedEntities(Template template) {
     Template savedTemplate = templateService.get(template.getUuid());
     if (savedTemplate == null) {
-      logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
+      log.info("Template {} was deleted. Not updating linked entities", template.getUuid());
       return;
     }
     // Read all the service commands that references the given command template
@@ -233,16 +233,16 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
           String templateVersion = serviceCommand.getTemplateVersion();
           if (templateVersion == null || (templateVersion.equalsIgnoreCase(LATEST_TAG))
               || isDefaultVersionOfTemplateChanged(template)) {
-            logger.info("Updating the linked commands");
+            log.info("Updating the linked commands");
             serviceCommand.setSetAsDefault(true);
             setCommandFromTemplate(template, serviceCommand);
             serviceResourceService.updateCommand(
                 serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand, true);
           } else {
-            logger.info("The linked template is not the latest. So, not updating it");
+            log.info("The linked template is not the latest. So, not updating it");
           }
         } catch (Exception e) {
-          logger.warn("Failed to update the linked Service Command {}", serviceCommand.getUuid(), e);
+          log.warn("Failed to update the linked Service Command {}", serviceCommand.getUuid(), e);
         }
       }
     }

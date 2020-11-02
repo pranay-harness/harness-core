@@ -130,7 +130,7 @@ public class MongoPersistentLockerTest extends PersistenceTestBase {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger logger = mock(Logger.class);
-    setStaticFieldValue(AcquiredDistributedLock.class, "logger", logger);
+    setStaticFieldValue(AcquiredDistributedLock.class, "log", logger);
 
     try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
     }
@@ -148,7 +148,7 @@ public class MongoPersistentLockerTest extends PersistenceTestBase {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(MessageManager.class, "log", mockLogger);
 
     try (AcquiredLock lock = mongoPersistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {

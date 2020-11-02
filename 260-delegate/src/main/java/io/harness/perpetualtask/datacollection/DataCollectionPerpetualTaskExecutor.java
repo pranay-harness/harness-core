@@ -59,10 +59,10 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
-    logger.info("Executing for !! dataCollectionWorkerId: {}", taskParams.getDataCollectionWorkerId());
+    log.info("Executing for !! dataCollectionWorkerId: {}", taskParams.getDataCollectionWorkerId());
     CVDataCollectionInfo dataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
-    logger.info("DataCollectionInfo {} ", dataCollectionInfo);
+    log.info("DataCollectionInfo {} ", dataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
     secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
             ? (DecryptableEntity) dataCollectionInfo.getConnectorConfigDTO()
@@ -74,15 +74,15 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       while (true) {
         dataCollectionTask = getNextDataCollectionTask(taskParams);
         if (dataCollectionTask == null) {
-          logger.info("Nothing to process.");
+          log.info("Nothing to process.");
           break;
         } else {
-          logger.info("Next task to process: ", dataCollectionTask);
+          log.info("Next task to process: ", dataCollectionTask);
           run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
         }
       }
     } catch (IOException e) {
-      logger.error("Perpetual task failed with exception", e);
+      log.error("Perpetual task failed with exception", e);
       throw new IllegalStateException(e);
     }
 
@@ -145,10 +145,10 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       DataCollectionTaskResult result =
           DataCollectionTaskResult.builder().dataCollectionTaskId(dataCollectionTask.getUuid()).status(SUCCESS).build();
       cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
-      logger.info("Updated task status to success.");
+      log.info("Updated task status to success.");
 
     } catch (Exception e) {
-      logger.error("Perpetual task failed with exception", e);
+      log.error("Perpetual task failed with exception", e);
       DataCollectionTaskResult result = DataCollectionTaskResult.builder()
                                             .dataCollectionTaskId(dataCollectionTask.getUuid())
                                             .status(FAILED)

@@ -50,14 +50,14 @@ public class SegmentHelper {
       try {
         this.analytics = Analytics.builder(segmentConfig.getApiKey()).build();
       } catch (Exception ex) {
-        logger.error("Error while initializing Segment configuration", ex);
+        log.error("Error while initializing Segment configuration", ex);
       }
     }
   }
 
   public String createOrUpdateIdentity(String userId, String email, String userName, Account account,
       String userInviteUrl, String oauthProvider, Map<String, Boolean> integrations) {
-    logger.info("Updating identity {} to segment", userId);
+    log.info("Updating identity {} to segment", userId);
 
     Builder identityBuilder = IdentifyMessage.builder();
 
@@ -132,27 +132,27 @@ public class SegmentHelper {
   public void enqueue(TrackMessage.Builder track) {
     if (analytics != null) {
       analytics.enqueue(track);
-      logger.info("Sent Track event to segment");
+      log.info("Sent Track event to segment");
     } else {
-      logger.info("Skipping sending track event to segment");
+      log.info("Skipping sending track event to segment");
     }
   }
 
   public void enqueue(GroupMessage.Builder group) {
     if (analytics != null) {
       analytics.enqueue(group);
-      logger.info("Sent Group event to segment");
+      log.info("Sent Group event to segment");
     } else {
-      logger.info("Skipping sending group event to segment");
+      log.info("Skipping sending group event to segment");
     }
   }
 
   public void enqueue(IdentifyMessage.Builder identity) {
     if (analytics != null) {
       analytics.enqueue(identity);
-      logger.info("Sent Identity event to segment");
+      log.info("Sent Identity event to segment");
     } else {
-      logger.info("Skipping sending identity to segment");
+      log.info("Skipping sending identity to segment");
     }
   }
 }

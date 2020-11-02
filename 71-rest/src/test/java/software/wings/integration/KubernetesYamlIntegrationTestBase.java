@@ -55,7 +55,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
     List<String> clusters = gkeClusterService.listClusters(COMPUTE_PROVIDER_SETTING, Collections.emptyList());
-    logger.info("Available clusters: {}", clusters);
+    log.info("Available clusters: {}", clusters);
 
     //    KubernetesConfig config = gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER,
     //        ImmutableMap.<String, String>builder()
@@ -73,7 +73,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
 
     NodePoolAutoscaling autoscaling =
         gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-    logger.info("Autoscale setting: {}", autoscaling);
+    log.info("Autoscale setting: {}", autoscaling);
 
     //    kubernetesService.cleanup(config);
 
@@ -126,7 +126,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
       kubernetesService.createOrReplaceController(
           config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     yaml = "---\n"
@@ -153,7 +153,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
     try {
       kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     yaml = "---\n"
@@ -203,7 +203,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
       kubernetesService.createOrReplaceController(
           config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     yaml = "---\n"
@@ -231,7 +231,7 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
     try {
       kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     kubernetesService.setControllerPodCount(
@@ -239,8 +239,8 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
 
     Optional<Integer> backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
     Optional<Integer> frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");
-    logger.info("Controller backend-ctrl has {} instances", backendCount.get());
-    logger.info("Controller frontend-ctrl has {} instances", frontendCount.get());
+    log.info("Controller backend-ctrl has {} instances", backendCount.get());
+    log.info("Controller frontend-ctrl has {} instances", frontendCount.get());
 
     kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");

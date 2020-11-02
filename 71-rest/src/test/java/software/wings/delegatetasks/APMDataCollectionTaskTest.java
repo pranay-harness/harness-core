@@ -103,7 +103,7 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
   }
   private Method useReflectionToMakeInnerClassVisible() throws Exception {
     Class[] innerClasses = dataCollectionTask.getClass().getDeclaredClasses();
-    logger.info("" + innerClasses);
+    log.info("" + innerClasses);
     Class[] parameterTypes = new Class[1];
     parameterTypes[0] = java.lang.String.class;
     Method m = innerClasses[0].getDeclaredMethod("resolveBatchHosts", parameterTypes);

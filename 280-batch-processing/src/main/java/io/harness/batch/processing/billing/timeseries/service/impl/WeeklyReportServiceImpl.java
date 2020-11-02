@@ -297,7 +297,7 @@ public class WeeklyReportServiceImpl {
       try {
         explorerUrl = templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId));
       } catch (URISyntaxException e) {
-        logger.error("Error in forming Explorer URL for Weekly Report", e);
+        log.error("Error in forming Explorer URL for Weekly Report", e);
       }
 
       templateModel.put("url", explorerUrl);
@@ -308,7 +308,7 @@ public class WeeklyReportServiceImpl {
           templateModel.put("UNSUBSCRIBE_URL",
               templateHelper.buildAbsoluteUrl(String.format(UNSUBSCRIBE_URL, enabledUsers.get(emailId))));
         } catch (URISyntaxException e) {
-          logger.error("Error in forming Explorer URL for Weekly Report", e);
+          log.error("Error in forming Explorer URL for Weekly Report", e);
         }
 
         EmailData emailData = EmailData.builder()
@@ -329,7 +329,7 @@ public class WeeklyReportServiceImpl {
         try {
           sendReportOnSlack(costValues, webhook.getWebhookUrl());
         } catch (IOException e) {
-          logger.error("Error in sending report on slack", e);
+          log.error("Error in sending report on slack", e);
         }
       }
     });
@@ -343,18 +343,18 @@ public class WeeklyReportServiceImpl {
       while (!successful && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              Statement statement = dbConnection.createStatement()) {
-          logger.info("Executing the following query in WeeklyReportServiceImpl : {} ", query);
+          log.info("Executing the following query in WeeklyReportServiceImpl : {} ", query);
           resultSet = statement.executeQuery(query);
           successful = true;
           return generateData(resultSet);
         } catch (SQLException e) {
-          logger.error("Failed to execute query in WeeklyReportServiceImpl ,[{}],retryCount=[{}], Exception: ", query,
+          log.error("Failed to execute query in WeeklyReportServiceImpl ,[{}],retryCount=[{}], Exception: ", query,
               retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Failed to execute query in WeeklyReportServiceImpl :[{}]", query);
+      log.warn("Failed to execute query in WeeklyReportServiceImpl :[{}]", query);
     }
     return null;
   }
@@ -454,7 +454,7 @@ public class WeeklyReportServiceImpl {
     try {
       loadedTemplate = Resources.toString(templateUrl, Charsets.UTF_8);
     } catch (IOException e) {
-      logger.error("Error in loading given template ", e);
+      log.error("Error in loading given template ", e);
     }
     RequestBody confirmationBody = RequestBody.create(JSON, sub.replace(loadedTemplate));
     slackPostRequest(confirmationBody, webhookUrl);
@@ -478,7 +478,7 @@ public class WeeklyReportServiceImpl {
 
     try (Response response = client.newCall(request1).execute()) {
       if (!response.isSuccessful()) {
-        logger.error("Slack post request failed. Response code: {}", response.code());
+        log.error("Slack post request failed. Response code: {}", response.code());
       }
     }
     return new RestResponse<>();

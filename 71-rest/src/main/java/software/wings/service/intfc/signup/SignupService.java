@@ -73,7 +73,7 @@ public class SignupService {
       baseUrl = authenticationUtils.getBaseUrl() + ERROR_PATH;
       redirectUrl = new SimpleUrlBuilder(baseUrl).build();
     }
-    logger.info("Base url is: {},  Redirect url is {}", authenticationUtils.getBaseUrl(), redirectUrl);
+    log.info("Base url is: {},  Redirect url is {}", authenticationUtils.getBaseUrl(), redirectUrl);
     return Response.seeOther(new URI(redirectUrl)).build();
   }
 }

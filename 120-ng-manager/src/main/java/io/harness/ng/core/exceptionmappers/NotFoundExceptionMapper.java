@@ -15,7 +15,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
   @Override
   public Response toResponse(NotFoundException exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     FailureDTO failureDTO = FailureDTO.toBody(
         Status.FAILURE, ErrorCode.RESOURCE_NOT_FOUND_EXCEPTION, "Request failed as Resource Not Found.", null);
     return Response.status(Response.Status.BAD_REQUEST).entity(failureDTO).type(MediaType.APPLICATION_JSON).build();

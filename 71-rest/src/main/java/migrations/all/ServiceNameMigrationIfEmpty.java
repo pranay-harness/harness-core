@@ -23,19 +23,19 @@ public class ServiceNameMigrationIfEmpty implements Migration {
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    logger.info("Changing Empty Service Name to Harness_Service");
+    log.info("Changing Empty Service Name to Harness_Service");
     final DBCollection collection = wingsPersistence.getCollection(Service.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
     int count = 1;
-    logger.info("Migrating Services with No Name");
+    log.info("Migrating Services with No Name");
     try (HIterator<Service> services =
              new HIterator<>(wingsPersistence.createQuery(Service.class).project(ServiceKeys.name, true).fetch())) {
       for (Service service : services) {
         if (i % 50 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Services: {} updated", i);
+          log.info("Services: {} updated", i);
         }
         if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
           bulkWriteOperation
@@ -52,8 +52,8 @@ public class ServiceNameMigrationIfEmpty implements Migration {
     }
     if (i % 50 != 1) {
       bulkWriteOperation.execute();
-      logger.info("Services: {} updated", i);
+      log.info("Services: {} updated", i);
     }
-    logger.info("Migrating Empty Service Names completed");
+    log.info("Migrating Empty Service Names completed");
   }
 }

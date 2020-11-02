@@ -21,9 +21,9 @@ public class SecretTextNameKeyWordsMigration implements Migration {
                                  .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT)
                                  .fetch())) {
       for (EncryptedData encryptedData : iterator) {
-        logger.info("updating {} id {}", encryptedData.getName(), encryptedData.getUuid());
+        log.info("updating {} id {}", encryptedData.getName(), encryptedData.getUuid());
         encryptedData.addSearchTag(Misc.replaceDotWithUnicode(encryptedData.getName()));
-        logger.info("updating search tags for {} to {}", encryptedData.getName(), encryptedData.getSearchTags());
+        log.info("updating search tags for {} to {}", encryptedData.getName(), encryptedData.getSearchTags());
         wingsPersistence.save(encryptedData);
       }
     }

@@ -17,7 +17,7 @@ public class StateTimeoutUtils {
     try {
       return Ints.checkedCast(ofMinutes(timeoutMinutes).toMillis());
     } catch (Exception e) {
-      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutMinutes);
+      log.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutMinutes);
       return null;
     }
   }

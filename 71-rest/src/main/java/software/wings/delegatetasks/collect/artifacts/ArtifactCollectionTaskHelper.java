@@ -79,7 +79,7 @@ public class ArtifactCollectionTaskHelper {
     if (fileInfo == null) {
       throw new FileNotFoundException("Unable to get artifact for path " + artifactPath);
     }
-    logger.info("Uploading the file {} for artifact path {}", fileInfo.getKey(), artifactPath);
+    log.info("Uploading the file {} for artifact path {}", fileInfo.getKey(), artifactPath);
 
     DelegateFile delegateFile = aDelegateFile()
                                     .withBucket(FileBucket.ARTIFACTS)
@@ -95,12 +95,12 @@ public class ArtifactCollectionTaskHelper {
     }
 
     if (fileRes == null || fileRes.getFileId() == null) {
-      logger.error(
+      log.error(
           "Failed to upload file name {} for artifactPath {} to manager. Artifact files will be uploaded during the deployment of Artifact Check Step",
           fileInfo.getKey(), artifactPath);
     } else {
-      logger.info("Uploaded the file name {} and fileUuid {} for artifactPath {}", fileInfo.getKey(),
-          fileRes.getFileId(), artifactPath);
+      log.info("Uploaded the file name {} and fileUuid {} for artifactPath {}", fileInfo.getKey(), fileRes.getFileId(),
+          artifactPath);
       ArtifactFile artifactFile = new ArtifactFile();
       artifactFile.setFileUuid(fileRes.getFileId());
       artifactFile.setName(fileInfo.getKey());
@@ -116,7 +116,7 @@ public class ArtifactCollectionTaskHelper {
         ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
     switch (artifactStreamType) {
       case AMAZON_S3:
-        logger.info("Downloading artifact [{}] from bucket :[{}]", metadata.get(ArtifactMetadataKeys.artifactFileName),
+        log.info("Downloading artifact [{}] from bucket :[{}]", metadata.get(ArtifactMetadataKeys.artifactFileName),
             metadata.get(ArtifactMetadataKeys.bucketName));
         saveExecutionLog("Metadata only option set for AMAZON_S3. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName)
@@ -141,7 +141,7 @@ public class ArtifactCollectionTaskHelper {
         }
         return pair;
       case ARTIFACTORY:
-        logger.info("Downloading artifact [{}] from artifactory at path :[{}]",
+        log.info("Downloading artifact [{}] from artifactory at path :[{}]",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
         saveExecutionLog("Metadata only option set for ARTIFACTORY. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactPath),
@@ -161,7 +161,7 @@ public class ArtifactCollectionTaskHelper {
         }
         return pair;
       case JENKINS:
-        logger.info("Downloading artifact [{}] from JENKINS at path :[{}] on delegate",
+        log.info("Downloading artifact [{}] from JENKINS at path :[{}] on delegate",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
         saveExecutionLog("Metadata only option set for JENKINS. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
@@ -188,11 +188,11 @@ public class ArtifactCollectionTaskHelper {
                 FAILURE, accountId, appId, activityId, commandUnitName, hostName);
           }
         } catch (IOException | URISyntaxException e) {
-          logger.warn("Artifact download failed", e);
+          log.warn("Artifact download failed", e);
         }
         return pair;
       case AZURE_ARTIFACTS:
-        logger.info("Downloading artifact [{}] from azure artifacts with version: [{}]",
+        log.info("Downloading artifact [{}] from azure artifacts with version: [{}]",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.version));
         saveExecutionLog("Metadata only option set for AZURE ARTIFACTS. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName),
@@ -211,7 +211,7 @@ public class ArtifactCollectionTaskHelper {
         }
         return pair;
       case BAMBOO:
-        logger.info("Downloading artifact [{}] from BAMBOO at path :[{}] on delegate",
+        log.info("Downloading artifact [{}] from BAMBOO at path :[{}] on delegate",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
         saveExecutionLog("Metadata only option set for BAMBOO. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
@@ -231,11 +231,11 @@ public class ArtifactCollectionTaskHelper {
                 FAILURE, accountId, appId, activityId, commandUnitName, hostName);
           }
         } catch (ArtifactServerException e) {
-          logger.warn("Artifact download failed", e);
+          log.warn("Artifact download failed", e);
         }
         return pair;
       case NEXUS:
-        logger.info("Downloading artifact [{}] from Nexus with version: [{}] on delegate",
+        log.info("Downloading artifact [{}] from Nexus with version: [{}] on delegate",
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.version));
         saveExecutionLog("Metadata only option set for NEXUS. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
@@ -264,19 +264,19 @@ public class ArtifactCollectionTaskHelper {
         ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
     switch (artifactStreamType) {
       case AMAZON_S3:
-        logger.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.artifactFileName)
+        log.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.artifactFileName)
             + " in bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
             + " with key: " + metadata.get(ArtifactMetadataKeys.key));
         return amazonS3Service.getFileSize((AwsConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
             metadata.get(ArtifactMetadataKeys.bucketName), metadata.get(ArtifactMetadataKeys.key));
       case ARTIFACTORY:
-        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactPath));
+        log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactPath));
         return artifactoryService.getFileSize(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());
       case AZURE_ARTIFACTS:
-        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.version));
+        log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.version));
         if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
             || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
@@ -305,7 +305,7 @@ public class ArtifactCollectionTaskHelper {
             || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
         }
-        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
         JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
         encryptionService.decrypt(
             jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), false);
@@ -321,7 +321,7 @@ public class ArtifactCollectionTaskHelper {
             || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
         }
-        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
         return bambooService.getFileSize((BambooConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
@@ -330,7 +330,7 @@ public class ArtifactCollectionTaskHelper {
             || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
         }
-        logger.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
+        log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
         return nexusService.getFileSize((NexusConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));

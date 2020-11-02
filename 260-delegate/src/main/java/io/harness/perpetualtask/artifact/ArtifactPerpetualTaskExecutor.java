@@ -54,11 +54,11 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("In ArtifactPerpetualTask artifact collection");
+    log.info("In ArtifactPerpetualTask artifact collection");
     ArtifactCollectionTaskParams artifactCollectionTaskParams = getTaskParams(params);
 
     String artifactStreamId = artifactCollectionTaskParams.getArtifactStreamId();
-    logger.info("Running artifact collection for artifactStreamId: {}", artifactStreamId);
+    log.info("Running artifact collection for artifactStreamId: {}", artifactStreamId);
 
     final BuildSourceParameters buildSourceParameters = (BuildSourceParameters) kryoSerializer.asObject(
         artifactCollectionTaskParams.getBuildSourceParams().toByteArray());
@@ -79,7 +79,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
       publishFromCache(accountId, taskId, artifactCollectionTaskParams, currCache, deadline);
     }
 
-    logger.info("Published artifact successfully");
+    log.info("Published artifact successfully");
     return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
   }
 
@@ -92,13 +92,13 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     // Return early if the artifact collection is unsuccessful.
     if (buildSourceExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       publishToManager(accountId, artifactStreamId, taskId, buildSourceExecutionResponse);
-      logger.info("Published unsuccessful artifact collection result");
+      log.info("Published unsuccessful artifact collection result");
       return;
     }
 
     List<BuildDetails> builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
     if (isEmpty(builds)) {
-      logger.info("Published empty artifact collection result");
+      log.info("Published empty artifact collection result");
       return;
     }
 
@@ -131,7 +131,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
       String accountId, String artifactStreamId, PerpetualTaskId taskId, ArtifactsPublishedCache currCache) {
     Set<String> toBeDeletedArtifactKeys = currCache.getToBeDeletedArtifactKeys();
     if (isEmpty(toBeDeletedArtifactKeys)) {
-      logger.info(
+      log.info(
           "Empty toBeDeletedArtifactKeys in publishDeletedArtifactKeys for artifactStreamId: {}, perpetualTaskId: {}",
           artifactStreamId, taskId.getId());
       return true;
@@ -163,7 +163,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     ImmutablePair<List<BuildDetails>, Boolean> resp = currCache.getLimitedUnpublishedBuildDetails();
     List<BuildDetails> builds = resp.getLeft();
     if (isEmpty(builds)) {
-      logger.info("Empty build details in publishUnpublishedBuildDetails for artifactStreamId: {}, perpetualTaskId: {}",
+      log.info("Empty build details in publishUnpublishedBuildDetails for artifactStreamId: {}, perpetualTaskId: {}",
           artifactStreamId, taskId.getId());
       return false;
     }
@@ -193,7 +193,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
           managerClient.publishArtifactCollectionResult(taskId.getId(), accountId, buildSourceExecutionResponse));
       return true;
     } catch (Exception ex) {
-      logger.error(
+      log.error(
           format(
               "Failed to publish build source execution response with status: %s for artifactStreamId: %s, perpetualTaskId: %s",
               artifactStreamId, buildSourceExecutionResponse.getCommandExecutionStatus().name(), taskId.getId()),

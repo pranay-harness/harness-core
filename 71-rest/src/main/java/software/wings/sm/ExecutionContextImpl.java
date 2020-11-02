@@ -738,7 +738,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     while (matcher.find()) {
       String variable = matcher.group(0);
-      logger.debug("wingsVariable found: {}", variable);
+      log.debug("wingsVariable found: {}", variable);
 
       // remove $ and braces(${varName})
       variable = variable.substring(2, variable.length() - 1);
@@ -804,7 +804,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
 
     if (isNotEmpty(normalizedExpressionMap)) {
-      logger.info("The above code seems obsolete, but if you see me in the logs, it is not");
+      log.info("The above code seems obsolete, but if you see me in the logs, it is not");
     }
 
     return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefixes);
@@ -826,7 +826,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       evaluatedValueMap.put(key, val);
     }
 
-    logger.debug("expr: {}, evaluatedValueMap: {}", expr, evaluatedValueMap);
+    log.debug("expr: {}, evaluatedValueMap: {}", expr, evaluatedValueMap);
     return evaluator.evaluate(expr, evaluatedValueMap);
   }
 

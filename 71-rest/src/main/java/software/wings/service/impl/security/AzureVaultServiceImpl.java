@@ -79,7 +79,7 @@ public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements 
             .decrypt(data, secretsManagerConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info(
+        log.info(
             "Azure vault decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;

@@ -46,7 +46,7 @@ public class ChangeContentHelper {
         try {
           segmentHandler.reportTrackEvent(account, segmentEvent, user, properties, integrations);
         } catch (Exception e) {
-          logger.error(String.format(
+          log.error(String.format(
               "Exception while reporting track event for Audit Trail Export for accountId: %s, exception: %s",
               accountId, e.getMessage()));
         }

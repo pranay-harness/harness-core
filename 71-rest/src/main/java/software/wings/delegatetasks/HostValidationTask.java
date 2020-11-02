@@ -52,7 +52,7 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
     if (!(parameters instanceof HostValidationTaskParameters)) {
       String message = format(
           "Unrecognized task params while running HostValidationTask: [%s]", parameters.getClass().getSimpleName());
-      logger.error(message);
+      log.error(message);
       return RemoteMethodReturnValueData.builder().returnValue(message).build();
     }
     hostValidationTaskParameters = (HostValidationTaskParameters) parameters;
@@ -65,7 +65,7 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
     Throwable exception = null;
 
     try {
-      logger.info("Running HostValidationTask for hosts: ", hostValidationTaskParameters.getHostNames());
+      log.info("Running HostValidationTask for hosts: ", hostValidationTaskParameters.getHostNames());
       methodReturnValue = hostValidationService.validateHost(hostValidationTaskParameters.getHostNames(),
           hostValidationTaskParameters.getConnectionSetting(), hostValidationTaskParameters.getEncryptionDetails(),
           hostValidationTaskParameters.getExecutionCredential());
@@ -73,7 +73,7 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
       exception = ex.getCause();
       String message =
           "Exception while running HostValidationTask for hosts " + hostValidationTaskParameters.getHostNames() + ex;
-      logger.error(message);
+      log.error(message);
     }
     return RemoteMethodReturnValueData.builder().returnValue(methodReturnValue).exception(exception).build();
   }

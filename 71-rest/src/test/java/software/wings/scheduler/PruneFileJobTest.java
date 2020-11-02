@@ -118,7 +118,7 @@ public class PruneFileJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Base.class, ENTITY_ID, FileBucket.PLATFORMS));
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(PruneFileJob.class, "logger", mockLogger);
+    setStaticFieldValue(PruneFileJob.class, "log", mockLogger);
 
     job.execute(context);
 

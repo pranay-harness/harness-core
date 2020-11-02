@@ -54,7 +54,7 @@ public abstract class EventWriter {
                  && instanceData.getUsageStartTime().isAfter(instanceTime))) {
         instanceDataService.updateInstanceState(instanceData, instanceTime, updateInstanceState);
       } else {
-        logger.info("Received past duplicate event {} {} {} ", accountId, instanceId, lifecycle.toString());
+        log.info("Received past duplicate event {} {} {} ", accountId, instanceId, lifecycle.toString());
       }
     }
   }
@@ -62,7 +62,7 @@ public abstract class EventWriter {
   protected InstanceData fetchInstanceData(String accountId, String instanceId) {
     InstanceData ec2InstanceData = instanceDataService.fetchInstanceData(accountId, instanceId);
     if (null == ec2InstanceData) {
-      logger.error("Instance detail not present {} ", instanceId);
+      log.error("Instance detail not present {} ", instanceId);
       throw new InvalidRequestException("EC2 Instance detail not present");
     }
     return ec2InstanceData;

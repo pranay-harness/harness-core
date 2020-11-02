@@ -63,7 +63,7 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
         toUnblock = true;
       } else if (ACTIVE == instance.getState()) {
         if (resourceRestraintService.updateActiveConstraintsForInstance(instance)) {
-          logger.info("The following resource constraint needs to be unblocked: {}", constraintId);
+          log.info("The following resource constraint needs to be unblocked: {}", constraintId);
           toUnblock = true;
         }
       }
@@ -74,9 +74,9 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
       }
 
     } catch (WingsException e) {
-      ExceptionLogger.logProcessedMessages(e, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(e, MANAGER, log);
     } catch (RuntimeException e) {
-      logger.error("", e);
+      log.error("", e);
     }
   }
 }

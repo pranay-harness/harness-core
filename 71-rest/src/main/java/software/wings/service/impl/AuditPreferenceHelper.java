@@ -77,7 +77,7 @@ public class AuditPreferenceHelper {
                          .fieldValues(new Object[] {applicationSearchFilter, accountSearchFilter})
                          .build();
     } else {
-      logger.info("No Account level or App level criteria were mentioned.");
+      log.info("No Account level or App level criteria were mentioned.");
       if (isNotEmpty(auditPreference.getOperationTypes())) {
         List<String> opTypes = auditPreference.getOperationTypes();
         String[] opTypeArr = opTypes.toArray(new String[opTypes.size()]);

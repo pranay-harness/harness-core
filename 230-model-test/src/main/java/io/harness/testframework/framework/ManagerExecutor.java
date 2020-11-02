@@ -75,7 +75,7 @@ public class ManagerExecutor {
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
 
-    logger.info("Execute the manager from {}", directory);
+    log.info("Execute the manager from {}", directory);
 
     final Path jar = Paths.get(directory.getPath(), "71-rest", "target", "rest-capsule.jar");
     final Path config = Paths.get(directory.getPath(), "71-rest", "modified_config.yml");
@@ -90,7 +90,7 @@ public class ManagerExecutor {
     }
 
     for (int i = 0; i < 10; i++) {
-      logger.info("***");
+      log.info("***");
     }
 
     List<String> command = new ArrayList<>();
@@ -108,7 +108,7 @@ public class ManagerExecutor {
     command.add(verb);
     addConfig(config, command);
 
-    logger.info(Strings.join(command, " "));
+    log.info(Strings.join(command, " "));
 
     ProcessExecutor processExecutor = new ProcessExecutor();
     processExecutor.directory(directory);
@@ -131,14 +131,14 @@ public class ManagerExecutor {
       Setup.portal().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
-        logger.info("not healthy");
+        log.info("not healthy");
       } else {
-        logger.info("not healthy - {}", exception.getMessage());
+        log.info("not healthy - {}", exception.getMessage());
         previous = exception;
       }
       return false;
     }
-    logger.info("healthy");
+    log.info("healthy");
     return true;
   }
 }

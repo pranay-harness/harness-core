@@ -88,7 +88,7 @@ public class AdminAccountResource {
   public RestResponse<CeLicenseInfo> updateCeLicense(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull CeLicenseUpdateInfo ceLicenseUpdateInfo) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Updating CE license.");
+      log.info("Updating CE license.");
       return new RestResponse<>(adminAccountService.updateCeLicense(accountId, ceLicenseUpdateInfo.getCeLicenseInfo()));
     }
   }

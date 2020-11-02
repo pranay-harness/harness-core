@@ -85,7 +85,7 @@ public class GitClientHelper {
     String repoName = getRepoName(gitConfig);
     String repoUrlHash = getRepoUrlHash(gitConfig);
     if (gitConfig.getGitRepoType() == null) {
-      logger.error("gitRepoType can not be null. defaulting it to YAML");
+      log.error("gitRepoType can not be null. defaulting it to YAML");
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
     }
     return buildGitFileDownloadsRepoDir(gitConfig.getAccountId(), connectorId, repoName, repoUrlHash);
@@ -134,7 +134,7 @@ public class GitClientHelper {
               .replace("{REPO_URL_HASH}", getRepoUrlHash(gitConfig)));
 
     } catch (IOException e) {
-      logger.error("Failed to created required dir structure for gitFileDownloads", e);
+      log.error("Failed to created required dir structure for gitFileDownloads", e);
       throw new WingsException(
           ErrorCode.GENERAL_ERROR, "Failed to created required dir structure for gitFileDownloads", SRE);
     }
@@ -152,7 +152,7 @@ public class GitClientHelper {
     try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
       stream.forEach(s -> contentBuilder.append(s).append("\n"));
     } catch (IOException e) {
-      logger.error("Failed to read file Content {}", path.toString());
+      log.error("Failed to read file Content {}", path.toString());
       throw new WingsException(GENERAL_ERROR, "Failed to read file Content {}", e);
     }
     uniqueFilePaths.add(filePath);
@@ -187,14 +187,14 @@ public class GitClientHelper {
       File file = new File(repoDir.getAbsolutePath() + "/.git/index.lock");
       FileIo.deleteFileIfExists(file.getAbsolutePath());
     } catch (Exception e) {
-      logger.error(new StringBuilder(64)
-                       .append("Failed to delete index.lock file for account: ")
-                       .append(gitConfig.getAccountId())
-                       .append(", Repo URL: ")
-                       .append(gitConfig.getRepoUrl())
-                       .append(", Branch: ")
-                       .append(gitConfig.getBranch())
-                       .toString());
+      log.error(new StringBuilder(64)
+                    .append("Failed to delete index.lock file for account: ")
+                    .append(gitConfig.getAccountId())
+                    .append(", Repo URL: ")
+                    .append(gitConfig.getRepoUrl())
+                    .append(", Branch: ")
+                    .append(gitConfig.getBranch())
+                    .toString());
 
       throw new WingsException(GENERAL_YAML_ERROR, "GIT_SYNC_ISSUE: Failed to delete index.lock file", SRE, e);
     }
@@ -236,7 +236,7 @@ public class GitClientHelper {
     String repoUrlHash = getRepoUrlHash(gitConfig);
 
     if (gitConfig.getGitRepoType() == null) {
-      logger.error("gitRepoType can not be null. defaulting it to YAML");
+      log.error("gitRepoType can not be null. defaulting it to YAML");
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
     }
     return buildGitRepoBaseDir(

@@ -98,7 +98,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
     } catch (Exception ex) {
       throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, ex, WingsException.USER_SRE);
     } finally {
-      logger.info("Time taken for the stats call {}", System.currentTimeMillis() - startTime);
+      log.info("Time taken for the stats call {}", System.currentTimeMillis() - startTime);
     }
 
     return result;
@@ -160,7 +160,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
         unit = "hours";
         break;
       default:
-        logger.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+        log.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
 
@@ -187,7 +187,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
         unit = "hours";
         break;
       default:
-        logger.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+        log.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
 

@@ -131,7 +131,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
           ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
           : commandExecutionStatus;
     } catch (IOException | TemplateException e) {
-      logger.error("Error in InitCommandUnit", e);
+      log.error("Error in InitCommandUnit", e);
     }
     try {
       List<String> commandUnitFiles = getCommandUnitFiles();
@@ -142,7 +142,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       }
     } catch (IOException | TemplateException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      logger.error("Error in InitCommandUnit", e);
+      log.error("Error in InitCommandUnit", e);
     }
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("chmod 0700 " + executionStagingDir + "/*")
@@ -157,7 +157,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
-      logger.error("Error in InitCommandUnit", e);
+      log.error("Error in InitCommandUnit", e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
     context.addEnvVariables(envVariables);

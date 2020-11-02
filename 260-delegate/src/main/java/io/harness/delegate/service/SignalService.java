@@ -16,17 +16,17 @@ public class SignalService {
 
   void pause() {
     if (state.compareAndSet(State.RUNNING, State.PAUSE)) {
-      logger.info("[Old] Setting state to pause from running");
+      log.info("[Old] Setting state to pause from running");
       delegateService.pause();
-      logger.info("[Old] Delegate paused");
+      log.info("[Old] Delegate paused");
     }
   }
 
   void stop() {
     state.set(State.STOP);
-    logger.info("[Old] Setting state to stopped");
+    log.info("[Old] Setting state to stopped");
     delegateService.stop();
-    logger.info("[Old] Delegate stopped");
+    log.info("[Old] Delegate stopped");
   }
 
   public enum State { RUNNING, PAUSE, STOP }

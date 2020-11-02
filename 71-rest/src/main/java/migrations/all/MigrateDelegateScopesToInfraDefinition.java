@@ -21,20 +21,20 @@ public class MigrateDelegateScopesToInfraDefinition {
   @Inject private WingsPersistence wingsPersistence;
 
   public void migrate(Account account) {
-    logger.info("Running infra migration for Delegate Scopes.Retrieving applications for accountId: "
+    log.info("Running infra migration for Delegate Scopes.Retrieving applications for accountId: "
         + account.getAccountName());
     try (HIterator<DelegateScope> scopes = new HIterator<>(wingsPersistence.createQuery(DelegateScope.class)
                                                                .filter(DelegateScopeKeys.accountId, account.getUuid())
                                                                .fetch())) {
-      logger.info("[Delegate Scoping Migration]: Updating Delegate Scopes.");
+      log.info("[Delegate Scoping Migration]: Updating Delegate Scopes.");
       while (scopes.hasNext()) {
         DelegateScope scope = scopes.next();
         try {
-          logger.info(
+          log.info(
               "[Delegate Scoping Migration]: Starting to migrate" + scope.getName() + " with id: " + scope.getUuid());
           migrate(scope, account);
         } catch (Exception e) {
-          logger.error("[Delegate Scoping Migration]: Migration Failed for scope " + scope.getName()
+          log.error("[Delegate Scoping Migration]: Migration Failed for scope " + scope.getName()
               + " with id: " + scope.getUuid());
         }
       }
@@ -58,19 +58,19 @@ public class MigrateDelegateScopesToInfraDefinition {
                                             .map(InfrastructureMapping::getInfrastructureDefinitionId)
                                             .collect(Collectors.toList());
 
-      logger.info("[Delegate Scoping Migration]: Setting " + serviceIds.size() + " on scope " + scope.getName()
+      log.info("[Delegate Scoping Migration]: Setting " + serviceIds.size() + " on scope " + scope.getName()
           + " with id: " + scope.getUuid());
       scope.setServices(serviceIds);
 
-      logger.info("[Delegate Scoping Migration]: Setting " + infraDefinitionIds.size() + " on scope " + scope.getName()
+      log.info("[Delegate Scoping Migration]: Setting " + infraDefinitionIds.size() + " on scope " + scope.getName()
           + " with id: " + scope.getUuid());
       scope.setInfrastructureDefinitions(infraDefinitionIds);
 
-      logger.info("[Delegate Scoping Migration]: Updating scope " + scope.getName() + " with id: " + scope.getUuid());
+      log.info("[Delegate Scoping Migration]: Updating scope " + scope.getName() + " with id: " + scope.getUuid());
       delegateScopeService.update(scope);
-      logger.info("[Delegate Scoping Migration]: Updated scope " + scope.getName() + " with id: " + scope.getUuid());
+      log.info("[Delegate Scoping Migration]: Updated scope " + scope.getName() + " with id: " + scope.getUuid());
     } else {
-      logger.info("[Delegate Scoping Migration]: No Service Infras Found for scope " + scope.getName()
+      log.info("[Delegate Scoping Migration]: No Service Infras Found for scope " + scope.getName()
           + " with id: " + scope.getUuid());
     }
   }

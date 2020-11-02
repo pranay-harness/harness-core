@@ -92,7 +92,7 @@ public class NexusTwoServiceImpl {
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryFormat) throws IOException {
-    logger.info("Retrieving repositories");
+    log.info("Retrieving repositories");
     final Call<RepositoryListResourceResponse> request;
     if (nexusConfig.hasCredentials()) {
       request =
@@ -104,7 +104,7 @@ public class NexusTwoServiceImpl {
 
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (isSuccessful(response)) {
-      logger.info("Retrieving repositories success");
+      log.info("Retrieving repositories success");
       if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
         return response.body()
             .getData()
@@ -122,7 +122,7 @@ public class NexusTwoServiceImpl {
       return response.body().getData().stream().collect(
           toMap(RepositoryListResource::getId, RepositoryListResource::getName));
     }
-    logger.info("No repositories found returning empty map");
+    log.info("No repositories found returning empty map");
     return emptyMap();
   }
 
@@ -192,7 +192,7 @@ public class NexusTwoServiceImpl {
 
   public List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String path) throws IOException {
-    logger.info("Retrieving Artifact Names");
+    log.info("Retrieving Artifact Names");
     final List<String> artifactNames = new ArrayList<>();
     final String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(path));
     final Response<IndexBrowserTreeViewResponse> response =
@@ -207,7 +207,7 @@ public class NexusTwoServiceImpl {
         });
       }
     }
-    logger.info("Retrieving Artifact Names success");
+    log.info("Retrieving Artifact Names success");
     return artifactNames;
   }
 
@@ -241,7 +241,7 @@ public class NexusTwoServiceImpl {
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName, String extension, String classifier) throws IOException {
-    logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
+    log.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/";
     final Response<IndexBrowserTreeViewResponse> response =
         getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
@@ -278,7 +278,7 @@ public class NexusTwoServiceImpl {
     if (isEmpty(extension) && isEmpty(classifier)) {
       return true;
     }
-    logger.info(
+    log.info(
         "Checking if versions exist for repoId: {} groupId: {} and artifactName: {}", repoId, groupId, artifactName);
     String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/";
     final Response<IndexBrowserTreeViewResponse> response =
@@ -291,7 +291,7 @@ public class NexusTwoServiceImpl {
             List<IndexBrowserTreeNode> children = treeNode.getChildren();
             for (IndexBrowserTreeNode child : children) {
               if (child.getType().equals("V")) {
-                logger.info("Checking if required artifacts exist for version: " + child.getNodeName());
+                log.info("Checking if required artifacts exist for version: " + child.getNodeName());
                 String relativePath = getGroupId(groupId) + artifactName + '/' + child.getNodeName() + '/';
                 relativePath = relativePath.charAt(0) == '/' ? relativePath.substring(1) : relativePath;
                 Call<ContentListResourceResponse> request;
@@ -344,7 +344,7 @@ public class NexusTwoServiceImpl {
   public List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName, String extension, String classifier, String buildNo)
       throws IOException {
-    logger.info(
+    log.info(
         "Retrieving version {} for repoId {} groupId {} and artifactName {}", buildNo, repoId, groupId, artifactName);
     String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/" + buildNo + "/";
     final Response<IndexBrowserTreeViewResponse> response =
@@ -405,7 +405,7 @@ public class NexusTwoServiceImpl {
   @NotNull
   private List<BuildDetails> getVersionsForNuGet(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryId, String packageName) throws IOException {
-    logger.info("Retrieving versions for NuGet repositoryId {} for packageName {}", repositoryId, packageName);
+    log.info("Retrieving versions for NuGet repositoryId {} for packageName {}", repositoryId, packageName);
     Call<ContentListResourceResponse> request;
     NexusRestClient nexusRestClient = getRestClient(nexusConfig, encryptionDetails);
     if (nexusConfig.hasCredentials()) {
@@ -430,13 +430,13 @@ public class NexusTwoServiceImpl {
             versionToArtifactUrls.put(content.getText(), artifactFileMetadata.get(0).getUrl());
           }
         } catch (IOException e) {
-          logger.info("Failed in getting artifact download urls");
+          log.info("Failed in getting artifact download urls");
         }
       });
     }
-    logger.info("Versions order come from nexus server {}", versions);
+    log.info("Versions order come from nexus server {}", versions);
     List<String> sortedVersions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    log.info("After sorting alphanumerically versions {}", versions);
 
     return sortedVersions.stream()
         .map(version -> {
@@ -460,7 +460,7 @@ public class NexusTwoServiceImpl {
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, String packageName, String version)
       throws IOException {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    logger.info(
+    log.info(
         "Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName, packageName, version);
     Call<ContentListResourceResponse> request;
     if (nexusConfig.hasCredentials()) {
@@ -480,7 +480,7 @@ public class NexusTwoServiceImpl {
           return;
         }
         final String artifactUrl = content.getResourceURI();
-        logger.info("Artifact Download Url {}", artifactUrl);
+        log.info("Artifact Download Url {}", artifactUrl);
         artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
       });
     }
@@ -507,7 +507,7 @@ public class NexusTwoServiceImpl {
             .build();
       }
     } catch (IOException e) {
-      logger.error("Failed in getting artifact download urls", e);
+      log.error("Failed in getting artifact download urls", e);
     }
     return null;
   }
@@ -515,7 +515,7 @@ public class NexusTwoServiceImpl {
   @NotNull
   private List<BuildDetails> getVersionsForNPM(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryId, String packageName) throws IOException {
-    logger.info("Retrieving versions for NPM repositoryId {} for packageName {}", repositoryId, packageName);
+    log.info("Retrieving versions for NPM repositoryId {} for packageName {}", repositoryId, packageName);
     Call<JsonNode> request;
     if (nexusConfig.hasCredentials()) {
       request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
@@ -539,16 +539,16 @@ public class NexusTwoServiceImpl {
           versions.add(next.at("/version").textValue());
           final String artifactUrl = next.at("/dist/tarball").asText();
           versionToArtifactUrls.put(next.at("/version").textValue(), artifactUrl);
-          logger.info("Artifact Download Url {}", artifactUrl);
+          log.info("Artifact Download Url {}", artifactUrl);
           final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
           versionToArtifactDownloadUrls.put(next.at("/version").textValue(),
               asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()));
         }
       }
     }
-    logger.info("Versions order come from nexus server {}", versions);
+    log.info("Versions order come from nexus server {}", versions);
     List<String> sortedVersions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
-    logger.info("After sorting alphanumerically versions {}", versions);
+    log.info("After sorting alphanumerically versions {}", versions);
 
     return sortedVersions.stream()
         .map(version -> {
@@ -571,7 +571,7 @@ public class NexusTwoServiceImpl {
 
   private BuildDetails getVersionForNPM(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryId, String packageName, String version) throws IOException {
-    logger.info("Retrieving version {} for NPM repositoryId {} for packageName {}", version, repositoryId, packageName);
+    log.info("Retrieving version {} for NPM repositoryId {} for packageName {}", version, repositoryId, packageName);
     Call<JsonNode> request;
     if (nexusConfig.hasCredentials()) {
       request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
@@ -584,7 +584,7 @@ public class NexusTwoServiceImpl {
     final Response<JsonNode> response = request.execute();
     if (isSuccessful(response) && response.body().at("/version").asText().equals(version)) {
       String artifactUrl = response.body().at("/dist/tarball").asText();
-      logger.info("Artifact Download Url {}", artifactUrl);
+      log.info("Artifact Download Url {}", artifactUrl);
       final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
       Map<String, String> metadata = new HashMap<>();
       metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
@@ -617,7 +617,7 @@ public class NexusTwoServiceImpl {
               if (classifier == null || artifactName.contains(classifier)) {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
                 if (isEmpty(extension) || artifactName.endsWith(extension)) {
-                  logger.info("Artifact Url:" + artifactUrl + " for artifact filename: " + artifactName);
+                  log.info("Artifact Url:" + artifactUrl + " for artifact filename: " + artifactName);
                   artifactUrls.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
                 }
               }
@@ -631,10 +631,10 @@ public class NexusTwoServiceImpl {
 
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName) {
-    logger.info("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
+    log.info("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
     Project project = getPomModel(nexusConfig, encryptionDetails, repoId, groupId, artifactName, "LATEST");
     String version = project.getVersion() != null ? project.getVersion() : project.getParent().getVersion();
-    logger.info("Retrieving the latest version {}", project);
+    log.info("Retrieving the latest version {}", project);
     return aBuildDetails().withNumber(version).withRevision(version).withUiDisplayName("Version# " + version).build();
   }
 
@@ -654,11 +654,11 @@ public class NexusTwoServiceImpl {
       final String artifactId = artifactStreamAttributes.getArtifactName().contains("${")
           ? artifactMetadata.get(ArtifactMetadataKeys.nexusArtifactId)
           : artifactStreamAttributes.getArtifactName();
-      logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName, groupId,
+      log.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName, groupId,
           artifactId, version);
       final String url =
           getIndexContentPathUrl(nexusConfig, repositoryName, getGroupId(groupId) + artifactId + "/" + version + "/");
-      logger.info("Index Content Url {}", url);
+      log.info("Index Content Url {}", url);
       final Response<IndexBrowserTreeViewResponse> response =
           getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
       String extension;
@@ -683,7 +683,7 @@ public class NexusTwoServiceImpl {
       final String packageName = artifactStreamAttributes.getNexusPackageName().contains("${")
           ? artifactMetadata.get(ArtifactMetadataKeys.nexusPackageName)
           : artifactStreamAttributes.getNexusPackageName();
-      logger.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName, packageName,
+      log.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName, packageName,
           version);
       Call<ContentListResourceResponse> request;
       if (nexusConfig.hasCredentials()) {
@@ -703,16 +703,16 @@ public class NexusTwoServiceImpl {
             return;
           }
           final String artifactUrl = content.getResourceURI();
-          logger.info("Artifact Download Url {}", artifactUrl);
+          log.info("Artifact Download Url {}", artifactUrl);
           downloadArtifactByUrl(nexusConfig, encryptionDetails, delegateId, taskId, accountId, notifyResponseData,
               artifactName, artifactUrl);
         });
       }
     } else if (repositoryFormat.equals(RepositoryFormat.npm.name())) {
-      logger.info("Retrieving artifacts of NPM Repository {}, Package {} of Version {}", repositoryName,
+      log.info("Retrieving artifacts of NPM Repository {}, Package {} of Version {}", repositoryName,
           artifactStreamAttributes.getNexusPackageName(), version);
       final String artifactUrl = artifactMetadata.get(ArtifactMetadataKeys.url);
-      logger.info("Artifact Download Url {}", artifactUrl);
+      log.info("Artifact Download Url {}", artifactUrl);
       final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
       downloadArtifactByUrl(
           nexusConfig, encryptionDetails, delegateId, taskId, accountId, notifyResponseData, artifactName, artifactUrl);
@@ -744,7 +744,7 @@ public class NexusTwoServiceImpl {
               String artifactName = artifact.getNodeName();
               if (!artifactName.endsWith("pom")) {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
-                logger.info("Artifact Url:" + artifactUrl);
+                log.info("Artifact Url:" + artifactUrl);
                 if (isNotEmpty(extension)) {
                   int index = artifactName.lastIndexOf('.');
                   // to avoid running into ArrayIndexOutOfBoundsException
@@ -821,12 +821,12 @@ public class NexusTwoServiceImpl {
       if (isSuccessful(response)) {
         return response.body();
       } else {
-        logger.error("Error while getting the latest version from Nexus url {} and queryParams {}. Reason:{}", url,
+        log.error("Error while getting the latest version from Nexus url {} and queryParams {}. Reason:{}", url,
             queryParams, response.message());
         throw new InvalidRequestException(response.message());
       }
     } catch (IOException e) {
-      logger.error("Error occurred while retrieving pom model from url " + url, e);
+      log.error("Error occurred while retrieving pom model from url " + url, e);
     }
     return new Project();
   }
@@ -952,7 +952,7 @@ public class NexusTwoServiceImpl {
 
   public long getFileSize(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
-    logger.info("Getting file size for artifact at path {}", artifactUrl);
+    log.info("Getting file size for artifact at path {}", artifactUrl);
     long size;
     Pair<String, InputStream> pair = downloadArtifactByUrl(nexusConfig, encryptionDetails, artifactName, artifactUrl);
     if (pair == null) {
@@ -964,7 +964,7 @@ public class NexusTwoServiceImpl {
     } catch (IOException e) {
       throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
     }
-    logger.info(format("Computed file size [%d] bytes for artifact Path: %s", size, artifactUrl));
+    log.info(format("Computed file size [%d] bytes for artifact Path: %s", size, artifactUrl));
     return size;
   }
 

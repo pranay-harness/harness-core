@@ -71,7 +71,7 @@ public class YamlAuditRecordGenerationUtils {
         (AuditGlobalContextData) GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
     AuditHeader auditHeader = wingsPersistence.get(AuditHeader.class, auditGlobalContextData.getAuditId());
     if (auditHeader == null) {
-      logger.warn("Somehow AuditHeader was not created for GitSync operation. ALERT...");
+      log.warn("Somehow AuditHeader was not created for GitSync operation. ALERT...");
       return;
     }
 
@@ -143,7 +143,7 @@ public class YamlAuditRecordGenerationUtils {
           }
         }
       } catch (Exception e) {
-        logger.warn("Failed to created EntityAuditRecord for error yaml path: " + change.getFilePath());
+        log.warn("Failed to created EntityAuditRecord for error yaml path: " + change.getFilePath());
       }
     });
 
@@ -182,7 +182,7 @@ public class YamlAuditRecordGenerationUtils {
           .forEach(change -> msg.append(change.getFilePath()).append("  \n"));
       return msg.toString();
     } catch (Exception e) {
-      logger.warn("Exception in handling audit for GitChanges: " + e);
+      log.warn("Exception in handling audit for GitChanges: " + e);
     }
 
     return null;
@@ -240,7 +240,7 @@ public class YamlAuditRecordGenerationUtils {
       changeListWithFailedChanges.forEach(change -> { msg.append(getChangePath(change)); });
       return msg.toString();
     } catch (Exception e) {
-      logger.warn("Exception in handling audit for GitChanges: " + e);
+      log.warn("Exception in handling audit for GitChanges: " + e);
     }
 
     return null;

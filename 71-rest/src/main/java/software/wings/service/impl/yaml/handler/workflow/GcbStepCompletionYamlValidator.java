@@ -63,7 +63,7 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       try {
         SweepingOutputInstance.Scope.valueOf((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_SCOPE));
       } catch (IllegalArgumentException e) {
-        logger.error("Invalid sweepingOutputScope", e);
+        log.error("Invalid sweepingOutputScope", e);
         throw new IncompleteStateException(
             "Invalid value for \"sweepingOutputScope\". Please, provide value (PIPELINE, WORKFLOW, PHASE, STATE)");
       }

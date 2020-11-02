@@ -204,7 +204,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition) {
     String name = definition.getMetadata().getName();
-    logger.info("Creating {} {}", definition.getKind(), name);
+    log.info("Creating {} {}", definition.getKind(), name);
 
     // TODO - Use definition.getKind()
     HasMetadata controller = null;
@@ -258,7 +258,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, String name, String namespace) {
     return () -> {
       HasMetadata controller = null;
-      logger.info("Trying to get controller for name {}", name);
+      log.info("Trying to get controller for name {}", name);
       if (isNotBlank(name)) {
         boolean success = false;
         boolean allFailed = true;
@@ -316,10 +316,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               success = true;
             }
           } catch (Exception e) {
-            logger.warn("Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(),
+            log.warn("Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(),
                 ExceptionUtils.getMessage(e));
             if (e.getCause() != null) {
-              logger.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
+              log.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
             }
 
             // Special handling of k8s client 401/403 error. No need to retry...
@@ -333,17 +333,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                 case SC_FORBIDDEN:
                   throw new InvalidRequestException("Access Denied", e, ACCESS_DENIED, USER);
                 default:
-                  logger.warn("Got KubernetesClientException with error code {}", code);
+                  log.warn("Got KubernetesClientException with error code {}", code);
                   break;
               }
             }
 
             sleep(ofSeconds(1));
-            logger.info("Retrying getController {} ...", name);
+            log.info("Retrying getController {} ...", name);
           }
         }
       }
-      logger.info("Got controller for name {}", name);
+      log.info("Got controller for name {}", name);
       return controller;
     };
   }
@@ -447,7 +447,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (KubernetesClientException ex) {
       throw new InvalidRequestException(ex.getMessage(), ex, USER);
     } catch (Exception ex) {
-      logger.error("Failed to list Deployments", ex);
+      log.error("Failed to list Deployments", ex);
       throw new InvalidRequestException("Failed to List Deployments", USER);
     } finally {
       cleanupDir(kubeConfigDir);
@@ -463,7 +463,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     try {
       FileIo.deleteDirectoryAndItsContentIfExists(kubeConfigDir.getPath());
     } catch (IOException e) {
-      logger.warn(format("Failed to cleanup directory %s", kubeConfigDir.getPath()), e);
+      log.warn(format("Failed to cleanup directory %s", kubeConfigDir.getPath()), e);
     }
   }
 
@@ -479,7 +479,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         throw new InvalidRequestException(METRICS_SERVER_ABSENT);
       }
     } catch (ApiException e) {
-      logger.error("Error validating Metrics Server", e);
+      log.error("Error validating Metrics Server", e);
       throw new InvalidRequestException(
           format("CE.MetricsServerCheck: code=%s message=%s. Try again, if it persists contact Harness Support.",
               e.getCode(), e.getResponseBody()));
@@ -500,7 +500,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           k8sResourceValidator.validateMetricsServer(kubernetesHelperService.getApiClient(kubernetesConfig));
       return CEK8sDelegatePrerequisite.MetricsServerCheck.builder().isInstalled(isInstalled).build();
     } catch (ApiException ex) {
-      logger.error("validateMetricsServer:ApiException ", ex);
+      log.error("validateMetricsServer:ApiException ", ex);
       return CEK8sDelegatePrerequisite.MetricsServerCheck.builder()
           .isInstalled(false)
           .message(ex.getCode() + ":" + ex.getResponseBody())
@@ -559,7 +559,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteController(KubernetesConfig kubernetesConfig, String name) {
-    logger.info("Deleting controller {}", name);
+    log.info("Deleting controller {}", name);
     if (isNotBlank(name)) {
       HasMetadata controller = getController(kubernetesConfig, name);
       if (controller instanceof ReplicationController) {
@@ -647,8 +647,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             .addParam("args", "DaemonSet runs one instance per cluster node and cannot be scaled.");
       }
 
-      logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
-          previousCount, desiredCount);
+      log.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName, previousCount,
+          desiredCount);
     } else {
       logCallback.saveExecutionLog(
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
@@ -691,7 +691,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (pods.size() != desiredCount) {
         msg += format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
       }
-      logger.error(msg);
+      log.error(msg);
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
     for (Pod pod : pods) {
@@ -712,19 +712,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (null != controller) {
         podTemplateSpec = getPodTemplateSpec(controller);
       } else {
-        logger.warn("podTemplateSpec is null.");
+        log.warn("podTemplateSpec is null.");
       }
       Set<String> images = emptySet();
       if (null != podTemplateSpec) {
         images = getControllerImages(podTemplateSpec);
       } else {
-        logger.warn("Images is null.");
+        log.warn("Images is null.");
       }
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
         String msg = format("Pod %s does not have image %s", podName, images);
-        logger.error(msg);
+        log.error(msg);
         logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
@@ -732,21 +732,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         if (!isRunning(pod)) {
           hasErrors = true;
           String msg = format("Pod %s failed to start", podName);
-          logger.error(msg);
+          log.error(msg);
           logCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
 
         if (!inSteadyState(pod)) {
           hasErrors = true;
           String msg = format("Pod %s failed to reach steady state", podName);
-          logger.error(msg);
+          log.error(msg);
           logCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
       }
 
       if (!hasErrors) {
         containerInfoBuilder.status(Status.SUCCESS);
-        logger.info("Pod {} started successfully", podName);
+        log.info("Pod {} started successfully", podName);
         logCallback.saveExecutionLog(format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
             pod.getStatus().getHostIP(), pod.getStatus().getPodIP()));
       } else {
@@ -768,7 +768,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         String msg =
             format("Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].",
                 podName, reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
-        logger.error(msg);
+        log.error(msg);
         logCallback.saveExecutionLog(msg, LogLevel.ERROR);
         logCallback.saveExecutionLog("\nCheck Kubernetes console for more information");
       }
@@ -1014,7 +1014,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Unable to get service. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1036,7 +1036,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteService(KubernetesConfig kubernetesConfig, String name) {
-    logger.info("Deleting service {}", name);
+    log.info("Deleting service {}", name);
     kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -1053,7 +1053,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                           .inNamespace(kubernetesConfig.getNamespace())
                           .withName(name)
                           .get();
-    logger.info("{} ingress [{}]", ingress == null ? "Creating" : "Replacing", name);
+    log.info("{} ingress [{}]", ingress == null ? "Creating" : "Replacing", name);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .ingresses()
@@ -1074,7 +1074,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteIngress(KubernetesConfig kubernetesConfig, String name) {
-    logger.info("Deleting service {}", name);
+    log.info("Deleting service {}", name);
     kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .ingresses()
@@ -1091,7 +1091,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                               .inNamespace(kubernetesConfig.getNamespace())
                               .withName(name)
                               .get();
-    logger.info("{} config map [{}]", configMap == null ? "Creating" : "Replacing", name);
+    log.info("{} config map [{}]", configMap == null ? "Creating" : "Replacing", name);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -1108,7 +1108,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private V1ConfigMap replaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
     String name = definition.getMetadata().getName();
-    logger.info("Replacing config map [{}]", name);
+    log.info("Replacing config map [{}]", name);
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
     try {
       return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
@@ -1116,14 +1116,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message = format(
           "Failed to replace ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
 
   private V1ConfigMap createConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
     String name = definition.getMetadata().getName();
-    logger.info("Creating config map [{}]", name);
+    log.info("Creating config map [{}]", name);
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
     try {
       return new CoreV1Api(apiClient).createNamespacedConfigMap(
@@ -1131,7 +1131,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to create ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1160,7 +1160,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to get ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1183,7 +1183,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to delete ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1192,7 +1192,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public IstioResource createOrReplaceIstioResource(KubernetesConfig kubernetesConfig, IstioResource definition) {
     String name = definition.getMetadata().getName();
     String kind = definition.getKind();
-    logger.info("Registering {} [{}]", kind, name);
+    log.info("Registering {} [{}]", kind, name);
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
     return istioClient.registerOrUpdateCustomResource(definition);
   }
@@ -1254,7 +1254,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                .endMetadata()
                                                .build());
     } catch (Exception e) {
-      logger.info(e.getMessage());
+      log.info(e.getMessage());
     }
   }
 
@@ -1269,7 +1269,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                .endMetadata()
                                                .build());
     } catch (Exception e) {
-      logger.info(e.getMessage());
+      log.info(e.getMessage());
     }
   }
 
@@ -1322,7 +1322,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                 .withName(kubernetesConfig.getNamespace())
                                 .get();
       if (namespace == null) {
-        logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
+        log.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
         kubernetesHelperService.getKubernetesClient(kubernetesConfig)
             .namespaces()
             .create(new NamespaceBuilder()
@@ -1332,7 +1332,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                         .build());
       }
     } catch (Exception e) {
-      logger.error("Couldn't get or create namespace {}", kubernetesConfig.getNamespace(), e);
+      log.error("Couldn't get or create namespace {}", kubernetesConfig.getNamespace(), e);
     }
   }
 
@@ -1361,7 +1361,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to get Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1384,7 +1384,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to delete Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1406,14 +1406,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @VisibleForTesting
   V1Secret createSecret(KubernetesConfig kubernetesConfig, V1Secret secret) {
-    logger.info("Creating secret [{}]", secret.getMetadata().getName());
+    log.info("Creating secret [{}]", secret.getMetadata().getName());
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
     try {
       return new CoreV1Api(apiClient).createNamespacedSecret(kubernetesConfig.getNamespace(), secret, null, null, null);
     } catch (ApiException exception) {
       String message =
           format("Failed to create Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1421,7 +1421,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @VisibleForTesting
   V1Secret replaceSecret(KubernetesConfig kubernetesConfig, V1Secret secret) {
     String name = secret.getMetadata().getName();
-    logger.info("Replacing secret [{}]", name);
+    log.info("Replacing secret [{}]", name);
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
     try {
       return new CoreV1Api(apiClient).replaceNamespacedSecret(
@@ -1429,7 +1429,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Failed to replace Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }
@@ -1459,7 +1459,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     String namespace = kubernetesConfig.getNamespace();
     String waitingMsg = "Waiting for pods to stop...";
-    logger.info(waitingMsg);
+    log.info(waitingMsg);
     try {
       timeLimiter.callWithTimeout(() -> {
         Set<String> seenEvents = new HashSet<>();
@@ -1479,7 +1479,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
-      logger.error(msg, e);
+      log.error(msg, e);
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
     } catch (WingsException e) {
       throw e;
@@ -1504,7 +1504,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    logger.info("Waiting for pods to be ready...");
+    log.info("Waiting for pods to be ready...");
     AtomicBoolean countReached = new AtomicBoolean(false);
     AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
     AtomicBoolean runningCountReached = new AtomicBoolean(false);
@@ -1525,12 +1525,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               if (controllerDesiredCount != absoluteDesiredCount) {
                 String msg = format("Replica count is set to %d instead of %d. [Could be due to HPA.]",
                     controllerDesiredCount, absoluteDesiredCount);
-                logger.warn(msg);
+                log.warn(msg);
                 executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
               }
             } else {
               String msg = "Couldn't find controller " + controllerName;
-              logger.error(msg);
+              log.error(msg);
               executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
             }
 
@@ -1599,7 +1599,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             return pods;
           } catch (Exception e) {
-            logger.error("Exception in pod state wait loop.", e);
+            log.error("Exception in pod state wait loop.", e);
             executionLogCallback.saveExecutionLog("Error while waiting for pods to be ready", LogLevel.ERROR);
             Misc.logAllMessages(e, executionLogCallback);
             executionLogCallback.saveExecutionLog("Continuing to wait...", LogLevel.ERROR);
@@ -1609,7 +1609,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }, waitMinutes, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
-      logger.error(msg, e);
+      log.error(msg, e);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
     } catch (WingsException e) {
       throw e;
@@ -1652,7 +1652,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
-      logger.error("Failed to process kubernetes pod events", e);
+      log.error("Failed to process kubernetes pod events", e);
     }
   }
 
@@ -1678,7 +1678,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
-      logger.error("Failed to process kubernetes controller events", e);
+      log.error("Failed to process kubernetes controller events", e);
     }
   }
 
@@ -1709,16 +1709,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).withName(rcName).get();
     if (rc != null) {
       String rcLink = masterUrl + rc.getMetadata().getSelfLink().substring(1);
-      logger.info("Controller {}: {}", rcName, rcLink);
+      log.info("Controller {}: {}", rcName, rcLink);
     } else {
-      logger.info("Controller {} does not exist", rcName);
+      log.info("Controller {} does not exist", rcName);
     }
     Service service = client.services().inNamespace(kubernetesConfig.getNamespace()).withName(serviceName).get();
     if (service != null) {
       String serviceLink = masterUrl + service.getMetadata().getSelfLink().substring(1);
-      logger.info("Service: {}, link: {}", serviceName, serviceLink);
+      log.info("Service: {}, link: {}", serviceName, serviceLink);
     } else {
-      logger.info("Service {} does not exist", serviceName);
+      log.info("Service {} does not exist", serviceName);
     }
   }
 
@@ -1783,7 +1783,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       createOrReplaceConfigMapFabric8(kubernetesConfig, configMap);
     } catch (Exception e) {
       String message = "Failed to save release History. " + ExceptionUtils.getMessage(e);
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, e, USER);
     }
   }
@@ -1929,7 +1929,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (ApiException exception) {
       String message =
           format("Unable to retrieve k8s version. Code: %s, message: %s", exception.getCode(), exception.getMessage());
-      logger.error(message);
+      log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
   }

@@ -146,7 +146,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
         recommendation.setLastDayCostAvailable(true);
       } else {
         recommendation.setLastDayCostAvailable(false);
-        logger.info("Unable to get lastDayCost for workload {}", workloadId);
+        log.info("Unable to get lastDayCost for workload {}", workloadId);
       }
       recommendation.setTtl(Instant.now().plus(RECOMMENDATION_TTL));
       recommendation.setDirty(false);

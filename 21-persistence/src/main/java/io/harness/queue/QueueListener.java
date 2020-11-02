@@ -46,7 +46,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
   @Override
   public void run() {
     String threadName = queueConsumer.getName() + "-handler-" + generateUuid();
-    logger.debug("Setting thread name to {}", threadName);
+    log.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
     do {
@@ -64,14 +64,14 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
   public boolean execute() {
     T message = null;
     try {
-      logger.trace("Waiting for message");
+      log.trace("Waiting for message");
       message = queueConsumer.get(ofSeconds(3), ofSeconds(1));
     } catch (Exception exception) {
       if (exception.getCause() instanceof InterruptedException) {
-        logger.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
+        log.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
         return false;
       }
-      logger.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
+      log.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
     }
 
     if (message != null) {
@@ -84,14 +84,14 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     while (true) {
       T message = null;
       try {
-        logger.trace("Waiting for message");
+        log.trace("Waiting for message");
         message = queueConsumer.get(Duration.ZERO, Duration.ZERO);
       } catch (Exception exception) {
         if (exception.getCause() instanceof InterruptedException) {
-          logger.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
+          log.info("Thread interrupted, shutting down for queue {}", queueConsumer.getName());
           return;
         }
-        logger.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
+        log.error("Exception happened while fetching message from queue {}", queueConsumer.getName(), exception);
       }
 
       if (message == null) {
@@ -114,7 +114,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
         long delay = startTime - message.getEarliestGet().toInstant().toEpochMilli();
         try (DelayLogContext ignore2 = new DelayLogContext(delay, OVERRIDE_ERROR)) {
-          logger.info("Working on message");
+          log.info("Working on message");
         }
 
         onMessage(message);
@@ -124,16 +124,16 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
       queueConsumer.ack(message);
     } catch (InstantiationError exception) {
-      logger.error("Critical exception happened in onMessage {}", queueConsumer.getName(), exception);
+      log.error("Critical exception happened in onMessage {}", queueConsumer.getName(), exception);
       queueConsumer.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);
     } finally {
       long processTime = currentTimeMillis() - startTime;
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
-        logger.info("Done with message");
+        log.info("Done with message");
       } catch (Throwable exception) {
-        logger.error("Exception while recording the processing of message", exception);
+        log.error("Exception while recording the processing of message", exception);
       }
     }
   }
@@ -146,15 +146,15 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
   public void onException(Throwable exception, T message) {
     if (exception instanceof WingsException) {
-      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, log);
     } else {
-      logger.error("Exception happened while processing message " + message, exception);
+      log.error("Exception happened while processing message " + message, exception);
     }
 
     if (message.getRetries() > 0) {
       requeue(message);
     } else {
-      logger.error("Out of retries for message " + message, exception);
+      log.error("Out of retries for message " + message, exception);
       queueConsumer.ack(message);
     }
   }

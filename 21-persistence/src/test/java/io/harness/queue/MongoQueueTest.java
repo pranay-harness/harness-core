@@ -194,7 +194,7 @@ public class MongoQueueTest extends PersistenceTestBase {
     queue.updateHeartbeat(message);
 
     TestTopicQueuableObject actual = persistence.get(TestTopicQueuableObject.class, message.getId());
-    logger.info("Actual Timestamp of message = {}", actual.getEarliestGet());
+    log.info("Actual Timestamp of message = {}", actual.getEarliestGet());
 
     assertThat(actual.getEarliestGet()).isAfter(messageEarliestGet);
 
@@ -237,7 +237,7 @@ public class MongoQueueTest extends PersistenceTestBase {
 
     persistence.createQuery(TestTopicQueuableObject.class)
         .fetch()
-        .forEach(dbObject -> logger.debug("TestQueueable = {}", dbObject));
+        .forEach(dbObject -> log.debug("TestQueueable = {}", dbObject));
     queue.ack(result);
     assertThat(persistence.createQuery(TestTopicQueuableObject.class).count()).isEqualTo(1);
   }

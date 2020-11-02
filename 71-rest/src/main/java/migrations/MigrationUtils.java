@@ -37,17 +37,17 @@ public class MigrationUtils {
    */
   public static void renameStateTypeAndStateClass(StateType oldStateType, StateType newStateType,
       WingsPersistence wingsPersistence, WorkflowService workflowService) {
-    logger.info("Renaming {} to {} in all CanaryOrchestrationWorkflows", oldStateType.name(), newStateType.name());
+    log.info("Renaming {} to {} in all CanaryOrchestrationWorkflows", oldStateType.name(), newStateType.name());
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      logger.info("No applications found");
+      log.info("No applications found");
       return;
     }
-    logger.info("Checking {} applications", apps.size());
+    log.info("Checking {} applications", apps.size());
     for (Application app : apps) {
       List<Workflow> workflows =
           workflowService
@@ -81,16 +81,16 @@ public class MigrationUtils {
         }
         if (workflowModified) {
           try {
-            logger.info("... Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+            log.info("... Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
             workflowService.updateWorkflow(workflow, false);
             Thread.sleep(100);
           } catch (Exception e) {
-            logger.error("Error updating workflow", e);
+            log.error("Error updating workflow", e);
           }
           updateCount++;
         }
       }
-      logger.info("Application migrated: {} - {}. Updated {} out of {} workflows", app.getUuid(), app.getName(),
+      log.info("Application migrated: {} - {}. Updated {} out of {} workflows", app.getUuid(), app.getName(),
           updateCount, workflows.size());
     }
   }

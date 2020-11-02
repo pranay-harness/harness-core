@@ -148,7 +148,7 @@ public class CapabilityHelper {
       }
 
     } catch (Exception e) {
-      logger.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);
+      log.warn("Failed while generating Encryption Configs from EncryptionDataDetails: " + e);
     }
     return encryptionConfigsMap;
   }
@@ -199,7 +199,7 @@ public class CapabilityHelper {
         return true;
       }
     } catch (Exception e) {
-      logger.warn("Failed in determining if instance of EncryptionDetails");
+      log.warn("Failed in determining if instance of EncryptionDetails");
     }
 
     return false;
@@ -216,7 +216,7 @@ public class CapabilityHelper {
         return true;
       }
     } catch (Exception e) {
-      logger.warn("Failed in determining if instance of EncryptableSettingWithEncryptionDetails");
+      log.warn("Failed in determining if instance of EncryptableSettingWithEncryptionDetails");
     }
 
     return false;

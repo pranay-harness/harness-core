@@ -43,13 +43,13 @@ public class FlakeFinder {
       if (portal.isSuccessful()) {
         flakyTests = Objects.requireNonNull(portal.body()).getTests();
         flakyTests.sort(Comparator.comparingDouble(TestFlakiness::getDisruptiveness));
-        logger.info("Total flakes: {}, failChance: {}", flakyTests.size(), cumulativeFailChance(flakyTests));
+        log.info("Total flakes: {}, failChance: {}", flakyTests.size(), cumulativeFailChance(flakyTests));
         Set<TestFlakiness> allowedTests = new HashSet<>();
         double minPassChance = 1 - maxFailChance;
         double cumulativePassChance = 1;
         for (TestFlakiness test : flakyTests) {
           // Check if allowing this test to run will reduce pass chance below the minimum allowed
-          logger.info("Checking test {} with disruptiveness {}", test.getFqdn(), test.getDisruptiveness());
+          log.info("Checking test {} with disruptiveness {}", test.getFqdn(), test.getDisruptiveness());
           double cumulativePassChanceIncludingTest = cumulativePassChance * test.getPassChance();
           if (cumulativePassChanceIncludingTest < minPassChance) {
             break;
@@ -57,14 +57,14 @@ public class FlakeFinder {
           allowedTests.add(test);
           cumulativePassChance = cumulativePassChanceIncludingTest;
         }
-        logger.info("Out of {} flakes, {} allowed with cumulative pass chance {}", flakyTests.size(),
-            allowedTests.size(), cumulativePassChance);
+        log.info("Out of {} flakes, {} allowed with cumulative pass chance {}", flakyTests.size(), allowedTests.size(),
+            cumulativePassChance);
         flakyTests.removeAll(allowedTests);
       } else {
-        logger.warn("Received error response {}", portal.code());
+        log.warn("Received error response {}", portal.code());
       }
     } catch (IOException e) {
-      logger.error("Exception fetching flaky tests", e);
+      log.error("Exception fetching flaky tests", e);
     }
     return flakyTests.stream().map(TestFlakiness::getFqdn).collect(Collectors.toSet());
   }

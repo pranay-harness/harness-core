@@ -1417,7 +1417,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       } catch (InterruptedException e) {
-        logger.error("", e);
+        log.error("", e);
       }
     }
 
@@ -1438,7 +1438,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           }
         }
       } catch (InterruptedException e) {
-        logger.error("", e);
+        log.error("", e);
       }
 
       throw new IllegalStateException(

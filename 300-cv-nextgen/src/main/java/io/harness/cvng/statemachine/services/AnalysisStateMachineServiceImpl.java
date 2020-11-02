@@ -85,7 +85,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Override
   public void executeStateMachine(String verificationTaskId) {
     if (isEmpty(verificationTaskId)) {
-      logger.error("Empty cvConfigId in executeStateMachine");
+      log.error("Empty cvConfigId in executeStateMachine");
       throw new AnalysisStateMachineException("Empty cvConfigId in executeStateMachine");
     }
     AnalysisStateMachine analysisStateMachine =
@@ -95,7 +95,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
             .get();
 
     if (analysisStateMachine == null) {
-      logger.info("There is currently no analysis running for cvConfigId: {}", verificationTaskId);
+      log.info("There is currently no analysis running for cvConfigId: {}", verificationTaskId);
     } else {
       executeStateMachine(analysisStateMachine);
     }
@@ -105,7 +105,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
     if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
         && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
-      logger.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
+      log.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
           analysisStateMachine.getAnalysisEndTime());
       analysisStateMachine.setStatus(AnalysisStatus.IGNORED);
@@ -119,14 +119,14 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
     if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
         && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
-      logger.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
+      log.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
           analysisStateMachine.getAnalysisEndTime());
       analysisStateMachine.setStatus(AnalysisStatus.IGNORED);
       return;
     }
 
-    logger.info("Executing state machine {} for verificationTask {}", analysisStateMachine.getUuid(),
+    log.info("Executing state machine {} for verificationTask {}", analysisStateMachine.getUuid(),
         analysisStateMachine.getVerificationTaskId());
 
     AnalysisState currentState = analysisStateMachine.getCurrentState();
@@ -138,32 +138,32 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         nextState = currentState.execute();
         break;
       case RUNNING:
-        logger.info("Analysis is currently RUNNING for {} and analysis range {} to {}. We will return.",
+        log.info("Analysis is currently RUNNING for {} and analysis range {} to {}. We will return.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleRunning();
         break;
       case TRANSITION:
-        logger.info(
+        log.info(
             "Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will call handleTransition.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTransition();
         break;
       case TIMEOUT:
-        logger.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will call handleTimeout.",
+        log.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will call handleTimeout.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTimeout();
         break;
       case FAILED:
-        logger.info("Analysis has FAILED for {} and analysis range {} to {}. We will call handleFailure.",
+        log.info("Analysis has FAILED for {} and analysis range {} to {}. We will call handleFailure.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleFailure();
         break;
       case RETRY:
-        logger.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will call handleRetry.",
+        log.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will call handleRetry.",
             analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleRetry();
@@ -172,7 +172,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         nextState = currentState.handleSuccess();
         break;
       default:
-        logger.error("Unexpected state in analysis statemachine execution: " + status);
+        log.error("Unexpected state in analysis statemachine execution: " + status);
         throw new AnalysisStateMachineException("Unexpected state in analysis statemachine execution: " + status);
     }
     AnalysisState previousState = analysisStateMachine.getCurrentState();
@@ -189,7 +189,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     }
     if (nextState.getStatus() == AnalysisStatus.SUCCESS) {
       // the state machine is done, time to mark it as success
-      logger.info(
+      log.info(
           "Analysis state machine has completed successfully for verificationTaskId: {} and analysis range {} to {}",
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
           analysisStateMachine.getAnalysisEndTime());
@@ -208,11 +208,11 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   public void retryStateMachineAfterFailure(AnalysisStateMachine analysisStateMachine) {
     Preconditions.checkNotNull(analysisStateMachine, "state machine is null while retrying");
     if (Instant.ofEpochMilli(analysisStateMachine.getNextAttemptTime()).isAfter(Instant.now())) {
-      logger.info("The next attempt time for the statemachine {} is {}. Not going to retry now",
+      log.info("The next attempt time for the statemachine {} is {}. Not going to retry now",
           analysisStateMachine.getUuid(), analysisStateMachine.getNextAttemptTime());
       return;
     }
-    logger.info("Retrying state machine for cvConfig {}", analysisStateMachine.getVerificationTaskId());
+    log.info("Retrying state machine for cvConfig {}", analysisStateMachine.getVerificationTaskId());
     AnalysisState currentState = analysisStateMachine.getCurrentState();
     injector.injectMembers(currentState);
     if (currentState.getStatus() == AnalysisStatus.FAILED || currentState.getStatus() == AnalysisStatus.TIMEOUT) {

@@ -190,18 +190,18 @@ public abstract class VerificationBaseIntegrationTest
     try {
       encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
     } catch (DecoderException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     try {
       directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     try {
       jwt.encrypt(directEncrypter);
     } catch (JOSEException e) {
-      logger.error("", e);
+      log.error("", e);
     }
 
     return jwt.serialize();
@@ -212,7 +212,7 @@ public abstract class VerificationBaseIntegrationTest
     Application app = anApplication().name(appName).description(appName).accountId(accountId).build();
     Response response = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON));
     if (response.getStatus() != Status.OK.getStatusCode()) {
-      logger.error("Non-ok-status. Headers: {}", response.getHeaders());
+      log.error("Non-ok-status. Headers: {}", response.getHeaders());
     }
     assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
     RestResponse<Application> restResponse = response.readEntity(new GenericType<RestResponse<Application>>() {});

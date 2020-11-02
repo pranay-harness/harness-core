@@ -36,7 +36,7 @@ public class TriggerCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    logger.info("Trigger command response {} for account {}", response, accountId);
+    log.info("Trigger command response {} for account {}", response, accountId);
 
     DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
@@ -56,8 +56,8 @@ public class TriggerCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.info("Trigger command request failed for account {} and for trigger executionId {} with response {}",
-        accountId, triggerExecutionId, response);
+    log.info("Trigger command request failed for account {} and for trigger executionId {} with response {}", accountId,
+        triggerExecutionId, response);
     DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
     triggerResponse.setExecutionStatus(ExecutionStatus.FAILED);

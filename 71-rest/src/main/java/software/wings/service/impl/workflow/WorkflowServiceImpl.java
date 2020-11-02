@@ -611,7 +611,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         try {
           loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
         } catch (Exception e) {
-          logger.error("Failed to load Orchestration workflow {}", workflow.getUuid(), e);
+          log.error("Failed to load Orchestration workflow {}", workflow.getUuid(), e);
         }
       }
     }
@@ -632,7 +632,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowExecutions.forEach(we -> we.setStateMachine(null));
           workflow.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
-          logger.error("Failed to fetch recent executions for workflow {}", workflow.getUuid(), e);
+          log.error("Failed to fetch recent executions for workflow {}", workflow.getUuid(), e);
         }
       }
     }
@@ -838,7 +838,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             stepNode.setName(template.getName());
           }
         } else {
-          logger.error("No command template found for the templateid in state machine");
+          log.error("No command template found for the templateid in state machine");
         }
       }
     }
@@ -1873,7 +1873,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (targetAppId == null || targetAppId.equals(appId)) {
       return cloneWorkflow(appId, originalWorkflow, workflow);
     }
-    logger.info("Cloning workflow across applications. "
+    log.info("Cloning workflow across applications. "
         + "Environment, Service Infrastructure and Node selection will not be cloned");
     workflowServiceHelper.validateServiceMapping(appId, targetAppId, cloneMetadata.getServiceMapping());
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
@@ -1939,7 +1939,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private static void validateNotificationRule(NotificationRule notificationRule) {
     if (notificationRule.isUserGroupAsExpression() && StringUtils.isEmpty(notificationRule.getUserGroupExpression())) {
-      logger.error("[ILLEGAL_STATE]: isUserGroupAsExpression = true but userGroupExpression is empty.");
+      log.error("[ILLEGAL_STATE]: isUserGroupAsExpression = true but userGroupExpression is empty.");
     }
   }
 
@@ -2569,7 +2569,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .collect(Collectors.toSet());
 
       if (!requiredEntityTypes.contains(ARTIFACT) && rollbackRequiredEntityTypes.contains(ARTIFACT)) {
-        logger.warn(
+        log.warn(
             "Phase Step do not need artifact. However, Rollback steps needed artifact for the workflow: [{}] of the app: [{}]",
             workflow.getUuid(), appId);
       }
@@ -2887,7 +2887,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!requiresArtifact && serviceArtifactVariableNamesMap.size() > 0) {
-      logger.warn(
+      log.warn(
           "Phase Steps do not need artifact. However, Rollback steps needed artifact for the workflow: [{}] of the app: [{}]",
           workflow.getUuid(), appId);
     }
@@ -3329,8 +3329,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UserGroup userGroup = userGroupService.getDefaultUserGroup(app.getAccountId());
 
     if (null == userGroup) {
-      logger.warn(
-          "Default user group not created for account {}. Ignoring adding user group", account.getAccountName());
+      log.warn("Default user group not created for account {}. Ignoring adding user group", account.getAccountName());
       return;
     }
 
@@ -3557,7 +3556,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
 
       if (isEmpty(workflowExecutions)) {
-        logger.info("Did not find a successful execution for {}. ", workflowId);
+        log.info("Did not find a successful execution for {}. ", workflowId);
         return singletonList(InstanceElement.Builder.anInstanceElement()
                                  .hostName("No successful workflow execution found for this workflow. "
                                      + "Please run the workflow to get deployed nodes")
@@ -3588,7 +3587,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       pageRequest.setOffset(String.valueOf(offset));
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
-    logger.info("No nodes were found in any execution for workflow {}", workflowId);
+    log.info("No nodes were found in any execution for workflow {}", workflowId);
     return singletonList(InstanceElement.Builder.anInstanceElement()
                              .hostName("No workflow execution found with deployed nodes for this workflow. "
                                  + "Please run the workflow to get deployed nodes")

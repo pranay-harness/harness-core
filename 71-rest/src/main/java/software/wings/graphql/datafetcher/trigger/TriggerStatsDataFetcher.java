@@ -88,7 +88,7 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
       case Application:
         return "appId";
       default:
-        logger.warn("Unknown aggregation type" + aggregation);
+        log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }
@@ -114,7 +114,7 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
       case APPLICATION:
         return QLTriggerEntityAggregation.Application;
       default:
-        logger.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
+        log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
   }

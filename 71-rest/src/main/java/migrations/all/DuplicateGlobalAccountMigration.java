@@ -13,8 +13,8 @@ public class DuplicateGlobalAccountMigration implements Migration {
   @Inject private TemplateGalleryService templateGalleryService;
   @Override
   public void migrate() {
-    logger.info("Deleting template gallery for Account Name: Global");
+    log.info("Deleting template gallery for Account Name: Global");
     templateGalleryService.deleteAccountGalleryByName(GLOBAL_ACCOUNT_ID, "Global");
-    logger.info("Finished deleting template gallery for Account Name: Global");
+    log.info("Finished deleting template gallery for Account Name: Global");
   }
 }

@@ -123,12 +123,12 @@ public class RepeatState extends State {
       try {
         executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
       } catch (Exception ex) {
-        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
+        log.error("Error in evaluating executionStrategy... default to SERIAL", ex);
       }
     }
 
     if (executionStrategy == null) {
-      logger.info("RepeatState: {} falling to default  executionStrategy : SERIAL", getName());
+      log.info("RepeatState: {} falling to default  executionStrategy : SERIAL", getName());
       executionStrategy = ExecutionStrategy.SERIAL;
     }
 
@@ -355,8 +355,8 @@ public class RepeatState extends State {
 
   @Override
   public int hashCode() {
-    return Objects.hash(logger, repeatElementType, repeatElementExpression, executionStrategy,
-        executionStrategyExpression, repeatTransitionStateName);
+    return Objects.hash(log, repeatElementType, repeatElementExpression, executionStrategy, executionStrategyExpression,
+        repeatTransitionStateName);
   }
 
   @Override

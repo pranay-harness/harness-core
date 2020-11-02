@@ -71,7 +71,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
     assertThat(subscriptions).isNotEmpty();
-    logger.info("Azure Subscriptions: " + subscriptions);
+    log.info("Azure Subscriptions: " + subscriptions);
   }
 
   @Test
@@ -89,7 +89,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
     }
     assertThat(registries).isNotEmpty();
 
-    logger.info("Azure Container Registries: " + registries);
+    log.info("Azure Container Registries: " + registries);
   }
 
   @Test
@@ -104,7 +104,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
       List<AzureVirtualMachineScaleSet> virtualMachineScaleSets =
           azureHelperService.listVirtualMachineScaleSets(config, Collections.emptyList(), subscriptionId);
       for (AzureVirtualMachineScaleSet vmss : virtualMachineScaleSets) {
-        logger.info("Details: " + subscriptionId + " " + vmss.getResourceId());
+        log.info("Details: " + subscriptionId + " " + vmss.getResourceId());
       }
     }
   }
@@ -121,7 +121,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
       List<AzureAvailabilitySet> availabilitySets =
           azureHelperService.listAvailabilitySets(config, Collections.emptyList(), subscriptionId);
       for (AzureAvailabilitySet as : availabilitySets) {
-        logger.info("Details: " + subscriptionId + " " + as.getResourceId());
+        log.info("Details: " + subscriptionId + " " + as.getResourceId());
       }
     }
   }
@@ -133,14 +133,14 @@ public class AzureIntegrationTest extends WingsBaseTest {
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    subscriptions.forEach((subId, Desc) -> log.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      logger.info("Subscription: " + subscriptionId);
+      log.info("Subscription: " + subscriptionId);
       Set<String> tags = azureHelperService.listTagsBySubscription(subscriptionId, config, Collections.emptyList());
       assertThat(tags).isNotEmpty();
       for (String tag : tags) {
-        logger.info("Tag: " + tag);
+        log.info("Tag: " + tag);
       }
     }
   }
@@ -152,10 +152,10 @@ public class AzureIntegrationTest extends WingsBaseTest {
   public void getHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    subscriptions.forEach((subId, Desc) -> log.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      logger.info("Subscription: " + subscriptionId);
+      log.info("Subscription: " + subscriptionId);
       Set<String> resourceGroups =
           azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
       assertThat(resourceGroups).isNotEmpty();
@@ -167,7 +167,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
         // assert that only windows instances are returned
         for (VirtualMachine vm : vms) {
           assertThat(vm.inner().osProfile().windowsConfiguration()).isNotNull();
-          logger.info("Resource group :" + rg + " VM :" + vm.name());
+          log.info("Resource group :" + rg + " VM :" + vm.name());
         }
       }
 
@@ -178,7 +178,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
         // assert that only linux instances are returned
         for (VirtualMachine vm : vms) {
           assertThat(vm.inner().osProfile().linuxConfiguration()).isNotNull();
-          logger.info("Resource group :" + rg + " VM :" + vm.name());
+          log.info("Resource group :" + rg + " VM :" + vm.name());
         }
       }
     }
@@ -191,7 +191,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = listSubscriptions(config);
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    subscriptions.forEach((subId, Desc) -> log.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<String> registries =
@@ -203,7 +203,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
           for (String repository : repositories) {
             List<String> tags = azureHelperService.listRepositoryTags(
                 config, Collections.emptyList(), subscriptionId, registry, repository);
-            logger.info("Details: " + subscriptionId + " " + registry + " " + repository + " " + tags.toString());
+            log.info("Details: " + subscriptionId + " " + registry + " " + repository + " " + tags.toString());
           }
         }
       }
@@ -222,7 +222,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
     assertThat(clusters).isNotEmpty();
 
     clusters.forEach(cluster -> {
-      logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName());
+      log.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName());
       azureHelperService.getKubernetesClusterConfig(
           config, Collections.emptyList(), subscriptionId, cluster.getResourceGroup(), cluster.getName(), "default");
     });

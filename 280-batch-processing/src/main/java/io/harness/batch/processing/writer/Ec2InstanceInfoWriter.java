@@ -25,12 +25,12 @@ import java.util.Map;
 public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
-    logger.info("Published batch size is Ec2InstanceInfoWriter {} ", publishedMessages.size());
+    log.info("Published batch size is Ec2InstanceInfoWriter {} ", publishedMessages.size());
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.EC2_INSTANCE_INFO))
         .forEach(publishedMessage -> {
           Ec2InstanceInfo ec2InstanceInfo = (Ec2InstanceInfo) publishedMessage.getMessage();
-          logger.debug("Message {} ", ec2InstanceInfo);
+          log.debug("Message {} ", ec2InstanceInfo);
           String accountId = publishedMessage.getAccountId();
           String clusterArn = ec2InstanceInfo.getClusterArn();
           String instanceId = ec2InstanceInfo.getInstanceId();
@@ -64,7 +64,7 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
                                .clusterId(clusterId)
                                .settingId(settingId)
                                .build();
-            logger.info("Creating ec2 instance {} ", instanceId);
+            log.info("Creating ec2 instance {} ", instanceId);
             instanceDataService.create(instanceData);
           }
         });

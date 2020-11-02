@@ -50,14 +50,14 @@ public class UsageMetricsEventPublisher {
       try {
         deploymentTimeSeriesEventQueue.send(event);
       } catch (Exception e) {
-        logger.error("Failed to publish deployment time series event:[{}]", event.getId(), e);
+        log.error("Failed to publish deployment time series event:[{}]", event.getId(), e);
       }
     });
   }
 
   public DeploymentTimeSeriesEvent constructDeploymentTimeSeriesEvent(
       String accountId, WorkflowExecution workflowExecution) {
-    logger.info("Reporting execution");
+    log.info("Reporting execution");
     Map<String, String> stringData = new HashMap<>();
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();
@@ -133,7 +133,7 @@ public class UsageMetricsEventPublisher {
                                         .data(objectData)
                                         .build();
     if (isEmpty(eventInfo.getListData())) {
-      logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
+      log.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
     }
     return DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
   }

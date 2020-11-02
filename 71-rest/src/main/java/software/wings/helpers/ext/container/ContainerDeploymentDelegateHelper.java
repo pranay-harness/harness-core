@@ -76,10 +76,10 @@ public class ContainerDeploymentDelegateHelper {
         String configFilePath = KUBE_CONFIG_DIR + md5Hash;
         File file = new File(configFilePath);
         if (!file.exists()) {
-          logger.info("File doesn't exist. Creating file at path {}", configFilePath);
+          log.info("File doesn't exist. Creating file at path {}", configFilePath);
           FileUtils.forceMkdir(file.getParentFile());
           FileUtils.writeStringToFile(file, configFileContent, UTF_8);
-          logger.info("Created file with size {}", file.length());
+          log.info("Created file with size {}", file.length());
         }
         return file.getAbsolutePath();
       }

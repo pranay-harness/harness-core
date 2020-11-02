@@ -33,7 +33,7 @@ public class LimitEnforcementUtils {
              new StaticLimitActionTypeLogContext(checker.getAction().getActionType().name(), OVERRIDE_ERROR)) {
       boolean allowed = checker.checkAndConsume();
       if (!allowed) {
-        logger.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
+        log.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
         throw new UsageLimitExceededException(ErrorCode.USAGE_LIMITS_EXCEEDED, Level.ERROR, WingsException.USER,
             checker.getLimit(), checker.getAction().getAccountId());
       }

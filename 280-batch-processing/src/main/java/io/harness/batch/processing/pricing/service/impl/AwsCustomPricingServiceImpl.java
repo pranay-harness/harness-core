@@ -102,7 +102,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
                   accountComputePricingData.getRegion(), accountComputePricingData.getOperatingSystem()),
               getVMComputePricingInfo(accountComputePricingData)));
     } catch (Exception e) {
-      logger.error("Exception in pricing service ", e);
+      log.error("Exception in pricing service ", e);
     }
   }
 
@@ -116,7 +116,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
           -> ecsFargatePricingInfoCache.put(
               getFargateCacheKey(billingAccountId, accountFargatePricingData.getRegion()), accountFargatePricingData));
     } catch (Exception e) {
-      logger.error("Exception in pricing service ", e);
+      log.error("Exception in pricing service ", e);
     }
   }
 

@@ -69,7 +69,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
     if (null != userGroup) {
       userGroupsToNotify.add(userGroup.getUuid());
     } else {
-      logger.error(
+      log.error(
           "No default User group found. accountId={}. Default alert notification rule will not have any notifiers.",
           accountId);
     }

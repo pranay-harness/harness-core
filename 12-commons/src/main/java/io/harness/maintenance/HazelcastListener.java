@@ -15,7 +15,7 @@ public class HazelcastListener implements MaintenanceListener {
 
   @Override
   public void onShutdown() {
-    logger.info("Shutdown started. Leaving hazelcast cluster.");
+    log.info("Shutdown started. Leaving hazelcast cluster.");
     hazelcastInstance.shutdown();
   }
 

@@ -38,7 +38,7 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
     CEReportSchedule entry = get(schedule.getUuid(), accountId);
     if (entry == null) {
       Date next = cronTrigger.next(new Date());
-      logger.info("Next Execution Time: " + next);
+      log.info("Next Execution Time: " + next);
       schedule.setNextExecution(next);
       schedule.setAccountId(accountId);
       schedule.setEnabled(true);
@@ -54,7 +54,7 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   public List<CEReportSchedule> update(CronSequenceGenerator cronTrigger, String accountId, CEReportSchedule schedule) {
     // validate cron expression during updates as well
     Date next = cronTrigger.next(new Date());
-    logger.info("Updated next Execution Time: " + next);
+    log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
     if (schedule.getDescription() == null) {
       schedule.setDescription("");
@@ -87,7 +87,7 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   public List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule) {
     CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
     Date next = cronSequenceGenerator.next(new Date());
-    logger.info("Updated next Execution Time: " + next);
+    log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
     return ceReportScheduleDao.updateNextExecution(accountId, schedule);
   }

@@ -205,7 +205,7 @@ public class PipelineServiceImpl implements PipelineService {
               workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false).getResponse();
           pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
-          logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
+          log.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
         }
       }
     }
@@ -294,8 +294,8 @@ public class PipelineServiceImpl implements PipelineService {
             int parallelIndexBefore = before.getPipelineStageElements().get(0).getParallelIndex();
             int parallelIndexAfter = after.getPipelineStageElements().get(0).getParallelIndex();
             if (parallelIndexAfter != parallelIndexBefore) {
-              logger.info("Pipeline Stage {} should not be parallel to pipeline stage {} in pipeline {}",
-                  after.getName(), before.getName(), pipeline.getUuid());
+              log.info("Pipeline Stage {} should not be parallel to pipeline stage {} in pipeline {}", after.getName(),
+                  before.getName(), pipeline.getUuid());
               after.setParallel(false);
             }
           }
@@ -831,7 +831,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
             }
           } catch (Exception ex) {
-            logger.warn(
+            log.warn(
                 format("Exception occurred while reading workflow associated to the pipeline %s", pipeline.toString()),
                 ex);
           }
@@ -1344,7 +1344,7 @@ public class PipelineServiceImpl implements PipelineService {
             handleSplunkConfigIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
       default:
-        logger.info("no parent fields required to be set");
+        log.info("no parent fields required to be set");
     }
     if (isNotEmpty(parentFields)) {
       if (pipelineVariable.getMetadata().get(Variable.PARENT_FIELDS) != null) {

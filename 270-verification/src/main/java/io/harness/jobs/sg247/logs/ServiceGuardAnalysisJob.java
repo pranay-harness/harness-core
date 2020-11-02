@@ -19,26 +19,26 @@ public class ServiceGuardAnalysisJob implements Handler<Account> {
       return;
     }
     final String accountId = account.getUuid();
-    logger.info("triggering all analysis for account {}", accountId);
+    log.info("triggering all analysis for account {}", accountId);
     long startTime = System.currentTimeMillis();
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
-    logger.info("[triggerServiceGuardTimeSeriesAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerServiceGuardTimeSeriesAnalysis] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogsL1Clustering(accountId);
-    logger.info("[triggerLogsL1Clustering] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerLogsL1Clustering] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogsL2Clustering(accountId);
-    logger.info("[triggerLogsL2Clustering] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerLogsL2Clustering] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogDataAnalysis(accountId);
-    logger.info("[triggerLogDataAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerLogDataAnalysis] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    logger.info("[triggerFeedbackAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+    log.info("[triggerFeedbackAnalysis] Total time taken to process accountId {} is {} (ms)", account,
         System.currentTimeMillis() - startTime);
   }
 }

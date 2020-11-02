@@ -304,7 +304,7 @@ public class UserServiceImpl implements UserService {
     String inviteId = wingsPersistence.save(userInvite);
     userInvite.setUuid(inviteId);
 
-    logger.info("Created a new user invite {} for a signup request from market place", inviteId);
+    log.info("Created a new user invite {} for a signup request from market place", inviteId);
 
     return userInvite;
   }
@@ -373,7 +373,7 @@ public class UserServiceImpl implements UserService {
       userInvite.setUuid(inviteId);
       params.put("userInviteId", inviteId);
 
-      logger.info("Created a new user invite {} for company {}", inviteId, userInvite.getCompanyName());
+      log.info("Created a new user invite {} for company {}", inviteId, userInvite.getCompanyName());
 
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
@@ -567,7 +567,7 @@ public class UserServiceImpl implements UserService {
       emailData.setRetries(2);
       emailNotificationService.send(emailData);
     } catch (URISyntaxException use) {
-      logger.error("Add account email couldn't be sent for accountId={}", account.getUuid(), use);
+      log.error("Add account email couldn't be sent for accountId={}", account.getUuid(), use);
     }
   }
 
@@ -697,7 +697,7 @@ public class UserServiceImpl implements UserService {
         return ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
       }
       default: {
-        logger.error("New authentication mechanism detected. Needs to handle the added role email template flow.");
+        log.error("New authentication mechanism detected. Needs to handle the added role email template flow.");
         throw new GeneralException(
             "New authentication mechanism detected while getting SSOSettings for account=" + account.getUuid());
       }
@@ -728,7 +728,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
-      logger.error("Verification email couldn't be sent", e);
+      log.error("Verification email couldn't be sent", e);
     }
   }
 
@@ -767,10 +767,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean resendInvitationEmail(String accountId, String email) {
-    logger.info("Initiating resending invitation email for user invite for: {}", email);
+    log.info("Initiating resending invitation email for user invite for: {}", email);
     UserInvite savedUserInvite = getUserInviteByEmailAndAccount(email, accountId, true);
     if (savedUserInvite == null) {
-      logger.info("Resending invitation email failed. User invite for: {} does not exist.", email);
+      log.info("Resending invitation email failed. User invite for: {} does not exist.", email);
       throw new InvalidOperationException("UserInvite not found.");
     }
     User user = getUserByEmail(email);
@@ -780,7 +780,7 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     sendNewInvitationMail(savedUserInvite, account, user);
-    logger.info("Resent invitation email for user: {}", email);
+    log.info("Resent invitation email for user: {}", email);
     return true;
   }
 
@@ -845,7 +845,7 @@ public class UserServiceImpl implements UserService {
     try {
       Account account = accountService.get(accountId);
       if (null == account) {
-        logger.error("No account found for accountId={}", accountId);
+        log.error("No account found for accountId={}", accountId);
         return;
       }
 
@@ -860,7 +860,7 @@ public class UserServiceImpl implements UserService {
       throw e;
     } catch (Exception e) {
       // catching this because we don't want to stop user invites due to failure in limit check
-      logger.error("Error while checking limits. accountId={}", accountId, e);
+      log.error("Error while checking limits. accountId={}", accountId, e);
     }
   }
 
@@ -970,7 +970,7 @@ public class UserServiceImpl implements UserService {
         userGroupService.updateMembers(userGroup, false, toBeAudited);
         NotificationSettings notificationSettings = userGroup.getNotificationSettings();
         if (notificationSettings == null) {
-          logger.error("Notification settings not found for user group id: [{}]", userGroup.getUuid());
+          log.error("Notification settings not found for user group id: [{}]", userGroup.getUuid());
         } else if (notificationSettings.isSendMailToNewMembers()) {
           newUserGroups.add(userGroup.getUuid());
         }
@@ -1103,8 +1103,8 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account, user);
       signupService.sendEmail(userInvite, INVITE_EMAIL_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
-      logger.error("Invitation email couldn't be sent for userInviteId={}, userId={} & accountId={}",
-          userInvite.getUuid(), user.getUuid(), account.getUuid(), e);
+      log.error("Invitation email couldn't be sent for userInviteId={}, userId={} & accountId={}", userInvite.getUuid(),
+          user.getUuid(), account.getUuid(), e);
     }
   }
 
@@ -1114,7 +1114,7 @@ public class UserServiceImpl implements UserService {
           getEmailVerificationTemplateModel(userInvite.getEmail(), url, userInvite.getAccountId());
       signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
-      logger.error("Verification email couldn't be sent for userInviteId={} & accountId={}", userInvite.getUuid(),
+      log.error("Verification email couldn't be sent for userInviteId={} & accountId={}", userInvite.getUuid(),
           userInvite.getAccountId(), e);
     }
   }
@@ -1167,7 +1167,7 @@ public class UserServiceImpl implements UserService {
     } else if (account.getAuthenticationMechanism() == AuthenticationMechanism.OAUTH) {
       ssoSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
     } else {
-      logger.error("New authentication mechanism detected. Needs to handle the added role email template flow.");
+      log.error("New authentication mechanism detected. Needs to handle the added role email template flow.");
       throw new GeneralException("New authentication mechanism detected.");
     }
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
@@ -1205,7 +1205,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
-      logger.error("Add to User Groups email couldn't be sent for userId={} in accountId={}", user.getUuid(),
+      log.error("Add to User Groups email couldn't be sent for userId={} in accountId={}", user.getUuid(),
           account.getUuid(), e);
     }
   }
@@ -1234,7 +1234,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public InviteOperationResponse completeInvite(UserInvite userInvite) {
-    logger.info("Completing invite for inviteId: {}", userInvite.getUuid());
+    log.info("Completing invite for inviteId: {}", userInvite.getUuid());
     UserInvite existingInvite = getInvite(userInvite.getUuid());
     if (existingInvite == null) {
       throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
@@ -1267,7 +1267,7 @@ public class UserServiceImpl implements UserService {
     List<Account> accounts = existingUser.getAccounts();
     if ((isEmpty(pendingAccounts) || !pendingAccounts.contains(account))
         && (isEmpty(accounts) || !accounts.contains(account))) {
-      logger.error("Processing of InviteId: {} failed. Account missing in both pendingAccounts and accounts",
+      log.error("Processing of InviteId: {} failed. Account missing in both pendingAccounts and accounts",
           userInvite.getUuid());
       throw new InvalidRequestException("Invite processing failed", USER);
     }
@@ -1280,7 +1280,7 @@ public class UserServiceImpl implements UserService {
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), existingUser);
     auditServiceHelper.reportForAuditingUsingAccountId(
         userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
-    logger.info(
+    log.info(
         "Auditing accepted invite for userInvite={} in account={}", userInvite.getName(), userInvite.getAccountName());
     return ACCOUNT_INVITE_ACCEPTED;
   }
@@ -1354,7 +1354,7 @@ public class UserServiceImpl implements UserService {
       throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     }
     if (existingInvite.isCompleted()) {
-      logger.error("Unexpected state: Existing invite is already completed. ID = {}", userInvite.getUuid());
+      log.error("Unexpected state: Existing invite is already completed. ID = {}", userInvite.getUuid());
       return;
     }
 
@@ -1503,7 +1503,7 @@ public class UserServiceImpl implements UserService {
     if (userInvite.getAccountId() != null) {
       auditServiceHelper.reportForAuditingUsingAccountId(
           userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
-      logger.info(
+      log.info(
           "Auditing accepted invite for userInvite={} in account={}", userInvite.getName(), account.getAccountName());
     }
     return userInvite;
@@ -1536,7 +1536,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User signUpUserUsingOauth(OauthUserInfo userInfo, String oauthProviderName) {
-    logger.info("User not found in db. Creating an account for: [{}]", userInfo.getEmail());
+    log.info("User not found in db. Creating an account for: [{}]", userInfo.getEmail());
     checkForFreemiumCluster();
     User user = createUser(userInfo, oauthProviderName);
     notNullOrEmptyCheck(user.getAccountName(), "Account/Company name");
@@ -1631,7 +1631,7 @@ public class UserServiceImpl implements UserService {
             .allowedProviders(Arrays.stream(OauthProviderType.values()).collect(Collectors.toSet()))
             .build();
     ssoSettingService.saveOauthSettings(oauthSettings);
-    logger.info("Setting authentication mechanism as oauth for account id: {}", accountId);
+    log.info("Setting authentication mechanism as oauth for account id: {}", accountId);
     ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH);
   }
 
@@ -1733,23 +1733,23 @@ public class UserServiceImpl implements UserService {
   @Override
   public LogoutResponse logout(String accountId, String userId) {
     LogoutResponse logoutResponse = new LogoutResponse();
-    logger.info("Sending logout response from manager for user {} in account {}", userId, accountId);
+    log.info("Sending logout response from manager for user {} in account {}", userId, accountId);
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
-    logger.info("Samlsettings from accountId is {}", samlSettings);
+    log.info("Samlsettings from accountId is {}", samlSettings);
     if (samlSettings != null && samlSettings.getLogoutUrl() != null) {
       logoutResponse.setLogoutUrl(samlSettings.getLogoutUrl());
-      logger.info("Logout URL from accountId is {}", samlSettings.getLogoutUrl());
+      log.info("Logout URL from accountId is {}", samlSettings.getLogoutUrl());
     }
     try {
       User user = get(accountId, userId);
-      logger.info("Invalidating token for {}", user);
+      log.info("Invalidating token for {}", user);
       if (user != null) {
         logout(user);
       }
     } catch (Exception e) {
-      logger.error("Invalidation of token and cache clear wasn't done", e);
+      log.error("Invalidation of token and cache clear wasn't done", e);
     }
-    logger.info("Logout Response from manager {}", logoutResponse);
+    log.info("Logout Response from manager {}", logoutResponse);
     return logoutResponse;
   }
 
@@ -1789,10 +1789,10 @@ public class UserServiceImpl implements UserService {
       if (updateQuery.count() > 0) {
         for (User user : updateQuery) {
           Account defaultAccount = authenticationUtils.getDefaultAccount(user);
-          logger.info("User {} default account Id is {}", user.getEmail(), defaultAccount.getUuid());
+          log.info("User {} default account Id is {}", user.getEmail(), defaultAccount.getUuid());
           if (defaultAccount.getUuid().equals(accountId) && !user.isTwoFactorAuthenticationEnabled()) {
             user = enableTwoFactorAuthenticationForUser(user, defaultAccount);
-            logger.info("Sending 2FA reset email to user {}", user.getEmail());
+            log.info("Sending 2FA reset email to user {}", user.getEmail());
             totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
           }
         }
@@ -1805,7 +1805,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private User enableTwoFactorAuthenticationForUser(User user, Account account) {
-    logger.info("Enabling 2FA for user {}", user.getEmail());
+    log.info("Enabling 2FA for user {}", user.getEmail());
     TwoFactorAuthenticationSettings twoFactorAuthenticationSettings =
         totpAuthHandler.createTwoFactorAuthenticationSettings(user, account);
     twoFactorAuthenticationSettings.setTwoFactorAuthenticationEnabled(true);
@@ -1826,8 +1826,8 @@ public class UserServiceImpl implements UserService {
     } else {
       defaultAccountId = account.getUuid();
     }
-    logger.info("User {} default account Id is {}", user.getEmail(), defaultAccountId);
-    logger.info("2FA enabled is {} account wide for account {}", account.isTwoFactorAdminEnforced(), account.getUuid());
+    log.info("User {} default account Id is {}", user.getEmail(), defaultAccountId);
+    log.info("2FA enabled is {} account wide for account {}", account.isTwoFactorAdminEnforced(), account.getUuid());
     if (defaultAccountId.equals(account.getUuid()) && account.isTwoFactorAdminEnforced()
         && !user.isTwoFactorAuthenticationEnabled()) {
       user = enableTwoFactorAuthenticationForUser(user, account);
@@ -1855,7 +1855,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
-      logger.error(RESET_ERROR, e);
+      log.error(RESET_ERROR, e);
     }
   }
 
@@ -1876,7 +1876,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException use) {
-      logger.error("User Invitation email to SSO couldn't be sent for userId={} in accountId={}", user.getUuid(),
+      log.error("User Invitation email to SSO couldn't be sent for userId={} in accountId={}", user.getUuid(),
           account.getUuid(), use);
     }
   }
@@ -1913,7 +1913,7 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE);
-        logger.info(
+        log.info(
             "Auditing updation of User Profile for user={} in account={}", user.getUuid(), account.getAccountName());
       });
     }
@@ -2024,7 +2024,7 @@ public class UserServiceImpl implements UserService {
     setUnset(operations, UserKeys.userLocked, false);
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
-    logger.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
+    log.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
     return applyUpdateOperations(user, operations);
   }
 
@@ -2198,7 +2198,7 @@ public class UserServiceImpl implements UserService {
       evictUserFromCache(userId);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
-    logger.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
+    log.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
   public void setNewDefaultAccountId(User user) {
@@ -2269,10 +2269,10 @@ public class UserServiceImpl implements UserService {
     try {
       user = userCache.get(userId);
     } catch (Exception ex) {
-      logger.error("Exception occurred while loading User from DB", ex);
+      log.error("Exception occurred while loading User from DB", ex);
     }
     if (user == null) {
-      logger.info("User [{}] not found in Cache. Load it from DB", userId);
+      log.info("User [{}] not found in Cache. Load it from DB", userId);
       user = get(userId);
       userCache.put(user.getUuid(), user);
     }
@@ -2323,7 +2323,7 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
     if (account == null) {
       String message = "Account [" + accountId + "] does not exist";
-      logger.warn(message);
+      log.warn(message);
       throw new GeneralException(message);
     }
     User user = get(userId);
@@ -2473,7 +2473,7 @@ public class UserServiceImpl implements UserService {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
     Account savedAccount = accountService.save(account, false, shouldCreateSampleApp);
-    logger.info("New account created with accountId {} and licenseType {}", account.getUuid(),
+    log.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());
     return savedAccount;
   }
@@ -2605,7 +2605,7 @@ public class UserServiceImpl implements UserService {
       return (authenticationMechanism != null && authenticationMechanism.getType().equals("SSO"))
           || user.isEmailVerified();
     }
-    logger.warn("User {} has no accounts associated", user.getEmail());
+    log.warn("User {} has no accounts associated", user.getEmail());
     return false;
   }
 
@@ -2698,7 +2698,7 @@ public class UserServiceImpl implements UserService {
       user.setDisabled(!enabled);
       wingsPersistence.save(user);
       evictUserFromCache(user.getUuid());
-      logger.info("User {} is enabled: {}", user.getEmail(), enabled);
+      log.info("User {} is enabled: {}", user.getEmail(), enabled);
     }
     return true;
   }
@@ -2754,7 +2754,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
-      logger.error(RESET_ERROR, e);
+      log.error(RESET_ERROR, e);
     }
   }
 
@@ -2798,7 +2798,7 @@ public class UserServiceImpl implements UserService {
 
       emailNotificationService.send(emailData);
     } catch (URISyntaxException e) {
-      logger.error(RESET_ERROR, e);
+      log.error(RESET_ERROR, e);
     }
   }
 
@@ -2832,7 +2832,7 @@ public class UserServiceImpl implements UserService {
       return loginSettingsService.getPasswordStrengthCheckViolations(
           account, EncodingUtils.decodeBase64ToString(password).toCharArray());
     } catch (Exception ex) {
-      logger.warn("Password violation polling failed for token: [{}]", token, ex);
+      log.warn("Password violation polling failed for token: [{}]", token, ex);
       throw new InvalidRequestException("Password violation polling failed", USER);
     }
   }
@@ -2901,11 +2901,11 @@ public class UserServiceImpl implements UserService {
   public boolean canEnableOrDisable(User user) {
     String email = user.getEmail();
     boolean associatedWithMultipleAccounts = user.getAccounts().size() > 1;
-    logger.info("User {} is associated with {} accounts", email, user.getAccounts().size());
+    log.info("User {} is associated with {} accounts", email, user.getAccounts().size());
     boolean isHarnessUser = harnessUserGroupService.isHarnessSupportUser(user.getUuid());
-    logger.info("User {} is in harness user group: {}", email, isHarnessUser);
+    log.info("User {} is in harness user group: {}", email, isHarnessUser);
     boolean result = !(associatedWithMultipleAccounts || isHarnessUser);
-    logger.info("User {} can be set to new disabled status: {}", email, result);
+    log.info("User {} can be set to new disabled status: {}", email, result);
     return result;
   }
 
@@ -2998,7 +2998,7 @@ public class UserServiceImpl implements UserService {
     }
 
     if (existingInvite.isCompleted()) {
-      logger.warn("User invite {} is already completed", userInvite.getUuid());
+      log.warn("User invite {} is already completed", userInvite.getUuid());
       return FAIL;
     }
 
@@ -3009,7 +3009,7 @@ public class UserServiceImpl implements UserService {
         (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());
 
     if (isPasswordRequired) {
-      logger.info("Redirecting invite id: {} to password signup page", existingInvite.getUuid());
+      log.info("Redirecting invite id: {} to password signup page", existingInvite.getUuid());
       return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
     } else {
       // Marking the user invite complete.

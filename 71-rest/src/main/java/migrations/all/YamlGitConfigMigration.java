@@ -24,7 +24,7 @@ public class YamlGitConfigMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running YamlGitConfigMigration");
+    log.info("Running YamlGitConfigMigration");
 
     try (HIterator<YamlGitConfig> yamlGitConfigHIterator =
              new HIterator<>(wingsPersistence.createQuery(YamlGitConfig.class).fetch())) {
@@ -33,7 +33,7 @@ public class YamlGitConfigMigration implements Migration {
       }
     }
 
-    logger.info("Completed running YamlGitConfigMigration");
+    log.info("Completed running YamlGitConfigMigration");
   }
 
   private void updateYamlGitConfig(YamlGitConfig yamlGitConfig) {

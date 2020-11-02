@@ -37,7 +37,7 @@ public class AddValidUntilToTimeSeriesRawData implements Migration {
                                                          .build();
         PageResponse<TimeSeriesRawData> response = dataStoreService.list(TimeSeriesRawData.class, pageRequest);
         if (isEmpty(response.getResponse())) {
-          logger.info("No more documents left to update!");
+          log.info("No more documents left to update!");
           break;
         }
         offset += pageSize;
@@ -47,9 +47,9 @@ public class AddValidUntilToTimeSeriesRawData implements Migration {
 
         dataStoreService.save(TimeSeriesRawData.class, rawDataList, false);
         sleep(ofMillis(1500));
-        logger.info("Updated {} time series raw data records", offset);
+        log.info("Updated {} time series raw data records", offset);
       } catch (Exception e) {
-        logger.info("Exception while adding valid until to time sereis raw data", e);
+        log.info("Exception while adding valid until to time sereis raw data", e);
         break;
       }
     }

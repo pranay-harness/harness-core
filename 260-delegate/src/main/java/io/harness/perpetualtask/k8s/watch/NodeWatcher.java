@@ -42,7 +42,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
   @Inject
   public NodeWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
       @Assisted SharedInformerFactory sharedInformerFactory, EventPublisher eventPublisher) {
-    logger.info(
+    log.info(
         "Creating new NodeWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
 
     this.clusterId = params.getClusterId();
@@ -69,7 +69,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                 return coreV1Api.listNodeCall(null, null, null, null, null, null, callGeneratorParams.resourceVersion,
                     callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null);
               } catch (ApiException e) {
-                logger.error("Unknown exception occurred", e);
+                log.error("Unknown exception occurred", e);
                 throw e;
               }
             },
@@ -80,33 +80,33 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
   @Override
   public void onUpdate(V1Node oldNode, V1Node newNode) {
     try {
-      logger.debug(NODE_EVENT_MSG, newNode.getMetadata().getUid(), EventType.MODIFIED);
+      log.debug(NODE_EVENT_MSG, newNode.getMetadata().getUid(), EventType.MODIFIED);
 
       publishNodeInfo(newNode);
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_MSG, EventType.MODIFIED, ex);
+      log.error(ERROR_PUBLISH_MSG, EventType.MODIFIED, ex);
     }
   }
 
   @Override
   public void onAdd(V1Node node) {
     try {
-      logger.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
+      log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
       publishNodeInfo(node);
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_MSG, EventType.ADDED, ex);
+      log.error(ERROR_PUBLISH_MSG, EventType.ADDED, ex);
     }
   }
 
   @Override
   public void onDelete(V1Node node, boolean deletedFinalStateUnknown) {
     try {
-      logger.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.DELETED);
+      log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.DELETED);
 
       publishNodeStoppedEvent(node);
     } catch (Exception ex) {
-      logger.error(ERROR_PUBLISH_MSG, EventType.DELETED.name(), ex);
+      log.error(ERROR_PUBLISH_MSG, EventType.DELETED.name(), ex);
     }
   }
 
@@ -121,7 +121,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                                      .setTimestamp(timestamp)
                                      .build();
 
-    logger.debug("Publishing event: {}", nodeStoppedEvent);
+    log.debug("Publishing event: {}", nodeStoppedEvent);
     eventPublisher.publishMessage(nodeStoppedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
     publishedNodes.remove(node.getMetadata().getUid());
   }
@@ -142,7 +142,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
       eventPublisher.publishMessage(nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedNodes.add(node.getMetadata().getUid());
     } else {
-      logger.debug("NodeInfo for uid:{} already published", node.getMetadata().getUid());
+      log.debug("NodeInfo for uid:{} already published", node.getMetadata().getUid());
     }
   }
 }

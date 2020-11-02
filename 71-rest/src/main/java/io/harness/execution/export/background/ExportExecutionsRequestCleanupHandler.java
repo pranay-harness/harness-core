@@ -63,7 +63,7 @@ public class ExportExecutionsRequestCleanupHandler implements Handler<ExportExec
   @Override
   public void handle(ExportExecutionsRequest request) {
     if (request == null) {
-      logger.warn("ExportExecutionsRequest is null");
+      log.warn("ExportExecutionsRequest is null");
       return;
     }
 
@@ -73,7 +73,7 @@ public class ExportExecutionsRequestCleanupHandler implements Handler<ExportExec
         exportExecutionsService.expireRequest(request);
       } catch (Exception ex) {
         // NOTE: This operation will be tried again. Just log an error and don't rethrow exception.
-        logger.error("Unable to cleanup export executions request", ex);
+        log.error("Unable to cleanup export executions request", ex);
       }
     }
   }

@@ -642,7 +642,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           clonedConfigFile.setEntityId(savedCloneService.getUuid());
           configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
         } catch (FileNotFoundException e) {
-          logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
+          log.error("Error in cloning config file " + originalConfigFile.toString(), e);
           // Ignore and continue adding more files
         }
       });
@@ -1787,7 +1787,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     try {
       return serviceCommand.getCommand().getGraph().isLinear();
     } catch (Exception ex) {
-      logger.error("Exception in validating command graph " + serviceCommand.getCommand(), ex);
+      log.error("Exception in validating command graph " + serviceCommand.getCommand(), ex);
       return false;
     }
   }
@@ -1820,7 +1820,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     } else if (serviceCommand.getCommand() != null) {
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
     } else {
-      logger.info(
+      log.info(
           "Underlying command is null for service command {}[{}]", serviceCommand.getName(), serviceCommand.getUuid());
     }
 
@@ -2542,7 +2542,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           service.setServiceCommands(serviceCommands);
         }
       } catch (Exception e) {
-        logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
+        log.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
             service.getAppId(), e);
       }
     });
@@ -2722,7 +2722,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       boolean isCreate = isBlank(manifestFile.getUuid());
       applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, isCreate);
     } catch (Exception ex) {
-      logger.warn("Failed to update the manifest file for PCF spec. ", ex);
+      log.warn("Failed to update the manifest file for PCF spec. ", ex);
     }
   }
 

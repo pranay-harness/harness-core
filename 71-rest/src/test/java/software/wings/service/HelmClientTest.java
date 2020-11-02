@@ -70,6 +70,6 @@ public class HelmClientTest extends CategoryTest {
     HelmCommandResponse helmCommandResponse =
         helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());
 
-    logger.info(helmCommandResponse.getOutput());
+    log.info(helmCommandResponse.getOutput());
   }
 }

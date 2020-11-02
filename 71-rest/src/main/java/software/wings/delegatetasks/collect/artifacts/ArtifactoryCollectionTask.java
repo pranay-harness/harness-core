@@ -46,7 +46,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
       return run((ArtifactoryConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
           (Map<String, String>) parameters[3]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact", e);
+      log.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
@@ -57,7 +57,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
       return artifactoryService.downloadArtifacts(artifactoryConfig, encryptedDataDetails, repositoryName, metadata,
           getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.warn("Exception occurred while collecting artifact for artifact server {} : {}",
+      log.warn("Exception occurred while collecting artifact for artifact server {} : {}",
           artifactoryConfig.getArtifactoryUrl(), ExceptionUtils.getMessage(e), e);
     }
     return new ListNotifyResponseData();

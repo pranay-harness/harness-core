@@ -68,7 +68,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
       }
 
     } catch (Exception e) {
-      logger.error("Exception in processing Create Route task", e);
+      log.error("Exception in processing Create Route task", e);
       pcfInfraMappingDataResponse.setOrganizations(emptyList());
       pcfInfraMappingDataResponse.setSpaces(emptyList());
       pcfInfraMappingDataResponse.setRouteMaps(emptyList());

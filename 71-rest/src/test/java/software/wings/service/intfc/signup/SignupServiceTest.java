@@ -90,7 +90,7 @@ public class SignupServiceTest extends WingsBaseTest {
       signupService.getEmail(signupSecretToken);
       fail();
     } catch (SignupException ex) {
-      logger.info("Test behaved as expected");
+      log.info("Test behaved as expected");
     }
   }
 

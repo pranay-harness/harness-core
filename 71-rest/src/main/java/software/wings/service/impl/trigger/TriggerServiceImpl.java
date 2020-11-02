@@ -403,10 +403,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void executeNewManifestTrigger(String appManifestId, List<HelmChart> helmCharts, Trigger trigger) {
     try (AutoLogContext ignore2 = new TriggerLogContext(trigger.getUuid(), OVERRIDE_ERROR)) {
-      logger.info("Trigger found with name {} and Id {} for appManifestId {}", trigger.getName(), trigger.getUuid(),
+      log.info("Trigger found with name {} and Id {} for appManifestId {}", trigger.getName(), trigger.getUuid(),
           appManifestId);
       if (trigger.isDisabled()) {
-        logger.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
+        log.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
         return;
       }
     }
@@ -418,26 +418,26 @@ public class TriggerServiceImpl implements TriggerService {
       deployingHelmCharts.add(matchingHelmChart);
     }
     if (isNotEmpty(deployingHelmCharts)) {
-      logger.info("Selecting the latest version from matched versions {}", deployingHelmCharts.get(0));
+      log.info("Selecting the latest version from matched versions {}", deployingHelmCharts.get(0));
       List<Artifact> deployingArtifacts = new ArrayList<>();
       if (isNotEmpty(trigger.getArtifactSelections()) || isNotEmpty(trigger.getManifestSelections())) {
-        logger.info("Manifest selections found collecting manifest as per app manifest selections");
+        log.info("Manifest selections found collecting manifest as per app manifest selections");
         addArtifactsAndHelmChartsFromSelections(trigger.getAppId(), trigger, deployingArtifacts, deployingHelmCharts);
       }
       try {
         triggerDeployment(deployingArtifacts, deployingHelmCharts, null, trigger);
       } catch (WingsException exception) {
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       }
     } else {
-      logger.info("None of the manifests {} match with the given filter", helmCharts);
+      log.info("None of the manifests {} match with the given filter", helmCharts);
     }
   }
 
   private HelmChart fetchLatestMatchingHelmChart(List<HelmChart> helmCharts, Trigger trigger,
       ManifestTriggerCondition manifestTriggerCondition, List<HelmChart> deployingHelmCharts) {
     if (isBlank(manifestTriggerCondition.getVersionRegex())) {
-      logger.info("No manifest version filter set. Triggering with the last collected manifest {}",
+      log.info("No manifest version filter set. Triggering with the last collected manifest {}",
           helmCharts.get(0).getUuid());
       return helmCharts.get(0);
     } else {
@@ -468,15 +468,15 @@ public class TriggerServiceImpl implements TriggerService {
       return;
     }
     triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
-      logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
+      log.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
           artifactStreamId);
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
       if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
-        logger.info("No artifact filter set. Triggering with all artifacts");
+        log.info("No artifact filter set. Triggering with all artifacts");
         artifacts.addAll(collectedArtifacts);
       } else {
-        logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+        log.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
             artifactTriggerCondition.getArtifactFilter());
         List<Artifact> matchedArtifacts =
             collectedArtifacts.stream()
@@ -485,14 +485,14 @@ public class TriggerServiceImpl implements TriggerService {
                         artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
                 .collect(Collectors.toList());
         if (isNotEmpty(matchedArtifacts)) {
-          logger.info("Matched artifacts size {}", matchedArtifacts.size());
+          log.info("Matched artifacts size {}", matchedArtifacts.size());
           artifacts.addAll(matchedArtifacts);
         } else {
-          logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+          log.info("Artifacts {} not matched with the given artifact filter", artifacts);
         }
       }
       if (isEmpty(artifacts)) {
-        logger.warn(
+        log.warn(
             "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
             artifactTriggerCondition);
         return;
@@ -500,14 +500,14 @@ public class TriggerServiceImpl implements TriggerService {
       List<Artifact> artifactsFromSelections = new ArrayList<>();
       List<HelmChart> helmCharts = new ArrayList<>();
       if (isNotEmpty(trigger.getArtifactSelections()) || isNotEmpty(trigger.getManifestSelections())) {
-        logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+        log.info("Artifact selections found collecting artifacts as per artifactStream selections");
         addArtifactsAndHelmChartsFromSelections(trigger.getAppId(), trigger, artifactsFromSelections, helmCharts);
       }
       if (isNotEmpty(artifacts)) {
-        logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+        log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
             artifacts.stream().map(Artifact::getUuid).collect(toList()));
         for (Artifact artifact : artifacts) {
-          logger.info("Triggering deployment with artifact {}", artifact.getUuid());
+          log.info("Triggering deployment with artifact {}", artifact.getUuid());
           try {
             List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
             selectedArtifacts.add(artifact);
@@ -516,11 +516,11 @@ public class TriggerServiceImpl implements TriggerService {
             exception.addContext(Application.class, trigger.getAppId());
             exception.addContext(ArtifactStream.class, artifactStreamId);
             exception.addContext(Trigger.class, trigger.getUuid());
-            ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+            ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
           }
         }
       } else {
-        logger.info("No Artifacts matched. Hence Skipping the deployment");
+        log.info("No Artifacts matched. Hence Skipping the deployment");
         return;
       }
     });
@@ -543,7 +543,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<Artifact> artifacts = new ArrayList<>();
     List<HelmChart> helmCharts = new ArrayList<>();
     Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
-    logger.info(
+    log.info(
         "Received WebHook request  for the Trigger {} with Service Build Numbers {}, Service Manifest mapping {}  and parameters {}",
         trigger.getUuid(), serviceArtifactMapping, serviceManifestMapping, parameters);
     if (isNotEmpty(serviceArtifactMapping) || isNotEmpty(serviceManifestMapping)) {
@@ -610,20 +610,20 @@ public class TriggerServiceImpl implements TriggerService {
          AutoLogContext ignore3 = new ArtifactStreamLogContext(artifactStreamId, OVERRIDE_ERROR)) {
       triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
         try (AutoLogContext ignore2 = new TriggerLogContext(trigger.getUuid(), OVERRIDE_ERROR)) {
-          logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(),
-              trigger.getUuid(), artifactStreamId);
+          log.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
+              artifactStreamId);
           if (trigger.isDisabled()) {
-            logger.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
+            log.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
             return;
           }
           ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
           List<Artifact> artifacts = new ArrayList<>();
           if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
-            logger.info("No artifact filter set. Triggering with the collected artifact {}",
+            log.info("No artifact filter set. Triggering with the collected artifact {}",
                 collectedArtifacts.get(collectedArtifacts.size() - 1).getUuid());
             artifacts.add(collectedArtifacts.get(collectedArtifacts.size() - 1));
           } else {
-            logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+            log.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
                 artifactTriggerCondition.getArtifactFilter());
             List<Artifact> matchedArtifacts =
                 collectedArtifacts.stream()
@@ -632,15 +632,15 @@ public class TriggerServiceImpl implements TriggerService {
                             artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
                     .collect(Collectors.toList());
             if (isNotEmpty(matchedArtifacts)) {
-              logger.info("Matched artifacts {}. Selecting the latest artifact",
+              log.info("Matched artifacts {}. Selecting the latest artifact",
                   matchedArtifacts.get(matchedArtifacts.size() - 1));
               artifacts.add(matchedArtifacts.get(matchedArtifacts.size() - 1));
             } else {
-              logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+              log.info("Artifacts {} not matched with the given artifact filter", artifacts);
             }
           }
           if (isEmpty(artifacts)) {
-            logger.warn(
+            log.warn(
                 "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
                 artifactTriggerCondition);
             return;
@@ -651,30 +651,30 @@ public class TriggerServiceImpl implements TriggerService {
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
             if (isNotEmpty(trigger.getArtifactSelections())) {
-              logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+              log.info("Artifact selections found collecting artifacts as per artifactStream selections");
               addArtifactsFromSelectionsTriggeringArtifactSource(
                   trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
             }
             if (isNotEmpty(artifactsFromSelection)) {
-              logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+              log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
                   artifactsFromSelection.stream().map(Artifact::getUuid).collect(toList()));
               try {
                 triggerDeployment(artifactsFromSelection, new ArrayList<>(), null, trigger);
               } catch (WingsException exception) {
-                ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+                ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
               }
             } else {
-              logger.info("No Artifacts matched. Hence Skipping the deployment");
+              log.info("No Artifacts matched. Hence Skipping the deployment");
               return;
             }
           } else {
             List<HelmChart> helmCharts = new ArrayList<>();
             if (isNotEmpty(trigger.getArtifactSelections()) || isNotEmpty(trigger.getManifestSelections())) {
-              logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+              log.info("Artifact selections found collecting artifacts as per artifactStream selections");
               addArtifactsAndHelmChartsFromSelections(trigger.getAppId(), trigger, artifacts, helmCharts);
             }
             if (isNotEmpty(artifacts)) {
-              logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+              log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
                   artifacts.stream().map(Artifact::getUuid).collect(toList()));
               try {
                 triggerDeployment(artifacts, helmCharts, null, trigger);
@@ -682,10 +682,10 @@ public class TriggerServiceImpl implements TriggerService {
                 exception.addContext(Application.class, trigger.getAppId());
                 exception.addContext(ArtifactStream.class, artifactStreamId);
                 exception.addContext(Trigger.class, trigger.getUuid());
-                ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+                ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
               }
             } else {
-              logger.info("No Artifacts matched. Hence Skipping the deployment");
+              log.info("No Artifacts matched. Hence Skipping the deployment");
               return;
             }
           }
@@ -722,7 +722,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerExecutionPostPipelineCompletion(String appId, String sourcePipelineId) {
     triggerServiceHelper.getTriggersMatchesWorkflow(appId, sourcePipelineId).forEach(trigger -> {
       if (trigger.isDisabled()) {
-        logger.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
+        log.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
         return;
       }
       List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
@@ -730,11 +730,11 @@ public class TriggerServiceImpl implements TriggerService {
       boolean helmArtifactEnabled =
           featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId());
       if (isEmpty(artifactSelections) && isEmpty(manifestSelections)) {
-        logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
+        log.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
             trigger.getWorkflowId(), sourcePipelineId);
         List<Artifact> lastDeployedArtifacts = getLastDeployedArtifacts(appId, sourcePipelineId, null);
         if (isEmpty(lastDeployedArtifacts)) {
-          logger.warn(
+          log.warn(
               "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
         }
         List<HelmChart> helmCharts = new ArrayList<>();
@@ -747,7 +747,7 @@ public class TriggerServiceImpl implements TriggerService {
         if (isNotEmpty(artifactSelections)
             && artifactSelections.stream().anyMatch(
                    artifactSelection -> artifactSelection.getType() == PIPELINE_SOURCE)) {
-          logger.info("Adding last deployed artifacts from source pipeline {} ", sourcePipelineId);
+          log.info("Adding last deployed artifacts from source pipeline {} ", sourcePipelineId);
           addLastDeployedArtifacts(appId, sourcePipelineId, null, artifacts);
         }
         List<HelmChart> helmCharts = new ArrayList<>();
@@ -775,7 +775,7 @@ public class TriggerServiceImpl implements TriggerService {
       ex.addContext(Application.class, trigger.getAppId());
       ex.addContext(Pipeline.class, sourcePipelineId);
       ex.addContext(Trigger.class, trigger.getUuid());
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
     }
   }
 
@@ -787,10 +787,10 @@ public class TriggerServiceImpl implements TriggerService {
         return;
       }
       if (trigger.isDisabled()) {
-        logger.info("Trigger rejected due to slowness in the product");
+        log.info("Trigger rejected due to slowness in the product");
         return;
       }
-      logger.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",
+      log.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",
           trigger.getAppId(), trigger.getUuid(), scheduledFireTime.getTime());
       List<Artifact> artifacts = new ArrayList<>();
       List<HelmChart> helmCharts = new ArrayList<>();
@@ -806,20 +806,20 @@ public class TriggerServiceImpl implements TriggerService {
             lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
         List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
         if (lastDeployedArtifactIds.containsAll(artifactIds)) {
-          logger.info("No new version of artifacts found from the last successful execution "
+          log.info("No new version of artifacts found from the last successful execution "
                   + "of pipeline/ workflow {}. So, not triggering execution",
               trigger.getWorkflowId());
         } else {
-          logger.info("New version of artifacts found from the last successful execution "
+          log.info("New version of artifacts found from the last successful execution "
                   + "of pipeline/ workflow {}. So, triggering  execution",
               trigger.getWorkflowId());
           triggerScheduledDeployment(trigger, artifacts, helmCharts);
         }
       }
-      logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
+      log.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
       idempotent.succeeded(TriggerIdempotentResult.builder().triggerUuid(trigger.getUuid()).build());
     } catch (UnableToRegisterIdempotentOperationException e) {
-      logger.error("Failed to trigger scheduled trigger {}", trigger.getName(), e);
+      log.error("Failed to trigger scheduled trigger {}", trigger.getName(), e);
     }
   }
 
@@ -829,7 +829,7 @@ public class TriggerServiceImpl implements TriggerService {
     } catch (WingsException ex) {
       ex.addContext(Application.class, trigger.getAppId());
       ex.addContext(Trigger.class, trigger.getUuid());
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
     }
   }
 
@@ -871,7 +871,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void addLastDeployedArtifacts(String appId, String workflowId, String serviceId, List<Artifact> artifacts) {
-    logger.info("Adding last deployed artifacts for appId {}, workflowid {}", appId, workflowId);
+    log.info("Adding last deployed artifacts for appId {}, workflowid {}", appId, workflowId);
     artifacts.addAll(getLastDeployedArtifacts(appId, workflowId, serviceId));
   }
 
@@ -908,7 +908,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void addLastDeployedHelmCharts(
       String appId, String workflowId, Set<String> serviceIds, List<HelmChart> helmCharts) {
-    logger.info("Adding last deployed helm charts for appId {}, workflowid {}", appId, workflowId);
+    log.info("Adding last deployed helm charts for appId {}, workflowid {}", appId, workflowId);
     List<HelmChart> lastDeployedHelmCharts =
         workflowExecutionService.obtainLastGoodDeployedHelmCharts(appId, workflowId);
     if (isNotEmpty(lastDeployedHelmCharts)) {
@@ -973,13 +973,13 @@ public class TriggerServiceImpl implements TriggerService {
     WorkflowExecution workflowExecution;
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Triggering  execution of appId {} with  pipeline id {} , trigger type {}", trigger.getAppId(),
+      log.info("Triggering  execution of appId {} with  pipeline id {} , trigger type {}", trigger.getAppId(),
           trigger.getWorkflowId(), trigger.getCondition().getConditionType().name());
     }
     resolveTriggerPipelineVariables(trigger, executionArgs);
     executionArgs.setPipelineId(trigger.getWorkflowId());
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
-      logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
+      log.info("Check file content option selected. Invoking delegate task to verify the file content.");
       TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(trigger);
       if (lastTriggerExecution == null) {
         triggerExecution.setExecutionArgs(executionArgs);
@@ -997,7 +997,7 @@ public class TriggerServiceImpl implements TriggerService {
       workflowExecution =
           workflowExecutionService.triggerEnvExecution(trigger.getAppId(), null, executionArgs, trigger);
     }
-    logger.info(
+    log.info(
         "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
     return workflowExecution;
   }
@@ -1013,7 +1013,7 @@ public class TriggerServiceImpl implements TriggerService {
     String envId = null;
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
     if (templatizedEnvName != null) {
-      logger.info("One of the environment is parameterized in the pipeline and Variable name {}", templatizedEnvName);
+      log.info("One of the environment is parameterized in the pipeline and Variable name {}", templatizedEnvName);
       String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
       if (envNameOrId == null) {
         String msg = "Pipeline contains environment as variable [" + templatizedEnvName
@@ -1046,10 +1046,10 @@ public class TriggerServiceImpl implements TriggerService {
     for (String serviceVarName : serviceWorkflowVariables) {
       String serviceIdOrName = triggerVariableValues.get(serviceVarName);
       notNullCheck("There is no corresponding Workflow Variable associated to service", serviceIdOrName);
-      logger.info("Checking  service {} can be found by id first.", serviceIdOrName);
+      log.info("Checking  service {} can be found by id first.", serviceIdOrName);
       Service service = serviceResourceService.get(trigger.getAppId(), serviceIdOrName, false);
       if (service == null) {
-        logger.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
+        log.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
         service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
       }
       notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER);
@@ -1059,10 +1059,10 @@ public class TriggerServiceImpl implements TriggerService {
 
   private String resolveEnvId(Trigger trigger, String envNameOrId) {
     Environment environment;
-    logger.info("Checking  environment {} can be found by id first.", envNameOrId);
+    log.info("Checking  environment {} can be found by id first.", envNameOrId);
     environment = environmentService.get(trigger.getAppId(), envNameOrId);
     if (environment == null) {
-      logger.info("Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
+      log.info("Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
       environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
     }
     notNullCheck("Resolved environment [" + envNameOrId
@@ -1132,7 +1132,7 @@ public class TriggerServiceImpl implements TriggerService {
   InfrastructureDefinition getInfrastructureDefinition(String appId, String envId, String infraDefIdOrName) {
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefIdOrName);
     if (infrastructureDefinition == null) {
-      logger.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
+      log.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
           infraDefIdOrName);
       infrastructureDefinition = infrastructureDefinitionService.getInfraDefByName(appId, envId, infraDefIdOrName);
     }
@@ -1142,7 +1142,7 @@ public class TriggerServiceImpl implements TriggerService {
   InfrastructureMapping getInfrastructureMapping(String appId, String envId, String infraDefIdOrName) {
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraDefIdOrName);
     if (infrastructureMapping == null) {
-      logger.info(
+      log.info(
           "Service Infrastructure does not exist by Id, checking if service infrastructure {} can be found by name.",
           infraDefIdOrName);
       infrastructureMapping = infrastructureMappingService.getInfraMappingByName(appId, envId, infraDefIdOrName);
@@ -1154,7 +1154,7 @@ public class TriggerServiceImpl implements TriggerService {
       Trigger trigger, ExecutionArgs executionArgs, TriggerExecution triggerExecution) {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Triggering workflow execution of appId {} with with workflow id {} , trigger type {}",
+      log.info("Triggering workflow execution of appId {} with with workflow id {} , trigger type {}",
           trigger.getAppId(), trigger.getWorkflowId(), trigger.getCondition().getConditionType().name());
     }
 
@@ -1199,7 +1199,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
     // Validate if the file path content changed
-    logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
+    log.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
         trigger.getWorkflowId());
     WorkflowExecution workflowExecution;
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
@@ -1213,7 +1213,7 @@ public class TriggerServiceImpl implements TriggerService {
         workflowExecution =
             workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
       } else {
-        logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
+        log.info("Check file content option selected. Invoking delegate task to verify the file content.");
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
             trigger, lastTriggerExecution, triggerExecution, trigger.getAppId());
@@ -1243,7 +1243,7 @@ public class TriggerServiceImpl implements TriggerService {
           .append("] does not need artifacts. However, trigger received with the artifacts");
 
       if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
-        logger.warn(msg.toString());
+        log.warn(msg.toString());
         throw new WingsException(msg.toString());
       }
     }
@@ -1256,14 +1256,14 @@ public class TriggerServiceImpl implements TriggerService {
       }
     }
     if (isNotEmpty(missingServiceIds)) {
-      logger.info(
+      log.info(
           "Artifact needed serviceIds {} do not match with the collected artifact serviceIds {}. Rejecting the trigger {} execution",
           artifactNeededServiceIds, collectedArtifactServiceIds, trigger.getUuid());
       List<String> missingServiceNames =
           serviceResourceService.fetchServiceNamesByUuids(trigger.getAppId(), missingServiceIds);
 
       if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
-        logger.warn("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
+        log.warn("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
         String message = "Trigger [" + trigger.getName()
             + " ] rejected. Reason: Artifacts are missing for service name(s)" + missingServiceNames;
         throw new WingsException(message, USER);
@@ -1279,7 +1279,7 @@ public class TriggerServiceImpl implements TriggerService {
           .append(']');
 
       if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
-        logger.warn(msg.toString());
+        log.warn(msg.toString());
         throw new WingsException(msg.toString());
       }
     }
@@ -1287,7 +1287,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public boolean triggerExecutionByServiceInfra(String appId, String infraMappingId) {
-    logger.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
+    log.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
       throw new InvalidRequestException("Infrastructure Mapping" + infraMappingId + " does not exist", USER);
@@ -1301,16 +1301,16 @@ public class TriggerServiceImpl implements TriggerService {
 
     serviceInfraWorkflows.forEach((ServiceInfraWorkflow serviceInfraWorkflow) -> {
       if (serviceInfraWorkflow.getWorkflowType() == null || serviceInfraWorkflow.getWorkflowType() == ORCHESTRATION) {
-        logger.info("Retrieving the last workflow execution for workflowId {} and infraMappingId {}",
+        log.info("Retrieving the last workflow execution for workflowId {} and infraMappingId {}",
             serviceInfraWorkflow.getWorkflowId(), infraMappingId);
         WorkflowExecution workflowExecution = workflowExecutionService.fetchWorkflowExecution(
             appId, serviceIds, envIds, serviceInfraWorkflow.getWorkflowId());
         if (workflowExecution == null) {
-          logger.warn("No Last workflow execution found for workflowId {} and infraMappingId {}",
+          log.warn("No Last workflow execution found for workflowId {} and infraMappingId {}",
               serviceInfraWorkflow.getWorkflowId(), serviceInfraWorkflow.getInfraMappingId());
         } else {
-          logger.info("Triggering workflow execution {}  for appId {} and infraMappingId {}",
-              workflowExecution.getUuid(), workflowExecution.getWorkflowId(), infraMappingId);
+          log.info("Triggering workflow execution {}  for appId {} and infraMappingId {}", workflowExecution.getUuid(),
+              workflowExecution.getWorkflowId(), infraMappingId);
           // TODO: Refactor later
           if (workflowExecution.getExecutionArgs() != null) {
             workflowExecution.getExecutionArgs().setCreatedByType(CreatedByType.TRIGGER);
@@ -1325,7 +1325,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public void handleTriggerTaskResponse(String appId, String triggerExecutionId, TriggerResponse triggerResponse) {
-    logger.info("Received the call back from delegate with the task response {}", triggerResponse);
+    log.info("Received the call back from delegate with the task response {}", triggerResponse);
     TriggerExecution triggerExecution = triggerExecutionService.get(appId, triggerExecutionId);
     notNullCheck("Trigger execution might have pruned", triggerExecution);
     Trigger trigger = get(triggerExecution.getAppId(), triggerExecution.getTriggerId());
@@ -1337,19 +1337,19 @@ public class TriggerServiceImpl implements TriggerService {
             (TriggerDeploymentNeededResponse) triggerResponse;
         if (triggerDeploymentNeededResponse.isDeploymentNeeded()) {
           try {
-            logger.info("File path content changed for the trigger {}.", trigger.getUuid());
+            log.info("File path content changed for the trigger {}.", trigger.getUuid());
             if (triggerExecution.getExecutionArgs() != null) {
               triggerExecution.getExecutionArgs().setCreatedByType(CreatedByType.TRIGGER);
             }
             switch (trigger.getWorkflowType()) {
               case ORCHESTRATION:
-                logger.info("Starting deployment for the workflow {}", trigger.getWorkflowId());
+                log.info("Starting deployment for the workflow {}", trigger.getWorkflowId());
                 workflowExecutionService.triggerEnvExecution(
                     trigger.getAppId(), triggerExecution.getEnvId(), triggerExecution.getExecutionArgs(), trigger);
                 triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
                 break;
               case PIPELINE:
-                logger.info("Starting deployment for the pipeline {}", trigger.getWorkflowId());
+                log.info("Starting deployment for the pipeline {}", trigger.getWorkflowId());
                 if (triggerExecution.getExecutionArgs() != null) {
                   triggerExecution.getExecutionArgs().setPipelineId(trigger.getWorkflowId());
                 }
@@ -1367,20 +1367,20 @@ public class TriggerServiceImpl implements TriggerService {
             exception.addContext(Application.class, trigger.getAppId());
             exception.addContext(TriggerExecution.class, triggerExecution.getUuid());
             exception.addContext(Trigger.class, trigger.getUuid());
-            ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+            ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
           } catch (Exception exception) {
             triggerExecutionService.updateStatus(
                 appId, triggerExecutionId, Status.FAILED, ExceptionUtils.getMessage(exception));
-            logger.error("Exception occurred while starting deployment of the trigger execution {}",
+            log.error("Exception occurred while starting deployment of the trigger execution {}",
                 triggerExecution.getUuid(), exception);
           }
         } else {
-          logger.info("File  content not changed for the trigger {}. Skipping the execution", trigger.getUuid());
+          log.info("File  content not changed for the trigger {}. Skipping the execution", trigger.getUuid());
           triggerExecutionService.updateStatus(
               appId, triggerExecutionId, Status.SUCCESS, "File content not changed. Skipped deployment");
         }
       } else {
-        logger.error("Wrong Response {} Received from trigger callback", triggerResponse);
+        log.error("Wrong Response {} Received from trigger callback", triggerResponse);
       }
     } else {
       triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, triggerResponse.getErrorMsg());
@@ -1456,7 +1456,7 @@ public class TriggerServiceImpl implements TriggerService {
               "Deploy if files has changed, Git Connector, Branch Name, Repo Name and File Paths cannot be changed on updating Trigger");
         }
         if (webHookTriggerCondition.isCheckFileContentChanged()) {
-          logger.info("File paths to watch selected");
+          log.info("File paths to watch selected");
           List<String> filePaths = trimStrings(webHookTriggerCondition.getFilePaths());
           if (isEmpty(filePaths)) {
             throw new InvalidRequestException("At least one file path is required to check content changed");
@@ -1881,7 +1881,7 @@ public class TriggerServiceImpl implements TriggerService {
         collectArtifactsForTemplatizedService(trigger, serviceArtifactMapping, artifacts, services);
       }
     } catch (Exception e) {
-      logger.error("failed to process artifacts and services from webhook", e);
+      log.error("failed to process artifacts and services from webhook", e);
     }
   }
 
@@ -1974,10 +1974,10 @@ public class TriggerServiceImpl implements TriggerService {
   private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
     Artifact artifact = artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber);
     if (artifact != null) {
-      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+      log.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());
     } else {
-      logger.warn(
+      log.warn(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
           buildNumber, artifactStream.getUuid());
     }
@@ -2003,10 +2003,10 @@ public class TriggerServiceImpl implements TriggerService {
     Artifact artifact =
         artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber, artifactVariables);
     if (artifact != null) {
-      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+      log.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());
     } else {
-      logger.warn(
+      log.warn(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
           buildNumber, artifactStream.getUuid());
     }
@@ -2112,7 +2112,7 @@ public class TriggerServiceImpl implements TriggerService {
       variables = workflow.getOrchestrationWorkflow().getUserVariables();
 
     } else {
-      logger.error("WorkflowType {} not supported", workflowType);
+      log.error("WorkflowType {} not supported", workflowType);
       throw new WingsException("Workflow Type [" + workflowType + "] not supported", USER);
     }
     if (envParamaterized) {

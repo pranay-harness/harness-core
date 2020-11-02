@@ -52,7 +52,7 @@ public class CustomDashboardFeature extends AbstractPremiumFeature implements Co
   public boolean isAvailable(String accountType) {
     boolean result = (boolean) getRestrictions(accountType).getOrDefault("available", true);
 
-    logger.info("Is custom dashboard usage allowed for account type {}? {}", accountType, result);
+    log.info("Is custom dashboard usage allowed for account type {}? {}", accountType, result);
     return result;
   }
 
@@ -97,7 +97,7 @@ public class CustomDashboardFeature extends AbstractPremiumFeature implements Co
       pageResponse = dashboardSettingsService.getDashboardSettingSummary(accountId, pageRequest);
       dashboardSettings.addAll(pageResponse.getResponse());
       offset += limit;
-      logger.info("Total custom dashboards available in account {} is {}, loaded {} custom dashboards so far...",
+      log.info("Total custom dashboards available in account {} is {}, loaded {} custom dashboards so far...",
           accountId, pageResponse.getTotal(), dashboardSettings.size());
     } while (dashboardSettings.size() < pageResponse.getTotal());
 

@@ -55,14 +55,14 @@ public class UserTest extends AbstractFunctionalTest {
     SettingAttribute emailSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.PAID_EMAIL_SMTP_CONNECTOR);
     assertThat(emailSettingAttribute).isNotNull();
-    logger.info("Setup completed successfully");
+    log.info("Setup completed successfully");
   }
 
   @Test()
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void listUsers() {
-    logger.info("Starting the list users test");
+    log.info("Starting the list users test");
     Account account = this.getAccount();
     UserRestUtils urUtil = new UserRestUtils();
     List<PublicUser> userList = urUtil.getUserList(bearerToken, account.getUuid());
@@ -81,10 +81,10 @@ public class UserTest extends AbstractFunctionalTest {
     assertThat(userInvitationList.size() == 1).isTrue();
     // Verify if email is sent, received and has signup link
     // Email check will run every 6 seconds upto 2 mins to see if email is delivered.
-    logger.info("Attempting to retrieve signup mail from inbox : " + emailId);
+    log.info("Attempting to retrieve signup mail from inbox : " + emailId);
     MailinatorMetaMessage message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_SUBJECT);
-    logger.info("Signup mail retrieved");
-    logger.info("Reading the retrieved email");
+    log.info("Signup mail retrieved");
+    log.info("Reading the retrieved email");
     String emailFetchId = message.getId();
     MailinatorMessageDetails messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertThat(messageDetails).isNotNull();
@@ -92,17 +92,17 @@ public class UserTest extends AbstractFunctionalTest {
         HTMLUtils.retrieveInviteUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "SIGN UP");
     assertThat(inviteUrl).isNotNull();
     assertThat(StringUtils.isNotBlank(inviteUrl)).isTrue();
-    logger.info("Email read and Signup URL is available for user signup");
+    log.info("Email read and Signup URL is available for user signup");
 
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
-    logger.info("Email deleted for the inbox : " + emailId);
+    log.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
     // Complete registration using the API
-    logger.info("Entering user invite validation");
+    log.info("Entering user invite validation");
     UserInvite incomplete = userInvitationList.get(0);
     UserInvite completed = UserRestUtils.completeUserRegistration(account, bearerToken, incomplete);
     assertThat(completed).isNotNull();
@@ -110,7 +110,7 @@ public class UserTest extends AbstractFunctionalTest {
     assertThat(incomplete.isCompleted()).isFalse();
     assertThat(completed.isCompleted()).isTrue();
     // Assert.assertThat("Error : Agreement is false after signup",completed.isAgreement()).isTrue();
-    logger.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
+    log.info(incomplete.getAccountId() + ":" + incomplete.getEmail());
     assertThat(incomplete.getEmail().equals(completed.getEmail())).isTrue();
     assertThat(incomplete.getName().equals(completed.getName())).isTrue();
     assertThat(incomplete.getAccountId().equals(completed.getAccountId())).isTrue();
@@ -123,17 +123,17 @@ public class UserTest extends AbstractFunctionalTest {
     // Verify user can reset the password
     emailId = emailId + domainName;
     UserRestUtils.sendResetPasswordMail(emailId);
-    logger.info("Attempting to retrieve reset password mail from inbox : " + emailId);
+    log.info("Attempting to retrieve reset password mail from inbox : " + emailId);
     message = MailinatorRestUtils.retrieveMessageFromInbox(emailId, EXPECTED_RESET_PWD_SUBJECT);
-    logger.info("Reset password mail retrieved");
-    logger.info("Reading the retrieved email");
+    log.info("Reset password mail retrieved");
+    log.info("Reading the retrieved email");
     emailFetchId = message.getId();
     messageDetails = MailinatorRestUtils.readEmail(emailId, emailFetchId);
     assertThat(messageDetails).isNotNull();
     String resetUrl =
         HTMLUtils.retrieveResetUrlFromEmail(messageDetails.getData().getParts().get(0).getBody(), "RESET PASSWORD");
     assertThat(StringUtils.isNotBlank(resetUrl)).isTrue();
-    logger.info(""
+    log.info(""
         + " URL is available for user password reset");
     UserRestUtils.resetPasswordWith(TestUtils.getResetTokenFromUrl(resetUrl), UserConstants.RESET_PASSWORD);
     // Verify if the user can login through the reset password
@@ -144,12 +144,12 @@ public class UserTest extends AbstractFunctionalTest {
     // Delete Email
     messageDetails = null;
     messageDetails = MailinatorRestUtils.deleteEmail(emailId, emailFetchId);
-    logger.info("Email deleted for the inbox : " + emailId);
+    log.info("Email deleted for the inbox : " + emailId);
     assertThat(messageDetails.getAdditionalProperties()).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().containsKey("status")).isNotNull();
     assertThat(messageDetails.getAdditionalProperties().get("status").toString().equals("ok")).isTrue();
 
-    logger.info("All validation completed");
-    logger.info("All validation for reset also done");
+    log.info("All validation completed");
+    log.info("All validation for reset also done");
   }
 }

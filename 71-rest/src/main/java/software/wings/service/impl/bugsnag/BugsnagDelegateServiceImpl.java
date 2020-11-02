@@ -66,7 +66,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
       sorted.addAll(returnList);
       return sorted;
     } catch (Exception ex) {
-      logger.error("Exception while fetching organizations from bugsnag");
+      log.error("Exception while fetching organizations from bugsnag");
     }
     return null;
   }
@@ -91,7 +91,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
       sorted.addAll(returnList);
       return sorted;
     } catch (Exception ex) {
-      logger.error("Exception while fetching projects from bugsnag");
+      log.error("Exception while fetching projects from bugsnag");
     }
     return null;
   }

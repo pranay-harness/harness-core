@@ -33,6 +33,6 @@ public class AddAnalysisStatusMigration implements Migration {
     UpdateOperations<LogMLAnalysisRecord> op = wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class);
     setUnset(op, LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     UpdateResults results = wingsPersistence.update(logDataRecordQuery, op);
-    logger.info("Updated {} logMLAnalysisRecords with analysisStatus", results.getUpdatedCount());
+    log.info("Updated {} logMLAnalysisRecords with analysisStatus", results.getUpdatedCount());
   }
 }

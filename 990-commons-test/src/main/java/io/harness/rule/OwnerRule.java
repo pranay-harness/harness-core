@@ -46,7 +46,7 @@ public class OwnerRule implements TestRule {
     try {
       return new JiraClient("https://harness.atlassian.net", credentials);
     } catch (JiraException e) {
-      logger.error("Failed to connect to jira", e);
+      log.error("Failed to connect to jira", e);
     }
 
     return null;
@@ -384,7 +384,7 @@ public class OwnerRule implements TestRule {
         }
 
         Issue issue = generateJiraCreate(test, userInfo, priority).execute();
-        logger.info("New jira issue was created {}", issue.getKey());
+        log.info("New jira issue was created {}", issue.getKey());
         return;
       }
 
@@ -411,7 +411,7 @@ public class OwnerRule implements TestRule {
       }
 
     } catch (JiraException e) {
-      logger.error("Failed when checking the jira issue", e);
+      log.error("Failed when checking the jira issue", e);
     }
   }
 
@@ -426,7 +426,7 @@ public class OwnerRule implements TestRule {
   }
 
   public static void fileOwnerAs(String developer, String type) {
-    logger.info("Developer {} is found to be owner of {} test", developer, type);
+    log.info("Developer {} is found to be owner of {} test", developer, type);
     createSlackFile(developer, type);
 
     UserInfo userInfo = active.get(developer);
@@ -465,9 +465,9 @@ public class OwnerRule implements TestRule {
 
       file.getParentFile().mkdirs();
       if (file.createNewFile()) {
-        logger.info("Wrote to {}", file);
+        log.info("Wrote to {}", file);
       } else {
-        logger.debug("{} was already set", file);
+        log.debug("{} was already set", file);
       }
     } catch (Exception ignore) {
       // Ignore the exceptions

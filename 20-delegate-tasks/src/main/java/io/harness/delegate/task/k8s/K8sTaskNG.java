@@ -57,7 +57,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   public K8sDeployResponse run(TaskParameters parameters) {
     K8sDeployRequest k8sDeployRequest = (K8sDeployRequest) parameters;
 
-    logger.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
+    log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
     decryptRequestDTOs(k8sDeployRequest);
 
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
@@ -65,7 +65,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
             .executeTask(k8sDeployRequest, null);
       } catch (Exception ex) {
-        logger.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -104,7 +104,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
             .executeTask(k8sDeployRequest, k8SDelegateTaskParams);
       } catch (Exception ex) {
-        logger.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -119,16 +119,16 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     try {
       k8sTaskTypeToRequestHandler.get(K8sTaskType.VERSION.name()).executeTask(k8sDeployRequest, k8sDelegateTaskParams);
     } catch (Exception ex) {
-      logger.error("Error fetching K8s Server Version: ", ex);
+      log.error("Error fetching K8s Server Version: ", ex);
     }
   }
 
   private void cleanup(String workingDirectory) {
     try {
-      logger.warn("Cleaning up directory " + workingDirectory);
+      log.warn("Cleaning up directory " + workingDirectory);
       deleteDirectoryAndItsContentIfExists(workingDirectory);
     } catch (Exception ex) {
-      logger.warn("Exception in directory cleanup.", ex);
+      log.warn("Exception in directory cleanup.", ex);
     }
   }
 

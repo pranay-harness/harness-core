@@ -26,20 +26,20 @@ public class NewRelicMetricDataBaselineMigration implements Migration {
   @Override
   public void migrate() {
     if (mainConfiguration.getExecutionLogsStorageMode() != DataStorageMode.GOOGLE_CLOUD_DATA_STORE) {
-      logger.info("google data store not enabled, returning....");
+      log.info("google data store not enabled, returning....");
       return;
     }
 
     try (HIterator<WorkflowExecutionBaseline> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecutionBaseline.class).fetch())) {
       for (WorkflowExecutionBaseline baseline : iterator) {
-        logger.info("marking baseline for {} ", baseline);
+        log.info("marking baseline for {} ", baseline);
         PageRequest<NewRelicMetricDataRecord> pageRequest =
             aPageRequest().addFilter("workflowExecutionId", Operator.EQ, baseline.getWorkflowExecutionId()).build();
         PageResponse<NewRelicMetricDataRecord> metricDataRecords =
             dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
 
-        logger.info("num Of records: ", metricDataRecords.size());
+        log.info("num Of records: ", metricDataRecords.size());
         if (!metricDataRecords.isEmpty()) {
           metricDataRecords.forEach(
               dataRecord -> dataRecord.setValidUntil(WorkflowExecutionBaselineServiceImpl.BASELINE_TTL));
@@ -49,6 +49,6 @@ public class NewRelicMetricDataBaselineMigration implements Migration {
       }
     }
 
-    logger.info("migration done...");
+    log.info("migration done...");
   }
 }

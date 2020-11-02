@@ -92,25 +92,25 @@ public class Utils {
   public User getUser(Map<String, String> properties) {
     String email = properties.get(EMAIL_ID);
     if (isEmpty(email)) {
-      logger.error("User email is empty");
+      log.error("User email is empty");
       return null;
     }
 
     User user = userService.getUserByEmail(email);
     if (user == null) {
-      logger.error("User not found for email {}", email);
+      log.error("User not found for email {}", email);
       return null;
     }
 
     List<Account> accounts = user.getAccounts();
     if (isEmpty(accounts)) {
-      logger.info("User {} is not assigned to any accounts", email);
+      log.info("User {} is not assigned to any accounts", email);
       return null;
     } else {
       if (accounts.size() > 1) {
         // At this point, only harness users can be assigned to more than one account.
         // Many systems like Marketo and Salesforce follow the model one user - one account.
-        logger.info("User {} is associated with more than one account, skipping segment publish", email);
+        log.info("User {} is associated with more than one account, skipping segment publish", email);
         return null;
       }
     }

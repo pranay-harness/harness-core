@@ -80,7 +80,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
-      logger.error("Encountered exception", ex);
+      log.error("Encountered exception", ex);
       throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
     } finally {
       authRuleInstrumentation.unsetAllThreadLocal();
@@ -151,7 +151,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
       return fetchConnection(filters, pageQueryParameters, sortCriteria);
     } catch (WingsException ex) {
       if (ErrorCode.ACCESS_DENIED == ex.getCode()) {
-        logger.warn("User doesn't have access to resource or no entities exist in that app");
+        log.warn("User doesn't have access to resource or no entities exist in that app");
       }
       throw ex;
     }

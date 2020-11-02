@@ -128,11 +128,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
       String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
     if (isEmpty(metricData)) {
-      logger.info("For state {} received empty collection", stateExecutionId);
+      log.info("For state {} received empty collection", stateExecutionId);
       return false;
     }
     if (!learningEngineService.isStateValid(appId, stateExecutionId)) {
-      logger.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
+      log.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
       return false;
     }
     metricData.forEach(metric -> {
@@ -149,7 +149,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (lastHeartBeatRecord.isPresent()
         && checkIfProcessed(lastHeartBeatRecord.get().getStateExecutionId(), lastHeartBeatRecord.get().getGroupName(),
                lastHeartBeatRecord.get().getDataCollectionMinute())) {
-      logger.info("for {} minute {} data already exists in db so returning", stateExecutionId,
+      log.info("for {} minute {} data already exists in db so returning", stateExecutionId,
           lastHeartBeatRecord.get().getDataCollectionMinute());
       return true;
     }
@@ -180,7 +180,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public void saveAnalysisRecordsIgnoringDuplicate(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(metricAnalysisRecord));
-    logger.info(
+    log.info(
         "inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: {} StateExecutionInstanceId: {}",
         metricAnalysisRecord.getWorkflowExecutionId(), metricAnalysisRecord.getStateExecutionId());
     logLearningEngineAnalysisMessage(metricAnalysisRecord);
@@ -224,8 +224,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   public boolean saveAnalysisRecordsML(String accountId, StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String groupName, Integer analysisMinute, String taskId, String baseLineExecutionId,
       String cvConfigId, MetricAnalysisRecord mlAnalysisResponse, String tag) {
-    logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
-        stateExecutionId, analysisMinute);
+    log.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType, stateExecutionId,
+        analysisMinute);
     mlAnalysisResponse.setStateType(stateType);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
@@ -327,7 +327,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         managerClientHelper.callManagerWithRetry(
             managerClient.updateMismatchStatusInExperiment(stateExecutionId, analysisMinute));
       } catch (Exception e) {
-        logger.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
+        log.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
       }
       return true;
     } else {
@@ -412,7 +412,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       managerClientHelper.callManagerWithRetry(
           managerClient.updateMismatchStatusInExperiment(stateExecutionId, analysisMinute));
     } catch (Exception e) {
-      logger.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
+      log.info("Exception while updating mismatch status {}", mlAnalysisResponse.getStateExecutionId(), e);
     }
 
     if (mlAnalysisResponse.getOverallMetricScores() == null) {
@@ -424,7 +424,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         cvConfigId, riskScore, mlAnalysisResponse.getAnalysisMinute());
     mlAnalysisResponse.bundleAsJosnAndCompress();
     wingsPersistence.save(mlAnalysisResponse);
-    logger.info("inserted MetricAnalysisRecord to persistence layer for "
+    log.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);
     logLearningEngineAnalysisMessage(mlAnalysisResponse);
@@ -588,7 +588,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         return successfulExecution;
       }
     }
-    logger.warn("Could not get a successful workflow to find control nodes");
+    log.warn("Could not get a successful workflow to find control nodes");
     return null;
   }
 
@@ -659,7 +659,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public NewRelicMetricDataRecord getHeartBeat(StateType stateType, String stateExecutionId, String workflowExecutionId,
       String serviceId, String groupName, OrderType orderType, String accountId) {
-    logger.info(
+    log.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, stateExecutionId, workflowExecutionId, serviceId, groupName);
     PageRequest<TimeSeriesDataRecord> pageRequest =
@@ -681,7 +681,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
 
     if (isEmpty(rv)) {
-      logger.info(
+      log.info(
           "No heartbeat record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}",
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
       return null;
@@ -692,7 +692,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName, String accountId) {
-    logger.info(
+    log.info(
         "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
     PageRequest<TimeSeriesDataRecord> pageRequest =
@@ -715,19 +715,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
 
     if (isEmpty(rv)) {
-      logger.info(
+      log.info(
           "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}.",
           ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
       return null;
     }
-    logger.info("Returning the record: {} from getAnalysisMinute", rv.get(0));
+    log.info("Returning the record: {} from getAnalysisMinute", rv.get(0));
     return rv.get(0);
   }
 
   @Override
   public void bumpCollectionMinuteToProcess(String appId, String stateExecutionId, String workflowExecutionId,
       String groupName, int analysisMinute, String accountId) {
-    logger.info(
+    log.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
     if (isEmpty(stateExecutionId)) {
@@ -834,7 +834,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
 
     } catch (Exception e) {
-      logger.error("Exception while fetching supervised metric thresholds", e);
+      log.error("Exception while fetching supervised metric thresholds", e);
     }
   }
 
@@ -1111,14 +1111,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
       List<TimeSeriesCumulativeSums> cumulativeSums = timeSeriesCumulativeSumsQuery.asList();
 
-      logger.info(
+      log.info(
           "Returning a list of size {} from getCumulativeSumsForRange for appId {}, cvConfigId {} and start {} and end {}",
           cumulativeSums.size(), appId, cvConfigId, startMinute, endMinute);
       cumulativeSums.forEach(metricSum -> metricSum.decompressMetricSums());
       return Sets.newHashSet(cumulativeSums);
     } else {
       final String errorMsg = "AppId or CVConfigId is null in getCumulativeSumsForRange";
-      logger.error(errorMsg);
+      log.error(errorMsg);
       throw WingsException.builder().message(errorMsg).build();
     }
   }

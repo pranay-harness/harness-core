@@ -102,7 +102,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
     int maxBuilds =
         artifactStreamAttributes.isMetadataOnly() ? AZURE_ARTIFACTS_MAX_BUILDS_METADATA_ONLY : ARTIFACT_RETENTION_SIZE;
     if (azureArtifactsPackageVersions.size() > maxBuilds) {
-      logger.info("Fetching top {} (out of {}) versions only", maxBuilds, azureArtifactsPackageVersions.size());
+      log.info("Fetching top {} (out of {}) versions only", maxBuilds, azureArtifactsPackageVersions.size());
     }
     azureArtifactsPackageVersions.sort(
         Collections.reverseOrder(Comparator.comparing(AzureArtifactsPackageVersion::getPublishDate)));
@@ -118,11 +118,10 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
     azureArtifactsPackageVersions.forEach(
         azureArtifactsPackageVersion -> constructBuildDetails(buildDetails, azureArtifactsPackageVersion));
     if (buildDetails.isEmpty()) {
-      logger.info("No builds found matching project={}, feed={} and packageId={}",
-          artifactStreamAttributes.getProject(), artifactStreamAttributes.getFeed(),
-          artifactStreamAttributes.getPackageId());
+      log.info("No builds found matching project={}, feed={} and packageId={}", artifactStreamAttributes.getProject(),
+          artifactStreamAttributes.getFeed(), artifactStreamAttributes.getPackageId());
     } else {
-      logger.info("Total builds found = {}", buildDetails.size());
+      log.info("Total builds found = {}", buildDetails.size());
     }
     return buildDetails;
   }

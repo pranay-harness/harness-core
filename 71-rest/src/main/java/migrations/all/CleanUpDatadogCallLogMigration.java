@@ -35,7 +35,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
               .greaterThanOrEq(Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
               .asList();
 
-      logger.info("Fixing the 3P calllogs for {} datadog executions", stateExecutionInstances.size());
+      log.info("Fixing the 3P calllogs for {} datadog executions", stateExecutionInstances.size());
       for (StateExecutionInstance instance : stateExecutionInstances) {
         List<ThirdPartyApiCallLog> callLogList = wingsPersistence.createQuery(ThirdPartyApiCallLog.class)
                                                      .field("stateExecutionId")
@@ -63,7 +63,7 @@ public class CleanUpDatadogCallLogMigration implements Migration {
       }
 
     } catch (RuntimeException ex) {
-      logger.error("Exception while migrating thirdpartycallLogs for Datadog", ex);
+      log.error("Exception while migrating thirdpartycallLogs for Datadog", ex);
     }
   }
 

@@ -1005,7 +1005,7 @@ public class YamlResource {
     try {
       entityId = URLDecoder.decode(entityId, Charsets.UTF_8.name());
     } catch (UnsupportedEncodingException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     return new RestResponse<>(yamlGitService.getWebhook(entityId, accountId));
   }
@@ -1091,7 +1091,7 @@ public class YamlResource {
   public RestResponse<String> processYamlFilesAsZip(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlPath") @Optional String yamlPath, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException, YamlProcessingException {
-    logger.debug("accountId: {}, fileDetail: {}, yamlPath: {}", accountId, fileDetail, yamlPath);
+    log.debug("accountId: {}, fileDetail: {}, yamlPath: {}", accountId, fileDetail, yamlPath);
 
     return yamlService.processYamlFilesAsZip(accountId,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),

@@ -105,7 +105,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
     try {
       return anyClassFieldWithTypeRequestFieldCache.get(parameterClass);
     } catch (ExecutionException e) {
-      logger.error("error while detecting field with type" + RequestField.class.getCanonicalName(), e);
+      log.error("error while detecting field with type" + RequestField.class.getCanonicalName(), e);
     }
     return false;
   }
@@ -122,7 +122,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
     try {
       return classToFieldsMapCache.get(clazz);
     } catch (Exception e) {
-      logger.error("error while getting fieldmap for class " + clazz.getCanonicalName());
+      log.error("error while getting fieldmap for class " + clazz.getCanonicalName());
     }
     return null;
   }
@@ -145,8 +145,8 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
       // this should not fail the overall mutation, so caught the exception
       authRuleInstrumentation.handlePostMutation(mutationContext, parameter, mutationResult);
     } catch (Exception e) {
-      logger.error(format("Cache eviction failed for mutation api [%s] for accountId [%s]",
-                       dataFetchingEnvironment.getField().getName(), accountId),
+      log.error(format("Cache eviction failed for mutation api [%s] for accountId [%s]",
+                    dataFetchingEnvironment.getField().getName(), accountId),
           e);
     }
   }

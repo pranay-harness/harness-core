@@ -69,7 +69,7 @@ public class Main {
       // java -jar cereal-killer.jar uploadMetrics dev-disruption
       GoogleCloudMonitoring.uploadMetrics(args);
     } catch (Exception ex) {
-      logger.error(String.format("Exception while uploading metrics: [%s]", ex.getMessage()), ex);
+      log.error(String.format("Exception while uploading metrics: [%s]", ex.getMessage()), ex);
     }
   }
 
@@ -79,7 +79,7 @@ public class Main {
     ReportProcessor reportProcessor = new ReportProcessor(emptySet());
     List<String> surefireReports = new ReportFinder(baseDir).findSurefireReports();
     for (String report : surefireReports) {
-      logger.info("Processing report file {}", report);
+      log.info("Processing report file {}", report);
       reportProcessor.removeFlakyTestsAndCheckSuccess(report);
     }
   }
@@ -92,17 +92,17 @@ public class Main {
     double maxFailChance = Double.parseDouble(args[2]);
     BuildPulseClient buildPulseClient = getBuildPulseClient(url, token);
     Set<String> flakyTests = new FlakeFinder(buildPulseClient, maxFailChance).fetchFlakyTests();
-    logger.info("Found {} flaky tests with maxFailChance = {}", flakyTests.size(), maxFailChance);
-    logger.info("Flaky tests are: \n{}", String.join("\n", flakyTests));
+    log.info("Found {} flaky tests with maxFailChance = {}", flakyTests.size(), maxFailChance);
+    log.info("Flaky tests are: \n{}", String.join("\n", flakyTests));
     List<String> surefireReports = new ReportFinder(baseDir).findSurefireReports();
     ReportProcessor reportProcessor = new ReportProcessor(flakyTests);
     boolean success = true;
     for (String report : surefireReports) {
-      logger.info("Processing report file {}", report);
+      log.info("Processing report file {}", report);
       success = reportProcessor.removeFlakyTestsAndCheckSuccess(report) && success;
     }
     if (!success) {
-      logger.warn("Found non-flaky test failures");
+      log.warn("Found non-flaky test failures");
     }
   }
 
@@ -118,15 +118,15 @@ public class Main {
 
       // keep this report significantly different the issue one to be searchable
       if (failureCount == 0) {
-        logger.info("{} - is clean", report);
+        log.info("{} - is clean", report);
       } else {
-        logger.info("{} - has {} issue(s)", report, failureCount);
+        log.info("{} - has {} issue(s)", report, failureCount);
       }
       numFailures += failureCount;
     }
-    logger.info("Total number of failed tests: {}", numFailures);
+    log.info("Total number of failed tests: {}", numFailures);
     if (numFailures >= maxFailures) {
-      logger.error("Too many test failures");
+      log.error("Too many test failures");
       System.exit(1);
     }
   }

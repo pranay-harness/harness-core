@@ -182,7 +182,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails(), false);
       gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
     } catch (RuntimeException ex) {
-      logger.error("Exception in processing git operation", ex);
+      log.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(TerraformTaskUtils.getGitExceptionMessageIfExists(ex))
@@ -192,14 +192,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     try {
       copyFilesToWorkingDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), workingDir);
     } catch (Exception ex) {
-      logger.error("Exception in processing git copying files to provisioner specific directory", ex);
+      log.error("Exception in processing git copying files to provisioner specific directory", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
     String scriptDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
-    logger.info("Script Directory: " + scriptDirectory);
+    log.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(
         parameters, format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO);
 
@@ -536,7 +536,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private TerraformExecutionData logErrorAndGetFailureResponse(
       TerraformProvisionParameters parameters, Exception ex, String message) {
     saveExecutionLog(parameters, message, CommandExecutionStatus.FAILURE, ERROR);
-    logger.error("Exception in processing terraform operation", ex);
+    log.error("Exception in processing terraform operation", ex);
     return TerraformExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(message).build();
   }
 
@@ -655,7 +655,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     try {
       deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, TERRAFORM_INTERNAL_FOLDER).toString());
     } catch (IOException e) {
-      logger.warn("Failed to delete .terraform folder");
+      log.warn("Failed to delete .terraform folder");
     }
     deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, WORKSPACE_DIR_BASE).toString());
   }
@@ -740,7 +740,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           return firstCommit.toString().split(" ")[1];
         }
       } catch (IOException | GitAPIException e) {
-        logger.error("Failed to extract the commit id from the cloned repo.");
+        log.error("Failed to extract the commit id from the cloned repo.");
       }
     }
 

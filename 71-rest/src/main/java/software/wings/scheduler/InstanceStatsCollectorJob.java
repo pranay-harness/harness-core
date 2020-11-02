@@ -91,7 +91,7 @@ public class InstanceStatsCollectorJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
     if (accountId == null) {
-      logger.debug("Skipping instance stats collector job since the account id is null");
+      log.debug("Skipping instance stats collector job since the account id is null");
       return;
     }
 
@@ -99,9 +99,9 @@ public class InstanceStatsCollectorJob implements Job {
       Account account = accountService.get(accountId);
       if (account == null || account.getLicenseInfo() == null || account.getLicenseInfo().getAccountStatus() == null
           || shouldSkipStatsCollection(account.getLicenseInfo())) {
-        logger.info("Skipping instance stats since the account is not active / not found");
+        log.info("Skipping instance stats since the account is not active / not found");
       } else {
-        logger.info("Running instance stats collector job");
+        log.info("Running instance stats collector job");
         executorService.submit(() -> {
           Objects.requireNonNull(accountId, "Account Id must be passed in job context");
           createStats(accountId);
@@ -139,19 +139,19 @@ public class InstanceStatsCollectorJob implements Job {
       Stopwatch sw = Stopwatch.createStarted();
       boolean ranAtLeastOnce = statsCollector.createStats(accountId);
       if (ranAtLeastOnce) {
-        logger.info("Successfully saved instance history stats. Account Id: {}. Time taken: {} millis", accountId,
+        log.info("Successfully saved instance history stats. Account Id: {}. Time taken: {} millis", accountId,
             sw.elapsed(TimeUnit.MILLISECONDS));
       } else {
-        logger.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
+        log.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
             sw.elapsed(TimeUnit.MILLISECONDS));
       }
       sw = Stopwatch.createStarted();
       ranAtLeastOnce = statsCollector.createServerlessStats(accountId);
       if (ranAtLeastOnce) {
-        logger.info("Successfully saved Serverless instance history stats. Account Id: {}. Time taken: {} millis",
+        log.info("Successfully saved Serverless instance history stats. Account Id: {}. Time taken: {} millis",
             accountId, sw.elapsed(TimeUnit.MILLISECONDS));
       } else {
-        logger.info("No Serverless instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
+        log.info("No Serverless instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
             sw.elapsed(TimeUnit.MILLISECONDS));
       }
     }

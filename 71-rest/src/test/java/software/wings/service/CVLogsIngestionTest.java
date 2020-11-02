@@ -49,9 +49,9 @@ public class CVLogsIngestionTest extends WingsBaseTest {
         httpPost.setEntity(new StringEntity("This is a new error \t This is a new exception"));
         httpPost.setHeader("X-Sumo-Name", host);
         httpPost.setHeader("X-Sumo-Host", host);
-        logger.info("sending log exception to sumo ");
+        log.info("sending log exception to sumo ");
         CloseableHttpResponse response = httpclient.execute(httpPost);
-        logger.info("status log sumo exception: " + response.getStatusLine());
+        log.info("status log sumo exception: " + response.getStatusLine());
         response.close();
         sleep(ofMillis(1000));
       }

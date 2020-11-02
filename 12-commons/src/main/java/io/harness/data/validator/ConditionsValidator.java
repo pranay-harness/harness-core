@@ -31,7 +31,7 @@ public class ConditionsValidator {
     for (Map.Entry<String, Supplier<Boolean>> entry : booleanFns.entrySet()) {
       Supplier<Boolean> fn = entry.getValue();
       if (!fn.get()) {
-        logger.info("All conditions not true. Condition returned false: {}", entry.getKey());
+        log.info("All conditions not true. Condition returned false: {}", entry.getKey());
         return false;
       }
     }

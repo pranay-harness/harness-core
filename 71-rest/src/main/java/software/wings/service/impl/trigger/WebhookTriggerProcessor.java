@@ -76,18 +76,18 @@ public class WebhookTriggerProcessor {
   }
 
   public boolean validateBranchName(Trigger trigger, TriggerExecution triggerExecution) {
-    logger.info("Validating branch name for the trigger {}", trigger.getUuid());
+    log.info("Validating branch name for the trigger {}", trigger.getUuid());
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
     WebhookEventDetails webhookEventDetails = triggerExecution.getWebhookEventDetails();
     if (webHookTriggerCondition.getBranchName() == null
         || webHookTriggerCondition.getBranchName().equals(webhookEventDetails.getBranchName())) {
-      logger.info("Validating branch name completed for the trigger {}", trigger.getUuid());
+      log.info("Validating branch name completed for the trigger {}", trigger.getUuid());
       return true;
     }
     String msg =
         String.format("WebHook event branch name [%s] does not match with the trigger condition branch name [%s]",
             webhookEventDetails.getBranchName(), webHookTriggerCondition.getBranchName());
-    logger.info(msg);
+    log.info(msg);
     throw new InvalidRequestException(msg, WingsException.USER);
   }
 
@@ -113,7 +113,7 @@ public class WebhookTriggerProcessor {
     webhookEventDetails.setPrevCommitId(prevWebhookEventDetails.getCommitId());
     TriggerExecution savedTriggerExecution = triggerExecutionService.save(triggerExecution);
 
-    logger.info("Initiating file content change delegate task request");
+    log.info("Initiating file content change delegate task request");
     String accountId = appService.getAccountIdByAppId(appId);
 
     TriggerDeploymentNeededRequest triggerDeploymentNeededRequest =
@@ -135,7 +135,7 @@ public class WebhookTriggerProcessor {
     waitNotifyEngine.waitForAllOn(
         ORCHESTRATION, new TriggerCallback(accountId, appId, savedTriggerExecution.getUuid()), waitId);
     delegateService.queueTask(delegateTask);
-    logger.info("Issued file content change delegate task request for trigger execution id {}",
+    log.info("Issued file content change delegate task request for trigger execution id {}",
         savedTriggerExecution.getUuid());
   }
 

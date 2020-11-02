@@ -153,7 +153,7 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));
     } catch (Exception ex) {
-      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           inputSetIdentifier, ex);
       throw new UnexpectedException(
           "Error while deleting the input set as was not able to check entity reference records.");

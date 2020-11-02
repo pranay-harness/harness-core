@@ -258,7 +258,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         try {
           setLoadBalancerName(infrastructureMapping);
         } catch (Exception e) {
-          logger.error(
+          log.error(
               format("Failed to set load balancer for InfrastructureMapping %s", infrastructureMapping.toString()), e);
         }
       }
@@ -335,7 +335,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void validateInfraMapping(
       @Valid InfrastructureMapping infraMapping, boolean skipValidation, String workflowExecutionId) {
     if (skipValidation) {
-      logger.info(
+      log.info(
           "Ignore validation for InfraMapping as skipValidation is marked true. Infra mapping coming from yaml or Infra def");
       return;
     }
@@ -347,7 +347,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infraMapping;
       // skipValidation if the namespace is an expression
       if (isNamespaceExpression(containerInfraMapping)) {
-        logger.info(
+        log.info(
             "Ignore validation for InfraMapping as mapping is of type ContainerInfrastructureMapping and namespace is an expression. infraMapping = {}",
             infraMapping);
         return;
@@ -501,7 +501,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onSaved, infraMapping);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+      log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
 
     return savedInfraMapping;
@@ -850,7 +850,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onUpdated, updatedInfraMapping);
     } catch (Exception e) {
-      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+      log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
 
     return updatedInfraMapping;
@@ -982,7 +982,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } catch (InvalidRequestException ex) {
       throw ex;
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1035,7 +1035,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1092,7 +1092,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }
@@ -1173,7 +1173,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validatePcfInfrastructureMapping(PcfInfrastructureMapping infraMapping) {
     if (StringUtils.isBlank(infraMapping.getOrganization()) || StringUtils.isBlank(infraMapping.getSpace())) {
-      logger.error("For PCFInfraMapping, Org and Space value cant be null");
+      log.error("For PCFInfraMapping, Org and Space value cant be null");
       throw new InvalidRequestException("Host names must be unique", USER);
     }
 
@@ -1544,7 +1544,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listRegions(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), appId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1595,7 +1595,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listTags(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1613,7 +1613,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return azureHelperService.listTagsBySubscription(
             subscriptionId, azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1631,7 +1631,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return azureHelperService.listResourceGroups(
             azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1697,7 +1697,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listVPCs(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1773,7 +1773,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listSGs(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -1800,7 +1800,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         return awsEc2HelperServiceManager.listSubnets(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
         throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
       }
     }
@@ -2258,7 +2258,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                      .getActiveServiceCounts(containerServiceParams);
       return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       return "0";
     }
   }

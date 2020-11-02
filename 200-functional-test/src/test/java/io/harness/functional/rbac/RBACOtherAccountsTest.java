@@ -35,7 +35,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
 
   @Before
   public void rbacManageUsersAndGroupsSetup() {
-    logger.info("Running RBAC setup");
+    log.info("Running RBAC setup");
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER).getUser();
     assertThat(readOnlyUser).isNotNull();
     userGroupManagementId = readOnlyUser.getUuid();
@@ -47,7 +47,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
-    logger.info("Logging in as a default user");
+    log.info("Logging in as a default user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");
     AccessManagementUtils.runUserAndGroupsListTest(getAccount(), roBearerToken, HttpStatus.SC_BAD_REQUEST);
     Setup.signOut(userGroupManagementId, roBearerToken);
@@ -65,10 +65,10 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
-    logger.info("Readonly test for GET");
+    log.info("Readonly test for GET");
     AccessManagementUtils.runAllGetTests(
         getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_BAD_REQUEST, HttpStatus.SC_OK);
-    logger.info("Readonly test for GET ends");
+    log.info("Readonly test for GET ends");
   }
 
   @Test
@@ -101,7 +101,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
-    logger.info("Check if create application test fails");
+    log.info("Check if create application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
@@ -122,7 +122,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
-    logger.info("Check if delete application test fails");
+    log.info("Check if delete application test fails");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "default");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
@@ -139,7 +139,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
 
   @After
   public void rbacCleanup() {
-    logger.info("Running RBAC cleanup");
+    log.info("Running RBAC cleanup");
     UserGroupUtils.deleteMembers(getAccount(), bearerToken, userGroup);
     UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid());
   }

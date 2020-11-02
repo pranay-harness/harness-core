@@ -117,7 +117,7 @@ public class ForkState extends State {
       }
     }
     final ExecutionResponse executionResponse = executionResponseBuilder.build();
-    logger.info("Fork state execution completed - displayName:{}, executionStatus:{}", getName(),
+    log.info("Fork state execution completed - displayName:{}, executionStatus:{}", getName(),
         executionResponse.getExecutionStatus());
     return executionResponse;
   }

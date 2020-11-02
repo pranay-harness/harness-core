@@ -150,7 +150,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         wingsPersistence.save(templateVersion);
         done = true;
       } catch (Exception e) {
-        logger.warn("TemplateVersion save failed templateUuid: {} - attemptNo: {}", templateUuid, i, e);
+        log.warn("TemplateVersion save failed templateUuid: {} - attemptNo: {}", templateUuid, i, e);
         i++;
         // If we exception out then done is still 'false' and we will retry again
         templateVersion.setCreatedAt(0);

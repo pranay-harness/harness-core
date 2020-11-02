@@ -36,7 +36,7 @@ public class ArtifactStreamSampleDataProvider {
     try {
       addTag(appId, savedArtifactStream, (DockerConfig) settingAttribute.getValue());
     } catch (Exception e) {
-      logger.warn("Error occurred while saving artifacts for docker ArtifactStream for accountId {} ",
+      log.warn("Error occurred while saving artifacts for docker ArtifactStream for accountId {} ",
           settingAttribute.getAccountId());
     }
     return savedArtifactStream;

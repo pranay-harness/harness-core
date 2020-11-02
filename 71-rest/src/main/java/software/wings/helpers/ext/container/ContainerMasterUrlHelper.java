@@ -48,7 +48,7 @@ public class ContainerMasterUrlHelper {
       return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
           .fetchMasterUrl(MasterUrlFetchTaskParameter.builder().containerServiceParams(containerServiceParams).build());
     } catch (Exception e) {
-      logger.warn(ExceptionUtils.getMessage(e), e);
+      log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
   }

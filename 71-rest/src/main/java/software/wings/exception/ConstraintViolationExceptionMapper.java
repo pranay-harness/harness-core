@@ -33,7 +33,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       errors = ImmutableList.of(Strings.nullToEmpty(exception.getMessage()));
     }
 
-    logger.info(toRestResponse(errors).toString());
+    log.info(toRestResponse(errors).toString());
 
     return Response.status(Status.BAD_REQUEST).entity(toRestResponse(errors)).build();
   }

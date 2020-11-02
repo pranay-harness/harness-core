@@ -54,7 +54,7 @@ public class TimeSeriesHandler implements EventHandler {
         serviceGuardSetupEventProcessor.processEvent(event.getEventData().getProperties());
         break;
       default:
-        logger.error("Invalid event typ e, dropping event : [{}]", event);
+        log.error("Invalid event typ e, dropping event : [{}]", event);
     }
   }
 }

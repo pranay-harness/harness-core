@@ -175,7 +175,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       return azureVMSSDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
-      logger.error(msg);
+      log.error(msg);
       throw new WingsException(msg);
     }
   }

@@ -25,7 +25,7 @@ public class FixDuplicatedHarnessGroups implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.error("Fixing duplicate Harness user groups issue.");
+      log.error("Fixing duplicate Harness user groups issue.");
 
       Set<String> memberIds = new HashSet<>();
 
@@ -37,7 +37,7 @@ public class FixDuplicatedHarnessGroups implements Migration {
         }
       }
 
-      logger.info("Harness support users: " + memberIds.toString());
+      log.info("Harness support users: " + memberIds.toString());
 
       Query<HarnessUserGroup> query = persistence.createQuery(HarnessUserGroup.class, excludeAuthority);
       persistence.delete(query);
@@ -45,7 +45,7 @@ public class FixDuplicatedHarnessGroups implements Migration {
       persistence.save(HarnessUserGroup.builder().memberIds(memberIds).name("readOnly").build());
 
     } catch (Exception e) {
-      logger.error("Error while fixing duplicated Harness user groups", e);
+      log.error("Error while fixing duplicated Harness user groups", e);
     }
   }
 }

@@ -53,7 +53,7 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
     if (!(parameters instanceof SpotInstCommandRequest)) {
       String message =
           format("Unrecognized task params while running spot inst task: [%s]", parameters.getClass().getSimpleName());
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
 
@@ -98,7 +98,7 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
           String message =
               format("Unrecognized task params type running spot inst task: [%s]. Workflow execution: [%s]",
                   spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId());
-          logger.error(message);
+          log.error(message);
           return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
         }
       }

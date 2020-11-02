@@ -96,7 +96,7 @@ public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
     try {
       return delegateCallbackServiceCache.get(driverId);
     } catch (ExecutionException | InvalidCacheLoadException ex) {
-      logger.error("Unexpected error occurred while fetching callback service from cache.", ex);
+      log.error("Unexpected error occurred while fetching callback service from cache.", ex);
       return null;
     }
   }
@@ -133,7 +133,7 @@ public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
     try {
       return delegateTaskResultsProviderCache.get(driverId);
     } catch (ExecutionException | InvalidCacheLoadException ex) {
-      logger.error("Unexpected error occurred while fetching callback service from cache.", ex);
+      log.error("Unexpected error occurred while fetching callback service from cache.", ex);
       return null;
     }
   }

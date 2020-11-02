@@ -25,7 +25,7 @@ public class AddLoginSettingsToAccountMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting AddLoginSettingsToAccountMigration migration for all accounts.");
+    log.info("Starting AddLoginSettingsToAccountMigration migration for all accounts.");
     try (HIterator<Account> accountIterator =
              new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
       while (accountIterator.hasNext()) {
@@ -39,16 +39,16 @@ public class AddLoginSettingsToAccountMigration implements Migration {
 
           // There can be only one settings for an account.
           if (loginSettingsHIterator.hasNext()) {
-            logger.info("Login settings already exist for account: {}. Skipping it.", account.getUuid());
+            log.info("Login settings already exist for account: {}. Skipping it.", account.getUuid());
             continue;
           }
           loginSettingsService.createDefaultLoginSettings(account);
         } catch (Exception exceptionInWhileLoop) {
-          logger.error("Login settings migration failed for account id: {}", account.getUuid(), exceptionInWhileLoop);
+          log.error("Login settings migration failed for account id: {}", account.getUuid(), exceptionInWhileLoop);
         }
       }
     } catch (Exception ex) {
-      logger.error("AddLoginSettingsToAccountMigration migration failed.", ex);
+      log.error("AddLoginSettingsToAccountMigration migration failed.", ex);
     }
   }
 }

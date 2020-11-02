@@ -53,20 +53,20 @@ public class ScheduledReportServiceImpl {
   public void generateAndSendScheduledReport() {
     scheduleCount = 0;
     if (!config.getReportScheduleConfig().isEnabled()) {
-      logger.warn("Batch job for ce scheduled report is disabled!");
+      log.warn("Batch job for ce scheduled report is disabled!");
       return;
     }
     // TODO: Change info to debug post integration with UI
     List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
     List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
-    logger.info("ceEnabledAccounts ids list {}", accountIds);
+    log.info("ceEnabledAccounts ids list {}", accountIds);
     Date jobTime = new Date();
-    logger.info("jobTime {}", jobTime.toInstant());
+    log.info("jobTime {}", jobTime.toInstant());
 
     accountIds.forEach(accountId -> {
       // N mongo calls for N accounts
       List<CEReportSchedule> schedules = ceReportScheduleService.getAllMatchingSchedules(accountId, jobTime);
-      logger.info("Found schedules(total {}) : {} for account {}", schedules.size(), schedules, accountId);
+      log.info("Found schedules(total {}) : {} for account {}", schedules.size(), schedules, accountId);
       scheduleCount += schedules.size();
       schedules.forEach(schedule -> {
         for (String viewId : schedule.getViewsId()) {
@@ -74,15 +74,15 @@ public class ScheduledReportServiceImpl {
             sendMail(accountId, schedule.getRecipients(), viewId, schedule.getUuid());
             setNextExecution(accountId, schedule);
           } catch (Exception e) {
-            logger.info("ERROR in generateAndSendScheduledReport for viewId {}, accountId {}, reportId {}", viewId,
+            log.info("ERROR in generateAndSendScheduledReport for viewId {}, accountId {}, reportId {}", viewId,
                 accountId, schedule.getUuid());
-            logger.error("ERROR", e);
+            log.error("ERROR", e);
             continue;
           }
         }
       });
     });
-    logger.info("A total of {} reportSchedules were processed", scheduleCount);
+    log.info("A total of {} reportSchedules were processed", scheduleCount);
   }
 
   private void sendMail(String accountId, String[] recipients, String viewId, String reportId) {
@@ -94,7 +94,7 @@ public class ScheduledReportServiceImpl {
     try {
       viewUrl = emailNotificationService.buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId));
     } catch (URISyntaxException e) {
-      logger.error("Error in forming View URL for Scheduled Report", e);
+      log.error("Error in forming View URL for Scheduled Report", e);
     }
     templateModel.put(URL, viewUrl);
     EmailData emailData = EmailData.builder()

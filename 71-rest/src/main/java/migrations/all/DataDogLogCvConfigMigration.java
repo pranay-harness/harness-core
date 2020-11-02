@@ -24,6 +24,6 @@ public class DataDogLogCvConfigMigration implements Migration {
     Query<CVConfiguration> query = wingsPersistence.createQuery(CVConfiguration.class)
                                        .filter(CVConfigurationKeys.stateType, StateType.DATA_DOG_LOG);
     UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
-    logger.info("Updated cvConfig Id with DATA_DOG_LOG: {} ", updateResults);
+    log.info("Updated cvConfig Id with DATA_DOG_LOG: {} ", updateResults);
   }
 }

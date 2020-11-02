@@ -182,7 +182,7 @@ public class EngineExpressionEvaluator {
         if (ex.getCause() instanceof FunctorException) {
           throw(FunctorException) ex.getCause();
         }
-        logger.debug(format("Failed to evaluate final expression: %s", finalExpression), ex);
+        log.debug(format("Failed to evaluate final expression: %s", finalExpression), ex);
       }
 
       if (object != null) {

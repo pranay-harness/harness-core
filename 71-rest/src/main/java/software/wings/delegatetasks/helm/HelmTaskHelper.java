@@ -158,7 +158,7 @@ public class HelmTaskHelper {
               Paths.get(workingDirectory, helmChartConfigParams.getChartName(), CHARTS_YAML_KEY).toString())
                                                     .getVersion());
         } catch (Exception e) {
-          logger.info("Unable to fetch chart version", e);
+          log.info("Unable to fetch chart version", e);
         }
       }
 
@@ -166,7 +166,7 @@ public class HelmTaskHelper {
           Files.readAllBytes(Paths.get(workingDirectory, helmChartConfigParams.getChartName(), VALUES_YAML)),
           StandardCharsets.UTF_8);
     } catch (Exception ex) {
-      logger.info("values.yaml file not found", ex);
+      log.info("values.yaml file not found", ex);
       return null;
     } finally {
       cleanup(workingDirectory);
@@ -220,7 +220,7 @@ public class HelmTaskHelper {
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath(helmVersion)));
     if (isNotBlank(helmHomePath) && isNotBlank(helmInitCommand)) {
       helmInitCommand = applyHelmHomePath(helmInitCommand, workingDirectory);
-      logger.info("Initing helm. Command " + helmInitCommand);
+      log.info("Initing helm. Command " + helmInitCommand);
 
       ProcessResult processResult =
           executeCommand(helmInitCommand, workingDirectory, "Initing helm Command " + helmInitCommand, timeoutInMillis);
@@ -235,8 +235,8 @@ public class HelmTaskHelper {
   private void addChartMuseumRepo(String repoName, String repoDisplayName, int port, String chartDirectory,
       HelmVersion helmVersion, long timeoutInMillis) {
     String repoAddCommand = getChartMuseumRepoAddCommand(repoName, port, chartDirectory, helmVersion);
-    logger.info(repoAddCommand);
-    logger.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
+    log.info(repoAddCommand);
+    log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
     ProcessResult processResult =
         executeCommand(repoAddCommand, chartDirectory, ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis);
@@ -249,7 +249,7 @@ public class HelmTaskHelper {
 
   private void executeFetchChartFromRepo(HelmChartConfigParams helmChartConfigParams, String chartDirectory,
       String helmFetchCommand, long timeoutInMillis) {
-    logger.info(helmFetchCommand);
+    log.info(helmFetchCommand);
 
     ProcessResult processResult = executeCommand(helmFetchCommand, chartDirectory,
         format("fetch chart %s", helmChartConfigParams.getChartName()), timeoutInMillis);
@@ -361,7 +361,7 @@ public class HelmTaskHelper {
     List<FileData> filteredFiles = new ArrayList<>();
 
     if (isEmpty(files)) {
-      logger.info("Files list is empty");
+      log.info("Files list is empty");
       return filteredFiles;
     }
 
@@ -377,10 +377,10 @@ public class HelmTaskHelper {
 
   public void cleanup(String workingDirectory) {
     try {
-      logger.info("Cleaning up directory " + workingDirectory);
+      log.info("Cleaning up directory " + workingDirectory);
       deleteDirectoryAndItsContentIfExists(workingDirectory);
     } catch (Exception ex) {
-      logger.warn("Exception in directory cleanup.", ex);
+      log.warn("Exception in directory cleanup.", ex);
     }
   }
 
@@ -448,8 +448,8 @@ public class HelmTaskHelper {
 
     String repoAddCommandForLogging =
         getHttpRepoAddCommandForLogging(repoName, chartRepoUrl, username, password, chartDirectory, helmVersion);
-    logger.info(repoAddCommandForLogging);
-    logger.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
+    log.info(repoAddCommandForLogging);
+    log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
     ProcessResult processResult = executeCommand(
         repoAddCommand, chartDirectory, "add helm repo. Executed command" + repoAddCommandForLogging, timeoutInMillis);
@@ -537,10 +537,10 @@ public class HelmTaskHelper {
       ProcessResult processResult =
           executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName), timeoutInMillis);
       if (processResult.getExitValue() != 0) {
-        logger.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
+        log.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
     } catch (Exception ex) {
-      logger.warn(ExceptionUtils.getMessage(ex));
+      log.warn(ExceptionUtils.getMessage(ex));
     }
   }
 
@@ -551,10 +551,10 @@ public class HelmTaskHelper {
       ProcessResult processResult =
           executeCommand(repoUpdateCommand, null, format("update helm repo %s", repoName), timeoutInMillis);
       if (processResult.getExitValue() != 0) {
-        logger.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
+        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
     } catch (Exception ex) {
-      logger.warn(ExceptionUtils.getMessage(ex));
+      log.warn(ExceptionUtils.getMessage(ex));
     }
   }
 

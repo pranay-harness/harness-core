@@ -62,9 +62,9 @@ public class ElasticsearchDao implements SearchDao {
       UpdateResponse updateResponse = elasticsearchClient.update(updateRequest);
       return updateResponse.status() == RestStatus.OK || updateResponse.status() == RestStatus.CREATED;
     } catch (ElasticsearchException e) {
-      logger.error("Error while updating document {} in index {}", entityJson, indexName, e);
+      log.error("Error while updating document {} in index {}", entityJson, indexName, e);
     } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+      log.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }
@@ -78,9 +78,9 @@ public class ElasticsearchDao implements SearchDao {
       DeleteResponse deleteResponse = elasticsearchClient.delete(deleteRequest);
       return deleteResponse.status() == RestStatus.OK || deleteResponse.status() == RestStatus.NOT_FOUND;
     } catch (ElasticsearchException e) {
-      logger.error("Error while trying to delete document {} in index {}", documentId, indexName, e);
+      log.error("Error while trying to delete document {} in index {}", documentId, indexName, e);
     } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+      log.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }
@@ -107,7 +107,7 @@ public class ElasticsearchDao implements SearchDao {
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate].add(params.newList);} "
             + "else{ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));
-    logger.info(request.toString());
+    log.info(request.toString());
     return processUpdateByQuery(request, params, indexName);
   }
 
@@ -331,7 +331,7 @@ public class ElasticsearchDao implements SearchDao {
       }
       return requiredIds;
     } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+      log.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return new ArrayList<>();
   }
@@ -343,15 +343,14 @@ public class ElasticsearchDao implements SearchDao {
       BulkByScrollResponse bulkResponse = elasticsearchClient.updateByQuery(updateByQueryRequest);
       if (bulkResponse.getSearchFailures().isEmpty() && bulkResponse.getBulkFailures().isEmpty()) {
         if (bulkResponse.getUpdated() == 0) {
-          logger.warn(
-              String.format("No documents were updated with params %s in index %s", params.toString(), indexName));
+          log.warn(String.format("No documents were updated with params %s in index %s", params.toString(), indexName));
         }
         return true;
       }
-      logger.error("Failed to update index {} by query with params {}", indexName, params.toString());
-      logger.error("Update by Query response is {}", bulkResponse);
+      log.error("Failed to update index {} by query with params {}", indexName, params.toString());
+      log.error("Update by Query response is {}", bulkResponse);
     } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+      log.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
     return false;
   }

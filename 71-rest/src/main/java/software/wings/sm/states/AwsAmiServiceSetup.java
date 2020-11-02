@@ -346,7 +346,7 @@ public class AwsAmiServiceSetup extends State {
               .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {
-      logger.error("Ami setup step failed with error ", exception);
+      log.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
       errorMessage = ExceptionUtils.getMessage(exception);
       awsAmiExecutionData.setStatus(executionStatus);

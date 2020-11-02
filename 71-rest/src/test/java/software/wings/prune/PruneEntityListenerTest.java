@@ -57,7 +57,7 @@ public class PruneEntityListenerTest extends WingsBaseTest {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(PruneEntityListener.class, "logger", mockLogger);
+    setStaticFieldValue(PruneEntityListener.class, "log", mockLogger);
 
     listener.onMessage(new PruneEvent(Base.class, APP_ID, ENTITY_ID));
 
@@ -94,7 +94,7 @@ public class PruneEntityListenerTest extends WingsBaseTest {
     doThrow(exception).when(logService).pruneByActivity(APP_ID, ENTITY_ID);
 
     Logger mockLogger = mock(Logger.class);
-    setStaticFieldValue(PruneEntityListener.class, "logger", mockLogger);
+    setStaticFieldValue(PruneEntityListener.class, "log", mockLogger);
 
     assertThatThrownBy(() -> listener.onMessage(new PruneEvent(Activity.class, APP_ID, ENTITY_ID)))
         .isInstanceOf(WingsException.class)

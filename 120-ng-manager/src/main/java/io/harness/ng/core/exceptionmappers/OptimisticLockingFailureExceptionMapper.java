@@ -15,7 +15,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 public class OptimisticLockingFailureExceptionMapper implements ExceptionMapper<OptimisticLockingFailureException> {
   @Override
   public Response toResponse(OptimisticLockingFailureException exception) {
-    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
     FailureDTO failureDTO = FailureDTO.toBody(Status.FAILURE, ErrorCode.OPTIMISTIC_LOCKING_EXCEPTION,
         "Request failed as you have an older version of entity, "
             + "please reload the page and try again.",

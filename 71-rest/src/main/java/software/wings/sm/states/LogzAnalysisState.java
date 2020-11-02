@@ -221,7 +221,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
   @Override
   @SchemaIgnore
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

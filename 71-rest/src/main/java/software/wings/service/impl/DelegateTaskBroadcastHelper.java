@@ -35,7 +35,7 @@ public class DelegateTaskBroadcastHelper {
       try {
         rebroadcastDelegateTask(task);
       } catch (Exception e) {
-        logger.error("Failed to broadcast task {} for account {}", task.getUuid(), task.getAccountId(), e);
+        log.error("Failed to broadcast task {} for account {}", task.getUuid(), task.getAccountId(), e);
       }
     });
   }

@@ -52,7 +52,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
       return run((NexusConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
           (ArtifactStreamAttributes) parameters[2], (Map<String, String>) parameters[3]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact", e);
+      log.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
@@ -61,12 +61,12 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
       ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> artifactMetadata) {
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
-      logger.info("Collecting artifact {}  from Nexus server {}", nexusConfig.getNexusUrl());
+      log.info("Collecting artifact {}  from Nexus server {}", nexusConfig.getNexusUrl());
       nexusService.downloadArtifacts(nexusConfig, encryptionDetails, artifactStreamAttributes, artifactMetadata,
           getDelegateId(), getTaskId(), getAccountId(), res);
 
     } catch (Exception e) {
-      logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
+      log.warn("Exception: " + ExceptionUtils.getMessage(e), e);
     }
     return res;
   }

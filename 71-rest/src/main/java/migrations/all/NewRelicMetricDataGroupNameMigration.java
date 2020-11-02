@@ -44,16 +44,16 @@ public class NewRelicMetricDataGroupNameMigration implements Migration {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           batched = 0;
-          logger.info("updated: " + updated);
+          log.info("updated: " + updated);
         }
       }
 
       if (batched != 0) {
         bulkWriteOperation.execute();
-        logger.info("updated: " + updated);
+        log.info("updated: " + updated);
       }
     }
 
-    logger.info("Complete. Updated " + updated + " records.");
+    log.info("Complete. Updated " + updated + " records.");
   }
 }

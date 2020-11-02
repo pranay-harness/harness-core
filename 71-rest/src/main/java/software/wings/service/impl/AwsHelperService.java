@@ -320,7 +320,7 @@ public class AwsHelperService {
   public void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isUseEc2IamCredentials()) {
-      logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
+      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
@@ -523,14 +523,14 @@ public class AwsHelperService {
   }
 
   private void handleAmazonClientException(AmazonClientException amazonClientException) {
-    logger.error("AWS API Client call exception", amazonClientException);
+    log.error("AWS API Client call exception", amazonClientException);
     String errorMessage = amazonClientException.getMessage();
     if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
       throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
               + " have required permissions.",
           amazonClientException, USER);
     } else {
-      logger.error("Unhandled aws exception");
+      log.error("Unhandled aws exception");
       throw new InvalidRequestException(
           amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message",
           ErrorCode.AWS_ACCESS_DENIED, USER);
@@ -538,7 +538,7 @@ public class AwsHelperService {
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    logger.error("AWS API call exception", amazonServiceException);
+    log.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
@@ -554,18 +554,18 @@ public class AwsHelperService {
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
-        logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
+        log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
-        logger.info("Nothing to update on stack" + amazonServiceException.getMessage());
+        log.info("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
       }
     } else {
-      logger.error("Unhandled aws exception");
+      log.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     }
   }
@@ -1279,7 +1279,7 @@ public class AwsHelperService {
   protected void describeAutoScalingGroupActivities(AmazonAutoScalingClient amazonAutoScalingClient,
       String autoScalingGroupName, Set<String> completedActivities, LogCallback callback, boolean withCause) {
     if (callback == null) {
-      logger.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
+      log.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
       return;
     }
     try {
@@ -1312,7 +1312,7 @@ public class AwsHelperService {
             });
       }
     } catch (Exception e) {
-      logger.warn("Failed to describe autoScalingGroup for [{}]", autoScalingGroupName, e);
+      log.warn("Failed to describe autoScalingGroup for [{}]", autoScalingGroupName, e);
     }
   }
 
@@ -1564,12 +1564,12 @@ public class AwsHelperService {
 
     // When delegate is running as fargate task, rely on ENV variable: AWS_REGION
     String currentRegion = System.getenv("AWS_REGION");
-    logger.info("ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
+    log.info("ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
     if (isNotBlank(currentRegion)) {
       return currentRegion.equals(region);
     }
 
-    logger.info("Failed in ECS validation, failed to fetch current region");
+    log.info("Failed in ECS validation, failed to fetch current region");
     return false;
   }
 

@@ -49,7 +49,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .build();
     PlanNode planNode = plan.fetchStartingNode();
     if (planNode == null) {
-      logger.error("Cannot Start Execution for empty plan");
+      log.error("Cannot Start Execution for empty plan");
       return null;
     }
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);

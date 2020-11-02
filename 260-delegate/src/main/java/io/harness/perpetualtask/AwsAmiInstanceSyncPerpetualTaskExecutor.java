@@ -29,7 +29,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
+    log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
 
     final AwsAmiInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AwsAmiInstanceSyncPerpetualTaskParams.class);
@@ -46,7 +46,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
       execute(
           delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
     } catch (Exception e) {
-      logger.error(
+      log.error(
           String.format("Failed to publish instance sync result for aws ami. asgName [%s] and PerpetualTaskId [%s]",
               taskParams.getAsgName(), taskId.getId()),
           e);
@@ -65,7 +65,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
           .asgName(taskParams.getAsgName())
           .build();
     } catch (Exception ex) {
-      logger.error(String.format("Failed to fetch aws instances for asg: [%s]", taskParams.getAsgName()), ex);
+      log.error(String.format("Failed to fetch aws instances for asg: [%s]", taskParams.getAsgName()), ex);
       return AwsAsgListInstancesResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .asgName(taskParams.getAsgName())

@@ -49,18 +49,18 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
 
     List<VaultConfig> beforeVault = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(beforeVault, VAULT_NAME)) {
-      logger.info("Vault already exists : " + VAULT_NAME);
+      log.info("Vault already exists : " + VAULT_NAME);
       return;
     }
 
     vaultId = VaultRestUtils.addVault(bearerToken, vaultConfig);
     assertThat(StringUtils.isNotBlank(vaultId)).isTrue();
-    logger.info("Vault created : " + vaultId);
+    log.info("Vault created : " + vaultId);
     List<VaultConfig> afterVault = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(afterVault, VAULT_NAME)) {
-      logger.info("Vault existence verified : " + VAULT_NAME);
+      log.info("Vault existence verified : " + VAULT_NAME);
     }
-    logger.info("Done");
+    log.info("Done");
   }
 
   /*
@@ -72,7 +72,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore("This has some issue with datagen model, which may turn other tests flaky. Runs in E2ETest.")
   public void secretsCRUDTests() {
-    logger.info("Secrets test starts");
+    log.info("Secrets test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();
     String secretsNewName = "newName-" + System.currentTimeMillis();
     String secretValue = "value";
@@ -111,6 +111,6 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
   @After
   public void vaultCleanup() {
     assertThat(VaultRestUtils.deleteVault(getAccount().getUuid(), bearerToken, vaultId)).isTrue();
-    logger.info("Vault Deleted. Test Clean up completed");
+    log.info("Vault Deleted. Test Clean up completed");
   }
 }

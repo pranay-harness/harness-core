@@ -78,7 +78,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters;
-    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.APP_DYNAMICS)
@@ -97,7 +97,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -198,8 +198,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         if (!AppdynamicsTimeSeries.getMetricsToTrack().contains(metricName)) {
           metricsData.remove(i);
           if (!metricName.equals("METRIC DATA NOT FOUND")) {
-            if (logger.isDebugEnabled()) {
-              logger.debug("metric with unexpected name found: " + metricName);
+            if (log.isDebugEnabled()) {
+              log.debug("metric with unexpected name found: " + metricName);
             }
           }
         }
@@ -224,7 +224,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             : appdynamicsPathPieces[5];
         if (dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.COMPARATIVE
             && !dataCollectionInfo.getHosts().keySet().contains(nodeName)) {
-          logger.info("skipping: {}", nodeName);
+          log.info("skipping: {}", nodeName);
           continue;
         }
         String btName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
@@ -267,7 +267,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             if (hostRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()) {
               hostVsRecordMap.put(nodeName, hostRecord);
             } else {
-              logger.info("Ignoring a record that was before the collectionStartTime.");
+              log.info("Ignoring a record that was before the collectionStartTime.");
             }
           }
           Set<String> rejectedMetricsList = is247Task ? REJECTED_METRICS_24X7 : REJECTED_METRICS_WORKFLOW;
@@ -318,8 +318,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.debug(
-              "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
+          log.debug("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
           AppdynamicsTier appdynamicsTier =
               appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
                   dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
@@ -327,7 +326,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
           setHostIdsIfNecessary();
           List<AppdynamicsMetricData> metricsData = getMetricsData();
-          logger.debug(
+          log.debug(
               "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
           TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
           records.putAll(processMetricData(metricsData));
@@ -355,10 +354,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
           if (!saveMetrics(appDynamicsConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
-            logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+            log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           } else {
-            logger.debug("Sent {} appdynamics metric records to the server for minute {} for state {}",
+            log.debug("Sent {} appdynamics metric records to the server for minute {} for state {}",
                 recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           }
           dataCollectionMinute++;
@@ -366,7 +365,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
           if (dataCollectionInfo.getCollectionTime() <= 0 || is247Task) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.info("Completed AppDynamics collection task. So setting task status to success and quitting");
+            log.info("Completed AppDynamics collection task. So setting task status to success and quitting");
             completed.set(true);
             taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
           }
@@ -374,18 +373,18 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching  metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+            log.error("error fetching  metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 dataCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
             break;
           } else {
             if (retry == 1) {
-              logger.info("For {} setting the error message to {}", dataCollectionInfo.getStateExecutionId(),
+              log.info("For {} setting the error message to {}", dataCollectionInfo.getStateExecutionId(),
                   ExceptionUtils.getMessage(ex));
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.info("error fetching appdynamics metrics for minute {} for state {}. retrying in "
+            log.info("error fetching appdynamics metrics for minute {} for state {}. retrying in "
                     + DATA_COLLECTION_RETRY_SLEEP + "s",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId(), ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
@@ -394,7 +393,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       }
 
       if (completed.get()) {
-        logger.debug("Shutting down appdynamics data collection");
+        log.debug("Shutting down appdynamics data collection");
         shutDownCollection();
         return;
       }
@@ -420,7 +419,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
         Map<String, String> finalHosts = new HashMap<>();
         dataCollectionInfo.getHosts().forEach((hostName, groupName) -> finalHosts.put(hosts.get(hostName), groupName));
-        logger.debug("for state {} final hosts are {}", dataCollectionInfo.getStateExecutionId(), finalHosts);
+        log.debug("for state {} final hosts are {}", dataCollectionInfo.getStateExecutionId(), finalHosts);
         dataCollectionInfo.setHosts(finalHosts);
         dataCollectionInfo.setNodeIdsMapped(true);
       }

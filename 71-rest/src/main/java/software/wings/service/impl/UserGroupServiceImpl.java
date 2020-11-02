@@ -159,7 +159,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
-    logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
+    log.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
   }
@@ -410,11 +410,11 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     UserGroup updatedGroup = wingsPersistence.findAndModify(query, update, HPersistence.returnNewOptions);
     if (null == updatedGroup) {
-      logger.error("No user group found. groupId={}, accountId={}", groupId, accountId);
+      log.error("No user group found. groupId={}, accountId={}", groupId, accountId);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "No user group found");
     }
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, updatedGroup, Type.UPDATE_NOTIFICATION_SETTING);
-    logger.info(
+    log.info(
         "Auditing update in notification setting for userGroup={} in account={}", updatedGroup.getName(), accountId);
     return updatedGroup;
   }
@@ -555,7 +555,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup.getAccountId() != null) {
       auditServiceHelper.reportForAuditingUsingAccountId(
           userGroup.getAccountId(), userGroup, updatedUserGroup, Type.MODIFY_PERMISSIONS);
-      logger.info("Auditing modification of permissions for userGroup={} in account={}", updatedUserGroup.getName(),
+      log.info("Auditing modification of permissions for userGroup={} in account={}", updatedUserGroup.getName(),
           userGroup.getAccountId());
     }
     return updatedUserGroup;
@@ -569,8 +569,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     Set<PermissionType> permissions = accountPermissions.getPermissions();
     if (isNotEmpty(permissions) && permissions.contains(USER_PERMISSION_MANAGEMENT)
         && !permissions.contains(USER_PERMISSION_READ)) {
-      logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
-          permissions, accountId, name);
+      log.info("Received account permissions {} are not in proper format for account {}, userGroupName {}", permissions,
+          accountId, name);
       throw new InvalidRequestException("Invalid account permission.", ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
     }
   }
@@ -608,7 +608,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       evictUserPermissionInfoCacheForUserGroup(userGroup);
       executors.submit(() -> userGroupDeleteEventHandler.handleUserGroupDelete(accountId, userGroupId));
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, userGroup);
-      logger.info("Auditing deletion of userGroupId={} and accountId={}", userGroup.getUuid(), accountId);
+      log.info("Auditing deletion of userGroupId={} and accountId={}", userGroup.getUuid(), accountId);
     }
     return deleted;
   }
@@ -794,7 +794,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     group.setSsoGroupId(null);
 
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Type.UNLINK_SSO);
-    logger.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
+    log.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
 
     return save(group);
   }
@@ -843,7 +843,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (isModified) {
-      logger.info("Pruning app ids from user group: " + userGroup.getUuid());
+      log.info("Pruning app ids from user group: " + userGroup.getUuid());
       UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
       setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
       Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)

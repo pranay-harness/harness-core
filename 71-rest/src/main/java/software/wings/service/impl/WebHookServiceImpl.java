@@ -119,13 +119,13 @@ public class WebHookServiceImpl implements WebHookService {
   public Response execute(String token, WebHookRequest webHookRequest) {
     try {
       if (webHookRequest == null) {
-        logger.warn("Payload is mandatory");
+        log.warn("Payload is mandatory");
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Payload is mandatory").build();
 
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
-      logger.info("Received input Webhook Request {}  ", webHookRequest);
+      log.info("Received input Webhook Request {}  ", webHookRequest);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
         WebHookResponse webHookResponse =
@@ -146,11 +146,11 @@ public class WebHookServiceImpl implements WebHookService {
       return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
 
     } catch (WingsException ex) {
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
       return prepareResponse(
           WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(), Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
-      logger.warn("Webhook Request call failed", ex);
+      log.warn("Webhook Request call failed", ex);
       return prepareResponse(WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(),
           Response.Status.INTERNAL_SERVER_ERROR);
     }
@@ -192,7 +192,7 @@ public class WebHookServiceImpl implements WebHookService {
 
   @Override
   public Response executeByEvent(String token, String webhookEventPayload, HttpHeaders httpHeaders) {
-    logger.info("Received the Webhook Request for token token {}  ", token);
+    log.info("Received the Webhook Request for token token {}  ", token);
     TriggerExecutionBuilder triggerExecutionBuilder = TriggerExecution.builder();
     TriggerExecution triggerExecution = triggerExecutionBuilder.build();
     try {
@@ -208,7 +208,7 @@ public class WebHookServiceImpl implements WebHookService {
       return executeTrigger(webhookEventPayload, httpHeaders, triggerExecution, trigger);
 
     } catch (WingsException ex) {
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
@@ -216,7 +216,7 @@ public class WebHookServiceImpl implements WebHookService {
 
       return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
-      logger.error("Webhook Request call failed", ex);
+      log.error("Webhook Request call failed", ex);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
@@ -266,7 +266,7 @@ public class WebHookServiceImpl implements WebHookService {
       // Validate the give branch name matches the one with selected one
       webhookTriggerProcessor.validateBranchName(trigger, triggerExecution);
     } catch (WingsException ex) {
-      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, log);
       triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecution.setStatus(Status.REJECTED);
       triggerExecutionService.save(triggerExecution);
@@ -275,7 +275,7 @@ public class WebHookServiceImpl implements WebHookService {
       return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
     }
 
-    logger.info("Trigger execution for the trigger {}", trigger.getUuid());
+    log.info("Trigger execution for the trigger {}", trigger.getUuid());
     WorkflowExecution workflowExecution =
         triggerService.triggerExecutionByWebHook(trigger, resolvedParameters, triggerExecution);
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
@@ -286,7 +286,7 @@ public class WebHookServiceImpl implements WebHookService {
 
       return prepareResponse(webHookResponse, Response.Status.OK);
     } else {
-      logger.info("Execution trigger success. Saving trigger execution");
+      log.info("Execution trigger success. Saving trigger execution");
       WebHookResponse webHookResponse = WebHookResponse.builder()
                                             .requestId(workflowExecution.getUuid())
                                             .status(workflowExecution.getStatus().name())
@@ -317,7 +317,7 @@ public class WebHookServiceImpl implements WebHookService {
           parameterMap.put("buildNo", buildNumber);
         }
 
-        logger.info("WebHook params Service name {}, Build Number {} and Artifact Source Name {}", serviceName,
+        log.info("WebHook params Service name {}, Build Number {} and Artifact Source Name {}", serviceName,
             buildNumber, artifactStreamName);
         if (serviceName != null) {
           Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
@@ -350,7 +350,7 @@ public class WebHookServiceImpl implements WebHookService {
       for (Map<String, Object> manifest : manifests) {
         String serviceName = (String) manifest.get("service");
         String versionNumber = (String) manifest.get("versionNumber");
-        logger.info("WebHook params Service name {} and Versions Number {}", serviceName, versionNumber);
+        log.info("WebHook params Service name {} and Versions Number {}", serviceName, versionNumber);
         if (serviceName != null) {
           Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
           if (service == null) {
@@ -422,7 +422,7 @@ public class WebHookServiceImpl implements WebHookService {
           }
         }
       } catch (Exception e) {
-        logger.warn("Failed to resolve the param {} in Json {}", param, payload);
+        log.warn("Failed to resolve the param {} in Json {}", param, payload);
       }
     }
     webhookEventDetails.setParameters(resolvedParameters);
@@ -453,9 +453,9 @@ public class WebHookServiceImpl implements WebHookService {
       Trigger trigger, WebHookTriggerCondition triggerCondition, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
     if (BITBUCKET == webhookSource) {
-      logger.info("Trigger is set for BitBucket. Checking the http headers for the request type");
+      log.info("Trigger is set for BitBucket. Checking the http headers for the request type");
       String bitBucketEvent = headers == null ? null : headers.getHeaderString(X_BIT_BUCKET_EVENT);
-      logger.info("X-Event-Key is {} ", bitBucketEvent);
+      log.info("X-Event-Key is {} ", bitBucketEvent);
       if (bitBucketEvent == null) {
         throw new InvalidRequestException("Header [X-Event-Key] is missing", USER);
       }
@@ -478,9 +478,9 @@ public class WebHookServiceImpl implements WebHookService {
       Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
     if (GITHUB == webhookSource) {
-      logger.info("Trigger is set for GitHub. Checking the http headers for the request type");
+      log.info("Trigger is set for GitHub. Checking the http headers for the request type");
       String gitHubEvent = headers == null ? null : headers.getHeaderString(X_GIT_HUB_EVENT);
-      logger.info("X-GitHub-Event is {} ", gitHubEvent);
+      log.info("X-GitHub-Event is {} ", gitHubEvent);
       if (gitHubEvent == null) {
         throw new InvalidRequestException("Header [X-GitHub-Event] is missing", USER);
       }
@@ -526,7 +526,7 @@ public class WebHookServiceImpl implements WebHookService {
         }
         break;
       default:
-        logger.warn("Action" + gitEventAction + "present not present in trigger" + triggerName
+        log.warn("Action" + gitEventAction + "present not present in trigger" + triggerName
             + "but provided in github webhook payload");
     }
   }

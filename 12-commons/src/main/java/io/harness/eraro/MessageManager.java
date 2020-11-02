@@ -33,7 +33,7 @@ public class MessageManager {
   public String prepareMessage(ErrorCodeName errorCodeName, String exceptionMessage, Map<String, Object> params) {
     String message = messages.getProperty(errorCodeName.getValue());
     if (message == null) {
-      logger.error("Response message for error code {} is not provided! Add one in response_messages.properties file.",
+      log.error("Response message for error code {} is not provided! Add one in response_messages.properties file.",
           errorCodeName.getValue());
       message = errorCodeName.getValue();
     }
@@ -46,7 +46,7 @@ public class MessageManager {
       message = StrSubstitutor.replace(message, ImmutableMap.of("exception_message", exceptionMessage));
     }
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
-      logger.info("Insufficient parameter from [{}] in message \"{}\"", String.join(", ", params.keySet()), message);
+      log.info("Insufficient parameter from [{}] in message \"{}\"", String.join(", ", params.keySet()), message);
     }
     return message;
   }

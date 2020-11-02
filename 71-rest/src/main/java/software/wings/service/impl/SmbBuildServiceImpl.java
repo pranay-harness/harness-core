@@ -66,7 +66,7 @@ public class SmbBuildServiceImpl implements SmbBuildService {
   @Override
   public List<String> getSmbPaths(SmbConfig config, List<EncryptedDataDetail> encryptionDetails) {
     List<String> artifactPaths = smbService.getArtifactPaths(config, encryptionDetails);
-    logger.info("Retrieved {} artifact paths from SMB server.", artifactPaths.size());
+    log.info("Retrieved {} artifact paths from SMB server.", artifactPaths.size());
     return artifactPaths;
   }
 

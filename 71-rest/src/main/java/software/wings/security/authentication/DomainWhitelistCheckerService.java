@@ -31,7 +31,7 @@ public class DomainWhitelistCheckerService {
   public boolean isDomainWhitelisted(User user) {
     Account primaryAccount = authenticationUtils.getDefaultAccount(user);
     if (null == primaryAccount) {
-      logger.warn("User with UUID {} has null primary account", user.getUuid());
+      log.warn("User with UUID {} has null primary account", user.getUuid());
       return false;
     }
 
@@ -48,14 +48,14 @@ public class DomainWhitelistCheckerService {
     String email = user.getEmail();
 
     if (isEmpty(email)) {
-      logger.warn("Empty email received from account {}", account.getUuid());
+      log.warn("Empty email received from account {}", account.getUuid());
       return false;
     }
 
     String domain = email.substring(email.indexOf('@') + 1);
 
     if (!filter.contains(domain)) {
-      logger.info("Domain filter was: [{}] while the email was: [{}]", filter, email);
+      log.info("Domain filter was: [{}] while the email was: [{}]", filter, email);
       return false;
     }
     return true;
@@ -63,7 +63,7 @@ public class DomainWhitelistCheckerService {
 
   boolean isDomainWhitelisted(User user, Account account) {
     if (null == account) {
-      logger.warn("Account received was null for user with UUID {}", user.getUuid());
+      log.warn("Account received was null for user with UUID {}", user.getUuid());
       return false;
     }
     return isDomainWhitelistedInternal(user, account);

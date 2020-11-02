@@ -23,8 +23,8 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLDAPCRUD() {
-    logger.info("Starting the LDAP test");
-    logger.info("Creating LDAP SSO Setting");
+    log.info("Starting the LDAP test");
+    log.info("Creating LDAP SSO Setting");
     LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(getAccount().getUuid());
     assertThat(SSORestUtils.addLdapSettings(getAccount().getUuid(), bearerToken, ldapSettings) == HttpStatus.SC_OK)
         .isTrue();
@@ -33,14 +33,14 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     String ldapId = SSOUtils.getLdapId(ssoConfig);
     assertThat(StringUtils.isNotBlank(ldapId)).isTrue();
     assertThat(SSORestUtils.deleteLDAPSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
-    logger.info("LDAP CRUD test completed");
+    log.info("LDAP CRUD test completed");
   }
 
   @Test()
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void testSAMLCRUD() {
-    logger.info("Starting the SAML test");
+    log.info("Starting the SAML test");
     String filePath = System.getProperty("user.dir");
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
@@ -50,6 +50,6 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
     assertThat(ssoConfig).isNotNull();
     assertThat(SSORestUtils.deleSAMLSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK).isTrue();
-    logger.info("Done");
+    log.info("Done");
   }
 }

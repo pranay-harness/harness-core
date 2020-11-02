@@ -35,8 +35,8 @@ class IndexManagerCollectionSession {
 
   final void reset(DBCollection collection) {
     indexInfo = collection.getIndexInfo();
-    if (logger.isDebugEnabled()) {
-      logger.debug("collection {} has index info {}", collection.getName(), indexInfo.toString());
+    if (log.isDebugEnabled()) {
+      log.debug("collection {} has index info {}", collection.getName(), indexInfo.toString());
     }
   }
 
@@ -98,16 +98,16 @@ class IndexManagerCollectionSession {
 
     // There is collision by name
     if (indexByName != null && indexByName != indexByFields) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("index {} collides by name with {}", indexCreator.toString(), indexByName.toString());
+      if (log.isDebugEnabled()) {
+        log.debug("index {} collides by name with {}", indexCreator.toString(), indexByName.toString());
       }
       return true;
     }
 
     // There is collision by fields
     if (indexByFields != null && indexByName != indexByFields) {
-      if (logger.isDebugEnabled()) {
-        logger.info("index {} collides by fields with {}", indexCreator.toString(), indexByFields.toString());
+      if (log.isDebugEnabled()) {
+        log.info("index {} collides by fields with {}", indexCreator.toString(), indexByFields.toString());
       }
       return true;
     }
@@ -168,7 +168,7 @@ class IndexManagerCollectionSession {
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
           try (AutoLogContext ignore = new IndexLogContext(entry.getKey(), OVERRIDE_ERROR)) {
-            logger.warn("Index is not used at for {} days", passed.toDays());
+            log.warn("Index is not used at for {} days", passed.toDays());
           }
         });
   }

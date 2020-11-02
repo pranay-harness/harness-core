@@ -96,10 +96,10 @@ public abstract class EntityNameValidationMigration implements Migration {
 
   private void migrateAccount(String accountId) {
     if (skipAccount(accountId)) {
-      logger.info("Skipping account: " + accountId);
+      log.info("Skipping account: " + accountId);
       return;
     }
-    logger.info("Migrating Account: " + accountId);
+    log.info("Migrating Account: " + accountId);
     migrateSettingAttributesOfAccount(accountId);
     PageRequest<Application> request = aPageRequest()
                                            .withLimit(UNLIMITED)
@@ -126,7 +126,7 @@ public abstract class EntityNameValidationMigration implements Migration {
     Set<String> appNamesForAccount = Sets.newHashSet();
     applications.forEach(application -> {
       try {
-        logger.info("Migrating Application: " + application.getUuid());
+        log.info("Migrating Application: " + application.getUuid());
         String newName = getValidName(appNamesForAccount, application.getName());
         if (!newName.equals(application.getName())) {
           wingsPersistence.updateField(Application.class, application.getUuid(), "name", newName);
@@ -136,13 +136,12 @@ public abstract class EntityNameValidationMigration implements Migration {
         migrateWorkflowsOfApplication(application.getUuid());
         migratePipelinesOfApplication(application.getUuid());
         migrateCommandsOfApplication(application.getUuid());
-        logger.info("Done with Application: " + application.getUuid());
+        log.info("Done with Application: " + application.getUuid());
       } catch (Exception ex) {
-        logger.error(
-            "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating App: " + application.getUuid(), ex);
+        log.error("Exception: " + ExceptionUtils.getMessage(ex) + " while migrating App: " + application.getUuid(), ex);
       }
     });
-    logger.info("Done with Account: " + accountId);
+    log.info("Done with Account: " + accountId);
   }
 
   private String getValidSettingAttributeNames(
@@ -174,27 +173,27 @@ public abstract class EntityNameValidationMigration implements Migration {
   }
 
   private void migrateSettingAttributesOfAccount(String accountId) {
-    logger.info("Migrating Setting Attributes of Account: " + accountId);
+    log.info("Migrating Setting Attributes of Account: " + accountId);
     PageRequest<SettingAttribute> request =
         aPageRequest().withLimit(UNLIMITED).addFilter("accountId", EQ, accountId).build();
     List<SettingAttribute> attributes = wingsPersistence.query(SettingAttribute.class, request).getResponse();
     Set<SettingAttributesKey> set = Sets.newHashSet();
     attributes.forEach(attribute -> {
       try {
-        logger.info("Migrating Setting Attribute: " + attribute.getUuid());
+        log.info("Migrating Setting Attribute: " + attribute.getUuid());
         String newName = getValidSettingAttributeNames(set, attribute.getName(), attribute.getAppId(),
             attribute.getEnvId(), attribute.getValue() != null ? attribute.getValue().getType() : null);
         if (!newName.equals(attribute.getName())) {
           wingsPersistence.updateField(SettingAttribute.class, attribute.getUuid(), "name", newName);
         }
-        logger.info("Done migrating Setting Attribute: " + attribute.getUuid());
+        log.info("Done migrating Setting Attribute: " + attribute.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ExceptionUtils.getMessage(ex)
+        log.error("Exception: " + ExceptionUtils.getMessage(ex)
                 + " while migrating Setting Attribute of id: " + attribute.getUuid(),
             ex);
       }
     });
-    logger.info("Done with Setting Attributes of Account: " + accountId);
+    log.info("Done with Setting Attributes of Account: " + accountId);
   }
 
   private void migrateServicesOfApplication(String appId) {
@@ -220,16 +219,15 @@ public abstract class EntityNameValidationMigration implements Migration {
     });
     services.forEach(service -> {
       try {
-        logger.info("Migrating Service: " + service.getUuid());
+        log.info("Migrating Service: " + service.getUuid());
         String newName = getValidName(namesAlreadyTaken, service.getName());
         if (isNotEmpty(newName) && !newName.equals(service.getName())) {
           wingsPersistence.updateField(Service.class, service.getUuid(), "name", newName);
         }
         migrateArtifactStreamsOfService(service.getUuid(), appId);
-        logger.info("Done with Service: " + service.getUuid());
+        log.info("Done with Service: " + service.getUuid());
       } catch (Exception ex) {
-        logger.error(
-            "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating service: " + service.getUuid(), ex);
+        log.error("Exception: " + ExceptionUtils.getMessage(ex) + " while migrating service: " + service.getUuid(), ex);
       }
     });
   }
@@ -261,14 +259,14 @@ public abstract class EntityNameValidationMigration implements Migration {
     });
     artifactStreams.forEach(artifactStream -> {
       try {
-        logger.info("Migrating Artifact Stream: " + artifactStream.getUuid());
+        log.info("Migrating Artifact Stream: " + artifactStream.getUuid());
         String newName = getValidName(namesAlreadyTaken, artifactStream.getName());
         if (isNotEmpty(newName) && !newName.equals(artifactStream.getName())) {
           wingsPersistence.updateField(ArtifactStream.class, artifactStream.getUuid(), "name", newName);
         }
-        logger.info("Done with Artifact Stream: " + artifactStream.getUuid());
+        log.info("Done with Artifact Stream: " + artifactStream.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ExceptionUtils.getMessage(ex)
+        log.error("Exception: " + ExceptionUtils.getMessage(ex)
                 + " while migrating artifact stream: " + artifactStream.getUuid(),
             ex);
       }
@@ -298,15 +296,15 @@ public abstract class EntityNameValidationMigration implements Migration {
     });
     environments.forEach(environment -> {
       try {
-        logger.info("Migrating Environment: " + environment.getUuid());
+        log.info("Migrating Environment: " + environment.getUuid());
         String newName = getValidName(namesAlreadyTaken, environment.getName());
         if (!newName.equals(environment.getName())) {
           wingsPersistence.updateField(Environment.class, environment.getUuid(), "name", newName);
         }
         migrateInfrastructureMappingOfEnvironment(environment.getUuid(), appId);
-        logger.info("Done with Environment: " + environment.getUuid());
+        log.info("Done with Environment: " + environment.getUuid());
       } catch (Exception ex) {
-        logger.error(
+        log.error(
             "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating environment: " + environment.getUuid(),
             ex);
       }
@@ -341,14 +339,14 @@ public abstract class EntityNameValidationMigration implements Migration {
     });
     infrastructureMappings.forEach(infrastructureMapping -> {
       try {
-        logger.info("Migrating Infrastructure Mapping: " + infrastructureMapping.getUuid());
+        log.info("Migrating Infrastructure Mapping: " + infrastructureMapping.getUuid());
         String newName = getValidName(namesAlreadyTaken, infrastructureMapping.getName());
         if (isNotEmpty(newName) && !newName.equals(infrastructureMapping.getName())) {
           wingsPersistence.updateField(InfrastructureMapping.class, infrastructureMapping.getUuid(), "name", newName);
         }
-        logger.info("Done with Infrastructure Mapping: " + infrastructureMapping.getUuid());
+        log.info("Done with Infrastructure Mapping: " + infrastructureMapping.getUuid());
       } catch (Exception ex) {
-        logger.error("Exception: " + ExceptionUtils.getMessage(ex)
+        log.error("Exception: " + ExceptionUtils.getMessage(ex)
                 + " while migrating Infra mapping: " + infrastructureMapping.getUuid(),
             ex);
       }
@@ -361,15 +359,14 @@ public abstract class EntityNameValidationMigration implements Migration {
     List<Workflow> workflows = wingsPersistence.query(Workflow.class, request).getResponse();
     workflows.forEach(workflow -> {
       try {
-        logger.info("Migrating workflow: " + workflow.getUuid());
+        log.info("Migrating workflow: " + workflow.getUuid());
         String newName = EntityNameValidator.getMappedString(workflow.getName());
         if (!newName.equals(workflow.getName())) {
           wingsPersistence.updateField(Workflow.class, workflow.getUuid(), "name", newName);
         }
-        logger.info("Done with workflow: " + workflow.getUuid());
+        log.info("Done with workflow: " + workflow.getUuid());
       } catch (Exception ex) {
-        logger.error(
-            "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating workflow: " + workflow.getUuid());
+        log.error("Exception: " + ExceptionUtils.getMessage(ex) + " while migrating workflow: " + workflow.getUuid());
       }
     });
   }
@@ -380,15 +377,14 @@ public abstract class EntityNameValidationMigration implements Migration {
     List<Pipeline> pipelines = wingsPersistence.query(Pipeline.class, request).getResponse();
     pipelines.forEach(pipeline -> {
       try {
-        logger.info("Migrating pipeline: " + pipeline.getUuid());
+        log.info("Migrating pipeline: " + pipeline.getUuid());
         String newName = EntityNameValidator.getMappedString(pipeline.getName());
         if (!newName.equals(pipeline.getName())) {
           wingsPersistence.updateField(Pipeline.class, pipeline.getUuid(), "name", newName);
         }
-        logger.info("Done with pipeline: " + pipeline.getUuid());
+        log.info("Done with pipeline: " + pipeline.getUuid());
       } catch (Exception ex) {
-        logger.error(
-            "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating pipeline: " + pipeline.getName());
+        log.error("Exception: " + ExceptionUtils.getMessage(ex) + " while migrating pipeline: " + pipeline.getName());
       }
     });
   }
@@ -399,15 +395,14 @@ public abstract class EntityNameValidationMigration implements Migration {
     List<Command> commands = wingsPersistence.query(Command.class, request).getResponse();
     commands.forEach(command -> {
       try {
-        logger.info("Migrating Command: " + command.getUuid());
+        log.info("Migrating Command: " + command.getUuid());
         String newName = EntityNameValidator.getMappedString(command.getName());
         if (!newName.equals(command.getName())) {
           wingsPersistence.updateField(Command.class, command.getUuid(), "name", newName);
         }
-        logger.info("Done with Command: " + command.getUuid());
+        log.info("Done with Command: " + command.getUuid());
       } catch (Exception ex) {
-        logger.error(
-            "Exception: " + ExceptionUtils.getMessage(ex) + " while migrating command:" + command.getUuid(), ex);
+        log.error("Exception: " + ExceptionUtils.getMessage(ex) + " while migrating command:" + command.getUuid(), ex);
       }
     });
   }

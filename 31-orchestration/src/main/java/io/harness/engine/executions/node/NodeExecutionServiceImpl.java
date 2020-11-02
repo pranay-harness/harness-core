@@ -168,7 +168,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     }
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
     if (updated == null) {
-      logger.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
+      log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
       eventEmitter.emitEvent(OrchestrationEvent.builder()
                                  .ambiance(updated.getAmbiance())
@@ -194,7 +194,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                       .addCriteria(where(NodeExecutionKeys.uuid).in(leafInstanceIds));
     UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
     if (!updateResult.wasAcknowledged()) {
-      logger.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);
+      log.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);
       return false;
     }
     return true;
@@ -211,7 +211,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
     NodeExecution nodeExecution = mongoTemplate.findAndModify(query, ops, NodeExecution.class);
     if (nodeExecution == null) {
-      logger.error("Failed to mark node as retry");
+      log.error("Failed to mark node as retry");
       return false;
     }
     return true;
@@ -230,7 +230,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Query query = query(where(NodeExecutionKeys.previousId).is(nodeExecutionId));
     UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
     if (updateResult.wasAcknowledged()) {
-      logger.warn("No previous nodeExecutions could be updated for this nodeExecutionId: {}", nodeExecutionId);
+      log.warn("No previous nodeExecutions could be updated for this nodeExecutionId: {}", nodeExecutionId);
       return false;
     }
     return true;

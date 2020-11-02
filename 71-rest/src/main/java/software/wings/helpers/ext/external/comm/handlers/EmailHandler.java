@@ -50,7 +50,7 @@ public class EmailHandler implements CollaborationHandler {
           .build();
     } catch (Exception e) {
       String errorString = emailHelperUtil.getErrorString(emailRequest.getEmailData());
-      logger.error(errorString, e);
+      log.error(errorString, e);
       return CollaborationProviderResponse.builder()
           .status(CommandExecutionStatus.FAILURE)
           .errorMessage(errorString)
@@ -98,19 +98,19 @@ public class EmailHandler implements CollaborationHandler {
           transport.close();
           result = true;
 
-          logger.info("Validated email delegate communication to {}.", transport.toString());
+          log.info("Validated email delegate communication to {}.", transport.toString());
         } catch (AuthenticationFailedException e) {
-          logger.warn("SMTP: Authentication Failed", e);
+          log.warn("SMTP: Authentication Failed", e);
 
         } catch (MessagingException e) {
-          logger.warn("SMTP: Messaging Exception Occurred", e);
+          log.warn("SMTP: Messaging Exception Occurred", e);
         } catch (Exception e) {
-          logger.warn("SMTP: Unknown Exception", e);
+          log.warn("SMTP: Unknown Exception", e);
         }
         return result;
       }, 10000, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
-      logger.warn("Failed to validate email delegate communication", e);
+      log.warn("Failed to validate email delegate communication", e);
     }
     return false;
   }

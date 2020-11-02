@@ -29,7 +29,7 @@ public class LogFeedbackRecordsMigration implements Migration {
 
     DBCursor logFeedbackRecords = collection.find();
 
-    logger.info("will go through " + logFeedbackRecords.size() + " records");
+    log.info("will go through " + logFeedbackRecords.size() + " records");
 
     int updated = 0;
     int batched = 0;
@@ -51,15 +51,15 @@ public class LogFeedbackRecordsMigration implements Migration {
         bulkWriteOperation.execute();
         bulkWriteOperation = collection.initializeUnorderedBulkOperation();
         batched = 0;
-        logger.info("updated: " + updated);
+        log.info("updated: " + updated);
       }
     }
 
     if (batched != 0) {
       bulkWriteOperation.execute();
-      logger.info("updated: " + updated);
+      log.info("updated: " + updated);
     }
 
-    logger.info("Complete. Updated " + updated + " records.");
+    log.info("Complete. Updated " + updated + " records.");
   }
 }

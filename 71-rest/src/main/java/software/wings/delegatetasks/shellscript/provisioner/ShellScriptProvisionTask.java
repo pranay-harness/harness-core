@@ -103,7 +103,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
         throw new WingsException("Error occurred while reading output file", e);
       }
     } catch (Exception e) {
-      logger.error("Error occurred in the task", e);
+      log.error("Error occurred in the task", e);
       return ShellScriptProvisionExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMsg(ExceptionUtils.getMessage(e))

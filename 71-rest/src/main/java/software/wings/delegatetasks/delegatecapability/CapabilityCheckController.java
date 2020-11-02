@@ -44,12 +44,12 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
       }
 
       executionCapabilities.forEach(delegateCapability -> {
-        logger.info("Checking Capability: " + delegateCapability.toString());
+        log.info("Checking Capability: " + delegateCapability.toString());
         CapabilityCheck capabilityCheck =
             capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType());
 
         if (capabilityCheck == null) {
-          logger.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
+          log.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
           return;
         }
 
@@ -57,7 +57,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
       });
 
     } catch (RuntimeException exception) {
-      logger.error("Exception while evaluating capabilities", exception);
+      log.error("Exception while evaluating capabilities", exception);
       return null;
     }
 

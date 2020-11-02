@@ -79,7 +79,7 @@ public class SpringMongoStore implements DistributedStore {
 
       return (T) kryoSerializer.asInflatedObject(cacheEntity.getEntity());
     } catch (RuntimeException ex) {
-      logger.error("Failed to obtain from cache", ex);
+      log.error("Failed to obtain from cache", ex);
     }
     return null;
   }
@@ -105,14 +105,14 @@ public class SpringMongoStore implements DistributedStore {
       mongoTemplate.findAndModify(query, update, HMongoTemplate.upsertReturnNewOptions, SpringCacheEntity.class);
     } catch (MongoCommandException e) {
       if (ErrorCategory.fromErrorCode(e.getErrorCode()) != DUPLICATE_KEY) {
-        logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
+        log.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
       } else {
         new Exception().addSuppressed(e);
       }
     } catch (DuplicateKeyException e) {
-      logger.error("Failed to update cache for key {}, hash {} ", canonicalKey, contextValue, e);
+      log.error("Failed to update cache for key {}, hash {} ", canonicalKey, contextValue, e);
     } catch (RuntimeException e) {
-      logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
+      log.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, e);
     }
   }
 }

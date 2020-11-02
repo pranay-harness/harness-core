@@ -25,7 +25,7 @@ public class YamlGitConfigAppMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Running YamlGitConfigAppMigration");
+    log.info("Running YamlGitConfigAppMigration");
 
     try (HIterator<Account> accountHIterator =
              new HIterator<>(wingsPersistence.createQuery(Account.class, excludeAuthority).fetch())) {
@@ -35,7 +35,7 @@ public class YamlGitConfigAppMigration implements Migration {
         YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, accountId, EntityType.ACCOUNT);
 
         if (yamlGitConfig != null) {
-          logger.info("Retrieving applications for accountId " + accountId);
+          log.info("Retrieving applications for accountId " + accountId);
           try (HIterator<Application> apps = new HIterator<>(
                    wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
             while (apps.hasNext()) {
@@ -43,12 +43,12 @@ public class YamlGitConfigAppMigration implements Migration {
               saveYamlGitConfigForApp(application, yamlGitConfig);
             }
           }
-          logger.info("Done updating applications for accountId " + accountId);
+          log.info("Done updating applications for accountId " + accountId);
         }
       }
     }
 
-    logger.info("Completed running YamlGitConfigAppMigration");
+    log.info("Completed running YamlGitConfigAppMigration");
   }
 
   private void saveYamlGitConfigForApp(Application app, YamlGitConfig yamlGitConfig) {

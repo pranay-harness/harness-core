@@ -83,21 +83,21 @@ public class AccountPasswordExpirationJob implements Job {
             }
             checkForPasswordExpiration(passwordExpirationPolicy, user);
           } else {
-            logger.info(
+            log.info(
                 "Skipping AccountPasswordExpirationCheckJob for accountId {} because auth mechanism is not User password",
                 account.getUuid());
           }
         } catch (Exception ex) {
-          logger.error("CheckAccountPasswordExpiration failed for User: {}", user.getEmail(), ex);
+          log.error("CheckAccountPasswordExpiration failed for User: {}", user.getEmail(), ex);
         }
       }
     } catch (Exception ex) {
-      logger.error("Error while running AccountPasswordExpirationCheckJob", ex);
+      log.error("Error while running AccountPasswordExpirationCheckJob", ex);
     }
   }
 
   private void checkForPasswordExpiration(PasswordExpirationPolicy passwordExpirationPolicy, User user) {
-    logger.info("AccountPasswordExpirationJob: processing user: {}", user.getEmail());
+    log.info("AccountPasswordExpirationJob: processing user: {}", user.getEmail());
     long passwordChangedAt = user.getPasswordChangedAt();
 
     // for someone who has never changed his password, this value will be 0.

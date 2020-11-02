@@ -37,7 +37,7 @@ public abstract class TimeSeriesAnalysisState extends AnalysisState {
       throw new AnalysisStateMachineException(
           "Unknown number of worker tasks created in Timeseries Analysis State: " + taskIds);
     }
-    logger.info("Executing timeseries analysis");
+    log.info("Executing timeseries analysis");
     return this;
   }
 
@@ -91,7 +91,7 @@ public abstract class TimeSeriesAnalysisState extends AnalysisState {
       this.setStatus(AnalysisStatus.FAILED);
     } else {
       setRetryCount(getRetryCount() + 1);
-      logger.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
+      log.info("In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(),
           workerTaskId);
       workerTaskId = null;
       execute();
@@ -105,7 +105,7 @@ public abstract class TimeSeriesAnalysisState extends AnalysisState {
     // clean up state in underlying worker and then execute
 
     this.setRetryCount(getRetryCount() + 1);
-    logger.info(
+    log.info(
         "In TimeSeriesAnalysisState for Inputs {}, cleaning up worker task. Old taskID: {}", getInputs(), workerTaskId);
     workerTaskId = null;
     this.execute();

@@ -40,14 +40,14 @@ public class DeleteServiceGuardAlertMigration implements Migration {
                               .build());
 
     if (pageResponse == null) {
-      logger.info("No CV alerts found to migrate");
+      log.info("No CV alerts found to migrate");
       return;
     }
     List<Alert> dataCollectionAlertList = pageResponse.getResponse();
 
     Set<String> deletedCVConfigs = new HashSet<>();
     if (isNotEmpty(dataCollectionAlertList)) {
-      logger.info("Going through {} alerts to find which ones to delete", dataCollectionAlertList.size());
+      log.info("Going through {} alerts to find which ones to delete", dataCollectionAlertList.size());
       dataCollectionAlertList.forEach(alert -> {
         CVConfiguration cvConfigurationInAlert = null;
         if (alert.getType() == AlertType.CONTINUOUS_VERIFICATION_ALERT) {

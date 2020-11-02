@@ -24,7 +24,7 @@ public class SamlUserGroupSync {
 
   public void syncUserGroup(
       final SamlUserAuthorization samlUserAuthorization, final String accountId, final String ssoId) {
-    logger.info("Syncing saml user groups for user: {}", samlUserAuthorization.getEmail());
+    log.info("Syncing saml user groups for user: {}", samlUserAuthorization.getEmail());
 
     List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
     updateUserGroups(userGroupsToSync, samlUserAuthorization, accountId);
@@ -35,14 +35,14 @@ public class SamlUserGroupSync {
     User user = userService.getUserByEmail(samlUserAuthorization.getEmail());
 
     List<String> newUserGroups = samlUserAuthorization.getUserGroups();
-    logger.info("SAML authorisation user groups for user: {} are: {}", samlUserAuthorization.getEmail(),
+    log.info("SAML authorisation user groups for user: {} are: {}", samlUserAuthorization.getEmail(),
         newUserGroups.toString());
 
     List<UserGroup> userAddedToGroups = new ArrayList<>();
 
     userGroupsToSync.forEach(userGroup -> {
       if (userGroup.hasMember(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
-        logger.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
+        log.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
             userGroup.getName(), userGroup.getAccountId());
         userGroupService.removeMembers(userGroup, Collections.singletonList(user), false, true);
       } else if (!userGroup.hasMember(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
@@ -50,7 +50,7 @@ public class SamlUserGroupSync {
       }
     });
 
-    logger.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
+    log.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
         userAddedToGroups.toString());
     userService.addUserToUserGroups(accountId, user, userAddedToGroups, true, true);
   }

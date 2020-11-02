@@ -154,7 +154,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   @Override
   public void processVerificationJobInstance(VerificationJobInstance verificationJobInstance) {
-    logger.info("Processing verificationJobInstance with ID: {}", verificationJobInstance.getUuid());
+    log.info("Processing verificationJobInstance with ID: {}", verificationJobInstance.getUuid());
     if (verificationJobInstance.getResolvedJob().shouldDoDataCollection()) {
       createDataCollectionTasks(verificationJobInstance);
     } else {
@@ -169,7 +169,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
-      logger.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
+      log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
       orchestrationService.queueAnalysis(verificationTaskId,
           verificationJob.getPreActivityTimeRange(verificationJobInstance.getStartTime()).get().getStartTime(),

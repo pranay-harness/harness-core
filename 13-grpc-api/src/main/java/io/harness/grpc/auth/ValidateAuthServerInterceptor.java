@@ -39,7 +39,7 @@ public class ValidateAuthServerInterceptor implements ServerInterceptor {
     if (GrpcAuthUtils.isAuthenticated() || excluded(call)) {
       return Contexts.interceptCall(Context.current(), call, metadata, next);
     }
-    logger.warn("No Auth interceptor could validate this request. Please add one for this service");
+    log.warn("No Auth interceptor could validate this request. Please add one for this service");
     call.close(Status.UNAUTHENTICATED.withDescription("Unable to authenticate request"), metadata);
     return NOOP_LISTENER;
   }

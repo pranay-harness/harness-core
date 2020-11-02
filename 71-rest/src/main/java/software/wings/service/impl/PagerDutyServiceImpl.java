@@ -57,14 +57,14 @@ public class PagerDutyServiceImpl implements PagerDutyService {
     TriggerIncident incident = TriggerIncidentBuilder.newBuilder(pagerDutyKey, payload).build();
     try {
       EventResult result = pagerDutyEventsClient.trigger(incident);
-      logger.debug("Event result {} for {}", result, incident);
+      log.debug("Event result {} for {}", result, incident);
 
       if (result != null && result.getErrors() == null) {
         String dedupKey = result.getDedupKey();
         pagerDutyEventsClient.resolve(ResolveIncidentBuilder.newBuilder(pagerDutyKey, dedupKey).build());
         return true;
       } else {
-        logger.error(errorMsg + "result: {} ", result);
+        log.error(errorMsg + "result: {} ", result);
         throw new WingsException(ErrorCode.PAGERDUTY_ERROR, WingsException.USER).addParam("message", errorMsg);
       }
     } catch (NotifyEventException e) {
@@ -110,7 +110,7 @@ public class PagerDutyServiceImpl implements PagerDutyService {
     TriggerIncident incident = TriggerIncidentBuilder.newBuilder(pagerDutyKey, payload).setLinks(links).build();
     try {
       EventResult result = pagerDutyEventsClient.trigger(incident);
-      logger.debug("Event result {} for {}", result, incident);
+      log.debug("Event result {} for {}", result, incident);
       if (result != null && result.getErrors() == null) {
         return true;
       } else {

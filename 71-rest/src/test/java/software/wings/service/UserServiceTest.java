@@ -337,7 +337,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (Exception e) {
-      logger.info("Expected error " + e.getMessage());
+      log.info("Expected error " + e.getMessage());
       assertThat(e).isInstanceOf(UnauthorizedException.class);
     }
 
@@ -347,7 +347,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      logger.info("Expected error " + e.getCode());
+      log.info("Expected error " + e.getCode());
       assertThat(e).isInstanceOf(UserRegistrationException.class);
     }
 
@@ -356,7 +356,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      logger.info("Expected error " + e.getCode());
+      log.info("Expected error " + e.getCode());
       assertThat(e).isInstanceOf(GeneralException.class);
     }
 
@@ -366,7 +366,7 @@ public class UserServiceTest extends WingsBaseTest {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
     } catch (WingsException e) {
-      logger.info("Expected error " + e.getCode());
+      log.info("Expected error " + e.getCode());
       assertThat(e.getCode()).isEqualTo(INVALID_CREDENTIAL);
     }
 

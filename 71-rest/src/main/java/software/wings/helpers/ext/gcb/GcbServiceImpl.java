@@ -67,7 +67,7 @@ public class GcbServiceImpl implements GcbService {
       }
       return response.body();
     } catch (InterruptedIOException e) {
-      logger.error("Failed to create GCB build due to: ", e);
+      log.error("Failed to create GCB build due to: ", e);
       throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -87,7 +87,7 @@ public class GcbServiceImpl implements GcbService {
       }
       return response.body();
     } catch (InterruptedIOException e) {
-      logger.error("Failed to fetch GCB build due to: ", e);
+      log.error("Failed to fetch GCB build due to: ", e);
       throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -107,7 +107,7 @@ public class GcbServiceImpl implements GcbService {
       }
       throw new GcbClientException(extractErrorMessage(response));
     } catch (InterruptedIOException e) {
-      logger.error("Failed to run GCB trigger due to: ", e);
+      log.error("Failed to run GCB trigger due to: ", e);
       throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -128,7 +128,7 @@ public class GcbServiceImpl implements GcbService {
       }
       return response.body().string();
     } catch (InterruptedIOException e) {
-      logger.error("Failed to fetch GCB build logs due to: ", e);
+      log.error("Failed to fetch GCB build logs due to: ", e);
       throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -192,7 +192,7 @@ public class GcbServiceImpl implements GcbService {
       return String.join(" ", "Bearer", gc.getAccessToken());
     } else {
       String msg = "Could not refresh token for google cloud provider";
-      logger.warn(msg);
+      log.warn(msg);
       throw new GcbClientException(msg);
     }
   }
@@ -205,7 +205,7 @@ public class GcbServiceImpl implements GcbService {
       }
       return String.join(" ", "Bearer", gc.refreshAccessToken().getTokenValue());
     } catch (IOException e) {
-      logger.error("Failed to get default credentials", e);
+      log.error("Failed to get default credentials", e);
       throw new GcbClientException("Failed to retrieve GCP access token");
     }
   }
@@ -229,7 +229,7 @@ public class GcbServiceImpl implements GcbService {
       okhttp3.Response response = client.newCall(request).execute();
       return response.body().string();
     } catch (IOException | NullPointerException e) {
-      logger.error("Failed to get projectId due to: ", e);
+      log.error("Failed to get projectId due to: ", e);
       throw new GcbClientException("Can not retrieve project-id from from cluster meta");
     }
   }

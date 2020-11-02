@@ -38,11 +38,11 @@ public class GCPUsageReportServiceImpl implements GCPUsageReportService {
     String id = persistence.save(gcpUsageReport);
 
     if (null == id) {
-      logger.error("Could not create gcpUsageReport: {}", gcpUsageReport);
+      log.error("Could not create gcpUsageReport: {}", gcpUsageReport);
       return false;
     }
 
-    logger.info("Saved gcpUsageReport. accountId: {}, startTime: {}, endTime: {}, instanceCount {}, id {}",
+    log.info("Saved gcpUsageReport. accountId: {}, startTime: {}, endTime: {}, instanceCount {}, id {}",
         gcpUsageReport.getAccountId(), gcpUsageReport.getStartTimestamp(), gcpUsageReport.getEndTimestamp(),
         gcpUsageReport.getInstanceUsage(), id);
 

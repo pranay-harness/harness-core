@@ -38,7 +38,7 @@ public class WebhookServiceImpl implements WebhookService {
                              .filter(WebhookTokenKeys.orgIdentifier, orgIdentifier)
                              .get();
     if (token != null) {
-      logger.info("Token already present for project {} and org {}", projectIdentifier, orgIdentifier);
+      log.info("Token already present for project {} and org {}", projectIdentifier, orgIdentifier);
       return token.getToken();
     }
     token = WebhookToken.builder()
@@ -47,7 +47,7 @@ public class WebhookServiceImpl implements WebhookService {
                 .projectIdentifier(projectIdentifier)
                 .build();
     hPersistence.save(token);
-    logger.info("Created a new Webhook token for project {} and org {}", projectIdentifier, orgIdentifier);
+    log.info("Created a new Webhook token for project {} and org {}", projectIdentifier, orgIdentifier);
     return token.getToken();
   }
 
@@ -56,7 +56,7 @@ public class WebhookServiceImpl implements WebhookService {
     Preconditions.checkNotNull(projectIdentifier);
     Preconditions.checkNotNull(orgIdentifier);
 
-    logger.info("Recreating a new webhook for project {} and org {}", projectIdentifier, orgIdentifier);
+    log.info("Recreating a new webhook for project {} and org {}", projectIdentifier, orgIdentifier);
     String newToken = CryptoUtils.secureRandAlphaNumString(40);
     Query<WebhookToken> tokenQuery = hPersistence.createQuery(WebhookToken.class)
                                          .filter(WebhookTokenKeys.projectIdentifier, projectIdentifier)
@@ -76,7 +76,7 @@ public class WebhookServiceImpl implements WebhookService {
     Preconditions.checkNotNull(projectIdentifier);
     Preconditions.checkNotNull(orgIdentifier);
 
-    logger.info("Deleting the webhook for project {} and org {}", projectIdentifier, orgIdentifier);
+    log.info("Deleting the webhook for project {} and org {}", projectIdentifier, orgIdentifier);
     hPersistence.delete(hPersistence.createQuery(WebhookToken.class)
                             .filter(WebhookTokenKeys.projectIdentifier, projectIdentifier)
                             .filter(WebhookTokenKeys.orgIdentifier, orgIdentifier));

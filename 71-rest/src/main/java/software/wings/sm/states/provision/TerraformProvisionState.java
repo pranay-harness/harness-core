@@ -201,7 +201,7 @@ public abstract class TerraformProvisionState extends State {
       json.forEach((key, object) -> outputs.put(key, ((Map<String, Object>) object).get("value")));
 
     } catch (IOException exception) {
-      logger.error("", exception);
+      log.error("", exception);
     }
 
     return outputs;

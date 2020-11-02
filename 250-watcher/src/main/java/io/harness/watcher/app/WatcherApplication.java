@@ -92,11 +92,11 @@ public class WatcherApplication {
         previousWatcherProcess = args[2];
       }
 
-      logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
+      log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
       WatcherApplication watcherApplication = new WatcherApplication();
       watcherApplication.run(configuration, upgrade, previousWatcherProcess);
     } catch (Exception exception) {
-      logger.error("Watcher process initialization failed", exception);
+      log.error("Watcher process initialization failed", exception);
       throw exception;
     }
   }
@@ -146,10 +146,10 @@ public class WatcherApplication {
                                          .publishAuthority(publishAuthority)
                                          .build()));
       } else {
-        logger.warn("Unable to configure event publisher configs. Event publisher will be disabled");
+        log.warn("Unable to configure event publisher configs. Event publisher will be disabled");
       }
     } else {
-      logger.warn("Skipping event publisher configuration for on-prem deployment");
+      log.warn("Skipping event publisher configuration for on-prem deployment");
     }
 
     Injector injector = Guice.createInjector(modules);
@@ -157,13 +157,13 @@ public class WatcherApplication {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       MessageService messageService = injector.getInstance(MessageService.class);
       messageService.closeChannel(WATCHER, processId);
-      logger.info("My watch has ended");
+      log.info("My watch has ended");
       LogManager.shutdown();
     }));
 
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
-      logger.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);
+      log.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);
       messageService.writeMessageToChannel(WATCHER, previousWatcherProcess, NEW_WATCHER, processId);
     }
 
@@ -173,7 +173,7 @@ public class WatcherApplication {
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(ExecutorService.class).shutdown();
     injector.getInstance(ExecutorService.class).awaitTermination(5, TimeUnit.MINUTES);
-    logger.info("Flushing logs");
+    log.info("Flushing logs");
     LogManager.shutdown();
     System.exit(0);
   }

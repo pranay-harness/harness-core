@@ -45,9 +45,8 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
       execute(
           delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
     } catch (Exception e) {
-      logger.error(
-          String.format("Failed to publish the instance collection result to manager for aws ssh for taskId [%s]",
-              taskId.getId()),
+      log.error(String.format("Failed to publish the instance collection result to manager for aws ssh for taskId [%s]",
+                    taskId.getId()),
           e);
     }
 
@@ -64,7 +63,7 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
           .executionStatus(ExecutionStatus.SUCCESS)
           .build();
     } catch (Exception e) {
-      logger.error("Error occured while fetching instances from AWS", e);
+      log.error("Error occured while fetching instances from AWS", e);
       return AwsEc2ListInstancesResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(e.getMessage())

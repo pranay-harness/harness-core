@@ -102,7 +102,7 @@ public class ReflectionUtils {
             }
             f.setAccessible(isAccessible);
           } catch (IllegalAccessException e) {
-            logger.error("Field [{}] is not accessible ", f.getName());
+            log.error("Field [{}] is not accessible ", f.getName());
           }
         }
       }
@@ -166,9 +166,9 @@ public class ReflectionUtils {
         Object value = field.get(obj);
         fieldNameValueMap.put(fieldName, value);
       } catch (NoSuchFieldException ignored) {
-        logger.error(format("Field \"%s\" not available in object \"%s\"", fieldName, obj.toString()));
+        log.error(format("Field \"%s\" not available in object \"%s\"", fieldName, obj.toString()));
       } catch (IllegalAccessException e) {
-        logger.error(format("Unable to access field \"%s\"", fieldName));
+        log.error(format("Unable to access field \"%s\"", fieldName));
       }
     }
     return fieldNameValueMap;
@@ -182,7 +182,7 @@ public class ReflectionUtils {
     try {
       return FieldUtils.readField(field, obj, true);
     } catch (IllegalAccessException e) {
-      logger.error("Unable to access field {} in object {}", field.getName(), obj.getClass(), e);
+      log.error("Unable to access field {} in object {}", field.getName(), obj.getClass(), e);
     }
     return null;
   }

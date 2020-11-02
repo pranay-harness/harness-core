@@ -24,7 +24,7 @@ public class AddCEPermissionToAllUserGroups implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Starting updating admin user groups with CE_ADMIN permission type");
+    log.info("Starting updating admin user groups with CE_ADMIN permission type");
     UserGroup userGroup = null;
     try (HIterator<UserGroup> userGroups =
              new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
@@ -47,10 +47,10 @@ public class AddCEPermissionToAllUserGroups implements Migration {
             wingsPersistence.update(userGroup, operations);
           }
         } catch (Exception ex) {
-          logger.error("Error while updating user group {}", userGroup != null ? userGroup.getUuid() : "NA", ex);
+          log.error("Error while updating user group {}", userGroup != null ? userGroup.getUuid() : "NA", ex);
         }
       }
     }
-    logger.info("Completed updating admin user groups with CE_ADMIN permission type");
+    log.info("Completed updating admin user groups with CE_ADMIN permission type");
   }
 }

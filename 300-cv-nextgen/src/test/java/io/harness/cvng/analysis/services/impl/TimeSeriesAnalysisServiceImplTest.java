@@ -481,14 +481,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
     assertThat(task.getControlDataUrl())
-        .isEqualTo("/cv-nextgen/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
+        .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
             + "&startTime=1595846766390&endTime=1595847666390");
     assertThat(task.getBaselineStartTime()).isEqualTo(1595846766390L);
     assertThat(task.getTestDataUrl())
-        .isEqualTo("/cv-nextgen/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
+        .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
             + "&startTime=1595846766390&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
-        .isEqualTo("/cv-nextgen/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
+        .isEqualTo("/cv/api/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
             + verificationTaskId);
     assertThat(task.getDataLength()).isEqualTo(9);
     assertThat(task.getTolerance()).isEqualTo(2);

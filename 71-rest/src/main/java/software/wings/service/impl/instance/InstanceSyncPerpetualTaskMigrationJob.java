@@ -66,14 +66,14 @@ public class InstanceSyncPerpetualTaskMigrationJob implements Managed {
   public void run() {
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(LOCK_NAME, Duration.ofMinutes(30))) {
       if (lock == null) {
-        logger.info("Couldn't acquire lock");
+        log.info("Couldn't acquire lock");
         return;
       }
-      logger.info("Instance sync Perpetual Task migration job started");
+      log.info("Instance sync Perpetual Task migration job started");
       for (FeatureName featureName : featureFlagToInstanceHandlerMap.keySet()) {
         handleFeatureFlag(featureName);
       }
-      logger.info("Instance sync Perpetual Task migration job completed");
+      log.info("Instance sync Perpetual Task migration job completed");
     }
   }
 
@@ -90,7 +90,7 @@ public class InstanceSyncPerpetualTaskMigrationJob implements Managed {
   }
 
   private void handleFeatureFlag(FeatureName featureFlag) {
-    logger.info("Processing Feature Flag: [{}]", featureFlag.name());
+    log.info("Processing Feature Flag: [{}]", featureFlag.name());
     Set<String> allAccounts = accountService.listAllAccountWithDefaultsWithoutLicenseInfo()
                                   .stream()
                                   .map(Account::getUuid)
@@ -106,25 +106,23 @@ public class InstanceSyncPerpetualTaskMigrationJob implements Managed {
       featureFlagDisabledAccounts = Sets.difference(allAccounts, featureFlagEnabledAccounts);
     }
 
-    logger.info("Enabling Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagEnabledAccounts.size());
+    log.info("Enabling Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagEnabledAccounts.size());
 
     for (String accountId : featureFlagEnabledAccounts) {
       enableFeatureFlagForAccount(featureFlag, accountId);
     }
 
-    logger.info("Enabled Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagEnabledAccounts.size());
+    log.info("Enabled Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagEnabledAccounts.size());
 
-    logger.info(
-        "Disabling Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagDisabledAccounts.size());
+    log.info("Disabling Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagDisabledAccounts.size());
 
     for (String accountId : featureFlagDisabledAccounts) {
       disableFeatureFlagForAccount(featureFlag, accountId);
     }
 
-    logger.info(
-        "Disabled Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagDisabledAccounts.size());
+    log.info("Disabled Feature Flag: [{}] for [{}] accounts", featureFlag.name(), featureFlagDisabledAccounts.size());
 
-    logger.info("Processed Feature Flag: [{}]", featureFlag.name());
+    log.info("Processed Feature Flag: [{}]", featureFlag.name());
   }
 
   private void enableFeatureFlagForAccount(FeatureName featureFlag, String accountId) {

@@ -57,15 +57,14 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
     try (AutoLogContext ignore1 = new AccountLogContext(infrastructureMapping.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new InfraMappingLogContext(infrastructureMapping.getUuid(), OVERRIDE_ERROR)) {
       if (instanceHelper.shouldSkipIteratorInstanceSync(infrastructureMapping)) {
-        logger.info("Skipping Instance Sync for Infrastructure Mapping {}", infrastructureMapping.getUuid());
+        log.info("Skipping Instance Sync for Infrastructure Mapping {}", infrastructureMapping.getUuid());
         return;
       }
 
       try {
         instanceHelper.syncNow(infrastructureMapping.getAppId(), infrastructureMapping, ITERATOR);
       } catch (Exception ex) {
-        logger.error(
-            "Error while syncing instances for Infrastructure Mapping {}", infrastructureMapping.getUuid(), ex);
+        log.error("Error while syncing instances for Infrastructure Mapping {}", infrastructureMapping.getUuid(), ex);
       }
     }
   }

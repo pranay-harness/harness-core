@@ -47,7 +47,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
             .encryptionDetails(encryptionDetails)
             .region(region)
             .build());
-    logger.info("Listing Lambda functions for region {}", region);
+    log.info("Listing Lambda functions for region {}", region);
     return ((AwsLambdaFunctionResponse) response).getLambdaFunctions();
   }
 

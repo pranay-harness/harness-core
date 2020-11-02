@@ -370,7 +370,7 @@ public class YamlHandlerFactory {
 
     if (yamlHandler == null) {
       String msg = "Yaml handler not found for yaml type: " + yamlType + " and subType: " + subType;
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
 

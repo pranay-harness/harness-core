@@ -49,7 +49,7 @@ public class MailinatorRestUtils {
         messageToReturn[0] = message;
       }
     });
-    logger.info("Message successfully retrieved from inbox");
+    log.info("Message successfully retrieved from inbox");
     return messageToReturn[0];
   }
 }

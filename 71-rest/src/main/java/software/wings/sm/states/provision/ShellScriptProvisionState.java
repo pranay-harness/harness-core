@@ -173,7 +173,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     try {
       return new ObjectMapper().readValue(output, typeRef);
     } catch (IOException e) {
-      logger.error("Output : " + output);
+      log.error("Output : " + output);
       throw new InvalidRequestException("Not a json type output", WingsException.USER);
     }
   }
@@ -224,7 +224,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
       results.put("Required Fields missing", "Provision must be provided.");
       return results;
     }
-    logger.info("Shell Script Provision State Validated");
+    log.info("Shell Script Provision State Validated");
     return results;
   }
 

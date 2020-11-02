@@ -52,7 +52,7 @@ public class SpotinstTrafficShiftAlbSetupTaskHandler extends SpotInstTaskHandler
     if (!(spotinstTaskParameters instanceof SpotinstTrafficShiftAlbSetupParameters)) {
       String message = format("Parameters of unrecognized class: [%s] found while executing setup step.",
           spotinstTaskParameters.getClass().getSimpleName());
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
 

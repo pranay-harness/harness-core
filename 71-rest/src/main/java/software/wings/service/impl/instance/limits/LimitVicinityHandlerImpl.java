@@ -53,7 +53,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
     try {
       limitChecker = limitCheckerFactory.getInstance(action);
     } catch (NoLimitConfiguredException e) {
-      logger.error(
+      log.error(
           "No limit configured. No check will be done. Configure a default limit in DefaultLimitsServiceImpl. Action: {}",
           action);
       return;
@@ -73,7 +73,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.RESOURCE_USAGE_APPROACHING_LIMIT, alertData);
       }
     } else {
-      logger.error("Unhandled type of limit checker. Either alert for it, or explicitly exclude it. Class: {}",
+      log.error("Unhandled type of limit checker. Either alert for it, or explicitly exclude it. Class: {}",
           limitChecker.getClass().getSimpleName());
     }
   }
@@ -84,7 +84,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
       try {
         return Integer.parseInt(percent);
       } catch (NumberFormatException e) {
-        logger.error("Error reading RESOURCE_LIMIT_USAGE_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
+        log.error("Error reading RESOURCE_LIMIT_USAGE_WARN_PERCENTAGE from env variables. Found Value: {}", percent);
         return PERCENT_TO_WARN_ON_DEFAULT;
       }
     }

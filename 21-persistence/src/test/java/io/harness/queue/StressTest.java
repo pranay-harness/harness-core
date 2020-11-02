@@ -48,13 +48,13 @@ public class StressTest extends PersistenceTestBase {
           persistence.save(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous topic records added: {}, still in queue {}", i, topicConsumer.count(ALL));
+            log.info("Previous topic records added: {}, still in queue {}", i, topicConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
           topicPublisher.send(new TestTopicQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct topic records added: {} , still in the queue {}", i, topicConsumer.count(ALL));
+            log.info("Correct topic records added: {} , still in the queue {}", i, topicConsumer.count(ALL));
           }
         }
 
@@ -62,7 +62,7 @@ public class StressTest extends PersistenceTestBase {
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
             final long count = topicConsumer.count(ALL);
-            // logger.info("Intermittent queue count: {}", count);
+            // log.info("Intermittent queue count: {}", count);
             return count == 0;
           });
         } catch (Exception ignore) {
@@ -70,7 +70,7 @@ public class StressTest extends PersistenceTestBase {
         }
 
         final long diff = start - topicConsumer.count(ALL);
-        logger.info("Items handled for 10s: {}", diff);
+        log.info("Items handled for 10s: {}", diff);
       }
     })
         .doesNotThrowAnyException();
@@ -92,13 +92,13 @@ public class StressTest extends PersistenceTestBase {
           noToipcPublisher.send(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous records added: {}, still in queue {}", i, noTopicConsumer.count(ALL));
+            log.info("Previous records added: {}, still in queue {}", i, noTopicConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
           noToipcPublisher.send(new TestNoTopicQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct records added: {} , still in the queue {}", i, noTopicConsumer.count(ALL));
+            log.info("Correct records added: {} , still in the queue {}", i, noTopicConsumer.count(ALL));
           }
         }
 
@@ -106,7 +106,7 @@ public class StressTest extends PersistenceTestBase {
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
             final long count = noTopicConsumer.count(ALL);
-            // logger.info("Intermittent queue count: {}", count);
+            // log.info("Intermittent queue count: {}", count);
             return count == 0;
           });
         } catch (Exception ignore) {
@@ -114,7 +114,7 @@ public class StressTest extends PersistenceTestBase {
         }
 
         final long diff = start - noTopicConsumer.count(ALL);
-        logger.info("Items handled for 10s: {}", diff);
+        log.info("Items handled for 10s: {}", diff);
       }
     })
         .doesNotThrowAnyException();

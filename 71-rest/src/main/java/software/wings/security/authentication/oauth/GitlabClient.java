@@ -80,7 +80,7 @@ public class GitlabClient extends BaseOauthClient implements OauthClient {
 
   private OAuth2AccessToken getAccessToken(final String code)
       throws InterruptedException, ExecutionException, IOException {
-    logger.info("Access token received is: {}", code);
+    log.info("Access token received is: {}", code);
     return service.getAccessToken(code);
   }
 
@@ -94,7 +94,7 @@ public class GitlabClient extends BaseOauthClient implements OauthClient {
       email = jsonObject.getString(EMAIL_FIELD_NAME);
       return OauthUserInfo.builder().email(email).name(name).build();
     } catch (JSONException je) {
-      logger.error("Unable to parse json in github oauth", je);
+      log.error("Unable to parse json in github oauth", je);
     }
     return OauthUserInfo.builder().email(email).name(name).build();
   }

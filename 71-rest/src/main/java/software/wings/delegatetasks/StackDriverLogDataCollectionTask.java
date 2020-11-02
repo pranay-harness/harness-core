@@ -57,7 +57,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
   @Override
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (StackDriverLogDataCollectionInfo) parameters;
-    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
+    log.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskResult.DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.STACK_DRIVER_LOG)
@@ -66,7 +66,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
 
   @Override
   protected Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override
@@ -106,11 +106,11 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
     public void run() {
       encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       int retry = 0;
-      logger.info("Initiating Stackdriver log Data collection for startTime : {} duration : {}", collectionStartTime,
+      log.info("Initiating Stackdriver log Data collection for startTime : {} duration : {}", collectionStartTime,
           dataCollectionInfo.getCollectionTime());
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.info("starting log data collection for {} for minute {}", dataCollectionInfo, collectionStartTime);
+          log.info("starting log data collection for {} for minute {}", dataCollectionInfo, collectionStartTime);
 
           List<LogElement> logElements = new ArrayList<>();
           for (String host : dataCollectionInfo.getHosts()) {
@@ -123,7 +123,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
 
             int clusterLabel = 0;
 
-            logger.info("Total no. of log records found : {}", entries.size());
+            log.info("Total no. of log records found : {}", entries.size());
             for (LogEntry entry : entries) {
               long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
               String logMessageField = isNotEmpty(dataCollectionInfo.getLogMessageField())
@@ -134,7 +134,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
                   isNotEmpty(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
                                                                     : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
               if (isEmpty(logMessage) || isEmpty(host)) {
-                logger.error(
+                log.error(
                     "either log message or host is empty for stateExId {} cvConfigId {}. Log message field: {} host field: {} entry: {} ",
                     dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getCvConfigId(), logMessageField,
                     dataCollectionInfo.getHostnameField(), entry);
@@ -160,7 +160,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
             completed.set(true);
             break;
           } catch (Exception e) {
-            logger.info("Search job was cancelled. Retrying ...", e);
+            log.info("Search job was cancelled. Retrying ...", e);
             if (++retry == RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               taskResult.setErrorMessage(
@@ -171,7 +171,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
             sleep(DATA_COLLECTION_RETRY_SLEEP);
             continue;
           }
-          logger.info("sent Stackdriver search records to server. Num of events: " + logElements.size()
+          log.info("sent Stackdriver search records to server. Num of events: " + logElements.size()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
 
@@ -192,7 +192,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
           }
 
           // We are done with all data collection, so setting task status to success and quitting.
-          logger.info(
+          log.info(
               "Completed stack driver collection task. So setting task status to success and quitting. StateExecutionId {}",
               dataCollectionInfo.getStateExecutionId());
           completed.set(true);
@@ -200,8 +200,8 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
           break;
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            logger.error("error fetching stack driver logs for {} for minute {}",
-                dataCollectionInfo.getStateExecutionId(), logCollectionMinute, ex);
+            log.error("error fetching stack driver logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE);
             completed.set(true);
             break;
@@ -209,7 +209,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching stack driver logs for minute " + logCollectionMinute + ". retrying in "
+            log.warn("error fetching stack driver logs for minute " + logCollectionMinute + ". retrying in "
                     + DATA_COLLECTION_RETRY_SLEEP + "s",
                 ex);
             sleep(DATA_COLLECTION_RETRY_SLEEP);
@@ -218,7 +218,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
       }
 
       if (completed.get()) {
-        logger.info("Shutting down stack driver data collection");
+        log.info("Shutting down stack driver data collection");
         shutDownCollection();
         return;
       }

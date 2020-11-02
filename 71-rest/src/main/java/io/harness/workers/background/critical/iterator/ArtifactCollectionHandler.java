@@ -84,7 +84,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public void handle(ArtifactStream artifactStream) {
     try (AutoLogContext ignore2 = new ArtifactStreamLogContext(
              artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-      logger.info("Received the artifact collection for ArtifactStream");
+      log.info("Received the artifact collection for ArtifactStream");
     }
     executeInternal(artifactStream);
   }
@@ -107,21 +107,21 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
                                                         .accountId(artifactStream.getAccountId())
                                                         .build());
       if (isNotEmpty(permitId)) {
-        logger.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
+        log.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
             artifactStream.getFailedCronAttempts(), TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
         artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);
       } else {
-        logger.info("Permit already exists for artifactStream");
+        log.info("Permit already exists for artifactStream");
       }
     } catch (WingsException exception) {
-      logger.warn("Failed to collect artifacts for artifact stream. Reason {}", exception.getMessage());
+      log.warn("Failed to collect artifacts for artifact stream. Reason {}", exception.getMessage());
       if (artifactStream.getAccountId() != null) {
         exception.addContext(Account.class, artifactStream.getAccountId());
       }
       exception.addContext(ArtifactStream.class, artifactStreamId);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception e) {
-      logger.warn("Failed to collect artifacts for artifactStream. Reason {}", e.getMessage());
+      log.warn("Failed to collect artifacts for artifactStream. Reason {}", e.getMessage());
     }
   }
 }

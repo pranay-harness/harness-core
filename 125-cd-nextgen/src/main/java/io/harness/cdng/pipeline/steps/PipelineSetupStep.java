@@ -33,7 +33,7 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, CDPipelineSetupParameters cdPipelineSetupParameters, StepInputPackage inputPackage) {
-    logger.info("starting execution for pipeline [{}]", cdPipelineSetupParameters);
+    log.info("starting execution for pipeline [{}]", cdPipelineSetupParameters);
 
     final Map<String, String> fieldToExecutionNodeIdMap = cdPipelineSetupParameters.getFieldToExecutionNodeIdMap();
     final String stagesNodeId = fieldToExecutionNodeIdMap.get("stages");
@@ -43,7 +43,7 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<
   @Override
   public StepResponse handleChildResponse(Ambiance ambiance, CDPipelineSetupParameters cdPipelineSetupParameters,
       Map<String, ResponseData> responseDataMap) {
-    logger.info("executed pipeline =[{}]", cdPipelineSetupParameters);
+    log.info("executed pipeline =[{}]", cdPipelineSetupParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }

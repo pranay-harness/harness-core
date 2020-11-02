@@ -20,7 +20,7 @@ public class PVCFetcher {
 
   @Inject
   public PVCFetcher(@Assisted ApiClient apiClient, @Assisted SharedInformerFactory sharedInformerFactory) {
-    logger.info("Creating new PVCFetcher for cluster: {}", apiClient.getBasePath());
+    log.info("Creating new PVCFetcher for cluster: {}", apiClient.getBasePath());
     this.coreV1Api = new CoreV1Api(apiClient);
     this.store = sharedInformerFactory
                      .sharedIndexInformerFor(
@@ -31,8 +31,8 @@ public class PVCFetcher {
                                  null, null, callGeneratorParams.resourceVersion, callGeneratorParams.timeoutSeconds,
                                  callGeneratorParams.watch, null);
                            } catch (ApiException e) {
-                             logger.error("Exception occurred creatingCall; code=[{}] headres=[{}] body=[{}]",
-                                 e.getCode(), e.getResponseHeaders(), e.getResponseBody(), e);
+                             log.error("Exception occurred creatingCall; code=[{}] headres=[{}] body=[{}]", e.getCode(),
+                                 e.getResponseHeaders(), e.getResponseBody(), e);
                              throw e;
                            }
                          },
@@ -45,7 +45,7 @@ public class PVCFetcher {
       return this.store.getByKey(namespace + "/" + name);
     }
 
-    logger.warn("PVC not found in PVCInformerStore, fetching using coreV1Api.");
+    log.warn("PVC not found in PVCInformerStore, fetching using coreV1Api.");
     return this.coreV1Api.readNamespacedPersistentVolumeClaim(name, namespace, null, null, null);
   }
 }

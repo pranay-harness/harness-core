@@ -235,7 +235,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       executionResponseBuilder.errorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
       return executionResponseBuilder.build();
     } else {
-      logger.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
+      log.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     ExecutionResponse executionResponse = executionResponseBuilder.build();

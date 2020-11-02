@@ -108,7 +108,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
   @Override
   @SchemaIgnore
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   @Override

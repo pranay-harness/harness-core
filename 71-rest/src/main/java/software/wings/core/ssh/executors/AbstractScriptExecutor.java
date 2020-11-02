@@ -216,10 +216,10 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
         int lastIndexOfSlash = fileName.lastIndexOf('/');
         if (lastIndexOfSlash > 0) {
           saveExecutionLogWarn("Filename contains slashes. Stripping off the portion before last slash.");
-          logger.warn("Filename contains slashes. Stripping off the portion before last slash.");
+          log.warn("Filename contains slashes. Stripping off the portion before last slash.");
           fileName = fileName.substring(lastIndexOfSlash + 1);
           saveExecutionLogWarn("Got filename: " + fileName);
-          logger.warn("Got filename: " + fileName);
+          log.warn("Got filename: " + fileName);
         }
 
         return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ArtifactMetadataKeys.artifactFileSize)));

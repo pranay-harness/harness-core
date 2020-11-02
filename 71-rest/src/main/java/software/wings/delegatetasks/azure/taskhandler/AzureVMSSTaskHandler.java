@@ -69,8 +69,8 @@ public abstract class AzureVMSSTaskHandler {
       } else {
         ExecutionLogCallback logCallback = getLogCallBack(azureVMSSTaskParameters, DEPLOYMENT_ERROR);
         logCallback.saveExecutionLog(message, ERROR, FAILURE);
-        logger.error(format("Exception: [%s] while processing azure vmss task: [%s].", message,
-                         azureVMSSTaskParameters.getCommandType().name()),
+        log.error(format("Exception: [%s] while processing azure vmss task: [%s].", message,
+                      azureVMSSTaskParameters.getCommandType().name()),
             ex);
         return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
       }

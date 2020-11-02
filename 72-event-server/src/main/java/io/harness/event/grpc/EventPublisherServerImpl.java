@@ -55,7 +55,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
     String delegateId = request.getMessages(0).getAttributesMap().getOrDefault(DELEGATE_ID, "");
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore1 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      logger.info("Received publish request with {} messages", request.getMessagesCount());
+      log.info("Received publish request with {} messages", request.getMessagesCount());
 
       List<PublishedMessage> withoutCategory = new ArrayList<>();
       List<PublishedMessage> withCategory = new ArrayList<>();
@@ -75,7 +75,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
         try {
           hPersistence.saveIgnoringDuplicateKeys(withoutCategory);
         } catch (Exception e) {
-          logger.warn("Encountered error while persisting messages", e);
+          log.warn("Encountered error while persisting messages", e);
           responseObserver.onError(Status.INTERNAL.withCause(e).asException());
           return;
         }
@@ -84,7 +84,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
       try {
         lastReceivedPublishedMessageRepository.updateLastReceivedPublishedMessages(withoutCategory);
       } catch (Exception e) {
-        logger.warn("Error while persisting last received data", e);
+        log.warn("Error while persisting last received data", e);
       }
 
       try {
@@ -94,10 +94,10 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
           processor.process(publishedMessage);
         });
       } catch (Exception e) {
-        logger.warn("Error while processing messages", e);
+        log.warn("Error while processing messages", e);
       }
 
-      logger.info("Published messages persisted");
+      log.info("Published messages persisted");
       responseObserver.onNext(PublishResponse.newBuilder().build());
       responseObserver.onCompleted();
     }
@@ -115,7 +115,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
           .occurredAt(HTimestamps.toMillis(publishMessage.getOccurredAt()))
           .build();
     } catch (Exception e) {
-      logger.error("Error persisting message {}", publishMessage, e);
+      log.error("Error persisting message {}", publishMessage, e);
       return null;
     }
   }

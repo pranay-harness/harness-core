@@ -33,7 +33,7 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
                                                     .getKey()
           == null;
       if (rootTemplateGalleryDoesNotExist) {
-        logger.error("TemplateGalleryDefaultTemplatesMigration root template gallery not found");
+        log.error("TemplateGalleryDefaultTemplatesMigration root template gallery not found");
         templateGalleryService.loadHarnessGallery(); // takes care of copying templates to individual accounts
         templateGalleryService.copyHarnessTemplates();
       } else {
@@ -41,7 +41,7 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
         copyHarnessTemplateToAccounts();
       }
     } catch (Exception ex) {
-      logger.error("TemplateGalleryDefaultTemplatesMigration failed", ex);
+      log.error("TemplateGalleryDefaultTemplatesMigration failed", ex);
     }
   }
 
@@ -49,7 +49,7 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
     try (HIterator<Account> records = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
       for (Account account : records) {
         try {
-          logger.info("TemplateGalleryDefaultTemplatesMigration started for account [{}]", account.getUuid());
+          log.info("TemplateGalleryDefaultTemplatesMigration started for account [{}]", account.getUuid());
           boolean templateGalleryDoesNotExist = wingsPersistence.createQuery(TemplateGallery.class)
                                                     .field(TemplateGallery.NAME_KEY)
                                                     .equal(account.getAccountName())
@@ -62,13 +62,12 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
               templateGalleryService.copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
             }
           } else {
-            logger.info("TemplateGalleryDefaultTemplatesMigration gallery already exists for account [{}]. do nothing",
+            log.info("TemplateGalleryDefaultTemplatesMigration gallery already exists for account [{}]. do nothing",
                 account.getUuid());
           }
-          logger.info("TemplateGalleryDefaultTemplatesMigration finished for account [{}]", account.getUuid());
+          log.info("TemplateGalleryDefaultTemplatesMigration finished for account [{}]", account.getUuid());
         } catch (Exception ex) {
-          logger.error(
-              format("TemplateGalleryDefaultTemplatesMigration failed for account [%s]", account.getUuid()), ex);
+          log.error(format("TemplateGalleryDefaultTemplatesMigration failed for account [%s]", account.getUuid()), ex);
         }
       }
     }

@@ -72,7 +72,7 @@ public class NameServiceImpl implements NameService {
       case workflow:
         return getWorkflowNames(ids);
       default:
-        logger.warn("Unsupported type :[{}]", type);
+        log.warn("Unsupported type :[{}]", type);
         return NameResult.builder().type(type).build();
     }
   }

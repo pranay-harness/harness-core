@@ -180,7 +180,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // Time to list tags
     long startTime = System.currentTimeMillis();
     PageResponse<Environment> pageResponse = list(request, withTags, tagFilter);
-    logger.info("Total time taken to load tags {}", System.currentTimeMillis() - startTime);
+    log.info("Total time taken to load tags {}", System.currentTimeMillis() - startTime);
 
     if (pageResponse.getResponse() == null) {
       return pageResponse;
@@ -201,7 +201,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // Time to list infradefcounts
     long startTime = System.currentTimeMillis();
     Map<String, Integer> countForEnvironments = infrastructureDefinitionService.getCountForEnvironments(appId, envIds);
-    logger.info("Total time taken to load infra definition count {}", System.currentTimeMillis() - startTime);
+    log.info("Total time taken to load infra definition count {}", System.currentTimeMillis() - startTime);
 
     for (Environment environment : environments) {
       environment.setInfrastructureDefinitions(
@@ -704,7 +704,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
                   infrastructureMappingService.save(infrastructureMapping, true, null);
                 } catch (Exception e) {
-                  logger.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
+                  log.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
                       infrastructureMapping.getName(), infrastructureMapping.getUuid(),
                       infrastructureMapping.getEnvId(), e);
                 }
@@ -819,7 +819,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
         // ToDo anshul why do we have same thing in two places
         cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
-        logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
+        log.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
       return clonedEnvironment;
     }
@@ -886,7 +886,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           File file = configService.download(configFile.getAppId(), configFile.getUuid());
           configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
         } catch (FileNotFoundException e) {
-          logger.error("Error in cloning config file " + configFile.toString(), e);
+          log.error("Error in cloning config file " + configFile.toString(), e);
           // Ignore and continue adding more files
         }
       }

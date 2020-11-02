@@ -59,11 +59,11 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runAWSCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAWSCloudProvider, booleanMatcher, true);
-    logger.info("Created AWS Cloud provider with id {}", AWSCloudProviderId);
+    log.info("Created AWS Cloud provider with id {}", AWSCloudProviderId);
     updateAWSCloudProvider();
-    logger.info("Updated AWS Cloud provider with id {}", AWSCloudProviderId);
+    log.info("Updated AWS Cloud provider with id {}", AWSCloudProviderId);
     deleteAWSCloudProvider();
-    logger.info("Deleted AWS Cloud provider with id {}", AWSCloudProviderId);
+    log.info("Deleted AWS Cloud provider with id {}", AWSCloudProviderId);
   }
 
   @Test
@@ -71,11 +71,11 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runAzureCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAzureCloudProvider, booleanMatcher, true);
-    logger.info("Created Azure Cloud provider with id {}", AzureCloudProviderId);
+    log.info("Created Azure Cloud provider with id {}", AzureCloudProviderId);
     updateAzureCloudProvider();
-    logger.info("Updated Azure Cloud provider with id {}", AzureCloudProviderId);
+    log.info("Updated Azure Cloud provider with id {}", AzureCloudProviderId);
     deleteAzureCloudProvider();
-    logger.info("Deleted Azure Cloud provider with id {}", AzureCloudProviderId);
+    log.info("Deleted Azure Cloud provider with id {}", AzureCloudProviderId);
   }
 
   @Test
@@ -84,11 +84,11 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   public void runGCPCloudProviderCRUDTests() {
     // TODO: this test always fails in jenkins but passes in local. Fix this test and uncomment.
     // retry.executeWithRetry(this ::createGCPCloudProvider, booleanMatcher, true);
-    // logger.info("Created GCP Cloud provider with id {}", GCPCloudProviderId);
+    // log.info("Created GCP Cloud provider with id {}", GCPCloudProviderId);
     // retry.executeWithRetry(this ::updateGCPCloudProvider, booleanMatcher, true);
-    // logger.info("Updated GCP Cloud provider with id {}", GCPCloudProviderId);
+    // log.info("Updated GCP Cloud provider with id {}", GCPCloudProviderId);
     // deleteGCPCloudProvider();
-    // logger.info("Deleted GCP Cloud provider with id {}", GCPCloudProviderId);
+    // log.info("Deleted GCP Cloud provider with id {}", GCPCloudProviderId);
   }
 
   @Test
@@ -96,13 +96,13 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runPhysicalDataCenterCloudProvider() {
     retry.executeWithRetry(this ::createPhysicalDataCenterCloudProvider, booleanMatcher, true);
-    logger.info(
+    log.info(
         String.format("Created Physical Data Center Cloud provider with id %s", PhysicalDataCenterCloudProviderId));
     updatePhyscialDataCenterCloudProvider();
-    logger.info(
+    log.info(
         String.format("Created Physical Data Center Cloud provider with id %s", PhysicalDataCenterCloudProviderId));
     deletePhysicalDataCenterCloudProvider();
-    logger.info(
+    log.info(
         String.format("Created Physical Data Center Cloud provider with id %s", PhysicalDataCenterCloudProviderId));
   }
 
@@ -163,7 +163,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
     assertThat(setAttrResponse).isNotNull();
     //    System.out.println(setAttrResponse.prettyPrint());
     GCPCloudProviderId = setAttrResponse.getString("resource.uuid").trim();
-    logger.info("GCP connector created with {}", GCPCloudProviderId);
+    log.info("GCP connector created with {}", GCPCloudProviderId);
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, GCP_CONNECTOR_NAME);
@@ -267,11 +267,11 @@ public class CloudProviderTest extends AbstractFunctionalTest {
 
   private boolean updateGCPCloudProvider() {
     String GCP_CONNECTOR_NAME = String.format(CONNECTOR_NAME, GCP_NAMESPACE) + MODIFIED_SUFFIX;
-    logger.info("GCP connector has id {}", GCPCloudProviderId);
+    log.info("GCP connector has id {}", GCPCloudProviderId);
     JsonPath setAttrResponse =
         SettingsUtils.updateGCP(bearerToken, getAccount().getUuid(), GCP_CONNECTOR_NAME, GCPCloudProviderId);
     assertThat(setAttrResponse).isNotNull();
-    logger.info(setAttrResponse.prettyPrint());
+    log.info(setAttrResponse.prettyPrint());
     //        System.out.println(setAttrResponse.prettyPrint());
 
     // Verify cloudprovider is created i.e cloudprovider with specific name exist
@@ -293,7 +293,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
 
   private boolean deleteGCPCloudProvider() {
     String GCP_CONNECTOR_NAME = String.format(CONNECTOR_NAME, GCP_NAMESPACE) + MODIFIED_SUFFIX;
-    logger.info("GCP connector has id {}", GCPCloudProviderId);
+    log.info("GCP connector has id {}", GCPCloudProviderId);
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), GCPCloudProviderId);
     // Verify cloudprovider is deleted i.e cloudprovider with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(

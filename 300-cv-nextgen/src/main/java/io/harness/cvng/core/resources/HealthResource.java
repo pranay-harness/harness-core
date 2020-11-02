@@ -46,7 +46,7 @@ public class HealthResource {
   @ApiOperation(value = "get health for CVNG service", nickname = "getCvHealthStatus")
   public RestResponse<String> get() throws Exception {
     if (getMaintenanceFlag()) {
-      logger.info("In maintenance mode. Throwing exception to prevent traffic.");
+      log.info("In maintenance mode. Throwing exception to prevent traffic.");
       throw NoResultFoundException.newBuilder()
           .code(ErrorCode.RESOURCE_NOT_FOUND)
           .message("in maintenance mode")

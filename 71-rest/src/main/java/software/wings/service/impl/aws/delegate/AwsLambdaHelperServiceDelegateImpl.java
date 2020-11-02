@@ -144,7 +144,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       }
       tracker.trackLambdaCall("Invoke Function");
       InvokeResult invokeResult = lambdaClient.invoke(invokeRequest);
-      logger.info("Lambda invocation result: " + invokeResult.toString());
+      log.info("Lambda invocation result: " + invokeResult.toString());
       AwsLambdaExecuteFunctionResponseBuilder responseBuilder = AwsLambdaExecuteFunctionResponse.builder();
       responseBuilder.statusCode(invokeResult.getStatusCode());
       responseBuilder.functionError(invokeResult.getFunctionError());
@@ -256,7 +256,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
     } catch (IOException ioException) {
-      logger.error(AWS_LAMBDA_LOG_PREFIX + "Exception in processing Lambda Setup task [{}]", request, ioException);
+      log.error(AWS_LAMBDA_LOG_PREFIX + "Exception in processing Lambda Setup task [{}]", request, ioException);
       logCallback.saveExecutionLog("\n\n ----------  AWS LAMBDA Setup process failed to complete successfully", ERROR,
           CommandExecutionStatus.FAILURE);
       return AwsLambdaExecuteWfResponse.builder()
@@ -719,7 +719,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         getFunctionResult = lambdaClient.getFunction(
             new GetFunctionRequest().withFunctionName(request.getFunctionName()).withQualifier(request.getQualifier()));
       } catch (ResourceNotFoundException rnfe) {
-        logger.info("No function found with name =[{}], qualifier =[{}]. Error Msg is [{}]", request.getFunctionName(),
+        log.info("No function found with name =[{}], qualifier =[{}]. Error Msg is [{}]", request.getFunctionName(),
             request.getQualifier(), rnfe.getMessage());
         return AwsLambdaDetailsResponse.builder().executionStatus(SUCCESS).details(null).build();
       }

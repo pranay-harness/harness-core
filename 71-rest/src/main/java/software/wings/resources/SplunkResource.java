@@ -50,7 +50,7 @@ public class SplunkResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
       @QueryParam("accountId") String accountId, @Valid SplunkSetupTestNodeData setupTestNodeData) {
-    logger.info("Fetching log Records for verification for accountId : " + accountId
+    log.info("Fetching log Records for verification for accountId : " + accountId
         + " and SplunkSetupTestNodeData :" + setupTestNodeData);
     return new RestResponse<>(analysisService.getLogDataByHost(accountId, setupTestNodeData));
   }

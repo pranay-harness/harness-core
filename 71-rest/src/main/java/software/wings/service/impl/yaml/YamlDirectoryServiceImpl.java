@@ -261,7 +261,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath) {
-    logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
+    log.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
     boolean addToFileChangeList = true;
     if (dn instanceof YamlNode) {
@@ -400,7 +400,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             break;
 
           default:
-            logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
+            log.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
         }
       } catch (Exception e) {
         exceptionThrown = true;
@@ -411,7 +411,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         } else {
           message = "Failed in yaml conversion during Harness to Git full sync for file:" + fileName;
         }
-        logger.warn(GIT_YAML_LOG_PREFIX + message, e);
+        log.warn(GIT_YAML_LOG_PREFIX + message, e);
 
         // Add GitSyncError record
         GitFileChange gitFileChange = Builder.aGitFileChange()
@@ -577,14 +577,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         final FolderNode fn = future.get();
 
         if (fn == null) {
-          logger.info("********* failure in completionService");
+          log.info("********* failure in completionService");
         } else {
           map.put(fn.getName(), fn);
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error(ExceptionUtils.getMessage(e), e);
+        log.error(ExceptionUtils.getMessage(e), e);
       }
     }
 
@@ -606,7 +606,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     long endTime = System.nanoTime();
     double elapsedTime = (endTime - startTime) / 1e6;
 
-    logger.info("********* ELAPSED_TIME: " + elapsedTime + " *********");
+    log.info("********* ELAPSED_TIME: " + elapsedTime + " *********");
 
     return configFolder;
   }
@@ -682,7 +682,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode doApplicationLevelOnly(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap, String appId) {
-    logger.info("Inside doApplicationLevelOnly");
+    log.info("Inside doApplicationLevelOnly");
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
@@ -840,14 +840,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         final FolderNode fn = future.get();
 
         if (fn == null) {
-          logger.info("********* failure in completionService");
+          log.info("********* failure in completionService");
         } else {
           map.put(fn.getName(), fn);
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.warn(ExceptionUtils.getMessage(e), e);
+        log.warn(ExceptionUtils.getMessage(e), e);
       }
     }
 
@@ -2564,7 +2564,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
         break;
       default:
-        logger.warn("Unknown SettingVariable type:" + settingVariableType);
+        log.warn("Unknown SettingVariable type:" + settingVariableType);
     }
     return sb.toString();
   }

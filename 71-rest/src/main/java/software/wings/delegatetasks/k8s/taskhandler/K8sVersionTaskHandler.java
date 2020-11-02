@@ -47,7 +47,7 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
     try (AutoLogContext ignore = new K8sVersionLogContext(kubernetesClusterConfig.getType(),
              k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
              isCloudCostEnabled, OVERRIDE_ERROR);) {
-      logger.info("[cloudProvider={}, version={}, ccEnabled={}]", kubernetesClusterConfig.getType(),
+      log.info("[cloudProvider={}, version={}, ccEnabled={}]", kubernetesClusterConfig.getType(),
           k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
           isCloudCostEnabled);
     }

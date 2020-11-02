@@ -451,7 +451,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + NEW_RELIC;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -525,7 +525,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(appDynamicsCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -557,7 +557,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + INSTANA;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -596,7 +596,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + INSTANA;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(instanaCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -604,7 +604,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + INSTANA + "&serviceConfigurationId=" + savedObjectUuid;
-    logger.info("PUT " + url);
+    log.info("PUT " + url);
     target = client.target(url);
     String updateApplicationId = generateUuid();
     instanaCVConfiguration.setTagFilters(new ArrayList<>());
@@ -638,7 +638,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APM_VERIFICATION;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(apmcvServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -720,7 +720,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     // Call PUT
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + DATA_DOG + "&serviceConfigurationId=" + savedObjectUuid;
-    logger.info("PUT " + url);
+    log.info("PUT " + url);
     target = client.target(url);
     getRequestBuilderWithAuthHeader(target).put(
         entity(datadogCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -746,7 +746,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
   @Ignore("skipping the integration test")
   public <T extends CVConfiguration> void testPrometheusConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + PROMETHEUS;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(prometheusCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -777,7 +777,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DYNA_TRACE;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(dynaTraceCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -808,7 +808,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -840,7 +840,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
 
     cloudWatchCVServiceConfiguration.setLambdaFunctionsMetrics(null);
@@ -862,7 +862,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -884,7 +884,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     // Call PUT
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + CLOUD_WATCH + "&serviceConfigurationId=" + savedObjectUuid;
-    logger.info("PUT " + url);
+    log.info("PUT " + url);
     target = client.target(url);
     thrown.expect(Exception.class);
     getRequestBuilderWithAuthHeader(target).put(
@@ -901,7 +901,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -922,7 +922,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     // Call PUT
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + CLOUD_WATCH + "&serviceConfigurationId=" + savedObjectUuid;
-    logger.info("PUT " + url);
+    log.info("PUT " + url);
     target = client.target(url);
     getRequestBuilderWithAuthHeader(target).put(
         entity(fetchedObject, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -937,7 +937,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + ELK;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(elkCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1041,7 +1041,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + BUG_SNAG;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(bugsnagCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1120,7 +1120,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + STACK_DRIVER_LOG;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(stackdriverCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1187,7 +1187,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
   @Ignore("skipping the integration test")
   public void testSplunkConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SPLUNKV2;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(splunkCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1285,7 +1285,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1378,7 +1378,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1553,7 +1553,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1733,7 +1733,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SUMO;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
@@ -1798,7 +1798,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
   public void testListConfigurations() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     String testUuid = generateUuid();
-    logger.info("testUuid {}", testUuid);
+    log.info("testUuid {}", testUuid);
     int numOfApplications = 2;
     int numOfEnvs = 3;
 
@@ -1911,7 +1911,7 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
 
     String url = API_BASE + "/timeseries/threshold?accountId=" + accountId + "&appId=" + appId + "&stateType="
         + DATA_DOG + "&serviceId=" + serviceId + "&transactionName=" + txnName + "&cvConfigId=" + cvConfigId;
-    logger.info("POST " + url);
+    log.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(timeSeriesMetricDefinition, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});

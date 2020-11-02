@@ -44,11 +44,11 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
   }
 
   private void resumeAllQuartzJobsForAccount(String accountId) {
-    logger.info("Resuming all Quartz jobs for account {}", accountId);
+    log.info("Resuming all Quartz jobs for account {}", accountId);
     try {
       persistentScheduler.resumeAllQuartzJobsForAccount(accountId);
     } catch (SchedulerException ex) {
-      logger.error("Exception occurred while resuming Quartz jobs for account {}", accountId, ex);
+      log.error("Exception occurred while resuming Quartz jobs for account {}", accountId, ex);
     }
   }
 
@@ -58,7 +58,7 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
    */
   private void resumeAllPerpetualTasksForAccount(String accountId) {
     List<PerpetualTaskRecord> perpetualTasksList = perpetualTaskService.listAllTasksForAccount(accountId);
-    logger.info("Resuming all perpetual tasks for account {}", accountId);
+    log.info("Resuming all perpetual tasks for account {}", accountId);
     for (PerpetualTaskRecord perpetualTask : perpetualTasksList) {
       if (perpetualTask.getState() == PerpetualTaskState.TASK_PAUSED) {
         perpetualTaskService.resumeTask(accountId, perpetualTask.getUuid());

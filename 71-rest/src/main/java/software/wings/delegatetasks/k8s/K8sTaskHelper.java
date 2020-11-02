@@ -129,7 +129,7 @@ public class K8sTaskHelper {
       String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
       long timeoutInMillis) throws Exception {
     String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
-    logger.info("Values file options: " + valuesFileOptions);
+    log.info("Values file options: " + valuesFileOptions);
 
     printHelmPath(executionLogCallback, helmPath);
 
@@ -277,7 +277,7 @@ public class K8sTaskHelper {
 
       return true;
     } catch (Exception e) {
-      logger.error("Failure in fetching files from git", e);
+      log.error("Failure in fetching files from git", e);
       executionLogCallback.saveExecutionLog(
           "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
           CommandExecutionStatus.FAILURE);
@@ -324,7 +324,7 @@ public class K8sTaskHelper {
         }
       }
     } catch (IOException ex) {
-      logger.error("Error while fetching helm chart info", ex);
+      log.error("Error while fetching helm chart info", ex);
     }
 
     return helmChartInfo;
@@ -386,7 +386,7 @@ public class K8sTaskHelper {
       throws Exception {
     String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
     String helmPath = k8sDelegateTaskParams.getHelmPath();
-    logger.info("Values file options: " + valuesFileOptions);
+    log.info("Values file options: " + valuesFileOptions);
 
     printHelmPath(executionLogCallback, helmPath);
 

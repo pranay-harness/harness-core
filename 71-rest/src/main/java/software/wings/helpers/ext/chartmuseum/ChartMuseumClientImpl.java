@@ -59,7 +59,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
   @Override
   public ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
       String resourceDirectory, String basePath) throws Exception {
-    logger.info("Starting chart museum server");
+    log.info("Starting chart museum server");
 
     if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
       return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig, basePath);
@@ -127,22 +127,22 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     int retries = 0;
     StringBuffer stringBuffer = null;
 
-    logger.info(command);
+    log.info(command);
 
     while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
       port = getNextRandomPort(random);
       command = command.replace("${PORT}", Integer.toString(port));
-      logger.info("Starting server at port {}. Retry #{}", port, retries);
+      log.info("Starting server at port {}. Retry #{}", port, retries);
 
       stringBuffer = new StringBuffer();
       process = startProcess(command, environment, stringBuffer);
 
       if (waitForServerReady(process, port)) {
-        logger.info(stringBuffer.toString());
+        log.info(stringBuffer.toString());
         break;
       } else {
         String processOutput = stringBuffer.toString();
-        logger.info(processOutput);
+        log.info(processOutput);
 
         if (checkAddressInUseError(processOutput, port)) {
           retries++;
@@ -153,7 +153,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     }
 
     if (!isPortInUse(port)) {
-      logger.error("Port {} is still not in use", port);
+      log.error("Port {} is still not in use", port);
     }
 
     if (process == null || !process.getProcess().isAlive()) {
@@ -188,7 +188,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
         process.getProcess().destroyForcibly().waitFor();
       }
     } catch (Exception ex) {
-      logger.warn("Failed to stop chart museum server " + getMessage(ex));
+      log.warn("Failed to stop chart museum server " + getMessage(ex));
     }
   }
 
@@ -196,7 +196,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     int count = -1;
 
     while (count < SERVER_HEALTH_CHECK_RETRIES) {
-      logger.info("Waiting for chart museum server to get ready");
+      log.info("Waiting for chart museum server to get ready");
       count++;
       sleep(ofSeconds(HEALTH_CHECK_TIME_GAP_SECONDS));
 

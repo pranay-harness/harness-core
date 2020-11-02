@@ -138,7 +138,7 @@ public class ExportExecutionsService {
         exportExecutionsFileService.deleteFile(fileId);
       } catch (Exception ex1) {
         // Ignore the exception as we are about to throw the relevant exception in the next line.
-        logger.error("Unable to delete file for export executions request", ex1);
+        log.error("Unable to delete file for export executions request", ex1);
       }
 
       throw ex;

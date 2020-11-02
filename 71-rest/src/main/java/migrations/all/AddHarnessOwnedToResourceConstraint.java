@@ -19,16 +19,16 @@ public class AddHarnessOwnedToResourceConstraint implements Migration {
 
   @Override
   public void migrate() {
-    logger.info(String.join(DEBUG_LINE, " Starting Migration For Disable Assertion"));
+    log.info(String.join(DEBUG_LINE, " Starting Migration For Disable Assertion"));
     try (HIterator<Account> accounts = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
       while (accounts.hasNext()) {
         Account account = accounts.next();
-        logger.info(
+        log.info(
             String.join(DEBUG_LINE, " Starting Migration For Disable Assertion for account", account.getAccountName()));
         migrateResourceConstraintForAccount(account);
       }
     } catch (Exception ex) {
-      logger.info(String.join(DEBUG_LINE, " Exception while fetching Accounts"));
+      log.info(String.join(DEBUG_LINE, " Exception while fetching Accounts"));
     }
   }
 
@@ -38,15 +38,15 @@ public class AddHarnessOwnedToResourceConstraint implements Migration {
                                  .filter(ResourceConstraintKeys.accountId, account.getUuid())
                                  .filter(ResourceConstraintKeys.name, InfrastructureConstants.QUEUING_RC_NAME)
                                  .fetch())) {
-      logger.info(String.join(DEBUG_LINE, " Fetching ResourceConstraint for account", account.getAccountName(),
-          "with Id", account.getUuid()));
+      log.info(String.join(DEBUG_LINE, " Fetching ResourceConstraint for account", account.getAccountName(), "with Id",
+          account.getUuid()));
       while (resourceConstraints.hasNext()) {
         ResourceConstraint resourceConstraint = resourceConstraints.next();
         resourceConstraint.setHarnessOwned(true);
         wingsPersistence.save(resourceConstraint);
       }
     } catch (Exception ex) {
-      logger.info(
+      log.info(
           String.join(DEBUG_LINE, " Exception while fetching ResourceConstraints with Account ", account.getUuid()));
     }
   }

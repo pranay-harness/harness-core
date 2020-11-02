@@ -42,7 +42,7 @@ public class AuditHelper {
    * @param header
    */
   public void setAuditContext(AuditHeader header) {
-    logger.debug("Saving auditHeader to thread local");
+    log.debug("Saving auditHeader to thread local");
     auditThreadLocal.set(header);
     setGlobalContext(header);
   }
@@ -55,7 +55,7 @@ public class AuditHelper {
    */
   public AuditHeader create(AuditHeader header) {
     header = auditService.create(header);
-    logger.debug("Saving auditHeader to thread local");
+    log.debug("Saving auditHeader to thread local");
     // TODO: should be removed later as we can rely on GlobalContextManager to get AuditId
     auditThreadLocal.set(header);
     setGlobalContext(header);

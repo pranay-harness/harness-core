@@ -39,40 +39,40 @@ public class CloudWatchCVMigration implements Migration {
           final CloudWatchCVServiceConfiguration cloudWatchCVConfiguration =
               (CloudWatchCVServiceConfiguration) iterator.next();
 
-          logger.info("running migration for {} ", cloudWatchCVConfiguration);
+          log.info("running migration for {} ", cloudWatchCVConfiguration);
 
-          logger.info("running migration for {}", AwsNameSpace.ELB);
+          log.info("running migration for {}", AwsNameSpace.ELB);
           if (isNotEmpty(cloudWatchCVConfiguration.getLoadBalancerMetrics())) {
             cloudWatchCVConfiguration.getLoadBalancerMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, metrics));
           }
 
-          logger.info("running migration for {}", AwsNameSpace.ECS);
+          log.info("running migration for {}", AwsNameSpace.ECS);
           if (isNotEmpty(cloudWatchCVConfiguration.getEcsMetrics())) {
             cloudWatchCVConfiguration.getEcsMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ECS, metrics));
           }
 
-          logger.info("running migration for {}", AwsNameSpace.LAMBDA);
+          log.info("running migration for {}", AwsNameSpace.LAMBDA);
           if (isNotEmpty(cloudWatchCVConfiguration.getLambdaFunctionsMetrics())) {
             cloudWatchCVConfiguration.getLambdaFunctionsMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.LAMBDA, metrics));
           }
 
-          logger.info("running migration for {}", AwsNameSpace.EC2);
+          log.info("running migration for {}", AwsNameSpace.EC2);
           if (isNotEmpty(cloudWatchCVConfiguration.getEc2Metrics())) {
             cloudWatchService.setStatisticsAndUnit(AwsNameSpace.EC2, cloudWatchCVConfiguration.getEc2Metrics());
           }
 
-          logger.info("saving updated config {}", cloudWatchCVConfiguration);
+          log.info("saving updated config {}", cloudWatchCVConfiguration);
           wingsPersistence.save(cloudWatchCVConfiguration);
           updated++;
         } catch (Exception e) {
-          logger.info("Error while running migration", e);
+          log.info("Error while running migration", e);
         }
       }
     }
 
-    logger.info("Complete. updated " + updated + " records.");
+    log.info("Complete. updated " + updated + " records.");
   }
 }

@@ -147,7 +147,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<Whitelist>>>() {});
 
-    logger.info(JsonUtils.asJson(restResponse));
+    log.info(JsonUtils.asJson(restResponse));
     verify(WHITELIST_SERVICE).list(anyString(), pageRequestArgumentCaptor.capture());
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);

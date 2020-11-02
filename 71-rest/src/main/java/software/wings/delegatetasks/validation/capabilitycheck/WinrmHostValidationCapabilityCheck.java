@@ -40,13 +40,13 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
 
     WinRmSessionConfig config =
         winrmSessionConfig(capability.getValidationInfo(), connectionAttributes, capability.getEnvVariables());
-    logger.info("Validating Winrm Session to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
+    log.info("Validating Winrm Session to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
         config.isUseSSL());
 
     try (WinRmSession ignore = makeSession(config, new NoopExecutionCallback())) {
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
-      logger.info("Exception in WinrmSession Validation: {}", e);
+      log.info("Exception in WinrmSession Validation: {}", e);
       capabilityResponseBuilder.validated(false);
     }
     return capabilityResponseBuilder.build();

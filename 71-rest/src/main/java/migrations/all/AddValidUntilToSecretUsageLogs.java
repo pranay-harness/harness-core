@@ -39,7 +39,7 @@ public class AddValidUntilToSecretUsageLogs implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("SecretUsageLogs: {} updated", i);
+          log.info("SecretUsageLogs: {} updated", i);
         }
         ++i;
 

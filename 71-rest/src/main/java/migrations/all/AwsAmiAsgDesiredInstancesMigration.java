@@ -36,12 +36,12 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
 
   @Override
   public void migrate() {
-    logger.info("Retrieving applications");
+    log.info("Retrieving applications");
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       while (apps.hasNext()) {
         Application application = apps.next();
-        logger.info("Updating app {}", application.getUuid());
+        log.info("Updating app {}", application.getUuid());
         List<Workflow> workflows =
             workflowService
                 .listWorkflows(
@@ -53,16 +53,16 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
             try {
               updateWorkflow(workflow);
             } catch (Exception ex) {
-              logger.error("Error updating workflow: [{}]", workflow.getUuid(), ex);
+              log.error("Error updating workflow: [{}]", workflow.getUuid(), ex);
             }
           }
         }
-        logger.info("Completed updating app {}", application.getUuid());
+        log.info("Completed updating app {}", application.getUuid());
       }
     }
 
-    logger.info("Updated all apps");
-    logger.info("Finished running AwsAmiAsgDesiredInstancesMigration");
+    log.info("Updated all apps");
+    log.info("Finished running AwsAmiAsgDesiredInstancesMigration");
   }
 
   private void updateWorkflow(Workflow workflow) throws Exception {
@@ -115,7 +115,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
     }
 
     if (workflowModified) {
-      logger.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
+      log.info("Updating workflow: {} - {}", workflow.getUuid(), workflow.getName());
       workflowService.updateWorkflow(workflow, false);
       Thread.sleep(100);
     }

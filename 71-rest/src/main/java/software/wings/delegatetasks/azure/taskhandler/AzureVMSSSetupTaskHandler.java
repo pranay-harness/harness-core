@@ -476,7 +476,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
           "Couldn't find reference baseVirtualMachineScaleSetName: [%s] in resourceGroupName: [%s] and subscriptionId: [%s]",
           baseVirtualMachineScaleSetName, resourceGroupName, subscriptionId);
       logCallback.saveExecutionLog(errorMessage, ERROR);
-      logger.error(errorMessage);
+      log.error(errorMessage);
       throw new InvalidRequestException(errorMessage);
     }
     return baseVirtualMachineScaleSetOp.get();

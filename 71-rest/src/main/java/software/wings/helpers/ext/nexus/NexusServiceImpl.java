@@ -66,7 +66,7 @@ public class NexusServiceImpl implements NexusService {
       return false;
     }
     if (!response.isSuccessful()) {
-      logger.error("Request not successful. Reason: {}", response);
+      log.error("Request not successful. Reason: {}", response);
       int code = response.code();
       switch (code) {
         case 404:
@@ -122,7 +122,7 @@ public class NexusServiceImpl implements NexusService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
+      log.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
@@ -174,7 +174,7 @@ public class NexusServiceImpl implements NexusService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
@@ -216,7 +216,7 @@ public class NexusServiceImpl implements NexusService {
               + nexusConfig.getNexusUrl() + " under repo " + repoId,
           e, USER);
     } catch (Exception e) {
-      logger.error(
+      log.error(
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() instanceof XMLStreamException) {
         throw new InvalidArtifactServerException("Nexus may not be running", e);
@@ -241,7 +241,7 @@ public class NexusServiceImpl implements NexusService {
     try {
       return nexusTwoService.getArtifactPaths(nexusConfig, encryptionDetails, repoId);
     } catch (final IOException e) {
-      logger.error("Error occurred while retrieving repository contents from Nexus Server " + nexusConfig.getNexusUrl()
+      log.error("Error occurred while retrieving repository contents from Nexus Server " + nexusConfig.getNexusUrl()
               + " for repository " + repoId,
           e);
       handleException(e);
@@ -255,7 +255,7 @@ public class NexusServiceImpl implements NexusService {
     try {
       return nexusTwoService.getArtifactPaths(nexusConfig, encryptionDetails, repoId, name);
     } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Artifact paths from Nexus server " + nexusConfig.getNexusUrl()
+      log.error("Error occurred while retrieving Artifact paths from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId,
           e);
       handleException(e);
@@ -278,7 +278,7 @@ public class NexusServiceImpl implements NexusService {
             artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
       }
     } catch (IOException e) {
-      logger.error("Error occurred while downloading the artifact", e);
+      log.error("Error occurred while downloading the artifact", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
@@ -289,7 +289,7 @@ public class NexusServiceImpl implements NexusService {
     try {
       return nexusTwoService.getArtifactNames(nexusConfig, encryptionDetails, repoId, path);
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format("Error occurred while retrieving artifact names from Nexus server %s for Repository %s under path %s",
               nexusConfig.getNexusUrl(), repoId, path),
           e);
@@ -306,7 +306,7 @@ public class NexusServiceImpl implements NexusService {
         return nexusThreeService.getArtifactNames(nexusConfig, encryptionDetails, repoId, path);
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format("Error occurred while retrieving artifact names from Nexus server %s for Repository %s under path %s",
               nexusConfig.getNexusUrl(), repoId, path),
           e);
@@ -348,7 +348,7 @@ public class NexusServiceImpl implements NexusService {
             classifier, supportForNexusGroupReposEnabled);
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format(
               "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
@@ -374,7 +374,7 @@ public class NexusServiceImpl implements NexusService {
             nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format(
               "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
@@ -397,7 +397,7 @@ public class NexusServiceImpl implements NexusService {
             nexusConfig, encryptionDetails, repoId, packageName, supportForNexusGroupReposEnabled);
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format("Error occurred while retrieving versions from Nexus server %s for Repository %s under package %s",
               nexusConfig.getNexusUrl(), repoId, packageName),
           e);
@@ -420,7 +420,7 @@ public class NexusServiceImpl implements NexusService {
             "Nexus 3.x does not support getVersion for parameterized artifact stream");
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format(
               "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
@@ -443,7 +443,7 @@ public class NexusServiceImpl implements NexusService {
             "Nexus 3.x does not support getVersion for parameterized artifact stream");
       }
     } catch (final IOException e) {
-      logger.error(
+      log.error(
           format("Error occurred while retrieving version %s from Nexus server %s for Repository %s under package %s",
               buildNo, nexusConfig.getNexusUrl(), repoId, packageName),
           e);
@@ -469,7 +469,7 @@ public class NexusServiceImpl implements NexusService {
         return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
       }
     } catch (IOException e) {
-      logger.error("Error occurred while retrieving tags from Nexus server {} for repository {} under image {}",
+      log.error("Error occurred while retrieving tags from Nexus server {} for repository {} under image {}",
           nexusConfig.getNexusUrl(), artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), e);
       handleException(e);
     }
@@ -491,8 +491,7 @@ public class NexusServiceImpl implements NexusService {
         }
         return true;
       } catch (Exception e) {
-        logger.warn(
-            "Failed to retrieve repositories. Ignoring validation for Nexus 3 for now. User can give custom path");
+        log.warn("Failed to retrieve repositories. Ignoring validation for Nexus 3 for now. User can give custom path");
         return true;
       }
     }

@@ -38,7 +38,7 @@ public class YamlSuccessfulChangeServiceImpl implements YamlSuccessfulChangeServ
   public void updateOnHarnessChangeSet(YamlChangeSet savedYamlChangeset) {
     if (harnessToGitChange(savedYamlChangeset)) {
       try (AccountLogContext ignore = new AccountLogContext(savedYamlChangeset.getAccountId(), OVERRIDE_ERROR)) {
-        logger.info("updating SuccessfulChange for  harness -> git changeset [{}]", savedYamlChangeset.getUuid());
+        log.info("updating SuccessfulChange for  harness -> git changeset [{}]", savedYamlChangeset.getUuid());
         for (GitFileChange gitFileChange : ListUtils.emptyIfNull(savedYamlChangeset.getGitFileChanges())) {
           final YamlSuccessfulChange yamlSuccessfulChange =
               YamlSuccessfulChange.builder()
@@ -53,12 +53,12 @@ public class YamlSuccessfulChangeServiceImpl implements YamlSuccessfulChangeServ
                       HarnessSuccessFulChangeDetail.builder().yamlChangeSetId(savedYamlChangeset.getUuid()).build())
                   .build();
           final String updatedId = upsert(yamlSuccessfulChange);
-          logger.info(
+          log.info(
               "updated SuccessfulChange for file = [{}], changeRequestTS =[{}], changeProcessedTS=[{}], uuid= [{}] ",
               yamlSuccessfulChange.getYamlFilePath(), yamlSuccessfulChange.getChangeRequestTS(),
               yamlSuccessfulChange.getChangeProcessedTS(), updatedId);
         }
-        logger.info("updated SuccessfulChange for  harness -> git changeset [{}]", savedYamlChangeset.getUuid());
+        log.info("updated SuccessfulChange for  harness -> git changeset [{}]", savedYamlChangeset.getUuid());
       }
     }
   }
@@ -67,7 +67,7 @@ public class YamlSuccessfulChangeServiceImpl implements YamlSuccessfulChangeServ
   public void updateOnSuccessfulGitChangeProcessing(
       GitFileChange gitFileChange, String accountId, String orgId, String projectId) {
     try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("updating SuccessfulChange from git for  file [{}]", gitFileChange.getFilePath());
+      log.info("updating SuccessfulChange from git for  file [{}]", gitFileChange.getFilePath());
       final YamlSuccessfulChange yamlSuccessfulChange =
           YamlSuccessfulChange.builder()
               .accountId(accountId)
@@ -83,12 +83,11 @@ public class YamlSuccessfulChangeServiceImpl implements YamlSuccessfulChangeServ
                                 .build())
               .build();
       final String updatedId = upsert(yamlSuccessfulChange);
-      logger.info(
-          "updated SuccessfulChange for file = [{}], changeRequestTS =[{}], changeProcessedTS=[{}], uuid= [{}] ",
+      log.info("updated SuccessfulChange for file = [{}], changeRequestTS =[{}], changeProcessedTS=[{}], uuid= [{}] ",
           yamlSuccessfulChange.getYamlFilePath(), yamlSuccessfulChange.getChangeRequestTS(),
           yamlSuccessfulChange.getChangeProcessedTS(), updatedId);
 
-      logger.info("updated SuccessfulChange from git for  file [{}]", gitFileChange.getFilePath());
+      log.info("updated SuccessfulChange from git for  file [{}]", gitFileChange.getFilePath());
     }
   }
 

@@ -400,35 +400,35 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
    */
   protected void after(List<Annotation> annotations) {
     try {
-      logger.info("Stopping executorService...");
+      log.info("Stopping executorService...");
       executorService.shutdownNow();
-      logger.info("Stopped executorService...");
+      log.info("Stopped executorService...");
     } catch (Exception ex) {
-      logger.error("", ex);
+      log.error("", ex);
     }
 
     try {
-      logger.info("Stopping notifier...");
+      log.info("Stopping notifier...");
       ((Managed) injector.getInstance(NotifierScheduledExecutorService.class)).stop();
-      logger.info("Stopped notifier...");
+      log.info("Stopped notifier...");
     } catch (Exception ex) {
-      logger.error("", ex);
+      log.error("", ex);
     }
 
     try {
-      logger.info("Stopping queue listener controller...");
+      log.info("Stopping queue listener controller...");
       injector.getInstance(QueueListenerController.class).stop();
-      logger.info("Stopped queue listener controller...");
+      log.info("Stopped queue listener controller...");
     } catch (Exception ex) {
-      logger.error("", ex);
+      log.error("", ex);
     }
 
-    logger.info("Stopping servers...");
+    log.info("Stopping servers...");
     closingFactory.stopServers();
   }
 
   protected void registerScheduledJobs(Injector injector) {
-    logger.info("Initializing scheduledJobs...");
+    log.info("Initializing scheduledJobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }

@@ -82,7 +82,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   @Override
   public String scheduleTrendAnalysisTask(AnalysisInput input) {
     TimeSeriesLearningEngineTask task = createTrendAnalysisTask(input);
-    logger.info("Scheduling ServiceGuardLogAnalysisTask {}", task);
+    log.info("Scheduling ServiceGuardLogAnalysisTask {}", task);
     return learningEngineTaskService.createLearningEngineTask(task);
   }
 
@@ -229,7 +229,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(cumulativeSums);
     hPersistence.save(riskSummary);
-    logger.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
+    log.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
     learningEngineTaskService.markCompleted(taskId);
   }
 
@@ -375,7 +375,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
       YamlUtils yamlUtils = new YamlUtils();
       return yamlUtils.read(metricDefinitionYaml, new TypeReference<List<TimeSeriesMetricDefinition>>() {});
     } catch (IOException e) {
-      logger.error("Exception while reading metric template yaml file", e);
+      log.error("Exception while reading metric template yaml file", e);
       throw new VerificationOperationException(
           ErrorCode.FILE_READ_FAILED, "Exception when fetching metric template from yaml file");
     }

@@ -15,8 +15,8 @@ public class CVConfigCleanupHandler implements MongoPersistenceIterator.Handler<
 
   @Override
   public void handle(DeletedCVConfig entity) {
-    logger.info("Triggering cleanup for CVConfig {}", entity.getCvConfig().getUuid());
+    log.info("Triggering cleanup for CVConfig {}", entity.getCvConfig().getUuid());
     deletedCVConfigService.triggerCleanup(entity);
-    logger.info("Cleanup complete for CVConfig {}", entity.getCvConfig().getUuid());
+    log.info("Cleanup complete for CVConfig {}", entity.getCvConfig().getUuid());
   }
 }

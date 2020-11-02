@@ -39,7 +39,7 @@ public class SshSessionFactory {
       throws JSchException {
     Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
     int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
-    logger.info("portforwarding port " + forwardingPort);
+    log.info("portforwarding port " + forwardingPort);
     logCallback.saveExecutionLog("portforwarding port " + forwardingPort);
 
     SshSessionConfig newConfig = aSshSessionConfig()
@@ -77,19 +77,19 @@ public class SshSessionFactory {
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
-      logger.info("SSH using Kerberos Auth");
+      log.info("SSH using Kerberos Auth");
       generateTGTUsingSshConfig(config, logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
     } else if (config.getAccessType() != null && config.getAccessType() == USER_PASSWORD) {
-      logger.info("SSH using Username Password");
+      log.info("SSH using Username Password");
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       byte[] password = EncryptionUtils.toBytes(config.getSshPassword(), Charsets.UTF_8);
       session.setPassword(password);
       session.setUserInfo(new SshUserInfo(new String(password, Charsets.UTF_8)));
     } else if (config.isKeyLess()) {
-      logger.info("SSH using KeyPath");
+      log.info("SSH using KeyPath");
       String keyPath = getKeyPath(config);
       if (!new File(keyPath).isFile()) {
         throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
@@ -104,7 +104,7 @@ public class SshSessionFactory {
       if (config.getKey() != null && config.getKey().length > 0) {
         // Copy Key because EncryptionUtils has a side effect of modifying the original array
         final char[] copyOfKey = getCopyOfKey(config);
-        logger.info("SSH using Key");
+        log.info("SSH using Key");
         if (null == config.getKeyPassphrase()) {
           jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8), null, null);
         } else {
@@ -113,7 +113,7 @@ public class SshSessionFactory {
         }
         session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       } else {
-        logger.warn("User password on commandline is not supported...");
+        log.warn("User password on commandline is not supported...");
         session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
         session.setPassword(new String(config.getPassword()));
         session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
@@ -137,7 +137,7 @@ public class SshSessionFactory {
     if (config.getKerberosConfig() == null) {
       return;
     }
-    logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
+    log.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
     if (config.getKerberosConfig().isGenerateTGT()) {
       SshHelperUtils.generateTGT(config.getKerberosConfig().getPrincipalWithRealm(),
           config.getPassword() != null ? new String(config.getPassword()) : null,

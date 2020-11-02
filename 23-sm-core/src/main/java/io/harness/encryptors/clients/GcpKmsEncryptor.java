@@ -83,7 +83,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
             () -> encryptInternal(accountId, value, gcpKmsConfig), DEFAULT_GCP_KMS_TIMEOUT, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("Encryption failed. Trial Number {}", failedAttempts, e);
+        log.warn("Encryption failed. Trial Number {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String reason = String.format("Encryption failed after %d retries", NUM_OF_RETRIES);
           throw new DelegateRetryableException(
@@ -98,13 +98,13 @@ public class GcpKmsEncryptor implements KmsEncryptor {
       throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException,
              NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
-    logger.info("Encrypting one secret in account {} with KMS Secret Manager {}", accountId, gcpKmsConfig.getName());
+    log.info("Encrypting one secret in account {} with KMS Secret Manager {}", accountId, gcpKmsConfig.getName());
 
     ByteString plainTextDek = generateDEK();
     String encryptedDek = encryptDekFromKms(gcpKmsConfig, plainTextDek);
 
     char[] encryptedValue = encryptDataUsingDek(value, new SecretKeySpec(plainTextDek.toByteArray(), "AES"));
-    logger.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
+    log.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
         gcpKmsConfig.getName(), System.currentTimeMillis() - startTime);
     return EncryptedRecordData.builder().encryptedValue(encryptedValue).encryptionKey(encryptedDek).build();
   }
@@ -148,7 +148,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
         }
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("Decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("Decryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String reason = String.format(
               "Decryption failed for encryptedData %s after %d retries", encryptedData.getName(), NUM_OF_RETRIES);
@@ -169,7 +169,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
       throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException,
              NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
-    logger.info("Decrypting secret {} with GCP KMS secret manager '{}'", data.getUuid(), gcpKmsConfig.getName());
+    log.info("Decrypting secret {} with GCP KMS secret manager '{}'", data.getUuid(), gcpKmsConfig.getName());
     KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
     // HAR-9752: Caching KMS encryption key to plain text key mapping to reduce KMS decrypt call volume.
     byte[] encryptedPlainTextKey = kmsEncryptionKeyCache.get(cacheKey, key -> {
@@ -177,7 +177,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
       // Encrypt plain text KMS key before caching it in memory.
       byte[] encryptedKey = simpleEncryptDek(plainTextKey, key.getUuid());
 
-      logger.info("Decrypted encryption key from KMS secret manager '{}' in {} ms.", gcpKmsConfig.getName(),
+      log.info("Decrypted encryption key from KMS secret manager '{}' in {} ms.", gcpKmsConfig.getName(),
           System.currentTimeMillis() - startTime);
       return encryptedKey;
     });
@@ -192,7 +192,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     byte[] plainTextKey = simpleDecryptDek(encryptedPlainTextKey, cacheKey.getUuid());
     String decrypted = decryptDataUsingDek(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES"));
 
-    logger.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
+    log.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
     return decrypted == null ? null : decrypted.toCharArray();
   }
 

@@ -30,7 +30,7 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
           "A valid GCP organization information should be provided for the billing account.");
     }
     String impersonatedServiceAccount = gcpOrganization.getServiceAccountEmail();
-    logger.info(format(
+    log.info(format(
         "Validating access to GCP billing report by impersonating the service account %s", impersonatedServiceAccount));
     ValidationResult result = validateAccessToBillingReport(billingAccount, impersonatedServiceAccount);
     if (result.isValid()) {
@@ -83,7 +83,7 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
           "A valid GCP organization information should be provided for the billing account.");
     }
     String impersonatedServiceAccount = gcpOrganization.getServiceAccountEmail();
-    logger.info(format(
+    log.info(format(
         "Validating access to GCP billing report by impersonating the service account %s", impersonatedServiceAccount));
     ValidationResult result = validateAccessToBillingReport(billingAccount, impersonatedServiceAccount);
     if (result.isValid()) {

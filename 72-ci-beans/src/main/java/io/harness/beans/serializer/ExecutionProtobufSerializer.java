@@ -95,7 +95,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case GIT_CLONE:
         case LITE_ENGINE_TASK:
         default:
-          logger.info("serialisation is not implemented");
+          log.info("serialisation is not implemented");
           return null;
       }
     } else {

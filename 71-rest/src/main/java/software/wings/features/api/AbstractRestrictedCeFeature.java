@@ -13,7 +13,7 @@ public abstract class AbstractRestrictedCeFeature extends AbstractRestrictedFeat
   @Override
   protected String getAccountType(String accountId) {
     String accountType = accountService.getCeAccountType(accountId).orElse(AccountType.PAID);
-    logger.info("Account type: {}", accountType);
+    log.info("Account type: {}", accountType);
     return accountService.getCeAccountType(accountId).orElse(AccountType.PAID);
   }
 

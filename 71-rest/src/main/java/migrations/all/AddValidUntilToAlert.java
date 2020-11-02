@@ -41,7 +41,7 @@ public class AddValidUntilToAlert implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("Alerts: {} updated", i);
+          log.info("Alerts: {} updated", i);
         }
         ++i;
 

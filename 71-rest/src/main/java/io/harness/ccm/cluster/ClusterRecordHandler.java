@@ -152,7 +152,7 @@ public class ClusterRecordHandler
   private void upsertClusterRecord(InfrastructureDefinition infrastructureDefinition) {
     ClusterRecord clusterRecord = clusterRecordService.from(infrastructureDefinition);
     if (clusterRecord == null) {
-      logger.info("No Cluster can be derived from the Infrastructure Definition with id={}",
+      log.info("No Cluster can be derived from the Infrastructure Definition with id={}",
           infrastructureDefinition.getUuid());
     } else {
       clusterRecordService.upsert(clusterRecord);
@@ -172,7 +172,7 @@ public class ClusterRecordHandler
   private void upsertClusterRecord(InfrastructureMapping infrastructureMapping) {
     ClusterRecord clusterRecord = clusterRecordService.from(infrastructureMapping);
     if (clusterRecord == null) {
-      logger.info("No Cluster can be derived from Infrastructure Mapping with id={}", infrastructureMapping.getUuid());
+      log.info("No Cluster can be derived from Infrastructure Mapping with id={}", infrastructureMapping.getUuid());
     } else {
       clusterRecordService.upsert(clusterRecord);
     }

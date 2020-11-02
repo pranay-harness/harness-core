@@ -55,18 +55,18 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     }
 
     if (!notificationProcessingController.canProcessAccount(userGroup.getAccountId())) {
-      logger.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
+      log.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
           userGroup.getAccountId());
       return;
     }
 
     if (null == userGroup.getNotificationSettings()) {
-      logger.info("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
+      log.info("Notification Settings is null for User Group. No message will be sent. userGroup={} accountId={}",
           userGroup.getName(), userGroup.getAccountId());
       return;
     }
 
-    logger.info("User group to notify. id={} name={}", userGroup.getUuid(), userGroup.getName());
+    log.info("User group to notify. id={} name={}", userGroup.getUuid(), userGroup.getName());
     NotificationSettings notificationSettings = userGroup.getNotificationSettings();
     String accountId = notifications.get(0).getAccountId();
 
@@ -75,8 +75,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       List<String> emails =
           userGroup.getMembers().stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
 
-      logger.info(
-          "[isUseIndividualEmails=true] Dispatching notifications to all the users of userGroup. uuid={} name={}",
+      log.info("[isUseIndividualEmails=true] Dispatching notifications to all the users of userGroup. uuid={} name={}",
           userGroup.getUuid(), userGroup.getName());
       emailDispatcher.dispatch(notifications, emails);
     }
@@ -84,10 +83,10 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     List<String> emailAddresses = userGroup.getEmailAddresses();
     if (CollectionUtils.isNotEmpty(emailAddresses)) {
       try {
-        logger.info("Sending emails to these addresses: {}", emailAddresses);
+        log.info("Sending emails to these addresses: {}", emailAddresses);
         emailDispatcher.dispatch(notifications, emailAddresses);
       } catch (Exception e) {
-        logger.error("Error sending emails to these addresses: {}", emailAddresses, e);
+        log.error("Error sending emails to these addresses: {}", emailAddresses, e);
       }
     }
 
@@ -102,36 +101,36 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       }
 
       try {
-        logger.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
+        log.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
-        logger.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
+        log.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
       }
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getMicrosoftTeamsWebhookUrl())) {
       try {
-        logger.info(
+        log.info(
             "Trying to send message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         microsoftTeamsMessageDispatcher.dispatch(notifications, userGroup.getMicrosoftTeamsWebhookUrl());
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Error sending message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
 
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
     if (isCommunityAccount) {
-      logger.info("Pager duty Configuration will be ignored since it's a community account. accountId={}", accountId);
+      log.info("Pager duty Configuration will be ignored since it's a community account. accountId={}", accountId);
       return;
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
       try {
-        logger.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
+        log.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         pagerDutyEventDispatcher.dispatch(accountId, notifications, userGroup.getPagerDutyIntegrationKey());
       } catch (Exception e) {
-        logger.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
+        log.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
   }
@@ -210,6 +209,6 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
   @Override
   public Logger logger() {
-    return logger;
+    return log;
   }
 }

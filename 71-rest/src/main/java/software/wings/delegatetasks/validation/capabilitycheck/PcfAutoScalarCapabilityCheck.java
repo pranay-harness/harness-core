@@ -19,12 +19,12 @@ public class PcfAutoScalarCapabilityCheck implements CapabilityCheck {
     try {
       boolean validated = pcfDeploymentManager.checkIfAppAutoscalarInstalled();
       if (!validated) {
-        logger.warn("Could not find App Autoscalar plugin installed. CF PLUGIN HOME Used: {}",
+        log.warn("Could not find App Autoscalar plugin installed. CF PLUGIN HOME Used: {}",
             pcfDeploymentManager.resolvePcfPluginHome());
       }
       return CapabilityResponse.builder().delegateCapability(pcfAutoScalarCapability).validated(validated).build();
     } catch (Exception e) {
-      logger.error("Failed to Validate App-Autoscalar Plugin installed");
+      log.error("Failed to Validate App-Autoscalar Plugin installed");
       return CapabilityResponse.builder().delegateCapability(pcfAutoScalarCapability).validated(false).build();
     }
   }

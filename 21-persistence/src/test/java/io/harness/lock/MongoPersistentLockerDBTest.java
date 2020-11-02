@@ -166,7 +166,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTestBase {
               try {
                 this.wait();
               } catch (InterruptedException e) {
-                logger.error("", e);
+                log.error("", e);
               }
             }
           }

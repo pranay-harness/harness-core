@@ -139,7 +139,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));
     } catch (Exception ex) {
-      logger.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           serviceEntity.getIdentifier(), ex);
       throw new UnexpectedException(
           "Error while deleting the Service as was not able to check entity reference records.");

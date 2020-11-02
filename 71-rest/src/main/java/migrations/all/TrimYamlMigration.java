@@ -23,13 +23,13 @@ public class TrimYamlMigration implements Migration {
                                              .exists()
                                              .asList();
 
-    logger.info("Trimming {} advanced yaml configs", containerTasks.size());
+    log.info("Trimming {} advanced yaml configs", containerTasks.size());
     for (ContainerTask containerTask : containerTasks) {
-      logger.info("Trimming {}", containerTask.getUuid());
+      log.info("Trimming {}", containerTask.getUuid());
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       kubernetesContainerTask.setAdvancedConfig(kubernetesContainerTask.getAdvancedConfig());
     }
-    logger.info("Done trimming.");
+    log.info("Done trimming.");
 
     wingsPersistence.save(containerTasks);
   }

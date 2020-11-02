@@ -125,7 +125,7 @@ public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAwa
           thresholdValue = Optional.of(Math.abs(supervisedThreshold.getMaxThreshold()));
           break;
         default:
-          logger.info(
+          log.info(
               "Comparision type not handled for supervised thresholds {}", defaultThreshold.get().getThresholdType());
           break;
       }

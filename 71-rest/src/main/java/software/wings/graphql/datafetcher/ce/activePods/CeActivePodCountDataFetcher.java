@@ -61,7 +61,7 @@ public class CeActivePodCountDataFetcher extends AbstractStatsDataFetcherWithAgg
     int retryCount = 0;
 
     queryData = billingDataQueryBuilder.formPodCountQuery(accountId, filters, sort);
-    logger.info("CeActivePodCountDataFetcher query: {}", queryData.getQuery());
+    log.info("CeActivePodCountDataFetcher query: {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -72,12 +72,11 @@ public class CeActivePodCountDataFetcher extends AbstractStatsDataFetcherWithAgg
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
-          logger.error(
+          log.error(
               "Failed to execute query in CeActivePodCountDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn(
-              "Failed to execute query in CeActivePodCountDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+          log.warn("Failed to execute query in CeActivePodCountDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
       } finally {

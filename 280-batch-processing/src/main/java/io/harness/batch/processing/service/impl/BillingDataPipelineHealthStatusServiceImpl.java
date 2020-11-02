@@ -81,7 +81,7 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   private void logFailedTransfers(List<TransferConfig> transferConfigList) {
     for (TransferConfig transferConfig : transferConfigList) {
       if (transferConfig.getState().getNumber() == 5) {
-        logger.error("Transfer Failed: {} ", transferConfig.getDisplayName());
+        log.error("Transfer Failed: {} ", transferConfig.getDisplayName());
       }
     }
   }
@@ -105,8 +105,7 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
         }
         billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
       } catch (Exception e) {
-        logger.error(
-            "Failed to update the health status for the account {}", billingDataPipelineRecord.getAccountId(), e);
+        log.error("Failed to update the health status for the account {}", billingDataPipelineRecord.getAccountId(), e);
       }
     });
   }

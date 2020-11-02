@@ -66,7 +66,7 @@ public class MongoFileServiceImpl implements FileService {
       getOrCreateGridFSBucket(fileBucket.representationName()).downloadToStream(new ObjectId(fileId), streamToDownload);
       return file;
     } catch (IOException ex) {
-      logger.error("Error in download", ex);
+      log.error("Error in download", ex);
       return null;
     }
   }
@@ -191,7 +191,7 @@ public class MongoFileServiceImpl implements FileService {
    */
   @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
-    logger.info("Saving file {} ", fileMetadata);
+    log.info("Saving file {} ", fileMetadata);
     Document metadata = new Document();
 
     if (isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
@@ -212,7 +212,7 @@ public class MongoFileServiceImpl implements FileService {
 
     ObjectId fileId = getOrCreateGridFSBucket(fileBucket.representationName())
                           .uploadFromStream(fileMetadata.getFileName(), in, options);
-    logger.info("Saved file {}. Returning fileId {}", fileMetadata.getFileName(), fileId.toHexString());
+    log.info("Saved file {}. Returning fileId {}", fileMetadata.getFileName(), fileId.toHexString());
     return fileId.toHexString();
   }
 
@@ -272,14 +272,14 @@ public class MongoFileServiceImpl implements FileService {
    */
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
-    logger.info("Deleting file {} from bucket {}", fileId, fileBucket);
+    log.info("Deleting file {} from bucket {}", fileId, fileBucket);
     try {
       getOrCreateGridFSBucket(fileBucket.representationName()).delete(new ObjectId(fileId));
-      logger.info("Deleted file {} from bucket {}", fileId, fileBucket);
+      log.info("Deleted file {} from bucket {}", fileId, fileBucket);
     } catch (MongoGridFSException e) {
       // HAR-7371: This is a workaround for another bug HAR-7336 which deleted files in GridFS by mistake.
       if (e.getMessage().contains("No file found with the id")) {
-        logger.info("File {} no longer exist in bucket {}. Skipped.", fileId, fileBucket);
+        log.info("File {} no longer exist in bucket {}. Skipped.", fileId, fileBucket);
       } else {
         throw e;
       }

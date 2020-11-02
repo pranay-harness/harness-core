@@ -203,19 +203,19 @@ public class WatcherServiceImpl implements WatcherService {
   public void run(boolean upgrade) {
     WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
     WatcherStackdriverLogAppender.setManagerClient(managerClient);
-    logger.info("Watcher will start running on JRE {}", watcherJreVersion);
+    log.info("Watcher will start running on JRE {}", watcherJreVersion);
 
     try {
-      logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
-      logger.info("Multiversion: {}", multiVersion);
+      log.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
+      log.info("Multiversion: {}", multiVersion);
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
       generateEcsDelegateSequenceConfigFile();
       if (upgrade) {
         Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
-        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
+        log.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                 : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
       if (chronicleEventTailer != null) {
         chronicleEventTailer.startAsync().awaitRunning();
@@ -229,8 +229,8 @@ public class WatcherServiceImpl implements WatcherService {
       }
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
 
-      logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
-      logger.info("Publish Authority:{}, Publish Target:{}", watcherConfiguration.getPublishAuthority(),
+      log.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
+      log.info("Publish Authority:{}, Publish Target:{}", watcherConfiguration.getPublishAuthority(),
           watcherConfiguration.getPublishTarget());
 
       String proxyHost = System.getProperty("https.proxyHost");
@@ -238,15 +238,15 @@ public class WatcherServiceImpl implements WatcherService {
       if (isNotBlank(proxyHost)) {
         String proxyScheme = System.getProperty("proxyScheme");
         String proxyPort = System.getProperty("https.proxyPort");
-        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+        log.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
         String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
           List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
-          logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
+          log.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
         }
       } else {
-        logger.info("No proxy settings. Configure in proxy.config if needed");
+        log.info("No proxy settings. Configure in proxy.config if needed");
       }
 
       checkAccountStatus();
@@ -261,22 +261,22 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.closeChannel(WATCHER, getProcessId());
 
     } catch (InterruptedException e) {
-      logger.error("Interrupted while running watcher", e);
+      log.error("Interrupted while running watcher", e);
     }
   }
 
   private void startMonitoringFileHandles() {
     if (!watcherConfiguration.isFileHandlesMonitoringEnabled()) {
-      logger.info("File handles monitoring disabled.");
+      log.info("File handles monitoring disabled.");
       return;
     }
 
     if (!isLsofCommandPresent()) {
-      logger.info("lsof command is not available.");
+      log.info("lsof command is not available.");
       return;
     }
 
-    logger.info("Scheduling logging of file handles...");
+    log.info("Scheduling logging of file handles...");
     watchExecutor.scheduleWithFixedDelay(
         new Schedulable("Unexpected exception occurred while logging file handles", this ::logFileHandles), 0,
         watcherConfiguration.getFileHandlesMonitoringIntervalInMinutes(), TimeUnit.MINUTES);
@@ -284,7 +284,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private boolean isLsofCommandPresent() {
     try {
-      logger.info("Checking if lsof command is available...");
+      log.info("Checking if lsof command is available...");
       ProcessExecutor processExecutor = new ProcessExecutor();
       processExecutor.command("lsof", "-v");
       int exitCode = processExecutor.execute().getExitValue();
@@ -294,14 +294,14 @@ public class WatcherServiceImpl implements WatcherService {
       Thread.currentThread().interrupt();
       return false;
     } catch (IOException | TimeoutException ex) {
-      logger.warn("lsof command not present", ex);
+      log.warn("lsof command not present", ex);
       return false;
     }
   }
 
   private void logFileHandles() {
     try {
-      logger.debug("Making sure that folder exists...");
+      log.debug("Making sure that folder exists...");
       File logsFolder = new File(FILE_HANDLES_LOGS_FOLDER);
       if (!logsFolder.exists()) {
         boolean created = logsFolder.mkdir();
@@ -314,22 +314,22 @@ public class WatcherServiceImpl implements WatcherService {
         return;
       }
 
-      logger.debug("Logging all file handles...");
+      log.debug("Logging all file handles...");
       logAllFileHandles();
 
-      logger.debug("Logging watcher file handles...");
+      log.debug("Logging watcher file handles...");
       String watcherProcessId =
           Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
       logProcessFileHandles(watcherProcessId, true);
 
-      logger.debug("Logging delegate file handles...");
+      log.debug("Logging delegate file handles...");
       ArrayList<String> monitoredProcesses = new ArrayList<>(runningDelegates);
       for (String pid : monitoredProcesses) {
         logProcessFileHandles(pid, false);
       }
-      logger.debug("File handles logging finished.");
+      log.debug("File handles logging finished.");
     } catch (Exception ex) {
-      logger.error("Unexpected exception occurred while logging file handles.", ex);
+      log.error("Unexpected exception occurred while logging file handles.", ex);
     }
   }
 
@@ -342,7 +342,7 @@ public class WatcherServiceImpl implements WatcherService {
         try {
           Files.delete(Paths.get(logFile.getAbsolutePath()));
         } catch (IOException ex) {
-          logger.warn("File handles log file {} could not be deleted.", logFile.getAbsolutePath(), ex);
+          log.warn("File handles log file {} could not be deleted.", logFile.getAbsolutePath(), ex);
           return false;
         }
       }
@@ -352,7 +352,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void logProcessFileHandles(String pid, boolean isWatcher)
       throws InterruptedException, TimeoutException, IOException {
-    logger.debug("Logging file handles for pid {}", pid);
+    log.debug("Logging file handles for pid {}", pid);
 
     String filePath = FILE_HANDLES_LOGS_FOLDER + File.separator + LocalDateTime.now()
         + (isWatcher ? "-watcher" : "-delegate") + "-pid-" + pid + ".txt";
@@ -366,7 +366,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void logAllFileHandles() throws InterruptedException, TimeoutException, IOException {
-    logger.debug("Logging all file handles");
+    log.debug("Logging all file handles");
 
     String filePath = FILE_HANDLES_LOGS_FOLDER + File.separator + LocalDateTime.now() + "-all.txt";
 
@@ -385,13 +385,13 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       // Only generate this file in case of ECS delegate
-      logger.info("Generating delegate_sequence_config file");
+      log.info("Generating delegate_sequence_config file");
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
           "[TOKEN]" + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
-      logger.warn("Failed to create DelegateSequenceConfigFile");
+      log.warn("Failed to create DelegateSequenceConfigFile");
     }
   }
 
@@ -450,7 +450,7 @@ public class WatcherServiceImpl implements WatcherService {
   private void watchDelegate() {
     try {
       if (!multiVersion) {
-        logger.info("Watching delegate processes: {}", runningDelegates);
+        log.info("Watching delegate processes: {}", runningDelegates);
       }
       // Cleanup obsolete
       messageService.listDataNames(DELEGATE_DASH)
@@ -460,7 +460,7 @@ public class WatcherServiceImpl implements WatcherService {
           .forEach(process -> {
             if (!Optional.ofNullable(messageService.getData(DELEGATE_DASH + process, DELEGATE_IS_NEW, Boolean.class))
                      .orElse(false)) {
-              logger.warn("Data found for untracked delegate process {}. Shutting it down", process);
+              log.warn("Data found for untracked delegate process {}. Shutting it down", process);
               shutdownDelegate(process);
             }
           });
@@ -469,7 +469,7 @@ public class WatcherServiceImpl implements WatcherService {
           .stream()
           .filter(process -> !runningDelegates.contains(process))
           .forEach(process -> {
-            logger.warn("Message channel found for untracked delegate process {}. Shutting it down", process);
+            log.warn("Message channel found for untracked delegate process {}. Shutting it down", process);
             shutdownDelegate(process);
           });
 
@@ -483,7 +483,7 @@ public class WatcherServiceImpl implements WatcherService {
                 -> !StringUtils.equals(process, getProcessId())
                     && !StringUtils.equals(process, messageService.getData(WATCHER_DATA, NEXT_WATCHER, String.class)))
             .forEach(process -> {
-              logger.warn(
+              log.warn(
                   "Message channel found for another watcher process that isn't the next watcher. {} will be shut down",
                   process);
               messageService.putData(WATCHER_DATA, EXTRA_WATCHER, process);
@@ -576,29 +576,28 @@ public class WatcherServiceImpl implements WatcherService {
                 if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
                   messageService.writeMessageToChannel(
                       DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
-                  logger.info(
-                      "Delegate version {} ({}) is not a published version. Future requests will go to primary.",
+                  log.info("Delegate version {} ({}) is not a published version. Future requests will go to primary.",
                       delegateVersion, delegateProcess);
                   drainingNeededList.add(delegateProcess);
                 }
               }
 
               if (newDelegate) {
-                logger.info("New delegate process {} is starting", delegateProcess);
+                log.info("New delegate process {} is starting", delegateProcess);
                 boolean startupTimedOut = now - heartbeat > DELEGATE_STARTUP_TIMEOUT;
                 if (startupTimedOut) {
                   newDelegateTimedOut = true;
                   shutdownNeededList.add(delegateProcess);
                 }
               } else if (shutdownPending) {
-                logger.info(
+                log.info(
                     "Shutdown is pending for delegate process {} with version {}", delegateProcess, delegateVersion);
                 shutdownPendingList.add(delegateProcess);
                 if (shutdownTimedOut || heartbeatTimedOut) {
                   shutdownNeededList.add(delegateProcess);
                 }
               } else if (heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch || upgradeTimedOut) {
-                logger.info("Restarting delegate process {}. Local heartbeat timeout: {}, "
+                log.info("Restarting delegate process {}. Local heartbeat timeout: {}, "
                         + "Version match timeout: {}, Version banned: {}, Upgrade timeout: {}",
                     delegateProcess, heartbeatTimedOut, versionMatchTimedOut, delegateMinorVersionMismatch,
                     upgradeTimedOut);
@@ -606,7 +605,7 @@ public class WatcherServiceImpl implements WatcherService {
                 minMinorVersion.set(0);
                 illegalVersions.clear();
               } else if (restartNeeded) {
-                logger.info("Draining restart delegate process {} at delegate request", delegateProcess);
+                log.info("Draining restart delegate process {} at delegate request", delegateProcess);
                 drainingRestartNeededList.add(delegateProcess);
               } else if (upgradeNeeded) {
                 upgradeNeededList.add(delegateProcess);
@@ -618,21 +617,21 @@ public class WatcherServiceImpl implements WatcherService {
           }
 
           if (isNotEmpty(obsolete)) {
-            logger.info("Obsolete processes {} no longer tracked", obsolete);
+            log.info("Obsolete processes {} no longer tracked", obsolete);
             runningDelegates.removeAll(obsolete);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
             obsolete.forEach(this ::shutdownDelegate);
           }
 
           if (!multiVersion && shutdownPendingList.containsAll(runningDelegates)) {
-            logger.warn("No delegates acquiring tasks. Delegate processes {} pending shutdown. Forcing shutdown now",
+            log.warn("No delegates acquiring tasks. Delegate processes {} pending shutdown. Forcing shutdown now",
                 shutdownPendingList);
             shutdownPendingList.forEach(this ::shutdownDelegate);
           }
         }
 
         if (isNotEmpty(drainingNeededList)) {
-          logger.info("Delegate processes {} to be drained.", drainingNeededList);
+          log.info("Delegate processes {} to be drained.", drainingNeededList);
           drainingNeededList.forEach(this ::drainDelegateProcess);
           Set<String> allVersions = new HashSet<>(expectedVersions);
           allVersions.addAll(runningVersions.keySet());
@@ -640,31 +639,31 @@ public class WatcherServiceImpl implements WatcherService {
           cleanupOldDelegateVersions(allVersions);
         }
         if (isNotEmpty(shutdownNeededList)) {
-          logger.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
+          log.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
           shutdownNeededList.forEach(this ::shutdownDelegate);
           if (newDelegateTimedOut && upgradePendingDelegate != null) {
-            logger.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
+            log.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
             messageService.writeMessageToChannel(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
           }
         }
         if (isNotEmpty(restartNeededList)) {
-          logger.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
+          log.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
           restartNeededList.forEach(this ::shutdownDelegate);
         }
         if (isNotEmpty(drainingRestartNeededList)) {
           if (multiVersion) {
-            logger.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
+            log.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
                 drainingRestartNeededList);
             drainingRestartNeededList.forEach(this ::drainDelegateProcess);
           } else if (drainingRestartNeededList.containsAll(runningDelegates) && working.compareAndSet(false, true)) {
-            logger.warn(
+            log.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
             startDelegateProcess(null, ".", drainingRestartNeededList, DELEGATE_RESTART_SCRIPT, getProcessId());
           }
         }
         if (!multiVersion && isNotEmpty(upgradeNeededList)) {
           if (working.compareAndSet(false, true)) {
-            logger.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
+            log.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
             upgradeNeededList.forEach(
                 delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
             startDelegateProcess(null, ".", upgradeNeededList, "DelegateUpgradeScript", getProcessId());
@@ -673,7 +672,7 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       if (multiVersion && !isDiskFull()) {
-        logger.info("Watching delegate processes: {}",
+        log.info("Watching delegate processes: {}",
             runningVersions.keySet()
                 .stream()
                 .map(version -> version + " (" + join(", ", runningVersions.get(version)) + ")")
@@ -686,7 +685,7 @@ public class WatcherServiceImpl implements WatcherService {
           }
 
           try {
-            logger.info("New delegate process for version {} will be started", version);
+            log.info("New delegate process for version {} will be started", version);
             downloadRunScripts(version, version, false);
             downloadDelegateJar(version);
             startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
@@ -694,12 +693,12 @@ public class WatcherServiceImpl implements WatcherService {
           } catch (IOException ioe) {
             if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
               lastAvailableDiskSpace.set(getDiskFreeSpace());
-              logger.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+              log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
             }
-            logger.error("Error downloading delegate version {}", version, ioe);
+            log.error("Error downloading delegate version {}", version, ioe);
             working.set(false);
           } catch (Exception e) {
-            logger.error("Error downloading or starting delegate version {}", version, e);
+            log.error("Error downloading or starting delegate version {}", version, e);
             working.set(false);
           }
         }
@@ -716,7 +715,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
     } catch (Exception e) {
-      logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+      log.error("Error processing delegate stream: {}", e.getMessage(), e);
     }
   }
 
@@ -736,20 +735,20 @@ public class WatcherServiceImpl implements WatcherService {
       return true;
     }
 
-    logger.info("Free disk space increased from {} to {}", lastAvailableDiskSpace.get(), freeSpace);
+    log.info("Free disk space increased from {} to {}", lastAvailableDiskSpace.get(), freeSpace);
     lastAvailableDiskSpace.set(DISK_SPACE_IS_OK);
     return false;
   }
 
   @VisibleForTesting
   public void switchStorage() {
-    logger.info("Switching Storage");
+    log.info("Switching Storage");
     boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     if (downloadSuccessful) {
       restartDelegate();
       restartWatcher();
     } else {
-      logger.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
+      log.warn("Download of run scripts was not successful. Skipping restart for switching storage.");
     }
   }
 
@@ -775,12 +774,12 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (IOException ioe) {
       if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
         lastAvailableDiskSpace.set(getDiskFreeSpace());
-        logger.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+        log.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
       }
-      logger.error("Error download run script", ioe);
+      log.error("Error download run script", ioe);
       return false;
     } catch (Exception e) {
-      logger.error("Error downloading or starting run script", e);
+      log.error("Error downloading or starting run script", e);
       return false;
     }
 
@@ -811,13 +810,13 @@ public class WatcherServiceImpl implements WatcherService {
   public void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) {
     if (!delegateJreVersion.equals(migrateToJreVersion)
         && clock.millis() - delegateRestartedToUpgradeJreAt > DELEGATE_RESTART_TO_UPGRADE_JRE_TIMEOUT) {
-      logger.debug("Delegate JRE: {} MigrateTo JRE: {} ", delegateJreVersion, migrateToJreVersion);
+      log.debug("Delegate JRE: {} MigrateTo JRE: {} ", delegateJreVersion, migrateToJreVersion);
       boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
       if (downloadSuccessful) {
         delegateRestartedToUpgradeJreAt = clock.millis();
         restartDelegate();
       } else {
-        logger.warn("Download of run scripts was not successful. Skipping restart for delegate JRE upgrade.");
+        log.warn("Download of run scripts was not successful. Skipping restart for delegate JRE upgrade.");
       }
     }
   }
@@ -830,13 +829,13 @@ public class WatcherServiceImpl implements WatcherService {
   @VisibleForTesting
   public void restartWatcherToUpgradeJre(String migrateToJreVersion) {
     if (!migrateToJreVersion.equals(watcherJreVersion) && !watcherRestartedToUpgradeJre) {
-      logger.debug("Watcher JRE: {} MigrateTo JRE: {} ", watcherJreVersion, migrateToJreVersion);
+      log.debug("Watcher JRE: {} MigrateTo JRE: {} ", watcherJreVersion, migrateToJreVersion);
       boolean downloadSuccessful = downloadRunScriptsBeforeRestartingDelegateAndWatcher();
       if (downloadSuccessful) {
         watcherRestartedToUpgradeJre = true;
         restartWatcher();
       } else {
-        logger.warn("Download of run scripts was not successful. Skipping restart for watcher JRE upgrade.");
+        log.warn("Download of run scripts was not successful. Skipping restart for watcher JRE upgrade.");
       }
     }
   }
@@ -883,9 +882,9 @@ public class WatcherServiceImpl implements WatcherService {
         return singletonList(substringBefore(delegateMetadata, " ").trim());
       }
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Timed out fetching delegate version information", e);
+      log.warn("Timed out fetching delegate version information", e);
     } catch (Exception e) {
-      logger.warn("Unable to fetch delegate version information", e);
+      log.warn("Unable to fetch delegate version information", e);
     }
     throw new GeneralException("Couldn't get delegate versions.");
   }
@@ -935,13 +934,13 @@ public class WatcherServiceImpl implements WatcherService {
           writer.write(script, 0, script.length());
           writer.flush();
         }
-        logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
+        log.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
         Files.setPosixFilePermissions(scriptFile.toPath(),
             newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
                 PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-        logger.info("Done setting file permissions");
+        log.info("Done setting file permissions");
       } else {
-        logger.error("Script for file [{}] was not replaced", scriptFile);
+        log.error("Script for file [{}] was not replaced", scriptFile);
       }
     }
   }
@@ -951,7 +950,7 @@ public class WatcherServiceImpl implements WatcherService {
 
     File finalDestination = new File(version + "/delegate.jar");
     if (finalDestination.exists()) {
-      logger.info("Verified delegate jar version {} already exists. Skipping download...", version);
+      log.info("Verified delegate jar version {} already exists. Skipping download...", version);
       return;
     }
 
@@ -965,7 +964,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     String downloadUrl = restResponse.getResource();
-    logger.info("Downloading delegate jar version {}", version);
+    log.info("Downloading delegate jar version {}", version);
     File downloadFolder = new File(version);
     if (!downloadFolder.exists()) {
       downloadFolder.mkdir();
@@ -978,14 +977,14 @@ public class WatcherServiceImpl implements WatcherService {
     if (downloadUrl.startsWith("file://")) {
       String sourceFile = downloadUrl.substring(7);
       FileUtils.copyFile(new File(sourceFile), downloadDestination);
-      logger.info("Downloaded delegate jar version {} from file share to the temporary location", version);
+      log.info("Downloaded delegate jar version {} from file share to the temporary location", version);
 
       FileUtils.moveFile(downloadDestination, finalDestination);
-      logger.info("Moved delegate jar version {} to the final location", version);
+      log.info("Moved delegate jar version {} to the final location", version);
     } else {
       try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
         FileUtils.copyInputStreamToFile(stream, downloadDestination);
-        logger.info("Downloaded delegate jar version {} to the temporary location", version);
+        log.info("Downloaded delegate jar version {} to the temporary location", version);
 
         try (JarFile delegateJar = new JarFile(downloadDestination)) {
           // Check if jar is signed properly (This will pass if jar was not signed at all)
@@ -996,13 +995,13 @@ public class WatcherServiceImpl implements WatcherService {
 
           if (verified && harnessSignatureFile != null) {
             FileUtils.moveFile(downloadDestination, finalDestination);
-            logger.info("Moved delegate jar version {} to the final location", version);
+            log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            logger.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          logger.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);
@@ -1011,7 +1010,7 @@ public class WatcherServiceImpl implements WatcherService {
       }
     }
 
-    logger.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
+    log.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
   }
 
   private boolean verify(JarFile jar) throws IOException {
@@ -1025,10 +1024,10 @@ public class WatcherServiceImpl implements WatcherService {
         while ((is.read(buffer, 0, buffer.length)) != -1) {
           // We just read. This will throw a SecurityException
           // if a signature/digest check fails.
-          logger.trace("Reading jar entries to trigger signing check...");
+          log.trace("Reading jar entries to trigger signing check...");
         }
       } catch (SecurityException se) {
-        logger.error("Jar signing verification failed", se);
+        log.error("Jar signing verification failed", se);
         return false;
       }
     }
@@ -1036,7 +1035,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void drainDelegateProcess(String delegateProcess) {
-    logger.info("Sending delegate process {} stop-acquiring message to drain", delegateProcess);
+    log.info("Sending delegate process {} stop-acquiring message to drain", delegateProcess);
     messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
   }
 
@@ -1064,7 +1063,7 @@ public class WatcherServiceImpl implements WatcherService {
           Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
           if (message != null) {
             newDelegateProcess = message.getParams().get(0);
-            logger.info("Got process ID from new delegate: {}", newDelegateProcess);
+            log.info("Got process ID from new delegate: {}", newDelegateProcess);
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
             if (version != null) {
@@ -1078,43 +1077,43 @@ public class WatcherServiceImpl implements WatcherService {
             }
             message = messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
             if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
-              logger.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
+              log.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
               oldDelegateProcesses.forEach(oldDelegateProcess -> {
-                logger.info("Sending old delegate process {} stop-acquiring message", oldDelegateProcess);
+                log.info("Sending old delegate process {} stop-acquiring message", oldDelegateProcess);
                 messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
               });
-              logger.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
+              log.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
               messageService.writeMessageToChannel(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
               success = true;
             }
           }
         }
         if (!success) {
-          logger.error("Failed to start new delegate");
-          logger.error("Watcher messages:");
+          log.error("Failed to start new delegate");
+          log.error("Watcher messages:");
           messageService.logAllMessages(WATCHER, watcherProcess);
           messageService.clearChannel(WATCHER, watcherProcess);
           if (isNotBlank(newDelegateProcess)) {
-            logger.error("Delegate messages:");
+            log.error("Delegate messages:");
             messageService.logAllMessages(DELEGATE, newDelegateProcess);
             messageService.clearChannel(DELEGATE, newDelegateProcess);
           }
           newDelegate.getProcess().destroy();
           newDelegate.getProcess().waitFor();
           oldDelegateProcesses.forEach(oldDelegateProcess -> {
-            logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+            log.info("Sending old delegate process {} resume message", oldDelegateProcess);
             messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
           });
         }
       } catch (Exception e) {
-        logger.error("Exception while upgrading", e);
+        log.error("Exception while upgrading", e);
         oldDelegateProcesses.forEach(oldDelegateProcess -> {
-          logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
+          log.info("Sending old delegate process {} resume message", oldDelegateProcess);
           messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_RESUME);
         });
         if (newDelegate != null) {
           try {
-            logger.warn("Killing new delegate");
+            log.warn("Killing new delegate");
             newDelegate.getProcess().destroy();
             newDelegate.getProcess().waitFor();
           } catch (Exception ex) {
@@ -1122,14 +1121,14 @@ public class WatcherServiceImpl implements WatcherService {
           }
           try {
             if (newDelegate.getProcess().isAlive()) {
-              logger.warn("Killing new delegate forcibly");
+              log.warn("Killing new delegate forcibly");
               newDelegate.getProcess().destroyForcibly();
               if (newDelegate.getProcess() != null) {
                 newDelegate.getProcess().waitFor();
               }
             }
           } catch (Exception ex) {
-            logger.error("ALERT: Couldn't kill forcibly", ex);
+            log.error("ALERT: Couldn't kill forcibly", ex);
           }
         }
       } finally {
@@ -1143,12 +1142,12 @@ public class WatcherServiceImpl implements WatcherService {
       messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
         sleep(ofSeconds(5));
-        logger.info("Send kill -3 to delegateProcess {}", delegateProcess);
+        log.info("Send kill -3 to delegateProcess {}", delegateProcess);
         new ProcessExecutor().command("kill", "-3", delegateProcess).start();
         sleep(ofSeconds(15));
         ProcessControl.ensureKilled(delegateProcess, Duration.ofSeconds(120));
       } catch (Exception e) {
-        logger.error("Error killing delegate {}", delegateProcess, e);
+        log.error("Error killing delegate {}", delegateProcess, e);
       }
       messageService.closeData(DELEGATE_DASH + delegateProcess);
       messageService.closeChannel(DELEGATE, delegateProcess);
@@ -1161,12 +1160,12 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void shutdownWatcher(String watcherProcess) {
     if (!StringUtils.equals(watcherProcess, getProcessId())) {
-      logger.warn("Shutting down extra watcher {}", watcherProcess);
+      log.warn("Shutting down extra watcher {}", watcherProcess);
       executorService.submit(() -> {
         try {
           ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
         } catch (Exception e) {
-          logger.error("Error killing watcher {}", watcherProcess, e);
+          log.error("Error killing watcher {}", watcherProcess, e);
         }
         messageService.closeChannel(WATCHER, watcherProcess);
         messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
@@ -1176,8 +1175,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void checkForWatcherUpgrade() {
     if (!watcherConfiguration.isDoUpgrade()) {
-      logger.info("Auto upgrade is disabled in watcher configuration");
-      logger.info("Watcher stays on version: [{}]", getVersion());
+      log.info("Auto upgrade is disabled in watcher configuration");
+      log.info("Watcher stays on version: [{}]", getVersion());
       return;
     }
     try {
@@ -1192,15 +1191,15 @@ public class WatcherServiceImpl implements WatcherService {
         upgrade = !StringUtils.equals(getVersion(), latestVersion);
       }
       if (upgrade) {
-        logger.info("[Old] Upgrading watcher");
+        log.info("[Old] Upgrading watcher");
         working.set(true);
         upgradeWatcher(getVersion(), latestVersion);
       } else {
-        logger.info("Watcher up to date");
+        log.info("Watcher up to date");
       }
     } catch (Exception e) {
       working.set(false);
-      logger.error("Exception while checking for upgrade", e);
+      log.error("Exception while checking for upgrade", e);
       logConfigWatcherYml();
     }
   }
@@ -1212,18 +1211,18 @@ public class WatcherServiceImpl implements WatcherService {
         LineIterator reader = FileUtils.lineIterator(configWatcher);
         while (reader.hasNext()) {
           String line = reader.nextLine();
-          logger.warn("   " + (StringUtils.containsIgnoreCase(line, "secret") ? "<redacted>" : line));
+          log.warn("   " + (StringUtils.containsIgnoreCase(line, "secret") ? "<redacted>" : line));
         }
       }
     } catch (IOException ex) {
-      logger.error("Couldn't read config-watcher.yml", ex);
+      log.error("Couldn't read config-watcher.yml", ex);
     }
   }
 
   private void upgradeWatcher(String version, String newVersion) {
     StartedProcess process = null;
     try {
-      logger.info("[Old] Starting new watcher");
+      log.info("[Old] Starting new watcher");
       process = new ProcessExecutor()
                     .command("nohup", "./start.sh", "upgrade", WatcherApplication.getProcessId())
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
@@ -1236,17 +1235,17 @@ public class WatcherServiceImpl implements WatcherService {
         Message message = messageService.waitForMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(3));
         if (message != null) {
           String newWatcherProcess = message.getParams().get(0);
-          logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
+          log.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
           messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
           message = messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
-            logger.info(
+            log.info(
                 "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
             if (chronicleEventTailer != null) {
               chronicleEventTailer.stopAsync().awaitTerminated();
             }
             messageService.writeMessageToChannel(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
-            logger.info("[Old] Watcher upgraded. Stopping");
+            log.info("[Old] Watcher upgraded. Stopping");
             removeWatcherVersionFromCapsule(version, newVersion);
             cleanupOldWatcherVersionFromBackup(version, newVersion);
             success = true;
@@ -1255,7 +1254,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
       if (!success) {
-        logger.error("[Old] Failed to upgrade watcher");
+        log.error("[Old] Failed to upgrade watcher");
         process.getProcess().destroy();
         process.getProcess().waitFor();
         watcherRestartedToUpgradeJre = false;
@@ -1264,7 +1263,7 @@ public class WatcherServiceImpl implements WatcherService {
       Thread.currentThread().interrupt();
       watcherRestartedToUpgradeJre = false;
     } catch (IOException | RuntimeException e) {
-      logger.error("[Old] Exception while upgrading", e);
+      log.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -1280,7 +1279,7 @@ public class WatcherServiceImpl implements WatcherService {
             }
           }
         } catch (Exception ex) {
-          logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
+          log.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
       watcherRestartedToUpgradeJre = false;
@@ -1293,7 +1292,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       cleanup(new File(System.getProperty(USER_DIR)), newHashSet(version, newVersion), "watcherBackup.");
     } catch (Exception ex) {
-      logger.error("Failed to clean watcher version from Backup", ex);
+      log.error("Failed to clean watcher version from Backup", ex);
     }
   }
 
@@ -1301,7 +1300,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), newHashSet(version, newVersion), "watcher-");
     } catch (Exception ex) {
-      logger.error("Failed to clean watcher version from Capsule", ex);
+      log.error("Failed to clean watcher version from Capsule", ex);
     }
   }
 
@@ -1310,7 +1309,7 @@ public class WatcherServiceImpl implements WatcherService {
       cleanupVersionFolders(new File(System.getProperty(USER_DIR)), keepVersions);
       cleanup(new File(System.getProperty(USER_DIR)), keepVersions, "backup.");
     } catch (Exception ex) {
-      logger.error("Failed to clean delegate version from Backup", ex);
+      log.error("Failed to clean delegate version from Backup", ex);
     }
   }
 
@@ -1318,7 +1317,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), keepVersions, "delegate-");
     } catch (Exception ex) {
-      logger.error("Failed to clean delegate version from Capsule", ex);
+      log.error("Failed to clean delegate version from Capsule", ex);
     }
   }
 
@@ -1328,7 +1327,7 @@ public class WatcherServiceImpl implements WatcherService {
         .filter(file -> !dir.equals(file))
         .filter(file -> keepVersions.stream().noneMatch(version -> file.getName().contains(version)))
         .forEach(file -> {
-          logger.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
+          log.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
           FileUtils.deleteQuietly(file);
         });
   }
@@ -1340,7 +1339,7 @@ public class WatcherServiceImpl implements WatcherService {
         .filter(file -> VERSION_PATTERN.matcher(file.getName()).matches())
         .filter(file -> keepVersions.stream().noneMatch(version -> file.getName().equals(version)))
         .forEach(file -> {
-          logger.info("Deleting version folder matching [{}] = {}", VERSION_PATTERN.pattern(), file.getAbsolutePath());
+          log.info("Deleting version folder matching [{}] = {}", VERSION_PATTERN.pattern(), file.getAbsolutePath());
           FileUtils.deleteQuietly(file);
         });
   }
@@ -1352,11 +1351,11 @@ public class WatcherServiceImpl implements WatcherService {
   private void migrate(String newUrl) {
     try {
       updateConfigFilesWithNewUrl(newUrl);
-      logger.info("Delegate processes {} will be restarted to complete migration.", runningDelegates);
+      log.info("Delegate processes {} will be restarted to complete migration.", runningDelegates);
       restartDelegate();
       restartWatcher();
     } catch (Exception e) {
-      logger.error("Error updating config.", e);
+      log.error("Error updating config.", e);
     }
   }
 
@@ -1459,7 +1458,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void selfDestruct() {
-    logger.info("Self destructing now...");
+    log.info("Self destructing now...");
 
     working.set(true);
     messageService.shutdown();
@@ -1473,8 +1472,8 @@ public class WatcherServiceImpl implements WatcherService {
 
     try {
       File workingDir = new File(System.getProperty(USER_DIR));
-      logger.info("Cleaning {}", workingDir.getCanonicalPath());
-      logger.info("Goodbye");
+      log.info("Cleaning {}", workingDir.getCanonicalPath());
+      log.info("Goodbye");
 
       cleanupVersionFolders(workingDir, emptySet());
 

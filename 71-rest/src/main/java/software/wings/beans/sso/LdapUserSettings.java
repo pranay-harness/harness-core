@@ -28,7 +28,7 @@ public class LdapUserSettings implements LdapUserConfig {
   @Override
   public String getUserFilter() {
     String userFilter = String.format("(&(%s={user})%s)", emailAttr, searchFilter);
-    logger.info("LDAP UserFilter is {}", userFilter);
+    log.info("LDAP UserFilter is {}", userFilter);
     return userFilter;
   }
 
@@ -36,7 +36,7 @@ public class LdapUserSettings implements LdapUserConfig {
   @Override
   public String getLoadUsersFilter() {
     String loadUserFilter = String.format("(&%s(%s=*))", searchFilter, emailAttr);
-    logger.info("LDAP loadUserFilter is {}", loadUserFilter);
+    log.info("LDAP loadUserFilter is {}", loadUserFilter);
     return loadUserFilter;
   }
 
@@ -45,7 +45,7 @@ public class LdapUserSettings implements LdapUserConfig {
   public String getGroupMembershipFilter(String groupDn) {
     String groupMembershipFilter = String.format("(&%s(%s:%s:=%s)(%s=*))", searchFilter, groupMembershipAttr,
         LdapConstants.LDAP_MATCHING_RULE_IN_CHAIN, groupDn, emailAttr);
-    logger.info("LDAP groupMembershipFilter is {}", groupMembershipFilter);
+    log.info("LDAP groupMembershipFilter is {}", groupMembershipFilter);
     return groupMembershipFilter;
   }
 
@@ -53,7 +53,7 @@ public class LdapUserSettings implements LdapUserConfig {
   @Override
   public String getFallbackGroupMembershipFilter(String groupDn) {
     String fallBackGroupMembershipFilter = String.format("(&%s(%s=%s))", searchFilter, groupMembershipAttr, groupDn);
-    logger.info("LDAP fallBackGroupMembershipFilter is {}", fallBackGroupMembershipFilter);
+    log.info("LDAP fallBackGroupMembershipFilter is {}", fallBackGroupMembershipFilter);
     return fallBackGroupMembershipFilter;
   }
 

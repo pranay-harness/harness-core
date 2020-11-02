@@ -119,7 +119,7 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
       Misc.logAllMessages(e, executionLogCallback);
       throw e;
     } catch (Exception e) {
-      logger.error("Exception in KubernetesSwapServiceSelectors", e);
+      log.error("Exception in KubernetesSwapServiceSelectors", e);
       Misc.logAllMessages(e, executionLogCallback);
       executionLogCallback.saveExecutionLog(
           "Exception occurred in kubernetesSwapServiceSelectors", LogLevel.ERROR, CommandExecutionStatus.FAILURE);

@@ -50,12 +50,12 @@ public class AddDuplicateFieldToCVFeedbacks implements Migration {
         try {
           cvFeedbackRecords.addAll(createCVFeedbackRecordFromLogMLFeedback(record));
         } catch (Exception ex) {
-          logger.info("Exception while creating feedback record for " + record);
+          log.info("Exception while creating feedback record for " + record);
         }
       }
       dataStoreService.save(CVFeedbackRecord.class, cvFeedbackRecords, true);
 
-      logger.info("Moved {} records to CVFeedback record", cvFeedbackRecords.size());
+      log.info("Moved {} records to CVFeedback record", cvFeedbackRecords.size());
     }
   }
 

@@ -48,8 +48,8 @@ public class WaitNotifyEngine {
   public String waitForAllOn(String publisherName, NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
+    if (log.isDebugEnabled()) {
+      log.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
 
     final WaitInstanceBuilder waitInstanceBuilder =
@@ -105,8 +105,8 @@ public class WaitNotifyEngine {
   private String doneWith(String correlationId, ResponseData response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("notify request received for the correlationId : {}", correlationId);
+    if (log.isDebugEnabled()) {
+      log.debug("notify request received for the correlationId : {}", correlationId);
     }
 
     try {
@@ -119,9 +119,9 @@ public class WaitNotifyEngine {
       handleNotifyResponse(correlationId);
       return correlationId;
     } catch (DuplicateKeyException exception) {
-      logger.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
+      log.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
     } catch (Exception exception) {
-      logger.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
+      log.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
     }
     return null;
   }
@@ -141,7 +141,7 @@ public class WaitNotifyEngine {
       if (notifyQueuePublisher == null) {
         // There is nothing smart that we can do.
         // If there is no publisher we should let people evaluate and handle the problem.
-        logger.error("Unknown publisher {}", publisher);
+        log.error("Unknown publisher {}", publisher);
         return;
       }
 

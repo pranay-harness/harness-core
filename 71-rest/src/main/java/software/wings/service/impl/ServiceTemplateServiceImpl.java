@@ -109,7 +109,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (withDetails) {
       long startTime = System.currentTimeMillis();
       setConfigs(encryptedFieldMode, serviceTemplates);
-      logger.info("Total time taken to load all the configs {}", System.currentTimeMillis() - startTime);
+      log.info("Total time taken to load all the configs {}", System.currentTimeMillis() - startTime);
     }
 
     return pageResponse;
@@ -121,56 +121,56 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideConfigFiles(serviceTemplate);
-        logger.info("Total time taken to load ServiceOverrideConfigFiles for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceOverrideConfigFiles for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Failed to populate the service and override config files for service template {} ", serviceTemplate, e);
       }
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
-        logger.info("Total time taken to load ServiceAndOverrideServiceVariables for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceAndOverrideServiceVariables for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
 
       } catch (Exception e) {
-        logger.error("Failed to populate the service and service variable overrides for service template {} ",
+        log.error("Failed to populate the service and service variable overrides for service template {} ",
             serviceTemplate, e);
       }
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
-        logger.info("Total time taken to load ServiceAndOverrideConfigMapYaml for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceAndOverrideConfigMapYaml for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
-        logger.error("Failed to populate the service and override config map yamls for service template {} ",
+        log.error("Failed to populate the service and override config map yamls for service template {} ",
             serviceTemplate, e);
       }
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideHelmValueYamls(serviceTemplate);
-        logger.info("Total time taken to load ServiceAndOverrideHelmValueYamls for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceAndOverrideHelmValueYamls for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
-        logger.error("Failed to populate the service and override helm value yamls for service template {} ",
+        log.error("Failed to populate the service and override helm value yamls for service template {} ",
             serviceTemplate, e);
       }
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideAppManifest(serviceTemplate);
-        logger.info("Total time taken to load ServiceAndOverrideValuesAppManifest for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceAndOverrideValuesAppManifest for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
-        logger.error("Failed to populate the service and override application manifest for service template {} ",
+        log.error("Failed to populate the service and override application manifest for service template {} ",
             serviceTemplate, e);
       }
       try {
         startTime = System.currentTimeMillis();
         populateServiceAndOverrideValuesManifestFile(serviceTemplate);
-        logger.info("Total time taken to load ServiceAndOverrideValuesManifestFil for one ServiceTemplate Id {} is {},",
+        log.info("Total time taken to load ServiceAndOverrideValuesManifestFil for one ServiceTemplate Id {} is {},",
             serviceTemplate.getUuid(), System.currentTimeMillis() - startTime);
       } catch (Exception e) {
-        logger.error(
+        log.error(
             "Failed to populate the service and override manifest file for service template {} ", serviceTemplate, e);
       }
     });
@@ -207,7 +207,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (isNotEmpty(services)) {
       for (Service service : services) {
         if (isBlank(service.getUuid())) {
-          logger.info("Null Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
+          log.info("Null Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
               service.getAppId(), service.getAccountId());
         }
       }
@@ -217,9 +217,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     try {
       serviceMap = Maps.uniqueIndex(services, Service::getUuid);
     } catch (Exception ex) {
-      logger.warn("Logging services in case of NPE");
+      log.warn("Logging services in case of NPE");
       for (Service service : services) {
-        logger.info("Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
+        log.info("Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
             service.getAppId(), service.getAccountId());
       }
 
@@ -644,15 +644,15 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> mergedConfigFiles = existingFiles;
 
     if (!existingFiles.isEmpty() || !newFiles.isEmpty()) {
-      logger.debug("Config files before overrides [{}]", existingFiles.toString());
-      logger.debug("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
+      log.debug("Config files before overrides [{}]", existingFiles.toString());
+      log.debug("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
       if (isNotEmpty(newFiles)) {
         mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
                                 .filter(new TreeSet<>(comparing(ConfigFile::getRelativeFilePath))::add)
                                 .collect(toList());
       }
     }
-    logger.debug("Config files after overrides [{}]", mergedConfigFiles.toString());
+    log.debug("Config files after overrides [{}]", mergedConfigFiles.toString());
     return mergedConfigFiles;
   }
 
@@ -660,9 +660,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
-        logger.debug(
+      if (log.isDebugEnabled()) {
+        log.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
+        log.debug(
             "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
       }
 
@@ -673,8 +673,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
+    if (log.isDebugEnabled()) {
+      log.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
     }
     return mergedServiceSettings;
   }

@@ -178,7 +178,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
 
     int totalGroupBy = entityListSize + tagListSize + timeSize;
     if (totalGroupBy > 2) {
-      logger.warn("The total number of aggregations cannot exceed 2, the observed count is {}", totalGroupBy);
+      log.warn("The total number of aggregations cannot exceed 2, the observed count is {}", totalGroupBy);
       throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
     }
 

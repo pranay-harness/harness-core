@@ -81,7 +81,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
   public void handle(Account account) {
     long oneMonthExpiryMillis = System.currentTimeMillis() - ONE_MONTH_IN_MILLIS;
     long twelveMonthExpiryMillis = System.currentTimeMillis() - TWELVE_MONTH_IN_MILLIS;
-    logger.info("Running git sync expiry handler {} .", account.getUuid());
+    log.info("Running git sync expiry handler {} .", account.getUuid());
     handleGitCommitInGitFileActivitySummary(account, twelveMonthExpiryMillis);
     handleGitFileActivity(account, twelveMonthExpiryMillis);
     handleGitError(account, oneMonthExpiryMillis);
@@ -94,7 +94,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     List<String> expiredCommits =
         appIds.stream()
             .map(appId -> {
-              logger.info("Running git file activity summary expiry handler for account {} and app {} .",
+              log.info("Running git file activity summary expiry handler for account {} and app {} .",
                   account.getUuid(), appId);
               int total = 0;
               String offset = "0";
@@ -125,7 +125,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     if (isNotEmpty(expiredCommits)) {
       boolean deleted = gitSyncService.deleteGitCommits(expiredCommits, account.getUuid());
       if (deleted) {
-        logger.info(
+        log.info(
             "Deleted {} expired Git File Activity Summary for account {}", expiredCommits.size(), account.getUuid());
       }
     }
@@ -138,7 +138,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     List<String> expiredActivities =
         appIds.stream()
             .map(appId -> {
-              logger.info(
+              log.info(
                   "Running git file activity  expiry handler for account {} and app {} .", account.getUuid(), appId);
               int total = 0;
               String offset = "0";
@@ -167,8 +167,8 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     if (isNotEmpty(expiredActivities)) {
       boolean deleted = gitSyncService.deleteGitActivity(expiredActivities, account.getUuid());
       if (deleted) {
-        logger.info("Deleted {} expired Git File Activity for account {}. Expired Ids are: {} ",
-            expiredActivities.size(), account.getUuid());
+        log.info("Deleted {} expired Git File Activity for account {}. Expired Ids are: {} ", expiredActivities.size(),
+            account.getUuid());
       }
     }
   }
@@ -187,7 +187,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
       errorIds = gitSyncErrorToBeDeleted.stream().map(GitSyncError::getUuid).collect(Collectors.toList());
       boolean deleted = gitSyncErrorService.deleteGitSyncErrors(errorIds, account.getUuid());
       if (deleted) {
-        logger.info("Deleted {} expired Git Sync Error for account {}. Expired Ids are: {} ", errorIds.size(),
+        log.info("Deleted {} expired Git Sync Error for account {}. Expired Ids are: {} ", errorIds.size(),
             account.getUuid());
       }
     } while (isNotEmpty(errorIds));
@@ -227,7 +227,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
                                                     .field(GitCommit.ID_KEY)
                                                     .in(gitCommitIds));
       if (deleted) {
-        logger.info("Deleted expired Git Commit for account {}. Expired Ids are: {} ", account.getUuid(), gitCommitIds);
+        log.info("Deleted expired Git Commit for account {}. Expired Ids are: {} ", account.getUuid(), gitCommitIds);
       }
     } while (isNotEmpty(gitCommitIds));
   }

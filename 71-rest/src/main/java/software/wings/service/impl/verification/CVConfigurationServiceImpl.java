@@ -247,7 +247,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         apmCvConfiguration.getMetricCollectionInfos().forEach(
             collectionInfo -> collectionInfo.setTag(cvConfiguration.getName()));
         if (!((APMCVServiceConfiguration) cvConfiguration).validate()) {
-          logger.info("The configuration for APM Custom Service Guard is invalid.");
+          log.info("The configuration for APM Custom Service Guard is invalid.");
           String errMsg =
               "The configuration should contain atleast one throughput if ERROR or Response Time is present. Throughput alone is not analyzed by itself";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -264,7 +264,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
             (CustomLogCVServiceConfiguration) cvConfiguration;
         if (!customLogCVServiceConfiguration.validateConfiguration()) {
-          logger.info("The configuration for Custom Logs Service Guard is invalid.");
+          log.info("The configuration for Custom Logs Service Guard is invalid.");
           String errMsg =
               "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -292,7 +292,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           new String[] {cvConfiguration.getAccountId(), cvConfiguration.getStateType().name(),
               String.valueOf(cvConfiguration.isEnabled24x7())});
     } catch (Exception e) {
-      logger.info("Unable to increase the metric for the CVConfiguration: " + cvConfiguration.getName(), e);
+      log.info("Unable to increase the metric for the CVConfiguration: " + cvConfiguration.getName(), e);
     }
 
     return dbConfiguration;
@@ -419,7 +419,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public String updateConfiguration(
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId) {
-    logger.info("Updating CV service configuration id " + serviceConfigurationId);
+    log.info("Updating CV service configuration id " + serviceConfigurationId);
 
     CVConfiguration updatedConfig;
     switch (stateType) {
@@ -515,7 +515,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
             (CustomLogCVServiceConfiguration) updatedConfig;
         if (!customLogCVServiceConfiguration.validateConfiguration()) {
-          logger.info("The configuration for Custom Logs Service Guard is invalid.");
+          log.info("The configuration for Custom Logs Service Guard is invalid.");
           String errMsg =
               "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -574,7 +574,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               ((CVConfiguration) savedConfig).getStateType().name(),
               String.valueOf(((CVConfiguration) savedConfig).isEnabled24x7())});
     } catch (Exception e) {
-      logger.info("Unable to decrease the metric for CVConfiguration: " + ((CVConfiguration) savedConfig).getName(), e);
+      log.info("Unable to decrease the metric for CVConfiguration: " + ((CVConfiguration) savedConfig).getName(), e);
     }
 
     return true;
@@ -657,7 +657,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   private UpdateOperations<CVConfiguration> getUpdateOperations(
       StateType stateType, CVConfiguration cvConfiguration, CVConfiguration savedConfiguration) {
-    logger.info("Updating CV Service Configuration {}", cvConfiguration);
+    log.info("Updating CV Service Configuration {}", cvConfiguration);
     validateAlertOccurrenceCount(cvConfiguration);
     validateEnabledLimit(cvConfiguration);
     UpdateOperations<CVConfiguration> updateOperations =
@@ -866,7 +866,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       LogsCVConfiguration updatedLogsCVConfiguration, LogsCVConfiguration savedLogsCVConfiguration) {
     if (savedLogsCVConfiguration.getBaselineStartMinute() != updatedLogsCVConfiguration.getBaselineStartMinute()
         || savedLogsCVConfiguration.getBaselineEndMinute() != updatedLogsCVConfiguration.getBaselineEndMinute()) {
-      logger.info("recalibrating baseline from {}, to {}", savedLogsCVConfiguration, updatedLogsCVConfiguration);
+      log.info("recalibrating baseline from {}, to {}", savedLogsCVConfiguration, updatedLogsCVConfiguration);
       String newCVConfigId = resetBaseline(
           savedLogsCVConfiguration.getAppId(), savedLogsCVConfiguration.getUuid(), updatedLogsCVConfiguration);
       savedLogsCVConfiguration.setUuid(newCVConfigId);
@@ -1028,7 +1028,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       }
     }
 
-    logger.info("Deleting {} stale CVConfigurations: {}", deleteList.size(), deleteList);
+    log.info("Deleting {} stale CVConfigurations: {}", deleteList.size(), deleteList);
 
     Query<CVConfiguration> query =
         wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).field("_id").in(deleteList);
@@ -1068,7 +1068,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public void pruneByEnvironment(String appId, String envId) {
-    logger.info("Deleting all configurations for envId: {}", envId);
+    log.info("Deleting all configurations for envId: {}", envId);
     Query<CVConfiguration> cvConfigurationQuery =
         wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfigurationKeys.envId, envId);
 
@@ -1113,12 +1113,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId) {
     if (isEmpty(cvConfigId)) {
-      logger.error("Empty cvConfigId passed into getTxnMetricPairsForAPMCVConfig");
+      log.error("Empty cvConfigId passed into getTxnMetricPairsForAPMCVConfig");
       return null;
     }
     CVConfiguration cvConfiguration = getConfiguration(cvConfigId);
     if (cvConfiguration == null || StateType.APM_VERIFICATION != cvConfiguration.getStateType()) {
-      logger.error(
+      log.error(
           "The cvConfigId provided in getTxnMetricPairsForAPMCVConfig doesn't correspond to a Custom Metrics Config");
       return null;
     }
@@ -1140,13 +1140,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       String accountId, String cvConfigId, List<String> keyTransactions) {
     if (isEmpty(cvConfigId) || getConfiguration(cvConfigId) == null) {
       final String errMsg = "CVConfigId is empty in saveKeyTransactionsForCVConfiguration";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
 
     if (isEmpty(keyTransactions)) {
       final String errMsg = "keyTransactions is empty in saveKeyTransactionsForCVConfiguration";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
 
@@ -1171,7 +1171,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       String accountId, String cvConfigId, List<String> keyTransaction) {
     if (isEmpty(keyTransaction)) {
       final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
 
@@ -1183,7 +1183,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                      .keyTransactions(new HashSet<>())
                                      .build();
     }
-    logger.info("Adding {} to the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
+    log.info("Adding {} to the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
     keyTransactionsForConfig.getKeyTransactions().addAll(keyTransaction);
     wingsPersistence.save(keyTransactionsForConfig);
     return true;
@@ -1193,13 +1193,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction) {
     if (isEmpty(keyTransaction)) {
       final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
 
     TimeSeriesKeyTransactions keyTransactionsForConfig = getKeyTransactionsForCVConfiguration(cvConfigId);
     if (keyTransactionsForConfig != null) {
-      logger.info("Removing {} from the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
+      log.info("Removing {} from the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
       keyTransactionsForConfig.getKeyTransactions().removeAll(keyTransaction);
       if (isEmpty(keyTransactionsForConfig.getKeyTransactions())) {
         wingsPersistence.delete(keyTransactionsForConfig);
@@ -1214,7 +1214,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId) {
     if (isEmpty(cvConfigId)) {
       final String errMsg = "CVConfigId is empty in getForCVConfiguration";
-      logger.error(errMsg);
+      log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
     return wingsPersistence.createQuery(TimeSeriesKeyTransactions.class)
@@ -1236,7 +1236,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   public void disableConfig(String cvConfigId) {
-    logger.info("Disabling the config: {}", cvConfigId);
+    log.info("Disabling the config: {}", cvConfigId);
     wingsPersistence.updateField(CVConfiguration.class, cvConfigId, CVConfigurationKeys.enabled24x7, false);
   }
 

@@ -91,7 +91,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(
              artifact.getArtifactStreamId(), artifact.getArtifactStreamType(), OVERRIDE_ERROR)) {
-      logger.info("Received artifact collection event");
+      log.info("Received artifact collection event");
 
       artifactService.updateStatus(uuid, accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
 
@@ -107,12 +107,12 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
       String waitId = generateUuid();
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
-      logger.info("Registering callback for the artifact with waitId {}", waitId);
+      log.info("Registering callback for the artifact with waitId {}", waitId);
       waitNotifyEngine.waitForAllOn(GENERAL, new ArtifactCollectionCallback(uuid), waitId);
-      logger.info("Queuing delegate task of artifactSourceName {} ", artifact.getArtifactSourceName());
+      log.info("Queuing delegate task of artifactSourceName {} ", artifact.getArtifactSourceName());
       delegateService.queueTask(delegateTask);
     } catch (Exception ex) {
-      logger.error("Failed to collect artifact. Reason {}", ExceptionUtils.getMessage(ex), ex);
+      log.error("Failed to collect artifact. Reason {}", ExceptionUtils.getMessage(ex), ex);
       artifactService.updateStatus(uuid, accountId, Status.APPROVED, ContentStatus.FAILED);
       if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
         eventEmitter.send(

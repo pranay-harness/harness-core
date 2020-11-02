@@ -386,7 +386,7 @@ public class InstanceFetchState extends State {
     } else {
       errorMessage.append(defaultErrorMessage).append("\n").append(t.getMessage());
     }
-    logger.error(errorMessage.toString(), t);
+    log.error(errorMessage.toString(), t);
     return responseBuilder.errorMessage(errorMessage.toString()).build();
   }
 

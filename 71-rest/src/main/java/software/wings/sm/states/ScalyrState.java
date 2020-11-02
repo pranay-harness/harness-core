@@ -42,7 +42,7 @@ public class ScalyrState extends AbstractLogAnalysisState {
 
   @Override
   public Logger getLogger() {
-    return logger;
+    return log;
   }
 
   public String getHostnameField() {

@@ -32,54 +32,54 @@ public class IISInstallCommandV3Migration implements SeedDataMigration {
   @Override
   public void migrate() {
     try {
-      logger.info("Migrating Install Command for IIS to V4");
+      log.info("Migrating Install Command for IIS to V4");
       updateExistingInstallCommand(POWER_SHELL_IIS_V4_INSTALL_PATH, "iis");
 
-      logger.info("Migrating Install Website Command for IIS to V3");
+      log.info("Migrating Install Website Command for IIS to V3");
       updateExistingInstallCommand(POWER_SHELL_IIS_WEBSITE_V3_INSTALL_PATH, "iiswebsite");
 
-      logger.info("Migrating Install App Command for IIS to V3");
+      log.info("Migrating Install App Command for IIS to V3");
       updateExistingInstallCommand(POWER_SHELL_IIS_APP_V3_INSTALL_PATH, "iisapp");
     } catch (WingsException e) {
-      ExceptionLogger.logProcessedMessages(e, MANAGER, logger);
-      logger.error("Migration failed: ", e);
+      ExceptionLogger.logProcessedMessages(e, MANAGER, log);
+      log.error("Migration failed: ", e);
     } catch (Exception e) {
-      logger.error("Migration failed: ", e);
+      log.error("Migration failed: ", e);
     }
   }
 
   public void updateExistingInstallCommand(String commandType, String keyword) throws IOException {
     TemplateGallery harnessTemplateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     if (harnessTemplateGallery == null) {
-      logger.info("Harness global gallery does not exist. Not copying templates");
+      log.info("Harness global gallery does not exist. Not copying templates");
       return;
     }
 
     Template globalTemplate = templateService.convertYamlToTemplate(commandType);
     globalTemplate.setAppId(GLOBAL_APP_ID);
     globalTemplate.setAccountId(GLOBAL_ACCOUNT_ID);
-    logger.info("Folder path for global account id: " + globalTemplate.getFolderPath());
+    log.info("Folder path for global account id: " + globalTemplate.getFolderPath());
     TemplateFolder destTemplateFolder = templateFolderService.getByFolderPath(
         GLOBAL_ACCOUNT_ID, globalTemplate.getFolderPath(), harnessTemplateGallery.getUuid());
     if (destTemplateFolder != null) {
-      logger.info("Template folder found for global account");
+      log.info("Template folder found for global account");
 
       // Get existing template
       Template existingTemplate = templateService.fetchTemplateByKeywordForAccountGallery(GLOBAL_ACCOUNT_ID, keyword);
       if (existingTemplate != null) {
-        logger.info("IIS Install template found in Global account");
+        log.info("IIS Install template found in Global account");
         globalTemplate.setUuid(existingTemplate.getUuid());
         globalTemplate.setVersion(null);
         globalTemplate.setGalleryId(harnessTemplateGallery.getUuid());
         globalTemplate.setFolderId(existingTemplate.getFolderId());
         globalTemplate = templateService.update(globalTemplate);
-        logger.info("Global IIS Install template updated in account [{}]", GLOBAL_ACCOUNT_ID);
+        log.info("Global IIS Install template updated in account [{}]", GLOBAL_ACCOUNT_ID);
         templateGalleryService.copyNewVersionFromGlobalToAllAccounts(globalTemplate, keyword);
       } else {
-        logger.error("IIS Install template not found in Global account");
+        log.error("IIS Install template not found in Global account");
       }
     } else {
-      logger.error("Template folder doesn't exist for account " + GLOBAL_ACCOUNT_ID);
+      log.error("Template folder doesn't exist for account " + GLOBAL_ACCOUNT_ID);
     }
   }
 }

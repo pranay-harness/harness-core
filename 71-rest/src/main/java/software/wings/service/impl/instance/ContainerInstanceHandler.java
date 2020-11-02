@@ -134,7 +134,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
       String msg = "Incompatible infrastructure mapping type found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
 
@@ -151,7 +151,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
 
-    logger.info("Found {} containerSvcNames for app {} and infraMapping",
+    log.info("Found {} containerSvcNames for app {} and infraMapping",
         containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
 
     if (containerMetadataInstanceMap == null) {
@@ -168,7 +168,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                                                  .collect(toList());
 
         if (containerMetadata.getType() == ContainerMetadataType.K8S) {
-          logger.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
+          log.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
               containerMetadata.getReleaseName());
 
           handleK8sInstances(responseData, instanceSyncFlow, containerInfraMapping, deploymentSummaryMap,
@@ -181,7 +181,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
               continue;
             }
           }
-          logger.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
+          log.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
               containerMetadata.getContainerServiceName());
 
           handleContainerServiceInstances(rollback, responseData, instanceSyncFlow, containerInfraMapping,
@@ -199,8 +199,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     // ECS it is taskDefinition)
     List<ContainerInfo> latestContainerInfoList =
         getContainerInfos(responseData, instanceSyncFlow, containerInfraMapping, containerMetadata);
-    logger.info("Found {} instances from remote server for app {} and containerSvcName {}",
-        latestContainerInfoList.size(), containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
+    log.info("Found {} instances from remote server for app {} and containerSvcName {}", latestContainerInfoList.size(),
+        containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
     processContainerServiceInstances(rollback, containerInfraMapping, deploymentSummaryMap, containerMetadata,
         instancesInDB, latestContainerInfoList);
   }
@@ -253,10 +253,10 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       }
     }
 
-    logger.info("Instances to be added {}", instancesToBeAdded.size());
-    logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+    log.info("Instances to be added {}", instancesToBeAdded.size());
+    log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
 
-    logger.info("Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
+    log.info("Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
             + "No of instances in DB: {}, No of Running instances: {}, "
             + "No of instances to be Added: {}, No of instances to be deleted: {}",
         containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), containerInfraMapping.getAppId(),
@@ -272,7 +272,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       if (!deploymentSummaryMap.containsKey(containerMetadata) && isNotEmpty(instancesInDB)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
-          logger.warn("Couldn't find an instance from a previous deployment");
+          log.warn("Couldn't find an instance from a previous deployment");
           return;
         }
 
@@ -450,14 +450,14 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
 
-    logger.info(
+    log.info(
         "[InstanceSync for namespace {} release {}] Got {} running Pods. InstancesToBeAdded:{} InstancesToBeDeleted:{}",
         containerMetadata.getNamespace(), containerMetadata.getReleaseName(), currentPods.size(),
         instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
-      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
 
     DeploymentSummary deploymentSummary = deploymentSummaryMap.get(containerMetadata);
@@ -476,7 +476,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       instanceService.saveOrUpdate(instance);
     }
 
-    logger.info("Instances to be added {}", instancesToBeAdded.size());
+    log.info("Instances to be added {}", instancesToBeAdded.size());
 
     if (deploymentSummaryMap.get(containerMetadata) != null) {
       deploymentSummary = deploymentSummaryMap.get(containerMetadata);
@@ -567,7 +567,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         if (isControllerNamesRetrievable || isEmpty(containerDeploymentInfo.getContainerInfoList())) {
           Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap, namespace);
 
-          logger.info(
+          log.info(
               "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
               newDeploymentSummaries.iterator().next().getWorkflowExecutionId(), containerInfraMapping.getUuid(),
               newDeploymentSummaries.iterator().next().getAppId(), controllerNames.size());
@@ -631,7 +631,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       ContainerInfrastructureMapping containerInfraMapping, Multimap<ContainerMetadata, Instance> instanceMap) {
     String appId = containerInfraMapping.getAppId();
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, containerInfraMapping.getUuid());
-    logger.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
+    log.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof ContainerInfo) {
@@ -671,7 +671,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     String appId = deploymentSummaries.iterator().next().getAppId();
-    logger.info("Handling new container deployment for inframappingId [{}]", infraMappingId);
+    log.info("Handling new container deployment for inframappingId [{}]", infraMappingId);
     validateDeploymentInfos(deploymentSummaries);
 
     if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof ContainerDeploymentInfoWithNames) {
@@ -741,8 +741,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
     if (phaseStepExecutionSummary == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      if (log.isDebugEnabled()) {
+        log.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
       }
       return Optional.empty();
     }
@@ -750,8 +750,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     // This was observed when the "deploy containers" step was executed in rollback and no commands were
     // executed since setup failed.
     if (stepExecutionSummaryList == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+      if (log.isDebugEnabled()) {
+        log.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
       }
       return Optional.empty();
     }
@@ -778,7 +778,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         } else if (stepExecutionSummary instanceof HelmSetupExecutionSummary
             || stepExecutionSummary instanceof KubernetesSteadyStateCheckExecutionSummary) {
           if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
-            logger.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
+            log.warn("Inframapping is not container type. cannot proceed for state execution instance: {}",
                 stateExecutionInstanceId);
             return Optional.empty();
           }
@@ -834,7 +834,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     List<String> serviceNames = containerSvcNameSet.stream().filter(EmptyPredicate::isNotEmpty).collect(toList());
 
     if (isEmpty(serviceNames)) {
-      logger.warn(
+      log.warn(
           "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
           stateExecutionInstanceId);
       return true;
@@ -997,7 +997,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
     } else {
       String msg = "Unsupported container instance type:" + containerInfo;
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
 
@@ -1031,7 +1031,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       return containerSync.getInstances(instanceSyncRequest);
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
   }
@@ -1142,7 +1142,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       delimiter = "-";
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
 
@@ -1212,7 +1212,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
       String msg = "Incompatible infrastructure mapping type found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
+      log.error(msg);
       throw new GeneralException(msg);
     }
 

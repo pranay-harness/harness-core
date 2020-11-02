@@ -111,7 +111,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
             - clusterCostData.getMemoryUtilizedCost() - clusterCostData.getMemorySystemCost());
         if (billingAmount.compareTo(BigDecimal.ZERO) == -1 || cpuBillingAmount.compareTo(BigDecimal.ZERO) == -1
             || memoryBillingAmount.compareTo(BigDecimal.ZERO) == -1) {
-          logger.warn(
+          log.warn(
               "Unallocated billing amount -ve account {} cluster {} startdate {} enddate {} total {} cpu {} memory {}",
               commonFields.getAccountId(), clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime(),
               billingAmount, cpuBillingAmount, memoryBillingAmount);

@@ -103,7 +103,7 @@ public class PerpetualTaskWorker {
       }
 
       for (PerpetualTaskId taskId : stopTasks) {
-        logger.info("Stopping the task with id: {}", taskId.getId());
+        log.info("Stopping the task with id: {}", taskId.getId());
         stopTask(taskId);
       }
 
@@ -123,11 +123,11 @@ public class PerpetualTaskWorker {
 
       backoffScheduler.recordSuccess();
     } catch (StatusRuntimeException ex) {
-      logger.error(
+      log.error(
           THROTTLED, "Grpc status exception in perpetual task worker for account:{}. Backing off...", accountId, ex);
       backoffScheduler.recordFailure();
     } catch (Exception ex) {
-      logger.error("Exception in perpetual task worker ", ex);
+      log.error("Exception in perpetual task worker ", ex);
     }
   }
 
@@ -137,7 +137,7 @@ public class PerpetualTaskWorker {
     long delay = startTime - lastContextUpdated;
 
     try (DelayLogContext ignore = new DelayLogContext(delay, OVERRIDE_ERROR)) {
-      logger.info(message);
+      log.info(message);
     }
   }
 
@@ -164,8 +164,8 @@ public class PerpetualTaskWorker {
   List<PerpetualTaskAssignDetails> fetchAssignedTask() {
     String delegateId = getDelegateId().orElse("UNREGISTERED");
     List<PerpetualTaskAssignDetails> assignedTasks = perpetualTaskServiceGrpcClient.perpetualTaskList(delegateId);
-    if (logger.isDebugEnabled()) {
-      logger.debug("Refreshed list of assigned perpetual tasks {}", assignedTasks);
+    if (log.isDebugEnabled()) {
+      log.debug("Refreshed list of assigned perpetual tasks {}", assignedTasks);
     }
     return assignedTasks;
   }
@@ -182,7 +182,7 @@ public class PerpetualTaskWorker {
 
       synchronized (runningTaskMap) {
         runningTaskMap.computeIfAbsent(task.getTaskId(), k -> {
-          logger.info("Starting perpetual task with id: {}.", task.getTaskId().getId());
+          log.info("Starting perpetual task with id: {}.", task.getTaskId().getId());
           ScheduledFuture<?> taskHandle = perpetualTaskTimeoutExecutor.scheduleWithFixedDelay(
               new Schedulable("Throwable while executing perpetual task", perpetualTaskLifecycleManager::startTask), 0,
               intervalSeconds, TimeUnit.SECONDS);
@@ -196,7 +196,7 @@ public class PerpetualTaskWorker {
         });
       }
     } catch (Exception ex) {
-      logger.error("Exception in starting perpetual task ", ex);
+      log.error("Exception in starting perpetual task ", ex);
     }
   }
 
@@ -211,7 +211,7 @@ public class PerpetualTaskWorker {
         }
         runningTaskMap.remove(taskId);
       }
-      logger.info("Stopping perpetual task with id: {}.", taskId.getId());
+      log.info("Stopping perpetual task with id: {}.", taskId.getId());
       perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskLifecycleManager().stopTask();
       perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskHandle().cancel(true);
     }

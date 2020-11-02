@@ -61,21 +61,21 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
     try {
       process(publishedMessages);
     } catch (Exception ex) {
-      logger.error("K8sNodeEventTasklet Exception ", ex);
+      log.error("K8sNodeEventTasklet Exception ", ex);
     }
   }
 
   public void process(List<PublishedMessage> publishedMessages) {
-    logger.info("Published batch size is K8SSyncEventTasklet {} ", publishedMessages.size());
+    log.info("Published batch size is K8SSyncEventTasklet {} ", publishedMessages.size());
     publishedMessages.forEach(publishedMessage -> {
       K8SClusterSyncEvent k8SClusterSyncEvent = (K8SClusterSyncEvent) publishedMessage.getMessage();
-      logger.info("K8S sync event {} ", k8SClusterSyncEvent);
+      log.info("K8S sync event {} ", k8SClusterSyncEvent);
       String accountId = publishedMessage.getAccountId();
       String clusterId = k8SClusterSyncEvent.getClusterId();
       Timestamp lastProcessedTimestamp = k8SClusterSyncEvent.getLastProcessedTimestamp();
       Set<String> activeInstanceIds =
           fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
-      logger.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
+      log.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
 
       Set<String> activeInstanceArns = new HashSet<>();
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
@@ -83,7 +83,7 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
 
       SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
-      logger.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
+      log.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
 
       inactiveInstanceArns.forEach(inactiveInstanceArn
           -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp)));

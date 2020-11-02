@@ -50,7 +50,7 @@ public class WatcherExecutor {
         if (isHealthy()) {
           return;
         }
-        logger.info("Execute the watcher from {}", directory);
+        log.info("Execute the watcher from {}", directory);
         final Path jar = Paths.get(directory.getPath(), "250-watcher", "target", "watcher-capsule.jar");
         final Path config = Paths.get(directory.getPath(), "250-watcher", "config-watcher.yml");
 
@@ -63,14 +63,14 @@ public class WatcherExecutor {
         addJar(jar, command);
         addConfig(config, command);
 
-        logger.info(Strings.join(command, " "));
+        log.info(Strings.join(command, " "));
 
         ProcessExecutor processExecutor = new ProcessExecutor();
         processExecutor.directory(directory);
         processExecutor.command(command);
 
-        processExecutor.redirectOutput(Slf4jStream.of(logger).asInfo());
-        processExecutor.redirectError(Slf4jStream.of(logger).asError());
+        processExecutor.redirectOutput(Slf4jStream.of(log).asInfo());
+        processExecutor.redirectError(Slf4jStream.of(log).asError());
 
         final StartedProcess startedProcess = processExecutor.start();
         watcherProcess = startedProcess.getProcess();

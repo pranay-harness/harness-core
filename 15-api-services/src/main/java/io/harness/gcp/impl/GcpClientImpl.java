@@ -65,11 +65,11 @@ public class GcpClientImpl implements GcpClient {
       GoogleCredential credential = getGoogleCredential(serviceAccountKey);
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
-      logger.error("Security exception getting Google container service", e);
+      log.error("Security exception getting Google container service", e);
       throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
-      logger.error("Error getting Google container service", e);
+      log.error("Error getting Google container service", e);
       throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     }

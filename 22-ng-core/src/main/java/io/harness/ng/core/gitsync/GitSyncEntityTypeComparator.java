@@ -20,7 +20,7 @@ public class GitSyncEntityTypeComparator implements Comparator<GitSyncEntities> 
     Integer i2 = orderingList.indexOf(o2.getEntityType());
     if (i1 == -1 || i2 == -1) {
       // handling unknown entity type by logging.
-      logger.error("Unknown entity type in ordering");
+      log.error("Unknown entity type in ordering");
     }
     return i1.compareTo(i2);
   }

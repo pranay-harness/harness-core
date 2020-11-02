@@ -111,7 +111,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
-    logger.info("Updating status {}", result);
+    log.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, result.getStatus());
@@ -142,7 +142,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   private void markDependentTasksFailed(DataCollectionTask task) {
     String exceptionMsg =
         task.getStatus() == DataCollectionExecutionStatus.EXPIRED ? "Previous task timed out" : "Previous task failed";
-    logger.info("Marking queued task failed for verificationTaskId {}", task.getVerificationTaskId());
+    log.info("Marking queued task failed for verificationTaskId {}", task.getVerificationTaskId());
     UpdateOperations<DataCollectionTask> updateOperations =
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.FAILED)
@@ -157,7 +157,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   private void enqueueNextTask(DataCollectionTask task) {
     if (task.getNextTaskId() != null) {
-      logger.info("Enqueuing next task {}", task.getUuid());
+      log.info("Enqueuing next task {}", task.getUuid());
       UpdateOperations<DataCollectionTask> updateOperations =
           hPersistence.createUpdateOperations(DataCollectionTask.class)
               .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.QUEUED);
@@ -182,15 +182,15 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     } else {
       markDependentTasksFailed(dataCollectionTask);
       // TODO: handle this logic in a better way and setup alert.
-      logger.error("Task retry count exceeded max limit. Not retrying anymore... {}, {}, {}",
-          dataCollectionTask.getUuid(), dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
+      log.error("Task retry count exceeded max limit. Not retrying anymore... {}, {}, {}", dataCollectionTask.getUuid(),
+          dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
     }
   }
 
   private void createNextTask(DataCollectionTask prevTask) {
     CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(prevTask.getVerificationTaskId()));
     if (cvConfig == null) {
-      logger.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
+      log.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
       return;
     }
     populateMetricPack(cvConfig);
@@ -210,7 +210,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   @Override
   public String enqueueFirstTask(CVConfig cvConfig) {
-    logger.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
+    log.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
     populateMetricPack(cvConfig);
 
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
@@ -227,7 +227,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
 
-    logger.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
+    log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
     return dataCollectionTaskId;
   }
 

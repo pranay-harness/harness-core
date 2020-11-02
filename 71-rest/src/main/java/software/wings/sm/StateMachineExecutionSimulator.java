@@ -105,7 +105,7 @@ public class StateMachineExecutionSimulator {
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
     if (isEmpty(res)) {
-      logger.error("No service instance found for the ids: {}", serviceInstanceIds);
+      log.error("No service instance found for the ids: {}", serviceInstanceIds);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
 
@@ -183,7 +183,7 @@ public class StateMachineExecutionSimulator {
       String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
       List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
       if (isEmpty(repeatElements)) {
-        logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
+        log.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return;
       }
       State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());

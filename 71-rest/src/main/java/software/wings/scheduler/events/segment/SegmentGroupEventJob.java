@@ -57,14 +57,14 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
 
     List<Account> accounts = accountService.list(request);
 
-    logger.info("Segment publish job with accounts. count={}", accounts.size());
+    log.info("Segment publish job with accounts. count={}", accounts.size());
     for (Account account : accounts) {
       if (Account.GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
         continue;
       }
 
       if (AccountStatus.ACTIVE.equals(accountService.getAccountStatus(account.getUuid()))) {
-        logger.info("publishing segment group event. accountId={}", account.getUuid());
+        log.info("publishing segment group event. accountId={}", account.getUuid());
         accountChangeHandler.publishAccountEventToSegment(account);
       }
     }

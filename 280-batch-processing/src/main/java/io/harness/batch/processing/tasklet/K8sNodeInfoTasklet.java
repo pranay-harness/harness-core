@@ -83,7 +83,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
     try {
       return process(publishedMessage);
     } catch (Exception ex) {
-      logger.error("K8sNodeInfoTasklet Exception ", ex);
+      log.error("K8sNodeInfoTasklet Exception ", ex);
     }
     return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
   }

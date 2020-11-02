@@ -78,7 +78,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
           GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
-          logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
+          log.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
 
           gitConnectorId = gitCommitRequest.getYamlGitConfig().getGitConnectorId();
           if (isBlank(gitConnectorId)) {
@@ -102,13 +102,13 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .build();
         case DIFF:
           GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
-          logger.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
+          log.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
           boolean excludeFilesOutsideSetupFolder = false;
 
           try {
             excludeFilesOutsideSetupFolder = (boolean) parameters[4];
           } catch (Exception e) {
-            logger.error("Boolean for excluding external files not found. Set to false by default.");
+            log.error("Boolean for excluding external files not found. Set to false by default.");
           }
 
           gitConnectorId = gitDiffRequest.getYamlGitConfig().getGitConnectorId();
@@ -131,7 +131,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .gitCommandStatus(GitCommandStatus.SUCCESS)
               .build();
         case VALIDATE:
-          logger.info(GIT_YAML_LOG_PREFIX + " Processing Git command: VALIDATE");
+          log.info(GIT_YAML_LOG_PREFIX + " Processing Git command: VALIDATE");
           String errorMessage = gitClient.validate(gitConfig);
           if (errorMessage == null) {
             return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
@@ -151,7 +151,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .build();
       }
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
       GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
                                                        .gitCommandStatus(GitCommandStatus.FAILURE)
                                                        .errorMessage(ex.getMessage())

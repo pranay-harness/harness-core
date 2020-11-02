@@ -109,18 +109,18 @@ public class K8BuildSetupUtils {
               .taskDescription("CI build task BuildEnvSetupStepInfo")
               .build();
 
-      logger.info("Sending pod creation task for {}", podSetupInfo.getName());
+      log.info("Sending pod creation task for {}", podSetupInfo.getName());
       K8sTaskExecutionResponse k8sTaskExecutionResponse =
           (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
+        log.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
         return k8sTaskExecutionResponse;
       } else {
-        logger.error("build env setup task state execution finished with status {}",
+        log.error("build env setup task state execution finished with status {}",
             k8sTaskExecutionResponse.getCommandExecutionStatus());
       }
     } catch (Exception e) {
-      logger.error("build env setup state execution failed", e);
+      log.error("build env setup state execution failed", e);
     }
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
   }
@@ -157,18 +157,18 @@ public class K8BuildSetupUtils {
               .taskDescription("CI build task LiteEngineTaskStepInfo")
               .build();
 
-      logger.info("Sending pod creation task for {}", podSetupInfo.getName());
+      log.info("Sending pod creation task for {}", podSetupInfo.getName());
       K8sTaskExecutionResponse k8sTaskExecutionResponse =
           (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        logger.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
+        log.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
       } else {
-        logger.error("lite engine task state execution finished with status {}",
+        log.error("lite engine task state execution finished with status {}",
             k8sTaskExecutionResponse.getCommandExecutionStatus());
       }
       return k8sTaskExecutionResponse;
     } catch (Exception e) {
-      logger.error("lite engine task state execution failed", e);
+      log.error("lite engine task state execution failed", e);
     }
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
   }

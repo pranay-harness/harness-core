@@ -41,13 +41,13 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
 
     // return if there is no cache
     if (graph == null) {
-      logger.info("Orchestration graph cache is null");
+      log.info("Orchestration graph cache is null");
       return;
     }
 
     Map<String, GraphVertex> graphVertexMap = graph.getAdjacencyList().getGraphVertexMap();
     if (graphVertexMap.containsKey(nodeExecutionId)) {
-      logger.info("Updating graph vertex for [{}] with status [{}]", nodeExecutionId, nodeExecution.getStatus());
+      log.info("Updating graph vertex for [{}] with status [{}]", nodeExecutionId, nodeExecution.getStatus());
       graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
         GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
         if (isFinalStatus(newValue.getStatus())) {

@@ -35,7 +35,7 @@ public class CleanupSyncStatusForDeletedEntities implements Migration {
   @Override
   public void migrate() {
     try {
-      logger.info("Start - Deleting of orphan infra sync");
+      log.info("Start - Deleting of orphan infra sync");
 
       List<Key<Application>> appKeyList = wingsPersistence.createQuery(Application.class, excludeAuthority).asKeyList();
       Set<String> apps = appKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toSet());
@@ -68,13 +68,13 @@ public class CleanupSyncStatusForDeletedEntities implements Migration {
         }
       }
 
-      logger.info("Number of orphaned infra sync identified: " + orphanInfraSyncSet.size());
+      log.info("Number of orphaned infra sync identified: " + orphanInfraSyncSet.size());
       Query<SyncStatus> deleteQuery = wingsPersistence.createQuery(SyncStatus.class, excludeAuthority);
       deleteQuery.field("_id").in(orphanInfraSyncSet);
       wingsPersistence.delete(deleteQuery);
-      logger.info("Deleted orphan infra sync  successfully");
+      log.info("Deleted orphan infra sync  successfully");
     } catch (Exception ex) {
-      logger.error("Error while deleting orphan infra sync info", ex);
+      log.error("Error while deleting orphan infra sync info", ex);
     }
   }
 }

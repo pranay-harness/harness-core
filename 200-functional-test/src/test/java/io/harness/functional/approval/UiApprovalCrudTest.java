@@ -63,9 +63,9 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    logger.info("Creating the workflow");
+    log.info("Creating the workflow");
 
-    logger.info("Fetching User Group Id");
+    log.info("Fetching User Group Id");
     List<UserGroup> userGroupLists = UserGroupRestUtils.getUserGroups(getAccount(), bearerToken);
     String userGroupId = userGroupLists.get(0).getUuid();
     String userGroupIdNew = userGroupLists.get(1).getUuid();
@@ -78,7 +78,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), uiWorkflow);
     assertThat(savedWorkflow).isNotNull();
 
-    logger.info("Asserting that the Phase step of approval is added");
+    log.info("Asserting that the Phase step of approval is added");
     String phaseName = ((CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow())
                            .getPostDeploymentSteps()
                            .getSteps()
@@ -87,14 +87,14 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(phaseName).isEqualToIgnoringCase("Test Approval");
 
     // Update Workflow's Approve Stage
-    logger.info("Updating the graph node");
+    log.info("Updating the graph node");
     PhaseStep phaseStep = new PhaseStep();
     phaseStep.setName("Post-Deployment");
     phaseStep.setSteps(getUpdatedApprovalNode(userGroupIdNew));
     PhaseStep phaseStepUpdated =
         workflowService.updatePostDeployment(application.getUuid(), savedWorkflow.getUuid(), phaseStep);
 
-    logger.info("Asserting the userGroupId of the approval Stage");
+    log.info("Asserting the userGroupId of the approval Stage");
     ArrayList<String> userGroupIds =
         (ArrayList<String>) phaseStepUpdated.getSteps().get(0).getProperties().get("userGroups");
     String userGroupIdUpdated = userGroupIds.get(0);
@@ -103,7 +103,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(userGroupIdUpdated).isEqualToIgnoringCase(userGroupIdNew);
 
     // Delete the Workflow
-    logger.info("Deleting the workflow");
+    log.info("Deleting the workflow");
     WorkflowRestUtils.deleteWorkflow(bearerToken, savedWorkflow.getUuid(), application.getAppId());
   }
 

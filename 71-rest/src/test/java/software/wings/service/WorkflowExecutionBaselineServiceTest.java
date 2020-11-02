@@ -303,7 +303,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     String pipeLineExecId = "";
     for (int i = 0; i < numOfPipelines; i++) {
       pipeLineExecId = UUID.randomUUID().toString();
-      logger.info("running for pipeline " + i);
+      log.info("running for pipeline " + i);
       workflowExecutionIds.add(new ArrayList<>());
       List<WorkflowExecution> workflowExecutions = new ArrayList<>();
       for (int j = 0; j < numOfWorkflowExecutions; j++) {

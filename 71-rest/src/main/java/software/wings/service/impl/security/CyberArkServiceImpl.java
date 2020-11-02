@@ -68,7 +68,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
             .decrypt(data, cyberArkConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
+        log.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
             failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
@@ -212,7 +212,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
     if (isNotEmpty(cyberArkConfig.getClientCertificate())) {
       wingsPersistence.delete(EncryptedData.class, cyberArkConfig.getClientCertificate());
-      logger.info("Deleted encrypted auth token record {} associated with CyberArk Secrets Manager '{}'",
+      log.info("Deleted encrypted auth token record {} associated with CyberArk Secrets Manager '{}'",
           cyberArkConfig.getClientCertificate(), cyberArkConfig.getName());
     }
 

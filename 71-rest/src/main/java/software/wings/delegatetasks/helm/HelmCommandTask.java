@@ -83,7 +83,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       String errorMsg = ex.getMessage();
       helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      logger.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
+      log.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage("Exception in processing helm task: " + errorMsg)
@@ -93,7 +93,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
         "Command finished with status " + commandResponse.getCommandExecutionStatus(), LogLevel.INFO,
         commandResponse.getCommandExecutionStatus());
-    logger.info(commandResponse.getOutput());
+    log.info(commandResponse.getOutput());
 
     HelmCommandExecutionResponse helmCommandExecutionResponse =
         HelmCommandExecutionResponse.builder()
@@ -134,7 +134,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     executionLogCallback.saveExecutionLog("Finding helm version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(helmCommandRequest);
-    logger.info(helmCommandResponse.getOutput());
+    log.info(helmCommandResponse.getOutput());
     executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
   }
 }

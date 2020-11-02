@@ -33,7 +33,7 @@ public class SpotinstTrafficShiftAlbDeployTaskHandler extends SpotInstTaskHandle
       String message =
           format("Parameters of unrecognized class: [%s] found while executing setup traffic shift deploy.",
               spotinstTaskParameters.getClass().getSimpleName());
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
     SpotinstTrafficShiftAlbDeployParameters deployParameters =
@@ -42,7 +42,7 @@ public class SpotinstTrafficShiftAlbDeployTaskHandler extends SpotInstTaskHandle
     ElastiGroup newElastigroup = deployParameters.getNewElastigroup();
     if (newElastigroup == null) {
       String message = "Found null newElastigroup when trying to scale up Alb traffic shift deployment.";
-      logger.error(message);
+      log.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
     updateElastiGroupAndWait(String.valueOf(spotinstConfig.getSpotInstToken()), spotinstConfig.getSpotInstAccountId(),

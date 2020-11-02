@@ -48,7 +48,7 @@ public class JiraTaskNGHandler {
       jiraClient.getProjects();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
     }
 
@@ -77,7 +77,7 @@ public class JiraTaskNGHandler {
 
       Issue issue = fluentCreate.execute();
 
-      logger.info("Script execution finished with status SUCCESS");
+      log.info("Script execution finished with status SUCCESS");
 
       return JiraTaskNGResponse.builder()
           .executionStatus(SUCCESS)
@@ -89,7 +89,7 @@ public class JiraTaskNGHandler {
           .build();
     } catch (JiraException e) {
       String errorMessage = "Failed to create Jira ticket";
-      logger.error(errorMessage, e);
+      log.error(errorMessage, e);
       return JiraTaskNGResponse.builder()
           .errorMessage(
               "Unable to create a new Jira ticket. " + ExceptionUtils.getMessage(e) + " " + extractResponseMessage(e))
@@ -167,7 +167,7 @@ public class JiraTaskNGHandler {
           updateStatus(issue, jiraTaskNGParameters.getStatus());
         }
 
-        logger.info("Successfully updated ticket : " + issueId);
+        log.info("Successfully updated ticket : " + issueId);
         issueKeys.add(issue.getKey());
         issueUrls.add(getIssueUrl(jiraTaskNGParameters.getJiraConnectorDTO(), issue.getKey()));
 
@@ -176,7 +176,7 @@ public class JiraTaskNGHandler {
         }
       } catch (JiraException j) {
         String errorMessage = "Failed to update Jira Issue for Id: " + issueId + ". " + extractResponseMessage(j);
-        logger.error(errorMessage, j);
+        log.error(errorMessage, j);
         return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
       } catch (WingsException we) {
         return JiraTaskNGResponse.builder()
@@ -282,7 +282,7 @@ public class JiraTaskNGHandler {
 
       return issueUrl.toString();
     } catch (MalformedURLException e) {
-      logger.info("Incorrect url: " + e.getMessage());
+      log.info("Incorrect url: " + e.getMessage());
     }
 
     return null;
@@ -307,7 +307,7 @@ public class JiraTaskNGHandler {
         String errorsKey = (String) errorsKeys[0];
         return errorsKey + " : " + errors.get(errorsKey);
       } catch (Exception ex) {
-        logger.error("Failed to parse json response from Jira", ex);
+        log.error("Failed to parse json response from Jira", ex);
       }
     }
 
@@ -319,7 +319,7 @@ public class JiraTaskNGHandler {
     try {
       allTransitions = issue.getTransitions(); // gives all transitions available for that issue
     } catch (JiraException e) {
-      logger.error("Failed to get all transitions from the Jira");
+      log.error("Failed to get all transitions from the Jira");
       throw e;
     }
 
@@ -329,11 +329,11 @@ public class JiraTaskNGHandler {
       try {
         issue.transition().execute(transition);
       } catch (JiraException e) {
-        logger.error("Exception while trying to update status to {}", status);
+        log.error("Exception while trying to update status to {}", status);
         throw e;
       }
     } else {
-      logger.error("No transition found from {} to {}", issue.getStatus(), status);
+      log.error("No transition found from {} to {}", issue.getStatus(), status);
       throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
     }
   }

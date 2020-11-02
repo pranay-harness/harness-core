@@ -37,7 +37,7 @@ public class HttpConnectionExecutionCapabilityGenerator {
         }
       }
     } catch (Exception e) {
-      logger.error("conversion to java.net.URI failed for url: " + urlString, e);
+      log.error("conversion to java.net.URI failed for url: " + urlString, e);
     }
     // This is falling back to existing approach, where we test for entire URL
     return HttpConnectionExecutionCapability.builder().url(urlString).build();

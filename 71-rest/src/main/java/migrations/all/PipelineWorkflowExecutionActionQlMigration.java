@@ -57,7 +57,7 @@ public class PipelineWorkflowExecutionActionQlMigration implements Migration {
         }
       }
     } catch (Exception e) {
-      logger.error("Could not run workflow/pipeline execution right graph QL migration", e);
+      log.error("Could not run workflow/pipeline execution right graph QL migration", e);
     }
   }
 }

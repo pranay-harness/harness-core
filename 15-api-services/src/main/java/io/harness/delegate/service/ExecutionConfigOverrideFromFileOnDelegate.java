@@ -40,9 +40,9 @@ public class ExecutionConfigOverrideFromFileOnDelegate {
         localSecrets = new Gson().fromJson(jsonString, new TypeToken<HashMap<String, Object>>() {}.getType());
       }
     } catch (IOException e) {
-      logger.info("No file found with name: {}", filePath, e);
+      log.info("No file found with name: {}", filePath, e);
     } catch (Exception e) {
-      logger.info("Failed processing file: {}", filePath, e);
+      log.info("Failed processing file: {}", filePath, e);
     }
     localDelegateSecrets = localSecrets;
   }

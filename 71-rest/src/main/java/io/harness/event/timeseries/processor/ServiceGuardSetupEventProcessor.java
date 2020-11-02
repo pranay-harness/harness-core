@@ -98,16 +98,16 @@ public class ServiceGuardSetupEventProcessor {
         } catch (SQLException e) {
           retryCount++;
           if (retryCount >= MAX_RETRY_COUNT) {
-            logger.error("Failed to save deployment data,[{}]", properties, e);
+            log.error("Failed to save deployment data,[{}]", properties, e);
           } else {
-            logger.info("Failed to save deployment data,[{}],retryCount=[{}]", properties, retryCount);
+            log.info("Failed to save deployment data,[{}],retryCount=[{}]", properties, retryCount);
           }
         } finally {
-          logger.info("Total time=[{}],retryCount=[{}]", System.currentTimeMillis() - startTime, retryCount);
+          log.info("Total time=[{}],retryCount=[{}]", System.currentTimeMillis() - startTime, retryCount);
         }
       }
     } else {
-      logger.trace("Not processing data:[{}]", properties);
+      log.trace("Not processing data:[{}]", properties);
     }
   }
 }

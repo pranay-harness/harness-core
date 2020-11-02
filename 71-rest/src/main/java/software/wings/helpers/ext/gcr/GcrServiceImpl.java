@@ -134,7 +134,7 @@ public class GcrServiceImpl implements GcrService {
         return validateImageName(imageName);
       }
     } catch (IOException e) {
-      logger.error(ExceptionUtils.getMessage(e), e);
+      log.error(ExceptionUtils.getMessage(e), e);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, USER).addParam("name", "Registry server");
     }
     return true;
@@ -142,7 +142,7 @@ public class GcrServiceImpl implements GcrService {
 
   private boolean validateImageName(String imageName) {
     // image not found or user doesn't have permission to list image tags
-    logger.warn("Image name [" + imageName + "] does not exist in Google Container Registry.");
+    log.warn("Image name [" + imageName + "] does not exist in Google Container Registry.");
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
         .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
   }
@@ -169,7 +169,7 @@ public class GcrServiceImpl implements GcrService {
       return Credentials.basic("_token", gc.getAccessToken());
     } else {
       String msg = "Could not refresh token for google cloud provider";
-      logger.warn(msg);
+      log.warn(msg);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
     }
   }
@@ -181,10 +181,10 @@ public class GcrServiceImpl implements GcrService {
         return true;
       case 404:
       case 400:
-        logger.info("Response code {} received. Mostly with Image does not exist", code);
+        log.info("Response code {} received. Mostly with Image does not exist", code);
         return false;
       case 403:
-        logger.info("Response code {} received. User not authorized to access GCR Storage", code);
+        log.info("Response code {} received. User not authorized to access GCR Storage", code);
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "User not authorized to access GCR Storage");
       case 401:

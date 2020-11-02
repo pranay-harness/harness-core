@@ -85,7 +85,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     try {
       connectorActivityService.create(accountIdentifier, connector, NGActivityType.ENTITY_CREATION);
     } catch (Exception ex) {
-      logger.info("Error while creating connector creation activity", ex);
+      log.info("Error while creating connector creation activity", ex);
     }
   }
 
@@ -106,7 +106,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     try {
       connectorActivityService.create(accountIdentifier, connector, NGActivityType.ENTITY_UPDATE);
     } catch (Exception ex) {
-      logger.info("Error while creating connector update activity", ex);
+      log.info("Error while creating connector update activity", ex);
     }
   }
 
@@ -136,7 +136,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     try {
       connectorActivityService.deleteAllActivities(accountIdentifier, connectorFQN);
     } catch (Exception ex) {
-      logger.info("Error while deleting connector activity", ex);
+      log.info("Error while deleting connector activity", ex);
     }
   }
 

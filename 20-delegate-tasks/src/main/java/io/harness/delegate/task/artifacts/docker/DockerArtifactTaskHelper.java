@@ -42,7 +42,7 @@ public class DockerArtifactTaskHelper {
           artifactTaskResponse = getSuccessTaskResponse(dockerArtifactTaskHandler.validateArtifactImage(attributes));
           break;
         default:
-          logger.error("No corresponding Docker artifact task type [{}]", artifactTaskParameters.toString());
+          log.error("No corresponding Docker artifact task type [{}]", artifactTaskParameters.toString());
           return ArtifactTaskResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
               .errorMessage("There is no Docker artifact task type impl defined for - "
@@ -52,7 +52,7 @@ public class DockerArtifactTaskHelper {
       }
       return artifactTaskResponse;
     } catch (Exception ex) {
-      logger.error("Exception in processing Docker artifact task [{}]", artifactTaskParameters.toString(), ex);
+      log.error("Exception in processing Docker artifact task [{}]", artifactTaskParameters.toString(), ex);
       return ArtifactTaskResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

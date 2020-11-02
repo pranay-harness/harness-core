@@ -76,11 +76,11 @@ public class SignupResource {
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw ex;
     } catch (WeakPasswordException ex) {
-      logger.error("Password validation failed");
+      log.error("Password validation failed");
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
-      logger.error(FAILURE_MESSAGE, ex);
+      log.error(FAILURE_MESSAGE, ex);
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
@@ -109,11 +109,11 @@ public class SignupResource {
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw ex;
     } catch (WeakPasswordException ex) {
-      logger.error("Password validation failed");
+      log.error("Password validation failed");
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
-      logger.error(FAILURE_MESSAGE, ex);
+      log.error(FAILURE_MESSAGE, ex);
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
@@ -129,7 +129,7 @@ public class SignupResource {
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw ex;
     } catch (Exception ex) {
-      logger.error(FAILURE_MESSAGE, ex);
+      log.error(FAILURE_MESSAGE, ex);
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }

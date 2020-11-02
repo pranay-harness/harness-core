@@ -120,7 +120,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       wingsPersistence.save(resourceConstraint);
       return resourceConstraint;
     } catch (DuplicateKeyException ex) {
-      logger.info("Resource Constraint Already exist for name {}", name);
+      log.info("Resource Constraint Already exist for name {}", name);
       return wingsPersistence.createQuery(ResourceConstraint.class)
           .filter(ResourceConstraintKeys.accountId, accountId)
           .filter(ResourceConstraintKeys.name, name)
@@ -136,7 +136,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public void delete(String accountId, String resourceConstraintId) {
     final ResourceConstraint resourceConstraint = wingsPersistence.get(ResourceConstraint.class, resourceConstraintId);
     if (resourceConstraint == null || !resourceConstraint.getAccountId().equals(accountId)) {
-      logger.error("Some attempted to delete resource constraint that belongs to different account");
+      log.error("Some attempted to delete resource constraint that belongs to different account");
       return;
     }
 
@@ -284,7 +284,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           continue;
         }
 
-        logger.info("Resource constraint {} has running units {}", instance.getUuid(), Joiner.on(", ").join(units));
+        log.info("Resource constraint {} has running units {}", instance.getUuid(), Joiner.on(", ").join(units));
 
         units.forEach(unit -> {
           final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit, getRegistry());
@@ -458,7 +458,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     try {
       wingsPersistence.save(builder.build());
     } catch (DuplicateKeyException exception) {
-      logger.info("Failed to add ResourceConstraintInstance", exception);
+      log.info("Failed to add ResourceConstraintInstance", exception);
       return false;
     }
     return true;
@@ -515,7 +515,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     final UpdateResults updateResults = wingsPersistence.update(query, ops);
     if (updateResults == null || updateResults.getUpdatedCount() == 0) {
-      logger.error("The attempt to finish {}.{} for {} failed", id.getValue(), unit.getValue(), consumerId.getValue());
+      log.error("The attempt to finish {}.{} for {} failed", id.getValue(), unit.getValue(), consumerId.getValue());
       return false;
     }
     return true;

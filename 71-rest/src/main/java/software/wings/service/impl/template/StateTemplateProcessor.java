@@ -26,7 +26,7 @@ public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {
     // Read steps that references the given template
     Template savedTemplate = templateService.get(template.getUuid());
     if (savedTemplate == null) {
-      logger.info("Template {} was deleted. Not updating linked entities", template.getUuid());
+      log.info("Template {} was deleted. Not updating linked entities", template.getUuid());
       return;
     }
     updateLinkedEntitiesInWorkflow(template);

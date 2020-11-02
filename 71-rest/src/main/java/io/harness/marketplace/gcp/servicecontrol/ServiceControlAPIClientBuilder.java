@@ -39,7 +39,7 @@ public class ServiceControlAPIClientBuilder {
     Path path = Paths.get(GcpMarketPlaceConstants.SERVICE_ACCOUNT_INTEGRATION_PATH);
 
     if (!Files.exists(path)) {
-      logger.error(
+      log.error(
           "GCP_MKT_PLACE credentials file does NOT exist. Marketplace Approval requests will fail. Path: {}", path);
       return Optional.empty();
     }
@@ -49,7 +49,7 @@ public class ServiceControlAPIClientBuilder {
       credentialStream = Files.newInputStream(path, StandardOpenOption.READ);
 
     } catch (IOException e) {
-      logger.error("GCP_MKT_PLACE exception reading credentials file. Path: " + path, e);
+      log.error("GCP_MKT_PLACE exception reading credentials file. Path: " + path, e);
       return Optional.empty();
     }
 
@@ -57,7 +57,7 @@ public class ServiceControlAPIClientBuilder {
     try {
       credential = GoogleCredential.fromStream(credentialStream);
     } catch (IOException e) {
-      logger.error("GCP_MKT_PLACE exception creating google credentials from credential stream. Path: " + path, e);
+      log.error("GCP_MKT_PLACE exception creating google credentials from credential stream. Path: " + path, e);
       return Optional.empty();
     }
 

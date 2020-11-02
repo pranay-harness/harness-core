@@ -45,7 +45,7 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
     try {
       service = injector.getInstance(Key.get(Class.forName(key)));
     } catch (ClassNotFoundException e) {
-      logger.error("", e);
+      log.error("", e);
     }
     String method = (String) parameters[1];
     Throwable exception = null;
@@ -68,9 +68,9 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
         }
       }
       if (exception instanceof WingsException) {
-        ExceptionLogger.logProcessedMessages((WingsException) exception, DELEGATE, logger);
+        ExceptionLogger.logProcessedMessages((WingsException) exception, DELEGATE, log);
       } else {
-        logger.error("Task error", exception);
+        log.error("Task error", exception);
       }
     }
     return RemoteMethodReturnValueData.builder().returnValue(methodReturnValue).exception(exception).build();

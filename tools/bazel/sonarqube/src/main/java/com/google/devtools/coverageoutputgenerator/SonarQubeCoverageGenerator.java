@@ -37,14 +37,14 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  * @see <a>https://docs.sonarqube.org/latest/analysis/generic-test/</a>
  */
 public class SonarQubeCoverageGenerator {
-  private static final Logger logger = Logger.getLogger(SonarQubeCoverageGenerator.class.getName());
+  private static final Logger log = Logger.getLogger(SonarQubeCoverageGenerator.class.getName());
 
   public static void main(String[] args) {
     LcovMergerFlags flags = null;
     try {
       flags = LcovMergerFlags.parseFlags(args);
     } catch (IllegalArgumentException e) {
-      logger.log(Level.SEVERE, e.getMessage());
+      log.log(Level.SEVERE, e.getMessage());
       System.exit(1);
     }
 
@@ -63,7 +63,7 @@ public class SonarQubeCoverageGenerator {
     if (coverage.isEmpty()) {
       int exitStatus = 0;
       if (profdataFile == null) {
-        logger.log(Level.WARNING, "There was no coverage found.");
+        log.log(Level.WARNING, "There was no coverage found.");
         exitStatus = 0;
       } else {
         // Bazel doesn't support yet converting profdata files to lcov. We still want to output a
@@ -74,7 +74,7 @@ public class SonarQubeCoverageGenerator {
         try {
           Files.copy(profdataFile.toPath(), outputFile.toPath(), REPLACE_EXISTING);
         } catch (IOException e) {
-          logger.log(Level.SEVERE,
+          log.log(Level.SEVERE,
               "Could not copy file " + profdataFile.getName() + " to output file " + outputFile.getName()
                   + " due to: " + e.getMessage());
           exitStatus = 1;
@@ -87,7 +87,7 @@ public class SonarQubeCoverageGenerator {
       // If there is one profdata file then there can't be other types of reports because there is
       // no way to merge them.
       // TODO(#5881): Add support for profdata files.
-      logger.log(Level.WARNING, "Bazel doesn't support LLVM profdata coverage amongst other coverage formats.");
+      log.log(Level.WARNING, "Bazel doesn't support LLVM profdata coverage amongst other coverage formats.");
       System.exit(0);
     }
 
@@ -105,7 +105,7 @@ public class SonarQubeCoverageGenerator {
     }
 
     if (coverage.isEmpty()) {
-      logger.log(Level.WARNING, "There was no coverage found.");
+      log.log(Level.WARNING, "There was no coverage found.");
       System.exit(0);
     }
 
@@ -114,7 +114,7 @@ public class SonarQubeCoverageGenerator {
     try {
       SonarQubeCoverageReportPrinter.print(new FileOutputStream(outputFile), coverage);
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Could not write to output file " + outputFile + " due to " + e.getMessage());
+      log.log(Level.SEVERE, "Could not write to output file " + outputFile + " due to " + e.getMessage());
       exitStatus = 1;
     }
     System.exit(exitStatus);
@@ -140,7 +140,7 @@ public class SonarQubeCoverageGenerator {
         }
       }
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error reading file " + sourceFileManifest + ": " + e.getMessage());
+      log.log(Level.SEVERE, "Error reading file " + sourceFileManifest + ": " + e.getMessage());
     }
     return sourceFiles;
   }
@@ -157,9 +157,9 @@ public class SonarQubeCoverageGenerator {
   private static List<File> getGcovInfoFiles(List<File> filesInCoverageDir) {
     List<File> gcovFiles = getFilesWithExtension(filesInCoverageDir, GCOV_EXTENSION);
     if (gcovFiles.isEmpty()) {
-      logger.log(Level.INFO, "No gcov info file found.");
+      log.log(Level.INFO, "No gcov info file found.");
     } else {
-      logger.log(Level.INFO, "Found " + gcovFiles.size() + " gcov info files.");
+      log.log(Level.INFO, "Found " + gcovFiles.size() + " gcov info files.");
     }
     return gcovFiles;
   }
@@ -171,16 +171,16 @@ public class SonarQubeCoverageGenerator {
   private static File getProfdataFileOrNull(List<File> files) {
     List<File> profdataFiles = getFilesWithExtension(files, PROFDATA_EXTENSION);
     if (profdataFiles.isEmpty()) {
-      logger.log(Level.INFO, "No .profdata file found.");
+      log.log(Level.INFO, "No .profdata file found.");
       return null;
     }
     if (profdataFiles.size() > 1) {
-      logger.log(Level.SEVERE,
+      log.log(Level.SEVERE,
           "Bazel currently supports only one profdata file per test. " + profdataFiles.size()
               + " .profadata files were found instead.");
       return null;
     }
-    logger.log(Level.INFO, "Found one .profdata file.");
+    log.log(Level.INFO, "Found one .profdata file.");
     return profdataFiles.get(0);
   }
 
@@ -192,9 +192,9 @@ public class SonarQubeCoverageGenerator {
       lcovTracefiles = getTracefilesFromFile(flags.reportsFile());
     }
     if (lcovTracefiles.isEmpty()) {
-      logger.log(Level.INFO, "No lcov file found.");
+      log.log(Level.INFO, "No lcov file found.");
     } else {
-      logger.log(Level.INFO, "Found " + lcovTracefiles.size() + " tracefiles.");
+      log.log(Level.INFO, "Found " + lcovTracefiles.size() + " tracefiles.");
     }
     return lcovTracefiles;
   }
@@ -218,7 +218,7 @@ public class SonarQubeCoverageGenerator {
         }
       }
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error reading file " + file + ": " + e.getMessage());
+      log.log(Level.SEVERE, "Error reading file " + file + ": " + e.getMessage());
     }
     return mapBuilder.build();
   }
@@ -227,13 +227,13 @@ public class SonarQubeCoverageGenerator {
     Coverage coverage = new Coverage();
     for (File file : files) {
       try {
-        logger.log(Level.SEVERE, "Parsing file " + file.toString());
+        log.log(Level.SEVERE, "Parsing file " + file.toString());
         List<SourceFileCoverage> sourceFilesCoverage = parser.parse(new FileInputStream(file));
         for (SourceFileCoverage sourceFileCoverage : sourceFilesCoverage) {
           coverage.add(sourceFileCoverage);
         }
       } catch (IOException e) {
-        logger.log(Level.SEVERE, "File " + file.getAbsolutePath() + " could not be parsed due to: " + e.getMessage());
+        log.log(Level.SEVERE, "File " + file.getAbsolutePath() + " could not be parsed due to: " + e.getMessage());
         System.exit(1);
       }
     }
@@ -254,7 +254,7 @@ public class SonarQubeCoverageGenerator {
                   .map(path -> path.toFile())
                   .collect(Collectors.toList());
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Error reading folder " + dir + ": " + ex.getMessage());
+      log.log(Level.SEVERE, "Error reading folder " + dir + ": " + ex.getMessage());
     }
     return files;
   }
@@ -276,7 +276,7 @@ public class SonarQubeCoverageGenerator {
       }
 
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error reading file " + reportsFile + ": " + e.getMessage());
+      log.log(Level.SEVERE, "Error reading file " + reportsFile + ": " + e.getMessage());
     }
     return datFiles;
   }

@@ -46,14 +46,14 @@ public class GcpScheduledQueryTriggerAction {
                 billingDataPipelineRecord.getPreAggregatedScheduleQueryResourceName(),
                 gcpOrganization.getServiceAccountEmail());
           } catch (IOException e) {
-            logger.error("Error while starting manual run for Scheduled Queries {}",
+            log.error("Error while starting manual run for Scheduled Queries {}",
                 billingDataPipelineRecord.getPreAggregatedScheduledQueryName(), e);
           }
           cloudBillingTransferRun.setState(TransferJobRunState.SUCCEEDED);
           cloudBillingTransferRunDao.upsert(cloudBillingTransferRun);
         }
       } catch (IOException e) {
-        logger.error("Failed to get the details for the TransferRun {}",
+        log.error("Failed to get the details for the TransferRun {}",
             cloudBillingTransferRun.getTransferRunResourceName(), e);
       }
     });

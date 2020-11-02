@@ -123,7 +123,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, long logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
-    logger.info("For {} bumping cluster level  from {} to {} for minute {}", stateExecutionId, fromLevel, toLevel,
+    log.info("For {} bumping cluster level  from {} to {} for minute {}", stateExecutionId, fromLevel, toLevel,
         logCollectionMinute);
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                      .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
@@ -136,9 +136,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     try {
       UpdateResults results = wingsPersistence.update(query,
           wingsPersistence.createUpdateOperations(LogDataRecord.class).set(LogDataRecordKeys.clusterLevel, toLevel));
-      logger.info("for {} bumped records {}", stateExecutionId, results.getUpdatedCount());
+      log.info("for {} bumped records {}", stateExecutionId, results.getUpdatedCount());
     } catch (DuplicateKeyException e) {
-      logger.warn(
+      log.warn(
           "duplicate update operation for state: {}, stateExecutionId: {}, searchQuery: {}, hosts: {}, logCollectionMinute: {}, from: {}, to: {}",
           stateType, stateExecutionId, searchQuery, host, logCollectionMinute, fromLevel, toLevel);
     }
@@ -174,7 +174,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       query = query.filter(LogDataRecordKeys.host, host);
     }
     boolean deleted = wingsPersistence.delete(query);
-    logger.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}, host {}, deleted {}",
+    log.info("Deleted clustered data for cvConfigId: {}, minute {}, fromLevel {}, toLevel {}, host {}, deleted {}",
         cvConfigId, logCollectionMinute, fromLevel, toLevel, host, deleted);
     try {
       query = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
@@ -195,18 +195,18 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               .set(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(toLevel)));
 
       if (updatedResults.getUpdatedCount() > 0 && host == null) {
-        logger.info("Updated heartbeat record from {} to {} for min {} and cvConfigId {}",
+        log.info("Updated heartbeat record from {} to {} for min {} and cvConfigId {}",
             ClusterLevel.getHeartBeatLevel(fromLevel), ClusterLevel.getHeartBeatLevel(toLevel), logCollectionMinute,
             cvConfigId);
       }
 
       if (updatedResults.getUpdatedCount() == 0 && DUMMY_HOST_NAME.equals(host)) {
-        logger.error("did not update heartbeat from {} to {}  for min {} host {}", fromLevel, toLevel,
-            logCollectionMinute, host);
+        log.error("did not update heartbeat from {} to {}  for min {} host {}", fromLevel, toLevel, logCollectionMinute,
+            host);
       }
     } catch (DuplicateKeyException e) {
-      logger.error("for {} for hosts {} for min {} level is already updated to {}", cvConfigId, host,
-          logCollectionMinute, toLevel);
+      log.error("for {} for hosts {} for min {} level is already updated to {}", cvConfigId, host, logCollectionMinute,
+          toLevel);
     }
   }
 
@@ -216,12 +216,12 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       ClusterLevel clusterLevel, String delegateTaskId, List<LogElement> logData) {
     try {
       if (isEmpty(cvConfigId) && !learningEngineService.isStateValid(appId, stateExecutionId)) {
-        logger.warn(
+        log.warn(
             "State is no longer active " + stateExecutionId + ". Sending delegate abort request " + delegateTaskId);
         return false;
       }
-      logger.info("inserting {}  pieces of log data for cvConfigId: {}, stateExecutionId: {}", logData.size(),
-          cvConfigId, stateExecutionId);
+      log.info("inserting {}  pieces of log data for cvConfigId: {}, stateExecutionId: {}", logData.size(), cvConfigId,
+          stateExecutionId);
 
       if (logData.isEmpty()) {
         return true;
@@ -235,7 +235,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
        * in python and reported here as L1 and L2. Only L0 will have the heartbeat
        */
       if (clusterLevel == ClusterLevel.L0 && !hasHeartBeat) {
-        logger.error("Delegate reporting log records without a "
+        log.error("Delegate reporting log records without a "
             + "heartbeat for state " + stateType + " : id " + stateExecutionId);
         return false;
       }
@@ -245,7 +245,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
        * additional clustering for Splunk
        */
       if (stateType == StateType.SPLUNKV2 && !hasHeartBeat) {
-        logger.error("Delegate reporting log records without a "
+        log.error("Delegate reporting log records without a "
             + "heartbeat for state " + stateType + " : id " + stateExecutionId);
 
         return false;
@@ -266,7 +266,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               logRecord -> logRecord.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant())));
           dataStoreService.save(LogDataRecord.class, logDataRecords, true);
         } catch (Exception e) {
-          logger.info("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);
+          log.info("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);
         }
       }
 
@@ -300,7 +300,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       metricRegistry.recordGaugeValue(NUM_LOG_RECORDS, null, logData.size());
       return true;
     } catch (Exception ex) {
-      logger.error("Save log data failed for {}", stateExecutionId, ex);
+      log.error("Save log data failed for {}", stateExecutionId, ex);
       return false;
     }
   }
@@ -327,7 +327,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return true;
     }
 
-    logger.info("for {} got logs for minutes {} which are already clustered", fieldValueForQuery, clusteredMinutes);
+    log.info("for {} got logs for minutes {} which are already clustered", fieldValueForQuery, clusteredMinutes);
     return false;
   }
 
@@ -336,7 +336,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       int logCollectionMinute, String host, List<LogElement> logData) {
     LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
     if (logsCVConfiguration == null) {
-      logger.info("No configuration found for {} in app {}. It may have been deleted.", cvConfigId, appId);
+      log.info("No configuration found for {} in app {}. It may have been deleted.", cvConfigId, appId);
       return false;
     }
     if (isNotEmpty(logData)) {
@@ -344,17 +344,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           cvConfigId, null, null, null, logsCVConfiguration.getServiceId(), clusterLevel,
           ClusterLevel.getHeartBeatLevel(clusterLevel), logData, logsCVConfiguration.getAccountId());
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
-      logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
+      log.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
           cvConfigId, logCollectionMinute, clusterLevel, host);
 
       if (dataStoreService instanceof GoogleDataStoreServiceImpl && L2 == clusterLevel) {
         try {
           dataStoreService.save(LogDataRecord.class, logDataRecords, true);
-          logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
+          log.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
               logCollectionMinute, clusterLevel);
 
         } catch (Exception e) {
-          logger.info("for {} failed to save clusterd log data to google store", cvConfigId, e);
+          log.info("for {} failed to save clusterd log data to google store", cvConfigId, e);
         }
       }
     }
@@ -375,7 +375,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                 "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute, logCollectionMinute,
                 MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
           } catch (DuplicateKeyException e) {
-            logger.info(
+            log.info(
                 "for {} task for L1 clustering min {} has already marked completed", cvConfigId, logCollectionMinute);
           }
         }
@@ -413,7 +413,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         }
       }
 
-      logger.info("returning " + rv.size() + " records for request: " + logRequest);
+      log.info("returning " + rv.size() + " records for request: " + logRequest);
 
     } else {
       LogMLAnalysisRecord logMLAnalysisRecord =
@@ -422,16 +422,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
               .get();
       if (logMLAnalysisRecord == null) {
-        logger.info("No analysis found for control data for state {} with executionId ",
-            logRequest.getStateExecutionId(), workflowExecutionId);
+        log.info("No analysis found for control data for state {} with executionId ", logRequest.getStateExecutionId(),
+            workflowExecutionId);
         return rv;
       }
 
-      logger.info(
-          "For {} serving control data from {}", logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
+      log.info("For {} serving control data from {}", logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
       logMLAnalysisRecord.decompressLogAnalysisRecord();
       if (isEmpty(logMLAnalysisRecord.getTest_events())) {
-        logger.info("No test events found for control data for state {} with analysisId ",
+        log.info("No test events found for control data for state {} with analysisId ",
             logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
         return rv;
       }
@@ -443,14 +442,14 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
         analysisClusters.forEach(analysisCluster -> {
           if (isEmpty(analysisCluster.getMessage_frequencies())) {
-            logger.error(
+            log.error(
                 "for state {} the control analysis {} has empty message frequencies. Control data for this execution may not be correct",
                 logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
             return;
           }
 
           if (analysisCluster.getMessage_frequencies().size() > 1) {
-            logger.error("for state {} the control analysis {} has {} message frequencies",
+            log.error("for state {} the control analysis {} has {} message frequencies",
                 logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid(),
                 analysisCluster.getMessage_frequencies());
           }
@@ -583,7 +582,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (isNotEmpty(successfulExecutions)) {
       return cvList.get(0).getWorkflowExecutionId();
     }
-    logger.warn("Could not get a successful workflow to find control nodes");
+    log.warn("Could not get a successful workflow to find control nodes");
     return null;
   }
 
@@ -603,7 +602,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isAnalysisEmpty
         || (isFeedbackAnalysis.isPresent() && isFeedbackAnalysis.get())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
-      logger.info("inserted ml LogMLAnalysisRecord to persistence layer for stateExecutionInstanceId: {}",
+      log.info("inserted ml LogMLAnalysisRecord to persistence layer for stateExecutionInstanceId: {}",
           mlAnalysisResponse.getStateExecutionId());
     }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
@@ -636,7 +635,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       Preconditions.checkNotNull(analysisTask);
       long currentEpoch = currentTimeMillis();
       long timeTaken = currentEpoch - analysisTask.getCreatedAt();
-      logger.info("Finished analysis: Analysis type: {}, time delay: {} seconds",
+      log.info("Finished analysis: Analysis type: {}, time delay: {} seconds",
           isFeedbackAnalysis.isPresent() && isFeedbackAnalysis.get() ? MLAnalysisType.FEEDBACK_ANALYSIS.name()
                                                                      : MLAnalysisType.LOG_ML.name(),
           TimeUnit.MILLISECONDS.toSeconds(timeTaken));
@@ -780,7 +779,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
-    logger.info("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
+    log.info("inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getAppId()
         + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
@@ -969,8 +968,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         }
 
         if (!lookupNodes.isEmpty()) {
-          logger.info(
-              "Still waiting for data for " + Arrays.toString(lookupNodes.toArray()) + " for " + stateExecutionId);
+          log.info("Still waiting for data for " + Arrays.toString(lookupNodes.toArray()) + " for " + stateExecutionId);
         }
 
         return lookupNodes.isEmpty() ? logCollectionMinute : -1;
@@ -1062,7 +1060,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       long logCollectionMinute, ClusterLevel clusterLevel, ClusterLevel heartBeat) {
     long lastProcessedMinute = getLastProcessedMinute(stateExecutionId);
     if (logCollectionMinute <= lastProcessedMinute) {
-      logger.info("deleting stale data for stateExecutionID = " + stateExecutionId + " logCollectionMinute "
+      log.info("deleting stale data for stateExecutionID = " + stateExecutionId + " logCollectionMinute "
           + logCollectionMinute);
       deleteClusterLevel(type, stateExecutionId, appId, query, hosts, logCollectionMinute, clusterLevel, heartBeat);
       return true;
@@ -1168,7 +1166,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     LogMLAnalysisRecord existingRecord = query.get();
 
     if (existingRecord == null) {
-      logger.error("Missing LE analysis record for " + fieldName + " and " + fieldValue
+      log.error("Missing LE analysis record for " + fieldName + " and " + fieldValue
           + " and analysisMinute: " + analysisMinute);
       return false;
     }
@@ -1185,7 +1183,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return true;
 
     } catch (Exception ex) {
-      logger.error("Error while creating a new Feedback Analysis for " + fieldName + " and " + fieldValue
+      log.error("Error while creating a new Feedback Analysis for " + fieldName + " and " + fieldValue
               + " and analysisMinute: " + analysisMinute,
           ex);
     }

@@ -83,7 +83,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
             () -> encryptInternal(accountId, value, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("Encryption failed. trial num: {}", failedAttempts, e);
+        log.warn("Encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
@@ -117,7 +117,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         }
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn("Decryption failed. trial num: {}", failedAttempts, e);
+        log.warn("Decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason =
@@ -179,7 +179,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
       throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException,
              NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
-    logger.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
+    log.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
 
     GenerateDataKeyResult dataKeyResult = generateKmsKey(kmsConfig);
 
@@ -188,7 +188,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     char[] encryptedValue = encrypt(value, new SecretKeySpec(getByteArray(plainTextKey), "AES"));
     String encryptedKeyString = StandardCharsets.ISO_8859_1.decode(dataKeyResult.getCiphertextBlob()).toString();
 
-    logger.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
+    log.info("Finished encrypting one secret in account {} with KMS secret manager '{}' in {} ms.", accountId,
         kmsConfig.getName(), System.currentTimeMillis() - startTime);
     return EncryptedRecordData.builder().encryptionKey(encryptedKeyString).encryptedValue(encryptedValue).build();
   }
@@ -197,7 +197,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
       throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException,
              NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
-    logger.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
+    log.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
     KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
     // HAR-9752: Caching KMS encryption key to plain text key mapping to reduce KMS decrypt call volume.
     byte[] encryptedPlainTextKey = kmsEncryptionKeyCache.get(cacheKey, key -> {
@@ -205,7 +205,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
       // Encrypt plain text KMS key before caching it in memory.
       byte[] encryptedKey = encryptPlainTextKey(plainTextKey, key.uuid);
 
-      logger.info("Decrypted encryption key from KMS secret manager '{}' in {} ms.", kmsConfig.getName(),
+      log.info("Decrypted encryption key from KMS secret manager '{}' in {} ms.", kmsConfig.getName(),
           System.currentTimeMillis() - startTime);
       return encryptedKey;
     });
@@ -226,7 +226,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     byte[] plainTextKey = decryptPlainTextKey(encryptedPlainTextKey, cacheKey.uuid);
     String decrypted = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES"));
 
-    logger.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
+    log.info("Finished decrypting secret {} in {} ms.", data.getUuid(), System.currentTimeMillis() - startTime);
     return decrypted == null ? null : decrypted.toCharArray();
   }
 
@@ -279,7 +279,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     Throwable t = e.getCause() == null ? e : e.getCause();
 
     if (t instanceof AWSKMSException) {
-      logger.info("Got AWSKMSException {}: {}", t.getClass().getName(), t.getMessage());
+      log.info("Got AWSKMSException {}: {}", t.getClass().getName(), t.getMessage());
       return t instanceof KMSInternalException || t instanceof DependencyTimeoutException
           || t instanceof KeyUnavailableException;
     } else {
