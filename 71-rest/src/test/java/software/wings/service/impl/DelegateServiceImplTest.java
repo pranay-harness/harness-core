@@ -34,7 +34,6 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.sun.tools.javac.util.List;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -83,6 +82,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class DelegateServiceImplTest extends WingsBaseTest {
@@ -145,7 +145,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(eq(batch), anyString(), any())).thenReturn(true);
     when(assignDelegateService.retrieveActiveDelegates(
              eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
-        .thenReturn(List.of(delegate.getUuid()));
+        .thenReturn(Arrays.asList(delegate.getUuid()));
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateSyncService.syncTaskWaitMap));
       DelegateTask task =

@@ -722,10 +722,6 @@ java_library(
     name = "supporter-test",
     srcs = glob(
         ["src/test/**/*.java"],
-        exclude = [
-            "**/DelegateServiceImplTest.java",
-            "**/CommandStateTest.java",
-        ],
     ),
     data = ["//:resource"],
     resources = [
@@ -750,10 +746,6 @@ java_library(
     name = "tests",
     srcs = glob(
         ["src/test/**/*.java"],
-        exclude = [
-            "**/DelegateServiceImplTest.java",
-            "**/CommandStateTest.java",
-        ],
     ),
     data = [
         "//71-rest/src/test/resources:resource",
