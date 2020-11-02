@@ -30,6 +30,10 @@ public class PipelineServiceHelper {
 
   public static void updateLoopingInfo(PipelineStage pipelineStage, Workflow workflow, List<String> infraDefinitionIds,
       boolean isRuntimeVariableEnabled) {
+    PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+    if (pipelineStageElement.checkDisableAssertion()) {
+      return;
+    }
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (EmptyPredicate.isEmpty(userVariables)) {
       return;
@@ -40,7 +44,7 @@ public class PipelineServiceHelper {
     if (EmptyPredicate.isEmpty(infraDefVariables) || infraDefVariables.size() > 1) {
       return;
     }
-    PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+
     RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
     String infraVarNameInPipelineStage = infraDefVariables.get(0).getName();
 
