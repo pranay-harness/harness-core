@@ -93,14 +93,14 @@ public class GlobalContextManager {
     if (task instanceof GlobalContextCallableWrapper) {
       return (GlobalContextCallableWrapper<T>) task;
     }
-    return GlobalContextCallableWrapper.<T>builder().task(task).context(obtainGlobalContext()).build();
+    return GlobalContextCallableWrapper.<T>builder().task(task).context(obtainGlobalContextCopy()).build();
   }
 
   static GlobalContextTaskWrapper generateExecutorTask(Runnable task) {
     if (task instanceof GlobalContextTaskWrapper) {
       return (GlobalContextTaskWrapper) task;
     }
-    return GlobalContextTaskWrapper.builder().task(task).context(obtainGlobalContext()).build();
+    return GlobalContextTaskWrapper.builder().task(task).context(obtainGlobalContextCopy()).build();
   }
 
   public static void upsertGlobalContextRecord(GlobalContextData data) {
@@ -118,6 +118,18 @@ public class GlobalContextManager {
 
   public static GlobalContext obtainGlobalContext() {
     GlobalContext globalContext = contextThreadLocal.get();
+    final Map<String, String> mdc = MDC.getCopyOfContextMap();
+    if (isNotEmpty(mdc)) {
+      if (globalContext == null) {
+        globalContext = new GlobalContext();
+      }
+      globalContext.upsertGlobalContextRecord(MdcGlobalContextData.builder().map(mdc).build());
+    }
+    return globalContext;
+  }
+
+  public static GlobalContext obtainGlobalContextCopy() {
+    GlobalContext globalContext = new GlobalContext(contextThreadLocal.get());
     final Map<String, String> mdc = MDC.getCopyOfContextMap();
     if (isNotEmpty(mdc)) {
       if (globalContext == null) {

@@ -4,6 +4,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
+import static io.harness.manage.GlobalContextManager.obtainGlobalContextCopy;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -77,6 +78,25 @@ public class ManagedExecutorServiceTest extends CategoryTest {
          AutoLogRemoveContext ignore = new AutoLogRemoveContext("foo")) {
       GlobalContext globalContext2 = obtainGlobalContext();
       assertThat((GlobalContextData) globalContext2.get(MdcGlobalContextData.MDC_ID)).isNull();
+    }
+  }
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testObtainGlobalContextCopy() {
+    ImmutableMap<String, String> map = ImmutableMap.of("foo", "bar");
+    GlobalContext globalContext = null;
+    try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(new GlobalContext());
+         AutoLogContext ignore1 = new AutoLogContext(map, OVERRIDE_ERROR)) {
+      globalContext = obtainGlobalContextCopy();
+
+      assertThat(((MdcGlobalContextData) globalContext.get(MdcGlobalContextData.MDC_ID)).getMap()).isEqualTo(map);
+
+      try (AutoLogRemoveContext ignore2 = new AutoLogRemoveContext("foo")) {
+        GlobalContext globalContext2 = obtainGlobalContextCopy();
+        assertThat((GlobalContextData) globalContext2.get(MdcGlobalContextData.MDC_ID)).isNull();
+        assertThat(((MdcGlobalContextData) globalContext.get(MdcGlobalContextData.MDC_ID)).getMap()).isEqualTo(map);
+      }
     }
   }
 
