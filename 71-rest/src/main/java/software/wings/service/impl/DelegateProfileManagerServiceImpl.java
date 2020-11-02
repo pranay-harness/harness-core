@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -132,6 +133,18 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
         AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
   }
 
+  @VisibleForTesting
+  public String generateScopingRuleDescription(Map<String, ScopingValues> scopingEntities) {
+    StringBuilder descriptionBuilder = new StringBuilder();
+
+    for (Map.Entry<String, ScopingValues> entry : scopingEntities.entrySet()) {
+      String join = String.join(",", entry.getValue().getValueList());
+
+      descriptionBuilder.append(entry.getKey()).append(": ").append(join).append("; ");
+    }
+    return descriptionBuilder.toString();
+  }
+
   private List<ProfileSelector> convertToProfileSelector(List<String> selectors) {
     if (isEmpty(selectors)) {
       return Collections.emptyList();
@@ -170,30 +183,22 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     if (isNotEmpty(delegateProfile.getScopingRules())) {
-      delegateProfileGrpcBuilder.addAllScopingRules(delegateProfile.getScopingRules()
-                                                        .stream()
-                                                        .map(scopingRule
-                                                            -> ProfileScopingRule.newBuilder()
-                                                                   .setDescription(scopingRule.getDescription())
-                                                                   .putAllScopingEntities(convert(scopingRule))
-                                                                   .build())
-                                                        .collect(Collectors.toList()));
+      delegateProfileGrpcBuilder.addAllScopingRules(convert(delegateProfile.getScopingRules()));
     }
 
     return delegateProfileGrpcBuilder.build();
   }
 
   private List<ProfileScopingRule> convert(List<ScopingRuleDetails> scopingRules) {
-    if (isEmpty(scopingRules)) {
-      return Collections.emptyList();
-    }
-
     return scopingRules.stream()
-        .map(scopingRule
-            -> ProfileScopingRule.newBuilder()
-                   .setDescription(scopingRule.getDescription())
-                   .putAllScopingEntities(convert(scopingRule))
-                   .build())
+        .map(scopingRule -> {
+          Map<String, ScopingValues> scopingEntities = convert(scopingRule);
+
+          return ProfileScopingRule.newBuilder()
+              .setDescription(generateScopingRuleDescription(scopingEntities))
+              .putAllScopingEntities(scopingEntities)
+              .build();
+        })
         .collect(Collectors.toList());
   }
 

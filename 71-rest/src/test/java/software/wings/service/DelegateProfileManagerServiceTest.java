@@ -315,4 +315,21 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
         .isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
+
+  @Test
+  @Owner(developers = OwnerRule.VUK)
+  @Category(UnitTests.class)
+  public void shouldGenerateScopingRuleDescription() {
+    ScopingValues scopingValuesAppId = ScopingValues.newBuilder().addValue("appId").build();
+    ScopingValues scopingValuesEnvTypeId = ScopingValues.newBuilder().addValue("envTypeId").build();
+
+    Map<String, ScopingValues> scopingEntities = new HashMap<>();
+    scopingEntities.put("applicationId", scopingValuesAppId);
+    scopingEntities.put("environmentTypeId", scopingValuesEnvTypeId);
+
+    String description = delegateProfileManagerService.generateScopingRuleDescription(scopingEntities);
+
+    Assertions.assertThat(description).isNotNull();
+    Assertions.assertThat(description).isEqualTo("environmentTypeId: envTypeId; applicationId: appId; ");
+  }
 }
