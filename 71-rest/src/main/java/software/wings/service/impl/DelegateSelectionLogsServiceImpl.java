@@ -312,4 +312,21 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                      .groupId(WAITING_ON_APPROVAL_GROUP_ID)
                      .build());
   }
+
+  @Override
+  public void logDisconnectedScalingGroup(
+      BatchDelegateSelectionLog batch, String accountId, Set<String> disconnectedScalingGroup, String groupName) {
+    if (batch == null) {
+      return;
+    }
+
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), disconnectedScalingGroup);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(DISCONNECTED)
+                     .message("Delegate scaling group: " + groupName + " was disconnected")
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(DISCONNECTED_GROUP_ID)
+                     .build());
+  }
 }

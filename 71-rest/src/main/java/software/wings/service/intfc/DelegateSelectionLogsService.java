@@ -38,4 +38,7 @@ public interface DelegateSelectionLogsService {
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 
   void logWaitingForApprovalDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
+
+  void logDisconnectedScalingGroup(
+      BatchDelegateSelectionLog batch, String accountId, Set<String> disconnectedScalingGroup, String groupName);
 }
