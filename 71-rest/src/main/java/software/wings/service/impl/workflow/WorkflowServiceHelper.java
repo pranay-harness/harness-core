@@ -2531,7 +2531,7 @@ public class WorkflowServiceHelper {
 
   public static void checkWorkflowVariablesOverrides(PipelineStageElement stageElement, List<Variable> variables,
       Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables, boolean isRuntimeEnabled) {
-    if (isEmpty(variables)) {
+    if (isEmpty(variables) || stageElement.checkDisableAssertion()) {
       return;
     }
 

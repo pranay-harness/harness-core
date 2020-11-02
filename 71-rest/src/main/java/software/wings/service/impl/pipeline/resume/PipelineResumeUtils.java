@@ -31,7 +31,6 @@ import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
@@ -145,8 +144,6 @@ public class PipelineResumeUtils {
       stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
     }
 
-    checkValidStateAndExecutionData(pse, stateExecutionInstance, stateExecutionData);
-
     Map<String, Object> properties = new HashMap<>();
     properties.put(EnvResumeStateKeys.prevStateExecutionId, stateExecutionInstance.getUuid());
     properties.put(EnvResumeStateKeys.prevPipelineExecutionId, prevWorkflowExecution.getUuid());
@@ -212,18 +209,6 @@ public class PipelineResumeUtils {
       workflowExecutionIds = workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(Collectors.toList());
     }
     properties.put(EnvResumeStateKeys.prevWorkflowExecutionIds, workflowExecutionIds);
-  }
-
-  private void checkValidStateAndExecutionData(
-      PipelineStageElement pse, StateExecutionInstance stateExecutionInstance, StateExecutionData stateExecutionData) {
-    if (stateExecutionInstance == null
-        || (ENV_STATE.name().equals(pse.getType()) && !(stateExecutionData instanceof EnvStateExecutionData))
-        || (APPROVAL.name().equals(pse.getType()) && !(stateExecutionData instanceof ApprovalStateExecutionData))
-        || (ENV_LOOP_STATE.name().equals(pse.getType()) && !(stateExecutionData instanceof ForkStateExecutionData))) {
-      throw new InvalidRequestException(
-          format("You cannot resume a pipeline which has been modified. New stage [%s] introduced in the pipeline",
-              pse.getName()));
-    }
   }
 
   private boolean isNotValidState(String type) {
