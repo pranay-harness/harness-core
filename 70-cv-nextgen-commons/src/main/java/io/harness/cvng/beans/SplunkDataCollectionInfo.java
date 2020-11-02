@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import io.harness.cvng.beans.splunk.SplunkUtils;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import lombok.Builder;
 import lombok.Data;
@@ -36,12 +37,8 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo<SplunkConnec
 
   @Override
   public Map<String, String> collectionHeaders(SplunkConnectorDTO splunkConnectorDTO) {
-    String decryptedPassword = new String(splunkConnectorDTO.getPasswordRef().getDecryptedValue());
-    String usernameColonPassword = splunkConnectorDTO.getUsername().concat(":").concat(decryptedPassword);
-    String auth =
-        "Basic " + Base64.getEncoder().encodeToString(usernameColonPassword.getBytes(Charset.forName("UTF-8")));
     Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", auth);
+    headers.put("Authorization", SplunkUtils.getAuthorizationHeader(splunkConnectorDTO));
     return headers;
   }
 

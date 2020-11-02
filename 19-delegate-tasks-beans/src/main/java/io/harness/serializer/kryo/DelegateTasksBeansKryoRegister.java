@@ -36,6 +36,8 @@ import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -388,5 +390,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ConnectorType.class, 19372);
     kryo.register(JSONArray.class, 19373);
     kryo.register(JSONObject.class, 19374);
+    kryo.register(CVConnectorTaskParams.class, 19375);
+    kryo.register(CVConnectorTaskResponse.class, 19376);
   }
 }

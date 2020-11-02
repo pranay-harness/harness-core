@@ -33,6 +33,9 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//70-cv-nextgen-commons/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -42,6 +45,9 @@ java_library(
 
 java_library(
     name = "test_deps",
+    resources = [
+        "//70-cv-nextgen-commons/src/main/resources:resource",
+    ],
     exports = [
         "//21-persistence:supporter-test",
         "//990-commons-test:module",

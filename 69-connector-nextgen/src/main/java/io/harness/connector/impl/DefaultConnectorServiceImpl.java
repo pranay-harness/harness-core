@@ -1,7 +1,14 @@
 package io.harness.connector.impl;
 
+import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
+import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorFilterHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
@@ -35,12 +42,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
-import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

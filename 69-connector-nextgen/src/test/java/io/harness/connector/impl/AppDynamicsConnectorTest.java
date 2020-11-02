@@ -17,7 +17,6 @@ import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
-import io.harness.connector.validator.AppDynamicsConnectionValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -45,7 +44,6 @@ import java.util.Optional;
 public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
-  @Mock AppDynamicsConnectionValidator appDynamicsConnectionValidator;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks DefaultConnectorServiceImpl connectorService;
 
@@ -120,19 +118,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
         .thenReturn(Optional.of(appDynamicsConfig));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.NEMANJA)
-  @Category(UnitTests.class)
-  public void testConnection() {
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
-        .thenReturn(Optional.of(appDynamicsConfig));
-    when(connectionValidatorMap.get(any())).thenReturn(appDynamicsConnectionValidator);
-    when(appDynamicsConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
-        .thenReturn(ConnectorValidationResult.builder().valid(true).errorMessage("").build());
-    connectorService.testConnection(accountIdentifier, null, null, identifier);
-    verify(appDynamicsConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
   }
 
   private void ensureAppDynamicsConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {

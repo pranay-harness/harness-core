@@ -3,6 +3,7 @@ package io.harness.cvng.core.dsl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -10,6 +11,7 @@ import com.google.common.io.Resources;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.HoverflyTest;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
+import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
@@ -76,6 +78,61 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     assertThat(hosts).hasSize(2);
     assertThat(hosts).isEqualTo(Sets.newHashSet(
         "harness-test-appd-deployment-5bd684f655-cslds", "harness-test-appd-deployment-5bd684f655-lqfrp"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_splunkConnectionValidationValidSettings() {
+    String filePath = "splunk/connection-validation-valid.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    SplunkConnectorValidationInfo splunkConnectorValidationInfo = SplunkConnectorValidationInfo.builder().build();
+    splunkConnectorValidationInfo.setConnectorConfigDTO(
+        SplunkConnectorDTO.builder()
+            .splunkUrl("https://splunk.dev.harness.io:8089/")
+            .username("harnessadmin")
+            .passwordRef(SecretRefData.builder().decryptedValue("Harness@123".toCharArray()).build())
+            .build());
+    String code = splunkConnectorValidationInfo.getConnectionValidationDSL();
+    Instant instant = Instant.parse("2020-10-30T10:44:48.164Z");
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(splunkConnectorValidationInfo.getStartTime(instant))
+                                              .endTime(splunkConnectorValidationInfo.getEndTime(instant))
+                                              .commonHeaders(splunkConnectorValidationInfo.collectionHeaders())
+                                              .baseUrl(splunkConnectorValidationInfo.getBaseUrl())
+                                              .build();
+    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters);
+    assertThat(isValid).isEqualTo("true");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_splunkConnectionValidationInValidSettings() {
+    String filePath = "splunk/connection-validation-invalid.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    SplunkConnectorValidationInfo splunkConnectorValidationInfo = SplunkConnectorValidationInfo.builder().build();
+    splunkConnectorValidationInfo.setConnectorConfigDTO(
+        SplunkConnectorDTO.builder()
+            .splunkUrl("https://splunk.dev.harness.io:8089/invalid")
+            .username("harnessadmin")
+            .passwordRef(SecretRefData.builder().decryptedValue("Harness@123".toCharArray()).build())
+            .build());
+    String code = splunkConnectorValidationInfo.getConnectionValidationDSL();
+    Instant instant = Instant.parse("2020-10-30T10:44:48.164Z");
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(splunkConnectorValidationInfo.getStartTime(instant))
+                                              .endTime(splunkConnectorValidationInfo.getEndTime(instant))
+                                              .commonHeaders(splunkConnectorValidationInfo.collectionHeaders())
+                                              .baseUrl(splunkConnectorValidationInfo.getBaseUrl())
+                                              .build();
+    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters))
+        .hasMessage(
+            "io.harness.datacollection.exception.DataCollectionException: io.harness.datacollection.exception.DataCollectionException: Response code: 405 Error: Response{protocol=http/1.1, code=405, message=Method Not Allowed, url=https://splunk.dev.harness.io:8089/invalid/services/search/jobs/?output_mode=json&exec_mode=blocking}");
   }
 
   private String readDSL(String fileName) throws IOException {

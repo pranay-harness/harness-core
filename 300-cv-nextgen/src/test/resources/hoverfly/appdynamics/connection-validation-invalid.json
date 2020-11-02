@@ -1,0 +1,61 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controllerr/rest/applications"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "json"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 404,
+        "body" : "H4sIAAAAAAAAALWTUW+bMBSF/8otfa3jEtJOIdRSGjIxqWujjmrrowEnWDOY2c4Iq/LfZ0yyRtoeNml9s+xzvnuvfG50Fj8s0ufVEkpTCVg93d59WICHMP4cLDCO0xi+JOnHO/BHl/DJKJ4bjJf3HnilMU2Icdu2ozYYSbXB6SPe9RS/tx2OSDvPqDCFRyJXY1eJWt/8we9Pp9PB1ksZLUhkuBGMzJsm7mpa8VwDgqVSUoFijVQmwoMi0qYTDEzXsBvPsJ3BudaWcoZQ4sPLWtYGrS1AdGFKS1nRi7niVFxoWmukmeLrWS6FVGFbcsNmGc2/bpTc1gUars+vxlfxu+uZA2n+g4XjcbOb7SEZvwndvx7owdvQJ45++xA//ws/Exb9O38oa3H/sdc9rP6O9ko4IE9bPZnY/dYcXtwzhDAI9snj69Wv2giRCLtAEYjwEMRMFp0NpU+SNF3ZRaBmq2FyObF5vJcG3vcdWK1vNQqTqLEO0qcxwhk5yo+RbQ7vFdOabpzkhHF8LZjOFW8Ml3WvSEtmAd+2TBtW2JOWW5Uz4Bpq66XfKRc0E2zkAK6HMjhdHNtcYMca5sD9kpGf+QYgdPwDAAA=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Language" : [ "" ],
+          "Content-Length" : [ "455" ],
+          "Content-Type" : [ "text/html; charset=UTF-8" ],
+          "Date" : [ "Thu, 29 Oct 2020 16:19:27 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-10-29T21:49:28+05:30"
+  }
+}

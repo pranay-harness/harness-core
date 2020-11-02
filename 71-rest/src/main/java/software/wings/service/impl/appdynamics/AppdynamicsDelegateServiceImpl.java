@@ -476,16 +476,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     return true;
   }
 
-  @Override
-  public boolean validateConfig(
-      AppDynamicsConnectorDTO appDynamicsConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
-    final Call<List<NewRelicApplication>> request =
-        getAppdynamicsRestClient(appDynamicsConnectorDTO.getControllerUrl())
-            .listAllApplications(getHeaderWithCredentials(appDynamicsConnectorDTO, encryptedDataDetails));
-    requestExecutor.executeRequest(request);
-    return true;
-  }
-
   AppdynamicsRestClient getAppdynamicsRestClient(final String controllerUrl) {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(controllerUrl.endsWith("/") ? controllerUrl : controllerUrl + "/")
