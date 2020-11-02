@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -87,5 +88,21 @@ public class LogDashboardResource {
         logDashboardService.getLogCountByTag(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             environmentIdentifier, monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null,
             startTimeMillis, endTimeMillis));
+  }
+
+  @GET
+  @Path("/{activityId}/logs")
+  @ApiOperation(value = "get activity logs for given activityId", nickname = "getActivityLogs")
+  public RestResponse<PageResponse<AnalyzedLogDataDTO>> getActivityLogs(
+      @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTimeMillis,
+      @NotNull @QueryParam("endTime") Long endTimeMillis, @QueryParam("anomalousOnly") boolean anomalousOnly,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
+      @NotNull @PathParam("activityId") String activityId) {
+    return new RestResponse(logDashboardService.getActivityLogs(activityId, accountId, projectIdentifier, orgIdentifier,
+        environmentIdentifier, serviceIdentifier, startTimeMillis, endTimeMillis, anomalousOnly, page, size));
   }
 }

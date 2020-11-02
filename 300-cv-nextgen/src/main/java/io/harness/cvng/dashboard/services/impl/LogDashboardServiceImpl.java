@@ -2,6 +2,8 @@ package io.harness.cvng.dashboard.services.impl;
 
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -45,6 +47,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   @Inject private CVConfigService cvConfigService;
   @Inject private CVParallelExecutor cvParallelExecutor;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private ActivityService activityService;
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier,
@@ -63,8 +66,29 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   }
 
   @Override
+  public PageResponse<AnalyzedLogDataDTO> getActivityLogs(String activityId, String accountId, String projectIdentifier,
+      String orgIdentifier, String environmentIdentifier, String serviceIdentifier, Long startTimeMillis,
+      Long endTimeMillis, boolean anomalousOnly, int page, int size) {
+    Activity activity = activityService.get(activityId);
+    List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
+    Set<String> verificationTaskIds =
+        verificationJobInstanceIds.stream()
+            .map(verificationJobInstanceId
+                -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+    List<String> cvConfigIds = verificationTaskIds.stream()
+                                   .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
+                                   .collect(Collectors.toList());
+    List<LogAnalysisTag> tags = anomalousOnly ? Arrays.asList(LogAnalysisTag.UNEXPECTED, LogAnalysisTag.UNKNOWN)
+                                              : Arrays.asList(LogAnalysisTag.values());
+    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
+        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+  }
+
+  @Override
   public SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
-      String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
+      String serviceIdentifier, String environmentIdentifier, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis) {
     Map<Long, Map<LogAnalysisTag, Integer>> logTagCountMap = new HashMap<>();
     List<LogDataByTag> logDataByTagList = new ArrayList<>();
@@ -72,7 +96,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
     List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     for (String cvConfigId : cvConfigIds) {
       String verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
@@ -106,20 +130,26 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   }
 
   private PageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,
-      String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
+      String serviceIdentifier, String environmentIdentifier, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, List<LogAnalysisTag> tags, int page, int size) {
-    List<LogData> logDataToBeReturned = Collections.synchronizedList(new ArrayList<>());
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
     List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifer, serviceIdentifier, category);
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, category);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
+        startTime, endTime, cvConfigIds, page, size);
+  }
 
+  private PageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,
+      String serviceIdentifier, String environmentIdentifer, List<LogAnalysisTag> tags, Instant startTime,
+      Instant endTime, List<String> cvConfigIds, int page, int size) {
     // for each cvConfigId, get the list of unknown and unexpected analysis results.
     // Total number of calls to DB = total number of cvConfigs that are part of this category for this service+env with
     // type as LOG
     Map<String, List<AnalysisResult>> cvConfigAnalysisResultMap = new ConcurrentHashMap<>();
 
+    List<LogData> logDataToBeReturned = Collections.synchronizedList(new ArrayList<>());
     List<Callable<Map<String, List<AnalysisResult>>>> callables = new ArrayList<>();
     cvConfigIds.forEach(cvConfigId -> {
       callables.add(() -> {

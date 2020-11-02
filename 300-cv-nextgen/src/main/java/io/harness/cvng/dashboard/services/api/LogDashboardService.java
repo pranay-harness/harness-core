@@ -18,4 +18,8 @@ public interface LogDashboardService {
   SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis);
+
+  PageResponse<AnalyzedLogDataDTO> getActivityLogs(String activityId, String accountId, String projectIdentifier,
+      String orgIdentifier, String environmentIdentifier, String serviceIdentifier, Long startTimeMillis,
+      Long endTimeMillis, boolean anomalousOnly, int page, int size);
 }
