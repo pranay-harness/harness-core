@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//12-commons:module",
+        "@jira_client//jar",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_ec2",
         "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",

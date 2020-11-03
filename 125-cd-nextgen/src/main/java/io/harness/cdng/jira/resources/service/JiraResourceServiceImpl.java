@@ -17,6 +17,7 @@ import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConve
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.JiraProjectDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -41,6 +42,7 @@ import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -180,6 +182,45 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     }
 
     return JiraIssueDTOConverter.toJiraIssueDTO().apply(jiraTaskResponse);
+  }
+
+  @Override
+  public List<JiraProjectDTO> getProjects(
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier) {
+    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+
+    JiraTaskNGParameters taskParameters = JiraTaskNGParameters.builder()
+                                              .accountId(jiraConnectorRef.getAccountIdentifier())
+                                              .jiraAction(JiraAction.GET_PROJECTS)
+                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
+                                              .jiraConnectorDTO(connector)
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
+    }
+    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
+    if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
+      throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    return jiraTaskResponse.getProjects()
+        .stream()
+        .map(project
+            -> JiraProjectDTO.builder()
+                   .id(project.getId())
+                   .key(project.getKey())
+                   .name(project.getName())
+                   .issueTypes(project.getIssueTypes())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private JiraConnectorDTO getConnector(IdentifierRef jiraConnectorRef) {
