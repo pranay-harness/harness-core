@@ -29,6 +29,7 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   private final PcfConnectivityCapability pcfConnectivityCapability = PcfConnectivityCapability.builder()
                                                                           .pcfConfig(pcfConfig)
                                                                           .limitPcfThreads(true)
+                                                                          .ignorePcfConnectionContextCache(true)
                                                                           .encryptionDetails(new ArrayList<>())
                                                                           .build();
 
@@ -39,7 +40,7 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldPerformCapabilityCheck() {
-    when(pcfDeploymentManager.checkConnectivity(pcfConfig, true)).thenReturn("SUCCESS");
+    when(pcfDeploymentManager.checkConnectivity(pcfConfig, true, true)).thenReturn("SUCCESS");
     CapabilityResponse capabilityResponse =
         pcfConnectivityCapabilityCheck.performCapabilityCheck(pcfConnectivityCapability);
     assertThat(capabilityResponse).isNotNull();

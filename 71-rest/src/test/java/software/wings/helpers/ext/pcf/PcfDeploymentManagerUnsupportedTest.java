@@ -125,7 +125,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCheckConnectivity() {
-    assertThat(deploymentManager.checkConnectivity(PcfConfig.builder().build(), false))
+    assertThat(deploymentManager.checkConnectivity(PcfConfig.builder().build(), false, false))
         .isEqualTo("FAILED: connection timed out");
   }
 

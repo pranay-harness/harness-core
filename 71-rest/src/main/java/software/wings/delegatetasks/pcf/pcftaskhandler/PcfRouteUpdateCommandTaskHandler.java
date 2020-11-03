@@ -78,6 +78,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(pcfCommandRouteUpdateRequest.isUseCfCLI())
               .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
               .build();
 
       PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =

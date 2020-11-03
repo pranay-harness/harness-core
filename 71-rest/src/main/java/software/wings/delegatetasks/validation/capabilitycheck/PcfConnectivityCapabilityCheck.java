@@ -26,8 +26,8 @@ public class PcfConnectivityCapabilityCheck implements CapabilityCheck {
       if (pcfConnectivityCapability.getEncryptionDetails() != null) {
         encryptionService.decrypt(pcfConfig, pcfConnectivityCapability.getEncryptionDetails(), false);
       }
-      String validationErrorMsg =
-          pcfDeploymentManager.checkConnectivity(pcfConfig, pcfConnectivityCapability.isLimitPcfThreads());
+      String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig,
+          pcfConnectivityCapability.isLimitPcfThreads(), pcfConnectivityCapability.isIgnorePcfConnectionContextCache());
       return CapabilityResponse.builder()
           .delegateCapability(pcfConnectivityCapability)
           .validated(PCF_CONNECTIVITY_SUCCESS.equals(validationErrorMsg))

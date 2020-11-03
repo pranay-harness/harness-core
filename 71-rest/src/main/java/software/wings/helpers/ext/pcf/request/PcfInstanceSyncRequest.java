@@ -13,10 +13,11 @@ public class PcfInstanceSyncRequest extends PcfCommandRequest {
   @Builder
   public PcfInstanceSyncRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      Integer timeoutIntervalInMin, String pcfApplicationName, boolean useCLIForPcfAppCreation,
-      boolean limitPcfThreads) {
+      Integer timeoutIntervalInMin, String pcfApplicationName, boolean useCLIForPcfAppCreation, boolean limitPcfThreads,
+      boolean ignorePcfConnectionContextCache) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false, limitPcfThreads);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false, limitPcfThreads,
+        ignorePcfConnectionContextCache);
     this.pcfApplicationName = pcfApplicationName;
   }
 }

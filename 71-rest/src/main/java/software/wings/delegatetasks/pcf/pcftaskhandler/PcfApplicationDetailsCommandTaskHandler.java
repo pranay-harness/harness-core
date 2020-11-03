@@ -49,16 +49,18 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       encryptionService.decrypt(pcfConfig, encryptedDataDetails, isInstanceSync);
 
       PcfInstanceSyncRequest pcfInstanceSyncRequest = (PcfInstanceSyncRequest) pcfCommandRequest;
-      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .timeOutIntervalInMins(5)
-                                              .applicationName(pcfInstanceSyncRequest.getPcfApplicationName())
-                                              .userName(String.valueOf(pcfConfig.getUsername()))
-                                              .password(String.valueOf(pcfConfig.getPassword()))
-                                              .endpointUrl(pcfConfig.getEndpointUrl())
-                                              .orgName(pcfCommandRequest.getOrganization())
-                                              .spaceName(pcfCommandRequest.getSpace())
-                                              .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
-                                              .build();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .timeOutIntervalInMins(5)
+              .applicationName(pcfInstanceSyncRequest.getPcfApplicationName())
+              .userName(String.valueOf(pcfConfig.getUsername()))
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .orgName(pcfCommandRequest.getOrganization())
+              .spaceName(pcfCommandRequest.getSpace())
+              .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
+              .build();
 
       ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
 

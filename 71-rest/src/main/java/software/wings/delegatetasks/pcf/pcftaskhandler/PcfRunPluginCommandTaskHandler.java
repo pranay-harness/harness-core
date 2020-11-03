@@ -96,15 +96,17 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .collect(Collectors.toList()),
           executionLogCallback);
 
-      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .orgName(pluginCommandRequest.getOrganization())
-                                              .spaceName(pluginCommandRequest.getSpace())
-                                              .userName(String.valueOf(pcfConfig.getUsername()))
-                                              .password(String.valueOf(pcfConfig.getPassword()))
-                                              .endpointUrl(pcfConfig.getEndpointUrl())
-                                              .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())
-                                              .limitPcfThreads(pluginCommandRequest.isLimitPcfThreads())
-                                              .build();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .orgName(pluginCommandRequest.getOrganization())
+              .spaceName(pluginCommandRequest.getSpace())
+              .userName(String.valueOf(pcfConfig.getUsername()))
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())
+              .limitPcfThreads(pluginCommandRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(pluginCommandRequest.isIgnorePcfConnectionContextCache())
+              .build();
 
       final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData =
           PcfRunPluginScriptRequestData.builder()

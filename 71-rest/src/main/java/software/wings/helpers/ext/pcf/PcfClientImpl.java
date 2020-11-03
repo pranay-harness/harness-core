@@ -38,6 +38,10 @@ import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.task.pcf.PcfManifestFileData;
@@ -132,6 +136,23 @@ public class PcfClientImpl implements PcfClient {
   public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
   public static final String PCF_PROXY_PROPERTY = "https_proxy";
+  private static final LoadingCache<String, ConnectionContext> contextCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100)
+          .expireAfterAccess(30, TimeUnit.MINUTES)
+          .removalListener((RemovalListener<String, ConnectionContext>)
+                               entry -> ((DefaultConnectionContext) entry.getValue()).dispose())
+          .build(new CacheLoader<String, ConnectionContext>() {
+            @Override
+            public ConnectionContext load(@NotNull String url) throws Exception {
+              DefaultConnectionContext.Builder builder = DefaultConnectionContext.builder()
+                                                             .apiHost(url)
+                                                             .skipSslValidation(true)
+                                                             .connectTimeout(Duration.ofMinutes(5))
+                                                             .proxyConfiguration(getProxyConfiguration(url));
+              return builder.build();
+            }
+          });
 
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
@@ -147,6 +168,7 @@ public class PcfClientImpl implements PcfClient {
       return CloudFoundryOperationsWrapper.builder()
           .cloudFoundryOperations(cloudFoundryOperations)
           .connectionContext(connectionContext)
+          .ignorePcfConnectionContextCache(pcfRequestConfig.isIgnorePcfConnectionContextCache())
           .build();
     } catch (Exception e) {
       throw new PivotalClientApiException("Exception while creating CloudFoundryOperations: " + e.getMessage(), e);
@@ -226,7 +248,6 @@ public class PcfClientImpl implements PcfClient {
             .flatMap(organizationDetail -> organizationDetail.getSpaces().stream())
             .collect(toList());
       }
-
       return spaces;
     }
   }
@@ -292,7 +313,6 @@ public class PcfClientImpl implements PcfClient {
           }, latch::countDown);
 
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
                                                 .append("Exception occurred Scaling Applications: ")
@@ -318,7 +338,6 @@ public class PcfClientImpl implements PcfClient {
 
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
-
     try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
           .applications()
@@ -1045,7 +1064,6 @@ public class PcfClientImpl implements PcfClient {
                                                 .append(", Error: " + errorBuilder.toString())
                                                 .toString());
       }
-
       return applicationDetails.size() > 0 ? applicationDetails.get(0) : null;
     }
   }
@@ -1209,7 +1227,6 @@ public class PcfClientImpl implements PcfClient {
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
     List<Route> routes = new ArrayList<>();
-
     try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
           .routes()
@@ -1292,7 +1309,6 @@ public class PcfClientImpl implements PcfClient {
 
     CreateRouteRequest.Builder createRouteRequestBuilder =
         getCreateRouteRequest(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
-
     try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
           .routes()
@@ -1908,25 +1924,32 @@ public class PcfClientImpl implements PcfClient {
   @VisibleForTesting
   ConnectionContext getConnectionContext(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
-      DefaultConnectionContext.Builder builder =
-          DefaultConnectionContext.builder()
-              .apiHost(pcfRequestConfig.getEndpointUrl())
-              .skipSslValidation(true)
-              .connectTimeout(Duration.ofMinutes(timeout))
-              .proxyConfiguration(getProxyConfiguration(pcfRequestConfig.getEndpointUrl()));
-      if (pcfRequestConfig.isLimitPcfThreads()) {
-        builder.threadPoolSize(1);
-      } else {
-        log.info(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Not limiting Pcf threads for Connection Context");
+      if (pcfRequestConfig.isIgnorePcfConnectionContextCache()) {
+        return createNewConnectionContext(pcfRequestConfig);
       }
-      return builder.build();
+      return contextCache.get(pcfRequestConfig.getEndpointUrl());
     } catch (Exception t) {
       throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }
   }
 
-  private Optional<ProxyConfiguration> getProxyConfiguration(String url) {
+  private ConnectionContext createNewConnectionContext(PcfRequestConfig pcfRequestConfig) {
+    long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
+    DefaultConnectionContext.Builder builder =
+        DefaultConnectionContext.builder()
+            .apiHost(pcfRequestConfig.getEndpointUrl())
+            .skipSslValidation(true)
+            .connectTimeout(Duration.ofMinutes(timeout))
+            .proxyConfiguration(getProxyConfiguration(pcfRequestConfig.getEndpointUrl()));
+    if (pcfRequestConfig.isLimitPcfThreads()) {
+      builder.threadPoolSize(1);
+    } else {
+      log.info(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Not limiting Pcf threads for Connection Context");
+    }
+    return builder.build();
+  }
+
+  private static Optional<ProxyConfiguration> getProxyConfiguration(String url) {
     String proxyHostName = Http.getProxyHostName();
     if (Http.shouldUseNonProxy(url) || isEmpty(proxyHostName)) {
       return Optional.empty();

@@ -133,7 +133,6 @@ public class PivotalClientTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws Exception {
     when(wrapper.getCloudFoundryOperations()).thenReturn(operations);
-    doNothing().when(wrapper).close();
     when(operations.applications()).thenReturn(applications);
     when(operations.routes()).thenReturn(routes);
     doReturn(wrapper).when(client).getCloudFoundryOperationsWrapper(any());
@@ -351,23 +350,6 @@ public class PivotalClientTest extends WingsBaseTest {
     assertThat(client.getPathFromRouteMap(routeOptional.get())).isEqualTo("qa.harness.io/api");
   }
 
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testCloudFoundryOperationsClose() throws Exception {
-    PcfClientImpl pcfClient = mock(PcfClientImpl.class);
-    CloudFoundryOperationsWrapper wrapperObject =
-        CloudFoundryOperationsWrapper.builder().cloudFoundryOperations(null).connectionContext(null).build();
-    wrapperObject = spy(wrapperObject);
-
-    doReturn(wrapperObject).when(pcfClient).getCloudFoundryOperationsWrapper(any());
-    try (CloudFoundryOperationsWrapper wrapper = client.getCloudFoundryOperationsWrapper(getPcfRequestConfig())) {
-      wrapperObject = wrapper;
-    }
-
-    verify(wrapperObject, times(1)).close();
-  }
-
   private PcfRequestConfig getPcfRequestConfig() {
     return PcfRequestConfig.builder().timeOutIntervalInMins(1).orgName("org").applicationName("app").build();
   }
@@ -397,8 +379,7 @@ public class PivotalClientTest extends WingsBaseTest {
       mockedClient.getCloudFoundryOperationsWrapper(pcfRequestConfig);
       fail("Should not reach here.");
     } catch (PivotalClientApiException e) {
-      assertThat(e.getMessage())
-          .isEqualTo("Exception while creating CloudFoundryOperations: NullPointerException: apiHost");
+      assertThat(e.getMessage()).isEqualTo("Exception while creating CloudFoundryOperations: NullPointerException");
     }
   }
 
@@ -1041,14 +1022,33 @@ public class PivotalClientTest extends WingsBaseTest {
     assertThat(connectionContext instanceof DefaultConnectionContext).isTrue();
     Optional<Duration> connectTimeout = ((DefaultConnectionContext) connectionContext).getConnectTimeout();
     assertThat(connectTimeout.isPresent()).isTrue();
-    assertThat(connectTimeout.get().getSeconds()).isEqualTo(600);
-
-    pcfRequestConfig.setTimeOutIntervalInMins(0);
-    connectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
-    assertThat(connectionContext instanceof DefaultConnectionContext).isTrue();
-    connectTimeout = ((DefaultConnectionContext) connectionContext).getConnectTimeout();
-    assertThat(connectTimeout.isPresent()).isTrue();
     assertThat(connectTimeout.get().getSeconds()).isEqualTo(300);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testIgnoringConnectionContextCache() throws Exception {
+    PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().endpointUrl("test").ignorePcfConnectionContextCache(true).build();
+
+    ConnectionContext firstConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+    ConnectionContext secondConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+
+    assertThat(firstConnectionContext).isNotSameAs(secondConnectionContext);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testNotIgnoringConnectionContextCache() throws Exception {
+    PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().endpointUrl("test").ignorePcfConnectionContextCache(false).build();
+
+    ConnectionContext firstConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+    ConnectionContext secondConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+
+    assertThat(firstConnectionContext).isSameAs(secondConnectionContext);
   }
 
   @Test
