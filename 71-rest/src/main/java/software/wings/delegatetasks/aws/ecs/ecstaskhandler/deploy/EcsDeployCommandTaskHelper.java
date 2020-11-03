@@ -209,9 +209,14 @@ public class EcsDeployCommandTaskHelper {
     int maxDesiredCount =
         resizeParams.isUseFixedInstances() ? resizeParams.getFixedInstances() : resizeParams.getMaxInstances();
 
-    // If Rollback or this is not final resize stage, just return.
-    // We create AutoScalar after new service has been completely upsized.
-    if (resizeParams.isRollback() || maxDesiredCount > containerServiceData.getDesiredCount()) {
+    /*
+     * If Rollback or this is not final resize stage, just return.
+     * We create AutoScalar after new service has been completely upsized.
+     * This method should also not get invoked if the service being sized is NOT the
+     * new service.
+     */
+    if (resizeParams.isRollback() || maxDesiredCount > containerServiceData.getDesiredCount()
+        || !resizeParams.getContainerServiceName().equals(containerServiceData.getName())) {
       return;
     }
 
