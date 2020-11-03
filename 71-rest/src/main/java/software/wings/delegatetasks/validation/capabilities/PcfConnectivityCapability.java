@@ -16,6 +16,7 @@ public class PcfConnectivityCapability implements ExecutionCapability {
   @NotNull private PcfConfig pcfConfig;
   List<EncryptedDataDetail> encryptionDetails;
   boolean limitPcfThreads;
+  boolean ignorePcfConnectionContextCache;
   private final CapabilityType capabilityType = CapabilityType.PCF_CONNECTIVITY;
 
   @Override

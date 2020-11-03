@@ -333,7 +333,8 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   }
 
   @Override
-  public String checkConnectivity(PcfConfig pcfConfig, boolean limitPcfThreads) {
+  public String checkConnectivity(
+      PcfConfig pcfConfig, boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
     try {
       getOrganizations(PcfRequestConfig.builder()
                            .endpointUrl(pcfConfig.getEndpointUrl())

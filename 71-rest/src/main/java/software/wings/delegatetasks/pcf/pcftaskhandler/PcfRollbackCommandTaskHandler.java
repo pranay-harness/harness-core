@@ -95,6 +95,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(commandRollbackRequest.isUseCfCLI())
               .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
               .build();
 
       // Will be used if app autoscalar is configured

@@ -85,16 +85,18 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
-      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .userName(String.valueOf(pcfConfig.getUsername()))
-                                              .password(String.valueOf(pcfConfig.getPassword()))
-                                              .endpointUrl(pcfConfig.getEndpointUrl())
-                                              .orgName(pcfCommandDeployRequest.getOrganization())
-                                              .spaceName(pcfCommandDeployRequest.getSpace())
-                                              .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
-                                              .useCFCLI(pcfCommandDeployRequest.isUseCfCLI())
-                                              .limitPcfThreads(pcfCommandDeployRequest.isLimitPcfThreads())
-                                              .build();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .userName(String.valueOf(pcfConfig.getUsername()))
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .orgName(pcfCommandDeployRequest.getOrganization())
+              .spaceName(pcfCommandDeployRequest.getSpace())
+              .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
+              .useCFCLI(pcfCommandDeployRequest.isUseCfCLI())
+              .limitPcfThreads(pcfCommandDeployRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(pcfCommandDeployRequest.isIgnorePcfConnectionContextCache())
+              .build();
 
       // This will be CF_HOME for any cli related operations
       workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment();

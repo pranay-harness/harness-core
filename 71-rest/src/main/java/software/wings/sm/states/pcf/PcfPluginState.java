@@ -5,6 +5,7 @@ import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
@@ -376,6 +377,8 @@ public class PcfPluginState extends State {
             .encryptedDataDetails(encryptedDataDetails)
             .repoRoot(repoRoot)
             .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
+            .ignorePcfConnectionContextCache(
+                featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
             .build();
 
     stateExecutionData.setPcfCommandRequest(commandRequest);

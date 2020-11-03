@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
+import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 
 import com.google.inject.Inject;
@@ -103,6 +104,8 @@ public class PcfRollbackState extends PcfDeployState {
         .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
         .useCfCLI(true)
         .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
+        .ignorePcfConnectionContextCache(
+            featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
         .build();
   }
 

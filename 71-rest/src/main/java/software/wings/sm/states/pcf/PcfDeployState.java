@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -338,6 +339,8 @@ public class PcfDeployState extends State {
         .pcfManifestsPackage(setupSweepingOutputPcf.getPcfManifestsPackage())
         .useCfCLI(true)
         .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
+        .ignorePcfConnectionContextCache(
+            featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
         .build();
   }
 

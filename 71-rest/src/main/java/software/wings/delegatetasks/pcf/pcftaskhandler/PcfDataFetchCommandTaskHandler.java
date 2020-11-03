@@ -102,6 +102,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
         PcfRequestConfig.builder()
             .endpointUrl(pcfConfig.getEndpointUrl())
             .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
+            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
             .orgName(pcfInfraMappingDataRequest.getOrganization())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
             .userName(String.valueOf(pcfConfig.getUsername()))
@@ -136,6 +137,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
         PcfRequestConfig.builder()
             .orgName(pcfInfraMappingDataRequest.getOrganization())
             .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
+            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
             .userName(String.valueOf(pcfConfig.getUsername()))
             .password(String.valueOf(pcfConfig.getPassword()))
@@ -154,6 +156,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
             .orgName(pcfInfraMappingDataRequest.getOrganization())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
             .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
+            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
             .userName(String.valueOf(pcfConfig.getUsername()))
             .password(String.valueOf(pcfConfig.getPassword()))
             .endpointUrl(pcfConfig.getEndpointUrl())
@@ -173,6 +176,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
             .endpointUrl(pcfConfig.getEndpointUrl())
             .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
             .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
+            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
             .build());
 
     pcfInfraMappingDataResponse.setOrganizations(orgs);

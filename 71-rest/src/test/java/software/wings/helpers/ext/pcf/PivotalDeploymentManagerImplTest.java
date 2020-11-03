@@ -762,13 +762,13 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   public void testCheckConnectivity() throws Exception {
     PcfConfig pcfConfig = PcfConfig.builder().username("user".toCharArray()).password("test".toCharArray()).build();
     when(client.getOrganizations(any())).thenReturn(Collections.emptyList());
-    String message = deploymentManager.checkConnectivity(pcfConfig, false);
+    String message = deploymentManager.checkConnectivity(pcfConfig, false, false);
     verify(client, times(1)).getOrganizations(any());
     assertThat(message.equalsIgnoreCase("SUCCESS")).isEqualTo(true);
 
     reset(client);
     doThrow(Exception.class).when(client).getOrganizations(any());
-    message = deploymentManager.checkConnectivity(pcfConfig, false);
+    message = deploymentManager.checkConnectivity(pcfConfig, false, false);
     assertThat(message.equalsIgnoreCase("SUCCESS")).isEqualTo(false);
   }
 

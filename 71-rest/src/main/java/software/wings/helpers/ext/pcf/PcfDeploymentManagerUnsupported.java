@@ -81,7 +81,8 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public String checkConnectivity(PcfConfig pcfConfig, boolean limitPcfThreads) {
+  public String checkConnectivity(
+      PcfConfig pcfConfig, boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
     return "FAILED: connection timed out";
   }
 

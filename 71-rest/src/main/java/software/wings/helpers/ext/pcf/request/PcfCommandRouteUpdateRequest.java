@@ -15,9 +15,11 @@ public class PcfCommandRouteUpdateRequest extends PcfCommandRequest {
   public PcfCommandRouteUpdateRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData, boolean useCfCLI,
-      boolean useAppAutoscalar, boolean enforceSslValidation, boolean limitPcfThreads) {
+      boolean useAppAutoscalar, boolean enforceSslValidation, boolean limitPcfThreads,
+      boolean ignorePcfConnectionContextCache) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads);
+        workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
+        ignorePcfConnectionContextCache);
     this.pcfRouteUpdateConfigData = pcfRouteUpdateConfigData;
   }
 }

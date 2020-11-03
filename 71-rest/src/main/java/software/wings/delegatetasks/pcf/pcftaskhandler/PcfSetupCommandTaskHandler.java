@@ -90,17 +90,19 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       workingDirectory = generateWorkingDirectoryOnDelegate(pcfCommandSetupRequest);
 
-      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .orgName(pcfCommandSetupRequest.getOrganization())
-                                              .spaceName(pcfCommandSetupRequest.getSpace())
-                                              .userName(String.valueOf(pcfConfig.getUsername()))
-                                              .password(String.valueOf(pcfConfig.getPassword()))
-                                              .endpointUrl(pcfConfig.getEndpointUrl())
-                                              .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
-                                              .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
-                                              .cfHomeDirPath(workingDirectory.getAbsolutePath())
-                                              .limitPcfThreads(pcfCommandSetupRequest.isLimitPcfThreads())
-                                              .build();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .orgName(pcfCommandSetupRequest.getOrganization())
+              .spaceName(pcfCommandSetupRequest.getSpace())
+              .userName(String.valueOf(pcfConfig.getUsername()))
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
+              .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
+              .cfHomeDirPath(workingDirectory.getAbsolutePath())
+              .limitPcfThreads(pcfCommandSetupRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(pcfCommandSetupRequest.isIgnorePcfConnectionContextCache())
+              .build();
 
       PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
           PcfAppAutoscalarRequestData.builder()

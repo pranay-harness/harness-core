@@ -46,10 +46,10 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation,
-      boolean limitPcfThreads) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads);
+        limitPcfThreads, ignorePcfConnectionContextCache);
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;
