@@ -172,7 +172,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
                                                                    .build()))
                                              .build())
                            .build();
-    ContainerServiceData containerServiceData = ContainerServiceData.builder().desiredCount(2).build();
+    ContainerServiceData containerServiceData = ContainerServiceData.builder().name("foo__1").desiredCount(2).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     String resId = "resId";
