@@ -27,10 +27,12 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.JIRA_APPROVAL_FIELD_KEY;
 import static io.harness.delegate.task.jira.JiraTaskNGHandler.ORIGINAL_ESTIMATE;
 import static io.harness.delegate.task.jira.JiraTaskNGHandler.REMAINING_ESTIMATE;
 import static io.harness.rule.OwnerRule.AGORODETKI;
@@ -215,6 +217,37 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
 
     assertThat(capturedFields).containsExactlyInAnyOrder(Field.TIME_TRACKING, "someCustomField");
     assertThat(capturedValues.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testFetchIssues() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    Issue issue = Mockito.mock(Issue.class);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    when(jiraClient.getIssue(any())).thenReturn(issue);
+    when(issue.getField(any())).thenReturn(Collections.singletonMap(JIRA_APPROVAL_FIELD_KEY, "value"));
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.fetchIssue(createJiraTaskParametersBuilder().approvalField("approvalField").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.RUNNING);
+    assertThat(jiraTaskNGResponse.getCurrentStatus()).isEqualTo("value");
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testFetchIssuesFailure() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    when(jiraClient.getIssue(any())).thenThrow(new JiraException("Exception"));
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.fetchIssue(createJiraTaskParametersBuilder().approvalField("approvalField").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {

@@ -13,6 +13,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.JiraIssueDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -20,6 +21,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
+import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.HarnessJiraException;
 import io.harness.logging.CommandExecutionStatus;
@@ -175,6 +177,54 @@ public class JiraResourceServiceTest extends CategoryTest {
     String response = jiraResourceService.updateTicket(
         identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, UpdateJiraTicketRequest.builder().build());
     assertThat(response).isEqualTo(issueKey);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestFetchIssue() {
+    final String issueKey = "CDNG-0000";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.RUNNING)
+                        .issueKey(issueKey)
+                        .currentStatus("WAITING FOR APPROVAL")
+                        .issueUrl("jiraUrl")
+                        .jiraIssueData(JiraIssueData.builder().description("").build())
+                        .build());
+
+    JiraIssueDTO jiraIssueDTO =
+        jiraResourceService.fetchIssue(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, issueKey);
+
+    assertThat(jiraIssueDTO).isNotNull();
+    assertThat(jiraIssueDTO.getIssueKey()).isEqualTo(issueKey);
+    assertThat(jiraIssueDTO.getExecutionStatus()).isEqualTo(CommandExecutionStatus.RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestFetchIssueFailure() {
+    final String issueKey = "CDNG-0000";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.FAILURE)
+                        .errorMessage("Error message")
+                        .build());
+
+    assertThatThrownBy(
+        () -> jiraResourceService.fetchIssue(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, issueKey))
+        .isInstanceOf(HarnessJiraException.class);
   }
 
   private ConnectorResponseDTO getConnector() {
