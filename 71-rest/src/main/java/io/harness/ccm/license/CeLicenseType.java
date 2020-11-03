@@ -27,11 +27,24 @@ public enum CeLicenseType {
   public long getDefaultExpiryTime() {
     Calendar calendar = Calendar.getInstance();
     calendar.add(Calendar.DATE, defaultPeriod);
-    calendar.set(Calendar.HOUR, 11);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    calendar.set(Calendar.AM_PM, Calendar.PM);
+    calendar.set(Calendar.HOUR, calendar.getMaximum(Calendar.HOUR));
+    calendar.set(Calendar.MINUTE, calendar.getMaximum(Calendar.MINUTE));
+    calendar.set(Calendar.SECOND, calendar.getMaximum(Calendar.SECOND));
+    calendar.set(Calendar.MILLISECOND, calendar.getMaximum(Calendar.MILLISECOND));
+
+    return calendar.getTimeInMillis();
+  }
+
+  public static long getEndOfYearAsMillis(int year) {
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(Calendar.YEAR, year);
+    calendar.set(Calendar.MONTH, calendar.getMaximum(Calendar.MONTH));
+    calendar.set(Calendar.DATE, calendar.getMaximum(Calendar.DATE));
+    calendar.set(Calendar.HOUR, calendar.getMaximum(Calendar.HOUR));
+    calendar.set(Calendar.MINUTE, calendar.getMaximum(Calendar.MINUTE));
+    calendar.set(Calendar.SECOND, calendar.getMaximum(Calendar.SECOND));
+    calendar.set(Calendar.MILLISECOND, calendar.getMaximum(Calendar.MILLISECOND));
+
     return calendar.getTimeInMillis();
   }
 }
