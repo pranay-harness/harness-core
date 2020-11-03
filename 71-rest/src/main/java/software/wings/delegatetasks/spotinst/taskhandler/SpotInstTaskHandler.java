@@ -250,7 +250,7 @@ public abstract class SpotInstTaskHandler {
       return emptyList();
     }
     List<String> instanceIds = instanceHealths.stream().map(ElastiGroupInstanceHealth::getInstanceId).collect(toList());
-    return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion);
+    return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, emptyList(), instanceIds, awsRegion, false);
   }
 
   @VisibleForTesting

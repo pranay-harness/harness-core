@@ -464,7 +464,7 @@ public class EcsDeployCommandTaskHelper {
     if (EmptyPredicate.isNotEmpty(taskDefinitionArns)) {
       return awsHelperService
           .describeTasks(region, awsConfig, encryptedDataDetails,
-              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskDefinitionArns))
+              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskDefinitionArns), false)
           .getTasks();
     }
     return Collections.emptyList();
@@ -490,14 +490,16 @@ public class EcsDeployCommandTaskHelper {
                                            new ListTasksRequest()
                                                .withCluster(clusterName)
                                                .withFamily(runTaskFamilyName)
-                                               .withDesiredStatus(DesiredStatus.RUNNING))
+                                               .withDesiredStatus(DesiredStatus.RUNNING),
+                                           false)
                                        .getTaskArns();
     List<String> stoppedTaskArns = awsHelperService
                                        .listTasks(region, awsConfig, encryptedDataDetails,
                                            new ListTasksRequest()
                                                .withCluster(clusterName)
                                                .withFamily(runTaskFamilyName)
-                                               .withDesiredStatus(DesiredStatus.STOPPED))
+                                               .withDesiredStatus(DesiredStatus.STOPPED),
+                                           false)
                                        .getTaskArns();
     List<String> taskArns = new ArrayList<>();
     taskArns.addAll(runningTaskArns);
@@ -509,7 +511,7 @@ public class EcsDeployCommandTaskHelper {
               runTaskFamilyName, stoppedTaskArns.size(), runningTaskArns.size()));
       return awsHelperService
           .describeTasks(region, awsConfig, encryptedDataDetails,
-              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+              new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns), false)
           .getTasks();
     }
     executionLogCallback.saveExecutionLog(format("No tasks were found in task family %s", runTaskFamilyName));

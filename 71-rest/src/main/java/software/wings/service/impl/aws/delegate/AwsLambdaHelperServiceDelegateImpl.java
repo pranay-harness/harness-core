@@ -707,12 +707,12 @@ public class AwsLambdaHelperServiceDelegateImpl
   }
 
   @Override
-  public AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request) {
+  public AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request, boolean isInstanceSync) {
     try {
       GetFunctionResult getFunctionResult = null;
       final AwsConfig awsConfig = request.getAwsConfig();
       final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       try {
         tracker.trackLambdaCall("Get Function");

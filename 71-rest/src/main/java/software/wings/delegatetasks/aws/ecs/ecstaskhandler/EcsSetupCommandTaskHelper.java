@@ -932,7 +932,7 @@ public class EcsSetupCommandTaskHelper {
   public List<ContainerInfo> waitForDaemonServiceToReachSteadyState(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     Service service = awsHelperService
                           .describeServices(region, awsConfig, encryptedDataDetails,
@@ -983,7 +983,8 @@ public class EcsSetupCommandTaskHelper {
                                                 new ListTasksRequest()
                                                     .withCluster(setupParams.getClusterName())
                                                     .withServiceName(activeServiceName)
-                                                    .withDesiredStatus(DesiredStatus.RUNNING))
+                                                    .withDesiredStatus(DesiredStatus.RUNNING),
+                                                false)
                                             .getTaskArns();
         List<ContainerInfo> containerInfos =
             ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(), awsConfig, encryptedDataDetails,

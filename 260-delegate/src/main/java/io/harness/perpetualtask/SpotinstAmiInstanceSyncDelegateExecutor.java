@@ -68,8 +68,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExe
     final List<EncryptedDataDetail> spotinstEncryptedDataDetails =
         (List<EncryptedDataDetail>) kryoSerializer.asObject(taskParams.getSpotinstEncryptedData().toByteArray());
 
-    encryptionService.decrypt(awsConfig, awsEncryptedDataDetails, false);
-    encryptionService.decrypt(spotInstConfig, spotinstEncryptedDataDetails, false);
+    encryptionService.decrypt(awsConfig, awsEncryptedDataDetails, true);
+    encryptionService.decrypt(spotInstConfig, spotinstEncryptedDataDetails, true);
 
     SpotInstListElastigroupInstancesParameters params = SpotInstListElastigroupInstancesParameters.builder()
                                                             .elastigroupId(taskParams.getElastigroupId())

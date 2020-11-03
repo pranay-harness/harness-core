@@ -400,7 +400,7 @@ public class AzureHelperServiceTest extends WingsBaseTest {
     doReturn(Response.success(credentials)).when(aksGetCredentialsCall).execute();
 
     KubernetesConfig clusterConfig = spyOnAzureHelperService.getKubernetesClusterConfig(
-        azureConfig, emptyList(), "subscriptionId", "resourceGroup", "clusterName", "namespace");
+        azureConfig, emptyList(), "subscriptionId", "resourceGroup", "clusterName", "namespace", false);
     assertThat(clusterConfig.getMasterUrl()).isEqualTo("https://master-url");
     assertThat(clusterConfig.getCaCert()).isEqualTo("certificate-authority-data".toCharArray());
     assertThat(clusterConfig.getUsername()).isEqualTo("admin".toCharArray());

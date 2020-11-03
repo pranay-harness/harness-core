@@ -24,7 +24,7 @@ public class HarnessKubernetesClientFactory implements KubernetesClientFactory {
 
   @Override
   public KubernetesClient newKubernetesClient(K8sClusterConfig k8sClusterConfig) {
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
     kubernetesConfig.setMasterUrl(modifyMasterUrl(kubernetesConfig.getMasterUrl()));
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
   }

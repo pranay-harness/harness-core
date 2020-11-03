@@ -152,7 +152,7 @@ public class ContainerServiceTest extends WingsBaseTest {
                                           .withLabels(ImmutableMap.of("app", "MyApp"))
                                           .endMetadata()
                                           .build();
-    when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default"))
+    when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default", false))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn((List) singletonList(replicationController));
@@ -181,8 +181,9 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(awsClusterService.getServices(
              Regions.US_EAST_1.getName(), awsSettingAttribute, Collections.emptyList(), CLUSTER_NAME))
         .thenReturn(singletonList(ecsService));
-    when(awsHelperService.validateAndGetAwsConfig(eq(awsSettingAttribute), anyObject())).thenReturn(awsConfig);
-    when(awsHelperService.listTasks(eq("us-east-1"), eq(awsConfig), anyObject(), anyObject()))
+    when(awsHelperService.validateAndGetAwsConfig(eq(awsSettingAttribute), anyObject(), eq(false)))
+        .thenReturn(awsConfig);
+    when(awsHelperService.listTasks(eq("us-east-1"), eq(awsConfig), anyObject(), anyObject(), eq(false)))
         .thenReturn(listTasksResult);
     when(listTasksResult.getTaskArns()).thenReturn(emptyList());
   }
@@ -191,7 +192,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Gcp() {
-    List<ContainerInfo> result = containerService.getContainerInfos(gcpParams);
+    List<ContainerInfo> result = containerService.getContainerInfos(gcpParams, false);
 
     assertThat(result.size()).isEqualTo(1);
   }
@@ -199,7 +200,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Aws() {
-    List<ContainerInfo> result = containerService.getContainerInfos(awsParams);
+    List<ContainerInfo> result = containerService.getContainerInfos(awsParams, false);
 
     assertThat(result.size()).isEqualTo(0);
   }
@@ -207,7 +208,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_DirectKube() {
-    List<ContainerInfo> result = containerService.getContainerInfos(kubernetesConfigParams);
+    List<ContainerInfo> result = containerService.getContainerInfos(kubernetesConfigParams, false);
 
     assertThat(result.size()).isEqualTo(1);
   }

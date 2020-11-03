@@ -31,7 +31,8 @@ import java.util.List;
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync) {
     if (!(pcfCommandRequest instanceof PcfInstanceSyncRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfInstanceSyncRequest"));
     }
@@ -45,7 +46,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
     try {
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-      encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails, isInstanceSync);
 
       PcfInstanceSyncRequest pcfInstanceSyncRequest = (PcfInstanceSyncRequest) pcfCommandRequest;
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()

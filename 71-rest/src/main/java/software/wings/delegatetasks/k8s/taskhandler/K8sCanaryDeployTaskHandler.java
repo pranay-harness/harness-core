@@ -203,8 +203,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
-    kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sCanaryDeployTaskParameters.getK8sClusterConfig());
+    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sCanaryDeployTaskParameters.getK8sClusterConfig(), false);
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 

@@ -62,7 +62,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace,
       Map<String, String> params) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -148,7 +148,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public boolean deleteCluster(SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       String locationClusterName) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -202,15 +202,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig getCluster(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace) {
+      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace,
+      boolean isInstanceSync) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    return getCluster(gcpConfig, encryptedDataDetails, locationClusterName, namespace);
+    return getCluster(gcpConfig, encryptedDataDetails, locationClusterName, namespace, isInstanceSync);
   }
 
   @Override
   public KubernetesConfig getCluster(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String locationClusterName, String namespace) {
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+      String locationClusterName, String namespace, boolean isInstanceSync) {
+    Container gkeContainerService =
+        gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, isInstanceSync);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -247,7 +249,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public List<String> listClusters(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     try {
       ListClustersResponse response = gkeContainerService.projects()
@@ -275,7 +277,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId,
       boolean enabled, int min, int max) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -319,7 +321,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public NodePoolAutoscaling getNodePoolAutoscaling(SettingAttribute computeProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];

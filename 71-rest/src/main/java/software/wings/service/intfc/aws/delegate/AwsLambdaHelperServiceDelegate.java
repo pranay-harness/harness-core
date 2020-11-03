@@ -14,5 +14,6 @@ public interface AwsLambdaHelperServiceDelegate {
   AwsLambdaExecuteWfResponse executeWf(AwsLambdaExecuteWfRequest request, ExecutionLogCallback logCallback);
   AwsLambdaExecuteFunctionResponse executeFunction(AwsLambdaExecuteFunctionRequest request);
   AwsLambdaFunctionResponse getLambdaFunctions(AwsLambdaFunctionRequest request);
-  AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request);
+
+  AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request, boolean isInstanceSync);
 }

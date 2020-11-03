@@ -57,7 +57,7 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, List<Filter> filters) {
     try {
       final List<Instance> instances =
-          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptedDataDetails, region, filters);
+          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptedDataDetails, region, filters, true);
       return AwsEc2ListInstancesResponse.builder()
           .instances(instances)
           .executionStatus(ExecutionStatus.SUCCESS)

@@ -54,7 +54,8 @@ import java.util.List;
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync) {
     if (!(pcfCommandRequest instanceof PcfCommandRollbackRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRollbackRequest"));

@@ -24,12 +24,15 @@ import java.util.List;
 public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * Performs validation of PCF config while adding PCF cloud provider
+   *
    * @param pcfCommandRequest
+   * @param isInstanceSync
    * @return
    */
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync) {
     if (!(pcfCommandRequest instanceof PcfInfraMappingDataRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfInfraMappingDataRequest"));

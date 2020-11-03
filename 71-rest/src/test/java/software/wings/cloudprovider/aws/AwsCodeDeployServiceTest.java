@@ -112,7 +112,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListDeploymentInstances() {
-    doReturn(AwsConfig.builder().build()).when(awsHelperService).validateAndGetAwsConfig(any(), any());
+    doReturn(AwsConfig.builder().build()).when(awsHelperService).validateAndGetAwsConfig(any(), any(), false);
 
     ListDeploymentInstancesResult listDeploymentInstancesResult = new ListDeploymentInstancesResult();
     listDeploymentInstancesResult.setInstancesList(Collections.EMPTY_LIST);

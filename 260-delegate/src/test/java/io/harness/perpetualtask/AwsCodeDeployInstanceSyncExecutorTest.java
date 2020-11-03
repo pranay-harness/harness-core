@@ -65,7 +65,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
     doReturn(singletonList(new Instance()))
         .when(ec2ServiceDelegate)
         .listEc2Instances(
-            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString(), anyListOf(Filter.class));
+            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString(), anyListOf(Filter.class), eq(true));
 
     doReturn(retrofit2.Response.success("success")).when(call).execute();
   }
@@ -85,8 +85,8 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), perpetualTaskParams, Instant.now());
 
     verify(ec2ServiceDelegate, times(1))
-        .listEc2Instances(
-            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq("us-east-1"), anyListOf(Filter.class));
+        .listEc2Instances(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq("us-east-1"),
+            anyListOf(Filter.class), eq(true));
     verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
     verifySuccessResponse(perpetualTaskResponse, captor.getValue());
 
@@ -119,14 +119,14 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doThrow(new InvalidRequestException("Invalid deployment id"))
         .when(ec2ServiceDelegate)
-        .listEc2Instances(
-            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq("us-east-1"), anyListOf(Filter.class));
+        .listEc2Instances(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq("us-east-1"),
+            anyListOf(Filter.class), eq(true));
     PerpetualTaskResponse perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), perpetualTaskParams, Instant.now());
 
     verify(ec2ServiceDelegate, times(1))
         .listEc2Instances(
-            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString(), anyListOf(Filter.class));
+            any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString(), anyListOf(Filter.class), eq(true));
     verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
     verifyFailureResponse(perpetualTaskResponse, captor.getValue());
   }

@@ -28,12 +28,12 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   public void testGetGoogleCredentialWithEmptyFile() throws IOException {
     GcpConfig gcpConfig = GcpConfig.builder().build();
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>()))
+        .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>(), false))
         .withMessageContaining("Empty service key");
 
     gcpConfig.setServiceAccountKeyFileContent(new char[] {});
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>()))
+        .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>(), false))
         .withMessageContaining("Empty service key");
   }
 }

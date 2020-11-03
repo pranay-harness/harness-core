@@ -19,10 +19,13 @@ import java.util.Map;
 public interface AwsAsgHelperServiceDelegate {
   List<String> listAutoScalingGroupNames(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<String> listAutoScalingGroupInstanceIds(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
-  List<Instance> listAutoScalingGroupInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
+
+  List<String> listAutoScalingGroupInstanceIds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, boolean isInstanceSync);
+
+  List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, boolean isInstanceSync);
+
   AutoScalingGroup getAutoScalingGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
   LaunchConfiguration getLaunchConfiguration(

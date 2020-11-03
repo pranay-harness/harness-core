@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -53,7 +54,7 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
   public void executeTaskInternalSuccess() throws Exception {
     doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
 
     List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
     doReturn(podsList)
@@ -72,7 +73,7 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
   public void executeTaskInternalNoPods() throws Exception {
     doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
 
     k8sInstanceSyncTaskHandler.executeTaskInternal(getTaskParameters(), K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
@@ -88,7 +89,7 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
     taskParameters.setDeprecateFabric8Enabled(false);
     doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
 
     List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
     doReturn(podsList)

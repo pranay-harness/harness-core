@@ -90,7 +90,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
     verify(encryptionService, times(2))
-        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(true));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))
@@ -125,7 +125,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
     verify(encryptionService, times(2))
-        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(true));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))
@@ -151,7 +151,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
         PerpetualTaskId.newBuilder().setId("task-id").build(), getPerpetualTaskParams(), Instant.now());
 
     verify(encryptionService, times(2))
-        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false));
+        .decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(true));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
     verify(delegateAgentManagerClient, times(1))

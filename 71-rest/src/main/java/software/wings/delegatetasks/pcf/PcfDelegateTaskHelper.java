@@ -20,10 +20,10 @@ public class PcfDelegateTaskHelper {
   @Inject private Map<String, PcfCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
 
   public PcfCommandExecutionResponse getPcfCommandExecutionResponse(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     try {
       return commandTaskTypeToTaskHandlerMap.get(pcfCommandRequest.getPcfCommandType().name())
-          .executeTask(pcfCommandRequest, encryptedDataDetails);
+          .executeTask(pcfCommandRequest, encryptedDataDetails, isInstanceSync);
     } catch (Exception ex) {
       log.error("Exception in processing PCF task [{}]", pcfCommandRequest.toString(), ex);
       return PcfCommandExecutionResponse.builder()

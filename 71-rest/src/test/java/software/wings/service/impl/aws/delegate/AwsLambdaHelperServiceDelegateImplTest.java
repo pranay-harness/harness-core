@@ -376,7 +376,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest = AwsLambdaDetailsRequest.builder().loadAliases(true).build();
     doNothing().when(mockTracker).trackLambdaCall(anyString());
     final AwsLambdaDetailsResponse functionDetails =
-        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
+        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false);
     assertThat(functionDetails.getLambdaDetails().getLastModified()).isNotNull();
     assertThat(functionDetails.getLambdaDetails().getTags()).containsKeys("key");
     assertThat(functionDetails.getLambdaDetails().getAliases()).contains("alias");
@@ -398,18 +398,18 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
 
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest = AwsLambdaDetailsRequest.builder().loadAliases(true).build();
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest));
+        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false));
 
     doThrow(new AmazonClientException("client exception")).when(mockClient).getFunction(any(GetFunctionRequest.class));
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest));
+        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false));
 
     doThrow(new ResourceNotFoundException("resource not found"))
         .when(mockClient)
         .getFunction(any(GetFunctionRequest.class));
     doNothing().when(mockTracker).trackLambdaCall(anyString());
     final AwsLambdaDetailsResponse functionDetails =
-        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
+        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false);
     assertThat(functionDetails.getLambdaDetails()).isNull();
   }
 

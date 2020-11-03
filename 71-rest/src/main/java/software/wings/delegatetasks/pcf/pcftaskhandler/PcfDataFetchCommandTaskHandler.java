@@ -39,7 +39,8 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
    */
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync) {
     if (!(pcfCommandRequest instanceof PcfInfraMappingDataRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfInfraMappingDataRequest"));

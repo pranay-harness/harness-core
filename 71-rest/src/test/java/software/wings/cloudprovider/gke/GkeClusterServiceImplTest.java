@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -116,7 +117,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gcpHelperService.getGkeContainerService(any(), any())).thenReturn(container);
+    when(gcpHelperService.getGkeContainerService(any(), any(), anyBoolean())).thenReturn(container);
     when(gcpHelperService.getSleepIntervalSecs()).thenReturn(0);
     when(gcpHelperService.getTimeoutMins()).thenReturn(1);
     when(container.projects()).thenReturn(projects);
@@ -271,7 +272,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
     KubernetesConfig config =
-        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default", false);
 
     verify(clusters).get(anyString());
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -286,7 +287,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenThrow(notFoundException);
 
     try {
-      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default", false);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       // Expected
@@ -302,7 +303,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenThrow(new IOException());
 
     try {
-      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default", false);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       // Expected
@@ -323,7 +324,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
             googleJsonError));
 
     try {
-      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default", false);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       // Expected

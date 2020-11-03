@@ -51,11 +51,12 @@ public class GcpHelperService {
    *
    * @return the gke container service
    */
-  public Container getGkeContainerService(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public Container getGkeContainerService(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails, isInstanceSync);
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       log.error("Security exception getting Google container service", e);
@@ -77,7 +78,7 @@ public class GcpHelperService {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails, false);
       return new Storage.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       log.error("Security exception getting Google storage service", e);
@@ -94,7 +95,7 @@ public class GcpHelperService {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails, false);
       return new Compute.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       log.error("Security exception getting Google storage service", e);
@@ -112,7 +113,7 @@ public class GcpHelperService {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails, false);
       return new Monitoring.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       log.error("Security exception getting Google storage service", e);
@@ -130,7 +131,7 @@ public class GcpHelperService {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails, false);
       return new Logging.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       log.error("Security exception getting Google storage service", e);
@@ -143,10 +144,10 @@ public class GcpHelperService {
     }
   }
 
-  public GoogleCredential getGoogleCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public GoogleCredential getGoogleCredential(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) throws IOException {
     if (isNotEmpty(encryptedDataDetails)) {
-      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);
     }
 
     validateServiceAccountKey(gcpConfig);

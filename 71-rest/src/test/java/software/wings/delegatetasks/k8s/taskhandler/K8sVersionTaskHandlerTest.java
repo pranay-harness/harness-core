@@ -131,7 +131,7 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
     final String MASTER_URL = "https://125.19.67.142";
 
     doReturn(Config.fromUrl(MASTER_URL, false)).when(apiClientFactory).getClient(kubernetesConfig);
-    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(k8sClusterConfig);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(k8sClusterConfig, false);
     VersionInfo versionInfo1 = k8sVersionTaskHandler.getK8sVersionInfo(k8sClusterConfig);
   }
 }

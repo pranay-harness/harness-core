@@ -95,8 +95,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   boolean init(K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..");
 
-    kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sTrafficSplitTaskParameters.getK8sClusterConfig());
+    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sTrafficSplitTaskParameters.getK8sClusterConfig(), false);
 
     try {
       boolean success;
@@ -181,8 +181,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
       K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Applying..");
 
-    kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sTrafficSplitTaskParameters.getK8sClusterConfig());
+    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sTrafficSplitTaskParameters.getK8sClusterConfig(), false);
 
     try {
       updateVirtualServiceWithDestinationWeights(k8sTrafficSplitTaskParameters, executionLogCallback);

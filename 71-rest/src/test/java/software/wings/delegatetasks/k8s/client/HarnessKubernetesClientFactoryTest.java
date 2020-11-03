@@ -7,6 +7,8 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -90,12 +92,12 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
     String masterUrl = "https://int-capi-rancher.cncpl.us/k8s/clusters/c-pv9p9";
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().masterUrl(masterUrl).build();
     K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
 
     harnessKubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
     verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig, eq(anyBoolean()));
     assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9");
   }
 
@@ -108,7 +110,7 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
     K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
     KubernetesClient client = new DefaultKubernetesClient();
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(client);
 
@@ -117,7 +119,7 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
     harnessKubernetesClientFactory.newAdaptedClient(k8sClusterConfig, ExtensionsAPIGroupClient.class);
 
     verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(eq(k8sClusterConfig), anyBoolean());
   }
 
   @Test
@@ -127,14 +129,14 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig =
         KubernetesConfig.builder().masterUrl("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9").build();
     K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
 
     try {
       harnessKubernetesClientFactory.newAdaptedClient(k8sClusterConfig, GenericKubernetesClient.class);
     } catch (Exception ex) {
       verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
-      verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
+      verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(eq(k8sClusterConfig), anyBoolean());
       assertThat(ex).isInstanceOf(K8sClusterException.class);
     }
   }

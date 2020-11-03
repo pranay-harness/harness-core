@@ -87,7 +87,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         K8sClusterConfig k8sClusterConfig =
             (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
 
-        KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+        KubernetesConfig kubernetesConfig =
+            containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
 
         DefaultK8sMetricsClient k8sMetricsClient =
             new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));

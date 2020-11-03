@@ -138,11 +138,11 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(describeAutoScalingGroupsResult).when(mockClient).describeAutoScalingGroups(any());
     doReturn(singletonList(new com.amazonaws.services.ec2.model.Instance().withInstanceId("id1")))
         .when(mockAwsEc2HelperServiceDelegate)
-        .listEc2Instances(any(), anyList(), anyList(), anyString());
+        .listEc2Instances(any(), anyList(), anyList(), anyString(), eq(false));
     doNothing().when(mockTracker).trackASGCall(anyString());
     List<com.amazonaws.services.ec2.model.Instance> instanceList =
         awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
-            AwsConfig.builder().build(), emptyList(), "us-east-1", "name");
+            AwsConfig.builder().build(), emptyList(), "us-east-1", "name", false);
     assertThat(instanceList).isNotNull();
     assertThat(instanceList.size()).isEqualTo(1);
     assertThat(instanceList.get(0).getInstanceId()).isEqualTo("id1");
@@ -401,7 +401,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(singletonList(new Instance().withState(new InstanceState().withName("warming"))))
         .doReturn(singletonList(new Instance().withState(new InstanceState().withName("running"))))
         .when(mockAwsEc2HelperServiceDelegate)
-        .listEc2Instances(any(), anyList(), anyList(), anyString());
+        .listEc2Instances(any(), anyList(), anyList(), anyString(), anyBoolean());
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockTracker).trackASGCall(anyString());

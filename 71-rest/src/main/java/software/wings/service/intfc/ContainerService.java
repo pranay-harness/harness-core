@@ -16,7 +16,7 @@ public interface ContainerService {
   Map<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams);
 
   @DelegateTaskType(TaskType.CONTAINER_INFO)
-  List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);
+  List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams, boolean isInstanceSync);
 
   @DelegateTaskType(TaskType.CONTROLLER_NAMES_WITH_LABELS)
   Set<String> getControllerNames(ContainerServiceParams containerServiceParams, Map<String, String> labels);

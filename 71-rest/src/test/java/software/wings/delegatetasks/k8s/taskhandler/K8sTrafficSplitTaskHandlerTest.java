@@ -87,7 +87,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     on(k8sTrafficSplitTaskHandler).set("kubernetesConfig", kubernetesConfig);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
         .thenReturn(releaseHistory.getAsYaml());
@@ -126,7 +126,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
         K8sTrafficSplitTaskParameters.builder().virtualServiceName("customVirtualServiceName").build();
 
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(kubernetesContainerService, times(1)).getIstioVirtualService(any(KubernetesConfig.class), anyString());
     assertThat(status).isFalse();
   }
@@ -141,7 +141,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse response = handler.executeTaskInternal(
         K8sTrafficSplitTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(handler, times(1)).init(any(K8sTrafficSplitTaskParameters.class), any(ExecutionLogCallback.class));
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(kubernetesContainerService, times(1))
         .createOrReplaceIstioResource(any(KubernetesConfig.class), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
@@ -160,7 +160,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
         .thenReturn(null);
     k8sTrafficSplitTaskHandler.executeTaskInternal(k8sTrafficSplitTaskParams, K8sDelegateTaskParams.builder().build());
-    verify(containerDeploymentDelegateHelper, times(2)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(2)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), eq(false));
     verify(kubernetesContainerService, times(1))
@@ -189,7 +189,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyString()))
         .thenReturn(istioVirtualService);
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), eq(false));
     verify(kubernetesContainerService, times(2)).getIstioVirtualService(any(KubernetesConfig.class), anyString());
@@ -213,7 +213,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     on(k8sTrafficSplitTaskHandler).set("kubernetesConfig", kubernetesConfig);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
         .thenReturn(releaseHistory.getAsYaml());

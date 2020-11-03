@@ -26,10 +26,13 @@ public interface AwsEc2HelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds);
   Set<String> listTags(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String resourceType);
-  List<Instance> listEc2Instances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters);
-  List<Instance> listEc2Instances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<String> instanceIds, String region);
+
+  List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      List<Filter> filters, boolean isInstanceSync);
+
+  List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<String> instanceIds, String region, boolean isInstanceSync);
+
   Set<String> listBlockDeviceNamesOfAmi(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId);
 

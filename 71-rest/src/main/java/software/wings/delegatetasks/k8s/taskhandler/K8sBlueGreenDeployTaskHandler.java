@@ -214,8 +214,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
-    kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sBlueGreenDeployTaskParameters.getK8sClusterConfig());
+    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sBlueGreenDeployTaskParameters.getK8sClusterConfig(), false);
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
     String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,

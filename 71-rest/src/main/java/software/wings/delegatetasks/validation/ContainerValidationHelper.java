@@ -111,11 +111,11 @@ public class ContainerValidationHelper {
     String resourceGroup = containerServiceParams.getResourceGroup();
     List<EncryptedDataDetail> edd = containerServiceParams.getEncryptionDetails();
     if (value instanceof GcpConfig) {
-      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace);
+      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace, false);
     } else if (value instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) value;
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
-          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
+          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace, false);
     } else if (value instanceof KubernetesClusterConfig) {
       return ((KubernetesClusterConfig) value).getMasterUrl();
     } else {

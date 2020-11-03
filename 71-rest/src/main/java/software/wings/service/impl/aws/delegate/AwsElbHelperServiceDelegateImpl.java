@@ -340,8 +340,8 @@ public class AwsElbHelperServiceDelegateImpl
       timeLimiter.callWithTimeout(() -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
-        List<String> instanceIds =
-            awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
+        List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
+            awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
           if (allInstancesDeRegistered(amazonElasticLoadBalancingClient, instanceIds, classicLB, logCallback)) {
             logCallback.saveExecutionLog(format("All targets  de  registered for Asg: [%s]", asgName));
@@ -390,8 +390,8 @@ public class AwsElbHelperServiceDelegateImpl
       timeLimiter.callWithTimeout(() -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
-        List<String> instanceIds =
-            awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
+        List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
+            awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
           if (allInstancesRegistered(amazonElasticLoadBalancingClient, instanceIds, classicLB, logCallback)) {
             logCallback.saveExecutionLog(format("All targets registered for Asg: [%s]", asgName));
@@ -443,8 +443,8 @@ public class AwsElbHelperServiceDelegateImpl
       timeLimiter.callWithTimeout(() -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-        List<String> instanceIds =
-            awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
+        List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
+            awsConfig, encryptionDetails, region, asgName, false);
         while (true) {
           if (allTargetsDeRegistered(amazonElasticLoadBalancingClient, instanceIds, targetGroupArn, logCallback)) {
             logCallback.saveExecutionLog(format("All targets de-registered for Asg: [%s]", asgName));
@@ -496,7 +496,7 @@ public class AwsElbHelperServiceDelegateImpl
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         while (true) {
           List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
-              awsConfig, encryptionDetails, region, asgName);
+              awsConfig, encryptionDetails, region, asgName, false);
           if (allTargetsRegistered(amazonElasticLoadBalancingClient, instanceIds, targetGroupArn, logCallback)) {
             logCallback.saveExecutionLog(format("All targets registered for Asg: [%s]", asgName));
             return true;

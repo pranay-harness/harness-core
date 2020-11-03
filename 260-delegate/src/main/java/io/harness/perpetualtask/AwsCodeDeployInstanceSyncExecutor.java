@@ -60,7 +60,7 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
       String region, List<Filter> filters, AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       List<Instance> ec2InstancesList =
-          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptedDataDetails, region, filters);
+          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptedDataDetails, region, filters, true);
 
       return AwsCodeDeployListDeploymentInstancesResponse.builder()
           .executionStatus(ExecutionStatus.SUCCESS)

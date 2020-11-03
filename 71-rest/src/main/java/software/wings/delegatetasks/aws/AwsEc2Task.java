@@ -88,7 +88,7 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
         case LIST_INSTANCES: {
           List<Instance> instances = ec2ServiceDelegate.listEc2Instances(request.getAwsConfig(),
               request.getEncryptionDetails(), ((AwsEc2ListInstancesRequest) request).getRegion(),
-              ((AwsEc2ListInstancesRequest) request).getFilters());
+              ((AwsEc2ListInstancesRequest) request).getFilters(), false);
           return AwsEc2ListInstancesResponse.builder().instances(instances).executionStatus(SUCCESS).build();
         }
         default: {
