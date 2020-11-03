@@ -192,7 +192,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     try {
       copyFilesToWorkingDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), workingDir);
     } catch (Exception ex) {
-      log.error("Exception in processing git copying files to provisioner specific directory", ex);
+      log.error("Exception in copying files to provisioner specific directory", ex);
+      FileUtils.deleteQuietly(new File(workingDir));
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(ExceptionUtils.getMessage(ex))
@@ -471,6 +472,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
+      FileUtils.deleteQuietly(new File(workingDir));
     }
   }
 
@@ -547,9 +549,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {
     File dest = new File(destinationDir);
     File src = new File(sourceDir);
-    if (FileIo.checkIfFileExist(dest.getPath())) {
-      FileUtils.cleanDirectory(dest);
-    }
+    FileUtils.deleteDirectory(dest);
     FileUtils.copyDirectory(src, dest);
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
