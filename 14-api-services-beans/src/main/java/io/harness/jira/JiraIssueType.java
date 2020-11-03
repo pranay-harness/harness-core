@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
+import net.rcarz.jiraclient.IssueType;
 import net.sf.json.JSONObject;
 
 import java.util.HashMap;
@@ -26,6 +27,19 @@ public class JiraIssueType {
     this.description = data.getString("description");
     this.isSubTask = data.getBoolean("subtask");
     JSONObject fields = data.getJSONObject("fields");
+    fields.keySet().forEach(keyStr -> {
+      String kk = (String) keyStr;
+      JSONObject fieldData = fields.getJSONObject(kk);
+      this.jiraFields.put(kk, new JiraField(fieldData, kk));
+    });
+  }
+
+  JiraIssueType(IssueType issueType) {
+    this.id = issueType.getId();
+    this.name = issueType.getName();
+    this.description = issueType.getDescription();
+    this.isSubTask = issueType.isSubtask();
+    JSONObject fields = issueType.getFields();
     fields.keySet().forEach(keyStr -> {
       String kk = (String) keyStr;
       JSONObject fieldData = fields.getJSONObject(kk);

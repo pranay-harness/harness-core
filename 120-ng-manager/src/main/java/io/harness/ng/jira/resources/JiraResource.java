@@ -6,6 +6,8 @@ import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.JiraProjectDTO;
+import io.harness.cdng.jira.resources.response.JiraProjectResponse;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -18,6 +20,7 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -85,5 +88,18 @@ public class JiraResource {
     JiraIssueDTO jiraIssueDTO =
         jiraResourceService.fetchIssue(connectorRef, orgIdentifier, projectIdentifier, jiraIssueId);
     return ResponseDTO.newResponse(jiraIssueDTO);
+  }
+
+  @GET
+  @Path("get-projects")
+  @ApiOperation(value = "Get jira projects", nickname = "getJiraProjects")
+  public ResponseDTO<JiraProjectResponse> getProjects(@QueryParam("connectorRef") String jiraConnectorIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    List<JiraProjectDTO> jiraProjectDTOList =
+        jiraResourceService.getProjects(connectorRef, orgIdentifier, projectIdentifier);
+    return ResponseDTO.newResponse(JiraProjectResponse.builder().jiraProjects(jiraProjectDTOList).build());
   }
 }

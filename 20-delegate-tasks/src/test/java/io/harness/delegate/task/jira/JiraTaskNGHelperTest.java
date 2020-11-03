@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
@@ -108,6 +109,32 @@ public class JiraTaskNGHelperTest {
 
     assertThat(jiraTaskResponse).isNotNull();
     assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetJiraTaskResponseGetProjects() {
+    final String issueId = "issueID";
+    final String issueType = "Bug";
+    JiraTaskNGResponse mockedResponse = JiraTaskNGResponse.builder()
+                                            .executionStatus(CommandExecutionStatus.SUCCESS)
+                                            .projects(new ArrayList<>())
+                                            .build();
+    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
+                                                    .jiraAction(JiraAction.GET_PROJECTS)
+                                                    .issueId(issueId)
+                                                    .issueType(issueType)
+                                                    .build();
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(jiraTaskNGHandler.getProjects(jiraTaskNGParameters)).thenReturn(mockedResponse);
+
+    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
+
+    assertThat(jiraTaskResponse).isNotNull();
+    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(jiraTaskResponse.getProjects()).isNotNull();
   }
 
   @Test

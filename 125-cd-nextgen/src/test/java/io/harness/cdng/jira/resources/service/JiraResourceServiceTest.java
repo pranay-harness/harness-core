@@ -14,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.JiraProjectDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -36,6 +37,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class JiraResourceServiceTest extends CategoryTest {
@@ -224,6 +227,41 @@ public class JiraResourceServiceTest extends CategoryTest {
 
     assertThatThrownBy(
         () -> jiraResourceService.fetchIssue(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, issueKey))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetProjects() {
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.SUCCESS)
+                        .projects(new ArrayList<>())
+                        .build());
+
+    List<JiraProjectDTO> projects = jiraResourceService.getProjects(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    assertThat(projects).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetProjectsDelegateError() {
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(ErrorNotifyResponseData.builder().errorMessage("Error").build());
+
+    assertThatThrownBy(() -> jiraResourceService.getProjects(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER))
         .isInstanceOf(HarnessJiraException.class);
   }
 

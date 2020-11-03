@@ -11,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
+import io.harness.jira.JiraProjectData;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
@@ -22,6 +23,7 @@ import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.TimeTracking;
 import net.rcarz.jiraclient.Transition;
+import net.rcarz.jiraclient.Project;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -226,6 +228,22 @@ public class JiraTaskNGHandler {
           "Unable to fetch Jira Issue for Id: " + jiraTaskNGParameters.getIssueId() + "  " + extractResponseMessage(e);
       log.error(error, e);
       return JiraTaskNGResponse.builder().executionStatus(FAILURE).errorMessage(error).build();
+    }
+  }
+
+  public JiraTaskNGResponse getProjects(JiraTaskNGParameters jiraTaskNGParameters) {
+    try {
+      JiraClient jiraClient = getJiraClient(jiraTaskNGParameters);
+      List<Project> projects = jiraClient.getProjects();
+      List<JiraProjectData> jiraProjectDataList = new ArrayList<>();
+      for (Project project : projects) {
+        jiraProjectDataList.add(new JiraProjectData(project));
+      }
+      return JiraTaskNGResponse.builder().executionStatus(SUCCESS).projects(jiraProjectDataList).build();
+    } catch (JiraException e) {
+      String errorMessage = "Failed to fetch projects during credential validation.";
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
     }
   }
 

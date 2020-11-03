@@ -250,6 +250,31 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetProjects() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    when(jiraClient.getProjects()).thenReturn(new ArrayList<>());
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.getProjects(createJiraTaskParametersBuilder().build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(jiraTaskNGResponse.getProjects()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetProjectsError() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    when(jiraClient.getProjects()).thenThrow(new JiraException("Exception"));
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.getProjects(createJiraTaskParametersBuilder().build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
   private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {
     JiraConnectorDTO jiraConnectorDTO =
         JiraConnectorDTO.builder()
