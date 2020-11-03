@@ -2,6 +2,7 @@ package io.harness.ngpipeline.orchestration;
 
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
+import io.harness.execution.status.Status;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
@@ -17,7 +18,12 @@ public class StepUtils {
     StepResponseBuilder responseBuilder = StepResponse.builder();
     StepResponseNotifyData statusNotifyResponseData =
         (StepResponseNotifyData) responseDataMap.values().iterator().next();
-    responseBuilder.status(statusNotifyResponseData.getStatus());
+    // If suspended, then the final execution should be Success
+    if (statusNotifyResponseData.getStatus() == Status.SUSPENDED) {
+      responseBuilder.status(Status.SUCCEEDED);
+    } else {
+      responseBuilder.status(statusNotifyResponseData.getStatus());
+    }
     return responseBuilder.build();
   }
 

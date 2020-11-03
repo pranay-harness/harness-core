@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
@@ -67,6 +68,10 @@ public class RollbackOptionalChildChainStep
   public StepResponse finalizeExecution(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
+    // If status is suspended, then we should mark the execution as success
+    if (notifyData.getStatus() == Status.SUSPENDED) {
+      return StepResponse.builder().status(Status.SUCCEEDED).failureInfo(notifyData.getFailureInfo()).build();
+    }
     return StepResponse.builder().status(notifyData.getStatus()).failureInfo(notifyData.getFailureInfo()).build();
   }
 }

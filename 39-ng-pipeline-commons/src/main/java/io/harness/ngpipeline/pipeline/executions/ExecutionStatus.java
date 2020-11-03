@@ -31,7 +31,7 @@ public enum ExecutionStatus {
     this.engineStatuses = engineStatuses;
     this.displayName = displayName;
   }
-  static final Set<ExecutionStatus> terminalStatuses = Sets.newHashSet(FAILED, SUCCESS);
+  static final Set<ExecutionStatus> terminalStatuses = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
 
   @JsonCreator
   public static ExecutionStatus getExecutionStatus(@JsonProperty("type") String displayName) {
