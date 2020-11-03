@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -1244,6 +1245,14 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     return UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
   }
 
+  public static UsageRestrictions getUsageRestrictionsForAppIdAndEnvId(Set<String> appIds, Set<String> envIds) {
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(appIds).build();
+    HashSet<String> envFilters = newHashSet(SELECTED);
+    EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilters).ids(envIds).build();
+    AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    return UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
+  }
+
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
@@ -1553,6 +1562,128 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     } finally {
       UserThreadLocal.unset();
     }
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void getCommonRestrictionsTest() {
+    // test 1
+    UsageRestrictions usageRestrictions1 = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet("PROD"));
+    UsageRestrictions usageRestrictions2 = getUsageRestrictionsForAppIdAndEnvId("111", "222");
+
+    doReturn(true).when(usageRestrictionsService).isEnvironmentOfType("222", EnvironmentType.PROD);
+
+    UsageRestrictions commonRestrictions1 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions1, usageRestrictions2);
+    assertThat(commonRestrictions1).isEqualTo(usageRestrictions2);
+
+    // test 2
+    UsageRestrictions usageRestrictions3 =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "333"), newHashSet("222", "555"));
+    UsageRestrictions usageRestrictions4 =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "444"), newHashSet("222", "666"));
+
+    UsageRestrictions commonRestrictions2 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions3, usageRestrictions4);
+    assertThat(commonRestrictions2).isEqualTo(getUsageRestrictionsForAppIdAndEnvId("111", "222"));
+
+    // test 3
+    UsageRestrictions usageRestrictions5 = getUsageRestrictionsForAppIdAndEnvId(newHashSet("111"), newHashSet("333"));
+    UsageRestrictions usageRestrictions6 = getUsageRestrictionsForAppIdAndEnvId(newHashSet("111"), newHashSet("222"));
+
+    UsageRestrictions commonRestrictions3 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions5, usageRestrictions6);
+    assertThat(commonRestrictions3.getAppEnvRestrictions().size()).isEqualTo(0);
+
+    // test 4
+    UsageRestrictions usageRestrictions7 = getUsageRestrictionsForAppIdAndEnvId(newHashSet("111"), newHashSet("333"));
+    UsageRestrictions usageRestrictions8 = getUsageRestrictionsForAppIdAndEnvId(newHashSet("222"), newHashSet("333"));
+
+    UsageRestrictions commonRestrictions4 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions7, usageRestrictions8);
+    assertThat(commonRestrictions4.getAppEnvRestrictions().size()).isEqualTo(0);
+
+    // test 5
+    UsageRestrictions usageRestrictions9 = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet("PROD", "NON_PROD"));
+    UsageRestrictions usageRestrictions10 = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet("PROD", "NON_PROD"));
+
+    UsageRestrictions commonRestrictions5 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions9, usageRestrictions10);
+    assertThat(commonRestrictions5).isEqualTo(usageRestrictions9);
+
+    // test 6
+    UsageRestrictions usageRestrictions11 = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet("NON_PROD"));
+    UsageRestrictions usageRestrictions12 = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet("PROD"));
+
+    UsageRestrictions commonRestrictions6 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions11, usageRestrictions12);
+    assertThat(commonRestrictions6.getAppEnvRestrictions().size()).isEqualTo(0);
+
+    // test 7
+    UsageRestrictions usageRestrictions13 = new UsageRestrictions();
+    usageRestrictions13.setAppEnvRestrictions(
+        newHashSet(getAppEnvRestriction("PROD"), getAppEnvRestriction("NON_PROD")));
+    UsageRestrictions usageRestrictions14 =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "222"), newHashSet("333", "444", "555"));
+
+    doReturn(true).when(usageRestrictionsService).isEnvironmentOfType("333", EnvironmentType.PROD);
+    doReturn(true).when(usageRestrictionsService).isEnvironmentOfType("444", EnvironmentType.NON_PROD);
+
+    UsageRestrictions commonRestrictions7 =
+        usageRestrictionsService.getCommonRestrictions(usageRestrictions13, usageRestrictions14);
+    assertThat(commonRestrictions7.getAppEnvRestrictions()
+                   .stream()
+                   .map(restriction -> restriction.getAppFilter().getFilterType())
+                   .collect(Collectors.toSet()))
+        .isEqualTo(newHashSet("SELECTED"));
+    assertThat(getAppIds(commonRestrictions7)).isEqualTo(newHashSet("111", "222"));
+    assertThat(getEnvIds(commonRestrictions7)).isEqualTo(newHashSet("333", "444"));
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void getCommonRestrictionsDoesntMutateArgumentsTest() {
+    UsageRestrictions usageRestrictions1 =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "222", "333"), newHashSet("555", "777"));
+    UsageRestrictions usageRestrictions2 =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "222", "444"), newHashSet("666", "777"));
+    UsageRestrictions usageRestrictions1_before =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "222", "333"), newHashSet("555", "777"));
+    UsageRestrictions usageRestrictions2_before =
+        getUsageRestrictionsForAppIdAndEnvId(newHashSet("111", "222", "444"), newHashSet("666", "777"));
+
+    usageRestrictionsService.getCommonRestrictions(usageRestrictions1, usageRestrictions2);
+
+    assertThat(usageRestrictions1).isEqualTo(usageRestrictions1_before);
+    assertThat(usageRestrictions2).isEqualTo(usageRestrictions2_before);
+  }
+
+  private Set<String> getAppIds(UsageRestrictions usageRestrictions) {
+    return usageRestrictions.getAppEnvRestrictions()
+        .stream()
+        .map(restriction -> restriction.getAppFilter().getIds())
+        .reduce(new HashSet<>(), (a, b) -> {
+          a.addAll(b);
+          return a;
+        });
+  }
+
+  private Set<String> getEnvIds(UsageRestrictions usageRestrictions) {
+    return usageRestrictions.getAppEnvRestrictions()
+        .stream()
+        .map(restriction -> restriction.getEnvFilter().getIds())
+        .reduce(new HashSet<>(), (a, b) -> {
+          a.addAll(b);
+          return a;
+        });
+  }
+
+  private AppEnvRestriction getAppEnvRestriction(String envType) {
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(envType)).build();
+    return AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
   }
 
   private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin,
