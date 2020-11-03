@@ -134,7 +134,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
-        k8sRollingDeployRollbackTaskParameters.getK8sClusterConfig());
+        k8sRollingDeployRollbackTaskParameters.getK8sClusterConfig(), false);
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 

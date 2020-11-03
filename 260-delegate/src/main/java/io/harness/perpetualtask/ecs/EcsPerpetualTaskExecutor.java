@@ -579,8 +579,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Set<String> instanceIds) {
     List<Instance> instances = new ArrayList<>();
     if (!CollectionUtils.isEmpty(instanceIds)) {
-      instances =
-          ec2ServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, new ArrayList<>(instanceIds), region);
+      instances = ec2ServiceDelegate.listEc2Instances(
+          awsConfig, encryptionDetails, new ArrayList<>(instanceIds), region, false);
       instances = instances.stream().filter(instance -> null != instance.getLaunchTime()).collect(Collectors.toList());
       log.debug("Instances {} ", instances.toString());
     }

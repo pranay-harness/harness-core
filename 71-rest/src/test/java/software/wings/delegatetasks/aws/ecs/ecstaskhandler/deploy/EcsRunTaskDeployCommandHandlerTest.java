@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -113,7 +114,7 @@ public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
         .triggerRunTask(eq(ecsCommandRequest.getRegion()), any(), any(), anyObject());
 
     AwsConfig awsConfig = AwsConfig.builder().build();
-    doReturn(awsConfig).when(mockAwsHelperService).validateAndGetAwsConfig(any(), any());
+    doReturn(awsConfig).when(mockAwsHelperService).validateAndGetAwsConfig(any(), any(), anyBoolean());
 
     EcsCommandExecutionResponse response =
         ecsRunTaskDeployCommandHandler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
@@ -178,7 +179,7 @@ public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
         .triggerRunTask(eq(ecsCommandRequest.getRegion()), any(), any(), anyObject());
 
     AwsConfig awsConfig = AwsConfig.builder().build();
-    doReturn(awsConfig).when(mockAwsHelperService).validateAndGetAwsConfig(any(), any());
+    doReturn(awsConfig).when(mockAwsHelperService).validateAndGetAwsConfig(any(), any(), anyBoolean());
 
     task.setLastStatus(DesiredStatus.STOPPED.name());
 

@@ -219,7 +219,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
                                           .loadAliases(TRUE)
                                           .build();
     try {
-      return awsLambdaHelperServiceDelegate.getFunctionDetails(request);
+      return awsLambdaHelperServiceDelegate.getFunctionDetails(request, true);
     } catch (Exception ex) {
       log.error(String.format(
           "Failed to execute aws function: [%s], exception: %s", taskParams.getFunctionName(), ex.getMessage()));

@@ -292,7 +292,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
         .describeInstances(any());
     doNothing().when(mockTracker).trackEC2Call(anyString());
     List<Instance> instances = awsEc2HelperServiceDelegate.listEc2Instances(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", emptyList());
+        AwsConfig.builder().build(), emptyList(), "us-east-1", emptyList(), false);
     assertThat(instances).isNotNull();
     assertThat(instances.size()).isEqualTo(2);
     assertThat(instances.get(0).getInstanceId()).isEqualTo("id1");
@@ -312,7 +312,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
         .describeInstances(any());
     doNothing().when(mockTracker).trackEC2Call(anyString());
     List<Instance> instances = awsEc2HelperServiceDelegate.listEc2Instances(
-        AwsConfig.builder().build(), emptyList(), singletonList("id1"), "us-east-1");
+        AwsConfig.builder().build(), emptyList(), singletonList("id1"), "us-east-1", false);
     assertThat(instances).isNotNull();
     assertThat(instances.size()).isEqualTo(2);
     assertThat(instances.get(0).getInstanceId()).isEqualTo("id1");

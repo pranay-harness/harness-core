@@ -82,7 +82,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
     doNothing().when(pcfClient).runPcfPluginScript(
         any(PcfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
     PcfRunPluginCommandRequest pcfCommandRequest = getPcfRunPluginCommandRequest();
-    pcfRunPluginCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    pcfRunPluginCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     // verify
     ArgumentCaptor<PcfRunPluginScriptRequestData> argumentCaptor =
@@ -132,7 +132,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   public void testExecuteTaskInternalInvalidArgumentsException() {
     try {
       pcfRunPluginCommandTaskHandler.executeTaskInternal(
-          PcfCommandRollbackRequest.builder().build(), null, executionLogCallback);
+          PcfCommandRollbackRequest.builder().build(), null, executionLogCallback, false);
     } catch (Exception e) {
       assertThatExceptionOfType(InvalidArgumentsException.class);
       InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;

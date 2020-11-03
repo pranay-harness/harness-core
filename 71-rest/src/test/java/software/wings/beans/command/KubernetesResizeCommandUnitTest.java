@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -86,7 +87,8 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    when(gkeClusterService.getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString()))
+    when(gkeClusterService.getCluster(
+             any(SettingAttribute.class), eq(emptyList()), anyString(), anyString(), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.setControllerPodCount(
              eq(kubernetesConfig), eq(CLUSTER_NAME), anyString(), anyInt(), anyInt(), anyInt(), any()))

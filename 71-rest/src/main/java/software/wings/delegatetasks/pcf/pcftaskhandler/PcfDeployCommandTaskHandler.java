@@ -53,13 +53,16 @@ import java.util.List;
 public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * This method is responsible for upsizing new application instances and downsizing previous application instances.
+   *
    * @param pcfCommandRequest
    * @param encryptedDataDetails
+   * @param isInstanceSync
    * @return
    */
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync) {
     if (!(pcfCommandRequest instanceof PcfCommandDeployRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandDeployRequest"));
     }

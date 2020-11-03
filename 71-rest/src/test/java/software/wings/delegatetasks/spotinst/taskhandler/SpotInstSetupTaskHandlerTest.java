@@ -15,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -463,7 +464,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
         .listElastiGroupInstancesHealth(anyString(), anyString(), anyString());
     doReturn(singletonList(new Instance().withInstanceId("id-1234")))
         .when(mockAwsEc2HelperServiceDelegate)
-        .listEc2Instances(any(), anyList(), anyList(), anyString());
+        .listEc2Instances(any(), anyList(), anyList(), anyString(), anyBoolean());
     List<Instance> allEc2Instances = spotInstSetupTaskHandler.getAllEc2InstancesOfElastiGroup(
         AwsConfig.builder().build(), "us-east-1", "TOKEN", "ACCOUNT_ID", "ELASTIGROUP_ID");
     assertThat(allEc2Instances.isEmpty()).isTrue();

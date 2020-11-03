@@ -53,6 +53,6 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    return pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails);
+    return pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails, false);
   }
 }

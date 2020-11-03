@@ -376,7 +376,7 @@ public class AwsAmiHelperServiceDelegateImpl
           request.isRollback(), request.getBaseScalingPolicyJSONs(), request.getDesiredInstances());
 
       List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
-          awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName());
+          awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName(), false);
 
       List<Instance> instancesAdded = allInstancesOfNewAsg.stream()
                                           .filter(instance -> !existingInstanceIds.contains(instance.getInstanceId()))
@@ -750,7 +750,7 @@ public class AwsAmiHelperServiceDelegateImpl
     if (isEmpty(request.getAsgDesiredCounts())) {
       if (isNotEmpty(request.getOldAutoScalingGroupName())) {
         existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
-            awsConfig, encryptionDetails, request.getRegion(), request.getOldAutoScalingGroupName()));
+            awsConfig, encryptionDetails, request.getRegion(), request.getOldAutoScalingGroupName(), false));
       }
 
       return existingInstancesForOldASG;
@@ -760,7 +760,7 @@ public class AwsAmiHelperServiceDelegateImpl
       if (isNotEmpty(awsAmiResizeData.getAsgName()) && awsAmiResizeData.getDesiredCount() > 0) {
         try {
           existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
-              awsConfig, encryptionDetails, request.getRegion(), awsAmiResizeData.getAsgName()));
+              awsConfig, encryptionDetails, request.getRegion(), awsAmiResizeData.getAsgName(), false));
         } catch (Exception e) {
           logCallback.saveExecutionLog("Failed to fetch instances for ASG: " + awsAmiResizeData.getAsgName());
           logCallback.saveExecutionLog("Verification cant use these instances");

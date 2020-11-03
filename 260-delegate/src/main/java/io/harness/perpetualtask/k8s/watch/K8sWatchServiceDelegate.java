@@ -91,7 +91,8 @@ public class K8sWatchServiceDelegate {
 
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
-      KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+      KubernetesConfig kubernetesConfig =
+          containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
 
       ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
       DefaultK8sMetricsClient k8sMetricsClient = new DefaultK8sMetricsClient(apiClient);

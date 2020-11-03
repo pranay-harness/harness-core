@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -99,7 +100,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(awsHelperService.validateAndGetAwsConfig(any(SettingAttribute.class), anyObject()))
+    when(awsHelperService.validateAndGetAwsConfig(any(SettingAttribute.class), anyObject(), anyBoolean()))
         .thenReturn((AwsConfig) connectorConfig.getValue());
   }
 
@@ -191,7 +192,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeServicesResult().withServices(
             asList(new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT))));
-    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any()))
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
         CLUSTER_NAME, SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
@@ -201,7 +202,8 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                 .withCluster(CLUSTER_NAME)
                 .withService(SERVICE_NAME)
                 .withDesiredCount(DESIRED_COUNT));
-    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(DescribeTasksRequest.class));
+    verify(awsHelperService)
+        .describeTasks(anyString(), any(AwsConfig.class), any(), any(DescribeTasksRequest.class), anyBoolean());
   }
 
   @Test

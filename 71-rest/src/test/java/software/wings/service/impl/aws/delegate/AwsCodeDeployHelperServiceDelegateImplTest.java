@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -114,7 +115,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
         .listDeploymentInstances(any());
     doReturn(Lists.newArrayList(new Instance().withInstanceId("i1"), new Instance().withInstanceId("13")))
         .when(mockAwsEc2HelperServiceDelegate)
-        .listEc2Instances(any(), anyList(), anyString(), anyList());
+        .listEc2Instances(any(), anyList(), anyString(), anyList(), anyBoolean());
     doNothing().when(mockTracker).trackCDCall(anyString());
     List<Instance> result = awsCodeDeployHelperServiceDelegate.listDeploymentInstances(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "id");

@@ -60,7 +60,7 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
           AwsAsgListInstancesRequest awsAsgListInstancesRequest = (AwsAsgListInstancesRequest) parameters;
           List<Instance> aSgInstances = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
-              awsAsgListInstancesRequest.getAutoScalingGroupName());
+              awsAsgListInstancesRequest.getAutoScalingGroupName(), false);
           return AwsAsgListInstancesResponse.builder().instances(aSgInstances).executionStatus(SUCCESS).build();
         }
         case LIST_DESIRED_CAPACITIES: {

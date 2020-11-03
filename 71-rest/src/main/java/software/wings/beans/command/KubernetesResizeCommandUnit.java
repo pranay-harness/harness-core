@@ -226,10 +226,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       AzureConfig azureConfig = (AzureConfig) contextData.settingAttribute.getValue();
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, contextData.encryptedDataDetails,
           resizeParams.getSubscriptionId(), resizeParams.getResourceGroup(), resizeParams.getClusterName(),
-          resizeParams.getNamespace());
+          resizeParams.getNamespace(), false);
     } else if (contextData.settingAttribute.getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(contextData.settingAttribute, contextData.encryptedDataDetails,
-          resizeParams.getClusterName(), resizeParams.getNamespace());
+          resizeParams.getClusterName(), resizeParams.getNamespace(), false);
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args",

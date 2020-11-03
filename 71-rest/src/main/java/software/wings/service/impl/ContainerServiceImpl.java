@@ -76,7 +76,7 @@ public class ContainerServiceImpl implements ContainerService {
     String controllerName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
       return kubernetesContainerService.getActiveServiceCounts(
-          getKubernetesConfig(containerServiceParams), controllerName);
+          getKubernetesConfig(containerServiceParams, false), controllerName);
     } else if (value instanceof AwsConfig) {
       return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),
@@ -87,22 +87,22 @@ public class ContainerServiceImpl implements ContainerService {
     }
   }
 
-  private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {
+  private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams, boolean isInstanceSync) {
     KubernetesConfig kubernetesConfig;
     if (containerServiceParams.getSettingAttribute().getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(containerServiceParams.getSettingAttribute(),
           containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
-          containerServiceParams.getNamespace());
+          containerServiceParams.getNamespace(), isInstanceSync);
     } else if (containerServiceParams.getSettingAttribute().getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) containerServiceParams.getSettingAttribute().getValue();
       kubernetesConfig =
           azureHelperService.getKubernetesClusterConfig(azureConfig, containerServiceParams.getEncryptionDetails(),
               containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
-              containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+              containerServiceParams.getClusterName(), containerServiceParams.getNamespace(), isInstanceSync);
     } else {
       KubernetesClusterConfig kubernetesClusterConfig =
           (KubernetesClusterConfig) containerServiceParams.getSettingAttribute().getValue();
-      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails(), false);
+      encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails(), isInstanceSync);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
     }
 
@@ -110,7 +110,7 @@ public class ContainerServiceImpl implements ContainerService {
   }
 
   @Override
-  public List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams) {
+  public List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams, boolean isInstanceSync) {
     String containerServiceName = containerServiceParams.getContainerServiceName();
     String accountId = containerServiceParams.getSettingAttribute().getAccountId();
     log.info("Getting container infos for account {}, controller: {}", accountId, containerServiceName);
@@ -119,7 +119,7 @@ public class ContainerServiceImpl implements ContainerService {
 
     if (isKubernetesClusterConfig(value)) {
       log.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams, isInstanceSync);
       notNullCheck("KubernetesConfig", kubernetesConfig);
       if (isNotEmpty(containerServiceName)) {
         HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, containerServiceName);
@@ -179,7 +179,7 @@ public class ContainerServiceImpl implements ContainerService {
       }
     } else if (value instanceof AwsConfig) {
       AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(
-          containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails());
+          containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(), isInstanceSync);
       notNullCheck("AwsConfig", awsConfig);
 
       List<Task> tasks;
@@ -195,7 +195,7 @@ public class ContainerServiceImpl implements ContainerService {
         ListTasksResult listTasksResult;
         try {
           listTasksResult = awsHelperService.listTasks(containerServiceParams.getRegion(), awsConfig,
-              containerServiceParams.getEncryptionDetails(), listTasksRequest);
+              containerServiceParams.getEncryptionDetails(), listTasksRequest, isInstanceSync);
         } catch (WingsException ex) {
           // if the cluster / service has been deleted, we need to continue and check the rest of the service names
           ErrorCode errorCode = ex.getCode();
@@ -216,7 +216,7 @@ public class ContainerServiceImpl implements ContainerService {
                                                           .withCluster(containerServiceParams.getClusterName())
                                                           .withTasks(listTasksResult.getTaskArns());
           DescribeTasksResult describeTasksResult = awsHelperService.describeTasks(containerServiceParams.getRegion(),
-              awsConfig, containerServiceParams.getEncryptionDetails(), describeTasksRequest);
+              awsConfig, containerServiceParams.getEncryptionDetails(), describeTasksRequest, isInstanceSync);
           tasks = describeTasksResult.getTasks();
           for (Task task : tasks) {
             if (task != null) {
@@ -242,7 +242,7 @@ public class ContainerServiceImpl implements ContainerService {
   public Set<String> getControllerNames(ContainerServiceParams containerServiceParams, Map<String, String> labels) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (isKubernetesClusterConfig(value)) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams, false);
       notNullCheck("KubernetesConfig", kubernetesConfig);
       List<? extends HasMetadata> controllers =
           kubernetesContainerService.getControllers(kubernetesConfig, labels)
@@ -273,7 +273,7 @@ public class ContainerServiceImpl implements ContainerService {
               containerServiceParams.getClusterName())) {
         KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
             containerServiceParams.getEncryptionDetails(), containerServiceParams.getSubscriptionId(),
-            containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace);
+            containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace, false);
         kubernetesContainerService.validate(kubernetesConfig);
         return true;
       } else {
@@ -287,7 +287,7 @@ public class ContainerServiceImpl implements ContainerService {
       kubernetesContainerService.validate(kubernetesConfig);
       return true;
     } else if (isKubernetesClusterConfig(value)) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams, false);
       kubernetesContainerService.validate(kubernetesConfig);
       return true;
     }
@@ -342,11 +342,11 @@ public class ContainerServiceImpl implements ContainerService {
     String resourceGroup = containerServiceParams.getResourceGroup();
     List<EncryptedDataDetail> edd = containerServiceParams.getEncryptionDetails();
     if (value instanceof GcpConfig) {
-      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace);
+      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace, false);
     } else if (value instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) value;
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
-          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
+          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace, false);
     } else {
       throw new InvalidArgumentsException(
           Pair.of("Setting Value", "Unknown kubernetes cloud provider setting value: " + value.getType()));

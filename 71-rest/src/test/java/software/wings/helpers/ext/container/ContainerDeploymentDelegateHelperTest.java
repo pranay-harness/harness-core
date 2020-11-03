@@ -227,7 +227,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
             .cloudProviderEncryptionDetails(emptyList())
             .build();
 
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
     assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://example.com");
   }
 }

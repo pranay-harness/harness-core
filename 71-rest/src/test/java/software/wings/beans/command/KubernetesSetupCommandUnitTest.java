@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -177,7 +178,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                                     .endStatus()
                                                                     .build();
 
-    when(gkeClusterService.getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString()))
+    when(gkeClusterService.getCluster(
+             any(SettingAttribute.class), eq(emptyList()), anyString(), anyString(), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
@@ -207,7 +209,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-    verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
+    verify(gkeClusterService)
+        .getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString(), anyBoolean());
     verify(kubernetesContainerService)
         .createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class));
   }
@@ -465,7 +468,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
 
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-    verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
+    verify(gkeClusterService)
+        .getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString(), anyBoolean());
     verify(kubernetesContainerService)
         .createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class));
 

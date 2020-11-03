@@ -68,19 +68,19 @@ public class PcfCommandTaskTest extends WingsBaseTest {
                                                   .build();
     pcfTask.run(new Object[] {taskParameters});
     verify(pcfDelegateTaskHelper, times(1))
-        .getPcfCommandExecutionResponse(eq(pcfCommandRequest), eq(encryptedDataDetails));
+        .getPcfCommandExecutionResponse(eq(pcfCommandRequest), eq(encryptedDataDetails), eq(false));
 
     reset(pcfDelegateTaskHelper);
     pcfTask.run(new Object[] {pcfCommandRequest, encryptedDataDetails});
     verify(pcfDelegateTaskHelper, times(1))
-        .getPcfCommandExecutionResponse(eq(pcfCommandRequest), eq(encryptedDataDetails));
+        .getPcfCommandExecutionResponse(eq(pcfCommandRequest), eq(encryptedDataDetails), eq(false));
 
     reset(pcfDelegateTaskHelper);
     PcfRunPluginCommandRequest pluginCommandRequest =
         PcfRunPluginCommandRequest.builder().encryptedDataDetails(encryptedDataDetails).build();
     pcfTask.run(pluginCommandRequest);
     verify(pcfDelegateTaskHelper, times(1))
-        .getPcfCommandExecutionResponse(eq(pluginCommandRequest), eq(encryptedDataDetails));
+        .getPcfCommandExecutionResponse(eq(pluginCommandRequest), eq(encryptedDataDetails), eq(false));
 
     reset(pcfDelegateTaskHelper);
     assertThatThrownBy(() -> pcfTask.run(AwsAsgListAllNamesRequest.builder().build()))
@@ -100,12 +100,12 @@ public class PcfCommandTaskTest extends WingsBaseTest {
 
     PcfDelegateTaskHelper delegateTaskHelper = new PcfDelegateTaskHelper();
     on(delegateTaskHelper).set("commandTaskTypeToTaskHandlerMap", commandTaskTypeToTaskHandlerMap);
-    delegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails);
-    verify(mockHandler, times(1)).executeTask(eq(pcfCommandRequest), eq(encryptedDataDetails));
+    delegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails, false);
+    verify(mockHandler, times(1)).executeTask(eq(pcfCommandRequest), eq(encryptedDataDetails), eq(false));
 
-    doThrow(Exception.class).when(mockHandler).executeTask(eq(pcfCommandRequest), eq(encryptedDataDetails));
+    doThrow(Exception.class).when(mockHandler).executeTask(eq(pcfCommandRequest), eq(encryptedDataDetails), eq(false));
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        delegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails);
+        delegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails, eq(false));
     assertThat(pcfCommandExecutionResponse).isNotNull();
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }

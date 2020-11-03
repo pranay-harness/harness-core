@@ -137,7 +137,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
       kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig());
+          containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig(), false);
 
       if (StringUtils.isEmpty(k8sDeleteTaskParameters.getResources())) {
         executionLogCallback.saveExecutionLog("\nNo resources found to delete.");
@@ -178,7 +178,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
       kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig());
+          containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig(), false);
 
       if (isEmpty(k8sDeleteTaskParameters.getFilePaths())) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));

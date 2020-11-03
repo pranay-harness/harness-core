@@ -40,8 +40,8 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
 
     K8sInstanceSyncTaskParameters k8sInstanceSyncTaskParameters = (K8sInstanceSyncTaskParameters) k8sTaskParameters;
 
-    KubernetesConfig kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sInstanceSyncTaskParameters.getK8sClusterConfig());
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sInstanceSyncTaskParameters.getK8sClusterConfig(), false);
 
     long steadyStateTimeoutInMillis =
         getTimeoutMillisFromMinutes(k8sInstanceSyncTaskParameters.getTimeoutIntervalInMin());

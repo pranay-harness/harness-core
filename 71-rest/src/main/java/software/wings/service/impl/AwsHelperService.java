@@ -513,12 +513,12 @@ public class AwsHelperService {
   }
 
   public AwsConfig validateAndGetAwsConfig(
-      SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+      SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
       throw new InvalidRequestException("connectorConfig is not of type AwsConfig");
     }
-    encryptionService.decrypt((EncryptableSetting) connectorConfig.getValue(), encryptedDataDetails, false);
+    encryptionService.decrypt((EncryptableSetting) connectorConfig.getValue(), encryptedDataDetails, isInstanceSync);
     return (AwsConfig) connectorConfig.getValue();
   }
 
@@ -919,9 +919,9 @@ public class AwsHelperService {
   }
 
   public ListTasksResult listTasks(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      ListTasksRequest listTasksRequest) {
+      ListTasksRequest listTasksRequest, boolean isInstanceSync) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       tracker.trackECSCall("List Tasks");
       return getAmazonEcsClient(region, awsConfig).listTasks(listTasksRequest.withMaxResults(100));
     } catch (ClusterNotFoundException ex) {
@@ -951,9 +951,9 @@ public class AwsHelperService {
   }
 
   public DescribeTasksResult describeTasks(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptionDetails, DescribeTasksRequest describeTasksRequest) {
+      List<EncryptedDataDetail> encryptionDetails, DescribeTasksRequest describeTasksRequest, boolean isInstanceSync) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       tracker.trackECSCall("Describe Tasks");
       return getAmazonEcsClient(region, awsConfig).describeTasks(describeTasksRequest);
     } catch (AmazonServiceException amazonServiceException) {

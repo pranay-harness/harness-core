@@ -70,7 +70,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
     final Instance instance = new Instance();
     doReturn(Arrays.asList(instance))
         .when(awsAsgHelperServiceDelegate)
-        .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
+        .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"), eq(true));
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
@@ -110,7 +110,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
   public void runOnceWithAwsCallFailure() throws IOException {
     doThrow(new RuntimeException("exception message"))
         .when(awsAsgHelperServiceDelegate)
-        .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
+        .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"), eq(true));
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));

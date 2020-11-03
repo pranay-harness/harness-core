@@ -111,7 +111,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                          .getContainerInfos(containerServiceParams));
+                          .getContainerInfos(containerServiceParams, false));
       } catch (WingsException e) {
         // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
         // will be deleted.
@@ -162,7 +162,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                          .getContainerInfos(containerServiceParams));
+                          .getContainerInfos(containerServiceParams, false));
       } catch (WingsException e) {
         // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
         // will be deleted.

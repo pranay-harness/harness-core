@@ -61,7 +61,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         .getRunningPodsWithLabelsFabric8(
             any(KubernetesConfig.class), eq("default"), eq(ImmutableMap.of("release", "release-name")));
 
-    final List<ContainerInfo> containerInfos = containerService.getContainerInfos(containerServiceParams);
+    final List<ContainerInfo> containerInfos = containerService.getContainerInfos(containerServiceParams, false);
 
     assertThat(containerInfos.stream().map(ContainerInfo::getClusterName).collect(Collectors.toList()))
         .containsExactly("test", "test");
@@ -86,12 +86,12 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         buildContainerSvcParams(null, KubernetesClusterConfig.builder().build());
     containerServiceParams.setReleaseName(null);
     final List<ContainerInfo> containerInfosWithReleaseNameNull =
-        containerService.getContainerInfos(containerServiceParams);
+        containerService.getContainerInfos(containerServiceParams, false);
     assertThat(containerInfosWithReleaseNameNull.isEmpty()).isTrue();
 
     containerServiceParams.setReleaseName("");
     final List<ContainerInfo> containerInfosWithReleaseNameEmpty =
-        containerService.getContainerInfos(containerServiceParams);
+        containerService.getContainerInfos(containerServiceParams, false);
     assertThat(containerInfosWithReleaseNameEmpty.isEmpty()).isTrue();
   }
 

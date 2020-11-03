@@ -163,7 +163,7 @@ public class GcrServiceImpl implements GcrService {
 
   private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
-    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
+    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
     if (gc.refreshToken()) {
       return Credentials.basic("_token", gc.getAccessToken());

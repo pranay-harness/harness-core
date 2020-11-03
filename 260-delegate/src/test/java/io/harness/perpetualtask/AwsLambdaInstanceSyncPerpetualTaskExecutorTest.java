@@ -74,7 +74,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithAwsCallSuccess() throws IOException {
     doReturn(AwsLambdaDetailsResponse.builder().executionStatus(SUCCESS).build())
         .when(awsLambdaHelperServiceDelegate)
-        .getFunctionDetails(any(AwsLambdaDetailsRequest.class));
+        .getFunctionDetails(any(AwsLambdaDetailsRequest.class), eq(true));
 
     doReturn(AwsCloudWatchStatisticsResponse.builder().executionStatus(SUCCESS).build())
         .when(awsCloudWatchHelperServiceDelegate)
@@ -108,7 +108,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithAwsCallSuccessAndCloudWatchCallFailure() throws IOException {
     doReturn(AwsLambdaDetailsResponse.builder().executionStatus(SUCCESS).build())
         .when(awsLambdaHelperServiceDelegate)
-        .getFunctionDetails(any(AwsLambdaDetailsRequest.class));
+        .getFunctionDetails(any(AwsLambdaDetailsRequest.class), eq(true));
 
     doThrow(new RuntimeException("Failed to get cloudwatch statistics"))
         .when(awsCloudWatchHelperServiceDelegate)
@@ -142,7 +142,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithAwsCallFailure() throws IOException {
     doThrow(new RuntimeException("Failed to execute lambda function"))
         .when(awsLambdaHelperServiceDelegate)
-        .getFunctionDetails(any(AwsLambdaDetailsRequest.class));
+        .getFunctionDetails(any(AwsLambdaDetailsRequest.class), eq(true));
 
     doReturn(call)
         .when(delegateAgentManagerClient)

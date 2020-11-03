@@ -186,7 +186,7 @@ public class GcbServiceImpl implements GcbService {
     if (gcpConfig.isUseDelegate()) {
       return getAccessTokenUsingK8sWorkloadIdentity();
     }
-    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
+    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
     if (gc.refreshToken()) {
       return String.join(" ", "Bearer", gc.getAccessToken());

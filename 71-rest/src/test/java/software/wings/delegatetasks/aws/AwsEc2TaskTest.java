@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -69,6 +70,6 @@ public class AwsEc2TaskTest extends WingsBaseTest {
     verify(mockEc2ServiceDelegate).listTags(any(), anyList(), anyString(), anyString());
     request = AwsEc2ListInstancesRequest.builder().build();
     task.run(new Object[] {request});
-    verify(mockEc2ServiceDelegate).listEc2Instances(any(), anyList(), anyString(), anyList());
+    verify(mockEc2ServiceDelegate).listEc2Instances(any(), anyList(), anyString(), anyList(), anyBoolean());
   }
 }

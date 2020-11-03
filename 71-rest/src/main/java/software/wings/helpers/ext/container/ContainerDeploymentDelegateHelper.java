@@ -64,7 +64,7 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   public String getKubeconfigFileContent(K8sClusterConfig k8sClusterConfig) {
-    return kubernetesContainerService.getConfigFileContent(getKubernetesConfig(k8sClusterConfig));
+    return kubernetesContainerService.getConfigFileContent(getKubernetesConfig(k8sClusterConfig, false));
   }
 
   private String createKubeConfig(KubernetesConfig kubernetesConfig) {
@@ -109,11 +109,13 @@ public class ContainerDeploymentDelegateHelper {
       encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails, false);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
     } else if (settingAttribute.getValue() instanceof GcpConfig) {
-      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, clusterName, namespace);
+      kubernetesConfig =
+          gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, clusterName, namespace, false);
     } else if (settingAttribute.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) settingAttribute.getValue();
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, encryptedDataDetails,
-          containerServiceParam.getSubscriptionId(), containerServiceParam.getResourceGroup(), clusterName, namespace);
+          containerServiceParam.getSubscriptionId(), containerServiceParam.getResourceGroup(), clusterName, namespace,
+          false);
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam(
@@ -123,7 +125,7 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
-  public KubernetesConfig getKubernetesConfig(K8sClusterConfig k8sClusterConfig) {
+  public KubernetesConfig getKubernetesConfig(K8sClusterConfig k8sClusterConfig, boolean isInstanceSync) {
     SettingValue cloudProvider = k8sClusterConfig.getCloudProvider();
     List<EncryptedDataDetail> encryptedDataDetails = k8sClusterConfig.getCloudProviderEncryptionDetails();
     String namespace = k8sClusterConfig.getNamespace();
@@ -131,15 +133,15 @@ public class ContainerDeploymentDelegateHelper {
     KubernetesConfig kubernetesConfig;
     if (cloudProvider instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) cloudProvider;
-      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails, false);
+      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails, isInstanceSync);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
     } else if (cloudProvider instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster((GcpConfig) cloudProvider, encryptedDataDetails,
-          k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
+          k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace, isInstanceSync);
     } else if (cloudProvider instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) cloudProvider;
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
-          azureConfig, encryptedDataDetails, k8sClusterConfig.getAzureKubernetesCluster(), namespace);
+          azureConfig, encryptedDataDetails, k8sClusterConfig.getAzureKubernetesCluster(), namespace, isInstanceSync);
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Unknown kubernetes cloud provider setting value: " + cloudProvider.getType());

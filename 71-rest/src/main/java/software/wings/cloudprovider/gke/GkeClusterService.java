@@ -32,10 +32,10 @@ public interface GkeClusterService {
    * Gets the details about a cluster
    */
   KubernetesConfig getCluster(SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
-      String zoneClusterName, String namespace);
+      String zoneClusterName, String namespace, boolean isInstanceSync);
 
   KubernetesConfig getCluster(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String locationClusterName, String namespace);
+      String locationClusterName, String namespace, boolean isInstanceSync);
 
   /**
    * Lists the available clusters

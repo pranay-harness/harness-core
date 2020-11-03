@@ -60,7 +60,7 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
             .timeoutIntervalInMin(InstanceSyncConstants.TIMEOUT_SECONDS / 60)
             .build();
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfInstanceSyncRequest, encryptedDataDetailList);
+        pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfInstanceSyncRequest, encryptedDataDetailList, true);
 
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();

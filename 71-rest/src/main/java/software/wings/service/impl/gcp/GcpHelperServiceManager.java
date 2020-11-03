@@ -47,7 +47,7 @@ public class GcpHelperServiceManager {
         throw new InvalidRequestException(gcpResponse.getErrorMessage(), USER);
       }
     } else {
-      gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+      gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     }
   }
 

@@ -58,7 +58,7 @@ public class PcfCreatePcfResourceCommandTaskHandlerTest extends WingsBaseTest {
             .build();
     List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();
     PcfCommandExecutionResponse response =
-        pcfSetupCommandTaskHandler.executeTaskInternal(mappingDataRequest, encryptedDataDetails, logCallback);
+        pcfSetupCommandTaskHandler.executeTaskInternal(mappingDataRequest, encryptedDataDetails, logCallback, false);
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
@@ -80,13 +80,13 @@ public class PcfCreatePcfResourceCommandTaskHandlerTest extends WingsBaseTest {
         .createRouteMap(
             any(PcfRequestConfig.class), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
     PcfCommandExecutionResponse response =
-        pcfSetupCommandTaskHandler.executeTaskInternal(mappingDataRequest, encryptedDataDetails, logCallback);
+        pcfSetupCommandTaskHandler.executeTaskInternal(mappingDataRequest, encryptedDataDetails, logCallback, false);
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
 
     PcfCommandDeployRequest deployRequest = PcfCommandDeployRequest.builder().build();
     assertThatThrownBy(
-        () -> pcfSetupCommandTaskHandler.executeTaskInternal(deployRequest, encryptedDataDetails, logCallback))
+        () -> pcfSetupCommandTaskHandler.executeTaskInternal(deployRequest, encryptedDataDetails, logCallback, false))
         .isInstanceOf(InvalidArgumentsException.class);
   }
 }

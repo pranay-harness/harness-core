@@ -12,6 +12,7 @@ import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -817,7 +818,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doReturn(new Service().withServiceName("foo__1").withServiceArn("svcArn"))
         .when(ecsSetupCommandTaskHelper)
         .getAwsServiceFromJson(anyString(), any());
-    doReturn(AwsConfig.builder().build()).when(mockAwsHelperService).validateAndGetAwsConfig(any(), anyList());
+    doReturn(AwsConfig.builder().build())
+        .when(mockAwsHelperService)
+        .validateAndGetAwsConfig(any(), anyList(), anyBoolean());
     doReturn(new DescribeServicesResult().withServices(
                  new Service().withDesiredCount(2).withEvents(new ServiceEvent().withId("evId"))))
         .when(mockAwsHelperService)
@@ -895,7 +898,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     doReturn(new ListTasksResult().withTaskArns(singletonList("foo__1__arn")))
         .doReturn(new ListTasksResult().withTaskArns(singletonList("foo__2__arn")))
         .when(mockAwsHelperService)
-        .listTasks(anyString(), any(), anyList(), any());
+        .listTasks(anyString(), any(), anyList(), any(), anyBoolean());
     doReturn(singletonList(ContainerInfo.builder().status(FAILURE).build()))
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)

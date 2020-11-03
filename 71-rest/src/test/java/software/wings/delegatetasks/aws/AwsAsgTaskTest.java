@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -51,7 +52,8 @@ public class AwsAsgTaskTest extends WingsBaseTest {
     verify(mockAwsAsgHelperServiceDelegate).listAutoScalingGroupNames(any(), anyList(), anyString());
     request = AwsAsgListInstancesRequest.builder().build();
     task.run(request);
-    verify(mockAwsAsgHelperServiceDelegate).listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString(), anyBoolean());
     request = AwsAsgListDesiredCapacitiesRequest.builder().build();
     task.run(request);
     verify(mockAwsAsgHelperServiceDelegate).getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList());

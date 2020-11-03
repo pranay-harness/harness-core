@@ -63,7 +63,9 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    doReturn(kubernetesConfig).when(deploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(kubernetesConfig)
+        .when(deploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
     doReturn(asList(deployment().getResourceId(), service().getResourceId(), deploymentConfig().getResourceId(),
                  namespace().getResourceId()))
         .when(k8sTaskHelper)
@@ -154,7 +156,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   public void deleteGivenFiles() throws Exception {
     doReturn(KubernetesConfig.builder().build())
         .when(deploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
@@ -167,7 +169,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
             any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class), anyLong());
-    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
     verify(k8sTaskHelper)
         .getResourcesFromManifests(any(K8sDelegateTaskParams.class), any(K8sDelegateManifestConfig.class),
             any(String.class), eq(ImmutableList.of("a", "b", "c")), any(List.class), any(String.class),
@@ -180,7 +182,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   public void deleteFilesGivenNoFilePaths() throws Exception {
     doReturn(KubernetesConfig.builder().build())
         .when(deploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
@@ -191,7 +193,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper)
         .getK8sTaskExecutionResponse(K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
-    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
   }
 
   @Test

@@ -94,7 +94,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
             .build();
 
     try {
-      List<ContainerInfo> containerInfos = containerService.getContainerInfos(request);
+      List<ContainerInfo> containerInfos = containerService.getContainerInfos(request, true);
       return ContainerSyncResponse.builder()
           .containerInfoList(containerInfos)
           .commandExecutionStatus((containerInfos != null) ? SUCCESS : FAILURE)
@@ -117,7 +117,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       PerpetualTaskId taskId, K8sContainerInstanceSyncPerpetualTaskParams k8sContainerInstanceSyncPerpetualTaskParams) {
     final K8sClusterConfig k8sClusterConfig = (K8sClusterConfig) kryoSerializer.asObject(
         k8sContainerInstanceSyncPerpetualTaskParams.getK8SClusterConfig().toByteArray());
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, true);
 
     K8sTaskExecutionResponse responseData =
         getK8sTaskResponse(k8sContainerInstanceSyncPerpetualTaskParams, kubernetesConfig);

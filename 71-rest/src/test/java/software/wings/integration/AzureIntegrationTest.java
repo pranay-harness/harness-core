@@ -223,8 +223,8 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
     clusters.forEach(cluster -> {
       log.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName());
-      azureHelperService.getKubernetesClusterConfig(
-          config, Collections.emptyList(), subscriptionId, cluster.getResourceGroup(), cluster.getName(), "default");
+      azureHelperService.getKubernetesClusterConfig(config, Collections.emptyList(), subscriptionId,
+          cluster.getResourceGroup(), cluster.getName(), "default", false);
     });
   }
 

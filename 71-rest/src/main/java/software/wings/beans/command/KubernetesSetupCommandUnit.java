@@ -232,10 +232,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
         kubernetesConfig =
             azureHelperService.getKubernetesClusterConfig(azureConfig, edd, setupParams.getSubscriptionId(),
-                setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
+                setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace(), false);
       } else {
         kubernetesConfig = gkeClusterService.getCluster(
-            cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
+            cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace(), false);
       }
 
       kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig);

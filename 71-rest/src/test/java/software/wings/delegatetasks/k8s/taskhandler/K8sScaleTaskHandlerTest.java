@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -84,7 +85,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForNamespaceFromKubeConfig() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.getPodDetailsFabric8(
              kubernetesConfig, kubeConfigNamespace, releaseName, LONG_TIMEOUT_INTERVAL))
@@ -112,7 +113,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     String namespacedWorkload = "namespace/deployment/workload";
     k8sScaleTaskParameters.setWorkload(namespacedWorkload);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, LONG_TIMEOUT_INTERVAL))
         .thenReturn(null);
@@ -169,7 +170,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executeTaskInternalInstanceUnitPercentage() throws Exception {
     Reflect.on(k8sScaleTaskHandler).set("k8sTaskHelper", new K8sTaskHelper());
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     k8sScaleTaskParameters.setDeprecateFabric8Enabled(true);
     k8sScaleTaskParameters.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
@@ -199,13 +200,13 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void skipSteadyStateCheckFail() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
@@ -220,7 +221,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void skipSteadyStateCheckSuccess() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
@@ -229,7 +230,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
              any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class)))
         .thenReturn(true);
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
@@ -247,7 +248,9 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   public void testNoWorkloadToScale() throws Exception {
     k8sScaleTaskParameters.setWorkload(null);
 
-    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(kubernetesConfig)
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     Reflect.on(k8sScaleTaskHandler).set("k8sTaskHelper", new K8sTaskHelper());
     K8sTaskExecutionResponse response =
         k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);

@@ -29,28 +29,31 @@ public abstract class PcfCommandTaskHandler {
   @Inject protected PcfCommandTaskHelper pcfCommandTaskHelper;
 
   public PcfCommandExecutionResponse executeTask(
-      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    Optional<LogSanitizer> logSanitizer = getLogSanitizer(pcfCommandRequest.getActivityId(), encryptedDataDetails);
+      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
+    Optional<LogSanitizer> logSanitizer =
+        getLogSanitizer(pcfCommandRequest.getActivityId(), encryptedDataDetails, isInstanceSync);
     try {
       logSanitizer.ifPresent(delegateLogService::registerLogSanitizer);
       ExecutionLogCallback executionLogCallback =
           new ExecutionLogCallback(delegateLogService, pcfCommandRequest.getAccountId(), pcfCommandRequest.getAppId(),
               pcfCommandRequest.getActivityId(), pcfCommandRequest.getCommandName());
 
-      return executeTaskInternal(pcfCommandRequest, encryptedDataDetails, executionLogCallback);
+      return executeTaskInternal(pcfCommandRequest, encryptedDataDetails, executionLogCallback, isInstanceSync);
     } finally {
       logSanitizer.ifPresent(delegateLogService::unregisterLogSanitizer);
     }
   }
 
   protected abstract PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean isInstanceSync);
 
-  private Optional<LogSanitizer> getLogSanitizer(String activityId, List<EncryptedDataDetail> encryptedDataDetails) {
+  private Optional<LogSanitizer> getLogSanitizer(
+      String activityId, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     Set<String> secrets = new HashSet<>();
     if (isNotEmpty(encryptedDataDetails)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-        secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+        secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, isInstanceSync)));
       }
     }
     return isNotEmpty(secrets) ? Optional.of(new ActivityBasedLogSanitizer(activityId, secrets)) : Optional.empty();

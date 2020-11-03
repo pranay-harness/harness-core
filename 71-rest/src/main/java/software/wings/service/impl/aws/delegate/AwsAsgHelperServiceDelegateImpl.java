@@ -114,10 +114,10 @@ public class AwsAsgHelperServiceDelegateImpl
   }
 
   @Override
-  public List<String> listAutoScalingGroupInstanceIds(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+  public List<String> listAutoScalingGroupInstanceIds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, boolean isInstanceSync) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
@@ -141,11 +141,12 @@ public class AwsAsgHelperServiceDelegateImpl
   }
 
   @Override
-  public List<Instance> listAutoScalingGroupInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+  public List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, boolean isInstanceSync) {
     List<String> instanceIds =
-        listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, autoScalingGroupName);
-    return awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, instanceIds, region);
+        listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, autoScalingGroupName, isInstanceSync);
+    return awsEc2HelperServiceDelegate.listEc2Instances(
+        awsConfig, encryptionDetails, instanceIds, region, isInstanceSync);
   }
 
   @Override
@@ -519,7 +520,7 @@ public class AwsAsgHelperServiceDelegateImpl
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           List<String> instanceIds =
-              listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, autoScalingGroupName);
+              listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, autoScalingGroupName, false);
           describeAutoScalingGroupActivities(
               amazonAutoScalingClient, autoScalingGroupName, completedActivities, logCallback, false);
           if (instanceIds.size() == desiredCount
@@ -557,7 +558,7 @@ public class AwsAsgHelperServiceDelegateImpl
   boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<String> instanceIds, ExecutionLogCallback logCallback) {
     List<Instance> instances =
-        awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, instanceIds, region);
+        awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, encryptionDetails, instanceIds, region, false);
     boolean allRunning = instanceIds.isEmpty()
         || instances.stream().allMatch(instance -> instance.getState().getName().equals("running"));
     if (!allRunning) {

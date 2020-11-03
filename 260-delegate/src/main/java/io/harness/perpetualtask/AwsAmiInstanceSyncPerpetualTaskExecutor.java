@@ -58,7 +58,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       final List<Instance> instances = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
-          awsConfig, encryptedDataDetails, taskParams.getRegion(), taskParams.getAsgName());
+          awsConfig, encryptedDataDetails, taskParams.getRegion(), taskParams.getAsgName(), true);
       return AwsAsgListInstancesResponse.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
           .instances(instances)

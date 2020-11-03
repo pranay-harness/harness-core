@@ -810,7 +810,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public void provisionNodes(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, Integer clusterSize, String launchConfigName,
       Map<String, Object> params, LogCallback logCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     String clusterName = (String) params.get("clusterName");
     awsHelperService.createCluster(
@@ -912,7 +912,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public String deployService(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String serviceDefinition) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
     CreateServiceRequest createServiceRequest;
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
@@ -993,7 +993,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void deleteService(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
     awsHelperService.deleteService(region, awsConfig, encryptedDataDetails,
         new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
   }
@@ -1002,7 +1002,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public List<ContainerInfo> waitForDaemonServiceToReachSteadyState(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     Service service =
         getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
@@ -1030,7 +1030,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     try {
       List<String> originalTaskArns =
@@ -1106,7 +1106,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     log.info("Task arns = " + taskArns);
     List<Task> tasks = awsHelperService
                            .describeTasks(region, awsConfig, encryptedDataDetails,
-                               new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+                               new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns), false)
                            .getTasks();
 
     List<ContainerInfo> containerInfos = null;
@@ -1483,14 +1483,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void createService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, CreateServiceRequest clusterConfiguration) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     awsHelperService.createService(region, awsConfig, encryptedDataDetails, clusterConfiguration);
   }
 
   @Override
   public TaskDefinition createTask(String region, SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails, false);
     return awsHelperService
         .registerTaskDefinition(region, awsConfig, encryptedDataDetails, registerTaskDefinitionRequest)
         .getTaskDefinition();
@@ -1499,7 +1499,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public RunTaskResult triggerRunTask(String region, SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, RunTaskRequest runTaskRequest) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails, false);
     RunTaskResult runTaskResult =
         awsHelperService.triggerEcsRunTask(region, awsConfig, encryptedDataDetails, runTaskRequest);
     log.info("Ecs Run Task with task definition %s Triggered", runTaskRequest.getTaskDefinition());
@@ -1509,7 +1509,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     List<Service> services = new ArrayList<>();
     ListServicesResult listServicesResult;
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
@@ -1553,14 +1553,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     return awsHelperService.getTargetGroupForAlb(region, awsConfig, encryptedDataDetails, targetGroupArn);
   }
 
   @Override
   public TaskDefinition getTaskDefinitionFromService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, Service service) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     DescribeTaskDefinitionRequest describeTaskDefinitionRequest =
         new DescribeTaskDefinitionRequest().withTaskDefinition(service.getTaskDefinition());
     DescribeTaskDefinitionResult taskDefinitionResult =
@@ -1575,7 +1575,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             new ListTasksRequest()
                 .withCluster(clusterName)
                 .withServiceName(serviceName)
-                .withDesiredStatus(desiredStatus))
+                .withDesiredStatus(desiredStatus),
+            false)
         .getTaskArns();
   }
 

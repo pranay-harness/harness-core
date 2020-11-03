@@ -86,7 +86,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithK8sCallSuccess() throws Exception {
     doReturn(KubernetesConfig.builder().accountId(null).build())
         .when(containerDeploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), eq(true));
 
     final K8sPod pod = K8sPod.builder().namespace("namespace").releaseName("release").build();
     doReturn(Arrays.asList(pod))
@@ -133,7 +133,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithK8sCallFailure() throws Exception {
     doReturn(KubernetesConfig.builder().accountId(null).build())
         .when(containerDeploymentDelegateHelper)
-        .getKubernetesConfig(any(K8sClusterConfig.class));
+        .getKubernetesConfig(any(K8sClusterConfig.class), eq(true));
 
     doThrow(new RuntimeException("Failed to retrieve pod list"))
         .when(k8sTaskHelperBase)
@@ -177,7 +177,9 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithContainerServicesCallSuccess() throws Exception {
     final KubernetesContainerInfo containerInfo =
         KubernetesContainerInfo.builder().namespace("namespace").serviceName("service").build();
-    doReturn(Arrays.asList(containerInfo)).when(containerService).getContainerInfos(any(ContainerServiceParams.class));
+    doReturn(Arrays.asList(containerInfo))
+        .when(containerService)
+        .getContainerInfos(any(ContainerServiceParams.class), eq(true));
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
@@ -219,7 +221,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   public void runOnceWithContainerServicesCallFailure() throws Exception {
     doThrow(new RuntimeException("Failed to retrieve container info"))
         .when(containerService)
-        .getContainerInfos(any(ContainerServiceParams.class));
+        .getContainerInfos(any(ContainerServiceParams.class), eq(true));
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));

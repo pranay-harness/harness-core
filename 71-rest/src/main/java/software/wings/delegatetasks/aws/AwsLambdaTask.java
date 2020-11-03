@@ -87,7 +87,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
       }
       case LAMBDA_FUNCTION_DETAILS: {
         try {
-          return awsLambdaHelperServiceDelegate.getFunctionDetails((AwsLambdaDetailsRequest) request);
+          return awsLambdaHelperServiceDelegate.getFunctionDetails((AwsLambdaDetailsRequest) request, false);
         } catch (Exception ex) {
           return AwsLambdaFunctionResponse.builder()
               .executionStatus(FAILED)

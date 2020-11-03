@@ -75,7 +75,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     boolean isDeprecateFabric8Enabled = k8sScaleTaskParameters.isDeprecateFabric8Enabled();
     KubernetesConfig kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
+        containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig(), false);
 
     boolean success = init(k8sScaleTaskParameters, k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),

@@ -59,7 +59,7 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
   }
 
   public VersionInfo getK8sVersionInfo(K8sClusterConfig k8sClusterConfig) throws ApiException {
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
     ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     VersionApi apiInstance = new VersionApi(client);
     return apiInstance.getCode();

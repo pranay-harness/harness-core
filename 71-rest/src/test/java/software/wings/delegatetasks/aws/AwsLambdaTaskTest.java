@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
@@ -137,7 +138,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   public void testGetFunctionDetails() {
     AwsLambdaDetailsRequest request = AwsLambdaDetailsRequest.builder().build();
     task.run(new Object[] {request});
-    verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(request);
+    verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(request, false);
   }
 
   @Test
@@ -145,15 +146,17 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetFunctionDetailsWithException() {
     AwsLambdaDetailsRequest request = AwsLambdaDetailsRequest.builder().build();
-    doThrow(new RuntimeException("Error msg")).when(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(request);
+    doThrow(new RuntimeException("Error msg"))
+        .when(mockAwsLambdaHelperServiceDelegate)
+        .getFunctionDetails(request, false);
 
     AwsResponse awsResponse = task.run(new Object[] {request});
 
-    verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(any());
+    verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(any(), anyBoolean());
     assertThat(awsResponse instanceof AwsLambdaFunctionResponse).isTrue();
     assertThat(((AwsLambdaFunctionResponse) awsResponse).getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(((AwsLambdaFunctionResponse) awsResponse).getErrorMessage()).isEqualTo("RuntimeException: Error msg");
     assertThatExceptionOfType(Exception.class)
-        .isThrownBy(() -> mockAwsLambdaHelperServiceDelegate.getFunctionDetails(request));
+        .isThrownBy(() -> mockAwsLambdaHelperServiceDelegate.getFunctionDetails(request, false));
   }
 }

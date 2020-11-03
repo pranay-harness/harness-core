@@ -899,7 +899,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .output("Rollback was a success.")
                         .commandExecutionStatus(SUCCESS)
                         .build());
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class)))
         .thenReturn(KubernetesConfig.builder().build());

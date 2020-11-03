@@ -574,15 +574,16 @@ public class AzureHelperService {
   }
 
   public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
-      List<EncryptedDataDetail> encryptionDetails, AzureKubernetesCluster azureKubernetesCluster, String namespace) {
+      List<EncryptedDataDetail> encryptionDetails, AzureKubernetesCluster azureKubernetesCluster, String namespace,
+      boolean isInstanceSync) {
     return getKubernetesClusterConfig(azureConfig, encryptionDetails, azureKubernetesCluster.getSubscriptionId(),
-        azureKubernetesCluster.getResourceGroup(), azureKubernetesCluster.getName(), namespace);
+        azureKubernetesCluster.getResourceGroup(), azureKubernetesCluster.getName(), namespace, isInstanceSync);
   }
 
   public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroup, String clusterName,
-      String namespace) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+      String namespace, boolean isInstanceSync) {
+    encryptionService.decrypt(azureConfig, encryptionDetails, isInstanceSync);
     try {
       Response<AksGetCredentialsResponse> response =
           getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())

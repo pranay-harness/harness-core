@@ -236,10 +236,10 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public List<Instance> listEc2Instances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters) {
+  public List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<Filter> filters, boolean isInstanceSync) {
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -261,13 +261,13 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public List<Instance> listEc2Instances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<String> instanceIds, String region) {
+  public List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<String> instanceIds, String region, boolean isInstanceSync) {
     try {
       if (instanceIds.isEmpty()) {
         return emptyList();
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {

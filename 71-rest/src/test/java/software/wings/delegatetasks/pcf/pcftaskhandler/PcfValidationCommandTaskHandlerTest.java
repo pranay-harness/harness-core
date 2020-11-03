@@ -36,7 +36,7 @@ public class PcfValidationCommandTaskHandlerTest extends WingsBaseTest {
     PcfConfig pcfConfig = PcfConfig.builder().accountId(ACCOUNT_ID).password("password".toCharArray()).build();
 
     pcfValidationCommandTaskHandler.executeTaskInternal(
-        PcfInfraMappingDataRequest.builder().pcfConfig(pcfConfig).build(), encryptedDataDetails, null);
+        PcfInfraMappingDataRequest.builder().pcfConfig(pcfConfig).build(), encryptedDataDetails, null, false);
 
     verify(encryptionService).decrypt(pcfConfig, encryptedDataDetails, false);
   }

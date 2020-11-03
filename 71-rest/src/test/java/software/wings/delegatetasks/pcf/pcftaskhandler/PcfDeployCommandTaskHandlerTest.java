@@ -143,7 +143,7 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   public void testExecuteTaskInternalInvalidArgumentsException() {
     try {
       pcfDeployCommandTaskHandler.executeTaskInternal(
-          PcfCommandRollbackRequest.builder().build(), null, executionLogCallback);
+          PcfCommandRollbackRequest.builder().build(), null, executionLogCallback, false);
     } catch (Exception e) {
       assertThatExceptionOfType(InvalidArgumentsException.class);
       InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;

@@ -150,13 +150,13 @@ public class K8sValidationHelper {
     List<EncryptedDataDetail> edd = k8sClusterConfig.getCloudProviderEncryptionDetails();
     if (value instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(
-          (GcpConfig) value, edd, k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
+          (GcpConfig) value, edd, k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace, false);
     } else if (value instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) value;
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, edd,
           k8sClusterConfig.getAzureKubernetesCluster().getSubscriptionId(),
           k8sClusterConfig.getAzureKubernetesCluster().getResourceGroup(),
-          k8sClusterConfig.getAzureKubernetesCluster().getName(), namespace);
+          k8sClusterConfig.getAzureKubernetesCluster().getName(), namespace, false);
     } else if (value instanceof KubernetesClusterConfig) {
       return ((KubernetesClusterConfig) value).getMasterUrl();
     } else {

@@ -152,7 +152,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
 
     when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(previousEligibleRelease);
     when(releaseHistory.getLatestRelease()).thenReturn(release);
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
     on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", releaseHistory);
     on(k8sRollingDeployRollbackTaskHandler).set("release", release);
@@ -374,7 +374,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     doReturn(logCallback).when(taskHelper).getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(taskHelperBase, times(1)).getReleaseHistoryData(any(KubernetesConfig.class), anyString(), anyBoolean());
   }
 

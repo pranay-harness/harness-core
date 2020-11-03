@@ -66,7 +66,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listApplications(
       String region, SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptionDetails) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptionDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptionDetails, false);
 
     List<String> applications = new ArrayList<>();
     ListApplicationsResult listApplicationsResult;
@@ -83,7 +83,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listDeploymentGroup(String region, String appName, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
 
     List<String> deploymentGroups = new ArrayList<>();
     ListDeploymentGroupsResult listDeploymentGroupsResult;
@@ -101,7 +101,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listDeploymentConfiguration(
       String region, SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
 
     List<String> deploymentConfigurations = new ArrayList<>();
     ListDeploymentConfigsResult listDeploymentConfigsResult;
@@ -120,7 +120,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       List<EncryptedDataDetail> encryptedDataDetails, CreateDeploymentRequest createDeploymentRequest,
       ExecutionLogCallback executionLogCallback, int timout) {
     try {
-      AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+      AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
 
       CreateDeploymentResult deploymentResult =
           awsHelperService.createCodeDeployDeployment(awsConfig, encryptedDataDetails, region, createDeploymentRequest);
@@ -171,7 +171,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<Instance> listDeploymentInstances(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String deploymentId) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
 
     List<String> instanceIds = fetchAllDeploymentInstances(
         awsConfig, encryptedDataDetails, region, deploymentId, asList(InstanceStatus.Succeeded.name()));
@@ -193,7 +193,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public RevisionLocation getApplicationRevisionList(String region, String appName, String deploymentGroupName,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     GetDeploymentGroupRequest getDeploymentGroupRequest =
         new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
     DeploymentGroupInfo deploymentGroupInfo =

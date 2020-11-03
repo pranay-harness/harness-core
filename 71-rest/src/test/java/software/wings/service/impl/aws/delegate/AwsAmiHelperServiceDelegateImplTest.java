@@ -1047,7 +1047,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     Instance instance = new Instance().withInstanceId("1");
     doReturn(Arrays.asList(instance))
         .when(mockAwsAsgHelperServiceDelegate)
-        .listAutoScalingGroupInstances(any(), anyList(), any(), any());
+        .listAutoScalingGroupInstances(any(), anyList(), any(), any(), anyBoolean());
 
     List<AwsAmiResizeData> awsAmiResizeData =
         Arrays.asList(AwsAmiResizeData.builder().asgName("1").desiredCount(1).build());
@@ -1070,7 +1070,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     awsAmiServiceDeployRequest.setAsgDesiredCounts(awsAmiResizeData);
     doThrow(new InvalidRequestException(""))
         .when(mockAwsAsgHelperServiceDelegate)
-        .listAutoScalingGroupInstances(any(), anyList(), any(), any());
+        .listAutoScalingGroupInstances(any(), anyList(), any(), any(), anyBoolean());
     existingInstancesForOlderASG = awsAmiHelperServiceDelegate.fetchExistingInstancesForOlderASG(
         AwsConfig.builder().build(), emptyList(), awsAmiServiceDeployRequest, mockCallback);
     assertThat(existingInstancesForOlderASG.size()).isEqualTo(0);

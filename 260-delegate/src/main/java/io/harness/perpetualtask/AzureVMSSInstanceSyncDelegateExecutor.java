@@ -66,7 +66,7 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
       AzureVmssInstanceSyncPerpetualTaskParams taskParams, software.wings.beans.AzureConfig azureConfig) {
     List<EncryptedDataDetail> encryptedDataDetails =
         (List<EncryptedDataDetail>) kryoSerializer.asObject(taskParams.getAzureEncryptedData().toByteArray());
-    encryptionService.decrypt(azureConfig, encryptedDataDetails, false);
+    encryptionService.decrypt(azureConfig, encryptedDataDetails, true);
     AzureVMSSListVMDataParameters parameters = AzureVMSSListVMDataParameters.builder()
                                                    .subscriptionId(taskParams.getSubscriptionId())
                                                    .resourceGroupName(taskParams.getResourceGroupName())

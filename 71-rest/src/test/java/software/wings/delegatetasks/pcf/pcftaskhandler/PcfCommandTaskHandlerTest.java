@@ -228,7 +228,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .createApplication(any(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null);
+        pcfSetupCommandTaskHandler.executeTask(pcfCommandRequest, null, false);
     verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
@@ -386,7 +386,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .upsizeApplicationWithSteadyStateCheck(any(), any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDeployCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfDeployCommandResponse pcfDeployCommandResponse =
@@ -584,7 +584,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .resizeApplication(any());
 
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfDeployCommandResponse pcfDeployCommandResponse =
@@ -606,7 +606,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     // Test Exception flow
     doThrow(new IOException("")).when(pcfCommandTaskHelper).generateWorkingDirectoryForDeployment();
     pcfCommandExecutionResponse =
-        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     assertThat(pcfCommandExecutionResponse.getErrorMessage()).isEqualTo("IOException: ");
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
@@ -656,7 +656,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     // Fetch Orgs
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
@@ -671,7 +671,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandRequest.setActionType(ActionType.FETCH_SPACE);
     pcfCommandRequest.setOrganization(ORG);
     pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
@@ -684,7 +684,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandRequest.setActionType(ActionType.FETCH_ROUTE);
     pcfCommandRequest.setSpace(SPACE);
     pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps()).isNotNull();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps()).hasSize(2);
@@ -708,7 +708,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     pcfCommandRequest.setApplicationNamePrefix(appNamePrefix);
     pcfCommandRequest.setActionType(RUNNING_COUNT);
     pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertThat(pcfInfraMappingDataResponse).isNotNull();
     assertThat(pcfInfraMappingDataResponse.getRunningInstanceCount()).isEqualTo(2);
@@ -718,13 +718,13 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .when(pcfDeploymentManager)
         .getPreviousReleases(any(PcfRequestConfig.class), eq(appNamePrefix));
     pcfCommandExecutionResponse =
-        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     assertThat(pcfCommandExecutionResponse).isNotNull();
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
 
     PcfCommandDeployRequest deployRequest = PcfCommandDeployRequest.builder().build();
     assertThatThrownBy(
-        () -> pcfDataFetchCommandTaskHandler.executeTaskInternal(deployRequest, null, executionLogCallback))
+        () -> pcfDataFetchCommandTaskHandler.executeTaskInternal(deployRequest, null, executionLogCallback, false))
         .isInstanceOf(InvalidArgumentsException.class);
   }
 
@@ -771,7 +771,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     // Fetch Orgs
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(pcfInstanceSyncRequest, null, executionLogCallback);
+        pcfApplicationDetailsCommandTaskHandler.executeTaskInternal(
+            pcfInstanceSyncRequest, null, executionLogCallback, false);
 
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
@@ -816,7 +817,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     reset(pcfDeploymentManager);
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     verify(pcfDeploymentManager, times(1)).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
@@ -825,7 +826,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     routeUpdateRequestConfigData.setDownsizeOldApplication(true);
     routeUpdateRequestConfigData.setExistingApplicationDetails(null);
     pcfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
@@ -835,7 +836,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     routeUpdateRequestConfigData.setRollback(false);
     routeUpdateRequestConfigData.setExistingApplicationDetails(null);
     pcfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
@@ -845,7 +846,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     routeUpdateRequestConfigData.setExistingApplicationDetails(
         Arrays.asList(PcfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()));
     pcfCommandExecutionResponse =
-        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
     verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -1110,7 +1111,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = Arrays.asList(EncryptedDataDetail.builder().build());
     when(encryptionService.getDecryptedValue(any(), eq(false))).thenReturn("decryptedValue".toCharArray());
     try {
-      pcfApplicationDetailsCommandTaskHandler.executeTask(pcfCommandRequest, encryptedDataDetails);
+      pcfApplicationDetailsCommandTaskHandler.executeTask(pcfCommandRequest, encryptedDataDetails, false);
     } catch (Exception e) {
       assertThatExceptionOfType(InvalidArgumentsException.class);
       InvalidArgumentsException invalidArgumentsException = (InvalidArgumentsException) e;

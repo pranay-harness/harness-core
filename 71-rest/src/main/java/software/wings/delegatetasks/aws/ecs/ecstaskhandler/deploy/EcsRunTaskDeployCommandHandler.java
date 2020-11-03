@@ -168,7 +168,8 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
   private void waitAndDoSteadyStateCheck(List<String> triggeredRunTaskArns, Long timeout,
       SettingAttribute cloudProviderSetting, String region, String clusterName,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
-    final AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    final AwsConfig awsConfig =
+        awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
