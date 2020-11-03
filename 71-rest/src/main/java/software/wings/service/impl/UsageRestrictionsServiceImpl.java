@@ -1394,4 +1394,102 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       });
     }
   }
+
+  public UsageRestrictions getCommonRestrictions(
+      UsageRestrictions usageRestrictions1, UsageRestrictions usageRestrictions2) {
+    Set<AppEnvRestriction> commonRestrictions = new HashSet<>();
+
+    for (AppEnvRestriction restriction1 : usageRestrictions1.getAppEnvRestrictions()) {
+      for (AppEnvRestriction restriction2 : usageRestrictions2.getAppEnvRestrictions()) {
+        AppEnvRestriction commonRestriction = getCommonAppEnvRestriction(restriction1, restriction2);
+        if (commonRestriction != null) {
+          commonRestrictions.add(commonRestriction);
+        }
+      }
+    }
+    return UsageRestrictions.builder().appEnvRestrictions(commonRestrictions).build();
+  }
+
+  private AppEnvRestriction getCommonAppEnvRestriction(AppEnvRestriction restriction1, AppEnvRestriction restriction2) {
+    GenericEntityFilter commonAppRestriction =
+        getCommonAppRestriction(restriction1.getAppFilter(), restriction2.getAppFilter());
+    EnvFilter commonEnvRestriction = getCommonEnvRestriction(restriction1.getEnvFilter(), restriction2.getEnvFilter());
+
+    if (commonAppRestriction == null || commonEnvRestriction == null) {
+      return null;
+    } else {
+      return AppEnvRestriction.builder().appFilter(commonAppRestriction).envFilter(commonEnvRestriction).build();
+    }
+  }
+
+  private GenericEntityFilter getCommonAppRestriction(GenericEntityFilter appFilter1, GenericEntityFilter appFilter2) {
+    if (appFilter1.getFilterType().equals(GenericEntityFilter.FilterType.ALL)) {
+      return appFilter2;
+    }
+
+    if (appFilter2.getFilterType().equals(GenericEntityFilter.FilterType.ALL)) {
+      return appFilter1;
+    }
+
+    Set<String> appIds = new HashSet<>(appFilter1.getIds());
+    appIds.retainAll(appFilter2.getIds());
+
+    if (appIds.isEmpty()) {
+      return null;
+    }
+
+    return GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.SELECTED).ids(appIds).build();
+  }
+
+  private EnvFilter getCommonEnvRestriction(EnvFilter envFilter1, EnvFilter envFilter2) {
+    Set<String> commonFilterTypes = new HashSet<>();
+    Set<String> commonIds = new HashSet<>();
+
+    if (isNotEmpty(envFilter1.getIds())) {
+      commonIds.addAll(getCommonEnvIds(envFilter1.getIds(), envFilter2));
+    } else if (isNotEmpty(envFilter2.getIds())) {
+      commonIds.addAll(getCommonEnvIds(envFilter2.getIds(), envFilter1));
+    } else {
+      commonFilterTypes.addAll(envFilter1.getFilterTypes());
+      commonFilterTypes.retainAll(envFilter2.getFilterTypes());
+    }
+
+    EnvFilter commonEnvRestriction = new EnvFilter();
+
+    if (!commonIds.isEmpty()) {
+      commonFilterTypes.add(FilterType.SELECTED);
+      commonEnvRestriction.setIds(commonIds);
+    }
+
+    if (commonFilterTypes.isEmpty()) {
+      return null;
+    }
+
+    commonEnvRestriction.setFilterTypes(commonFilterTypes);
+    return commonEnvRestriction;
+  }
+
+  private Set<String> getCommonEnvIds(Set<String> ids, EnvFilter envFilter) {
+    Set<String> commonIds = new HashSet<>();
+    if (isNotEmpty(envFilter.getIds())) {
+      commonIds.addAll(ids);
+      commonIds.retainAll(envFilter.getIds());
+    } else {
+      envFilter.getFilterTypes().forEach(envType -> {
+        Set<String> envIds = new HashSet<>(ids);
+        envIds.removeIf(envId -> !isEnvironmentOfType(envId, EnvironmentType.valueOf(envType)));
+        commonIds.addAll(envIds);
+      });
+    }
+    return commonIds;
+  }
+
+  public boolean isEnvironmentOfType(String envId, EnvironmentType type) {
+    Environment env = wingsPersistence.get(Environment.class, envId);
+    if (env == null) {
+      return false;
+    }
+    EnvironmentType envType = env.getEnvironmentType();
+    return envType == type || envType == EnvironmentType.ALL;
+  }
 }
