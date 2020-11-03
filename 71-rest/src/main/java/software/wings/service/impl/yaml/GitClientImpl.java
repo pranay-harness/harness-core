@@ -13,6 +13,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
@@ -26,11 +27,13 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
@@ -1080,6 +1083,10 @@ public class GitClientImpl implements GitClient {
       username = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue())
                      .getKerberosConfig()
                      .getPrincipal(); // set principal as username
+    }
+    if (HTTP_PASSWORD == gitConfig.getAuthenticationScheme()) {
+      Preconditions.checkState(EmptyPredicate.isNotEmpty(username), "The user name is null in the git config");
+      Preconditions.checkState(EmptyPredicate.isNotEmpty(password), "The password is null in the git config");
     }
     gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(username, password));
   }

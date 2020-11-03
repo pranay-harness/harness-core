@@ -27,9 +27,11 @@ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
@@ -53,6 +55,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.JgitSshAuthRequest;
 import io.harness.git.model.PushResultGit;
+import io.vavr.CheckedPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -1171,6 +1174,10 @@ public class GitClientV2Impl implements GitClientV2 {
   TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitBaseRequest gitBaseRequest) {
     if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.HTTP_PASSWORD) {
       UsernamePasswordAuthRequest authRequest = (UsernamePasswordAuthRequest) gitBaseRequest.getAuthRequest();
+      Preconditions.checkState(EmptyPredicate.isNotEmpty(authRequest.getUsername()),
+          "The user is null in git config for the git connector " + gitBaseRequest.getConnectorId());
+      Preconditions.checkState(EmptyPredicate.isNotEmpty(authRequest.getPassword()),
+          "The password is null in git config for the git connector " + gitBaseRequest.getConnectorId());
       gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(
           authRequest.getUsername(), authRequest.getPassword()));
     } else if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.SSH_KEY) {
