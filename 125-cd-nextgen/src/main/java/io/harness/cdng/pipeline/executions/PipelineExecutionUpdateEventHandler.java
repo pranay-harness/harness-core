@@ -3,6 +3,8 @@ package io.harness.cdng.pipeline.executions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
@@ -40,6 +42,13 @@ public class PipelineExecutionUpdateEventHandler implements SyncOrchestrationEve
               accountId, orgId, projectId, planExecutionId, nodeExecutionId, outcome));
       return;
     }
+    if (isInfrastructureNodeAndCompleted(nodeExecution.getNode(), nodeExecution.getStatus())) {
+      Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionId, planExecutionId);
+      environmentOutcome.ifPresent(outcome
+          -> ngPipelineExecutionService.addEnvironmentInformationToPipelineExecutionNode(
+              accountId, orgId, projectId, planExecutionId, nodeExecutionId, outcome));
+      return;
+    }
     if (!shouldHandle(nodeExecution.getNode().getGroup())) {
       return;
     }
@@ -55,11 +64,20 @@ public class PipelineExecutionUpdateEventHandler implements SyncOrchestrationEve
         .findFirst();
   }
 
+  private Optional<EnvironmentOutcome> getEnvironmentOutcome(String planNodeId, String planExecutionId) {
+    return outcomeService.findAllByRuntimeId(planExecutionId, planNodeId)
+        .stream()
+        .filter(outcome -> outcome instanceof EnvironmentOutcome)
+        .map(outcome -> (EnvironmentOutcome) outcome)
+        .findFirst();
+  }
+
   private boolean isServiceNodeAndCompleted(PlanNode node, Status status) {
-    if (Objects.equals(node.getStepType(), ServiceStep.STEP_TYPE)) {
-      return status == Status.SUCCEEDED;
-    }
-    return false;
+    return Objects.equals(node.getStepType(), ServiceStep.STEP_TYPE) && status == Status.SUCCEEDED;
+  }
+
+  private boolean isInfrastructureNodeAndCompleted(PlanNode node, Status status) {
+    return Objects.equals(node.getStepType(), InfrastructureStep.STEP_TYPE) && status == Status.SUCCEEDED;
   }
 
   private boolean shouldHandle(String stepOutcomeGroup) {

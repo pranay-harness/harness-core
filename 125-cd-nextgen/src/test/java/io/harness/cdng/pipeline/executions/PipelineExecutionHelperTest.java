@@ -12,6 +12,7 @@ import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -23,10 +24,12 @@ import io.harness.execution.status.Status;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary.CDStageExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.plan.PlanNode;
@@ -37,6 +40,7 @@ import io.harness.yaml.core.StageElement;
 import org.apache.groovy.util.Maps;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,13 +77,11 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
-                                                   .envIdentifier("envIdentifier")
                                                    .stageIdentifier("testIdentifier")
                                                    .executionStatus(ExecutionStatus.NOT_STARTED)
                                                    .build();
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().size()).isEqualTo(1);
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().get(0)).isEqualTo(executionSummary);
-    assertThat(pipelineExecutionSummary.getEnvIdentifiers()).isEqualTo(Lists.newArrayList("envIdentifier"));
     assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(new ArrayList<>());
     assertThat(pipelineExecutionSummary.getStageIdentifiers()).isEqualTo(Lists.newArrayList("testIdentifier"));
     assertThat(pipelineExecutionSummary.getStageTypes()).isEqualTo(Lists.newArrayList(DEPLOYMENT_STAGE_TYPE));
@@ -116,7 +118,6 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
 
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
-                                                   .envIdentifier("envIdentifier")
                                                    .stageIdentifier("testIdentifier")
                                                    .executionStatus(ExecutionStatus.NOT_STARTED)
                                                    .build();
@@ -128,7 +129,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
 
     assertThat(parallelStageExecutionSummary.getStageExecutionSummaries().size()).isEqualTo(1);
     assertThat(parallelStageExecutionSummary.getStageExecutionSummaries().get(0)).isEqualTo(executionSummary);
-    assertThat(pipelineExecutionSummary.getEnvIdentifiers()).isEqualTo(Lists.newArrayList("envIdentifier"));
+    assertThat(pipelineExecutionSummary.getEnvIdentifiers()).isEqualTo(new ArrayList<>());
     assertThat(pipelineExecutionSummary.getServiceIdentifiers()).isEqualTo(new ArrayList<>());
     assertThat(pipelineExecutionSummary.getStageIdentifiers()).isEqualTo(Lists.newArrayList("testIdentifier"));
     assertThat(pipelineExecutionSummary.getStageTypes()).isEqualTo(Lists.newArrayList(DEPLOYMENT_STAGE_TYPE));
@@ -160,6 +161,75 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
         pipelineExecutionHelper.getCDStageExecutionSummary(nodeExecution);
 
     assertThat(actualStageExecutionSummary).isEqualTo(expectedExecutionSummary);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetCDStageExecutionSummaryStatusUpdate() {
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid("id")
+                                      .status(Status.FAILED)
+                                      .failureInfo(FailureInfo.builder().errorMessage("invalid").build())
+                                      .startTs(123L)
+                                      .endTs(124L)
+                                      .build();
+
+    PipelineExecutionHelper.StageIndex stageIndex =
+        PipelineExecutionHelper.StageIndex.builder().firstLevelIndex(0).build();
+    String key = String.format(
+        "%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements, stageIndex.getFirstLevelIndex());
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.executionStatus, ExecutionStatus.FAILED)
+        .set(key + "." + CDStageExecutionSummaryKeys.nodeExecutionId, nodeExecution.getUuid())
+        .set(key + "." + CDStageExecutionSummaryKeys.startedAt, nodeExecution.getStartTs())
+        .set(key + "." + CDStageExecutionSummaryKeys.endedAt, nodeExecution.getEndTs())
+        .set(key + "." + CDStageExecutionSummaryKeys.errorInfo, nodeExecution.getFailureInfo());
+
+    Update actualUpdate = pipelineExecutionHelper.getCDStageExecutionSummaryStatusUpdate(stageIndex, nodeExecution);
+
+    assertThat(actualUpdate).isEqualTo(update);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetCDStageExecutionSummaryServiceUpdate() {
+    ServiceExecutionSummary serviceExecutionSummary = ServiceExecutionSummary.builder().identifier("test").build();
+
+    PipelineExecutionHelper.StageIndex stageIndex =
+        PipelineExecutionHelper.StageIndex.builder().firstLevelIndex(0).build();
+    String key = String.format(
+        "%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements, stageIndex.getFirstLevelIndex());
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.serviceIdentifier, serviceExecutionSummary.getIdentifier())
+        .set(key + "." + CDStageExecutionSummaryKeys.serviceExecutionSummary, serviceExecutionSummary)
+        .addToSet(PipelineExecutionSummaryKeys.serviceIdentifiers, serviceExecutionSummary.getIdentifier());
+
+    Update actualUpdate =
+        pipelineExecutionHelper.getCDStageExecutionSummaryServiceUpdate(stageIndex, serviceExecutionSummary);
+
+    assertThat(actualUpdate).isEqualTo(update);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetCDStageExecutionSummaryEnvironmentUpdate() {
+    EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder().build();
+
+    PipelineExecutionHelper.StageIndex stageIndex =
+        PipelineExecutionHelper.StageIndex.builder().firstLevelIndex(0).build();
+    String key = String.format(
+        "%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements, stageIndex.getFirstLevelIndex());
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.envIdentifier, environmentOutcome.getIdentifier())
+        .addToSet(PipelineExecutionSummaryKeys.envIdentifiers, environmentOutcome.getIdentifier());
+
+    Update actualUpdate =
+        pipelineExecutionHelper.getCDStageExecutionSummaryEnvironmentUpdate(stageIndex, environmentOutcome);
+
+    assertThat(actualUpdate).isEqualTo(update);
   }
 
   @Test
