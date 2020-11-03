@@ -81,7 +81,7 @@ public class NodeAndPodDetailsDataFetcher
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
     if (!billingDataQueryBuilder.isFilterCombinationValid(filters, groupByEntityList)) {
-      return QLNodeAndPodDetailsTableData.builder().data(new ArrayList<>()).info(INVALID_FILTER_MSG).build();
+      return QLNodeAndPodDetailsTableData.builder().data(null).info(INVALID_FILTER_MSG).build();
     }
     queryData = billingDataQueryBuilder.formNodeAndPodDetailsQuery(
         accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, limit, offset);

@@ -1440,7 +1440,8 @@ public class BillingDataQueryBuilder {
   private List<QLBillingDataFilter> getUpdatedInstanceIdFilter(
       List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
     List<QLBillingDataFilter> updatedFilters = new ArrayList<>();
-    if (groupBy.contains(QLCCMEntityGroupBy.WorkloadName) || groupBy.contains(QLCCMEntityGroupBy.Namespace)) {
+    if (groupBy.stream().anyMatch(
+            entry -> entry == QLCCMEntityGroupBy.WorkloadName || entry == QLCCMEntityGroupBy.Namespace)) {
       for (QLBillingDataFilter filter : filters) {
         if (filter.getNodeInstanceId() != null) {
           QLIdFilter filterValues = filter.getNodeInstanceId();
@@ -1461,39 +1462,26 @@ public class BillingDataQueryBuilder {
   }
 
   protected boolean isFilterCombinationValid(List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
-    if (groupBy.contains(QLCCMEntityGroupBy.Application) || groupBy.contains(QLCCMEntityGroupBy.Service)
-        || groupBy.contains(QLCCMEntityGroupBy.Environment) || groupBy.contains(QLCCMEntityGroupBy.CloudProvider)) {
-      for (QLBillingDataFilter filter : filters) {
-        if (filter.getApplication() == null && filter.getService() == null && filter.getEnvironment() == null
-            && filter.getCloudProvider() == null && filter.getTag() == null && filter.getStartTime() == null
-            && filter.getEndTime() == null) {
-          return false;
-        }
-      }
-    } else if (groupBy.contains(QLCCMEntityGroupBy.WorkloadName) || groupBy.contains(QLCCMEntityGroupBy.Namespace)) {
-      for (QLBillingDataFilter filter : filters) {
-        if (filter.getWorkloadName() == null && filter.getNamespace() == null && filter.getNodeInstanceId() == null
-            && filter.getCluster() == null && filter.getLabel() == null && filter.getInstanceType() == null
-            && filter.getStartTime() == null && filter.getEndTime() == null) {
-          return false;
-        }
-      }
-    } else if (groupBy.contains(QLCCMEntityGroupBy.Node)) {
-      for (QLBillingDataFilter filter : filters) {
-        if (filter.getNodeInstanceId() == null && filter.getCluster() == null && filter.getInstanceType() == null
-            && filter.getStartTime() == null && filter.getEndTime() == null) {
-          return false;
-        }
-      }
-    } else if (groupBy.contains(QLCCMEntityGroupBy.CloudServiceName) || groupBy.contains(QLCCMEntityGroupBy.TaskId)
-        || groupBy.contains(QLCCMEntityGroupBy.LaunchType)) {
-      for (QLBillingDataFilter filter : filters) {
-        if (filter.getCloudServiceName() == null && filter.getLaunchType() == null && filter.getTaskId() == null
-            && filter.getCluster() == null && filter.getInstanceType() == null && filter.getStartTime() == null
-            && filter.getEndTime() == null) {
-          return false;
-        }
-      }
+    if (groupBy.stream().anyMatch(
+            entry -> entry == QLCCMEntityGroupBy.WorkloadName || entry == QLCCMEntityGroupBy.Namespace)) {
+      return !filters.stream().anyMatch(filter
+          -> filter.getCloudServiceName() != null || filter.getLaunchType() != null || filter.getTaskId() != null);
+
+    } else if (groupBy.stream().anyMatch(entry -> entry == QLCCMEntityGroupBy.Node)) {
+      return !filters.stream().anyMatch(filter
+          -> filter.getNodeInstanceId() == null && filter.getCluster() == null && filter.getInstanceType() == null
+              && filter.getStartTime() == null && filter.getEndTime() == null);
+
+    } else if (groupBy.stream().anyMatch(entry
+                   -> entry == QLCCMEntityGroupBy.CloudServiceName || entry == QLCCMEntityGroupBy.TaskId
+                       || entry == QLCCMEntityGroupBy.LaunchType)) {
+      return !filters.stream().anyMatch(filter
+          -> filter.getWorkloadName() != null || filter.getNamespace() != null || filter.getLabel() != null
+              || filter.getNodeInstanceId() != null);
+    } else if (groupBy.stream().anyMatch(entry
+                   -> entry == QLCCMEntityGroupBy.Application || entry == QLCCMEntityGroupBy.Service
+                       || entry == QLCCMEntityGroupBy.Environment || entry == QLCCMEntityGroupBy.CloudProvider)) {
+      return !filters.stream().anyMatch(filter -> filter.getNodeInstanceId() != null);
     }
     return true;
   }
