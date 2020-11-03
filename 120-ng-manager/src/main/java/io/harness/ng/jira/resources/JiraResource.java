@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.JiraIssueDTO;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -50,7 +51,7 @@ public class JiraResource {
   }
 
   @POST
-  @Path("create-ticket")
+  @Path("createTicket")
   @ApiOperation(value = "Create jira ticket", nickname = "createJiraTicket")
   public ResponseDTO<String> createTicket(@QueryParam("connectorRef") String jiraConnectorIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
@@ -62,7 +63,7 @@ public class JiraResource {
   }
 
   @POST
-  @Path("update-ticket")
+  @Path("updateTicket")
   @ApiOperation(value = "Update jira ticket", nickname = "updateJiraTicket")
   public ResponseDTO<String> updateTicket(@QueryParam("connectorRef") String jiraConnectorIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
@@ -71,5 +72,18 @@ public class JiraResource {
         IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     String ticketKey = jiraResourceService.updateTicket(connectorRef, orgIdentifier, projectIdentifier, request);
     return ResponseDTO.newResponse(ticketKey);
+  }
+
+  @GET
+  @Path("fetchIssue")
+  @ApiOperation(value = "Fetch jira issue", nickname = "fetchJiraIssue")
+  public ResponseDTO<JiraIssueDTO> fetchJiraIssue(@QueryParam("connectorRef") String jiraConnectorIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("jiraIssueId") String jiraIssueId) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    JiraIssueDTO jiraIssueDTO =
+        jiraResourceService.fetchIssue(connectorRef, orgIdentifier, projectIdentifier, jiraIssueId);
+    return ResponseDTO.newResponse(jiraIssueDTO);
   }
 }

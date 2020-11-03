@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static net.rcarz.jiraclient.Field.RESOLUTION;
 import static net.rcarz.jiraclient.Field.TIME_TRACKING;
@@ -41,6 +42,7 @@ import static net.rcarz.jiraclient.Field.TIME_TRACKING;
 public class JiraTaskNGHandler {
   @VisibleForTesting static final String ORIGINAL_ESTIMATE = "TimeTracking:OriginalEstimate";
   @VisibleForTesting static final String REMAINING_ESTIMATE = "TimeTracking:RemainingEstimate";
+  @VisibleForTesting static final String JIRA_APPROVAL_FIELD_KEY = "name";
 
   public JiraTaskNGResponse validateCredentials(JiraTaskNGParameters jiraTaskNGParameters) {
     try {
@@ -197,8 +199,38 @@ public class JiraTaskNGHandler {
         .build();
   }
 
-  private JiraClient getJiraClient(JiraTaskNGParameters jiraTaskNGParameters) throws JiraException {
+  public JiraTaskNGResponse fetchIssue(JiraTaskNGParameters jiraTaskNGParameters) {
     JiraConnectorDTO jiraConnectorDTO = jiraTaskNGParameters.getJiraConnectorDTO();
+    JiraClient jira;
+    Issue issue;
+    String approvalFieldValue = null;
+    try {
+      jira = getJiraClient(jiraTaskNGParameters);
+      issue = jira.getIssue(jiraTaskNGParameters.getIssueId());
+      String message = "Waiting for Approval on ticket: " + issue.getKey();
+      if (EmptyPredicate.isNotEmpty(jiraTaskNGParameters.getApprovalField())) {
+        Map<String, String> fieldMap = (Map<String, String>) issue.getField(jiraTaskNGParameters.getApprovalField());
+        approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+      }
+
+      return JiraTaskNGResponse.builder()
+          .executionStatus(RUNNING)
+          .issueUrl(getIssueUrl(jiraConnectorDTO, issue.getKey()))
+          .issueKey(issue.getKey())
+          .currentStatus(approvalFieldValue)
+          .errorMessage(message)
+          .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
+          .build();
+    } catch (JiraException e) {
+      String error =
+          "Unable to fetch Jira Issue for Id: " + jiraTaskNGParameters.getIssueId() + "  " + extractResponseMessage(e);
+      log.error(error, e);
+      return JiraTaskNGResponse.builder().executionStatus(FAILURE).errorMessage(error).build();
+    }
+  }
+
+  private JiraClient getJiraClient(JiraTaskNGParameters parameters) throws JiraException {
+    JiraConnectorDTO jiraConnectorDTO = parameters.getJiraConnectorDTO();
     BasicCredentials creds = new BasicCredentials(
         jiraConnectorDTO.getUsername(), String.valueOf(jiraConnectorDTO.getPasswordRef().getDecryptedValue()));
     String jiraUrl = jiraConnectorDTO.getJiraUrl();
