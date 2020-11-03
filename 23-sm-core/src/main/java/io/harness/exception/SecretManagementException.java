@@ -26,7 +26,7 @@ public class SecretManagementException extends WingsException {
   }
 
   public SecretManagementException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets) {
-    super(null, null, errorCode, Level.ERROR, reportTargets, null);
+    super(message, null, errorCode, Level.ERROR, reportTargets, null);
     param(MESSAGE_KEY, message);
   }
 
@@ -36,7 +36,7 @@ public class SecretManagementException extends WingsException {
 
   public SecretManagementException(
       ErrorCode errorCode, String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
-    super(null, cause, errorCode, Level.ERROR, reportTargets, null);
+    super(message, cause, errorCode, Level.ERROR, reportTargets, null);
     param(MESSAGE_KEY, message);
   }
 
