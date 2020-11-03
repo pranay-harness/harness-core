@@ -1,6 +1,8 @@
 package io.harness.engine.executables.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.brokeStatuses;
+import static io.harness.execution.status.Status.ABORTED;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -26,6 +28,8 @@ import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
@@ -69,7 +73,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
     TaskChainExecutableResponse lastLinkResponse =
         Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
-    if (lastLinkResponse.isChainEnd()) {
+    Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
+    if (lastLinkResponse.isChainEnd() || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse =
           taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
               lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
@@ -122,6 +127,16 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                 .build()));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
+  }
+
+  private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(
+        stepNotifyResponse -> brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()));
+  }
+
+  private boolean isAborted(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(
+        stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
   }
 
   @Override

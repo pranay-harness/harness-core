@@ -2,6 +2,7 @@ package io.harness.engine.executables.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.ABORTED;
 import static io.harness.execution.status.Status.QUEUED;
 import static io.harness.execution.status.Status.SUSPENDED;
 import static io.harness.execution.status.Status.brokeStatuses;
@@ -80,10 +81,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
       accumulatedResponse = invocationHelper.accumulateResponses(
           ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     }
-    if (lastChildChainExecutableResponse.isLastLink()
-        || accumulatedResponse.values().stream().anyMatch(stepNotifyResponse
-               -> brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()))
-        || lastChildChainExecutableResponse.isSuspend()) {
+    if (lastChildChainExecutableResponse.isLastLink() || lastChildChainExecutableResponse.isSuspend()
+        || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse =
           childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
               lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
@@ -153,5 +152,15 @@ public class ChildChainStrategy implements ExecuteStrategy {
             .status(SUSPENDED)
             .description("Ignoring Execution as next child found to be null")
             .build());
+  }
+
+  private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(
+        stepNotifyResponse -> brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()));
+  }
+
+  private boolean isAborted(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(
+        stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
   }
 }

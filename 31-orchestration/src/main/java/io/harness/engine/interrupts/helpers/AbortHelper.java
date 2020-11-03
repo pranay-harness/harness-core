@@ -59,9 +59,8 @@ public class AbortHelper {
         ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);
       }
 
-      NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecution.getUuid(),
-          ops
-          -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()).set(NodeExecutionKeys.status, finalStatus));
+      NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
+          nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
       engine.endTransition(updatedNodeExecution);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(ABORT_ALL,
