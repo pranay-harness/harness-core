@@ -77,7 +77,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -126,7 +125,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -228,11 +226,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment get(String appId, String envId) {
     return wingsPersistence.getWithAppId(Environment.class, appId, envId);
-  }
-
-  @Override
-  public Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status) {
-    return get(appId, envId, true);
   }
 
   @Override

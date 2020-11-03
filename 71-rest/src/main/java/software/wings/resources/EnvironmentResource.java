@@ -19,7 +19,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Service;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -109,25 +108,13 @@ public class EnvironmentResource {
     return new RestResponse<>(environmentService.save(environment));
   }
 
-  /**
-   * List.
-   *
-   * @param appId  the app id
-   * @param envId  the env id
-   * @param status the status
-   * @return the rest response
-   */
   @GET
   @Path("{envId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Environment> get(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, @QueryParam("status") SetupStatus status) {
+  public RestResponse<Environment> get(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     try {
-      if (status == null) {
-        status = SetupStatus.COMPLETE;
-      }
-      return new RestResponse<>(environmentService.get(appId, envId, status));
+      return new RestResponse<>(environmentService.get(appId, envId, false));
     } catch (Exception e) {
       return new RestResponse<>();
     }

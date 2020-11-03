@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -224,18 +225,32 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should get environment.
+   * Should get environment with summary.
    */
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldGetEnvironment() {
+  public void shouldGetEnvironmentWithSummary() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
         .thenReturn(new PageResponse<>());
-    environmentService.get(APP_ID, ENV_ID, true);
+    Environment environment = environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
+    assertThat(environment.getServiceTemplates()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetEnvironmentWithoutSummary() {
+    when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
+        .thenReturn(new PageResponse<>());
+    Environment environment = environmentService.get(APP_ID, ENV_ID, false);
+    verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
+    assertThat(environment.getServiceTemplates()).isNull();
   }
 
   @Test
