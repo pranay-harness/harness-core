@@ -13,6 +13,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
@@ -27,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -38,6 +41,9 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
@@ -49,14 +55,16 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.SpotInstConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.sm.ContextElement;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
-import java.util.List;
 import java.util.Map;
 
 public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
+  @Mock SweepingOutputService mockSweepingOutputService;
+  @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
+
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
@@ -139,6 +147,7 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
     SpotinstTrafficShiftAlbSetupState state = spy(SpotinstTrafficShiftAlbSetupState.class);
     on(state).set("useCurrentRunningCount", true);
     on(state).set("elastigroupNamePrefix", "foo");
+    on(state).set("sweepingOutputService", mockSweepingOutputService);
     ActivityService mockActivityService = mock(ActivityService.class);
     on(state).set("activityService", mockActivityService);
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
@@ -197,26 +206,27 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
       }
     });
     doReturn(stateExecutionData).when(mockContext).getStateExecutionData();
+    doReturn("test").when(mockSpotinstStateHelper).getSweepingOutputName(any(), any());
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
-    assertThat(stateExecutionData.getNewElastigroupId()).isEqualTo("newId");
-    assertThat(stateExecutionData.getNewElastigroupName()).isEqualTo("newName");
-    assertThat(stateExecutionData.getOldElastigroupId()).isEqualTo("oldId");
-    assertThat(stateExecutionData.getOldElastigroupName()).isEqualTo("oldName");
-    assertThat(response).isNotNull();
-    assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
-    List<ContextElement> contextElements = response.getContextElements();
-    assertThat(contextElements).isNotNull();
-    assertThat(contextElements.size()).isEqualTo(1);
-    ContextElement contextElement = contextElements.get(0);
-    assertThat(contextElement).isNotNull();
-    assertThat(contextElement instanceof SpotinstTrafficShiftAlbSetupElement).isTrue();
-    SpotinstTrafficShiftAlbSetupElement setupElement = (SpotinstTrafficShiftAlbSetupElement) contextElement;
+
+    verify(mockSweepingOutputService, times(1)).save(sweepingOutputInstanceArgumentCaptor.capture());
+    SpotinstTrafficShiftAlbSetupElement setupElement =
+        (SpotinstTrafficShiftAlbSetupElement) sweepingOutputInstanceArgumentCaptor.getValue().getValue();
+    assertThat(setupElement).isNotNull();
     assertThat(setupElement.getOldElastiGroupOriginalConfig().getCapacity().getMinimum()).isEqualTo(0);
     assertThat(setupElement.getOldElastiGroupOriginalConfig().getCapacity().getMaximum()).isEqualTo(1);
     assertThat(setupElement.getOldElastiGroupOriginalConfig().getCapacity().getTarget()).isEqualTo(1);
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getMinimum()).isEqualTo(0);
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getMaximum()).isEqualTo(1);
     assertThat(setupElement.getNewElastiGroupOriginalConfig().getCapacity().getTarget()).isEqualTo(1);
+
+    assertThat(stateExecutionData.getNewElastigroupId()).isEqualTo("newId");
+    assertThat(stateExecutionData.getNewElastigroupName()).isEqualTo("newName");
+    assertThat(stateExecutionData.getOldElastigroupId()).isEqualTo("oldId");
+    assertThat(stateExecutionData.getOldElastigroupName()).isEqualTo("oldName");
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
   }
 
   @Test

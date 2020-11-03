@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
@@ -15,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
@@ -32,6 +34,7 @@ import software.wings.WingsBaseTest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -43,6 +46,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private DelegateService mockDelegateService;
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
+  @Mock private SweepingOutputService mockSweepingOutputService;
 
   @InjectMocks SpotInstServiceSetup state = new SpotInstServiceSetup("stateName");
 
@@ -110,18 +114,15 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
                     .build())
             .build();
     doReturn(data).when(mockContext).getStateExecutionData();
+    doReturn("test").when(mockSpotinstStateHelper).getSweepingOutputName(any(), any());
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     doReturn(groupPrefix).when(mockContext).renderExpression(anyString());
     ExecutionResponse executionResponse = state.handleAsyncResponse(mockContext, responseMap);
+    verify(mockSweepingOutputService, times(1)).save(any());
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
     List<ContextElement> notifyElements = executionResponse.getNotifyElements();
     assertThat(notifyElements).isNotNull();
-    assertThat(notifyElements.size()).isEqualTo(1);
-    ContextElement contextElement = notifyElements.get(0);
-    assertThat(contextElement).isNotNull();
-    assertThat(contextElement instanceof SpotInstSetupContextElement).isTrue();
-    SpotInstSetupContextElement spotinstElement = (SpotInstSetupContextElement) contextElement;
-    assertThat(spotinstElement.getSpotInstSetupTaskResponse().getNewElastiGroup().getId()).isEqualTo(newId);
-    assertThat(spotinstElement.getSpotInstSetupTaskResponse().getGroupToBeDownsized().get(0).getId()).isEqualTo(oldId);
+    assertThat(notifyElements.size()).isEqualTo(0);
   }
 }

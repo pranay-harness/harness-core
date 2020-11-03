@@ -45,6 +45,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -55,6 +56,7 @@ import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -83,6 +85,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -100,6 +103,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private AwsCommandHelper mockCommandHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Captor private ArgumentCaptor<SweepingOutputInquiry> sweepingOutputInquiryArgumentCaptor;
 
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
@@ -397,5 +401,34 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     assertThat(value.getNewInstanceTrafficPercent()).isEqualTo(35);
     assertThat(value.getInstanceDetails()).isNull();
     assertThat(value.getInstanceElements()).isNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetSetupElementFromSweepingOutput() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    String prefix = "prefix";
+    doReturn("sweepingOutputName").when(spotInstStateHelper).getSweepingOutputName(mockContext, prefix);
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    spotInstStateHelper.getSetupElementFromSweepingOutput(mockContext, prefix);
+
+    verify(sweepingOutputService, times(1)).findSweepingOutput(sweepingOutputInquiryArgumentCaptor.capture());
+    SweepingOutputInquiry sweepingOutputInquiry = sweepingOutputInquiryArgumentCaptor.getValue();
+    assertThat(sweepingOutputInquiry.getName()).isEqualTo("sweepingOutputName");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetSweepingOutputName() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    String suffix = "sufix";
+    String prefix = "prefix";
+    PhaseElement phaseElement = mock(PhaseElement.class);
+    doReturn(phaseElement).when(mockContext).getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    doReturn(ServiceElement.builder().uuid(suffix).build()).when(phaseElement).getServiceElement();
+    String sweepingOutputName = spotInstStateHelper.getSweepingOutputName(mockContext, prefix);
+    assertThat(sweepingOutputName).isEqualTo(prefix + suffix);
   }
 }

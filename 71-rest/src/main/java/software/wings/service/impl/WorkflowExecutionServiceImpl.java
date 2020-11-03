@@ -4785,7 +4785,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType()
         || DeploymentType.ECS == infrastructureDefinition.getDeploymentType()
         || DeploymentType.KUBERNETES == infrastructureDefinition.getDeploymentType()
-        || isAmiAsg(infrastructureDefinition);
+        || isAmiAsg(infrastructureDefinition) || isAmiSpotinst(infrastructureDefinition);
   }
 
   private boolean isAmiAsg(InfrastructureDefinition infrastructureDefinition) {
@@ -4793,6 +4793,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         && infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure
         && (((AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure()).getAmiDeploymentType()
                == AmiDeploymentType.AWS_ASG);
+  }
+
+  private boolean isAmiSpotinst(InfrastructureDefinition infrastructureDefinition) {
+    return DeploymentType.AMI == infrastructureDefinition.getDeploymentType()
+        && infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure
+        && (((AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure()).getAmiDeploymentType()
+               == AmiDeploymentType.SPOTINST);
   }
 
   @Override

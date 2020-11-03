@@ -2,6 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -79,8 +80,8 @@ public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest 
                  .newElastiGroupOriginalConfig(ElastiGroup.builder().id("newId").name("newName").build())
                  .timeoutIntervalInMin(10)
                  .build())
-        .when(mockContext)
-        .getContextElement(any());
+        .when(mockSpotinstStateHelper)
+        .getSetupElementFromSweepingOutput(mockContext, SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME);
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
         .when(mockSpotinstStateHelper)
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());

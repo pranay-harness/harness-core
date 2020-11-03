@@ -1,12 +1,12 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.context.ContextElementType.SPOTINST_SERVICE_SETUP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
+import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
@@ -42,7 +42,6 @@ import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
-import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -81,8 +80,10 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
     notNullCheck("Phase element is null", phaseElement);
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    ContextElement contextElement = context.getContextElement(SPOTINST_SERVICE_SETUP);
-    if (!(contextElement instanceof SpotinstTrafficShiftAlbSetupElement)) {
+    SpotinstTrafficShiftAlbSetupElement setupElement =
+        (SpotinstTrafficShiftAlbSetupElement) spotinstStateHelper.getSetupElementFromSweepingOutput(
+            context, SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME);
+    if (setupElement == null) {
       if (rollback) {
         return ExecutionResponse.builder()
             .executionStatus(SKIPPED)
@@ -92,7 +93,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
         throw new InvalidRequestException("Did not find Setup element of class SpotinstTrafficShiftAlbSetupElement");
       }
     }
-    SpotinstTrafficShiftAlbSetupElement setupElement = (SpotinstTrafficShiftAlbSetupElement) contextElement;
+
     SpotinstTrafficShiftDataBag dataBag = spotinstStateHelper.getDataBag(context);
 
     Activity activity =

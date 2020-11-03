@@ -49,4 +49,8 @@ public interface SpotInstConstants {
   String ELASTI_GROUP_ID = "id";
   String ELASTI_GROUP_CREATED_AT = "createdAt";
   String ELASTI_GROUP_UPDATED_AT = "updatedAt";
+
+  // Spotinst Sweeping output constants
+  String SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputSpotinst";
+  String SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputSpotinstAlb";
 }

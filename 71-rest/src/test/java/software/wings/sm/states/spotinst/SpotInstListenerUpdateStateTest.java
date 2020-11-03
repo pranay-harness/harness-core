@@ -2,7 +2,6 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -107,7 +106,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
                     .spotInstTaskParameters(SpotInstSetupTaskParameters.builder().timeoutIntervalInMin(10).build())
                     .build())
             .build();
-    doReturn(singletonList(element)).when(mockContext).getContextElementList(any());
+    doReturn(element).when(mockSpotinstStateHelper).getSetupElementFromSweepingOutput(any(), anyString());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity)
         .when(mockSpotinstStateHelper)

@@ -3,6 +3,7 @@ package software.wings.sm.states.spotinst;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
 
 import com.google.common.collect.ImmutableList;
@@ -96,11 +97,11 @@ public class SpotInstListenerUpdateState extends State {
 
     // retrieve SpotInstSetupContextElement
     SpotInstSetupContextElement spotInstSetupContextElement =
-        context.<SpotInstSetupContextElement>getContextElementList(ContextElementType.SPOTINST_SERVICE_SETUP)
-            .stream()
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(SpotInstSetupContextElement.builder().build());
+        (SpotInstSetupContextElement) spotInstStateHelper.getSetupElementFromSweepingOutput(
+            context, SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    if (spotInstSetupContextElement == null) {
+      throw new InvalidRequestException("Did not find Setup element of class SpotinstSetupContextElement");
+    }
 
     // create activity with details
     Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(),

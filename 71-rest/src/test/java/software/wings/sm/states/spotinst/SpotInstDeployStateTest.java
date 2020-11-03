@@ -130,7 +130,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
                     .spotInstTaskParameters(SpotInstSetupTaskParameters.builder().timeoutIntervalInMin(10).build())
                     .build())
             .build();
-    doReturn(singletonList(element)).when(mockContext).getContextElementList(any());
+    doReturn(element).when(mockSpotinstStateHelper).getSetupElementFromSweepingOutput(any(), anyString());
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
