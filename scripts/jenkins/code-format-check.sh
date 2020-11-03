@@ -7,7 +7,6 @@ timestamp=$(date +%d-%m-%Y_%H-%M-%S)
 logPath="/var/log/format_${timestamp}.log"
 #logPath="check.log"
 #repoPath="~/.m2/"
-repoPath="/home/jenkins/maven-repositories/0"
 grepStr="Could not resolve dependencies for project"
 echo "Starting Format Checks" > "$logPath"
 

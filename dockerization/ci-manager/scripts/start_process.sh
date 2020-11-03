@@ -29,8 +29,12 @@ export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCP
 
 export JAVA_OPTS="-Xms${MAX_MEMORY} -Xmx${MIN_MEMORY} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
 
-if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/ci-manager-config.yml
-else
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/ci-manager-config.yml > /opt/harness/logs/ci-manager.log 2>&1
+if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
+    mkdir /opt/harness/AppServerAgent-20.8.0.30686 && unzip AppServerAgent-20.8.0.30686.zip -d /opt/harness/AppServerAgent-20.8.0.30686
+    node_name="-Dappdynamics.agent.nodeName=$(hostname)"
+    JAVA_OPTS=$JAVA_OPTS" -Dcapsule.jvm.args=-javaagent:/opt/harness/AppServerAgent-20.8.0.30686/javaagent.jar -Dappdynamics.jvm.shutdown.mark.node.as.historical=true"
+    JAVA_OPTS="$JAVA_OPTS $node_name"
+    echo "Using Appdynamics java agent"
 fi
+
+java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/ci-manager-config.yml
