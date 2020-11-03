@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
@@ -14,9 +15,12 @@ import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary.CDStageExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary.ParallelStageExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
+import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperHelperRegistry;
@@ -26,6 +30,7 @@ import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,8 +67,6 @@ public class PipelineExecutionHelper {
       if (!skipAddingStageExecutionElement) {
         pipelineExecutionSummary.addStageExecutionSummaryElement(stageExecutionSummary);
       }
-      pipelineExecutionSummary.addEnvironmentIdentifier(
-          stageTypeToStageExecutionSummaryMapper.getEnvironmentIdentifier(stageType));
       pipelineExecutionSummary.addStageIdentifier(stageType.getIdentifier());
       pipelineExecutionSummary.addNGStageType(stageType.getStageType());
       return stageExecutionSummary;
@@ -96,6 +99,43 @@ public class PipelineExecutionHelper {
       }
     }
     return cdStageExecutionSummary;
+  }
+
+  public Update getCDStageExecutionSummaryStatusUpdate(StageIndex stageIndex, NodeExecution nodeExecution) {
+    String key = getKeyForGivenStage(stageIndex);
+
+    ExecutionStatus executionStatus = getExecutionStatus(nodeExecution.getStatus());
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.executionStatus, executionStatus)
+        .set(key + "." + CDStageExecutionSummaryKeys.nodeExecutionId, nodeExecution.getUuid())
+        .set(key + "." + CDStageExecutionSummaryKeys.startedAt, nodeExecution.getStartTs());
+
+    if (ExecutionStatus.isTerminal(executionStatus)) {
+      update.set(key + "." + CDStageExecutionSummaryKeys.endedAt, nodeExecution.getEndTs());
+      if (nodeExecution.getFailureInfo() != null) {
+        update.set(key + "." + CDStageExecutionSummaryKeys.errorInfo, nodeExecution.getFailureInfo());
+      }
+    }
+    return update;
+  }
+
+  public Update getCDStageExecutionSummaryServiceUpdate(
+      StageIndex stageIndex, ServiceExecutionSummary serviceExecutionSummary) {
+    String key = getKeyForGivenStage(stageIndex);
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.serviceIdentifier, serviceExecutionSummary.getIdentifier())
+        .set(key + "." + CDStageExecutionSummaryKeys.serviceExecutionSummary, serviceExecutionSummary)
+        .addToSet(PipelineExecutionSummaryKeys.serviceIdentifiers, serviceExecutionSummary.getIdentifier());
+    return update;
+  }
+
+  public Update getCDStageExecutionSummaryEnvironmentUpdate(
+      StageIndex stageIndex, EnvironmentOutcome environmentOutcome) {
+    String key = getKeyForGivenStage(stageIndex);
+    Update update = new Update();
+    update.set(key + "." + CDStageExecutionSummaryKeys.envIdentifier, environmentOutcome.getIdentifier())
+        .addToSet(PipelineExecutionSummaryKeys.envIdentifiers, environmentOutcome.getIdentifier());
+    return update;
   }
 
   public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
@@ -154,6 +194,28 @@ public class PipelineExecutionHelper {
     return null;
   }
 
+  public StageIndex findStageIndexByNodeExecutionId(
+      List<StageExecutionSummary> stageExecutionSummaries, String nodeExecutionId) {
+    int index = 0;
+    for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
+      if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
+        ParallelStageExecutionSummary parallelStageExecutionSummary =
+            (ParallelStageExecutionSummary) stageExecutionSummary;
+        StageIndex stageIndex = findStageIndexByNodeExecutionId(
+            parallelStageExecutionSummary.getStageExecutionSummaries(), nodeExecutionId);
+
+        if (stageIndex != null) {
+          return StageIndex.builder().firstLevelIndex(index).secondLevelIndex(stageIndex.firstLevelIndex).build();
+        }
+      } else if (stageExecutionSummary instanceof CDStageExecutionSummary
+          && ((CDStageExecutionSummary) stageExecutionSummary).getNodeExecutionId().equals(nodeExecutionId)) {
+        return StageIndex.builder().firstLevelIndex(index).build();
+      }
+      index++;
+    }
+    return null;
+  }
+
   public StageIndex findStageIndexByPlanNodeId(List<StageExecutionSummary> stageExecutionSummaries, String planNodeId) {
     int index = 0;
     for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
@@ -173,6 +235,15 @@ public class PipelineExecutionHelper {
       index++;
     }
     return null;
+  }
+
+  private String getKeyForGivenStage(StageIndex stageIndex) {
+    return stageIndex.getSecondLevelIndex() != -1
+        ? String.format("%s.%s.%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements,
+              stageIndex.getFirstLevelIndex(), ParallelStageExecutionSummaryKeys.stageExecutionSummaries,
+              stageIndex.getSecondLevelIndex())
+        : String.format("%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements,
+              stageIndex.getFirstLevelIndex());
   }
 
   @Value

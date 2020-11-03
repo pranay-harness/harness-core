@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
@@ -32,7 +33,6 @@ import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.TriggerType;
-import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
@@ -200,9 +200,8 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
       if (stageIndex == null) {
         throw new UnexpectedException("No Stage Found for plan node Id: " + nodeExecution.getNode().getUuid());
       }
-      CDStageExecutionSummary cdStageExecutionSummary =
-          pipelineExecutionHelper.getCDStageExecutionSummary(nodeExecution);
-      pipelineExecutionRepository.findAndUpdate(planExecutionId, cdStageExecutionSummary, stageIndex);
+      pipelineExecutionRepository.findAndUpdate(
+          planExecutionId, pipelineExecutionHelper.getCDStageExecutionSummaryStatusUpdate(stageIndex, nodeExecution));
     } else if (nodeExecution.getNode().getGroup().equals(StepOutcomeGroup.PIPELINE.name())) {
       PipelineExecutionSummary pipelineExecutionSummary =
           getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
@@ -214,12 +213,14 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,
       String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution stageNodeExecution = getStageNodeExecution(nodeExecutionId);
     PipelineExecutionSummary pipelineExecutionSummary =
         getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
-    CDStageExecutionSummary stageExecutionSummaryWrapper =
-        pipelineExecutionHelper.findStageExecutionSummaryByNodeExecutionId(
-            pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), nodeExecution.getParentId());
+    StageIndex stageIndex = pipelineExecutionHelper.findStageIndexByNodeExecutionId(
+        pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), stageNodeExecution.getUuid());
+    if (stageIndex == null) {
+      throw new UnexpectedException("No Stage Found for plan node Id: " + stageNodeExecution.getNode().getUuid());
+    }
     ServiceExecutionSummary serviceExecutionSummary =
         ServiceExecutionSummary.builder()
             .identifier(serviceOutcome.getIdentifier())
@@ -227,11 +228,24 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
             .deploymentType(serviceOutcome.getDeploymentType())
             .artifacts(pipelineExecutionHelper.mapArtifactsOutcomeToSummary(serviceOutcome))
             .build();
-    stageExecutionSummaryWrapper.setServiceExecutionSummary(serviceExecutionSummary);
-    stageExecutionSummaryWrapper.setServiceIdentifier(serviceExecutionSummary.getIdentifier());
-    pipelineExecutionSummary.addServiceIdentifier(serviceExecutionSummary.getIdentifier());
-    pipelineExecutionSummary.addServiceDefinitionType(serviceExecutionSummary.getDeploymentType());
-    pipelineExecutionRepository.save(pipelineExecutionSummary);
+    pipelineExecutionRepository.findAndUpdate(planExecutionId,
+        pipelineExecutionHelper.getCDStageExecutionSummaryServiceUpdate(stageIndex, serviceExecutionSummary));
+    return pipelineExecutionSummary;
+  }
+
+  @Override
+  public PipelineExecutionSummary addEnvironmentInformationToPipelineExecutionNode(String accountId, String orgId,
+      String projectId, String planExecutionId, String nodeExecutionId, EnvironmentOutcome environmentOutcome) {
+    NodeExecution stageNodeExecution = getStageNodeExecution(nodeExecutionId);
+    PipelineExecutionSummary pipelineExecutionSummary =
+        getByPlanExecutionId(accountId, orgId, projectId, planExecutionId);
+    StageIndex stageIndex = pipelineExecutionHelper.findStageIndexByNodeExecutionId(
+        pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), stageNodeExecution.getUuid());
+    if (stageIndex == null) {
+      throw new UnexpectedException("No Stage Found for plan node Id: " + stageNodeExecution.getNode().getUuid());
+    }
+    pipelineExecutionRepository.findAndUpdate(planExecutionId,
+        pipelineExecutionHelper.getCDStageExecutionSummaryEnvironmentUpdate(stageIndex, environmentOutcome));
     return pipelineExecutionSummary;
   }
 
@@ -259,5 +273,13 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   public Map<ExecutionNodeType, String> getStepTypeToYamlTypeMapping() {
     return Arrays.stream(ExecutionNodeType.values())
         .collect(Collectors.toMap(executionStepType -> executionStepType, ExecutionNodeType::getYamlType, (a, b) -> b));
+  }
+
+  private NodeExecution getStageNodeExecution(String nodeExecutionId) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())) {
+      return nodeExecution;
+    }
+    return getStageNodeExecution(nodeExecution.getParentId());
   }
 }

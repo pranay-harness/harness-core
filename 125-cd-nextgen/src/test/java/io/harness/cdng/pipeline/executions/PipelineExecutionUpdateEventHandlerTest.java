@@ -12,6 +12,8 @@ import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
@@ -108,6 +110,33 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
     verify(nodeExecutionService).get("node1");
     verify(ngPipelineExecutionService)
         .addServiceInformationToPipelineExecutionNode(
+            eq("accountId"), eq("orgIdentifier"), eq("projectIdentfier"), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testHandleEventEnvironment() {
+    OrchestrationEvent orchestrationEvent =
+        OrchestrationEvent.builder()
+            .ambiance(Ambiance.builder()
+                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
+                              "orgIdentifier", "orgIdentifier"))
+                          .levels(Lists.newArrayList(Level.builder().runtimeId("node1").build()))
+                          .build())
+            .build();
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .node(PlanNode.builder().stepType(InfrastructureStep.STEP_TYPE).build())
+                                      .status(Status.SUCCEEDED)
+                                      .build();
+    when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
+    when(outcomeService.findAllByRuntimeId(any(), anyString()))
+        .thenReturn(Lists.newArrayList(EnvironmentOutcome.builder().build()));
+    pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
+
+    verify(nodeExecutionService).get("node1");
+    verify(ngPipelineExecutionService)
+        .addEnvironmentInformationToPipelineExecutionNode(
             eq("accountId"), eq("orgIdentifier"), eq("projectIdentfier"), any(), any(), any());
   }
 }

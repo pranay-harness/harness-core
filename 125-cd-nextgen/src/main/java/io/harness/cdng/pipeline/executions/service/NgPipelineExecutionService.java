@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions.service;
 
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
@@ -35,6 +36,9 @@ public interface NgPipelineExecutionService {
 
   PipelineExecutionSummary addServiceInformationToPipelineExecutionNode(String accountId, String orgId,
       String projectId, String planExecutionId, String nodeExecutionId, ServiceOutcome serviceOutcome);
+
+  PipelineExecutionSummary addEnvironmentInformationToPipelineExecutionNode(String accountId, String orgId,
+      String projectId, String planExecutionId, String nodeExecutionId, EnvironmentOutcome environmentOutcome);
 
   List<ExecutionStatus> getExecutionStatuses();
 

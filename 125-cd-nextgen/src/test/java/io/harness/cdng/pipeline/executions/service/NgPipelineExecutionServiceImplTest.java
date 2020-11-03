@@ -36,7 +36,6 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
@@ -61,6 +60,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -107,14 +107,14 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
 
     PipelineExecutionHelper.StageIndex stageIndex = PipelineExecutionHelper.StageIndex.builder().build();
     doReturn(stageIndex).when(pipelineExecutionHelper).findStageIndexByPlanNodeId(emptyList(), "planNodeId");
-    CDStageExecutionSummary stageExecutionSummary = CDStageExecutionSummary.builder().build();
-    doReturn(stageExecutionSummary).when(pipelineExecutionHelper).getCDStageExecutionSummary(nodeExecution);
+    Update update = new Update();
+    doReturn(update).when(pipelineExecutionHelper).getCDStageExecutionSummaryStatusUpdate(stageIndex, nodeExecution);
 
     ngPipelineExecutionService.updateStatusForGivenNode(
         ACCOUNT_ID, ORG_ID, PROJECT_ID, PLAN_EXECUTION_ID, nodeExecution);
 
-    verify(pipelineExecutionHelper).getCDStageExecutionSummary(nodeExecution);
-    verify(pipelineExecutionRepository).findAndUpdate(PLAN_EXECUTION_ID, stageExecutionSummary, stageIndex);
+    verify(pipelineExecutionHelper).getCDStageExecutionSummaryStatusUpdate(stageIndex, nodeExecution);
+    verify(pipelineExecutionRepository).findAndUpdate(PLAN_EXECUTION_ID, update);
   }
 
   @Test

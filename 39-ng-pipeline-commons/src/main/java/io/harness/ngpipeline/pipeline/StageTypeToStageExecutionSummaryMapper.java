@@ -6,6 +6,4 @@ import io.harness.yaml.core.intfc.StageType;
 
 public interface StageTypeToStageExecutionSummaryMapper<T extends StageType> extends RegistrableEntity {
   StageExecutionSummary getStageExecution(T stageType, String planNodeId, String executionId);
-
-  String getEnvironmentIdentifier(T stageType);
 }
