@@ -103,7 +103,7 @@ public class CIManagerServiceModule extends AbstractModule {
     // Keeping it to 1 thread to start with. Assuming executor service is used only to
     // serve health checks. If it's being used for other tasks also, max pool size should be increased.
     bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(1, 1, 5, TimeUnit.SECONDS,
+        .toInstance(ThreadPool.create(1, 2, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
                 .setNameFormat("default-ci-executor-%d")
                 .setPriority(Thread.MIN_PRIORITY)
