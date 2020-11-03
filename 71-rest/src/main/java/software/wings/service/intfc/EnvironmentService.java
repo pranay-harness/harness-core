@@ -13,7 +13,6 @@ import software.wings.beans.Base;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
-import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.container.KubernetesPayload;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -56,14 +54,6 @@ public interface EnvironmentService extends OwnedByApplication {
   PageResponse<Environment> listWithSummary(
       PageRequest<Environment> request, boolean withTags, String tagFilter, List<String> appIds);
 
-  /**
-   * Gets the.
-   *
-   * @param appId       the app id
-   * @param envId       the env id
-   * @param withSummary the with summary
-   * @return the environment
-   */
   Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);
 
   /**
@@ -73,16 +63,6 @@ public interface EnvironmentService extends OwnedByApplication {
    * @return
    */
   Environment get(@NotEmpty String appId, @NotEmpty String envId);
-
-  /**
-   * Get environment.
-   *
-   * @param appId  the app id
-   * @param envId  the env id
-   * @param status the status
-   * @return the environment
-   */
-  Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status);
 
   Environment getEnvironmentByName(String appId, String environmentName);
 
