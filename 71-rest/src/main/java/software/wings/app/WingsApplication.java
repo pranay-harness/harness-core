@@ -69,6 +69,7 @@ import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -427,6 +428,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
       }
     });

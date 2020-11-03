@@ -2759,6 +2759,16 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public void publishTaskProgressResponse(
+      String accountId, String driverId, String delegateTaskId, DelegateResponseData responseData) {
+    DelegateCallbackService delegateCallbackService = delegateCallbackRegistry.obtainDelegateCallbackService(driverId);
+    if (delegateCallbackService == null) {
+      return;
+    }
+    delegateCallbackService.publishTaskProgressResponse(delegateTaskId, kryoSerializer.asDeflatedBytes(responseData));
+  }
+
+  @Override
   public boolean validateThatDelegateNameIsUnique(String accountId, String delegateName) {
     Delegate delegate = wingsPersistence.createQuery(Delegate.class)
                             .filter(DelegateKeys.accountId, accountId)

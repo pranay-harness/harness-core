@@ -24,6 +24,7 @@ import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -166,6 +167,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
       }
     });

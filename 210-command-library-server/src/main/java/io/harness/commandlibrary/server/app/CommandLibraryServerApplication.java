@@ -32,6 +32,7 @@ import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -151,6 +152,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
       }
     });

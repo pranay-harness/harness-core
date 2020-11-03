@@ -32,6 +32,7 @@ import io.harness.configuration.ConfigurationType;
 import io.harness.connector.ConnectorPersistenceConfig;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
@@ -212,6 +213,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "!!!custom_delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "!!!custom_delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "!!!custom_delegateTaskProgressResponses")
             .build();
       }
 

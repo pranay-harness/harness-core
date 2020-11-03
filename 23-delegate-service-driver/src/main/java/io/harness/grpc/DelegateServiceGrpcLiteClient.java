@@ -11,6 +11,8 @@ import io.harness.delegate.ExecuteParkedTaskRequest;
 import io.harness.delegate.ExecuteParkedTaskResponse;
 import io.harness.delegate.FetchParkedTaskStatusRequest;
 import io.harness.delegate.FetchParkedTaskStatusResponse;
+import io.harness.delegate.SendTaskProgressRequest;
+import io.harness.delegate.SendTaskProgressResponse;
 import io.harness.delegate.SendTaskStatusRequest;
 import io.harness.delegate.SendTaskStatusResponse;
 import io.harness.delegate.TaskExecutionStage;
@@ -82,6 +84,26 @@ public class DelegateServiceGrpcLiteClient {
       return response.getSuccess();
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while checking task progress.", ex);
+    }
+  }
+
+  public boolean sendTaskProgressUpdate(
+      AccountId accountId, TaskId taskId, DelegateCallbackToken delegateCallbackToken, byte[] responseData) {
+    try {
+      SendTaskProgressResponse response =
+          delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
+              .sendTaskProgress(
+                  SendTaskProgressRequest.newBuilder()
+                      .setAccountId(accountId)
+                      .setTaskId(taskId)
+                      .setCallbackToken(delegateCallbackToken)
+                      .setTaskResponseData(
+                          TaskResponseData.newBuilder().setKryoResultsData(ByteString.copyFrom(responseData)).build())
+                      .build());
+
+      return response.getSuccess();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException("Unexpected error occurred while sending task progress update.", ex);
     }
   }
 }

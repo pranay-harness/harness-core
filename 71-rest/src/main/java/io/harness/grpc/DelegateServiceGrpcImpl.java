@@ -32,6 +32,8 @@ import io.harness.delegate.RegisterCallbackRequest;
 import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.ResetPerpetualTaskResponse;
+import io.harness.delegate.SendTaskProgressRequest;
+import io.harness.delegate.SendTaskProgressResponse;
 import io.harness.delegate.SendTaskStatusRequest;
 import io.harness.delegate.SendTaskStatusResponse;
 import io.harness.delegate.SubmitTaskRequest;
@@ -199,6 +201,22 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing send parked task status request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void sendTaskProgress(
+      SendTaskProgressRequest request, StreamObserver<SendTaskProgressResponse> responseObserver) {
+    try {
+      delegateService.publishTaskProgressResponse(request.getAccountId().getId(), request.getCallbackToken().getToken(),
+          request.getTaskId().getId(),
+          (DelegateResponseData) kryoSerializer.asInflatedObject(
+              request.getTaskResponseData().getKryoResultsData().toByteArray()));
+      responseObserver.onNext(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing send task progress status request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

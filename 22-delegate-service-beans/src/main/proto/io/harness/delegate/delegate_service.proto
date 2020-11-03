@@ -28,6 +28,7 @@ service DelegateService {
   rpc ExecuteParkedTask(ExecuteParkedTaskRequest) returns (ExecuteParkedTaskResponse);
   rpc FetchParkedTaskStatus(FetchParkedTaskStatusRequest) returns (FetchParkedTaskStatusResponse);
   rpc SendTaskStatus(SendTaskStatusRequest) returns (SendTaskStatusResponse);
+  rpc SendTaskProgress(SendTaskProgressRequest) returns (SendTaskProgressResponse);
 
   rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
   rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
@@ -91,12 +92,23 @@ message SendTaskStatusRequest {
   TaskResponseData task_response_data = 4;
 }
 
+message SendTaskProgressRequest {
+  AccountId account_id = 1;
+  TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  TaskResponseData task_response_data = 4;
+}
+
 message TaskResponseData {
   oneof response_data {
     bytes kryo_results_data = 1;
   }
 }
 message SendTaskStatusResponse {
+  bool success = 1;
+}
+
+message SendTaskProgressResponse {
   bool success = 1;
 }
 

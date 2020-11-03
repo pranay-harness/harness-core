@@ -26,6 +26,7 @@ import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
@@ -95,6 +96,7 @@ public class NextGenModule extends AbstractModule {
     return ImmutableMap.<Class, String>builder()
         .put(DelegateSyncTaskResponse.class, "ngManager_delegateSyncTaskResponses")
         .put(DelegateAsyncTaskResponse.class, "ngManager_delegateAsyncTaskResponses")
+        .put(DelegateTaskProgressResponse.class, "ngManager_delegateTaskProgressResponses")
         .build();
   }
 
