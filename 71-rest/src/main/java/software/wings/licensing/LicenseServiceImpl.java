@@ -398,7 +398,8 @@ public class LicenseServiceImpl implements LicenseService {
 
     CeLicenseInfo ceLicenseInfo = CeLicenseInfo.builder()
                                       .licenseType(CeLicenseType.LIMITED_TRIAL)
-                                      .expiryTime(CeLicenseType.LIMITED_TRIAL.getDefaultExpiryTime())
+                                      .expiryTime(Math.max(CeLicenseType.LIMITED_TRIAL.getDefaultExpiryTime(),
+                                          CeLicenseType.getEndOfYearAsMillis(2020)))
                                       .build();
     updateCeLicense(accountId, ceLicenseInfo);
     return true;

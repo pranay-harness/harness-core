@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.license.CeLicenseType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
 import org.joda.time.LocalDate;
@@ -68,8 +69,10 @@ public class LicenseServiceImplTest extends CategoryTest {
     verify(accountDao).updateCeLicense(eq(accountId), ceLicenseInfoArgumentCaptor.capture());
     CeLicenseInfo updatedCeLicenseInfo = ceLicenseInfoArgumentCaptor.getValue();
     assertThat(updatedCeLicenseInfo.getLicenseType()).isEqualTo(LIMITED_TRIAL);
+
+    long expiryTime = Math.max(CeLicenseType.getEndOfYearAsMillis(2020),
+        LocalDate.now().plusDays(CE_TRIAL_PERIOD_DAYS).toDate().toInstant().toEpochMilli());
     assertThat(updatedCeLicenseInfo.getExpiryTime())
-        .isCloseTo(LocalDate.now().plusDays(CE_TRIAL_PERIOD_DAYS).toDate().toInstant().toEpochMilli(),
-            offset(Duration.of(1, ChronoUnit.DAYS).toMillis()));
+        .isCloseTo(expiryTime, offset(Duration.of(1, ChronoUnit.DAYS).toMillis()));
   }
 }
