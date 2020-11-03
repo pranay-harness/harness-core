@@ -54,7 +54,7 @@ public class PageUtils {
         .pageItemCount(page.getContent().size())
         .content(page.getContent())
         .pageSize(page.getSize())
-        .pageIndex(page.getPageable().getPageNumber())
+        .pageIndex(page.getNumber())
         .empty(page.isEmpty())
         .build();
   }
@@ -66,7 +66,7 @@ public class PageUtils {
         .pageItemCount((content != null) ? content.size() : 0)
         .content(content)
         .pageSize(page.getSize())
-        .pageIndex(page.getPageable().getPageNumber())
+        .pageIndex(page.getNumber())
         .empty(page.isEmpty())
         .build();
   }

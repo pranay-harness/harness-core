@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -82,6 +83,20 @@ public class ServiceResource {
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
         createdService.getVersion().toString(), ServiceElementMapper.writeDTO(createdService));
+  }
+
+  @POST
+  @Path("/batch")
+  @ApiOperation(value = "Create Services", nickname = "createServices")
+  public ResponseDTO<PageResponse<ServiceResponseDTO>> createServices(
+      @QueryParam("accountId") String accountId, @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+    List<ServiceEntity> serviceEntities =
+        serviceRequestDTOs.stream()
+            .map(serviceRequestDTO -> ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO))
+            .collect(Collectors.toList());
+    Page<ServiceEntity> createdServices = serviceEntityService.bulkCreate(accountId, serviceEntities);
+    return ResponseDTO.newResponse(
+        getNGPageResponse(createdServices.map(serviceEntity -> ServiceElementMapper.writeDTO(serviceEntity))));
   }
 
   @DELETE

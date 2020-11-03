@@ -1,14 +1,20 @@
 package io.harness.ng.core.service.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER_SRE;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import com.mongodb.client.result.UpdateResult;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.ng.DuplicateKeyExceptionParser;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -18,21 +24,20 @@ import io.harness.ng.core.service.respositories.spring.ServiceRepository;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.exception.WingsException.USER_SRE;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -52,7 +57,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     try {
       validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getOrgIdentifier(),
           serviceEntity.getProjectIdentifier(), serviceEntity.getIdentifier());
-      setName(serviceEntity);
+      setNameIfNotPresent(serviceEntity);
       return serviceRepository.save(serviceEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, serviceEntity.getIdentifier(),
@@ -72,7 +77,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   public ServiceEntity update(@Valid ServiceEntity requestService) {
     validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
         requestService.getProjectIdentifier(), requestService.getIdentifier());
-    setName(requestService);
+    setNameIfNotPresent(requestService);
     Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
     ServiceEntity updatedResult = serviceRepository.update(criteria, requestService);
     if (updatedResult == null) {
@@ -87,7 +92,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   public ServiceEntity upsert(@Valid ServiceEntity requestService) {
     validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
         requestService.getProjectIdentifier(), requestService.getIdentifier());
-    setName(requestService);
+    setNameIfNotPresent(requestService);
     Criteria criteria = getServiceEqualityCriteria(requestService, requestService.getDeleted());
     ServiceEntity result = serviceRepository.upsert(criteria, requestService);
     if (result == null) {
@@ -151,7 +156,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     }
   }
 
-  private void setName(ServiceEntity requestService) {
+  private void setNameIfNotPresent(ServiceEntity requestService) {
     if (isEmpty(requestService.getName())) {
       requestService.setName(requestService.getIdentifier());
     }
@@ -172,5 +177,53 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       criteria.and(ServiceEntityKeys.version).is(requestService.getVersion());
     }
     return criteria;
+  }
+
+  @Override
+  public Page<ServiceEntity> bulkCreate(String accountId, @NotNull List<ServiceEntity> serviceEntities) {
+    try {
+      validateTheServicesList(serviceEntities);
+      populateDefaultNameIfNotPresent(serviceEntities);
+      List<ServiceEntity> outputServiceEntitiesList = (List<ServiceEntity>) serviceRepository.saveAll(serviceEntities);
+      return new PageImpl<>(outputServiceEntitiesList);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(getDuplicateServiceExistsErrorMessage(ex.getMessage()), USER_SRE, ex);
+    } catch (Exception ex) {
+      String serviceNames = serviceEntities.stream().map(ServiceEntity::getName).collect(Collectors.joining(","));
+      log.info(
+          "Encountered exception while saving the service entity records of [{}], with exception", serviceNames, ex);
+      throw new UnexpectedException("Encountered exception while saving the service entity records.");
+    }
+  }
+
+  @VisibleForTesting
+  String getDuplicateServiceExistsErrorMessage(String exceptionString) {
+    String errorMessageToBeReturned = null;
+    try {
+      JSONObject jsonObjectOfDuplicateKey = DuplicateKeyExceptionParser.getDuplicateKey(exceptionString);
+      String orgIdentifier = jsonObjectOfDuplicateKey.getString("orgIdentifier");
+      String projectIdentifier = jsonObjectOfDuplicateKey.getString("projectIdentifier");
+      String identifier = jsonObjectOfDuplicateKey.getString("identifier");
+      errorMessageToBeReturned = String.format(DUP_KEY_EXP_FORMAT_STRING, identifier, orgIdentifier, projectIdentifier);
+    } catch (Exception ex) {
+      errorMessageToBeReturned = "A Duplicate Service already exists";
+    }
+    return errorMessageToBeReturned;
+  }
+
+  private void validateTheServicesList(List<ServiceEntity> serviceEntities) {
+    if (isEmpty(serviceEntities)) {
+      return;
+    }
+    serviceEntities.forEach(serviceEntity
+        -> validatePresenceOfRequiredFields(serviceEntity.getAccountId(), serviceEntity.getOrgIdentifier(),
+            serviceEntity.getProjectIdentifier(), serviceEntity.getIdentifier()));
+  }
+
+  private void populateDefaultNameIfNotPresent(List<ServiceEntity> serviceEntities) {
+    if (isEmpty(serviceEntities)) {
+      return;
+    }
+    serviceEntities.forEach(this ::setNameIfNotPresent);
   }
 }
