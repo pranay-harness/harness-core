@@ -6,6 +6,7 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.SPOTINST_SETUP;
 
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
@@ -32,6 +34,7 @@ import software.wings.beans.TaskType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -64,6 +67,7 @@ public class SpotInstServiceSetup extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient SpotInstStateHelper spotinstStateHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public SpotInstServiceSetup(String name) {
     super(name, SPOTINST_SETUP.name());
@@ -196,6 +200,12 @@ public class SpotInstServiceSetup extends State {
                 spotInstSetupTaskResponse != null ? spotInstSetupTaskResponse.getLbDetailsForBGDeployments() : null)
             .build();
 
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(spotinstStateHelper.getSweepingOutputName(context, SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(spotInstSetupContextElement)
+            .build());
+
     // Add these details only if spotInstSetupTaskResponse is not NULL
     addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
 
@@ -203,8 +213,6 @@ public class SpotInstServiceSetup extends State {
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
-        .contextElement(spotInstSetupContextElement)
-        .notifyElement(spotInstSetupContextElement)
         .build();
   }
 

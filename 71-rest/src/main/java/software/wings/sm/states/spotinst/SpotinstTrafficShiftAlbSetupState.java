@@ -9,6 +9,7 @@ import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TA
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
 import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
@@ -21,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSetupParameters;
@@ -47,6 +49,7 @@ import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -71,6 +74,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @VisibleForTesting
   SpotinstTrafficShiftAlbSetupState() {
@@ -137,12 +141,16 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
     }
     SpotinstTrafficShiftAlbSetupElement contextElement = builder.build();
 
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(spotinstStateHelper.getSweepingOutputName(context, SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(contextElement)
+            .build());
+
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
-        .contextElement(contextElement)
-        .notifyElement(contextElement)
         .build();
   }
 

@@ -2,6 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.spotinst.model.ElastiGroup;
@@ -22,7 +23,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SpotInstSetupContextElement implements ContextElement {
+public class SpotInstSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
   private String commandName;

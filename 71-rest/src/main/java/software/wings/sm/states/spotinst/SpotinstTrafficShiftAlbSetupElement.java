@@ -2,6 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.spotinst.model.ElastiGroup;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SpotinstTrafficShiftAlbSetupElement implements ContextElement {
+public class SpotinstTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
   private String commandName;

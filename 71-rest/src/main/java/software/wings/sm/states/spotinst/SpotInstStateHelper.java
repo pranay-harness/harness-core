@@ -30,6 +30,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
@@ -74,6 +75,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -486,5 +488,18 @@ public class SpotInstStateHelper {
                        .build());
     }
     return rendered;
+  }
+
+  SweepingOutput getSetupElementFromSweepingOutput(ExecutionContext context, String prefix) {
+    String sweepingOutputName = getSweepingOutputName(context, prefix);
+    SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
+    return sweepingOutputService.findSweepingOutput(inquiry);
+  }
+
+  @NotNull
+  String getSweepingOutputName(ExecutionContext context, String prefix) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String suffix = phaseElement.getServiceElement().getUuid().trim();
+    return prefix + suffix;
   }
 }

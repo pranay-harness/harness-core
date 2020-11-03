@@ -88,8 +88,9 @@ public class SpotinstTrafficShiftAlbDeployStateTest extends WingsBaseTest {
                  .newElastiGroupOriginalConfig(ElastiGroup.builder().id("newId").name("newName").build())
                  .timeoutIntervalInMin(10)
                  .build())
-        .when(mockContext)
-        .getContextElement(any());
+        .when(mockSpotinstStateHelper)
+        .getSetupElementFromSweepingOutput(any(), anyString());
+
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
         .when(mockSpotinstStateHelper)
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());
