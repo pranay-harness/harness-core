@@ -49,6 +49,7 @@ java_library(
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_jooq_joor",
+        "@maven//:org_json_json",
         "@maven//:org_jsr107_ri_cache_annotations_ri_common",
         "@maven//:org_jsr107_ri_cache_annotations_ri_guice",
         "@maven//:org_modelmapper_modelmapper",

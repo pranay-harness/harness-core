@@ -1,6 +1,7 @@
 package io.harness.ng.core.service.services.impl;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -21,12 +22,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ServiceEntityServiceImplTest extends NGCoreTestBase {
   @Inject ServiceEntityServiceImpl serviceEntityService;
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
   @Test
   @Owner(developers = ARCHIT)
@@ -132,5 +135,50 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     Optional<ServiceEntity> deletedService =
         serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_SERVICE", false);
     assertThat(deletedService.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testBulkCreate() {
+    List<ServiceEntity> serviceEntities = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      String serviceIdentifier = "identifier " + i;
+      String serviceName = "serviceName " + i;
+      ServiceEntity serviceEntity = createServiceEntity(serviceIdentifier, serviceName);
+      serviceEntities.add(serviceEntity);
+    }
+    serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
+    for (int i = 0; i < 5; i++) {
+      String serviceIdentifier = "identifier " + i;
+      Optional<ServiceEntity> serviceEntitySaved =
+          serviceEntityService.get(ACCOUNT_ID, "ORG_ID", "PROJECT_ID", serviceIdentifier, false);
+      assertThat(serviceEntitySaved.isPresent()).isTrue();
+    }
+  }
+
+  private ServiceEntity createServiceEntity(String identifier, String name) {
+    return ServiceEntity.builder()
+        .accountId(ACCOUNT_ID)
+        .identifier(identifier)
+        .orgIdentifier("ORG_ID")
+        .projectIdentifier("PROJECT_ID")
+        .name(name)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testGetDuplicateServiceExistsErrorMessage() {
+    String errorMessage = "Bulk write operation error on server localhost:27017. "
+        + "Write errors: [BulkWriteError{index=0, code=11000, "
+        + "message='E11000 duplicate key error collection: ng-harness.servicesNG "
+        + "index: unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier "
+        + "dup key: { accountId: \"kmpySmUISimoRrJL6NL73w\", orgIdentifier: \"default\", "
+        + "projectIdentifier: \"Nofar\", identifier: \"service_5\" }'";
+    String errorMessageToBeShownToUser = serviceEntityService.getDuplicateServiceExistsErrorMessage(errorMessage);
+    assertThat(errorMessageToBeShownToUser)
+        .isEqualTo("Service [service_5] under Project[default], Organization [Nofar] already exists");
   }
 }
