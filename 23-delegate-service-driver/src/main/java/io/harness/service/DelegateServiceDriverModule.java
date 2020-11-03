@@ -3,8 +3,10 @@ package io.harness.service;
 import com.google.inject.AbstractModule;
 
 import io.harness.service.impl.DelegateAsyncServiceImpl;
+import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.intfc.DelegateAsyncService;
+import io.harness.service.intfc.DelegateProgressService;
 import io.harness.service.intfc.DelegateSyncService;
 
 public class DelegateServiceDriverModule extends AbstractModule {
@@ -21,5 +23,6 @@ public class DelegateServiceDriverModule extends AbstractModule {
   protected void configure() {
     bind(DelegateSyncService.class).to(DelegateSyncServiceImpl.class);
     bind(DelegateAsyncService.class).to(DelegateAsyncServiceImpl.class);
+    bind(DelegateProgressService.class).to(DelegateProgressServiceImpl.class);
   }
 }

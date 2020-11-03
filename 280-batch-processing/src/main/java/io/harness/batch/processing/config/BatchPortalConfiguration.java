@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.serializer.PersistenceRegistrars;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class BatchPortalConfiguration {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
       }
     };

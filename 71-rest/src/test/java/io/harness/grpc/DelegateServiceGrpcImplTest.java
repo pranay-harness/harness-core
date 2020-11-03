@@ -47,6 +47,7 @@ import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
+import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.DelegateServiceDriverException;
@@ -66,6 +67,7 @@ import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -330,6 +332,29 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
             -> delegateServiceGrpcClient.taskProgressUpdate(AccountId.newBuilder().setId(accountId).build(),
                 TaskId.newBuilder().setId(taskId).build(), taskExecutionStageConsumer))
         .isInstanceOf(NotImplementedException.class);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testSendTaskProgress() {
+    String accountId = generateUuid();
+    String taskId = generateUuid();
+    when(delegateService.fetchDelegateTask(accountId, taskId)).thenReturn(Optional.ofNullable(null));
+
+    DelegateCallback delegateCallback =
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder().setConnection("test").setCollectionNamePrefix("test").build())
+            .build();
+
+    when(delegateCallbackRegistry.ensureCallback(delegateCallback)).thenReturn("token");
+    DelegateCallbackToken token = delegateServiceGrpcClient.registerCallback(delegateCallback);
+
+    ResponseData testData = DelegateStringResponseData.builder().data("Example").build();
+    byte[] testDataBytes = kryoSerializer.asDeflatedBytes(testData);
+    assertThat(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(AccountId.newBuilder().setId(accountId).build(),
+                   TaskId.newBuilder().setId(taskId).build(), token, testDataBytes))
+        .isEqualTo(true);
   }
 
   @Test

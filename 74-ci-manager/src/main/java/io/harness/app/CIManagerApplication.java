@@ -28,6 +28,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -51,6 +52,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
+import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.spring.AliasRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -154,6 +156,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "ciManager_delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "ciManager_delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "ciManager_delegateTaskProgressResponses")
             .build();
       }
 
@@ -255,6 +258,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
   private void registerQueueListeners(Injector injector) {

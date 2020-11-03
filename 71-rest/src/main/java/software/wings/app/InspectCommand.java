@@ -17,6 +17,7 @@ import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.IndexManager;
 import io.harness.mongo.MongoConfig;
@@ -60,6 +61,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
       }
 

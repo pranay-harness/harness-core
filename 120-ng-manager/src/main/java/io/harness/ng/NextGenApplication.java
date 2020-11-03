@@ -37,6 +37,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
+import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -199,6 +200,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
   private void registerExecutionPlanCreators(Injector injector) {

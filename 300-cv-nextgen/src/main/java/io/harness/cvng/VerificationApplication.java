@@ -56,6 +56,7 @@ import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
 import io.harness.cvng.verificationjob.jobs.ProcessQueuedVerificationJobInstanceHandler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -193,6 +194,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "cvng_delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "cvng_delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "cvng_delegateTaskProgressResponses")
             .build();
       }
     });
