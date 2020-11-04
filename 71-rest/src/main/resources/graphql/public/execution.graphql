@@ -167,6 +167,56 @@ type PipelineExecution implements Execution {
 
   tags: [DeploymentTag]
 
+  # Execution details of every stage
+  pipelineStageExecutions: [PipelineStageExecution]
+
   memberExecutions: ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")
+}
+
+interface PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+}
+
+type ApprovalStageExecution implements PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+
+  # Execution status of the stage
+  status: ExecutionStatus
+
+  # Approval method type
+  approvalStepType: ApprovalStepType
+}
+
+type WorkflowStageExecution implements PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+
+  # Workflow execution ID
+  workflowExecutionId: String
+  # Stage execution status
+  status: ExecutionStatus
+  # List of runtime variables
+  runtimeInputVariables: [Variable]
+}
+
+enum ApprovalStepType {
+  JIRA
+  SERVICENOW
+  USER_GROUP
+  SHELL_SCRIPT
 }

@@ -562,6 +562,7 @@
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/ExecutionQueryHelper.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/ExportExecutionsDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/PipelineExecutionController.java
+71-rest/src/main/java/software/wings/graphql/datafetcher/execution/PipelineExecutionControllerTest.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/QLExecutionFilter.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/RuntimeExecutionInputsToResumePipelineDataFetcher.java
 71-rest/src/main/java/software/wings/graphql/datafetcher/execution/RuntimeInputExecutionInputsController.java
@@ -603,6 +604,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/input/QLVariableValueType.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/execution/payload/QLStartExecutionPayload.java
 71-rest/src/main/java/software/wings/graphql/schema/mutation/pipeline/payload/QLContinueExecutionPayload.java
+71-rest/src/main/java/software/wings/graphql/schema/type/QLApprovalStageExecution.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLAzureImageDefinition.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLKeyValuePair.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLPipeline.java
@@ -610,6 +612,7 @@
 71-rest/src/main/java/software/wings/graphql/schema/type/QLWorkflow.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLWorkflowConnection.java
 71-rest/src/main/java/software/wings/graphql/schema/type/QLWorkflowExecution.java
+71-rest/src/main/java/software/wings/graphql/schema/type/QLWorkflowStageExecution.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifact/QLArtifact.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLACRArtifactSource.java
 71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLAMIArtifactSource.java

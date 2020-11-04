@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import graphql.schema.TypeResolver;
 import lombok.experimental.UtilityClass;
+import software.wings.graphql.schema.type.QLApprovalStageExecution;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
 import software.wings.graphql.schema.type.QLExecutedByAPIKey;
@@ -12,6 +13,7 @@ import software.wings.graphql.schema.type.QLExecutedByTrigger;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.QLWorkflowStageExecution;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
@@ -137,11 +139,13 @@ public class TypeResolverManager {
     public static final String TRIGGER_CONDITION = "TriggerCondition";
     public static final String TRIGGER_ACTION = "TriggerAction";
     public static final String ARTIFACT_SELECTION = "ArtifactSelection";
+    public static final String PipelineStageExecution = "PipelineStageExecution";
   }
 
   @UtilityClass
   public static final class TypeResolverManagerTypes {
     public static final String AggregatedData = "AggregatedData";
+    public static final String ApprovalStageExecution = "ApprovalStageExecution";
     public static final String AutoScalingGroupInstance = "AutoScalingGroupInstance";
     public static final String AwsCloudProvider = "AwsCloudProvider";
     public static final String AzureCloudProvider = "AzureCloudProvider";
@@ -162,11 +166,13 @@ public class TypeResolverManager {
     public static final String PhysicalDataCenterCloudProvider = "PhysicalDataCenterCloudProvider";
     public static final String PhysicalHostInstance = "PhysicalHostInstance";
     public static final String PipelineExecution = "PipelineExecution";
+    public static final String PipelineStageExecution = "PipelineStageExecution";
     public static final String SinglePointData = "SinglePointData";
     public static final String StackedData = "StackedData";
     public static final String StackedTimeSeriesData = "StackedTimeSeriesData";
     public static final String TimeSeriesData = "TimeSeriesData";
     public static final String WorkflowExecution = "WorkflowExecution";
+    public static final String WorkflowStageExecution = "WorkflowStageExecution";
 
     public static final String ACRArtifactSource = "ACRArtifactSource";
     public static final String AmazonS3ArtifactSource = "AmazonS3ArtifactSource";
@@ -319,6 +325,12 @@ public class TypeResolverManager {
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
                                       .put(QLWorkflowExecution.class, TypeResolverManagerTypes.WorkflowExecution)
                                       .build()))
+        .put(TypeResolverManagerUnifaces.PipelineStageExecution,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLApprovalStageExecution.class, TypeResolverManagerTypes.ApprovalStageExecution)
+                    .put(QLWorkflowStageExecution.class, TypeResolverManagerTypes.WorkflowStageExecution)
+                    .build()))
         .put(TypeResolverManagerUnifaces.ArtifactSource,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()

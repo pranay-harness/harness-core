@@ -71,6 +71,11 @@ public class PipelineServiceValidator {
       PipelineStageElement pipelineStageElement, List<Variable> workflowVariables) {
     Map<String, String> pseVariableValues = pipelineStageElement.getWorkflowVariables();
     List<String> runtimeVariables = pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables();
+    String missing =
+        runtimeVariables.stream().filter(variable -> !pseVariableValues.containsKey(variable)).findAny().orElse(null);
+    if (missing != null) {
+      throw new InvalidRequestException(String.format("Variable %s is marked runtime and is not provided", missing));
+    }
     for (Map.Entry<String, String> variable : pseVariableValues.entrySet()) {
       String variableName = variable.getKey();
       if (runtimeVariables.contains(variableName)) {

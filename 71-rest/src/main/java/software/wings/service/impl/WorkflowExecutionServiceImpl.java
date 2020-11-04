@@ -113,6 +113,7 @@ import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.limits.InstanceUsageExceededLimitException;
 import io.harness.limits.checker.LimitApproachingException;
@@ -1585,6 +1586,41 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     wingsPersistence.update(query, updateOps);
   }
 
+  /**
+   * Sets the artifacts and artifactVariables in Execution Args and Updates the artifacts in workflowexecution.
+   * The method merges worklflow execution artifacts with the newArtifacts passed and sets these are the values
+   * @param workflowExecution
+   * @param stdParams
+   * @param executionArgs
+   * @param newArtifacts
+   * @param newArtifactVariables
+   */
+  private void addArtifactsToRuntimeWorkflowExecution(WorkflowExecution workflowExecution,
+      WorkflowStandardParams stdParams, ExecutionArgs executionArgs, List<Artifact> newArtifacts,
+      List<ArtifactVariable> newArtifactVariables) {
+    newArtifacts = isEmpty(newArtifacts) ? new ArrayList<>() : newArtifacts;
+    newArtifactVariables = isEmpty(newArtifactVariables) ? new ArrayList<>() : newArtifactVariables;
+    List<Artifact> existingArtifacts = isNotEmpty(workflowExecution.getArtifacts())
+        ? new ArrayList<>(workflowExecution.getArtifacts())
+        : new ArrayList<>();
+    List<ArtifactVariable> existingArtifactVariables =
+        isNotEmpty(workflowExecution.getExecutionArgs().getArtifactVariables())
+        ? new ArrayList<>(workflowExecution.getExecutionArgs().getArtifactVariables())
+        : new ArrayList<>();
+
+    List<Artifact> artifacts = new ArrayList<>(existingArtifacts);
+    artifacts.addAll(newArtifacts);
+
+    List<ArtifactVariable> artifactVariables = new ArrayList<>(existingArtifactVariables);
+    artifactVariables.addAll(newArtifactVariables);
+
+    workflowExecution.setArtifacts(artifacts);
+    executionArgs.setArtifacts(artifacts);
+    executionArgs.setArtifactVariables(artifactVariables);
+    List<String> artifactIds = artifacts.stream().map(Base::getUuid).collect(toList());
+    stdParams.setArtifactIds(artifactIds);
+  }
+
   private void addArtifactsToWorkflowExecution(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       ExecutionArgs executionArgs, List<Artifact> artifacts) {
     if (isNotEmpty(artifacts)) {
@@ -2131,6 +2167,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.createUpdateOperations(WorkflowExecution.class)
             .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
             .set(WorkflowExecutionKeys.artifacts, workflowExecutionArtifacts)
+            .set(WorkflowExecutionKeys.executionArgs_artifacts, executionArgsArtifacts);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  private void updateWorkflowExecutionArtifactsAndArtifactVariables(String appId, String workflowExecutionId,
+      List<Artifact> workflowExecutionArtifacts, List<Artifact> executionArgsArtifacts,
+      List<ArtifactVariable> executionArgsArtifactVariables) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+            .set(WorkflowExecutionKeys.artifacts, workflowExecutionArtifacts)
+            .set(WorkflowExecutionKeys.executionArgs_artifact_variables, executionArgsArtifactVariables)
             .set(WorkflowExecutionKeys.executionArgs_artifacts, executionArgsArtifacts);
 
     wingsPersistence.update(query, updateOps);
@@ -2718,11 +2771,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public DeploymentMetadata fetchDeploymentMetadataRunningPipeline(String appId, ExecutionArgs executionArgs,
+  public DeploymentMetadata fetchDeploymentMetadataRunningPipeline(String appId, Map<String, String> workflowVariables,
       boolean withDefaultArtifact, String workflowExecutionId, String pipelineStageElementId) {
     if (isEmpty(workflowExecutionId) || isEmpty(pipelineStageElementId)) {
       throw new InvalidRequestException(
           "ExecutionId and PipelineStageElementId is required to check Inputs for a running execution");
+    }
+    if (workflowVariables == null) {
+      workflowVariables = new HashMap<>();
     }
 
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
@@ -2731,7 +2787,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     String pipelineId = workflowExecution.getWorkflowId();
-    Pipeline pipeline = pipelineService.getPipeline(appId, pipelineId);
+    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
+        appId, pipelineId, workflowExecution.getExecutionArgs().getWorkflowVariables());
     notNullCheck("Couldnt load a pipeline associated with given executionId: " + workflowExecutionId, pipeline);
 
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
@@ -2756,8 +2813,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         notNullCheck(
             "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
             workflow.getOrchestrationWorkflow());
-        return workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null,
-            null, withDefaultArtifact, workflowExecution, includes);
+        Map<String, String> wfVars =
+            getWFVarFromPipelineVar(workflowVariables, workflowExecution, pipeline, pipelineStageElementId);
+        return workflowService.fetchDeploymentMetadata(
+            appId, workflow, wfVars, null, null, withDefaultArtifact, workflowExecution, includes);
       }
     }
 
@@ -2863,7 +2922,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution pipelineExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineExecutionId);
     notNullCheck("Invalid executionId: " + pipelineExecutionId, pipelineExecution);
-    validateContinuePipeline(appId, pipelineExecution, pipelineStageElementId, executionArgs);
+    // Map WF variables from pipeline variables
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      executionArgs.setArtifacts(executionArgs.getArtifacts()
+                                     .stream()
+                                     .map(t -> artifactService.get(pipelineExecution.getAccountId(), t.getUuid()))
+                                     .collect(toList()));
+    }
+    Map<String, String> wfVariables =
+        validateContinuePipeline(appId, pipelineExecution, pipelineStageElementId, executionArgs);
 
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstancePipelineStage(appId, pipelineExecutionId, pipelineStageElementId);
@@ -2877,9 +2944,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("Couldnt continue thie pipelineStage, might be expired", workflowStandardParams);
     List<Artifact> artifacts = executionArgs.getArtifacts();
     if (isNotEmpty(artifacts)) {
-      addArtifactsToWorkflowExecution(pipelineExecution, workflowStandardParams, executionArgs, artifacts);
-      updateWorkflowExecutionArtifacts(
-          appId, pipelineExecutionId, pipelineExecution.getArtifacts(), executionArgs.getArtifacts());
+      addArtifactsToRuntimeWorkflowExecution(
+          pipelineExecution, workflowStandardParams, executionArgs, artifacts, executionArgs.getArtifactVariables());
+      updateWorkflowExecutionArtifactsAndArtifactVariables(appId, pipelineExecutionId, pipelineExecution.getArtifacts(),
+          executionArgs.getArtifacts(), executionArgs.getArtifactVariables());
     }
 
     LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
@@ -2892,7 +2960,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.createQuery(StateExecutionInstance.class).filter("_id", stateExecutionInstance.getUuid()), ops,
         HPersistence.returnNewOptions);
 
-    ResponseData responseData = new ContinuePipelineResponseData(executionArgs.getWorkflowVariables(), null);
+    // Replace with WF variables and not pipeline Vars.
+    ResponseData responseData = new ContinuePipelineResponseData(wfVariables, null);
     waitNotifyEngine.doneWith(
         StateMachineExecutor.getContinuePipelineWaitId(
             stateExecutionInstance.getPipelineStageElementId(), stateExecutionInstance.getExecutionUuid()),
@@ -2900,7 +2969,82 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return true;
   }
 
-  private void validateContinuePipeline(
+  private List<String> getWFVarNamesFromPipelineVar(
+      Map<String, String> pipelineVars, Pipeline pipeline, String pipelineStageElementId) {
+    List<String> result = new ArrayList<>();
+    if (pipelineVars == null) {
+      pipelineVars = new HashMap<>();
+    }
+    PipelineStageElement stageElement = pipeline.getPipelineStages()
+                                            .stream()
+                                            .map(stage -> stage.getPipelineStageElements().get(0))
+                                            .filter(stageEl -> stageEl.getUuid().equals(pipelineStageElementId))
+                                            .filter(stageEl -> stageEl.getProperties().get("workflowId") != null)
+                                            .findFirst()
+                                            .orElse(null);
+    if (stageElement != null) {
+      Map<String, String> wfVars = stageElement.getWorkflowVariables();
+      for (Entry<String, String> entry : wfVars.entrySet()) {
+        if (ExpressionEvaluator.matchesVariablePattern(entry.getValue())) {
+          String value = ExpressionEvaluator.getName(entry.getValue());
+          if (pipelineVars.containsKey(value)) {
+            result.add(entry.getKey());
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private Map<String, String> getWFVarFromPipelineVar(
+      Map<String, String> pipelineVars, WorkflowExecution execution, Pipeline pipeline, String pipelineStageElementId) {
+    String appId = pipeline.getAppId();
+    Pipeline newPipeline = pipelineService.getPipeline(appId, pipeline.getUuid());
+    Map<String, String> pipelineExecWFVars = execution.getExecutionArgs().getWorkflowVariables();
+    if (pipelineExecWFVars == null) {
+      pipelineExecWFVars = new HashMap<>();
+    }
+    Map<String, String> mappedWFVars = new HashMap<>();
+    if (pipelineVars == null) {
+      pipelineVars = new HashMap<>();
+    }
+    PipelineStageElement stageElement = newPipeline.getPipelineStages()
+                                            .stream()
+                                            .map(stage -> stage.getPipelineStageElements().get(0))
+                                            .filter(stageEl -> stageEl.getUuid().equals(pipelineStageElementId))
+                                            .filter(stageEl -> stageEl.getProperties().get("workflowId") != null)
+                                            .findFirst()
+                                            .orElse(null);
+    if (stageElement != null) {
+      String workflowId = (String) stageElement.getProperties().get("workflowId");
+      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+      // handle default value
+      for (Variable var : workflow.getOrchestrationWorkflow().getUserVariables()) {
+        mappedWFVars.put(var.getName(), var.getValue());
+        String value = stageElement.getWorkflowVariables().get(var.getName());
+        if (ExpressionEvaluator.matchesVariablePattern(value)) {
+          value = ExpressionEvaluator.getName(value);
+          if (pipelineExecWFVars.containsKey(value)) {
+            mappedWFVars.put(var.getName(), pipelineExecWFVars.get(value));
+          }
+          if (pipelineVars.containsKey(value)) {
+            mappedWFVars.put(var.getName(), pipelineVars.get(value));
+          }
+        } else {
+          mappedWFVars.put(var.getName(), value);
+          if (pipelineExecWFVars.containsKey(var.getName())) {
+            mappedWFVars.put(var.getName(), pipelineExecWFVars.get(var.getName()));
+          }
+          if (pipelineVars.containsKey(var.getName())) {
+            mappedWFVars.put(var.getName(), pipelineVars.get(var.getName()));
+          }
+        }
+      }
+    }
+    return mappedWFVars;
+  }
+
+  private Map<String, String> validateContinuePipeline(
       String appId, WorkflowExecution pipelineExecution, String pipelineStageElementId, ExecutionArgs executionArgs) {
     validatePipelineExecution(pipelineExecution.getUuid(), pipelineExecution);
 
@@ -2914,8 +3058,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     validatePipelineStageExecution(pipelineStageElementId, pipelineStageExecution);
 
     String pipelineId = pipelineExecution.getWorkflowId();
-    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
-        appId, pipelineId, pipelineExecution.getExecutionArgs().getWorkflowVariables());
+    Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
     validateRBAC(appId, pipelineId, pipeline);
 
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
@@ -2932,6 +3075,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         break;
       }
     }
+    Map<String, String> wfVariables = getWFVarFromPipelineVar(
+        executionArgs.getWorkflowVariables(), pipelineExecution, pipeline, pipelineStageElementId);
     notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId, workflowId);
     notNullCheck("No Runtime Input Vars for the given PipelineStage: " + pipelineStageElementId, runtimeInputsConfig);
     if (isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
@@ -2945,7 +3090,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflow.getOrchestrationWorkflow());
 
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    Map<String, String> runtimeVariableValues = executionArgs.getWorkflowVariables();
 
     Variable envVarInStage = workflowVariables.stream()
                                  .filter(t -> EntityType.ENVIRONMENT.equals(t.obtainEntityType()))
@@ -2954,11 +3098,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<String> runtimeVarsInStage = runtimeInputsConfig.getRuntimeInputVariables();
 
     if (envVarInStage != null && runtimeVarsInStage.contains(envVarInStage.getName())) {
-      String envValueInStage = runtimeVariableValues.get(envVarInStage.getName());
+      String envValueInStage = wfVariables.get(envVarInStage.getName());
       authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envValueInStage);
     }
     List<String> extraVars = new ArrayList<>();
-    for (String key : runtimeVariableValues.keySet()) {
+    List<String> runtimeKeys =
+        getWFVarNamesFromPipelineVar(executionArgs.getWorkflowVariables(), pipeline, pipelineStageElementId);
+    for (String key : runtimeKeys) {
       if (!runtimeVarsInStage.contains(key)) {
         extraVars.add(key);
       }
@@ -2969,17 +3115,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           "Cannot override value for variables: " + extraVars.toString() + " These are not marked runtime in stage");
     }
 
-    validateRequiredVariables(workflowVariables, runtimeVariableValues, runtimeVarsInStage);
+    validateRequiredVariables(workflowVariables, wfVariables, runtimeVarsInStage);
 
     List<Artifact> existingArtifacts = pipelineExecution.getArtifacts();
     List<Artifact> newArtifacts = executionArgs.getArtifacts();
     validateArtifactOverrides(existingArtifacts, newArtifacts);
+    return wfVariables;
   }
 
   private void validateArtifactOverrides(List<Artifact> existingArtifacts, List<Artifact> newArtifacts) {
     if (isEmpty(existingArtifacts) || isEmpty(newArtifacts)) {
       return;
     }
+    if (existingArtifacts.stream()
+            .map(Artifact::getUuid)
+            .collect(Collectors.toSet())
+            .containsAll(newArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet()))) {
+      return;
+    }
+    // Read from DB
     for (Artifact newArtifact : newArtifacts) {
       if (existingArtifacts.stream().anyMatch(
               t -> t.getServiceIds().get(0).equals(newArtifact.getServiceIds().get(0)))) {
@@ -2997,8 +3151,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .filter(t -> runtimeVarsInStage.contains(t.getName()))
                                                      .collect(toList());
     List<String> missingVars = requiredRuntimeWorkflowVars.stream()
-                                   .filter(t -> !runtimeVariableValues.keySet().contains(t))
-                                   .map(t -> t.getName())
+                                   .map(Variable::getName)
+                                   .filter(t -> !runtimeVariableValues.containsKey(t))
                                    .collect(toList());
     if (isNotEmpty(missingVars)) {
       throw new InvalidRequestException(
@@ -3020,7 +3174,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String pipelineStageElementId, PipelineStageExecution pipelineStageExecution) {
     if (pipelineStageExecution == null) {
       throw new InvalidRequestException(
-          "Cannot continue Pipeline stage, PipelineStageExecution not founfd for Id: " + pipelineStageElementId);
+          "Cannot continue Pipeline stage, PipelineStageExecution not found for Id: " + pipelineStageElementId);
     }
 
     if (pipelineStageExecution.getStatus() != PAUSED) {

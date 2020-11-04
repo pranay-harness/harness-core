@@ -28,4 +28,5 @@ public class QLPipelineExecution implements QLExecution, QLCause {
   private String notes;
   private String appId;
   private List<QLDeploymentTag> tags;
+  private List<QLPipelineStageExecution> pipelineStageExecutions;
 }

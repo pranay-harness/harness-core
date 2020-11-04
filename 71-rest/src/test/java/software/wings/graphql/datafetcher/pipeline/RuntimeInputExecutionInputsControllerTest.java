@@ -41,9 +41,8 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.JsonUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -70,9 +69,10 @@ public class RuntimeInputExecutionInputsControllerTest extends WingsBaseTest {
   @Owner(developers = {DEEPAK_PUTHRAYA})
   @Category(UnitTests.class)
   public void testQLExecutionInputReturnsCorrectServices() {
-    WorkflowExecution pipelineExecution = jsonToObj("./execution/pipeline_execution.json", WorkflowExecution.class);
+    WorkflowExecution pipelineExecution =
+        JsonUtils.readResourceFile("./execution/pipeline_execution.json", WorkflowExecution.class);
     when(workflowExecutionService.getWorkflowExecution(anyString(), anyString())).thenReturn(pipelineExecution);
-    Pipeline pipeline = jsonToObj("./pipeline/pipeline.json", Pipeline.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("./pipeline/pipeline.json", Pipeline.class);
     when(pipelineService.readPipeline(anyString(), anyString(), eq(true))).thenReturn(pipeline);
     when(pipelineExecutionController.resolveEnvId(eq(pipeline), anyListOf(QLVariableInput.class))).thenReturn("envId");
     when(pipelineExecutionController.validateAndResolvePipelineVariables(
@@ -92,32 +92,20 @@ public class RuntimeInputExecutionInputsControllerTest extends WingsBaseTest {
                      .createdAt(0)
                      .createdBy(null)
                      .build());
-    when(pipelineService.fetchDeploymentMetadata(anyString(), eq(pipeline), eq(new HashMap<>()))).thenReturn(metadata);
+    when(workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
+             anyString(), eq(new HashMap<>()), eq(false), eq("executionId"), eq("stageElementId")))
+        .thenReturn(metadata);
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false), eq(false), anyString()))
         .thenReturn(response);
 
-    JsonNode actual = toJson(controller.fetch(QLExecutionInputsToResumePipelineQueryParams.builder()
-                                                  .applicationId("appId")
-                                                  .pipelineStageElementId("stageElementId")
-                                                  .pipelineExecutionId("executionId")
-                                                  .variableInputs(new ArrayList<>())
-                                                  .build(),
+    JsonNode actual = JsonUtils.toJsonNode(controller.fetch(QLExecutionInputsToResumePipelineQueryParams.builder()
+                                                                .applicationId("appId")
+                                                                .pipelineStageElementId("stageElementId")
+                                                                .pipelineExecutionId("executionId")
+                                                                .variableInputs(new ArrayList<>())
+                                                                .build(),
         "accountId"));
-    JsonNode expected = jsonToObj("./execution/qlExecution_input_expected.json", JsonNode.class);
-    assertEquals("QLInputs should be equal", actual.toString(), expected.toString());
-  }
-
-  private static <T> T jsonToObj(String filPath, Class<T> tClass) {
-    File file =
-        new File(RuntimeInputExecutionInputsControllerTest.class.getClassLoader().getResource(filPath).getFile());
-    try {
-      return mapper.readValue(file, tClass);
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private static JsonNode toJson(Object obj) {
-    return mapper.convertValue(obj, JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("./execution/qlExecution_input_expected.json", JsonNode.class);
+    assertEquals("QLInputs should be equal", expected.toString(), actual.toString());
   }
 }

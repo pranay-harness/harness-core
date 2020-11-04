@@ -20,6 +20,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.DeploymentType;
 import software.wings.api.WorkflowElement;
@@ -49,8 +50,12 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -352,8 +357,7 @@ public class WorkflowExecutionServiceHelper {
 
     notNullCheck("No Executions found for given PipelineExecutionId " + pipelineExecutionId, pipelineExecution);
     String pipelineId = pipelineExecution.getWorkflowId();
-    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
-        appId, pipelineId, pipelineExecution.getExecutionArgs().getWorkflowVariables());
+    Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
 
     notNullCheck("No pipeline associated with given executionId:  " + pipelineExecutionId, pipeline);
 
@@ -374,10 +378,10 @@ public class WorkflowExecutionServiceHelper {
 
         Workflow workflow = workflowService.readWorkflow(appId, workflowId);
         notNullCheck(
-            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            "Not able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
             workflow);
         notNullCheck(
-            "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            "Not able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
             workflow.getOrchestrationWorkflow());
         List<Variable> variables = workflow.getOrchestrationWorkflow().getUserVariables();
         if (isEmpty(variables)) {
@@ -392,13 +396,63 @@ public class WorkflowExecutionServiceHelper {
         List<String> runtimeVarNames = runtimeInputsConfig.getRuntimeInputVariables();
         List<Variable> runtimeVariables =
             variables.stream().filter(t -> runtimeVarNames.contains(t.getName())).collect(toList());
-        for (Variable variable : runtimeVariables) {
-          String defaultValuePresent = resolvedVariablesValues.get(variable.getName());
+        // Map these to pipeline variables
+        Set<String> pipelineVarsName =
+            runtimeVariables.stream()
+                .map(v -> ExpressionEvaluator.getName(resolvedVariablesValues.get(v.getName())))
+                .collect(Collectors.toSet());
+        List<Variable> vars = pipeline.getPipelineVariables();
+        ExecutionArgs args = pipelineExecution.getExecutionArgs();
+        if (args.getWorkflowVariables() == null) {
+          args.setWorkflowVariables(new HashMap<>());
+        }
+        Set<String> toMapRelatedFields = new HashSet<>();
+        for (Variable variable : vars) {
+          String defaultValuePresent = args.getWorkflowVariables().get(variable.getName());
           if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
             variable.setValue(defaultValuePresent);
           }
+          if (variable.obtainEntityType() != null && variable.getRuntimeInput()) {
+            if (variable.getMetadata() == null || variable.getMetadata().get(Variable.RELATED_FIELD) == null) {
+              continue;
+            }
+            Set<String> relatedFields =
+                Stream.of(String.valueOf(variable.getMetadata().get(Variable.RELATED_FIELD)).split(","))
+                    .collect(Collectors.toSet());
+            if (vars.stream()
+                    .filter(var -> !var.getRuntimeInput())
+                    .map(Variable::getName)
+                    .anyMatch(relatedFields::contains)) {
+              toMapRelatedFields.add(variable.getName());
+            }
+          }
+
+          if (variable.obtainEntityType() != null && !variable.getRuntimeInput()) {
+            toMapRelatedFields.add(variable.getName());
+            if (variable.getMetadata() == null || variable.getMetadata().get(Variable.RELATED_FIELD) == null) {
+              continue;
+            }
+            Set<String> relatedFields =
+                Stream.of(String.valueOf(variable.getMetadata().get(Variable.RELATED_FIELD)).split(","))
+                    .collect(Collectors.toSet());
+            toMapRelatedFields.addAll(vars.stream()
+                                          .filter(Variable::getRuntimeInput)
+                                          .map(Variable::getName)
+                                          .filter(relatedFields::contains)
+                                          .collect(Collectors.toSet()));
+          }
         }
-        return runtimeVariables;
+
+        for (Variable variable : vars) {
+          if (toMapRelatedFields.contains(variable.getName())) {
+            // Workflow Variables remove runtime -> pipelineExecution.getExecutionArgs().getWorkflowVariables()
+            PipelineServiceImpl.setParentAndRelatedFieldsForRuntime(pipeline.getPipelineVariables(),
+                pipelineExecution.getExecutionArgs().getWorkflowVariables(), variable.getName(), variable,
+                variable.obtainEntityType());
+          }
+        }
+
+        return vars.stream().filter(v -> pipelineVarsName.contains(v.getName())).collect(toList());
       }
     }
     throw new InvalidRequestException(

@@ -1,11 +1,14 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.POOJA;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -23,9 +26,11 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,6 +50,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
+import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -334,6 +340,31 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     assertThat(calculateCdPageCandidate(null, null, false)).isTrue();
     assertThat(calculateCdPageCandidate(null, "pipelineResumeId", false)).isFalse();
     assertThat(calculateCdPageCandidate(null, "pipelineResumeId", true)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testRunningPipelineWorkflowVariablesReturnsCorrectVariableList() {
+    final String appID = "nCLN8c84SqWPr44sqg65JQ";
+    final String pipelineStageElementId = "iibzVUjNTlWsv23lQIrkWw";
+    final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
+
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("./pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
+    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+
+    when(workflowExecutionService.getWorkflowExecution(eq(appID), eq(pipelineExecutionId)))
+        .thenReturn(workflowExecution);
+    when(workflowService.readWorkflow(eq(appID), anyString())).thenReturn(workflow);
+    when(pipelineService.readPipelineWithVariables(eq(appID), anyString())).thenReturn(pipeline);
+
+    WorkflowVariablesMetadata actual = workflowExecutionServiceHelper.fetchWorkflowVariablesForRunningExecution(
+        appID, pipelineExecutionId, pipelineStageElementId);
+    List<Variable> expected =
+        JsonUtils.readResourceFile("./expected_workflow_vars_metada.json", new TypeReference<List<Variable>>() {});
+    Assertions.assertThat(actual.getWorkflowVariables()).isEqualTo(expected);
   }
 
   private void validateUnsetWorkflowVariables(List<Variable> workflowVariables) {

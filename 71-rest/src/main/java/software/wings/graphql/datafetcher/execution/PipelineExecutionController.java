@@ -9,6 +9,7 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,6 +18,7 @@ import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,12 +27,16 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.datafetcher.VariableController;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
@@ -41,6 +47,7 @@ import software.wings.graphql.schema.mutation.execution.payload.QLStartExecution
 import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
 import software.wings.graphql.schema.type.QLApiKey;
+import software.wings.graphql.schema.type.QLApprovalStageExecution;
 import software.wings.graphql.schema.type.QLCause;
 import software.wings.graphql.schema.type.QLExecuteOptions;
 import software.wings.graphql.schema.type.QLExecutedByAPIKey;
@@ -48,6 +55,9 @@ import software.wings.graphql.schema.type.QLExecutedByTrigger;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
+import software.wings.graphql.schema.type.QLPipelineStageExecution;
+import software.wings.graphql.schema.type.QLVariable;
+import software.wings.graphql.schema.type.QLWorkflowStageExecution;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
@@ -61,6 +71,8 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,7 +126,15 @@ public class PipelineExecutionController {
                  .collect(Collectors.toList());
     }
 
+    Pipeline pipeline = workflowExecution.getPipelineExecution().getPipeline();
     builder.id(workflowExecution.getUuid())
+        .pipelineStageExecutions(workflowExecution.getPipelineExecution()
+                                     .getPipelineStageExecutions()
+                                     .stream()
+                                     .map(exec
+                                         -> populatePipelineStageExecution(workflowExecution.getUuid(), pipeline, exec,
+                                             workflowExecution.getExecutionArgs()))
+                                     .collect(Collectors.toList()))
         .pipelineId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
         .createdAt(workflowExecution.getCreatedAt())
@@ -125,6 +145,52 @@ public class PipelineExecutionController {
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
         .build();
+  }
+
+  private QLPipelineStageExecution populatePipelineStageExecution(
+      String pipelineExecutionId, Pipeline pipeline, PipelineStageExecution execution, ExecutionArgs args) {
+    StateType stateType = StateType.valueOf(execution.getStateType());
+    PipelineStageElement element =
+        pipeline.getPipelineStages()
+            .stream()
+            .flatMap(ps
+                -> ps.getPipelineStageElements().stream().filter(
+                    se -> se.getUuid().equals(execution.getPipelineStageElementId())))
+            .findFirst()
+            .orElseThrow(() -> new UnexpectedException("Expected at least one pipeline stage element"));
+
+    if (Lists.newArrayList(StateType.APPROVAL, StateType.APPROVAL_RESUME).stream().anyMatch(stateType::equals)) {
+      return QLApprovalStageExecution.builder()
+          .pipelineStageElementId(execution.getPipelineStageElementId())
+          .pipelineStageName(element.getProperties().get("stageName").toString())
+          .pipelineStepName(element.getName())
+          .status(ExecutionController.convertStatus(execution.getStatus()))
+          .approvalStepType(ApprovalStateType.valueOf(element.getProperties().get("approvalStateType").toString()))
+          .build();
+    } else {
+      String workflowExecutionId = null;
+      if (!execution.getWorkflowExecutions().isEmpty()) {
+        workflowExecutionId =
+            execution.getWorkflowExecutions()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new UnexpectedException("Expected at least one workflow execution"))
+                .getUuid();
+      }
+      WorkflowVariablesMetadata metadata = workflowExecutionService.fetchWorkflowVariables(
+          pipeline.getAppId(), args, pipelineExecutionId, execution.getPipelineStageElementId());
+
+      List<QLVariable> variables = new ArrayList<>();
+      VariableController.populateVariables(metadata.getWorkflowVariables(), variables);
+      return QLWorkflowStageExecution.builder()
+          .pipelineStageElementId(execution.getPipelineStageElementId())
+          .pipelineStageName(element.getProperties().get("stageName").toString())
+          .pipelineStepName(element.getName())
+          .status(ExecutionController.convertStatus(execution.getStatus()))
+          .workflowExecutionId(workflowExecutionId)
+          .runtimeInputVariables(variables)
+          .build();
+    }
   }
 
   QLStartExecutionPayload startPipelineExecution(
