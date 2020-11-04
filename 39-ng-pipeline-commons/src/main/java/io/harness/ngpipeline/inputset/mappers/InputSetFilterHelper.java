@@ -63,6 +63,7 @@ public class InputSetFilterHelper {
     update.set(BaseInputSetEntityKeys.name, baseInputSetEntity.getName());
     update.set(BaseInputSetEntityKeys.description, baseInputSetEntity.getDescription());
     update.set(BaseInputSetEntityKeys.tags, baseInputSetEntity.getTags());
+    update.set(BaseInputSetEntityKeys.referredEntities, baseInputSetEntity.getReferredEntities());
     update.set(BaseInputSetEntityKeys.deleted, false);
 
     if (baseInputSetEntity.getInputSetType() == InputSetEntityType.INPUT_SET) {

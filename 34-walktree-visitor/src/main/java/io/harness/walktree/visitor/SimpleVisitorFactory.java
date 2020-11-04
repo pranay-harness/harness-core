@@ -3,7 +3,7 @@ package io.harness.walktree.visitor;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-
+import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
 import io.harness.walktree.visitor.mergeinputset.MergeInputSetVisitor;
 import io.harness.walktree.visitor.mergeinputset.beans.MergeVisitorInputSetElement;
@@ -32,5 +32,13 @@ public class SimpleVisitorFactory {
     InputSetTemplateVisitor inputSetTemplateVisitor = new InputSetTemplateVisitor(injector, keepRuntimeInput);
     injector.injectMembers(inputSetTemplateVisitor);
     return inputSetTemplateVisitor;
+  }
+
+  public EntityReferenceExtractorVisitor obtainEntityReferenceExtractorVisitor(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    EntityReferenceExtractorVisitor entityReferenceExtractorVisitor =
+        new EntityReferenceExtractorVisitor(injector, accountIdentifier, orgIdentifier, projectIdentifier);
+    injector.injectMembers(entityReferenceExtractorVisitor);
+    return entityReferenceExtractorVisitor;
   }
 }

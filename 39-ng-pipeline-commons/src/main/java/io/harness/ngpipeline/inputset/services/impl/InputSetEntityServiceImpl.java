@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import io.harness.EntityType;
 import io.harness.beans.InputSetReference;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
@@ -13,10 +14,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.walktree.visitor.SimpleVisitorFactory;
+import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -38,6 +43,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 public class InputSetEntityServiceImpl implements InputSetEntityService {
   private final InputSetRepository inputSetRepository;
   private final EntitySetupUsageClient entitySetupUsageClient;
+  private final SimpleVisitorFactory simpleVisitorFactory;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "InputSet [%s] under Project[%s], Organization [%s] for Pipeline [%s] already exists";
@@ -48,17 +54,32 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
   @Override
   public BaseInputSetEntity create(@NotNull @Valid BaseInputSetEntity baseInputSetEntity) {
+    validatePresenceOfRequiredFields(baseInputSetEntity.getAccountId(), baseInputSetEntity.getOrgIdentifier(),
+        baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getPipelineIdentifier(),
+        baseInputSetEntity.getIdentifier());
+    setName(baseInputSetEntity);
+    if (baseInputSetEntity instanceof InputSetEntity) {
+      return saveInputSetAndReferences((InputSetEntity) baseInputSetEntity);
+    } else {
+      return saveInputSet(baseInputSetEntity);
+    }
+  }
+
+  private BaseInputSetEntity saveInputSetAndReferences(InputSetEntity inputSetEntity) {
+    inputSetEntity.setReferredEntities(getReferences(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(),
+        inputSetEntity.getProjectIdentifier(), inputSetEntity.getInputSetConfig().getPipeline()));
+    BaseInputSetEntity savedEntity = saveInputSet(inputSetEntity);
+    saveReferencesInInputSet(inputSetEntity);
+    return savedEntity;
+  }
+
+  private BaseInputSetEntity saveInputSet(BaseInputSetEntity inputSetEntity) {
     try {
-      validatePresenceOfRequiredFields(baseInputSetEntity.getAccountId(), baseInputSetEntity.getOrgIdentifier(),
-          baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getPipelineIdentifier(),
-          baseInputSetEntity.getIdentifier());
-      setName(baseInputSetEntity);
-      return inputSetRepository.save(baseInputSetEntity);
+      return inputSetRepository.save(inputSetEntity);
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format(DUP_KEY_EXP_FORMAT_STRING, baseInputSetEntity.getIdentifier(),
-              baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getOrgIdentifier(),
-              baseInputSetEntity.getPipelineIdentifier()),
+      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, inputSetEntity.getIdentifier(),
+                                            inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier(),
+                                            inputSetEntity.getPipelineIdentifier()),
           USER_SRE, ex);
     }
   }
@@ -76,13 +97,42 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
     validatePresenceOfRequiredFields(baseInputSetEntity.getAccountId(), baseInputSetEntity.getOrgIdentifier(),
         baseInputSetEntity.getProjectIdentifier(), baseInputSetEntity.getPipelineIdentifier(),
         baseInputSetEntity.getIdentifier());
-    Criteria criteria = getInputSetEqualityCriteria(baseInputSetEntity, baseInputSetEntity.getDeleted());
-    BaseInputSetEntity updateResult = inputSetRepository.update(criteria, baseInputSetEntity);
+    if (baseInputSetEntity instanceof InputSetEntity) {
+      return updateInputSetAndReferences((InputSetEntity) baseInputSetEntity);
+    } else {
+      return updateInputSet(baseInputSetEntity);
+    }
+  }
+
+  private BaseInputSetEntity updateInputSetAndReferences(InputSetEntity inputSetEntity) {
+    inputSetEntity.setReferredEntities(getReferences(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(),
+        inputSetEntity.getProjectIdentifier(), inputSetEntity.getInputSetConfig().getPipeline()));
+
+    Set<EntityDetail> oldEntities;
+    try {
+      InputSetEntity oldVersion = (InputSetEntity) get(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(),
+          inputSetEntity.getProjectIdentifier(), inputSetEntity.getPipelineIdentifier(), inputSetEntity.getIdentifier(),
+          false)
+                                      .get();
+      oldEntities = oldVersion.getReferredEntities();
+    } catch (Exception e) {
+      throw new InvalidRequestException(String.format(
+          "Input Set [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+          inputSetEntity.getIdentifier(), inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
+    }
+
+    BaseInputSetEntity updateResult = updateInputSet(inputSetEntity);
+    updateReferencesPresentInInputSet(inputSetEntity, oldEntities);
+    return updateResult;
+  }
+
+  private BaseInputSetEntity updateInputSet(BaseInputSetEntity inputSetEntity) {
+    Criteria criteria = getInputSetEqualityCriteria(inputSetEntity, inputSetEntity.getDeleted());
+    BaseInputSetEntity updateResult = inputSetRepository.update(criteria, inputSetEntity);
     if (updateResult == null) {
-      throw new InvalidRequestException(
-          String.format("Input Set [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-              baseInputSetEntity.getIdentifier(), baseInputSetEntity.getProjectIdentifier(),
-              baseInputSetEntity.getOrgIdentifier()));
+      throw new InvalidRequestException(String.format(
+          "Input Set [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+          inputSetEntity.getIdentifier(), inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
     }
     return updateResult;
   }
@@ -196,5 +246,69 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
       criteria.and(BaseInputSetEntityKeys.version).is(version);
     }
     return criteria;
+  }
+
+  private Set<EntityDetail> getReferences(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, NgPipeline pipeline) {
+    EntityReferenceExtractorVisitor visitor =
+        simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
+    visitor.walkElementTree(pipeline);
+    return visitor.getEntityReferenceSet();
+  }
+
+  private EntityDetail getInputSetEntityDetail(InputSetEntity inputSetEntity) {
+    InputSetReference inputSetReference = InputSetReference.builder()
+                                              .accountIdentifier(inputSetEntity.getAccountId())
+                                              .orgIdentifier(inputSetEntity.getOrgIdentifier())
+                                              .projectIdentifier(inputSetEntity.getProjectIdentifier())
+                                              .pipelineIdentifier(inputSetEntity.getPipelineIdentifier())
+                                              .identifier(inputSetEntity.getIdentifier())
+                                              .build();
+    return EntityDetail.builder().entityRef(inputSetReference).type(EntityType.INPUT_SETS).build();
+  }
+
+  private void saveReferencesInInputSet(InputSetEntity inputSetEntity) {
+    Set<EntityDetail> referredEntities = inputSetEntity.getReferredEntities();
+
+    EntityDetail referredByEntity = getInputSetEntityDetail(inputSetEntity);
+    for (EntityDetail entity : referredEntities) {
+      EntitySetupUsageDTO entitySetupUsageDTO = EntitySetupUsageDTO.builder()
+                                                    .accountIdentifier(inputSetEntity.getAccountId())
+                                                    .referredEntity(entity)
+                                                    .referredByEntity(referredByEntity)
+                                                    .build();
+      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+    }
+  }
+
+  private void updateReferencesPresentInInputSet(InputSetEntity inputSetEntity, Set<EntityDetail> oldEntities) {
+    EntityDetail referredByEntity = getInputSetEntityDetail(inputSetEntity);
+
+    Set<EntityDetail> newEntities = inputSetEntity.getReferredEntities();
+
+    Set<EntityDetail> commonEntities = new HashSet<>(newEntities);
+    commonEntities.removeIf(entity -> !oldEntities.contains(entity));
+
+    Set<EntityDetail> entitiesToRemove = new HashSet<>(oldEntities);
+    entitiesToRemove.removeIf(commonEntities::contains);
+
+    Set<EntityDetail> entitiesToAdd = new HashSet<>(newEntities);
+    entitiesToAdd.removeIf(commonEntities::contains);
+
+    // adds entities present in the update but not in the old version
+    for (EntityDetail entity : entitiesToAdd) {
+      EntitySetupUsageDTO entitySetupUsageDTO = EntitySetupUsageDTO.builder()
+                                                    .accountIdentifier(inputSetEntity.getAccountId())
+                                                    .referredEntity(entity)
+                                                    .referredByEntity(referredByEntity)
+                                                    .build();
+      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+    }
+
+    // removes entities present in the old version but not in the update
+    for (EntityDetail entity : entitiesToRemove) {
+      execute(entitySetupUsageClient.delete(inputSetEntity.getAccountId(),
+          entity.getEntityRef().getFullyQualifiedName(), referredByEntity.getEntityRef().getFullyQualifiedName()));
+    }
   }
 }

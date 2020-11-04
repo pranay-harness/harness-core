@@ -7,6 +7,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.persistence.PersistentEntity;
@@ -23,6 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Size;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @FieldNameConstants(innerTypeName = "BaseInputSetEntityKeys")
@@ -52,6 +54,8 @@ public abstract class BaseInputSetEntity implements PersistentEntity {
 
   @NotEmpty String inputSetYaml;
   @NotEmpty InputSetEntityType inputSetType;
+
+  Set<EntityDetail> referredEntities;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

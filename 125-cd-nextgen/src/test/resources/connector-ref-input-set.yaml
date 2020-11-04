@@ -1,0 +1,23 @@
+inputSet:
+  identifier: inputSet2
+  tags:
+    company: Harness
+    location: India
+  pipeline:
+    identifier: myPipeline
+    stages:
+      - stage:
+          identifier: qa
+          type: Deployment
+          spec:
+            service:
+              identifier: ${input}
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  artifacts:
+                    primary:
+                      type: Dockerhub
+                      spec:
+                        connectorRef: npQuoteCenter
+                        imagePath: this/that

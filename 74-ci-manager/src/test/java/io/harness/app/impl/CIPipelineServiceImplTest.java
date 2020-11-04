@@ -7,10 +7,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
@@ -19,11 +22,11 @@ import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +40,8 @@ import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
   @Mock private NgPipelineRepository ngPipelineRepository;
-  @InjectMocks NGPipelineServiceImpl ngPipelineService;
+  @Mock EntitySetupUsageClient entitySetupUsageClient;
+  @Inject NGPipelineServiceImpl ngPipelineService;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
@@ -47,6 +51,8 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
 
   @Before
   public void setUp() {
+    Reflect.on(ngPipelineService).set("ngPipelineRepository", ngPipelineRepository);
+    Reflect.on(ngPipelineService).set("entitySetupUsageClient", entitySetupUsageClient);
     inputYaml = new Scanner(
         Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream("pipeline.yml")), "UTF-8")
                     .useDelimiter("\\A")

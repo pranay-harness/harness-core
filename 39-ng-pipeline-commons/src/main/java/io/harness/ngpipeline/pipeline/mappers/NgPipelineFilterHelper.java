@@ -44,6 +44,7 @@ public class NgPipelineFilterHelper {
     update.set(PipelineNGKeys.ngPipeline, ngPipelineEntity.getNgPipeline());
     update.set(PipelineNGKeys.yamlPipeline, ngPipelineEntity.getYamlPipeline());
     update.set(PipelineNGKeys.tags, ngPipelineEntity.getTags());
+    update.set(PipelineNGKeys.referredEntities, ngPipelineEntity.getReferredEntities());
     update.set(PipelineNGKeys.deleted, false);
     return update;
   }
