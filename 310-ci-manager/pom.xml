@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>74-ci-manager</artifactId>
+    <artifactId>310-ci-manager</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.github.rutledgepaulv</groupId>

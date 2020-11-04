@@ -192,11 +192,11 @@ cd ../..
 
 mkdir -p dist/ci-manager
 cd dist/ci-manager
-cp ../../74-ci-manager/target/ci-manager-capsule.jar .
-cp ../../74-ci-manager/ci-manager-config.yml .
+cp ../../310-ci-manager/target/ci-manager-capsule.jar .
+cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
-cp ../../74-ci-manager/key.pem .
-cp ../../74-ci-manager/cert.pem .
+cp ../../310-ci-manager/key.pem .
+cp ../../310-ci-manager/cert.pem .
 
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
