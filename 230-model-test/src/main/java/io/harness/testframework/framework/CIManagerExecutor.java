@@ -31,7 +31,7 @@ import java.util.List;
 @UtilityClass
 @Slf4j
 public class CIManagerExecutor {
-  public static final String MODULE = "74-ci-manager";
+  public static final String MODULE = "310-ci-manager";
   public static final String CONFIG_YML = "ci-manager-config.yml";
   public static final String CAPSULE_JAR = "ci-manager-capsule.jar";
   public static final String TARGET = "target";

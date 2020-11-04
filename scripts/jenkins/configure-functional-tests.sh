@@ -16,4 +16,4 @@ sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 72-event-se
 sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 280-batch-processing/batch-processing-config.yml
 sed -i "s|uri: mongodb://localhost:27017/events|uri: ${MONGO_URI}_events|" 280-batch-processing/batch-processing-config.yml
 sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 210-command-library-server/command-library-server-config.yml
-sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 74-ci-manager/ci-manager-config.yml
+sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 310-ci-manager/ci-manager-config.yml
