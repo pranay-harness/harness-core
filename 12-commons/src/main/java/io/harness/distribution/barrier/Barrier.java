@@ -9,7 +9,10 @@ import static io.harness.govern.Switch.unhandled;
 
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -38,9 +41,11 @@ import java.util.List;
 
 @Value
 @Builder
+@Slf4j
 public class Barrier {
   private BarrierId id;
   private Forcer forcer;
+  private static final String DEBUG_LINE = "CDC_10273_TEST_LOG:";
 
   public enum State {
     // Standing when the barrier is standing because not all of the forcers are inline.
@@ -73,8 +78,12 @@ public class Barrier {
     Deque<Forcer> deque = new ArrayDeque<>();
     deque.add(forcer);
 
+    Instant startTime = Instant.now();
+
     // By default we assume that all forcers already succeeded
     State result = DOWN;
+
+    int forcerCount = 0;
 
     while (!deque.isEmpty()) {
       Forcer firstForcer = deque.removeFirst();
@@ -83,7 +92,11 @@ public class Barrier {
         continue;
       }
 
+      forcerCount++;
+
       final Forcer.State forcerState = proctor.getForcerState(firstForcer.getId(), firstForcer.getMetadata());
+      log.info("{} Time taken till getting forcer state for {}: {}", DEBUG_LINE, firstForcer.getId().getValue(),
+          getDuration(startTime));
       switch (forcerState) {
         case ABSENT:
           // If the forcer is absent, the barrier stands, but there is no reason to check the children
@@ -118,6 +131,7 @@ public class Barrier {
       }
     }
 
+    log.info("{} Total number of forcers processed: {}", DEBUG_LINE, forcerCount);
     return result;
   }
 
@@ -130,5 +144,10 @@ public class Barrier {
       return state;
     }
     return calculateState(proctor);
+  }
+
+  public static String getDuration(Instant startTime) {
+    Duration duration = Duration.between(startTime, Instant.now());
+    return String.format("%ds %dns", duration.getSeconds(), duration.getNano());
   }
 }
