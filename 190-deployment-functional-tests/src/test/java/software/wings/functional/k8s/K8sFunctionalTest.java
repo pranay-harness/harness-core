@@ -103,8 +103,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
         assert false;
     }
 
-    workflowName = workflowName + '-' + System.currentTimeMillis();
-
     InfrastructureDefinition infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, infrastructureDefinitionTestType);
 

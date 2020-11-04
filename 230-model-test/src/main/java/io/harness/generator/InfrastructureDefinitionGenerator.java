@@ -115,7 +115,7 @@ public class InfrastructureDefinitionGenerator {
       Randomizer.Seed seed, Owners owners, String predefined, String bearerToken) {
     switch (predefined) {
       case GCP_KUBERNETES_ENGINE:
-        return ensureGcpK8s(seed, owners, "gcp-k8s", bearerToken);
+        return ensureGcpK8s(seed, owners, "gcp-k8s");
       case AWS_AMI:
         return ensureAwsAmi(seed, owners, bearerToken);
       case AWS_AMI_LT:
@@ -347,7 +347,7 @@ public class InfrastructureDefinitionGenerator {
 
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
-            .name("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
+            .name("Ecs Ec2 type deployment Functional test")
             .infrastructure(AwsEcsInfrastructure.builder()
                                 .cloudProviderId(ecsCloudProvider.getUuid())
                                 .clusterName("SdkTesting")
@@ -383,7 +383,7 @@ public class InfrastructureDefinitionGenerator {
 
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
-            .name("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
+            .name("Ecs Ec2 type deployment Functional test")
             .infrastructure(AwsEcsInfrastructure.builder()
                                 .cloudProviderId(ecsCloudProvider.getUuid())
                                 .region("us-east-1")
@@ -780,7 +780,7 @@ public class InfrastructureDefinitionGenerator {
                                                     .launchType(LaunchType.EC2.toString())
                                                     .build();
 
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "aws-ecs-", Long.toString(System.currentTimeMillis()));
+    String name = "aws-ecs-infra";
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
                                                             .infrastructure(awsEcsInfrastructure)
@@ -822,20 +822,16 @@ public class InfrastructureDefinitionGenerator {
     return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
-  private InfrastructureDefinition ensureGcpK8s(
-      Randomizer.Seed seed, Owners owners, String namespace, String bearerToken) {
+  private InfrastructureDefinition ensureGcpK8s(Randomizer.Seed seed, Owners owners, String namespace) {
     Environment environment = ensureEnv(seed, owners);
 
     final SettingAttribute gcpK8sCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
-    final String nameSpaceUnique =
-        HarnessStringUtils.join(StringUtils.EMPTY, namespace, Long.toString(System.currentTimeMillis()));
-
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "gcp-k8s-", Long.toString(System.currentTimeMillis()));
+    String name = "gcp-k8s-infra";
 
     GoogleKubernetesEngine gcpK8sInfra = GoogleKubernetesEngine.builder()
                                              .cloudProviderId(gcpK8sCloudProvider.getUuid())
-                                             .namespace(nameSpaceUnique)
+                                             .namespace(namespace)
                                              .clusterName(InfraDefinitionGeneratorConstants.GCP_CLUSTER)
                                              .releaseName("release-${infra.kubernetes.infraId}")
                                              .build();
@@ -969,8 +965,7 @@ public class InfrastructureDefinitionGenerator {
             .spotinstCloudProvider(spotinstProvider.getUuid())
             .build();
 
-    String name =
-        HarnessStringUtils.join(StringUtils.EMPTY, "aws-ami-spotinst-", Long.toString(System.currentTimeMillis()));
+    String name = "aws-ami-spotinst-infra";
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
                                                             .cloudProviderType(CloudProviderType.AWS)
@@ -999,7 +994,7 @@ public class InfrastructureDefinitionGenerator {
                                                           .role(GeneratorConstants.AWS_TEST_LAMBDA_ROLE)
                                                           .build();
 
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "aws-lamda-", Long.toString(System.currentTimeMillis()));
+    String name = "aws-lamda-infra";
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
                                                             .cloudProviderType(CloudProviderType.AWS)
@@ -1020,7 +1015,7 @@ public class InfrastructureDefinitionGenerator {
         settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
     final SettingAttribute winRmConnectionAttr = settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
 
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "azure-winrm-", Long.toString(System.currentTimeMillis()));
+    String name = "azure-winrm-infra";
 
     AzureInstanceInfrastructure azureInstanceInfrastructure =
         AzureInstanceInfrastructure.builder()
