@@ -10,6 +10,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -37,9 +38,10 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private EcsContainerService ecsContainerService;
 
-  public EcsSteadyStateCheckTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public EcsSteadyStateCheckTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   private Service getService(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,

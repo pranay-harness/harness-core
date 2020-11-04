@@ -18,6 +18,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -35,9 +36,9 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private AwsClient awsClient;
   @Inject private AwsNgConfigMapper awsNgConfigMapper;
 
-  public AwsDelegateTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public AwsDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

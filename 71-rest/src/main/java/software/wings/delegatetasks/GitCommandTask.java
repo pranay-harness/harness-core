@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -50,9 +51,9 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private GitService gitService;
 
-  public GitCommandTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public GitCommandTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

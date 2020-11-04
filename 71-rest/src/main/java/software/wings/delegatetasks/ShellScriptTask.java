@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -18,9 +19,9 @@ import java.util.function.Consumer;
 public class ShellScriptTask extends AbstractDelegateRunnableTask {
   @Inject private ShellScriptTaskHandler shellScriptTaskHandler;
 
-  public ShellScriptTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, postExecute, preExecute);
+  public ShellScriptTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute);
   }
 
   @Override

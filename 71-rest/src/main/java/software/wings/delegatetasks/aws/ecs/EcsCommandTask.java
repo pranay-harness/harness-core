@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -23,9 +24,9 @@ import java.util.function.Consumer;
 public class EcsCommandTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, EcsCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
 
-  public EcsCommandTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public EcsCommandTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

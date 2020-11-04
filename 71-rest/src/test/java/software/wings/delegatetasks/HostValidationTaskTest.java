@@ -38,7 +38,7 @@ public class HostValidationTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private HostValidationTask hostValidationTask = (HostValidationTask) HOST_VALIDATION.getDelegateRunnableTask(
-      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(),
+      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(), null,
       notifyResponseData -> {}, () -> true);
 
   @Before

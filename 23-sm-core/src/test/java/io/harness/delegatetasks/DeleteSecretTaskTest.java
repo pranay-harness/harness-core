@@ -41,7 +41,7 @@ public class DeleteSecretTaskTest extends CategoryTest {
                                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                                             .build())
                                                   .build();
-    deleteSecretTask = new DeleteSecretTask(delegateTaskPackage, notifyResponseData -> {}, () -> true);
+    deleteSecretTask = new DeleteSecretTask(delegateTaskPackage, null, notifyResponseData -> {}, () -> true);
 
     VaultEncryptorsRegistry vaultEncryptorsRegistry = mock(VaultEncryptorsRegistry.class);
     vaultEncryptor = mock(VaultEncryptor.class);

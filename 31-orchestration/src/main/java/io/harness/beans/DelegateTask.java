@@ -33,6 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,6 +86,36 @@ public class DelegateTask
   private String workflowExecutionId;
 
   @Singular private Map<String, String> setupAbstractions;
+
+  /**
+   * This field is intended to be used by Task owners to prepare key-value pairs which should represent the baseLogKey
+   * to be used for log streaming. If any other sub-step, like command unit, exists and has to be logged in a dedicated
+   * log stream, command unit identifier will be appended to the base key, by the logger implementation based on the
+   * command unit identifier passed by the task that is being executed. SortedMap is used, so that the same order is
+   * guarantied every time when the key is being built, on manager or delegate side.
+   *
+   * Convention for key generation will be the following:
+   *
+   *  [mapKey]:[mapvalue]-[mapKey]:[mapvalue]-...
+   *
+   *  In case there is a command unit, it should be appended to the end of the base key:
+   *
+   *  [mapKey]:[mapvalue]-[mapKey]:[mapvalue]-commandUnit:[commandUnitIdentifier]
+   *
+   * Example:
+   *     key: pipelineId, value: 1111
+   *     key: stageId, value: 2222
+   *     key: stepId, value: 3333
+   *
+   * Value of the key would be: pipelineId:1111-stageId:2222-stepId:3333
+   *
+   * In case there is a command unit that requires a dedicated log stream, manager(while reading logs) and logger
+   * implementation(while writing logs) should concatenate the commandUnit part to the end:
+   *
+   * Value of the key would be: pipelineId:1111-stageId:2222-stepId:3333-commandUnit:XYZ
+   *
+   */
+  private LinkedHashMap<String, String> logStreamingAbstractions;
 
   private String version;
 

@@ -21,6 +21,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -70,9 +71,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private JenkinsUtils jenkinsUtil;
   @Inject @Named("jenkinsExecutor") private ExecutorService jenkinsExecutor;
 
-  public JenkinsTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, postExecute, preExecute);
+  public JenkinsTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute);
   }
 
   @Override

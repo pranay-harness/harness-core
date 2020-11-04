@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +49,10 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   private DataCollectionExecutionContext dataCollectionExecutionContext;
   private Logger activityLogger;
 
-  public AbstractDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public AbstractDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

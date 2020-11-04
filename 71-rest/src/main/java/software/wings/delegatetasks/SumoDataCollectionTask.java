@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.sumologic.client.SumoLogicClient;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -40,9 +41,9 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private SumoDelegateServiceImpl sumoDelegateService;
 
-  public SumoDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public SumoDataCollectionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

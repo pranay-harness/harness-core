@@ -9,6 +9,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnexpectedException;
@@ -40,9 +41,10 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
-  public TerraformFetchTargetsTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public TerraformFetchTargetsTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

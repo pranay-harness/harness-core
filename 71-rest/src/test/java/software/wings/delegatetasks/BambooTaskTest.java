@@ -48,7 +48,7 @@ public class BambooTaskTest extends CategoryTest {
           .delegateId("delid1")
           .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
-      notifyResponseData -> {}, () -> true);
+      null, notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";
   private String userName = "admin";

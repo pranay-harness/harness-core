@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -21,9 +22,9 @@ import java.util.function.Consumer;
 public class HttpTask extends AbstractDelegateRunnableTask {
   @Inject private HttpService httpService;
 
-  public HttpTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, postExecute, preExecute);
+  public HttpTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute);
   }
 
   @Override

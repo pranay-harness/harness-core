@@ -2615,6 +2615,8 @@ public class DelegateServiceImpl implements DelegateService {
         } catch (ExecutionException e) {
           log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
         }
+
+        delegateTaskPackageBuilder.logStreamingAbstractions(delegateTask.getLogStreamingAbstractions());
       }
 
       if (delegateTask.getData().getParameters() == null || delegateTask.getData().getParameters().length != 1

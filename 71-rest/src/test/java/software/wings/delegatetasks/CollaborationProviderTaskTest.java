@@ -50,7 +50,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
               .delegateId("delid1")
               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
-          notifyResponseData -> {}, () -> true);
+          null, notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = RUSHABH)

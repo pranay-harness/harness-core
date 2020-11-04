@@ -28,8 +28,8 @@ import static org.mockito.Mockito.when;
 public class JiraTestConnectionTaskNGTest {
   @Mock private JiraTaskNGHelper jiraTaskNGHelper;
   @InjectMocks
-  private final JiraTestConnectionTaskNG jiraTestConnectionTaskNG =
-      new JiraTestConnectionTaskNG(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null);
+  private final JiraTestConnectionTaskNG jiraTestConnectionTaskNG = new JiraTestConnectionTaskNG(
+      DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null, null);
 
   @Before
   public void setup() {

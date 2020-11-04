@@ -43,8 +43,8 @@ public class S3FetchFilesTaskTest extends WingsBaseTest {
   @Mock private DelegateLogService delegateLogService;
   @InjectMocks
   S3FetchFilesTask s3FetchFilesTask =
-      new S3FetchFilesTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), mock(Consumer.class),
-          mock(BooleanSupplier.class));
+      new S3FetchFilesTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null,
+          mock(Consumer.class), mock(BooleanSupplier.class));
 
   FetchS3FilesCommandParams params;
 

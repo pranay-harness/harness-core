@@ -8,6 +8,7 @@ import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsDelegateTask;
@@ -394,9 +395,12 @@ public enum TaskType {
     return taskGroup;
   }
 
-  public DelegateRunnableTask getDelegateRunnableTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    return on(delegateRunnableTaskClass).create(delegateTaskPackage, postExecute, preExecute).get();
+  public DelegateRunnableTask getDelegateRunnableTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> postExecute,
+      BooleanSupplier preExecute) {
+    return on(delegateRunnableTaskClass)
+        .create(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute)
+        .get();
   }
 
   public DelegateValidateTask getDelegateValidateTaskVersionForCapabilityFramework(String delegateId,

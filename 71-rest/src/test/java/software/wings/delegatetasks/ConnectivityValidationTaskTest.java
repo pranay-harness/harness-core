@@ -46,7 +46,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
               .delegateId("delegateid")
               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
-          notifyResponseData -> {}, () -> true);
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

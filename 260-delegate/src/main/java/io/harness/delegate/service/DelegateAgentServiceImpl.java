@@ -101,6 +101,10 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.logstreaming.DelegateAgentLogStreamingClient;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
+import io.harness.delegate.beans.logstreaming.LogStreamingTaskClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -141,6 +145,7 @@ import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.Precision;
 import org.apache.http.client.utils.URIBuilder;
 import org.atmosphere.wasync.Client;
@@ -280,6 +285,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
+  @Inject private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -1790,13 +1796,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Already executing task");
       return;
     }
+
     log.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
-    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTaskPackage);
+    Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
+    Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
+    ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
+
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(taskData.getTaskType())
-            .getDelegateRunnableTask(delegateTaskPackage,
-                getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null)),
-                getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null)));
+            .getDelegateRunnableTask(delegateTaskPackage, logStreamingTaskClient,
+                getPostExecutionFunction(
+                    delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+                getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
@@ -1811,7 +1822,44 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("Task submitted for execution");
   }
 
-  private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTaskPackage delegateTaskPackage) {
+  private ILogStreamingTaskClient getLogStreamingTaskClient(
+      Pair<String, Set<String>> activitySecrets, DelegateTaskPackage delegateTaskPackage) {
+    if (isBlank(delegateTaskPackage.getLogStreamingToken())) {
+      return null;
+    }
+
+    if (delegateTaskPackage.getLogStreamingAbstractions() == null
+        || isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
+      return null;
+    }
+
+    StringBuilder logBaseKey = new StringBuilder();
+    for (Entry<String, String> entry : delegateTaskPackage.getLogStreamingAbstractions().entrySet()) {
+      if (logBaseKey.length() != 0) {
+        logBaseKey.append("-");
+      }
+      logBaseKey.append(entry.getKey() + ":" + entry.getValue());
+    }
+
+    return LogStreamingTaskClient.builder()
+        .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+        .accountId(delegateTaskPackage.getAccountId())
+        .token(delegateTaskPackage.getLogStreamingToken())
+        .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
+        .baseLogKey(logBaseKey.toString())
+        .build();
+  }
+
+  private Optional<LogSanitizer> getLogSanitizer(Pair<String, Set<String>> activitySecrets) {
+    // Create log sanitizer only if activityId and secrets are present
+    if (isNotBlank(activitySecrets.getLeft()) && isNotEmpty(activitySecrets.getRight())) {
+      return Optional.of(new ActivityBasedLogSanitizer(activitySecrets.getLeft(), activitySecrets.getRight()));
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  private Pair<String, Set<String>> obtainActivitySecrets(@NotNull DelegateTaskPackage delegateTaskPackage) {
     TaskData taskData = delegateTaskPackage.getData();
 
     String activityId = null;
@@ -1851,11 +1899,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
     }
 
-    if (isNotBlank(activityId) && isNotEmpty(secrets)) {
-      return Optional.of(new ActivityBasedLogSanitizer(activityId, secrets));
-    } else {
-      return Optional.empty();
-    }
+    return Pair.of(activityId, secrets);
   }
 
   /**
@@ -1878,9 +1922,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return secrets;
   }
 
-  private BooleanSupplier getPreExecutionFunction(
-      @NotNull DelegateTaskPackage delegateTaskPackage, LogSanitizer sanitizer) {
+  private BooleanSupplier getPreExecutionFunction(@NotNull DelegateTaskPackage delegateTaskPackage,
+      LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
     return () -> {
+      if (logStreamingTaskClient != null) {
+        try {
+          // Opens the log stream for task
+          logStreamingTaskClient.openStream(null);
+        } catch (Exception ex) {
+          log.error("Unexpected error occurred while opening the log stream.");
+        }
+      }
+
       if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
         log.info("Adding task to executing tasks");
         currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
@@ -1900,8 +1953,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     counter.updateAndGet(value -> value < current ? current : value);
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(
+      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
     return taskResponse -> {
+      if (logStreamingTaskClient != null) {
+        try {
+          // Closes the log stream for the task
+          logStreamingTaskClient.closeStream(null);
+        } catch (Exception ex) {
+          log.error("Unexpected error occurred while closing the log stream.");
+        }
+      }
+
       Response<ResponseBody> response = null;
       try {
         response = timeLimiter.callWithTimeout(() -> {

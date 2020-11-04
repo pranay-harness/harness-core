@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -58,9 +59,10 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   @Inject private DynaTraceDelegateService dynaTraceDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
 
-  public DynaTraceDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public DynaTraceDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

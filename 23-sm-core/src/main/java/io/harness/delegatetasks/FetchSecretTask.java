@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.encryptors.CustomEncryptor;
@@ -31,9 +32,9 @@ public class FetchSecretTask extends AbstractDelegateRunnableTask {
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Inject private CustomEncryptorsRegistry customEncryptorsRegistry;
 
-  public FetchSecretTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public FetchSecretTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

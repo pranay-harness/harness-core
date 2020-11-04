@@ -90,7 +90,7 @@ public class StackDriverLogDataCollectionTaskTest extends WingsBaseTest {
                             .build();
 
     dataCollectionTask = new StackDriverLogDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
     when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     setupFields();
   }

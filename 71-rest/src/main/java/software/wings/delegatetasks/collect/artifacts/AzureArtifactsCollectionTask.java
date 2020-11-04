@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.TaskParameters;
@@ -30,9 +31,10 @@ import java.util.function.Consumer;
 public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AzureArtifactsService azureArtifactsService;
 
-  public AzureArtifactsCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, postExecute, preExecute);
+  public AzureArtifactsCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> postExecute,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute);
   }
 
   @Override

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.TaskParameters;
@@ -30,9 +31,10 @@ import java.util.function.Consumer;
 public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private ArtifactoryService artifactoryService;
 
-  public ArtifactoryCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, postExecute, preExecute);
+  public ArtifactoryCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> postExecute,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute);
   }
 
   @Override

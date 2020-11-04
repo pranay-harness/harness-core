@@ -35,7 +35,7 @@ public class ExecuteCommandTaskTest extends WingsBaseTest {
           .delegateId("delegateid")
           .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
-      notifyResponseData -> {}, () -> true);
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

@@ -38,4 +38,6 @@ public class DelegateConfiguration {
   private Integer grpcServiceConnectorPort;
 
   private String managerServiceSecret;
+
+  private String logStreamingServiceBaseUrl;
 }

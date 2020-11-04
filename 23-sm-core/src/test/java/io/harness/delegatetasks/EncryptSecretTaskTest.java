@@ -42,7 +42,7 @@ public class EncryptSecretTaskTest extends CategoryTest {
                                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                                             .build())
                                                   .build();
-    encryptSecretTask = new EncryptSecretTask(delegateTaskPackage, notifyResponseData -> {}, () -> true);
+    encryptSecretTask = new EncryptSecretTask(delegateTaskPackage, null, notifyResponseData -> {}, () -> true);
 
     KmsEncryptorsRegistry kmsEncryptorsRegistry = mock(KmsEncryptorsRegistry.class);
     kmsEncryptor = mock(KmsEncryptor.class);

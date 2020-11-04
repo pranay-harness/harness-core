@@ -33,7 +33,7 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
   @InjectMocks
   HelmValuesFetchTask task = (HelmValuesFetchTask) TaskType.HELM_VALUES_FETCH.getDelegateRunnableTask(
       DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
-      notifyResponseData -> {}, () -> true);
+      null, notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = ABOSII)

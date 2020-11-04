@@ -17,6 +17,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
@@ -42,13 +43,15 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Getter private String taskType;
   @Getter private boolean isAsync;
   @Getter private Object[] parameters;
+  @Getter private ILogStreamingTaskClient logStreamingTaskClient;
   private Consumer<DelegateTaskResponse> consumer;
   private BooleanSupplier preExecute;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
-  public AbstractDelegateRunnableTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+  public AbstractDelegateRunnableTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
     this.delegateId = delegateTaskPackage.getDelegateId();
     this.taskId = delegateTaskPackage.getDelegateTaskId();
     this.parameters = delegateTaskPackage.getData().getParameters();
@@ -57,6 +60,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     this.preExecute = preExecute;
     this.taskType = delegateTaskPackage.getData().getTaskType();
     this.isAsync = delegateTaskPackage.getData().isAsync();
+    this.logStreamingTaskClient = logStreamingTaskClient;
   }
 
   @Override

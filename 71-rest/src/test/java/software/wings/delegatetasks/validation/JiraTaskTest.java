@@ -22,7 +22,7 @@ import software.wings.delegatetasks.jira.JiraTask;
 public class JiraTaskTest extends WingsBaseTest {
   @InjectMocks
   private JiraTask jiraTask =
-      new JiraTask(DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(), null, null);
+      new JiraTask(DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(), null, null, null);
 
   static TaskData taskData = TaskData.builder().async(true).taskType(TaskType.JIRA.name()).build();
 

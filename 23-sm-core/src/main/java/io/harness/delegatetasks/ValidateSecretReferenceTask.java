@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.encryptors.CustomEncryptor;
@@ -27,9 +28,10 @@ public class ValidateSecretReferenceTask extends AbstractDelegateRunnableTask {
   @Inject VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject CustomEncryptorsRegistry customEncryptorsRegistry;
 
-  public ValidateSecretReferenceTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public ValidateSecretReferenceTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

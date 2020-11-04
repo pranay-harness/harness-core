@@ -27,7 +27,7 @@ public class JiraTaskNGTest extends CategoryTest {
   @Mock private JiraTaskNGHelper jiraTaskNGHelper;
   @InjectMocks
   private final JiraTaskNG jiraTaskNG =
-      new JiraTaskNG(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null);
+      new JiraTaskNG(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null, null);
 
   @Before
   public void setup() {

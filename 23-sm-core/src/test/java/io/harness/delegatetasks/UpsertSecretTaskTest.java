@@ -45,7 +45,7 @@ public class UpsertSecretTaskTest extends CategoryTest {
                                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                                             .build())
                                                   .build();
-    upsertSecretTask = new UpsertSecretTask(delegateTaskPackage, notifyResponseData -> {}, () -> true);
+    upsertSecretTask = new UpsertSecretTask(delegateTaskPackage, null, notifyResponseData -> {}, () -> true);
 
     VaultEncryptorsRegistry vaultEncryptorsRegistry = mock(VaultEncryptorsRegistry.class);
     vaultEncryptor = mock(VaultEncryptor.class);

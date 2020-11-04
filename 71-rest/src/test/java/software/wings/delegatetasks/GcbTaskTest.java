@@ -83,7 +83,7 @@ public class GcbTaskTest extends CategoryTest {
           .delegateId("delid1")
           .data(TaskData.builder().async(true).taskType(GCB.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
-      Functions::doNothing, Functions::staticTruth));
+      null, Functions::doNothing, Functions::staticTruth));
 
   @Test
   @Owner(developers = VGLIJIN)

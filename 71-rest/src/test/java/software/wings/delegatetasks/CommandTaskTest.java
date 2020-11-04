@@ -46,7 +46,7 @@ public class CommandTaskTest extends WingsBaseTest {
           .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build();
 
-  @InjectMocks CommandTask commandTask = new CommandTask(delegateTaskPackage, null, null);
+  @InjectMocks CommandTask commandTask = new CommandTask(delegateTaskPackage, null, null, null);
 
   private Host.Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withPublicDns(PUBLIC_DNS);
   private CommandExecutionContext commandExecutionContextBuider =

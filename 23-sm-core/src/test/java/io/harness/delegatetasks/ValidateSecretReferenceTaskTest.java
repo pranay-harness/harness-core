@@ -54,7 +54,7 @@ public class ValidateSecretReferenceTaskTest extends CategoryTest {
     vaultEncryptorsRegistry = mock(VaultEncryptorsRegistry.class);
     customEncryptorsRegistry = mock(CustomEncryptorsRegistry.class);
     validateSecretReferenceTask =
-        new ValidateSecretReferenceTask(delegateTaskPackage, notifyResponseData -> {}, () -> true);
+        new ValidateSecretReferenceTask(delegateTaskPackage, null, notifyResponseData -> {}, () -> true);
     FieldUtils.writeField(validateSecretReferenceTask, "vaultEncryptorsRegistry", vaultEncryptorsRegistry, true);
     FieldUtils.writeField(validateSecretReferenceTask, "customEncryptorsRegistry", customEncryptorsRegistry, true);
   }

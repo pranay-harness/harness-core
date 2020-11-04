@@ -54,7 +54,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   @InjectMocks
   private final HelmCommandTask helmCommandTask = (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
       DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
-      notifyResponseData -> {}, () -> true);
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setup() {
@@ -195,6 +195,6 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   private static HelmCommandTask getTask(boolean async) {
     return (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
         DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(async).build()).build(),
-        notifyResponseData -> {}, () -> true);
+        null, notifyResponseData -> {}, () -> true);
   }
 }

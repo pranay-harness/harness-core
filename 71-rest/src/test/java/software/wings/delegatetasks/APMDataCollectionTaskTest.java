@@ -92,7 +92,7 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
                             .build();
 
     dataCollectionTask = new APMDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
     FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(dataCollectionTask, "metricStoreService", metricStoreService, true);
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);

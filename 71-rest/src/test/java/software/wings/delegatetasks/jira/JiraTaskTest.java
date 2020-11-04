@@ -46,7 +46,8 @@ import java.util.Map;
 public class JiraTaskTest extends CategoryTest {
   @Inject
   @InjectMocks
-  JiraTask jiraTask = new JiraTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null);
+  JiraTask jiraTask =
+      new JiraTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null, null);
 
   @Mock private EncryptionService encryptionService;
 
