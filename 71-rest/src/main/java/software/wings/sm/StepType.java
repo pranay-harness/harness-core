@@ -197,6 +197,11 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
@@ -301,6 +306,27 @@ public enum StepType {
       WorkflowServiceHelper.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK, singletonList(WorkflowStepType.AZURE_VMSS),
       singletonList(PhaseStepType.AZURE_VMSS_SWITCH_ROLLBACK), Lists.newArrayList(DeploymentType.AZURE_VMSS),
       singletonList(PhaseType.ROLLBACK), singletonList(BLUE_GREEN)),
+
+  // Azure Web App
+  AZURE_WEBAPP_SLOT_SETUP(AzureWebAppSlotSetup.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
+      asList(CANARY, BLUE_GREEN)),
+  AZURE_WEBAPP_SLOT_RESIZE(AzureWebAppSlotResize.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
+      asList(CANARY, BLUE_GREEN)),
+  AZURE_WEBAPP_SLOT_SWAP(AzureWebAppSlotSwap.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
+      asList(CANARY, BLUE_GREEN)),
+  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class,
+      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, singletonList(WorkflowStepType.AZURE_WEBAPP),
+      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC), Lists.newArrayList(DeploymentType.AZURE_WEBAPP),
+      singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
+  AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.ROLLBACK), asList(CANARY, BLUE_GREEN)),
 
   // AWS CodeDeploy
   AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, AWS_CODE_DEPLOY, asList(WorkflowStepType.AWS_CODE_DEPLOY),

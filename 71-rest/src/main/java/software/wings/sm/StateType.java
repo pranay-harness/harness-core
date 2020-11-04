@@ -62,6 +62,7 @@ import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
 import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
 import static software.wings.stencils.StencilCategory.AZURE_VMSS;
+import static software.wings.stencils.StencilCategory.AZURE_WEBAPP;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COLLABORATION;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
@@ -185,6 +186,11 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic;
+import software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
@@ -483,6 +489,30 @@ public enum StateType implements StateTypeDescriptor {
   AZURE_VMSS_SWITCH_ROUTES_ROLLBACK(AzureVMSSSwitchRoutesRollbackState.class, AZURE_VMSS,
       WorkflowServiceHelper.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK, singletonList(InfrastructureMappingType.AZURE_VMSS),
       singletonList(PhaseStepType.AZURE_VMSS_SWITCH_ROLLBACK), ORCHESTRATION_STENCILS),
+
+  /**
+   * Azure Web App states
+   */
+  AZURE_WEBAPP_SLOT_SETUP(AzureWebAppSlotSetup.class, AZURE_WEBAPP, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_WEBAPP_SLOT_RESIZE(AzureWebAppSlotResize.class, AZURE_WEBAPP, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_WEBAPP_SLOT_SWAP(AzureWebAppSlotSwap.class, AZURE_WEBAPP, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class, AZURE_WEBAPP,
+      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP),
+      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC), ORCHESTRATION_STENCILS),
+
+  AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, AZURE_WEBAPP,
+      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK, Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP),
+      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK), ORCHESTRATION_STENCILS),
+
   /**
    * AWS Node Select state.
    */

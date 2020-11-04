@@ -15,6 +15,7 @@ public enum WorkflowStepType {
 
   // AZURE VMSS
   AZURE_VMSS("Azure Virtual Machine Scale Set"),
+  AZURE_WEBAPP("Azure Web App"),
 
   // AWS
   AWS_CODE_DEPLOY("AWS Code Deploy"),

@@ -12,6 +12,7 @@ public interface AzureConstants {
   String MAX_INSTANCES = "maxInstancesExpr";
   String DESIRED_INSTANCES = "targetInstancesExpr";
   String AUTO_SCALING_VMSS_TIMEOUT = "autoScalingSteadyStateVMSSTimeout";
+  String TRAFFIC_WEIGHT_EXPR = "trafficWeightExpr";
   String BLUE_GREEN = "blueGreen";
   String AZURE_VMSS_SETUP_COMMAND_NAME = "Azure VMSS Setup";
   String AZURE_VMSS_DEPLOY_COMMAND_NAME = "Resize Azure Virtual Machine Scale Set";
