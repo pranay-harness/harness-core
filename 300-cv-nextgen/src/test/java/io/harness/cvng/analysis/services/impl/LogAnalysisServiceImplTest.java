@@ -393,7 +393,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
             end.minus(Duration.ofMinutes(5)), end.plus(Duration.ofMinutes(10)));
     assertThat(logAnalysisResults).hasSize(3);
     for (int i = 0; i < 3; i++) {
-      assertThat(logAnalysisResults.get(i).getScore()).isEqualTo((i + 2) * .1, offset(.00001));
+      assertThat(logAnalysisResults.get(i).getOverallRisk()).isEqualTo((i + 2) * .1, offset(.00001));
     }
   }
 

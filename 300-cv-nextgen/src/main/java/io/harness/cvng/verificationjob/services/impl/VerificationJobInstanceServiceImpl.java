@@ -33,6 +33,8 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.entities.DataCollectionTask.Type;
+import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
@@ -551,16 +553,14 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
         preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
-        dataCollectionTasks.add(DataCollectionTask.builder()
+        dataCollectionTasks.add(DeploymentDataCollectionTask.builder()
                                     .verificationTaskId(verificationTaskId)
                                     .dataCollectionWorkerId(getDataCollectionWorkerId(
                                         verificationJobInstance, cvConfig.getConnectorIdentifier()))
                                     .startTime(preDeploymentTimeRange.get().getStartTime())
                                     .endTime(preDeploymentTimeRange.get().getEndTime())
-                                    .validAfter(preDeploymentTimeRange.get()
-                                                    .getEndTime()
-                                                    .plus(verificationJobInstance.getDataCollectionDelay())
-                                                    .toEpochMilli())
+                                    .validAfter(preDeploymentTimeRange.get().getEndTime().plus(
+                                        verificationJobInstance.getDataCollectionDelay()))
                                     .accountId(verificationJob.getAccountId())
                                     .status(QUEUED)
                                     .dataCollectionInfo(preDeploymentDataCollectionInfo)
@@ -575,14 +575,14 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         dataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(
-            DataCollectionTask.builder()
+            DeploymentDataCollectionTask.builder()
+                .type(Type.DEPLOYMENT)
                 .verificationTaskId(verificationTaskId)
                 .dataCollectionWorkerId(
                     getDataCollectionWorkerId(verificationJobInstance, cvConfig.getConnectorIdentifier()))
                 .startTime(timeRange.getStartTime())
                 .endTime(timeRange.getEndTime())
-                .validAfter(
-                    timeRange.getEndTime().plus(verificationJobInstance.getDataCollectionDelay()).toEpochMilli())
+                .validAfter(timeRange.getEndTime().plus(verificationJobInstance.getDataCollectionDelay()))
                 .accountId(verificationJob.getAccountId())
                 .status(QUEUED)
                 .dataCollectionInfo(dataCollectionInfo)

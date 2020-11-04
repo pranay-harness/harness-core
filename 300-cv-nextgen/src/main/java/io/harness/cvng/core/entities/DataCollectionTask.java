@@ -21,6 +21,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -31,16 +32,17 @@ import java.util.Date;
 
 @FieldNameConstants(innerTypeName = "DataCollectionTaskKeys")
 @Data
-@Builder
+@SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "dataCollectionTasks", noClassnameStored = true)
+@Entity(value = "dataCollectionTasks")
 @HarnessEntity(exportable = false)
-public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public abstract class DataCollectionTask
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
-
   @NonNull @FdIndex private String accountId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String dataCollectionWorkerId;
+  private Type type;
   @Getter(AccessLevel.NONE) @Builder.Default private boolean queueAnalysis = true;
   private String nextTaskId;
   @FdIndex @NonNull private DataCollectionExecutionStatus status;
@@ -52,7 +54,7 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
 
   private String exception;
   private String stacktrace;
-  private long validAfter;
+  private Instant validAfter;
   private DataCollectionInfo dataCollectionInfo;
   private Instant startTime;
   private Instant endTime;
@@ -67,8 +69,16 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
   @PrePersist
   private void prePersist() {
-    if (validAfter == 0) {
-      validAfter = endTime.plus(DATA_COLLECTION_DELAY).toEpochMilli();
+    if (validAfter == null) {
+      validAfter = endTime.plus(DATA_COLLECTION_DELAY);
     }
   }
+
+  public abstract boolean shouldCreateNextTask();
+
+  public abstract boolean eligibleForRetry(Instant currentTime);
+
+  public abstract Instant getNextValidAfter(Instant currentTime);
+
+  public enum Type { SERVICE_GUARD, DEPLOYMENT }
 }

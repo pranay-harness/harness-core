@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.entities.DataCollectionTask.Type.SERVICE_GUARD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -18,7 +18,9 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
+import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -43,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
-  @VisibleForTesting static int MAX_RETRY_COUNT = 10;
   @Inject private HPersistence hPersistence;
   @Inject private Injector injector;
   @Inject private Clock clock;
@@ -63,14 +64,15 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
                                           .filter(DataCollectionTaskKeys.accountId, accountId)
                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId)
-                                          .filter(DataCollectionTaskKeys.validAfter + " <=", clock.millis())
-                                          .field(DataCollectionTaskKeys.retryCount)
-                                          .lessThan(MAX_RETRY_COUNT)
+                                          .field(DataCollectionTaskKeys.validAfter)
+                                          .lessThanOrEq(clock.instant())
                                           .order(Sort.ascending("lastUpdatedAt"));
     query.or(query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.QUEUED),
         query.and(query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.RUNNING),
             query.criteria(DataCollectionTaskKeys.lastUpdatedAt)
                 .lessThan(clock.millis() - TimeUnit.MINUTES.toMillis(5))));
+    query.or(query.criteria(DataCollectionTaskKeys.type).equal(SERVICE_GUARD),
+        query.criteria(DataCollectionTaskKeys.retryCount).lessThanOrEq(DeploymentDataCollectionTask.MAX_RETRY_COUNT));
     UpdateOperations<DataCollectionTask> updateOperations =
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.RUNNING)
@@ -125,8 +127,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
-      if (isServiceGuardTask(dataCollectionTask)) {
-        createNextTask(dataCollectionTask);
+      if (dataCollectionTask.shouldCreateNextTask()) {
+        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
       } else {
         enqueueNextTask(dataCollectionTask);
       }
@@ -167,38 +169,48 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
   }
 
-  private boolean isServiceGuardTask(DataCollectionTask dataCollectionTask) {
-    return verificationTaskService.isServiceGuardId(dataCollectionTask.getVerificationTaskId());
-  }
   private void retry(DataCollectionTask dataCollectionTask) {
-    if (dataCollectionTask.getRetryCount() < MAX_RETRY_COUNT) {
+    if (dataCollectionTask.eligibleForRetry(clock.instant())) {
       UpdateOperations<DataCollectionTask> updateOperations =
           hPersistence.createUpdateOperations(DataCollectionTask.class)
               .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.QUEUED)
+              .set(DataCollectionTaskKeys.validAfter, dataCollectionTask.getNextValidAfter(clock.instant()))
               .inc(DataCollectionTaskKeys.retryCount);
       Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
                                             .filter(DataCollectionTaskKeys.uuid, dataCollectionTask.getUuid());
       hPersistence.update(query, updateOperations);
     } else {
       markDependentTasksFailed(dataCollectionTask);
+      if (dataCollectionTask.shouldCreateNextTask()) {
+        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+      }
       // TODO: handle this logic in a better way and setup alert.
-      log.error("Task retry count exceeded max limit. Not retrying anymore... {}, {}, {}", dataCollectionTask.getUuid(),
-          dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
+      log.error("Task is in the past. Enqueuing next task with new data collection startTime. {}, {}, {}",
+          dataCollectionTask.getUuid(), dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
     }
   }
 
-  private void createNextTask(DataCollectionTask prevTask) {
+  private void createNextTask(ServiceGuardDataCollectionTask prevTask) {
     CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(prevTask.getVerificationTaskId()));
     if (cvConfig == null) {
       log.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
       return;
     }
     populateMetricPack(cvConfig);
+    Instant nextTaskStartTime = prevTask.getEndTime();
+    Instant currentTime = clock.instant();
+    if (nextTaskStartTime.isBefore(prevTask.getDataCollectionPastTimeCutoff(currentTime))) {
+      nextTaskStartTime = prevTask.getDataCollectionPastTimeCutoff(currentTime);
+      log.info("Restarting Data collection startTime: {}", nextTaskStartTime);
+    }
     DataCollectionTask dataCollectionTask =
-        getDataCollectionTask(cvConfig, prevTask.getEndTime(), prevTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+        getDataCollectionTask(cvConfig, nextTaskStartTime, nextTaskStartTime.plus(5, ChronoUnit.MINUTES));
+    if (prevTask.getStatus() != DataCollectionExecutionStatus.SUCCESS) {
+      dataCollectionTask.setRetryCount(prevTask.getRetryCount());
+      dataCollectionTask.setValidAfter(dataCollectionTask.getNextValidAfter(clock.instant()));
+    }
     save(dataCollectionTask);
   }
-
   private void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
@@ -249,8 +261,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
-    return DataCollectionTask.builder()
+    return ServiceGuardDataCollectionTask.builder()
         .accountId(cvConfig.getAccountId())
+        .type(SERVICE_GUARD)
         .dataCollectionWorkerId(cvConfig.getUuid())
         .status(DataCollectionExecutionStatus.QUEUED)
         .startTime(startTime)
