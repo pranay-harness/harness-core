@@ -53,6 +53,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.http.HttpServiceImpl;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -135,6 +137,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private TemplateUtils templateUtils;
   @Mock private StateExecutionService stateExecutionService;
+  @Inject private HttpServiceImpl httpService;
 
   private ExecutionResponse asyncExecutionResponse;
 
@@ -704,13 +707,16 @@ public class HttpStateTest extends WingsBaseTest {
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
-      TaskType.valueOf(task.getData().getTaskType())
-          .getDelegateRunnableTask(DelegateTaskPackage.builder().data(task.getData()).delegateId(DELEGATE_ID).build(),
-              o
-              -> asyncExecutionResponse =
-                     httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o.getResponse())),
-              () -> true)
-          .run();
+      DelegateRunnableTask delegateRunnableTask =
+          TaskType.valueOf(task.getData().getTaskType())
+              .getDelegateRunnableTask(
+                  DelegateTaskPackage.builder().data(task.getData()).delegateId(DELEGATE_ID).build(),
+                  o
+                  -> asyncExecutionResponse =
+                         httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o.getResponse())),
+                  () -> true);
+      on(delegateRunnableTask).set("httpService", httpService);
+      delegateRunnableTask.run();
       return null;
     })
         .when(delegateService)

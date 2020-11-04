@@ -18,6 +18,7 @@ import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectDTO;
+import io.harness.common.NGTaskType;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -36,7 +37,6 @@ import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
-import software.wings.beans.TaskType;
 
 import java.time.Duration;
 import java.util.EnumSet;
@@ -257,7 +257,7 @@ public class JiraResourceServiceImpl implements JiraResourceService {
       BaseNGAccess baseNGAccess, JiraTaskNGParameters taskNGParameters) {
     return DelegateTaskRequest.builder()
         .accountId(baseNGAccess.getAccountIdentifier())
-        .taskType(TaskType.JIRA_TASK_NG.name())
+        .taskType(NGTaskType.JIRA_TASK_NG.name())
         .taskParameters(taskNGParameters)
         .executionTimeout(Duration.ofSeconds(timeoutInSecs))
         .taskSetupAbstraction("orgIdentifier", baseNGAccess.getOrgIdentifier())

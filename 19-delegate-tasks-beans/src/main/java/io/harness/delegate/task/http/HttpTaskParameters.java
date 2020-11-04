@@ -17,12 +17,12 @@ import java.util.List;
 @Value
 @Builder
 public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
-  private String method;
-  @Expression(ALLOW_SECRETS) private String url;
-  @Expression(ALLOW_SECRETS) private String header;
-  @Expression(ALLOW_SECRETS) private String body;
-  private int socketTimeoutMillis;
-  private boolean useProxy;
+  String method;
+  @Expression(ALLOW_SECRETS) String url;
+  @Expression(ALLOW_SECRETS) String header;
+  @Expression(ALLOW_SECRETS) String body;
+  int socketTimeoutMillis;
+  boolean useProxy;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
