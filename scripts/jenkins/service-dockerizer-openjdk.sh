@@ -32,3 +32,34 @@ then
     docker build -t harness/${SERVICE}:${IMAGE_TAG} destination/dist/${SERVICE}
     docker push harness/${SERVICE}:${IMAGE_TAG}
 fi
+
+
+if [ "${PURPOSE}" = "/on-prem-${JDK}" ] && [ ${SIGNED_REPO} = true ]
+then
+    echo "Singed Repo - On Prem"
+else
+    exit 0
+fi
+
+# docker signing flow
+
+echo ${HARNESS_SIGNING_KEY}  | base64 -di > key.pem
+
+chmod 600 key.pem
+
+(cat <<END
+${HARNESS_SIGNING_KEY_PASSPHRASE}
+${HARNESS_SIGNING_KEY_PASSPHRASE}
+END
+) |  docker trust key load key.pem --name harness
+
+docker pull harness/${SERVICE}:${IMAGE_TAG}
+docker tag harness/${SERVICE}:${IMAGE_TAG} harness/${SERVICE}-signed:${IMAGE_TAG}
+(cat <<END
+$HARNESS_SIGNING_KEY_PASSPHRASE
+$HARNESS_SIGNING_KEY_PASSPHRASE
+END
+) | docker trust sign harness/${SERVICE}-signed:${IMAGE_TAG}
+
+rm key.pem
+rm  ~/.docker/trust/private/ae13b87*
