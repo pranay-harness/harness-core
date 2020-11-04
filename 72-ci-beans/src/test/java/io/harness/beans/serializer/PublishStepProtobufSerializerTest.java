@@ -57,7 +57,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
     FilePatternArtifact filePatternArtifact = FilePatternArtifact.builder()
                                                   .filePattern(FILE_PATTERN)
                                                   .connector(ArtifactoryConnector.builder()
-                                                                 .connector(ARTIFACTORY_CONNECTOR)
+                                                                 .connectorRef(ARTIFACTORY_CONNECTOR)
                                                                  .artifactPath(ARTIFACT_PATH)
                                                                  .repository(REPOSITORY)
                                                                  .build())
@@ -88,7 +88,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
     DockerFileArtifact dockerFileArtifact =
         DockerFileArtifact.builder()
             .buildArguments(singletonList(DockerFileArtifact.BuildArgument.builder().key(KEY).value(VALUE).build()))
-            .connector(GcrConnector.builder().connector(GCR_CONNECTOR).location(GCR_LOCATION).build())
+            .connector(GcrConnector.builder().connectorRef(GCR_CONNECTOR).location(GCR_LOCATION).build())
             .dockerFile(DOCKER_FILE)
             .context(CONTEXT)
             .image(IMAGE)
@@ -122,7 +122,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
     DockerFileArtifact dockerFileArtifact =
         DockerFileArtifact.builder()
             .buildArguments(singletonList(DockerFileArtifact.BuildArgument.builder().key(KEY).value(VALUE).build()))
-            .connector(DockerhubConnector.builder().connector(DOCKER_HUB_CONNECTOR).build())
+            .connector(DockerhubConnector.builder().connectorRef(DOCKER_HUB_CONNECTOR).build())
             .dockerFile(DOCKER_FILE)
             .context(CONTEXT)
             .image(IMAGE)
@@ -157,7 +157,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
         DockerFileArtifact.builder()
             .buildArguments(singletonList(DockerFileArtifact.BuildArgument.builder().key(KEY).value(VALUE).build()))
             .connector(
-                EcrConnector.builder().connector(ECR_CONNECTOR).location(ECR_LOCATION).region(ECR_REGION).build())
+                EcrConnector.builder().connectorRef(ECR_CONNECTOR).location(ECR_LOCATION).region(ECR_REGION).build())
             .dockerFile(DOCKER_FILE)
             .context(CONTEXT)
             .image(IMAGE)

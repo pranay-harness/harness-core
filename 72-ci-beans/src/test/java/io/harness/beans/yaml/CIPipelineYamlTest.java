@@ -18,6 +18,7 @@ import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
@@ -56,9 +57,9 @@ public class CIPipelineYamlTest extends CIBeansTest {
                         IntegrationStage.builder()
                             .identifier("masterBuildUpload")
                             .infrastructure(K8sDirectInfraYaml.builder()
-                                                .type("kubernetes-direct")
+                                                .type(Infrastructure.Type.KUBERNETES_DIRECT)
                                                 .spec(K8sDirectInfraYaml.Spec.builder()
-                                                          .kubernetesCluster("MyKubeCluster1")
+                                                          .connectorRef("MyKubeCluster1")
                                                           .namespace("ShoppingCart")
                                                           .build())
                                                 .build())
@@ -165,7 +166,7 @@ public class CIPipelineYamlTest extends CIBeansTest {
                                                                         .value("value2")
                                                                         .build()))
                                                             .connector(GcrConnector.builder()
-                                                                           .connector("myDockerRepoConnector")
+                                                                           .connectorRef("myDockerRepoConnector")
                                                                            .location("eu.gcr.io/harness/ui:latest")
                                                                            .build())
                                                             .build()))

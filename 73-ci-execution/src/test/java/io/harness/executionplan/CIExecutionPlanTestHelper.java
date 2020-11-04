@@ -57,6 +57,7 @@ import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.common.CIExecutionConstants;
@@ -92,7 +93,6 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
-import io.harness.yaml.core.intfc.Infrastructure;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import software.wings.beans.ci.pod.ConnectorDetails;
@@ -536,7 +536,7 @@ public class CIExecutionPlanTestHelper {
                                                    .publishArtifacts(singletonList(
                                                        DockerFileArtifact.builder()
                                                            .connector(GcrConnector.builder()
-                                                                          .connector("gcr-connector")
+                                                                          .connectorRef("gcr-connector")
                                                                           .location("us.gcr.io/ci-play/portal:v01")
                                                                           .build())
                                                            .tag("v01")
@@ -557,7 +557,7 @@ public class CIExecutionPlanTestHelper {
                                 DockerFileArtifact.builder()
                                     .connector(
                                         EcrConnector.builder()
-                                            .connector("ecr-connector")
+                                            .connectorRef("ecr-connector")
                                             .location(
                                                 " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01")
                                             .build())
@@ -624,11 +624,9 @@ public class CIExecutionPlanTestHelper {
 
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
-        .type("kubernetes-direct")
-        .spec(K8sDirectInfraYaml.Spec.builder()
-                  .kubernetesCluster("testKubernetesCluster")
-                  .namespace("testNamespace")
-                  .build())
+        .type(Infrastructure.Type.KUBERNETES_DIRECT)
+        .spec(
+            K8sDirectInfraYaml.Spec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
         .build();
   }
   public StageElement getIntegrationStageElement() {

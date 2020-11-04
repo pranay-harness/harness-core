@@ -11,7 +11,7 @@ pipeline:
         infrastructure:
           type: kubernetes-direct
           spec:
-            kubernetesCluster: MyKubeCluster1
+            connectorRef: MyKubeCluster1
             namespace: ShoppingCart
         gitConnector:
           identifier: gitRepo
@@ -90,4 +90,4 @@ pipeline:
                           value: value2
                       gcr:
                         location: eu.gcr.io/harness/ui:latest
-                        connector: myDockerRepoConnector
+                        connectorRef: myDockerRepoConnector

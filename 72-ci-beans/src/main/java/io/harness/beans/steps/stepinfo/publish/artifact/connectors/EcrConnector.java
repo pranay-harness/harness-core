@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class EcrConnector implements ArtifactConnector {
-  @NotNull private String connector;
+  @NotNull private String connectorRef;
   @NotNull private String location;
   @NotNull private String region;
   @Override

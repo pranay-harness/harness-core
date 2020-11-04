@@ -91,7 +91,7 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
   private Connector getConnector(Artifact artifact) {
     return Connector.newBuilder()
         .setAuth(getAuthType(artifact.getConnector().getType()))
-        .setId(artifact.getConnector().getConnector())
+        .setId(artifact.getConnector().getConnectorRef())
         .build();
   }
 

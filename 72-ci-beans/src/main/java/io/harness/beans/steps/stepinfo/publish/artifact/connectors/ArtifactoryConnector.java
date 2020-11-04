@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class ArtifactoryConnector implements ArtifactConnector {
-  @NotNull private String connector;
+  @NotNull private String connectorRef;
   @NotNull private String repository;
   @NotNull private String artifactPath;
   @Override

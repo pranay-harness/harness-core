@@ -21,6 +21,7 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
+import io.harness.integrationstage.IntegrationPipelineExecutionModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
 import io.harness.states.CIPipelineSetupStep;
@@ -37,6 +38,7 @@ import java.util.List;
 @Slf4j
 public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
+  @Inject private IntegrationPipelineExecutionModifier integrationPipelineExecutionModifier;
   @Override
   public ExecutionPlanCreatorResponse createPlan(NgPipeline ngPipeline, ExecutionPlanCreationContext context) {
     addArgumentsToContext(ngPipeline, context);
@@ -46,10 +48,11 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
             .orElseThrow(()
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
+    NgPipeline modifiedNgPipeline = integrationPipelineExecutionModifier.modifyExecutionPlan(ngPipeline, context);
 
-    final ExecutionPlanCreatorResponse planForStages = createPlanForStages(ngPipeline.getStages(), context);
+    final ExecutionPlanCreatorResponse planForStages = createPlanForStages(modifiedNgPipeline.getStages(), context);
 
-    final PlanNode pipelineExecutionNode = preparePipelineNode(ngPipeline, planForStages, ciExecutionArgs);
+    final PlanNode pipelineExecutionNode = preparePipelineNode(modifiedNgPipeline, planForStages, ciExecutionArgs);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)

@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class GcrConnector implements ArtifactConnector {
-  @NotNull private String connector;
+  @NotNull private String connectorRef;
   @NotNull private String location;
   @Override
   public Type getType() {

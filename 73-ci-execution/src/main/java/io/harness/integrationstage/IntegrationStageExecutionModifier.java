@@ -19,6 +19,7 @@ import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.k8s.model.ImageDetails;
@@ -116,18 +117,18 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
     // TODO Only kubernetes is supported currently
-    if (integrationStage.getInfrastructure().getType().equals("kubernetes-direct")) {
+    if (integrationStage.getInfrastructure().getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
           .workDir(integrationStage.getWorkingDirectory())
-          .publishStepConnectorIdentifier(getPublishStepConnectorIdentifier(integrationStage))
+          .publishStepConnectorIdentifier(getPublishStepConnectorRefs(integrationStage))
           .build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
     }
   }
 
-  private Set<String> getPublishStepConnectorIdentifier(IntegrationStage integrationStage) {
+  private Set<String> getPublishStepConnectorRefs(IntegrationStage integrationStage) {
     List<ExecutionWrapper> executionWrappers = integrationStage.getExecution().getSteps();
     if (isEmpty(executionWrappers)) {
       return Collections.emptySet();
@@ -138,7 +139,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
         .filter(executionSection -> ((StepElement) executionSection).getStepSpecType() instanceof PublishStepInfo)
         .map(step -> ((PublishStepInfo) ((StepElement) step).getStepSpecType()).getPublishArtifacts())
         .flatMap(Collection::stream)
-        .map(artifact -> artifact.getConnector().getConnector())
+        .map(artifact -> artifact.getConnector().getConnectorRef())
         .collect(Collectors.toSet());
   }
 

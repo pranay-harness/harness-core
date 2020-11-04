@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class NexusConnector implements ArtifactConnector {
-  @NotNull private String connector;
+  @NotNull private String connectorRef;
   @NotNull private String path;
   @Override
   public Type getType() {
