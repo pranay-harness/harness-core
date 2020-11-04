@@ -126,6 +126,21 @@ public enum ExecutionStatus {
     }
   }
 
+  public static ExecutionStatus translateCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
+    switch (commandExecutionStatus) {
+      case SUCCESS:
+        return ExecutionStatus.SUCCESS;
+      case FAILURE:
+        return ExecutionStatus.FAILED;
+      case RUNNING:
+        return ExecutionStatus.RUNNING;
+      case QUEUED:
+        return ExecutionStatus.QUEUED;
+      default:
+        throw new IllegalArgumentException("invalid status: " + commandExecutionStatus);
+    }
+  }
+
   public static ExecutionStatusCategory getStatusCategory(ExecutionStatus status) {
     if (ExecutionStatus.isPositiveStatus(status)) {
       return ExecutionStatusCategory.SUCCEEDED;

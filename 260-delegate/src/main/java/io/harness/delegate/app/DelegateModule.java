@@ -72,6 +72,8 @@ import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.http.HttpService;
+import io.harness.http.HttpServiceImpl;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -729,6 +731,7 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name()).to(K8sRollingRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
+    bind(HttpService.class).to(HttpServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
 
     MapBinder<Class<? extends ArtifactSourceDelegateRequest>, Class<? extends DelegateArtifactTaskHandler>>
