@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.TaskFailureReason;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
@@ -36,7 +37,7 @@ public interface AssignDelegateService {
 
   void clearConnectionResults(String accountId);
 
-  String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask);
+  String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask);
 
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 

@@ -26,6 +26,8 @@ import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
+import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
+import static io.harness.delegate.task.TaskFailureReason.NO_ELIGIBLE_DELEGATE;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
@@ -2033,7 +2035,7 @@ public class DelegateServiceImpl implements DelegateService {
       saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
-        log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
+        log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
           throw new NoInstalledDelegatesException();
         } else {
@@ -2935,7 +2937,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask != null) {
         try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-          errorMessage = "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+          errorMessage =
+              "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
           log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {

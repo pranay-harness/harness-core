@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -25,6 +26,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.task.TaskFailureReason;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -532,14 +534,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   @Override
-  public String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask) {
+  public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
     log.info("Delegate task is terminated");
 
     String errorMessage = "Unknown";
 
     List<DelegateSelectionLogParams> delegateSelectionLogs =
         delegateSelectionLogsService.fetchTaskSelectionLogs(delegateTask.getAccountId(), delegateTask.getUuid());
-    if (!isEmpty(delegateSelectionLogs)) {
+
+    if (reason != EXPIRED && isNotEmpty(delegateSelectionLogs)) {
       return delegateSelectionLogs.stream()
           .map(selectionLog
               -> String.format(String.format(ERROR_MESSAGE, selectionLog.getDelegateId(),
