@@ -66,7 +66,7 @@ public class CreateEncryptedTextTest extends GraphQLTest {
          encryptedText: {
              name: "%s",
              value: "secret",
-             secretManagerId: null
+             secretManagerId: "kmpySmUISimoRrJL6NL73w"
           }
  }*/ secretName);
     return encryptedText;
@@ -104,7 +104,7 @@ public class CreateEncryptedTextTest extends GraphQLTest {
    encryptedText: {
        name: "%s",
        value: "secret",
-       secretManagerId: null,
+       secretManagerId: "kmpySmUISimoRrJL6NL73w",
        usageScope : {
            appEnvScopes: [{
               application: {

@@ -2648,8 +2648,12 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public void validateThatSecretManagerSupportsText(String accountId, String secretManagerId) {
     SecretManagerConfig secretManagerConfig = getSecretManager(accountId, secretManagerId, null);
+
+    if (secretManagerConfig == null) {
+      throw new InvalidRequestException(String.format("secretManager with id %s not valid", secretManagerId));
+    }
     // setting the encrypted value and it is not supported by cyberArk
-    if (secretManagerConfig != null && secretManagerConfig.getEncryptionType() == CYBERARK) {
+    if (secretManagerConfig.getEncryptionType() == CYBERARK) {
       throw new InvalidRequestException(
           String.format("Secret values is not supported for the secretManager with id %s, type %s", secretManagerId,
               secretManagerConfig.getEncryptionType()));
