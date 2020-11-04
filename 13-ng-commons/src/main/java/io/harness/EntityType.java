@@ -35,7 +35,7 @@ public enum EntityType {
   @JsonCreator
   public static EntityType fromString(@JsonProperty("type") String entityType) {
     for (EntityType entityTypeEnum : EntityType.values()) {
-      if (entityTypeEnum.name().equalsIgnoreCase(entityType)) {
+      if (entityTypeEnum.getYamlName().equalsIgnoreCase(entityType)) {
         return entityTypeEnum;
       }
     }

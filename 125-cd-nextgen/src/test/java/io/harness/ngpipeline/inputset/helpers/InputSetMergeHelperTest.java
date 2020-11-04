@@ -2,12 +2,19 @@ package io.harness.ngpipeline.inputset.helpers;
 
 import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
@@ -22,8 +29,15 @@ import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorRespons
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlPipelineUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.joor.Reflect;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import retrofit2.Call;
+import retrofit2.Response;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,15 +46,23 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Inject InputSetMergeHelper inputSetMergeHelper;
   @Inject NGPipelineService ngPipelineService;
   @Inject InputSetEntityService inputSetEntityService;
+  @Mock EntitySetupUsageClient entitySetupUsageClient;
 
   private final String ACCOUNT_ID = "accountId";
   private final String ORG_ID = "orgId";
   private final String PROJECT_ID = "projId";
   private final String PIPELINE_ID = "myPipeline1";
+
+  @Before
+  public void setUp() {
+    Reflect.on(ngPipelineService).set("entitySetupUsageClient", entitySetupUsageClient);
+    Reflect.on(inputSetEntityService).set("entitySetupUsageClient", entitySetupUsageClient);
+  }
 
   @Test
   @Owner(developers = NAMAN)
@@ -64,6 +86,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
   public void testMergingInputSets() throws IOException {
+    Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
+    doReturn(request).when(entitySetupUsageClient).save(any());
+    try {
+      when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
+    } catch (IOException ex) {
+      log.info("Encountered exception ", ex);
+    }
     setupPipelineAndInputSets();
     testMergingInputSetsWithYamlParam(
         "cdng/mergeInputSets/finalInputSet.yml", "cdng/mergeInputSets/expectedMergedPipeline.yml");
@@ -75,6 +104,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
   public void testMergingInputSetsWithWrongTemplate() throws IOException {
+    Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
+    doReturn(request).when(entitySetupUsageClient).save(any());
+    try {
+      when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Page.empty())));
+    } catch (IOException ex) {
+      log.info("Encountered exception ", ex);
+    }
     setupPipelineAndWrongInputSets();
 
     MergeInputSetResponse mergeInputSetResponse =

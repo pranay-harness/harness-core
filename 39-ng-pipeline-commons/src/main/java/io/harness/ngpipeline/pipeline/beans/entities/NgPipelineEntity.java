@@ -9,13 +9,10 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.persistence.AccountAccess;
-import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UuidAware;
+import io.harness.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -28,6 +25,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -62,6 +60,8 @@ public class NgPipelineEntity implements PersistentEntity, AccountAccess, UuidAw
   @Singular @Size(max = 128) List<NGTag> tags;
 
   @Version Long version;
+
+  Set<EntityDetail> referredEntities;
 
   @Override
   public String getAccountId() {

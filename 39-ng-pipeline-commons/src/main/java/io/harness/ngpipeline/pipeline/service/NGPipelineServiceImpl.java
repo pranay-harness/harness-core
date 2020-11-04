@@ -5,14 +5,23 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.client.result.UpdateResult;
+import io.harness.EntityType;
 import io.harness.NGResourceFilterConstants;
+import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
+import io.harness.utils.IdentifierRefHelper;
+import io.harness.walktree.visitor.SimpleVisitorFactory;
+import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -25,6 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -34,6 +44,8 @@ public class NGPipelineServiceImpl implements NGPipelineService {
   @Inject private NgPipelineRepository ngPipelineRepository;
   @Inject private InputSetEntityService inputSetEntityService;
   @Inject @Named("NgPipelineCommonsExecutor") private ExecutorService executorService;
+  @Inject private EntitySetupUsageClient entitySetupUsageClient;
+  @Inject private SimpleVisitorFactory simpleVisitorFactory;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -47,7 +59,10 @@ public class NGPipelineServiceImpl implements NGPipelineService {
     try {
       validatePresenceOfRequiredFields(ngPipeline.getAccountId(), ngPipeline.getOrgIdentifier(),
           ngPipeline.getProjectIdentifier(), ngPipeline.getIdentifier(), ngPipeline.getIdentifier());
-      return ngPipelineRepository.save(ngPipeline);
+      ngPipeline.setReferredEntities(getReferences(ngPipeline));
+      NgPipelineEntity createdEntity = ngPipelineRepository.save(ngPipeline);
+      saveReferencesPresentInPipeline(ngPipeline);
+      return createdEntity;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, ngPipeline.getIdentifier(),
                                             ngPipeline.getProjectIdentifier(), ngPipeline.getOrgIdentifier()),
@@ -66,6 +81,13 @@ public class NGPipelineServiceImpl implements NGPipelineService {
   public NgPipelineEntity update(NgPipelineEntity ngPipeline) {
     validatePresenceOfRequiredFields(ngPipeline.getAccountId(), ngPipeline.getOrgIdentifier(),
         ngPipeline.getProjectIdentifier(), ngPipeline.getIdentifier());
+    ngPipeline.setReferredEntities(getReferences(ngPipeline));
+
+    NgPipelineEntity oldVersion = get(ngPipeline.getAccountId(), ngPipeline.getOrgIdentifier(),
+        ngPipeline.getProjectIdentifier(), ngPipeline.getIdentifier(), false)
+                                      .get();
+    Set<EntityDetail> oldEntities = oldVersion.getReferredEntities();
+
     Criteria criteria = getPipelineEqualityCriteria(ngPipeline, ngPipeline.getDeleted());
     NgPipelineEntity updateResult = ngPipelineRepository.update(criteria, ngPipeline);
     if (updateResult == null) {
@@ -73,6 +95,8 @@ public class NGPipelineServiceImpl implements NGPipelineService {
           String.format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
               ngPipeline.getIdentifier(), ngPipeline.getProjectIdentifier(), ngPipeline.getOrgIdentifier()));
     }
+
+    updateReferencesPresentInPipeline(ngPipeline, oldEntities);
     return updateResult;
   }
 
@@ -166,5 +190,64 @@ public class NGPipelineServiceImpl implements NGPipelineService {
     }
 
     return ngPipelineRepository.findAll(criteria, pageable);
+  }
+
+  private Set<EntityDetail> getReferences(NgPipelineEntity ngPipelineEntity) {
+    NgPipeline ngPipeline = ngPipelineEntity.getNgPipeline();
+    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
+        ngPipelineEntity.getAccountId(), ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
+    visitor.walkElementTree(ngPipeline);
+    return visitor.getEntityReferenceSet();
+  }
+
+  private EntityDetail getPipelineEntityDetail(NgPipelineEntity ngPipelineEntity) {
+    IdentifierRef ngPipelineEntityReference = IdentifierRefHelper.getIdentifierRefFromEntityIdentifiers(
+        ngPipelineEntity.getIdentifier(), ngPipelineEntity.getAccountId(), ngPipelineEntity.getOrgIdentifier(),
+        ngPipelineEntity.getProjectIdentifier());
+    return EntityDetail.builder().entityRef(ngPipelineEntityReference).type(EntityType.PIPELINES).build();
+  }
+
+  private void saveReferencesPresentInPipeline(NgPipelineEntity ngPipelineEntity) {
+    Set<EntityDetail> referredEntities = ngPipelineEntity.getReferredEntities();
+    EntityDetail referredByEntity = getPipelineEntityDetail(ngPipelineEntity);
+    for (EntityDetail entity : referredEntities) {
+      EntitySetupUsageDTO entitySetupUsageDTO = EntitySetupUsageDTO.builder()
+                                                    .accountIdentifier(ngPipelineEntity.getAccountId())
+                                                    .referredEntity(entity)
+                                                    .referredByEntity(referredByEntity)
+                                                    .build();
+      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+    }
+  }
+
+  private void updateReferencesPresentInPipeline(NgPipelineEntity ngPipelineEntity, Set<EntityDetail> oldEntities) {
+    EntityDetail referredByEntity = getPipelineEntityDetail(ngPipelineEntity);
+
+    Set<EntityDetail> newEntities = ngPipelineEntity.getReferredEntities();
+
+    Set<EntityDetail> commonEntities = new HashSet<>(newEntities);
+    commonEntities.removeIf(entity -> !oldEntities.contains(entity));
+
+    Set<EntityDetail> entitiesToRemove = new HashSet<>(oldEntities);
+    entitiesToRemove.removeIf(commonEntities::contains);
+
+    Set<EntityDetail> entitiesToAdd = new HashSet<>(newEntities);
+    entitiesToAdd.removeIf(commonEntities::contains);
+
+    // adds entities present in the update but not in the old version
+    for (EntityDetail entity : entitiesToAdd) {
+      EntitySetupUsageDTO entitySetupUsageDTO = EntitySetupUsageDTO.builder()
+                                                    .accountIdentifier(ngPipelineEntity.getAccountId())
+                                                    .referredEntity(entity)
+                                                    .referredByEntity(referredByEntity)
+                                                    .build();
+      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+    }
+
+    // removes entities present in the old version but not in the update
+    for (EntityDetail entity : entitiesToRemove) {
+      execute(entitySetupUsageClient.delete(ngPipelineEntity.getAccountId(),
+          entity.getEntityRef().getFullyQualifiedName(), referredByEntity.getEntityRef().getFullyQualifiedName()));
+    }
   }
 }
