@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AZURE_VMSS;
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
@@ -246,6 +247,11 @@ public class WorkflowServiceHelper {
   public static final String AZURE_VMSS_ROLLBACK = "Azure Virtual Machine Scale Set Rollback";
   public static final String AZURE_VMSS_SWITCH_ROUTES = "Swap Virtual Machine Scale Set Route";
   public static final String AZURE_VMSS_SWITCH_ROUTES_ROLLBACK = "Rollback Virtual Machine Scale Set Route";
+  public static final String AZURE_WEBAPP_SLOT_SETUP = "Slot Setup";
+  public static final String AZURE_WEBAPP_SLOT_RESIZE = "Slot Resize";
+  public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
+  public static final String AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC = "Slot Shift Traffic Weight";
+  public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
   public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
@@ -876,7 +882,7 @@ public class WorkflowServiceHelper {
 
   public void generateNewWorkflowPhaseStepsForAzureVMSS(String appId, String accountId, WorkflowPhase workflowPhase,
       OrchestrationWorkflowType orchestrationWorkflowType, boolean serviceSetupRequired) {
-    validateWorkflowCreation(accountId, orchestrationWorkflowType);
+    validateVMSSWorkflowCreation(accountId, orchestrationWorkflowType);
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
@@ -931,7 +937,7 @@ public class WorkflowServiceHelper {
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
-  private void validateWorkflowCreation(String accountId, OrchestrationWorkflowType orchestrationWorkflowType) {
+  private void validateVMSSWorkflowCreation(String accountId, OrchestrationWorkflowType orchestrationWorkflowType) {
     if (!featureFlagService.isEnabled(FeatureName.AZURE_VMSS, accountId)) {
       throw new InvalidRequestException(
           format("Azure VMSS is disabled by feature flag for account id : %s", accountId), USER);
@@ -945,6 +951,74 @@ public class WorkflowServiceHelper {
 
   private boolean isAzureVMSSSupportedWorkflowType(OrchestrationWorkflowType workflowType) {
     return (BASIC == workflowType) || (CANARY == workflowType) || (BLUE_GREEN == workflowType);
+  }
+
+  public void generateNewWorkflowPhaseStepsForAzureWebApp(String appId, String accountId, WorkflowPhase workflowPhase,
+      OrchestrationWorkflowType orchestrationWorkflowType) {
+    validateWebAppWorkflowCreation(accountId, orchestrationWorkflowType);
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_SETUP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
+                                    .name(AZURE_WEBAPP_SLOT_SETUP)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE, AZURE_WEBAPP_SLOT_RESIZE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_RESIZE.name())
+                                    .name(AZURE_WEBAPP_SLOT_RESIZE)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+
+    if (BLUE_GREEN == orchestrationWorkflowType) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_SWAP)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(StateType.AZURE_WEBAPP_SLOT_SWAP.name())
+                                      .name(AZURE_WEBAPP_SLOT_SWAP)
+                                      .build())
+                         .build());
+    } else if (CANARY == orchestrationWorkflowType) {
+      Map<String, Object> defaultData = new HashMap<>();
+      defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 100);
+      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
+                                      .name(AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC)
+                                      .properties(defaultData)
+                                      .build())
+                         .build());
+    }
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  private void validateWebAppWorkflowCreation(String accountId, OrchestrationWorkflowType orchestrationWorkflowType) {
+    if (!featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, accountId)) {
+      throw new InvalidRequestException(
+          format("Azure WebApp is disabled by feature flag for account id : %s", accountId), USER);
+    }
+    if (!isAzureWebAppSupportedWorkflowType(orchestrationWorkflowType)) {
+      throw new InvalidRequestException(
+          format("Unsupported Azure Web App deployment type, orchestrationWorkflowType: %s",
+              orchestrationWorkflowType != null ? orchestrationWorkflowType.name() : ""),
+          USER);
+    }
+  }
+
+  private boolean isAzureWebAppSupportedWorkflowType(OrchestrationWorkflowType workflowType) {
+    return (CANARY == workflowType) || (BLUE_GREEN == workflowType);
   }
 
   public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, WorkflowPhase workflowPhase) {
@@ -2101,6 +2175,29 @@ public class WorkflowServiceHelper {
         .build();
   }
 
+  public WorkflowPhase generateRollbackWorkflowPhaseForAzureWebApp(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK, AZURE_WEBAPP_SLOT_ROLLBACK)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(StateType.AZURE_WEBAPP_SLOT_ROLLBACK.name())
+                                            .name(AZURE_WEBAPP_SLOT_ROLLBACK)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withRollback(true)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
   public WorkflowPhase generateRollbackSetupWorkflowPhase(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
         .daemonSet(workflowPhase.isDaemonSet())
@@ -2665,6 +2762,8 @@ public class WorkflowServiceHelper {
     } else if (deploymentType == AZURE_VMSS) {
       generateNewWorkflowPhaseStepsForAzureVMSS(
           appId, accountId, workflowPhase, orchestrationWorkflowType, !serviceRepeat);
+    } else if (deploymentType == AZURE_WEBAPP) {
+      generateNewWorkflowPhaseStepsForAzureWebApp(appId, accountId, workflowPhase, orchestrationWorkflowType);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -2744,6 +2843,8 @@ public class WorkflowServiceHelper {
       }
     } else if (deploymentType == AZURE_VMSS) {
       return generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase, orchestrationWorkflowType);
+    } else if (deploymentType == AZURE_WEBAPP) {
+      return generateRollbackWorkflowPhaseForAzureWebApp(workflowPhase);
     } else if (deploymentType == CUSTOM) {
       return generateRollbackWorkflowPhaseForCustomDeployment(workflowPhase);
     } else {

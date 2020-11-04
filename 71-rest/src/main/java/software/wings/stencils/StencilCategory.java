@@ -41,7 +41,8 @@ public enum StencilCategory {
   ECS("Ecs", 0),
   SPOTINST("Spotinst", 0),
   STAGING_ORIGINAL_EXECUTION(101, true),
-  AZURE_VMSS("Azure VMSS", 0);
+  AZURE_VMSS("Azure VMSS", 0),
+  AZURE_WEBAPP("Azure WebApp", 0);
 
   @Getter boolean hidden;
 

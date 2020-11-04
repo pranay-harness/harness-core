@@ -41,6 +41,10 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_DEPLOY;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_SETUP;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_SWITCH_ROUTES;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SETUP;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
@@ -500,6 +504,18 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     WorkflowPhase rollbackPhaseBlueGreen = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(
         workflowPhase, OrchestrationWorkflowType.BLUE_GREEN);
     verifyPhase(rollbackPhaseBlueGreen, singletonList(AZURE_VMSS_SWITCH_ROUTES_ROLLBACK.name()), 3);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateRollbackWorkflowPhaseForAzureWebApp() {
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureWebApp(workflowPhase);
+
+    List<PhaseStepType> phaseStepTypes =
+        rollbackPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes).containsExactly(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK, VERIFY_SERVICE, WRAP_UP);
   }
 
   @Test
@@ -1162,6 +1178,77 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
                                APP_ID, ACCOUNT_ID, workflowPhase, BASIC, true))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateNewWorkflowPhaseStepsForAzureWebApp() {
+    Service service =
+        Service.builder().deploymentType(DeploymentType.AZURE_WEBAPP).appId(APP_ID).uuid(SERVICE_ID).build();
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().infrastructure(AzureVMSSInfra.builder().build()).build();
+    InfrastructureMapping infrastructureMapping = AzureVMSSInfrastructureMapping.builder().build();
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .serviceId(SERVICE_ID)
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
+                                      .build();
+
+    // mocks
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(true);
+
+    // canary deployment test
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY);
+    List<PhaseStepType> phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_RESIZE, VERIFY_SERVICE,
+            AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, WRAP_UP);
+    workflowPhase.getPhaseSteps().clear();
+
+    // blue green deployment test
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BLUE_GREEN);
+    phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(
+            AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_RESIZE, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
+    workflowPhase.getPhaseSteps().clear();
+
+    // unsupported deployment type test
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BASIC))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // feature flag test
+    when(featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY))
         .isInstanceOf(InvalidRequestException.class);
   }
 
