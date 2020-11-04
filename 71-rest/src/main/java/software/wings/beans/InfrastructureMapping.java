@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -15,11 +16,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
@@ -45,27 +45,45 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-/**
- * Created by anubhaw on 1/10/17.
- */
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("envId"), @Field("name") })
-@CdIndex(name = "app_infratype", fields = { @Field("appId")
-                                            , @Field("infraMappingType") })
-@CdIndex(name = "app_envId_serviceTemplateId",
-    fields =
-    {
-      @Field("appId"), @Field("envId"), @Field("serviceTemplateId"), @Field(value = "createdAt", type = IndexType.DESC)
-    })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
 public abstract class InfrastructureMapping
     extends Base implements EncryptableSetting, PersistentRegularIterable, NameAccess, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CreatedAtSortCompoundMongoIndex.builder()
+                 .name("infra_mapping_appId_envId_serviceId")
+                 .unique(true)
+                 .field(InfrastructureMappingKeys.appId)
+                 .field(InfrastructureMappingKeys.envId)
+                 .field(InfrastructureMappingKeys.serviceId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(InfrastructureMappingKeys.appId)
+                 .field(InfrastructureMappingKeys.envId)
+                 .field(InfrastructureMappingKeys.name)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("app_infratype")
+                 .field(InfrastructureMappingKeys.appId)
+                 .field(InfrastructureMappingKeys.infraMappingType)
+                 .build())
+        .add(CreatedAtSortCompoundMongoIndex.builder()
+                 .name("app_envId_serviceTemplateId")
+                 .field(InfrastructureMappingKeys.appId)
+                 .field(InfrastructureMappingKeys.envId)
+                 .field(InfrastructureMappingKeys.serviceTemplateId)
+                 .build())
+        .build();
+  }
+
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";
