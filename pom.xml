@@ -50,7 +50,6 @@
         <module>71-rest</module>
         <module>72-ci-beans</module>
         <module>72-event-server</module>
-        <module>73-ci-execution</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
         <module>125-cd-nextgen</module>
@@ -67,6 +66,7 @@
         <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
         <module>310-ci-manager</module>
+        <module>320-ci-execution</module>
 
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
