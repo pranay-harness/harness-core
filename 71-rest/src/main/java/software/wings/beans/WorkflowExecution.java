@@ -306,6 +306,8 @@ public class WorkflowExecution
     public static final String executionArgs_pipelinePhaseElementId =
         executionArgs + "." + ExecutionArgsKeys.pipelinePhaseElementId;
     public static final String executionArgs_artifacts = executionArgs + "." + ExecutionArgsKeys.artifacts;
+    public static final String executionArgs_artifact_variables =
+        executionArgs + "." + ExecutionArgsKeys.artifactVariables;
   }
 
   @PrePersist

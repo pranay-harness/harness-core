@@ -31,6 +31,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class RuntimeInputExecutionInputsController {
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       pipelineExecutionController.handleAuthentication(appId, pipeline);
       // Validate Required changes
-      List<String> serviceIds = getArtifactNeededServices(appId, parameters.getVariableInputs(), pipeline);
+      List<String> serviceIds = getArtifactNeededServices(appId, parameters, pipeline);
       if (isEmpty(serviceIds)) {
         return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
       }
@@ -75,8 +76,9 @@ public class RuntimeInputExecutionInputsController {
   }
 
   private List<String> getArtifactNeededServices(
-      String appId, List<QLVariableInput> variableInputs, Pipeline pipeline) {
+      String appId, QLExecutionInputsToResumePipelineQueryParams params, Pipeline pipeline) {
     String pipelineId = pipeline.getUuid();
+    List<QLVariableInput> variableInputs = params.getVariableInputs();
     if (variableInputs == null) {
       variableInputs = new ArrayList<>();
     }
@@ -85,8 +87,9 @@ public class RuntimeInputExecutionInputsController {
 
     Map<String, String> variableValues = pipelineExecutionController.validateAndResolvePipelineVariables(
         pipeline, variableInputs, envId, extraVariables, false);
-    DeploymentMetadata finalDeploymentMetadata =
-        pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
+    Map<String, String> workflowVariables = new HashMap<>();
+    DeploymentMetadata finalDeploymentMetadata = workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
+        appId, workflowVariables, false, params.getPipelineExecutionId(), params.getPipelineStageElementId());
     if (finalDeploymentMetadata != null) {
       List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
       if (isNotEmpty(artifactNeededServiceIds)) {

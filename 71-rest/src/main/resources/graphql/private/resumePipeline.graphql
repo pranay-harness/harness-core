@@ -6,8 +6,11 @@ extend type Mutation {
 
 input RuntimeExecutionInputsToResumePipeline {
   clientMutationId: String
+  # Application ID
   applicationId: String!
+  # Workflow Execution Id
   pipelineExecutionId: String!
+  # Pipeline stage element ID
   pipelineStageElementId: String!
 
   #Variable inputs required for the execution
@@ -24,8 +27,11 @@ type ContinueExecutionPayload {
 extend type Query {
   #Beta: Get required inputs to start an execution of a Workflow or Pipeline
   runtimeExecutionInputsToResumePipeline(
+    # Application ID
     applicationId: String!
+    # Workflow Execution Id
     pipelineExecutionId: String!
+    # Pipeline stage element ID
     pipelineStageElementId: String!
     # Variable inputs if the Workflow or Pipeline is templatized. Provide the required variable values to know about the required inputs
     variableInputs: [VariableInput]

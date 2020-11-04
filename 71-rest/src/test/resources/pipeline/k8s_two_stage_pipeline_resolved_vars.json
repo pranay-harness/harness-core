@@ -1,0 +1,328 @@
+{
+  "name": "template-pipeline-multi",
+  "description": null,
+  "pipelineStages": [
+    {
+      "name": "STAGE 2",
+      "parallel": false,
+      "pipelineStageElements": [
+        {
+          "uuid": "KZPqXENuRbKqkuISe07JAQ",
+          "name": "k8s-stage-1",
+          "type": "ENV_STATE",
+          "parallelIndex": 1,
+          "properties": {
+            "workflowVariables": {
+              "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+              "AppDynamics_Tier": "214198",
+              "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+              "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+              "xxz": "",
+              "message": "Stage 1 message",
+              "AppDynamics_Application": "15588",
+              "buildNumber": "${pipelineBuildNumber}",
+              "ServiceId": "${service1}"
+            },
+            "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+            "timeoutAction": "END_EXECUTION",
+            "envId": "imRBOGz2ReyY89dr4K-vrQ",
+            "pipelineStageParallelIndex": 1,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeout": 86400000,
+            "pipelineId": "rF1mCEaETZ2gEXljOTwhrQ",
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "stageName": "STAGE 2",
+            "disable": false,
+            "disableAssertion": null,
+            "workflowId": "9zhGmY7FTlSnj2ALPvPTOQ"
+          },
+          "workflowVariables": {
+            "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+            "ServiceId": "${service1}",
+            "InfraDefinition_KUBERNETES": "CzcfKUN2Q_eCrlrV66r4ug",
+            "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+            "AppDynamics_Application": "15588",
+            "AppDynamics_Tier": "214198",
+            "message": "Stage 1 message",
+            "buildNumber": "${pipelineBuildNumber}",
+            "xxz": ""
+          },
+          "runtimeInputsConfig": {
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "timeout": 86400000,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeoutAction": "END_EXECUTION"
+          },
+          "disable": false,
+          "disableAssertion": null,
+          "valid": true,
+          "validationMessage": null
+        }
+      ],
+      "valid": true,
+      "validationMessage": null,
+      "looped": false,
+      "loopedVarName": null
+    },
+    {
+      "name": "STAGE 2",
+      "parallel": false,
+      "pipelineStageElements": [
+        {
+          "uuid": "iibzVUjNTlWsv23lQIrkWw",
+          "name": "k8s-stage-2",
+          "type": "ENV_STATE",
+          "parallelIndex": 2,
+          "properties": {
+            "workflowVariables": {
+              "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+              "ServiceId": "${service2}",
+              "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+              "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+              "AppDynamics_Application": "15588",
+              "AppDynamics_Tier": "214198",
+              "message": "Random Message",
+              "buildNumber": "${pipelineBuildNumber2}",
+              "xxz": ""
+            },
+            "pipelineStageElementId": "iibzVUjNTlWsv23lQIrkWw",
+            "timeoutAction": "END_EXECUTION",
+            "envId": "imRBOGz2ReyY89dr4K-vrQ",
+            "pipelineStageParallelIndex": 2,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeout": 86400000,
+            "pipelineId": "rF1mCEaETZ2gEXljOTwhrQ",
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "stageName": "STAGE 2",
+            "disable": false,
+            "disableAssertion": null,
+            "workflowId": "9zhGmY7FTlSnj2ALPvPTOQ"
+          },
+          "workflowVariables": {
+            "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+            "ServiceId": "NA2uRPKLTqm9VU3dPENb-g",
+            "InfraDefinition_KUBERNETES": "CzcfKUN2Q_eCrlrV66r4ug",
+            "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+            "AppDynamics_Application": "15588",
+            "AppDynamics_Tier": "214198",
+            "message": "Random Message",
+            "buildNumber": "1.2.0",
+            "xxz": ""
+          },
+          "runtimeInputsConfig": {
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "timeout": 86400000,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeoutAction": "END_EXECUTION"
+          },
+          "disable": false,
+          "disableAssertion": null,
+          "valid": true,
+          "validationMessage": null
+        }
+      ],
+      "valid": true,
+      "validationMessage": null,
+      "looped": false,
+      "loopedVarName": null
+    }
+  ],
+  "stateEtaMap": {
+    "iibzVUjNTlWsv23lQIrkWw": 11285,
+    "KZPqXENuRbKqkuISe07JAQ": 23980
+  },
+  "services": [
+    {
+      "uuid": "NA2uRPKLTqm9VU3dPENb-g",
+      "appId": "nCLN8c84SqWPr44sqg65JQ",
+      "createdBy": {
+        "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+        "name": "Admin",
+        "email": "admin@harness.io"
+      },
+      "createdAt": 1598018446206,
+      "lastUpdatedAt": 1601379672767,
+      "name": "hello",
+      "description": null,
+      "artifactType": "DOCKER",
+      "deploymentType": "KUBERNETES",
+      "configMapYaml": null,
+      "helmValueYaml": null,
+      "version": 2,
+      "appContainer": null,
+      "configFiles": [],
+      "serviceVariables": [],
+      "artifactStreams": [],
+      "serviceCommands": [],
+      "lastDeploymentActivity": null,
+      "lastProdDeploymentActivity": null,
+      "setup": null,
+      "keywords": [
+        "hello",
+        "docker"
+      ],
+      "helmVersion": "V2",
+      "accountId": "kmpySmUISimoRrJL6NL73w",
+      "artifactStreamIds": [
+        "CchJMhP6Tn6nFyca5lE1zw"
+      ],
+      "artifactStreamBindings": null,
+      "sample": false,
+      "tagLinks": null,
+      "deploymentTypeTemplateId": null,
+      "customDeploymentName": null,
+      "pcfV2": false,
+      "k8sV2": true
+    }
+  ],
+  "workflowExecutions": [],
+  "valid": true,
+  "validationMessage": null,
+  "templatized": true,
+  "hasSshInfraMapping": false,
+  "failureStrategies": [],
+  "pipelineVariables": [
+    {
+      "name": "service1",
+      "description": "Variable for Service entity in Rollback Rolling",
+      "mandatory": true,
+      "runtimeInput": true,
+      "value": "ServiceId",
+      "fixed": false,
+      "allowMultipleValues": false,
+      "metadata": {
+        "artifactType": "DOCKER",
+        "deploymentType": "KUBERNETES",
+        "relatedField": "pipelineInfra",
+        "entityType": "SERVICE",
+        "stateType": "PHASE"
+      },
+      "type": "ENTITY"
+    },
+    {
+      "name": "pipelineInfra",
+      "description": "Variable for Infrastructure Definition entity in Rollback Rolling",
+      "mandatory": true,
+      "runtimeInput": true,
+      "value": "InfraDefinition_KUBERNETES",
+      "fixed": false,
+      "allowMultipleValues": false,
+      "metadata": {
+        "relatedField": "service1,service2",
+        "deploymentType": "KUBERNETES",
+        "envId": "imRBOGz2ReyY89dr4K-vrQ",
+        "entityType": "INFRASTRUCTURE_DEFINITION",
+        "stateType": "PHASE"
+      },
+      "type": "ENTITY"
+    },
+    {
+      "name": "service2",
+      "description": "Variable for Service entity in Rollback Rolling",
+      "mandatory": true,
+      "runtimeInput": true,
+      "value": "ServiceId",
+      "fixed": false,
+      "allowMultipleValues": false,
+      "metadata": {
+        "artifactType": "DOCKER",
+        "deploymentType": "KUBERNETES",
+        "relatedField": "pipelineInfra",
+        "entityType": "SERVICE",
+        "stateType": "PHASE"
+      },
+      "type": "ENTITY"
+    },
+    {
+      "name": "pipelineBuildNumber",
+      "description": "",
+      "mandatory": false,
+      "runtimeInput": false,
+      "value": "",
+      "fixed": false,
+      "allowedValues": "",
+      "allowMultipleValues": false,
+      "metadata": {},
+      "type": "NUMBER"
+    },
+    {
+      "name": "xxz",
+      "description": "",
+      "mandatory": false,
+      "runtimeInput": false,
+      "value": "",
+      "fixed": false,
+      "allowedValues": "",
+      "allowMultipleValues": false,
+      "metadata": {},
+      "type": "TEXT"
+    },
+    {
+      "name": "pipelineBuildNumber2",
+      "description": "",
+      "mandatory": false,
+      "runtimeInput": false,
+      "value": "",
+      "fixed": false,
+      "allowedValues": "",
+      "allowMultipleValues": false,
+      "metadata": {},
+      "type": "NUMBER"
+    }
+  ],
+  "envIds": [
+    "imRBOGz2ReyY89dr4K-vrQ"
+  ],
+  "workflowIds": [
+    "9zhGmY7FTlSnj2ALPvPTOQ"
+  ],
+  "envParameterized": true,
+  "deploymentTypes": [
+    "KUBERNETES"
+  ],
+  "envSummaries": [],
+  "hasBuildWorkflow": false,
+  "infraMappingIds": [],
+  "infraDefinitionIds": [
+    "CzcfKUN2Q_eCrlrV66r4ug"
+  ],
+  "keywords": [
+    "pipeline",
+    "template-rolling-k8s-wf",
+    "admin@harness.io",
+    "template-pipeline-multi",
+    "admin"
+  ],
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "sample": false,
+  "tagLinks": null,
+  "uuid": "rF1mCEaETZ2gEXljOTwhrQ",
+  "appId": "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy": {
+    "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+    "name": "Admin",
+    "email": "admin@harness.io"
+  },
+  "createdAt": 1603858389476,
+  "lastUpdatedAt": 1604425048739
+}

@@ -235,17 +235,15 @@ public class ExecutionResource {
       @QueryParam("pipelineStageElementId") String pipelineStageElementId,
       @QueryParam("pipelineExecutionId") String pipelineExecutionId, ExecutionArgs executionArgs) {
     // add auth
-    if (executionArgs != null) {
-      if (isNotEmpty(executionArgs.getArtifactVariables())) {
-        for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
-          if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
-            throw new InvalidRequestException(
-                format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
-          }
+    if (executionArgs != null && isNotEmpty(executionArgs.getArtifactVariables())) {
+      for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
+        if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
+          throw new InvalidRequestException(
+              format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
         }
       }
-      executionArgs.setCreatedByType(CreatedByType.USER);
     }
+    executionArgs.setCreatedByType(CreatedByType.USER);
 
     return new RestResponse<>(workflowExecutionService.continuePipelineStage(
         appId, pipelineExecutionId, pipelineStageElementId, executionArgs));
@@ -435,8 +433,8 @@ public class ExecutionResource {
       @QueryParam("pipelineStageElementId") String pipelineStageElementId,
       @QueryParam("withLastDeployedInfo") boolean withLastDeployedInfo, ExecutionArgs executionArgs) {
     if (isRunningExecution) {
-      return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
-          appId, executionArgs, withDefaultArtifact, workflowExecutionId, pipelineStageElementId));
+      return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadataRunningPipeline(appId,
+          executionArgs.getWorkflowVariables(), withDefaultArtifact, workflowExecutionId, pipelineStageElementId));
     }
     return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(
         appId, executionArgs, withDefaultArtifact, workflowExecutionId, withLastDeployedInfo));

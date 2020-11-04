@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -21,9 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -35,6 +38,8 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import static software.wings.beans.WorkflowExecution.builder;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.ARTIFACT_SERVICE;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.DEPLOYMENT_TYPE;
 import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRONMENT;
@@ -62,6 +67,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
 import io.harness.beans.ExecutionStatus;
@@ -70,6 +76,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -111,6 +118,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -120,6 +128,7 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
@@ -128,14 +137,18 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
+import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.JsonUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,6 +181,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock AuthService authService;
   @Mock private AccountExpirationChecker accountExpirationChecker;
   @Mock private HelmChartService helmChartService;
+  @Mock private ArtifactService artifactService;
+  @Mock private StateMachineExecutor stateMachineExecutor;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -329,7 +344,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecution() {
     when(query.order(Sort.descending(anyString()))).thenReturn(query);
-    when(query.get(any(FindOptions.class))).thenReturn(WorkflowExecution.builder().appId(APP_ID).build());
+    when(query.get(any(FindOptions.class))).thenReturn(builder().appId(APP_ID).build());
     WorkflowExecution workflowExecution =
         workflowExecutionService.fetchWorkflowExecution(APP_ID, asList(SERVICE_ID), asList(ENV_ID), WORKFLOW_ID);
     assertThat(workflowExecution).isNotNull();
@@ -835,7 +850,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                               .withPipelineStageExecutions(asList(pipelineStageExecution))
                                               .build();
     WorkflowExecution parentWorkflowExecution =
-        WorkflowExecution.builder().pipelineExecution(pipelineExecution).workflowType(WorkflowType.PIPELINE).build();
+        builder().pipelineExecution(pipelineExecution).workflowType(WorkflowType.PIPELINE).build();
     int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(parentWorkflowExecution);
     assertThat(instancesDeployed).isEqualTo(1);
   }
@@ -896,7 +911,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   private WorkflowExecution createNewWorkflowExecution() {
-    return WorkflowExecution.builder()
+    return builder()
         .appId(APP_ID)
         .appName(APP_NAME)
         .envType(NON_PROD)
@@ -1020,5 +1035,108 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .serviceId(SERVICE_ID + version)
         .version("v" + version)
         .build();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDeploymentMetadataRunningPipeline() {
+    final String appID = "nCLN8c84SqWPr44sqg65JQ";
+    final String pipelineStageElementId = "iibzVUjNTlWsv23lQIrkWw";
+    final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
+    final Map<String, String> wfVariables = new HashMap<>();
+    wfVariables.put("pipelineInfra", "62pv3U26RnmaLYFiZxjiTg");
+    wfVariables.put("service2", "NA2uRPKLTqm9VU3dPENb-g");
+
+    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+    Pipeline pipelineWithResolvedVars =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
+    Pipeline pipeline =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    List<String> emptyList = null;
+
+    when(wingsPersistence.getWithAppId(eq(WorkflowExecution.class), eq(appID), eq(pipelineExecutionId)))
+        .thenReturn(workflowExecution);
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(eq(appID), anyString(), any(Map.class)))
+        .thenReturn(pipelineWithResolvedVars);
+    when(pipelineService.getPipeline(eq(appID), anyString())).thenReturn(pipeline);
+    when(workflowService.readWorkflow(eq(appID), anyString())).thenReturn(workflow);
+
+    Map<String, String> expectedWFVars =
+        JsonUtils.readResourceFile("./expected_wf_variables.json", new TypeReference<Map<String, String>>() {});
+    workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
+        appID, wfVariables, true, pipelineExecutionId, pipelineStageElementId);
+
+    verify(workflowService)
+        .fetchDeploymentMetadata(eq(appID), eq(workflow), eq(expectedWFVars), eq(emptyList), eq(emptyList), eq(true),
+            eq(workflowExecution), eq(ENVIRONMENT), eq(ARTIFACT_SERVICE), eq(DEPLOYMENT_TYPE));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testContinueExecutionOfPausedPipelineExecution() {
+    final String appID = "nCLN8c84SqWPr44sqg65JQ";
+    final String pipelineStageElementId = "iibzVUjNTlWsv23lQIrkWw";
+    final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
+
+    ExecutionArgs executionArgs =
+        JsonUtils.readResourceFile("./execution_args/execution_args_continue_pipeline.json", ExecutionArgs.class);
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+    Pipeline pipelineWithVars =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
+    Pipeline pipeline =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+    Artifact artifact = JsonUtils.readResourceFile("./artifacts/artifacts.json", Artifact.class);
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                                        .uuid("D7fBZxZyQniDAhWTHdnYHQ")
+                                                        .appId("nCLN8c84SqWPr44sqg65JQ")
+                                                        .status(ExecutionStatus.PAUSED)
+                                                        .executionUuid("dTFHGyWOTMSHXGQoI5kVKw")
+                                                        .contextElements(new LinkedList<>())
+                                                        .build();
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    WorkflowStandardParams params = new WorkflowStandardParams();
+
+    when(artifactService.get(anyString(), anyString())).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(eq(WorkflowExecution.class), eq(appID), eq(pipelineExecutionId)))
+        .thenReturn(workflowExecution);
+    when(pipelineService.readPipelineWithVariables(eq(appID), anyString())).thenReturn(pipelineWithVars);
+    when(pipelineService.getPipeline(eq(appID), anyString())).thenReturn(pipeline);
+    doNothing().when(deploymentAuthHandler).authorizePipelineExecution(anyString(), anyString());
+    doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
+    when(workflowService.readWorkflow(eq(appID), anyString())).thenReturn(workflow);
+
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(StateExecutionInstance.class))).thenReturn(query);
+    when(query.filter(anyString(), any())).thenReturn(query);
+    when(query.get()).thenReturn(stateExecutionInstance);
+    when(stateMachineExecutor.getExecutionContext(anyString(), anyString(), anyString())).thenReturn(context);
+    when(context.getContextElement(eq(ContextElementType.STANDARD))).thenReturn(params);
+    when(wingsPersistence.createUpdateOperations(eq(StateExecutionInstance.class)))
+        .thenReturn(mock(UpdateOperations.class));
+    // Test that updates are correct
+    UpdateOperations updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(eq(WorkflowExecution.class))).thenReturn(updateOperations);
+    when(updateOperations.set(anyString(), anyString())).thenReturn(updateOperations);
+    workflowExecutionService.continuePipelineStage(appID, pipelineExecutionId, pipelineStageElementId, executionArgs);
+
+    List<Artifact> expectedArtifacts = JsonUtils.readResourceFile(
+        "./artifacts/expected_artifacts_continue_pipeline.json", new TypeReference<List<Artifact>>() {});
+
+    List<ArtifactVariable> expectedArtifactVars =
+        JsonUtils.readResourceFile("./artifacts/expected_artifact_variables_continue_pipeline.json",
+            new TypeReference<List<ArtifactVariable>>() {});
+
+    verify(updateOperations).set(eq(WorkflowExecutionKeys.startTs), anyLong());
+    verify(updateOperations).set(eq(WorkflowExecutionKeys.artifacts), eq(expectedArtifacts));
+    verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifact_variables), eq(expectedArtifactVars));
+    verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifacts), eq(expectedArtifacts));
   }
 }

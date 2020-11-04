@@ -1,0 +1,2546 @@
+{
+  "uuid": "9zhGmY7FTlSnj2ALPvPTOQ",
+  "appId": "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy": {
+    "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+    "name": "Admin",
+    "email": "admin@harness.io"
+  },
+  "createdAt": 1599018682658,
+  "lastUpdatedAt": 1604382560183,
+  "name": "template-rolling-k8s-wf",
+  "description": null,
+  "workflowType": "ORCHESTRATION",
+  "envId": "imRBOGz2ReyY89dr4K-vrQ",
+  "defaultVersion": 18,
+  "templatized": true,
+  "templateExpressions": [
+    {
+      "fieldName": "envId",
+      "expression": "${Environment}",
+      "expressionAllowed": false,
+      "description": null,
+      "mandatory": false,
+      "metadata": {
+        "relatedField": "${InfraDefinition_KUBERNETES}",
+        "entityType": "ENVIRONMENT"
+      }
+    },
+    {
+      "fieldName": "serviceId",
+      "expression": "${ServiceId}",
+      "expressionAllowed": false,
+      "description": null,
+      "mandatory": false,
+      "metadata": {
+        "relatedField": "",
+        "artifactType": "DOCKER",
+        "entityType": "SERVICE"
+      }
+    },
+    {
+      "fieldName": "infraDefinitionId",
+      "expression": "${InfraDefinition_KUBERNETES}",
+      "expressionAllowed": false,
+      "description": null,
+      "mandatory": false,
+      "metadata": {
+        "relatedField": "",
+        "entityType": "INFRASTRUCTURE_DEFINITION"
+      }
+    }
+  ],
+  "keywords": [
+    "template",
+    "rolling",
+    "template-rolling-k8s-wf",
+    "orchestration",
+    "dev",
+    "admin@harness.io",
+    "admin",
+    "hello"
+  ],
+  "notes": null,
+  "orchestration": {
+    "orchestrationWorkflowType": "ROLLING",
+    "concurrencyStrategy": {
+      "unitType": "INFRA",
+      "holdingScope": "WORKFLOW",
+      "strategy": "FIFO",
+      "resourceUnit": "${infra.infraId}",
+      "notificationGroups": null,
+      "notifyTriggeredByUser": false
+    },
+    "valid": true,
+    "validationMessage": null,
+    "linkedTemplateUuids": [],
+    "graph": {
+      "graphName": "MAIN",
+      "nodes": [
+        {
+          "id": "mt42DETBTz6MEn33levi2A",
+          "name": "Pre-Deployment",
+          "type": "PHASE_STEP",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": true,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": null,
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "phaseStepType": "PRE_DEPLOYMENT",
+            "subWorkflowId": "mt42DETBTz6MEn33levi2A",
+            "stepsInParallel": false,
+            "artifactNeeded": false
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "tgtfG_80S-u0BuzX1lABnw",
+          "name": "Rolling",
+          "type": "PHASE",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": [
+            {
+              "fieldName": "serviceId",
+              "expression": "${ServiceId}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "artifactType": "DOCKER",
+                "entityType": "SERVICE"
+              }
+            },
+            {
+              "fieldName": "infraDefinitionId",
+              "expression": "${InfraDefinition_KUBERNETES}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "entityType": "INFRASTRUCTURE_DEFINITION"
+              }
+            }
+          ],
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "deploymentType": "KUBERNETES",
+            "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+            "subWorkflowId": "tgtfG_80S-u0BuzX1lABnw",
+            "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+            "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ"
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "bT7YS9ciT76oZQGhdKRHyg",
+          "name": "Rollback Rolling",
+          "type": "PHASE",
+          "rollback": true,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": [
+            {
+              "fieldName": "serviceId",
+              "expression": "${ServiceId}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "artifactType": "DOCKER",
+                "entityType": "SERVICE"
+              }
+            },
+            {
+              "fieldName": "infraDefinitionId",
+              "expression": "${InfraDefinition_KUBERNETES}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "entityType": "INFRASTRUCTURE_DEFINITION"
+              }
+            }
+          ],
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "deploymentType": "KUBERNETES",
+            "phaseNameForRollback": "Rolling",
+            "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+            "subWorkflowId": "bT7YS9ciT76oZQGhdKRHyg",
+            "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+            "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ"
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "ZF2PEDRMS2iwTO4FwwpNTA",
+          "name": "Post-Deployment",
+          "type": "PHASE_STEP",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": null,
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "phaseStepType": "POST_DEPLOYMENT",
+            "subWorkflowId": "ZF2PEDRMS2iwTO4FwwpNTA",
+            "stepsInParallel": false,
+            "artifactNeeded": false
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        }
+      ],
+      "links": [
+        {
+          "id": "rUL1YF7YRoqgzl1N8RWcaA",
+          "from": "mt42DETBTz6MEn33levi2A",
+          "to": "tgtfG_80S-u0BuzX1lABnw",
+          "type": "SUCCESS"
+        },
+        {
+          "id": "p295YsajT_O-KXjNWFM1fw",
+          "from": "tgtfG_80S-u0BuzX1lABnw",
+          "to": "ZF2PEDRMS2iwTO4FwwpNTA",
+          "type": "SUCCESS"
+        }
+      ],
+      "subworkflows": {
+        "Ir3yPBXDQBWo6oJhz5kSzQ": {
+          "graphName": "Verify",
+          "nodes": [
+            {
+              "id": "node_8537e007a9f84c2fac9ce08e633e0e8a",
+              "name": "Shell Script",
+              "type": "SHELL_SCRIPT",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "sweepingOutputScope": null,
+                "templateUuid": null,
+                "connectionAttributes": null,
+                "publishAsVar": false,
+                "scriptString": "echo \"verify\"\necho \"message\"\necho ${workflow.variables.message}\necho buildNumber\"\"\necho ${workflow.variables.buildNumber}\necho \"xxz\"\necho ${workflow.variables.xxz}\n\necho \"ENVIRONMENT\"\necho ${workflow.variables.Environment}\necho \"INFRA\"\necho ${workflow.variables.InfraDefinition_KUBERNETES}\necho \"SERVICE_ID\"\necho ${workflow.variables.ServiceId}",
+                "sshKeyRef": null,
+                "executeOnDelegate": true,
+                "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "tags": null,
+                "templateVariables": null,
+                "commandPath": null,
+                "scriptType": "BASH",
+                "templateExpressions": null,
+                "host": null,
+                "timeoutMillis": 60000,
+                "templateVersion": null,
+                "outputVars": "",
+                "sweepingOutputName": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "node_2dd83390168a48ffb12e7afd46f5ce28",
+              "name": "AppDynamics",
+              "type": "APP_DYNAMICS",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "templateUuid": null,
+                "tierId": "",
+                "templateExpressions": [
+                  {
+                    "expression": "${AppDynamics_Server}",
+                    "fieldName": "analysisServerConfigId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_CONFIGID",
+                      "relatedField": "${AppDynamics_Application}"
+                    }
+                  },
+                  {
+                    "expression": "${AppDynamics_Application}",
+                    "fieldName": "applicationId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_APPID",
+                      "relatedField": "${AppDynamics_Tier}"
+                    }
+                  },
+                  {
+                    "expression": "${AppDynamics_Tier}",
+                    "fieldName": "tierId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_TIERID",
+                      "relatedField": ""
+                    }
+                  }
+                ],
+                "templateVersion": null,
+                "analysisTolerance": "LOW",
+                "executeWithPreviousSteps": false,
+                "comparisonStrategy": "COMPARE_WITH_CURRENT",
+                "applicationId": "",
+                "timeDuration": 15,
+                "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "templateVariables": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": null,
+              "from": "node_8537e007a9f84c2fac9ce08e633e0e8a",
+              "to": "node_2dd83390168a48ffb12e7afd46f5ce28",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "tgtfG_80S-u0BuzX1lABnw": {
+          "graphName": "Rolling",
+          "nodes": [
+            {
+              "id": "AXKMmhi-Qoen3TmZIuqYxQ",
+              "name": "Deploy",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "AXKMmhi-Qoen3TmZIuqYxQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "name": "Verify",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "QkvJgsxzTs6pE2NBxfptyg",
+              "name": "Wrap Up",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "QkvJgsxzTs6pE2NBxfptyg",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": "tgtfG_80S-u0BuzX1lABnw",
+              "from": "AXKMmhi-Qoen3TmZIuqYxQ",
+              "to": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "type": "SUCCESS"
+            },
+            {
+              "id": "tgtfG_80S-u0BuzX1lABnw",
+              "from": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "to": "QkvJgsxzTs6pE2NBxfptyg",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "mt42DETBTz6MEn33levi2A": {
+          "graphName": "Pre-Deployment",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "AXKMmhi-Qoen3TmZIuqYxQ": {
+          "graphName": "Deploy",
+          "nodes": [
+            {
+              "id": "FNZjNL76Qum_nGHDkFefpA",
+              "name": "Rollout Deployment",
+              "type": "K8S_DEPLOYMENT_ROLLING",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "templateUuid": null,
+                "stateTimeoutInMinutes": 10,
+                "templateVersion": null,
+                "parentId": "AXKMmhi-Qoen3TmZIuqYxQ",
+                "templateVariables": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        },
+        "9AbuaQBQSsGDjRd1_zsPYQ": {
+          "graphName": "Wrap Up",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "bT7YS9ciT76oZQGhdKRHyg": {
+          "graphName": "Rollback Rolling",
+          "nodes": [
+            {
+              "id": "mIr27Y2kRDC3hZZpuQhqRQ",
+              "name": "Deploy",
+              "type": "PHASE_STEP",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepNameForRollback": "Deploy",
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "mIr27Y2kRDC3hZZpuQhqRQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false,
+                "statusForRollback": "SUCCESS"
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "9AbuaQBQSsGDjRd1_zsPYQ",
+              "name": "Wrap Up",
+              "type": "PHASE_STEP",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepNameForRollback": "Wrap Up",
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "9AbuaQBQSsGDjRd1_zsPYQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": "bT7YS9ciT76oZQGhdKRHyg",
+              "from": "mIr27Y2kRDC3hZZpuQhqRQ",
+              "to": "9AbuaQBQSsGDjRd1_zsPYQ",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "ZF2PEDRMS2iwTO4FwwpNTA": {
+          "graphName": "Post-Deployment",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "mIr27Y2kRDC3hZZpuQhqRQ": {
+          "graphName": "Deploy",
+          "nodes": [
+            {
+              "id": "iobp3SIXQPe3JznvxSUvSQ",
+              "name": "Rollback Deployment",
+              "type": "K8S_DEPLOYMENT_ROLLING_ROLLBACK",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "parentId": "mIr27Y2kRDC3hZZpuQhqRQ"
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        },
+        "QkvJgsxzTs6pE2NBxfptyg": {
+          "graphName": "Wrap Up",
+          "nodes": [
+            {
+              "id": "node_dca73c59dbb94077aded64314832001e",
+              "name": "Shell Script",
+              "type": "SHELL_SCRIPT",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "sweepingOutputScope": null,
+                "connectionAttributes": null,
+                "publishAsVar": false,
+                "scriptString": "echo \"DONE\"",
+                "sshKeyRef": null,
+                "executeOnDelegate": true,
+                "parentId": "QkvJgsxzTs6pE2NBxfptyg",
+                "tags": null,
+                "templateVariables": "",
+                "commandPath": null,
+                "scriptType": "BASH",
+                "templateExpressions": null,
+                "host": null,
+                "timeoutMillis": 60000,
+                "outputVars": "",
+                "sweepingOutputName": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        }
+      }
+    },
+    "preDeploymentSteps": {
+      "uuid": "mt42DETBTz6MEn33levi2A",
+      "name": "Pre-Deployment",
+      "phaseStepType": "PRE_DEPLOYMENT",
+      "steps": [],
+      "stepsInParallel": false,
+      "failureStrategies": [],
+      "stepSkipStrategies": [],
+      "rollback": false,
+      "phaseStepNameForRollback": null,
+      "statusForRollback": null,
+      "artifactNeeded": false,
+      "valid": true,
+      "validationMessage": null,
+      "waitInterval": null
+    },
+    "rollbackProvisioners": null,
+    "rollbackWorkflowPhaseIdMap": {
+      "tgtfG_80S-u0BuzX1lABnw": {
+        "uuid": "bT7YS9ciT76oZQGhdKRHyg",
+        "name": "Rollback Rolling",
+        "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+        "daemonSet": false,
+        "statefulSet": false,
+        "infraMappingId": null,
+        "infraMappingName": null,
+        "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+        "infraDefinitionName": null,
+        "deploymentType": "KUBERNETES",
+        "srvTemplatised": true,
+        "infraTemplatised": true,
+        "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ",
+        "provisionNodes": false,
+        "rollback": true,
+        "phaseNameForRollback": "Rolling",
+        "valid": true,
+        "validationMessage": null,
+        "templateExpressions": [
+          {
+            "fieldName": "serviceId",
+            "expression": "${ServiceId}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "artifactType": "DOCKER",
+              "entityType": "SERVICE"
+            }
+          },
+          {
+            "fieldName": "infraDefinitionId",
+            "expression": "${InfraDefinition_KUBERNETES}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "entityType": "INFRASTRUCTURE_DEFINITION"
+            }
+          }
+        ],
+        "variableOverrides": [],
+        "phaseSteps": [
+          {
+            "uuid": "mIr27Y2kRDC3hZZpuQhqRQ",
+            "name": "Deploy",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": true,
+            "phaseStepNameForRollback": "Deploy",
+            "statusForRollback": "SUCCESS",
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          },
+          {
+            "uuid": "9AbuaQBQSsGDjRd1_zsPYQ",
+            "name": "Wrap Up",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": true,
+            "phaseStepNameForRollback": "Wrap Up",
+            "statusForRollback": null,
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          }
+        ]
+      }
+    },
+    "workflowPhases": [],
+    "postDeploymentSteps": {
+      "uuid": "ZF2PEDRMS2iwTO4FwwpNTA",
+      "name": "Post-Deployment",
+      "phaseStepType": "POST_DEPLOYMENT",
+      "steps": [],
+      "stepsInParallel": false,
+      "failureStrategies": [],
+      "stepSkipStrategies": [],
+      "rollback": false,
+      "phaseStepNameForRollback": null,
+      "statusForRollback": null,
+      "artifactNeeded": false,
+      "valid": true,
+      "validationMessage": null,
+      "waitInterval": null
+    },
+    "notificationRules": [
+      {
+        "uuid": "yihmt_bJRB-fu6esRIFOtg",
+        "conditions": [
+          "FAILED"
+        ],
+        "executionScope": "WORKFLOW",
+        "notificationGroupAsExpression": false,
+        "userGroupAsExpression": false,
+        "notificationGroups": [],
+        "userGroupIds": [
+          "8u4n0jVISS2zv8LFRuj2uw"
+        ],
+        "userGroupExpression": null,
+        "batchNotifications": false,
+        "active": true
+      }
+    ],
+    "failureStrategies": [
+      {
+        "failureTypes": [
+          "APPLICATION_ERROR"
+        ],
+        "executionScope": "WORKFLOW",
+        "repairActionCode": "IGNORE",
+        "retryCount": 0,
+        "retryIntervals": null,
+        "repairActionCodeAfterRetry": null,
+        "failureCriteria": null,
+        "specificSteps": null
+      }
+    ],
+    "systemVariables": [],
+    "userVariables": [
+      {
+        "name": "Environment",
+        "description": "Variable for Environment entity",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "InfraDefinition_KUBERNETES",
+          "entityType": "ENVIRONMENT"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "ServiceId",
+        "description": "Variable for Service entity in Rollback Rolling",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "artifactType": "DOCKER",
+          "deploymentType": "KUBERNETES",
+          "relatedField": "InfraDefinition_KUBERNETES",
+          "entityType": "SERVICE",
+          "stateType": "PHASE"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "InfraDefinition_KUBERNETES",
+        "description": "Variable for Infrastructure Definition entity in Rollback Rolling",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "ServiceId",
+          "deploymentType": "KUBERNETES",
+          "entityType": "INFRASTRUCTURE_DEFINITION",
+          "stateType": "PHASE"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Server",
+        "description": "Variable for AppDynamics Server entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "AppDynamics_Application",
+          "entityType": "APPDYNAMICS_CONFIGID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Application",
+        "description": "Variable for AppDynamics Application entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "AppDynamics_Tier",
+          "entityType": "APPDYNAMICS_APPID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Tier",
+        "description": "Variable for AppDynamics Tier entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "",
+          "entityType": "APPDYNAMICS_TIERID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "message",
+        "description": "",
+        "mandatory": true,
+        "value": "HELLO HARNESS",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "TEXT"
+      },
+      {
+        "name": "buildNumber",
+        "description": "",
+        "mandatory": false,
+        "value": "",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "NUMBER"
+      },
+      {
+        "name": "xxz",
+        "description": "",
+        "mandatory": false,
+        "value": "",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "TEXT"
+      }
+    ],
+    "derivedVariables": [],
+    "requiredEntityTypes": null,
+    "serviceIds": [
+      "NA2uRPKLTqm9VU3dPENb-g"
+    ],
+    "infraMappingIds": [],
+    "infraDefinitionIds": [
+      "CzcfKUN2Q_eCrlrV66r4ug"
+    ]
+  },
+  "orchestrationWorkflow": {
+    "orchestrationWorkflowType": "ROLLING",
+    "concurrencyStrategy": {
+      "unitType": "INFRA",
+      "holdingScope": "WORKFLOW",
+      "strategy": "FIFO",
+      "resourceUnit": "${infra.infraId}",
+      "notificationGroups": null,
+      "notifyTriggeredByUser": false
+    },
+    "valid": true,
+    "validationMessage": null,
+    "linkedTemplateUuids": [],
+    "graph": {
+      "graphName": "MAIN",
+      "nodes": [
+        {
+          "id": "mt42DETBTz6MEn33levi2A",
+          "name": "Pre-Deployment",
+          "type": "PHASE_STEP",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": true,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": null,
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "phaseStepType": "PRE_DEPLOYMENT",
+            "subWorkflowId": "mt42DETBTz6MEn33levi2A",
+            "stepsInParallel": false,
+            "artifactNeeded": false
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "tgtfG_80S-u0BuzX1lABnw",
+          "name": "Rolling",
+          "type": "PHASE",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": [
+            {
+              "fieldName": "serviceId",
+              "expression": "${ServiceId}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "artifactType": "DOCKER",
+                "entityType": "SERVICE"
+              }
+            },
+            {
+              "fieldName": "infraDefinitionId",
+              "expression": "${InfraDefinition_KUBERNETES}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "entityType": "INFRASTRUCTURE_DEFINITION"
+              }
+            }
+          ],
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "deploymentType": "KUBERNETES",
+            "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+            "subWorkflowId": "tgtfG_80S-u0BuzX1lABnw",
+            "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+            "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ"
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "bT7YS9ciT76oZQGhdKRHyg",
+          "name": "Rollback Rolling",
+          "type": "PHASE",
+          "rollback": true,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": [
+            {
+              "fieldName": "serviceId",
+              "expression": "${ServiceId}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "artifactType": "DOCKER",
+                "entityType": "SERVICE"
+              }
+            },
+            {
+              "fieldName": "infraDefinitionId",
+              "expression": "${InfraDefinition_KUBERNETES}",
+              "expressionAllowed": false,
+              "description": null,
+              "mandatory": false,
+              "metadata": {
+                "relatedField": "",
+                "entityType": "INFRASTRUCTURE_DEFINITION"
+              }
+            }
+          ],
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "deploymentType": "KUBERNETES",
+            "phaseNameForRollback": "Rolling",
+            "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+            "subWorkflowId": "bT7YS9ciT76oZQGhdKRHyg",
+            "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+            "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ"
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        },
+        {
+          "id": "ZF2PEDRMS2iwTO4FwwpNTA",
+          "name": "Post-Deployment",
+          "type": "PHASE_STEP",
+          "rollback": false,
+          "status": null,
+          "executionSummary": null,
+          "executionDetails": null,
+          "detailsReference": null,
+          "origin": false,
+          "executionHistoryCount": 0,
+          "interruptHistoryCount": 0,
+          "hasInspection": false,
+          "valid": true,
+          "validationMessage": null,
+          "inValidFieldMessages": null,
+          "elementStatusSummary": null,
+          "instanceStatusSummary": null,
+          "templateExpressions": null,
+          "variableOverrides": null,
+          "templateVariables": null,
+          "templateUuid": null,
+          "templateVersion": null,
+          "importedTemplateDetails": null,
+          "templateMetadata": null,
+          "properties": {
+            "phaseStepType": "POST_DEPLOYMENT",
+            "subWorkflowId": "ZF2PEDRMS2iwTO4FwwpNTA",
+            "stepsInParallel": false,
+            "artifactNeeded": false
+          },
+          "next": null,
+          "group": null,
+          "delegateTaskId": null,
+          "selectionLogsTrackingForTaskEnabled": false,
+          "delegateTasksDetails": null,
+          "selectionLogsTrackingForTasksEnabled": false
+        }
+      ],
+      "links": [
+        {
+          "id": "rUL1YF7YRoqgzl1N8RWcaA",
+          "from": "mt42DETBTz6MEn33levi2A",
+          "to": "tgtfG_80S-u0BuzX1lABnw",
+          "type": "SUCCESS"
+        },
+        {
+          "id": "p295YsajT_O-KXjNWFM1fw",
+          "from": "tgtfG_80S-u0BuzX1lABnw",
+          "to": "ZF2PEDRMS2iwTO4FwwpNTA",
+          "type": "SUCCESS"
+        }
+      ],
+      "subworkflows": {
+        "Ir3yPBXDQBWo6oJhz5kSzQ": {
+          "graphName": "Verify",
+          "nodes": [
+            {
+              "id": "node_8537e007a9f84c2fac9ce08e633e0e8a",
+              "name": "Shell Script",
+              "type": "SHELL_SCRIPT",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "sweepingOutputScope": null,
+                "templateUuid": null,
+                "connectionAttributes": null,
+                "publishAsVar": false,
+                "scriptString": "echo \"verify\"\necho \"message\"\necho ${workflow.variables.message}\necho buildNumber\"\"\necho ${workflow.variables.buildNumber}\necho \"xxz\"\necho ${workflow.variables.xxz}\n\necho \"ENVIRONMENT\"\necho ${workflow.variables.Environment}\necho \"INFRA\"\necho ${workflow.variables.InfraDefinition_KUBERNETES}\necho \"SERVICE_ID\"\necho ${workflow.variables.ServiceId}",
+                "sshKeyRef": null,
+                "executeOnDelegate": true,
+                "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "tags": null,
+                "templateVariables": null,
+                "commandPath": null,
+                "scriptType": "BASH",
+                "templateExpressions": null,
+                "host": null,
+                "timeoutMillis": 60000,
+                "templateVersion": null,
+                "outputVars": "",
+                "sweepingOutputName": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "node_2dd83390168a48ffb12e7afd46f5ce28",
+              "name": "AppDynamics",
+              "type": "APP_DYNAMICS",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "templateUuid": null,
+                "tierId": "",
+                "templateExpressions": [
+                  {
+                    "expression": "${AppDynamics_Server}",
+                    "fieldName": "analysisServerConfigId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_CONFIGID",
+                      "relatedField": "${AppDynamics_Application}"
+                    }
+                  },
+                  {
+                    "expression": "${AppDynamics_Application}",
+                    "fieldName": "applicationId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_APPID",
+                      "relatedField": "${AppDynamics_Tier}"
+                    }
+                  },
+                  {
+                    "expression": "${AppDynamics_Tier}",
+                    "fieldName": "tierId",
+                    "metadata": {
+                      "entityType": "APPDYNAMICS_TIERID",
+                      "relatedField": ""
+                    }
+                  }
+                ],
+                "templateVersion": null,
+                "analysisTolerance": "LOW",
+                "executeWithPreviousSteps": false,
+                "comparisonStrategy": "COMPARE_WITH_CURRENT",
+                "applicationId": "",
+                "timeDuration": 15,
+                "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "templateVariables": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": null,
+              "from": "node_8537e007a9f84c2fac9ce08e633e0e8a",
+              "to": "node_2dd83390168a48ffb12e7afd46f5ce28",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "tgtfG_80S-u0BuzX1lABnw": {
+          "graphName": "Rolling",
+          "nodes": [
+            {
+              "id": "AXKMmhi-Qoen3TmZIuqYxQ",
+              "name": "Deploy",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "AXKMmhi-Qoen3TmZIuqYxQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "name": "Verify",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "QkvJgsxzTs6pE2NBxfptyg",
+              "name": "Wrap Up",
+              "type": "PHASE_STEP",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "QkvJgsxzTs6pE2NBxfptyg",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": "tgtfG_80S-u0BuzX1lABnw",
+              "from": "AXKMmhi-Qoen3TmZIuqYxQ",
+              "to": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "type": "SUCCESS"
+            },
+            {
+              "id": "tgtfG_80S-u0BuzX1lABnw",
+              "from": "Ir3yPBXDQBWo6oJhz5kSzQ",
+              "to": "QkvJgsxzTs6pE2NBxfptyg",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "mt42DETBTz6MEn33levi2A": {
+          "graphName": "Pre-Deployment",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "AXKMmhi-Qoen3TmZIuqYxQ": {
+          "graphName": "Deploy",
+          "nodes": [
+            {
+              "id": "FNZjNL76Qum_nGHDkFefpA",
+              "name": "Rollout Deployment",
+              "type": "K8S_DEPLOYMENT_ROLLING",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "templateUuid": null,
+                "stateTimeoutInMinutes": 10,
+                "templateVersion": null,
+                "parentId": "AXKMmhi-Qoen3TmZIuqYxQ",
+                "templateVariables": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        },
+        "9AbuaQBQSsGDjRd1_zsPYQ": {
+          "graphName": "Wrap Up",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "bT7YS9ciT76oZQGhdKRHyg": {
+          "graphName": "Rollback Rolling",
+          "nodes": [
+            {
+              "id": "mIr27Y2kRDC3hZZpuQhqRQ",
+              "name": "Deploy",
+              "type": "PHASE_STEP",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepNameForRollback": "Deploy",
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "mIr27Y2kRDC3hZZpuQhqRQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false,
+                "statusForRollback": "SUCCESS"
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            },
+            {
+              "id": "9AbuaQBQSsGDjRd1_zsPYQ",
+              "name": "Wrap Up",
+              "type": "PHASE_STEP",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": false,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "phaseStepNameForRollback": "Wrap Up",
+                "phaseStepType": "K8S_PHASE_STEP",
+                "subWorkflowId": "9AbuaQBQSsGDjRd1_zsPYQ",
+                "stepsInParallel": false,
+                "artifactNeeded": false
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [
+            {
+              "id": "bT7YS9ciT76oZQGhdKRHyg",
+              "from": "mIr27Y2kRDC3hZZpuQhqRQ",
+              "to": "9AbuaQBQSsGDjRd1_zsPYQ",
+              "type": "SUCCESS"
+            }
+          ],
+          "subworkflows": {}
+        },
+        "ZF2PEDRMS2iwTO4FwwpNTA": {
+          "graphName": "Post-Deployment",
+          "nodes": [],
+          "links": [],
+          "subworkflows": {}
+        },
+        "mIr27Y2kRDC3hZZpuQhqRQ": {
+          "graphName": "Deploy",
+          "nodes": [
+            {
+              "id": "iobp3SIXQPe3JznvxSUvSQ",
+              "name": "Rollback Deployment",
+              "type": "K8S_DEPLOYMENT_ROLLING_ROLLBACK",
+              "rollback": true,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "parentId": "mIr27Y2kRDC3hZZpuQhqRQ"
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        },
+        "QkvJgsxzTs6pE2NBxfptyg": {
+          "graphName": "Wrap Up",
+          "nodes": [
+            {
+              "id": "node_dca73c59dbb94077aded64314832001e",
+              "name": "Shell Script",
+              "type": "SHELL_SCRIPT",
+              "rollback": false,
+              "status": null,
+              "executionSummary": null,
+              "executionDetails": null,
+              "detailsReference": null,
+              "origin": true,
+              "executionHistoryCount": 0,
+              "interruptHistoryCount": 0,
+              "hasInspection": false,
+              "valid": true,
+              "validationMessage": null,
+              "inValidFieldMessages": null,
+              "elementStatusSummary": null,
+              "instanceStatusSummary": null,
+              "templateExpressions": null,
+              "variableOverrides": null,
+              "templateVariables": null,
+              "templateUuid": null,
+              "templateVersion": null,
+              "importedTemplateDetails": null,
+              "templateMetadata": null,
+              "properties": {
+                "sweepingOutputScope": null,
+                "connectionAttributes": null,
+                "publishAsVar": false,
+                "scriptString": "echo \"DONE\"",
+                "sshKeyRef": null,
+                "executeOnDelegate": true,
+                "parentId": "QkvJgsxzTs6pE2NBxfptyg",
+                "tags": null,
+                "templateVariables": "",
+                "commandPath": null,
+                "scriptType": "BASH",
+                "templateExpressions": null,
+                "host": null,
+                "timeoutMillis": 60000,
+                "outputVars": "",
+                "sweepingOutputName": null
+              },
+              "next": null,
+              "group": null,
+              "delegateTaskId": null,
+              "selectionLogsTrackingForTaskEnabled": false,
+              "delegateTasksDetails": null,
+              "selectionLogsTrackingForTasksEnabled": false
+            }
+          ],
+          "links": [],
+          "subworkflows": {}
+        }
+      }
+    },
+    "preDeploymentSteps": {
+      "uuid": "mt42DETBTz6MEn33levi2A",
+      "name": "Pre-Deployment",
+      "phaseStepType": "PRE_DEPLOYMENT",
+      "steps": [],
+      "stepsInParallel": false,
+      "failureStrategies": [],
+      "stepSkipStrategies": [],
+      "rollback": false,
+      "phaseStepNameForRollback": null,
+      "statusForRollback": null,
+      "artifactNeeded": false,
+      "valid": true,
+      "validationMessage": null,
+      "waitInterval": null
+    },
+    "rollbackProvisioners": null,
+    "rollbackWorkflowPhaseIdMap": {
+      "tgtfG_80S-u0BuzX1lABnw": {
+        "uuid": "bT7YS9ciT76oZQGhdKRHyg",
+        "name": "Rollback Rolling",
+        "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+        "daemonSet": false,
+        "statefulSet": false,
+        "infraMappingId": null,
+        "infraMappingName": null,
+        "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+        "infraDefinitionName": null,
+        "deploymentType": "KUBERNETES",
+        "srvTemplatised": true,
+        "infraTemplatised": true,
+        "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ",
+        "provisionNodes": false,
+        "rollback": true,
+        "phaseNameForRollback": "Rolling",
+        "valid": true,
+        "validationMessage": null,
+        "templateExpressions": [
+          {
+            "fieldName": "serviceId",
+            "expression": "${ServiceId}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "artifactType": "DOCKER",
+              "entityType": "SERVICE"
+            }
+          },
+          {
+            "fieldName": "infraDefinitionId",
+            "expression": "${InfraDefinition_KUBERNETES}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "entityType": "INFRASTRUCTURE_DEFINITION"
+            }
+          }
+        ],
+        "variableOverrides": [],
+        "phaseSteps": [
+          {
+            "uuid": "mIr27Y2kRDC3hZZpuQhqRQ",
+            "name": "Deploy",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [
+              {
+                "id": "iobp3SIXQPe3JznvxSUvSQ",
+                "name": "Rollback Deployment",
+                "type": "K8S_DEPLOYMENT_ROLLING_ROLLBACK",
+                "rollback": true,
+                "status": null,
+                "executionSummary": null,
+                "executionDetails": null,
+                "detailsReference": null,
+                "origin": true,
+                "executionHistoryCount": 0,
+                "interruptHistoryCount": 0,
+                "hasInspection": false,
+                "valid": true,
+                "validationMessage": null,
+                "inValidFieldMessages": null,
+                "elementStatusSummary": null,
+                "instanceStatusSummary": null,
+                "templateExpressions": null,
+                "variableOverrides": null,
+                "templateVariables": null,
+                "templateUuid": null,
+                "templateVersion": null,
+                "importedTemplateDetails": null,
+                "templateMetadata": null,
+                "properties": {
+                  "parentId": "mIr27Y2kRDC3hZZpuQhqRQ"
+                },
+                "next": null,
+                "group": null,
+                "delegateTaskId": null,
+                "selectionLogsTrackingForTaskEnabled": false,
+                "delegateTasksDetails": null,
+                "selectionLogsTrackingForTasksEnabled": false
+              }
+            ],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": true,
+            "phaseStepNameForRollback": "Deploy",
+            "statusForRollback": "SUCCESS",
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          },
+          {
+            "uuid": "9AbuaQBQSsGDjRd1_zsPYQ",
+            "name": "Wrap Up",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": true,
+            "phaseStepNameForRollback": "Wrap Up",
+            "statusForRollback": null,
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          }
+        ]
+      }
+    },
+    "workflowPhases": [
+      {
+        "uuid": "tgtfG_80S-u0BuzX1lABnw",
+        "name": "Rolling",
+        "serviceId": "NA2uRPKLTqm9VU3dPENb-g",
+        "daemonSet": false,
+        "statefulSet": false,
+        "infraMappingId": null,
+        "infraMappingName": null,
+        "infraDefinitionId": "CzcfKUN2Q_eCrlrV66r4ug",
+        "infraDefinitionName": null,
+        "deploymentType": "KUBERNETES",
+        "srvTemplatised": true,
+        "infraTemplatised": true,
+        "computeProviderId": "2BaHM9CGQxqKAo2x-mLBuQ",
+        "provisionNodes": false,
+        "rollback": false,
+        "phaseNameForRollback": null,
+        "valid": true,
+        "validationMessage": null,
+        "templateExpressions": [
+          {
+            "fieldName": "serviceId",
+            "expression": "${ServiceId}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "artifactType": "DOCKER",
+              "entityType": "SERVICE"
+            }
+          },
+          {
+            "fieldName": "infraDefinitionId",
+            "expression": "${InfraDefinition_KUBERNETES}",
+            "expressionAllowed": false,
+            "description": null,
+            "mandatory": false,
+            "metadata": {
+              "relatedField": "",
+              "entityType": "INFRASTRUCTURE_DEFINITION"
+            }
+          }
+        ],
+        "variableOverrides": [],
+        "phaseSteps": [
+          {
+            "uuid": "AXKMmhi-Qoen3TmZIuqYxQ",
+            "name": "Deploy",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [
+              {
+                "id": "FNZjNL76Qum_nGHDkFefpA",
+                "name": "Rollout Deployment",
+                "type": "K8S_DEPLOYMENT_ROLLING",
+                "rollback": false,
+                "status": null,
+                "executionSummary": null,
+                "executionDetails": null,
+                "detailsReference": null,
+                "origin": true,
+                "executionHistoryCount": 0,
+                "interruptHistoryCount": 0,
+                "hasInspection": false,
+                "valid": true,
+                "validationMessage": null,
+                "inValidFieldMessages": null,
+                "elementStatusSummary": null,
+                "instanceStatusSummary": null,
+                "templateExpressions": null,
+                "variableOverrides": null,
+                "templateVariables": null,
+                "templateUuid": null,
+                "templateVersion": null,
+                "importedTemplateDetails": null,
+                "templateMetadata": null,
+                "properties": {
+                  "templateUuid": null,
+                  "stateTimeoutInMinutes": 10,
+                  "templateVersion": null,
+                  "parentId": "AXKMmhi-Qoen3TmZIuqYxQ",
+                  "templateVariables": null
+                },
+                "next": null,
+                "group": null,
+                "delegateTaskId": null,
+                "selectionLogsTrackingForTaskEnabled": false,
+                "delegateTasksDetails": null,
+                "selectionLogsTrackingForTasksEnabled": false
+              }
+            ],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": false,
+            "phaseStepNameForRollback": null,
+            "statusForRollback": null,
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          },
+          {
+            "uuid": "Ir3yPBXDQBWo6oJhz5kSzQ",
+            "name": "Verify",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [
+              {
+                "id": "node_8537e007a9f84c2fac9ce08e633e0e8a",
+                "name": "Shell Script",
+                "type": "SHELL_SCRIPT",
+                "rollback": false,
+                "status": null,
+                "executionSummary": null,
+                "executionDetails": null,
+                "detailsReference": null,
+                "origin": true,
+                "executionHistoryCount": 0,
+                "interruptHistoryCount": 0,
+                "hasInspection": false,
+                "valid": true,
+                "validationMessage": null,
+                "inValidFieldMessages": null,
+                "elementStatusSummary": null,
+                "instanceStatusSummary": null,
+                "templateExpressions": null,
+                "variableOverrides": null,
+                "templateVariables": null,
+                "templateUuid": null,
+                "templateVersion": null,
+                "importedTemplateDetails": null,
+                "templateMetadata": null,
+                "properties": {
+                  "sweepingOutputScope": null,
+                  "templateUuid": null,
+                  "connectionAttributes": null,
+                  "publishAsVar": false,
+                  "scriptString": "echo \"verify\"\necho \"message\"\necho ${workflow.variables.message}\necho buildNumber\"\"\necho ${workflow.variables.buildNumber}\necho \"xxz\"\necho ${workflow.variables.xxz}\n\necho \"ENVIRONMENT\"\necho ${workflow.variables.Environment}\necho \"INFRA\"\necho ${workflow.variables.InfraDefinition_KUBERNETES}\necho \"SERVICE_ID\"\necho ${workflow.variables.ServiceId}",
+                  "sshKeyRef": null,
+                  "executeOnDelegate": true,
+                  "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                  "tags": null,
+                  "templateVariables": null,
+                  "commandPath": null,
+                  "scriptType": "BASH",
+                  "templateExpressions": null,
+                  "host": null,
+                  "timeoutMillis": 60000,
+                  "templateVersion": null,
+                  "outputVars": "",
+                  "sweepingOutputName": null
+                },
+                "next": null,
+                "group": null,
+                "delegateTaskId": null,
+                "selectionLogsTrackingForTaskEnabled": false,
+                "delegateTasksDetails": null,
+                "selectionLogsTrackingForTasksEnabled": false
+              },
+              {
+                "id": "node_2dd83390168a48ffb12e7afd46f5ce28",
+                "name": "AppDynamics",
+                "type": "APP_DYNAMICS",
+                "rollback": false,
+                "status": null,
+                "executionSummary": null,
+                "executionDetails": null,
+                "detailsReference": null,
+                "origin": false,
+                "executionHistoryCount": 0,
+                "interruptHistoryCount": 0,
+                "hasInspection": false,
+                "valid": true,
+                "validationMessage": null,
+                "inValidFieldMessages": null,
+                "elementStatusSummary": null,
+                "instanceStatusSummary": null,
+                "templateExpressions": null,
+                "variableOverrides": null,
+                "templateVariables": null,
+                "templateUuid": null,
+                "templateVersion": null,
+                "importedTemplateDetails": null,
+                "templateMetadata": null,
+                "properties": {
+                  "templateUuid": null,
+                  "tierId": "",
+                  "templateExpressions": [
+                    {
+                      "expression": "${AppDynamics_Server}",
+                      "fieldName": "analysisServerConfigId",
+                      "metadata": {
+                        "entityType": "APPDYNAMICS_CONFIGID",
+                        "relatedField": "${AppDynamics_Application}"
+                      }
+                    },
+                    {
+                      "expression": "${AppDynamics_Application}",
+                      "fieldName": "applicationId",
+                      "metadata": {
+                        "entityType": "APPDYNAMICS_APPID",
+                        "relatedField": "${AppDynamics_Tier}"
+                      }
+                    },
+                    {
+                      "expression": "${AppDynamics_Tier}",
+                      "fieldName": "tierId",
+                      "metadata": {
+                        "entityType": "APPDYNAMICS_TIERID",
+                        "relatedField": ""
+                      }
+                    }
+                  ],
+                  "templateVersion": null,
+                  "analysisTolerance": "LOW",
+                  "executeWithPreviousSteps": false,
+                  "comparisonStrategy": "COMPARE_WITH_CURRENT",
+                  "applicationId": "",
+                  "timeDuration": 15,
+                  "parentId": "Ir3yPBXDQBWo6oJhz5kSzQ",
+                  "templateVariables": null
+                },
+                "next": null,
+                "group": null,
+                "delegateTaskId": null,
+                "selectionLogsTrackingForTaskEnabled": false,
+                "delegateTasksDetails": null,
+                "selectionLogsTrackingForTasksEnabled": false
+              }
+            ],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": false,
+            "phaseStepNameForRollback": null,
+            "statusForRollback": null,
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          },
+          {
+            "uuid": "QkvJgsxzTs6pE2NBxfptyg",
+            "name": "Wrap Up",
+            "phaseStepType": "K8S_PHASE_STEP",
+            "steps": [
+              {
+                "id": "node_dca73c59dbb94077aded64314832001e",
+                "name": "Shell Script",
+                "type": "SHELL_SCRIPT",
+                "rollback": false,
+                "status": null,
+                "executionSummary": null,
+                "executionDetails": null,
+                "detailsReference": null,
+                "origin": true,
+                "executionHistoryCount": 0,
+                "interruptHistoryCount": 0,
+                "hasInspection": false,
+                "valid": true,
+                "validationMessage": null,
+                "inValidFieldMessages": null,
+                "elementStatusSummary": null,
+                "instanceStatusSummary": null,
+                "templateExpressions": null,
+                "variableOverrides": null,
+                "templateVariables": null,
+                "templateUuid": null,
+                "templateVersion": null,
+                "importedTemplateDetails": null,
+                "templateMetadata": null,
+                "properties": {
+                  "sweepingOutputScope": null,
+                  "connectionAttributes": null,
+                  "publishAsVar": false,
+                  "scriptString": "echo \"DONE\"",
+                  "sshKeyRef": null,
+                  "executeOnDelegate": true,
+                  "parentId": "QkvJgsxzTs6pE2NBxfptyg",
+                  "tags": null,
+                  "templateVariables": "",
+                  "commandPath": null,
+                  "scriptType": "BASH",
+                  "templateExpressions": null,
+                  "host": null,
+                  "timeoutMillis": 60000,
+                  "outputVars": "",
+                  "sweepingOutputName": null
+                },
+                "next": null,
+                "group": null,
+                "delegateTaskId": null,
+                "selectionLogsTrackingForTaskEnabled": false,
+                "delegateTasksDetails": null,
+                "selectionLogsTrackingForTasksEnabled": false
+              }
+            ],
+            "stepsInParallel": false,
+            "failureStrategies": [],
+            "stepSkipStrategies": [],
+            "rollback": false,
+            "phaseStepNameForRollback": null,
+            "statusForRollback": null,
+            "artifactNeeded": false,
+            "valid": true,
+            "validationMessage": null,
+            "waitInterval": null
+          }
+        ]
+      }
+    ],
+    "postDeploymentSteps": {
+      "uuid": "ZF2PEDRMS2iwTO4FwwpNTA",
+      "name": "Post-Deployment",
+      "phaseStepType": "POST_DEPLOYMENT",
+      "steps": [],
+      "stepsInParallel": false,
+      "failureStrategies": [],
+      "stepSkipStrategies": [],
+      "rollback": false,
+      "phaseStepNameForRollback": null,
+      "statusForRollback": null,
+      "artifactNeeded": false,
+      "valid": true,
+      "validationMessage": null,
+      "waitInterval": null
+    },
+    "notificationRules": [
+      {
+        "uuid": "yihmt_bJRB-fu6esRIFOtg",
+        "conditions": [
+          "FAILED"
+        ],
+        "executionScope": "WORKFLOW",
+        "notificationGroupAsExpression": false,
+        "userGroupAsExpression": false,
+        "notificationGroups": [],
+        "userGroupIds": [
+          "8u4n0jVISS2zv8LFRuj2uw"
+        ],
+        "userGroupExpression": null,
+        "batchNotifications": false,
+        "active": true
+      }
+    ],
+    "failureStrategies": [
+      {
+        "failureTypes": [
+          "APPLICATION_ERROR"
+        ],
+        "executionScope": "WORKFLOW",
+        "repairActionCode": "IGNORE",
+        "retryCount": 0,
+        "retryIntervals": null,
+        "repairActionCodeAfterRetry": null,
+        "failureCriteria": null,
+        "specificSteps": null
+      }
+    ],
+    "systemVariables": [],
+    "userVariables": [
+      {
+        "name": "Environment",
+        "description": "Variable for Environment entity",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "InfraDefinition_KUBERNETES",
+          "entityType": "ENVIRONMENT"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "ServiceId",
+        "description": "Variable for Service entity in Rollback Rolling",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "artifactType": "DOCKER",
+          "deploymentType": "KUBERNETES",
+          "relatedField": "InfraDefinition_KUBERNETES",
+          "entityType": "SERVICE",
+          "stateType": "PHASE"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "InfraDefinition_KUBERNETES",
+        "description": "Variable for Infrastructure Definition entity in Rollback Rolling",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "ServiceId",
+          "deploymentType": "KUBERNETES",
+          "entityType": "INFRASTRUCTURE_DEFINITION",
+          "stateType": "PHASE"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Server",
+        "description": "Variable for AppDynamics Server entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "AppDynamics_Application",
+          "entityType": "APPDYNAMICS_CONFIGID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Application",
+        "description": "Variable for AppDynamics Application entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "AppDynamics_Tier",
+          "entityType": "APPDYNAMICS_APPID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "AppDynamics_Tier",
+        "description": "Variable for AppDynamics Tier entity in AppDynamics",
+        "mandatory": true,
+        "fixed": false,
+        "allowMultipleValues": false,
+        "metadata": {
+          "relatedField": "",
+          "entityType": "APPDYNAMICS_TIERID",
+          "stateType": "APP_DYNAMICS"
+        },
+        "type": "ENTITY"
+      },
+      {
+        "name": "message",
+        "description": "",
+        "mandatory": true,
+        "value": "HELLO HARNESS",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "TEXT"
+      },
+      {
+        "name": "buildNumber",
+        "description": "",
+        "mandatory": false,
+        "value": "",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "NUMBER"
+      },
+      {
+        "name": "xxz",
+        "description": "",
+        "mandatory": false,
+        "value": "",
+        "fixed": false,
+        "allowedValues": "",
+        "allowMultipleValues": false,
+        "metadata": {},
+        "type": "TEXT"
+      }
+    ],
+    "derivedVariables": [],
+    "requiredEntityTypes": null,
+    "serviceIds": [
+      "NA2uRPKLTqm9VU3dPENb-g"
+    ],
+    "infraMappingIds": [],
+    "infraDefinitionIds": [
+      "CzcfKUN2Q_eCrlrV66r4ug"
+    ]
+  },
+  "services": [
+    {
+      "uuid": "NA2uRPKLTqm9VU3dPENb-g",
+      "appId": "nCLN8c84SqWPr44sqg65JQ",
+      "createdBy": {
+        "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+        "name": "Admin",
+        "email": "admin@harness.io"
+      },
+      "createdAt": 1598018446206,
+      "lastUpdatedAt": 1601379672767,
+      "name": "hello",
+      "description": null,
+      "artifactType": "DOCKER",
+      "deploymentType": "KUBERNETES",
+      "configMapYaml": null,
+      "helmValueYaml": null,
+      "version": 2,
+      "appContainer": null,
+      "configFiles": [],
+      "serviceVariables": [],
+      "artifactStreams": [],
+      "serviceCommands": [],
+      "lastDeploymentActivity": null,
+      "lastProdDeploymentActivity": null,
+      "setup": null,
+      "keywords": [
+        "hello",
+        "docker"
+      ],
+      "helmVersion": "V2",
+      "accountId": "kmpySmUISimoRrJL6NL73w",
+      "artifactStreamIds": [
+        "CchJMhP6Tn6nFyca5lE1zw"
+      ],
+      "artifactStreamBindings": null,
+      "sample": false,
+      "tagLinks": null,
+      "deploymentTypeTemplateId": null,
+      "customDeploymentName": null,
+      "k8sV2": true,
+      "pcfV2": false
+    }
+  ],
+  "workflowExecutions": [],
+  "serviceId": null,
+  "infraMappingId": null,
+  "infraDefinitionId": null,
+  "creationFlags": null,
+  "envTemplatized": true,
+  "tagLinks": null,
+  "templatizedServiceIds": [
+    "NA2uRPKLTqm9VU3dPENb-g"
+  ],
+  "linkedTemplateUuids": [],
+  "linkedArtifactStreamIds": [],
+  "deploymentTypes": [
+    "KUBERNETES"
+  ],
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "sample": false
+}
