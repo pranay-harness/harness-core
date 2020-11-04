@@ -75,7 +75,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
-    bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
+    bind(EngineObtainmentHelper.class).in(Singleton.class);
 
     MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
