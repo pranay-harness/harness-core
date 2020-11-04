@@ -57,6 +57,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>330-ci-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>39-ng-pipeline-commons</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
@@ -64,11 +69,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>72-ci-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

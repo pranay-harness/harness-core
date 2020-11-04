@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>72-ci-beans</artifactId>
+    <artifactId>330-ci-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
