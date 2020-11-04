@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
+import static io.harness.distribution.barrier.Barrier.getDuration;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -56,6 +57,7 @@ import software.wings.sm.BarrierStatusData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,7 @@ import javax.validation.Valid;
 public class BarrierServiceImpl implements BarrierService, ForceProctor {
   private static final String APP_ID = "appId";
   private static final String LEVEL = "level";
+  private static final String DEBUG_LINE = "CDC_10273_TEST_LOG:";
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private WingsPersistence wingsPersistence;
@@ -129,6 +132,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     // Grouping by on workflowId + pipelineStageId Because If a workflow is added twice manually in pipeline in same
     // parallel section, then they have different pipeline stages IDs, whereas we only want to group together the looped
     // workflows.
+    log.info("{} Number of barrier workflow instances in pipeline: {}", DEBUG_LINE, pipeline.getWorkflows().size());
+    Instant startTime = Instant.now();
     Map<String, List<BarrierInstanceWorkflow>> barrierWorkflows = pipeline.getWorkflows().stream().collect(
         Collectors.groupingBy(BarrierInstanceWorkflow::getUniqueWorkflowKeyInPipeline));
     for (Map.Entry<String, List<BarrierInstanceWorkflow>> entry : barrierWorkflows.entrySet()) {
@@ -156,6 +161,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         }
       }
 
+      log.info(
+          "{} Time taken to complete till first query for fetching pipeline stage execution Id: {}, workflow key: {}",
+          DEBUG_LINE, getDuration(startTime), entry.getKey());
+
       String workflowId = workflows.get(0).getUuid();
       if (workflows.stream().anyMatch(t -> t.getWorkflowExecutionId() == null)) {
         try (HKeyIterator<WorkflowExecution> keys = new HKeyIterator(
@@ -177,6 +186,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
         }
       }
+
+      log.info("{} Time taken to complete till second query for fetching workflow execution Id: {}, workflow key: {}",
+          DEBUG_LINE, getDuration(startTime), entry.getKey());
     }
     for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
       BarrierInstanceWorkflow workflow = pipeline.getWorkflows().get(index);
@@ -198,6 +210,11 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
         }
       }
+
+      log.info(
+          "{} Time taken to complete till third query for fetching workflow phase execution Id: {}, workflow execution id: {}",
+          DEBUG_LINE, getDuration(startTime), workflow.getWorkflowExecutionId());
+
       if (workflow.getStepExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -215,13 +232,20 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
         }
       }
+
+      log.info(
+          "{} Time taken to complete till fourth query for fetching workflow phase execution Id: {}, workflow execution id: {}",
+          DEBUG_LINE, getDuration(startTime), workflow.getWorkflowExecutionId());
     }
 
     // Update the DB to not need to make the same queries again
     wingsPersistence.merge(barrierInstance);
+    log.info("{} Time taken till first database merge update: {}", DEBUG_LINE, getDuration(startTime));
 
     // Lets construct a barrier
     Forcer forcer = buildForcer(barrierInstance);
+
+    log.info("{} Time taken till building a forcer: {}", DEBUG_LINE, getDuration(startTime));
 
     Barrier barrier = Barrier.builder().id(new BarrierId(barrierInstance.getUuid())).forcer(forcer).build();
     Barrier.State state = barrier.pushDown(this);
@@ -238,8 +262,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         unhandled(state);
     }
 
+    log.info("{} Time taken till completion of pushdown: {}", DEBUG_LINE, getDuration(startTime));
     barrierInstance.setState(state.name());
     wingsPersistence.merge(barrierInstance);
+    log.info("{} Time taken till second database merge update: {}", DEBUG_LINE, getDuration(startTime));
     return barrierInstance;
   }
 
