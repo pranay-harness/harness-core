@@ -99,11 +99,6 @@ message SendTaskProgressRequest {
   TaskResponseData task_response_data = 4;
 }
 
-message TaskResponseData {
-  oneof response_data {
-    bytes kryo_results_data = 1;
-  }
-}
 message SendTaskStatusResponse {
   bool success = 1;
 }

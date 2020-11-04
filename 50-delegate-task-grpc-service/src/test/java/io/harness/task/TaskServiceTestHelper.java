@@ -1,8 +1,11 @@
 package io.harness.task;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.delegate.TaskResponseData;
+import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.KryoSerializer;
@@ -86,6 +89,13 @@ public class TaskServiceTestHelper {
                 .setStepExecutionStatus(io.harness.task.service.StepExecutionStatus.SUCCESS)
                 .setStepOutput(io.harness.task.service.StepMapOutput.newBuilder().putOutput("VAR1", "VALUE1").build())
                 .build())
+        .build();
+  }
+
+  public TaskResponseData getTaskProgressResponseData() {
+    return TaskResponseData.newBuilder()
+        .setKryoResultsData(ByteString.copyFrom(
+            kryoSerializer.asDeflatedBytes(DelegateStringResponseData.builder().data("Test").build())))
         .build();
   }
 

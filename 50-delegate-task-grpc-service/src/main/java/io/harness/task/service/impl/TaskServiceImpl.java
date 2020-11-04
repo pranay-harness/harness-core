@@ -20,6 +20,8 @@ import io.harness.task.service.FetchParkedTaskStatusRequest;
 import io.harness.task.service.FetchParkedTaskStatusResponse;
 import io.harness.task.service.HTTPTaskResponse;
 import io.harness.task.service.JiraTaskResponse;
+import io.harness.task.service.SendTaskProgressRequest;
+import io.harness.task.service.SendTaskProgressResponse;
 import io.harness.task.service.SendTaskStatusRequest;
 import io.harness.task.service.SendTaskStatusResponse;
 import io.harness.task.service.TaskProgressRequest;
@@ -158,6 +160,22 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
 
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing getTaskResults request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void sendTaskProgress(
+      SendTaskProgressRequest request, StreamObserver<SendTaskProgressResponse> responseObserver) {
+    log.info("Received sendTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}", request.getAccountId().getId(),
+        request.getTaskId().getId(), request.getCallbackToken().getToken());
+    try {
+      delegateServiceGrpcLiteClient.sendTaskProgressUpdate(request.getAccountId(), request.getTaskId(),
+          request.getCallbackToken(), request.getTaskResponseData().getKryoResultsData().toByteArray());
+      responseObserver.onNext(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing sendTaskProgress request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

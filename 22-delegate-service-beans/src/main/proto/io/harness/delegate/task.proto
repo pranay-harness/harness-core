@@ -69,3 +69,9 @@ message TaskDetails {
 message TaskSelector {
   string selector = 1;
 }
+
+message TaskResponseData {
+  oneof response_data {
+    bytes kryo_results_data = 1;
+  }
+}

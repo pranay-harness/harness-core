@@ -1,6 +1,7 @@
 package io.harness.task.service.impl;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.SANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
@@ -28,6 +29,8 @@ import io.harness.task.service.ExecuteParkedTaskRequest;
 import io.harness.task.service.ExecuteParkedTaskResponse;
 import io.harness.task.service.FetchParkedTaskStatusRequest;
 import io.harness.task.service.FetchParkedTaskStatusResponse;
+import io.harness.task.service.SendTaskProgressRequest;
+import io.harness.task.service.SendTaskProgressResponse;
 import io.harness.task.service.SendTaskStatusRequest;
 import io.harness.task.service.SendTaskStatusResponse;
 import io.harness.task.service.TaskProgressRequest;
@@ -247,6 +250,43 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
                                    .setTaskId(taskId)
                                    .setCallbackToken(delegateCallbackToken)
                                    .setTaskStatusData(taskServiceTestHelper.getTaskResponseData())
+                                   .build()))
+        .isInstanceOf(io.grpc.StatusRuntimeException.class);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldSendTaskProgressSuccess() {
+    when(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
+             eq(taskServiceTestHelper.getTaskProgressResponseData().getKryoResultsData().toByteArray())))
+        .thenReturn(true);
+    SendTaskProgressResponse sendTaskProgressResponse = taskServiceBlockingStub.sendTaskProgress(
+        SendTaskProgressRequest.newBuilder()
+            .setAccountId(accountId)
+            .setTaskId(taskId)
+            .setCallbackToken(delegateCallbackToken)
+            .setTaskResponseData(taskServiceTestHelper.getTaskProgressResponseData())
+            .build());
+
+    assertThat(sendTaskProgressResponse).isEqualTo(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldSendTaskProgressException() {
+    when(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
+             eq(taskServiceTestHelper.getTaskProgressResponseData().getKryoResultsData().toByteArray())))
+        .thenThrow(new IllegalArgumentException());
+
+    assertThatThrownBy(()
+                           -> taskServiceBlockingStub.sendTaskProgress(
+                               SendTaskProgressRequest.newBuilder()
+                                   .setAccountId(accountId)
+                                   .setTaskId(taskId)
+                                   .setCallbackToken(delegateCallbackToken)
+                                   .setTaskResponseData(taskServiceTestHelper.getTaskProgressResponseData())
                                    .build()))
         .isInstanceOf(io.grpc.StatusRuntimeException.class);
   }
