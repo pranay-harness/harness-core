@@ -68,6 +68,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.quartz.TriggerKey;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -2031,6 +2032,11 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void collectHelmCharts(
       Trigger trigger, Map<String, String> serviceManifestMapping, List<HelmChart> helmCharts) {
+    if (isEmpty(serviceManifestMapping)) {
+      return;
+    }
+    helmCharts.addAll(collectHelmChartsForTemplatizedServices(
+        trigger.getAppId(), trigger.getManifestSelections(), serviceManifestMapping));
     if (isEmpty(trigger.getManifestSelections())) {
       return;
     }
@@ -2046,6 +2052,37 @@ public class TriggerServiceImpl implements TriggerService {
           helmCharts.add(getAlreadyCollectedHelmChartForVersionNumber(
               trigger.getAppId(), manifestSelection.getAppManifestId(), versionNo));
         });
+  }
+
+  private List<HelmChart> collectHelmChartsForTemplatizedServices(
+      String appId, List<ManifestSelection> manifestSelections, Map<String, String> serviceManifestMapping) {
+    List<String> serviceIdsInManifestSelections = isEmpty(manifestSelections)
+        ? new ArrayList<>()
+        : manifestSelections.stream().map(ManifestSelection::getServiceId).collect(toList());
+    List<String> filteredServiceIds = serviceManifestMapping.keySet()
+                                          .stream()
+                                          .filter(serviceId -> !serviceIdsInManifestSelections.contains(serviceId))
+                                          .collect(toList());
+    return filteredServiceIds.stream()
+        .map(serviceId -> getHelmChartByVersionForService(appId, serviceManifestMapping, serviceId))
+        .collect(toList());
+  }
+
+  @NotNull
+  private HelmChart getHelmChartByVersionForService(
+      String appId, Map<String, String> serviceManifestMapping, String serviceId) {
+    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
+    notNullCheck(
+        "Application manifest not present for the service in payload: " + serviceId, applicationManifest, USER);
+    if (!Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      throw new InvalidRequestException("Polling not enabled for service: " + serviceId);
+    }
+    HelmChart helmChart = helmChartService.getManifestByVersionNumber(
+        applicationManifest.getAccountId(), applicationManifest.getUuid(), serviceManifestMapping.get(serviceId));
+    notNullCheck("Helm chart with given version number doesn't exist: " + serviceManifestMapping.get(serviceId)
+            + "for service" + serviceId,
+        helmChart, USER);
+    return helmChart;
   }
 
   private Map<String, String> resolveWorkflowServices(Trigger trigger) {

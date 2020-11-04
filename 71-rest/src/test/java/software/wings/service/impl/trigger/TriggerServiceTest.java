@@ -3391,4 +3391,44 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.triggerExecutionPostManifestCollectionAsync(APP_ID, MANIFEST_ID, asList(helmChart1));
     verify(workflowExecutionService, never()).triggerEnvExecution(eq(APP_ID), anyString(), any(), any());
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateManifestForTemplatizedServiceInWebhook() {
+    Trigger trigger = buildWebhookCondTrigger();
+    trigger.setManifestSelections(asList(ManifestSelection.builder()
+                                             .type(ManifestSelectionType.WEBHOOK_VARIABLE)
+                                             .serviceId(SERVICE_ID)
+                                             .appManifestId(MANIFEST_ID)
+                                             .build()));
+    triggerService.save(trigger);
+
+    when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString()))
+        .thenAnswer(invocationOnMock
+            -> HelmChart.builder()
+                   .uuid(HELM_CHART_ID + invocationOnMock.getArgumentAt(2, String.class))
+                   .version(invocationOnMock.getArgumentAt(2, String.class))
+                   .build());
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .storeType(StoreType.HelmChartRepo)
+                                          .pollForChanges(true)
+                                          .build();
+    appManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
+    when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
+
+    ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
+    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
+        serviceManifestMapping, null, Collections.singletonMap("service", SERVICE_NAME));
+    verify(workflowExecutionService, times(1))
+        .triggerEnvExecution(eq(APP_ID), eq(null), argsArgumentCaptor.capture(), any());
+    verify(helmChartService, times(2)).getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString());
+    verify(applicationManifestService, times(1)).getById(anyString(), anyString());
+    assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
+    assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getVersion))
+        .containsExactlyInAnyOrder("1", "5");
+  }
 }
