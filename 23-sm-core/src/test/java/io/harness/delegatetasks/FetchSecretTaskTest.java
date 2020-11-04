@@ -54,7 +54,7 @@ public class FetchSecretTaskTest extends CategoryTest {
     vaultEncryptorsRegistry = mock(VaultEncryptorsRegistry.class);
     kmsEncryptorsRegistry = mock(KmsEncryptorsRegistry.class);
     customEncryptorsRegistry = mock(CustomEncryptorsRegistry.class);
-    fetchSecretTask = new FetchSecretTask(delegateTaskPackage, notifyResponseData -> {}, () -> true);
+    fetchSecretTask = new FetchSecretTask(delegateTaskPackage, null, notifyResponseData -> {}, () -> true);
     FieldUtils.writeField(fetchSecretTask, "vaultEncryptorsRegistry", vaultEncryptorsRegistry, true);
     FieldUtils.writeField(fetchSecretTask, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(fetchSecretTask, "customEncryptorsRegistry", customEncryptorsRegistry, true);

@@ -45,7 +45,7 @@ public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
                         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                         .build())
               .build(),
-          Functions::doNothing, Functions::staticTruth));
+          null, Functions::doNothing, Functions::staticTruth));
 
   @Test
   @Owner(developers = VUK)

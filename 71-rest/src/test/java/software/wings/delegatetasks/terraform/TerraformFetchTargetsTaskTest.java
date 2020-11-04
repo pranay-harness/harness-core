@@ -27,8 +27,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
           .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
 
           .build(),
-
-      delegateTaskResponse -> {}, () -> true);
+      null, delegateTaskResponse -> {}, () -> true);
   Map<String, Object> parsedContentWithModulesAndResources, getParsedContentWithoutModulesAndResources;
 
   @Before

@@ -56,7 +56,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   @InjectMocks
   private ShellScriptProvisionTask shellScriptProvisionTask =
       (ShellScriptProvisionTask) TaskType.SHELL_SCRIPT_PROVISION_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId("delegateid").data(TaskData.builder().build()).build(),
+          DelegateTaskPackage.builder().delegateId("delegateid").data(TaskData.builder().build()).build(), null,
           notifyResponseData -> {}, () -> true);
 
   @Test

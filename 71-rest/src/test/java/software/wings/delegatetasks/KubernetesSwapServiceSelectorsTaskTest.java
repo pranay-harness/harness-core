@@ -47,7 +47,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
 
               .build(),
-          notifyResponseData -> {}, () -> true);
+          null, notifyResponseData -> {}, () -> true);
 
   private Service createService(String serviceName, Map<String, String> labelSelectors) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);

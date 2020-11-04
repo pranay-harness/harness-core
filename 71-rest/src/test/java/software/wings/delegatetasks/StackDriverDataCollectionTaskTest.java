@@ -119,7 +119,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
                             .build();
 
     dataCollectionTask = new StackDriverDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
     when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     setupFields();
   }
@@ -246,7 +246,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
 
     dataCollectionTask = new StackDriverDataCollectionTask(
         DelegateTaskPackage.builder().delegateTaskId(task.getUuid()).delegateId(delegateId).data(taskData).build(),
-        null, null);
+        null, null, null);
 
     // setup the executor service to run the mock calls.
     DataCollectionExecutorService executorService = new DataCollectionExecutorService();

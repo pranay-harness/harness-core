@@ -31,8 +31,8 @@ import java.io.IOException;
 public class DockerArtifactTaskNGTest extends CategoryTest {
   @Mock DockerArtifactTaskHelper dockerArtifactTaskHelper;
   @InjectMocks
-  private DockerArtifactTaskNG dockerArtifactTaskNG =
-      new DockerArtifactTaskNG(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null);
+  private DockerArtifactTaskNG dockerArtifactTaskNG = new DockerArtifactTaskNG(
+      DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null, null, null);
 
   @Before
   public void setup() {

@@ -45,7 +45,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
               .delegateId(DELEGATE_ID)
               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
-          notifyResponseData -> {}, () -> true);
+          null, notifyResponseData -> {}, () -> true);
   @Before
   public void setUp() throws Exception {
     on(task).set("awsHelperService", mockAwsHelperService);

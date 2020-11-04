@@ -85,7 +85,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
                                      .delegateId(WingsTestConstants.DELEGATE_ID)
                                      .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                      .build(),
-          delegateTaskResponse -> {}, () -> true);
+          null, delegateTaskResponse -> {}, () -> true);
 
   private TerraformProvisionTask terraformProvisionTaskSpy;
 

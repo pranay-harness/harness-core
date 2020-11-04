@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
@@ -31,9 +32,10 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
   private MetricsDataCollector<T> metricsDataCollector;
   @Inject private MetricDataStoreService metricStoreService;
 
-  public MetricsDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public MetricsDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

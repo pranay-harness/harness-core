@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
-
 import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -61,7 +60,7 @@ public class CVNGConnectorValidationDelegateTaskTest extends WingsBaseTest {
                                                               .build()})
                         .build())
               .build(),
-          notifyResponseData -> {}, () -> true);
+          null, notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = KAMAL)

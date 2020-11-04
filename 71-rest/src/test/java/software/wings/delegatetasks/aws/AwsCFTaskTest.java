@@ -33,7 +33,7 @@ public class AwsCFTaskTest extends WingsBaseTest {
           .delegateId("delegateid")
           .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
-      notifyResponseData -> {}, () -> true);
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

@@ -35,7 +35,8 @@ import java.util.Map;
 
 public class EcsCommandTaskTest extends WingsBaseTest {
   private final EcsCommandTask task = new EcsCommandTask(
-      DelegateTaskPackage.builder().data(TaskData.builder().parameters(new Object[2]).build()).build(), null, null);
+      DelegateTaskPackage.builder().data(TaskData.builder().parameters(new Object[2]).build()).build(), null, null,
+      null);
   @Mock private Map<String, EcsCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
 
   @Before

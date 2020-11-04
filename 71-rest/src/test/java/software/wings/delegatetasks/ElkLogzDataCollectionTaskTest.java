@@ -77,7 +77,7 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
                             .build();
 
     dataCollectionTask = new ElkLogzDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
     when(encryptionService.decrypt(any(), any(), eq(false))).thenReturn(null);
     setupFields();
   }

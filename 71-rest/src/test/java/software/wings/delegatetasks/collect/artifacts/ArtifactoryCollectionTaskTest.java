@@ -52,7 +52,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
   @InjectMocks
   private ArtifactoryCollectionTask artifactoryCollectionTask =
       (ArtifactoryCollectionTask) TaskType.ARTIFACTORY_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId("delid1").data(taskData).build(),
+          DelegateTaskPackage.builder().delegateId("delid1").data(taskData).build(), null,
           notifyResponseData -> {}, () -> true);
 
   @Test

@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -26,9 +27,10 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
   @Inject private DockerConnectorToDockerInternalConfigMapper dockerConnectorToDockerInternalConfigMapper;
   @Inject private DockerRegistryService dockerRegistryService;
 
-  public DockerTestConnectionDelegateTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public DockerTestConnectionDelegateTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

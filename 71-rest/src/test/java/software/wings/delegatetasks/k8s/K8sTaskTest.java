@@ -49,7 +49,7 @@ public class K8sTaskTest extends WingsBaseTest {
   private K8sClusterConfig k8sClusterConfig;
 
   @InjectMocks
-  private K8sTask k8sTask = new K8sTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(),
+  private K8sTask k8sTask = new K8sTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(), null,
       mock(Consumer.class), mock(BooleanSupplier.class));
 
   private K8sTaskParameters k8sTaskParameters;

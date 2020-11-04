@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -38,9 +39,9 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
   @Inject private SpotinstTrafficShiftAlbDeployTaskHandler shiftAlbDeployTaskHandler;
   @Inject private SpotinstTrafficShiftAlbSwapRoutesTaskHandler shiftAlbSwapRoutesTaskHandler;
 
-  public SpotInstTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public SpotInstTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

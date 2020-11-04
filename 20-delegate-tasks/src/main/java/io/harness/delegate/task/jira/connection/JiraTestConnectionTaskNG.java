@@ -1,6 +1,7 @@
 package io.harness.delegate.task.jira.connection;
 
 import com.google.inject.Inject;
+
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -8,6 +9,7 @@ import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse.JiraTestConnectionTaskNGResponseBuilder;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.jira.JiraTaskNGHelper;
@@ -23,9 +25,10 @@ import java.util.function.Consumer;
 public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
   @Inject JiraTaskNGHelper jiraTaskNGHelper;
 
-  public JiraTestConnectionTaskNG(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public JiraTestConnectionTaskNG(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override

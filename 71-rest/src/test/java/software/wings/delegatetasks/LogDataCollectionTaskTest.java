@@ -80,7 +80,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
                             .build();
 
     dataCollectionTask = new LogDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
 
     MockitoAnnotations.initMocks(this);
 

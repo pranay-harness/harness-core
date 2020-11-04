@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
@@ -54,9 +55,10 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
   @Inject private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
-  public CloudWatchDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
-    super(delegateTaskPackage, consumer, preExecute);
+  public CloudWatchDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
   @Override
