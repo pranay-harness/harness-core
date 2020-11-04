@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -171,6 +172,15 @@ public class SecretManagerTest extends CategoryTest {
                                     .build();
     secretManager.resetUnchangedEncryptedFields(awsConfig, maskedAwsConfig);
     assertThat(maskedAwsConfig.getSecretKey()).isEqualTo(SECRET_KEY);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testValidateThatSecretManagerSupportsText_invalidSecretManagerId() {
+    expectedEx.expect(InvalidRequestException.class);
+    expectedEx.expectMessage("secretManager with id kmpySmUISimoRrJL6NL73 not valid");
+    secretManager.validateThatSecretManagerSupportsText("accountId", "kmpySmUISimoRrJL6NL73");
   }
 
   @Test
