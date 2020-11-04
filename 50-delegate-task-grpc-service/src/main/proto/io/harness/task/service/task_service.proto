@@ -105,10 +105,22 @@ message SendTaskStatusResponse {
   bool success = 1;
 }
 
+message SendTaskProgressRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  io.harness.delegate.TaskResponseData task_response_data = 4;
+}
+
+message SendTaskProgressResponse {
+  bool success = 1;
+}
+
 service TaskService {
   // resolves JEXL expression with given context
   rpc ExecuteParkedTask(ExecuteParkedTaskRequest) returns (ExecuteParkedTaskResponse);
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
   rpc FetchParkedTaskStatus(FetchParkedTaskStatusRequest) returns (FetchParkedTaskStatusResponse);
   rpc SendTaskStatus(SendTaskStatusRequest) returns (SendTaskStatusResponse);
+  rpc SendTaskProgress(SendTaskProgressRequest) returns (SendTaskProgressResponse);
 }
