@@ -11,6 +11,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_P
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_NAME;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -28,6 +29,9 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskTy
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
@@ -40,9 +44,11 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesSh
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -73,6 +79,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   @Inject private LearningEngineTaskService learningEngineTaskService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private HeatMapService heatMapService;
 
   @Override
   public Map<String, ExecutionStatus> getTaskStatus(List<String> taskIds) {
@@ -220,21 +227,56 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
     analysis.setAnalysisStartTime(startTime);
     analysis.setAnalysisEndTime(endTime);
+
     TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
     TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
 
-    saveRisk(analysis, startTime, endTime, learningEngineTask.getVerificationTaskId());
+    saveRisk(analysis, startTime, endTime, learningEngineTask.getVerificationTaskId(), riskSummary);
     saveShortTermHistory(shortTermHistory);
     saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(cumulativeSums);
-    hPersistence.save(riskSummary);
     log.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
     learningEngineTaskService.markCompleted(taskId);
   }
 
-  private void saveRisk(
-      ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime, String verificationTaskId) {
+  private void saveRisk(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime,
+      String verificationTaskId, TimeSeriesRiskSummary riskSummary) {
+    List<Long> unexpectedClusters = new ArrayList<>();
+    String cvConfigId = verificationTaskService.getCVConfigId(verificationTaskId);
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    Preconditions.checkNotNull(cvConfig, "Config not present for verification task id: {}", verificationTaskId);
+
+    saveRiskForLogClusters(analysis, startTime, endTime, verificationTaskId, unexpectedClusters);
+    updateRiskForLogAnalysisResult(
+        analysis, startTime, endTime, riskSummary, cvConfig, verificationTaskId, unexpectedClusters);
+  }
+
+  private void updateRiskForLogAnalysisResult(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime,
+      Instant endTime, TimeSeriesRiskSummary riskSummary, CVConfig cvConfig, String verificationTaskId,
+      List<Long> unexpectedClusters) {
+    LogAnalysisResult analysisResult = hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
+                                           .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
+                                           .filter(LogAnalysisResultKeys.analysisEndTime, endTime)
+                                           .get();
+    if (isNotEmpty(unexpectedClusters)) {
+      double score = Math.max(analysis.getOverallMetricScores().values().stream().mapToDouble(s -> s).max().orElse(0.0),
+          analysisResult.getOverallRisk());
+      analysisResult.setOverallRisk(score);
+      analysisResult.getLogAnalysisResults().forEach(logAnalysisCluster -> {
+        if (unexpectedClusters.contains(logAnalysisCluster.getLabel())) {
+          logAnalysisCluster.setTag(LogAnalysisTag.UNEXPECTED);
+        }
+      });
+      hPersistence.save(analysisResult);
+      heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+          cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
+          cvConfig.getCategory(), startTime, score);
+    }
+  }
+
+  private void saveRiskForLogClusters(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime,
+      String verificationTaskId, List<Long> unexpectedClusters) {
     List<LogAnalysisCluster> logAnalysisClusters =
         hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
             .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
@@ -242,12 +284,15 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
             .asList();
     Map<Long, LogAnalysisCluster> logAnalysisClusterMap =
         logAnalysisClusters.stream().collect(Collectors.toMap(LogAnalysisCluster::getLabel, cluster -> cluster));
+
     for (Map.Entry<String, Map<String, ServiceGuardTxnMetricAnalysisDataDTO>> txnMetricAnalysis :
         analysis.getTxnMetricAnalysisData().entrySet()) {
       String txnName = txnMetricAnalysis.getKey();
       ServiceGuardTxnMetricAnalysisDataDTO analysisDataDTO = txnMetricAnalysis.getValue().get(TREND_METRIC_NAME);
       LogAnalysisCluster cluster = logAnalysisClusterMap.get(Long.valueOf(txnName));
-
+      if (analysisDataDTO.getRisk() > 0) {
+        unexpectedClusters.add(cluster.getLabel());
+      }
       int index = cluster.getFrequencyTrend().size() - 1;
       while (index >= 0) {
         Frequency frequency = cluster.getFrequencyTrend().get(index);
