@@ -1,5 +1,6 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,17 +11,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeName("kubernetes-direct")
-public class K8sDirectInfraYaml implements Infrastructure {
-  @Builder.Default private Type type = Type.KUBERNETES_DIRECT;
-  private Spec spec;
+@JsonTypeName("useFromStage")
+public class UseFromStageInfraYaml implements Infrastructure {
+  @JsonIgnore @Builder.Default private Type type = Type.USE_FROM_STAGE;
+  private UseFromStage useFromStage;
 
   @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class Spec {
-    private String connectorRef;
-    private String namespace;
+  public static class UseFromStage {
+    private String stage;
   }
 }

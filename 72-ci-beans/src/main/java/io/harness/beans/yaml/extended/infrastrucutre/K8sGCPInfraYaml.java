@@ -1,7 +1,6 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.yaml.core.intfc.Infrastructure;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,8 +14,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @JsonTypeName("kubernetes-gcp")
 public class K8sGCPInfraYaml implements Infrastructure {
-  private String type;
-  private String previousStageIdentifier;
+  @Builder.Default private Type type = Type.KUBERNETES_GCP;
   private Spec spec;
 
   @Data
@@ -24,7 +22,7 @@ public class K8sGCPInfraYaml implements Infrastructure {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Spec {
-    @NotNull private String gcpConnector;
+    @NotNull private String connectorRef;
     @NotNull private String clusterName;
     @NotNull private String namespace;
   }

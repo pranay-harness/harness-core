@@ -8,6 +8,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
@@ -33,8 +34,8 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
       Ambiance ambiance, IntegrationStageStepParameters integrationStageStepParameters, StepInputPackage inputPackage) {
     log.info("Executing deployment stage with params [{}]", integrationStageStepParameters);
     // TODO Only K8 is supported currently
-    if (integrationStageStepParameters.getIntegrationStage().getInfrastructure().getType().equals(
-            "kubernetes-direct")) {
+    if (integrationStageStepParameters.getIntegrationStage().getInfrastructure().getType()
+        == Infrastructure.Type.KUBERNETES_DIRECT) {
       K8sDirectInfraYaml k8sDirectInfraYaml =
           (K8sDirectInfraYaml) integrationStageStepParameters.getIntegrationStage().getInfrastructure();
 
@@ -42,7 +43,7 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
       String stageID = integrationStageStepParameters.getIntegrationStage().getIdentifier();
 
       K8PodDetails k8PodDetails = K8PodDetails.builder()
-                                      .clusterName(k8sDirectInfraYaml.getSpec().getKubernetesCluster())
+                                      .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
                                       .buildNumber(buildNumber)
                                       .stageID(stageID)
                                       .accountId(buildNumber.getAccountIdentifier())

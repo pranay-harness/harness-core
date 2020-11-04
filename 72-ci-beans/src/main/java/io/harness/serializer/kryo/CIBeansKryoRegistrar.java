@@ -48,8 +48,10 @@ import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sGCPInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
@@ -129,5 +131,8 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomVariable.Type.class, 100063);
     kryo.register(DependencyElement.class, 100064);
     kryo.register(CIServiceInfo.class, 100065);
+    kryo.register(UseFromStageInfraYaml.class, 100066);
+    kryo.register(UseFromStageInfraYaml.UseFromStage.class, 100067);
+    kryo.register(Infrastructure.Type.class, 100068);
   }
 }

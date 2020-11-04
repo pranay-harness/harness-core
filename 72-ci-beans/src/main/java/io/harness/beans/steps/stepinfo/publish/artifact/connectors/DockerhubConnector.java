@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class DockerhubConnector implements ArtifactConnector {
-  @NotNull private String connector;
+  @NotNull private String connectorRef;
   @Override
   public Type getType() {
     return Type.DOCKERHUB;

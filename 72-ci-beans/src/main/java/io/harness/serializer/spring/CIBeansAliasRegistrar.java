@@ -27,10 +27,14 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.NexusConnecto
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.S3Connector;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.spring.AliasRegistrar;
@@ -69,6 +73,9 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("container_limit", Container.Limit.class);
     orchestrationElements.put("container_reserve", Container.Reserve.class);
     orchestrationElements.put("k8sDirectInfraYaml", K8sDirectInfraYaml.class);
+    orchestrationElements.put("useFromStageInfraYaml", UseFromStageInfraYaml.class);
+    orchestrationElements.put("useFromStageInfraYaml_useFromStage", UseFromStageInfraYaml.UseFromStage.class);
+    orchestrationElements.put("infrastructure_type", Infrastructure.Type.class);
     orchestrationElements.put("k8BuildJobEnvInfo", K8BuildJobEnvInfo.class);
     orchestrationElements.put("gitConnectorYaml", GitConnectorYaml.class);
     orchestrationElements.put("dockerFileArtifact", DockerFileArtifact.class);
@@ -80,5 +87,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("gcrConnector", GcrConnector.class);
     orchestrationElements.put("nexusConnector", NexusConnector.class);
     orchestrationElements.put("s3Connector", S3Connector.class);
+    orchestrationElements.put("customSecretVariable", CustomSecretVariable.class);
+    orchestrationElements.put("customTextVariable", CustomTextVariable.class);
   }
 }

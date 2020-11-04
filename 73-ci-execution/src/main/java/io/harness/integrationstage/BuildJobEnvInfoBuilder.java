@@ -36,6 +36,7 @@ import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
@@ -64,11 +65,11 @@ public class BuildJobEnvInfoBuilder {
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
       List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
     // TODO Only kubernetes is supported currently
-    if (integrationStage.getInfrastructure().getType().equals("kubernetes-direct")) {
+    if (integrationStage.getInfrastructure().getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, buildNumber))
           .workDir(integrationStage.getWorkingDirectory())
-          .publishStepConnectorIdentifier(getPublishStepConnectorIdentifier(integrationStage))
+          .publishStepConnectorIdentifier(getPublishStepConnectorRefs(integrationStage))
           .build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
@@ -270,7 +271,7 @@ public class BuildJobEnvInfoBuilder {
         .collect(Collectors.toList());
   }
 
-  private Set<String> getPublishStepConnectorIdentifier(IntegrationStage integrationStage) {
+  private Set<String> getPublishStepConnectorRefs(IntegrationStage integrationStage) {
     List<ExecutionWrapper> executionWrappers = integrationStage.getExecution().getSteps();
     if (isEmpty(executionWrappers)) {
       return Collections.emptySet();
@@ -285,7 +286,7 @@ public class BuildJobEnvInfoBuilder {
             if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
               List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
               for (Artifact artifact : publishArtifacts) {
-                String connector = artifact.getConnector().getConnector();
+                String connector = artifact.getConnector().getConnectorRef();
                 set.add(connector);
               }
             }
@@ -296,7 +297,7 @@ public class BuildJobEnvInfoBuilder {
           List<Artifact> publishArtifacts =
               ((PublishStepInfo) ((StepElement) executionSection).getStepSpecType()).getPublishArtifacts();
           for (Artifact artifact : publishArtifacts) {
-            set.add(artifact.getConnector().getConnector());
+            set.add(artifact.getConnector().getConnectorRef());
           }
         }
       }

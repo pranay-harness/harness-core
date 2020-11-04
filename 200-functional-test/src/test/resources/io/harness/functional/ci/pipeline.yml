@@ -11,7 +11,7 @@ pipeline:
           infrastructure:
             type: kubernetes-direct
             spec:
-              kubernetesCluster: account.ciplayground
+              connectorRef: account.ciplayground
               namespace: harness-delegate
           gitConnector:
             type: git
@@ -21,15 +21,6 @@ pipeline:
                 type: ssh
                 sshKey: git-ssh
               repo: "master"
-          container:
-            identifier: harnessimage
-            connector: account.harnessimage
-            imagePath: "harshjain12/harness_build:A"
-            resources:
-              limit:
-                cpu: 1000
-              reserve:
-                cpu: 1000
           execution:
             steps:
               - step:

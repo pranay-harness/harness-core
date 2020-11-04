@@ -6,11 +6,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.Container;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.Connector;
-import io.harness.yaml.core.intfc.Infrastructure;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -39,6 +39,9 @@ public class IntegrationStage implements CIStage {
 
   private boolean runParallel;
   private String skipCondition;
+
+  private boolean skipGitClone;
+  private List<String> sharedPaths;
 
   private Infrastructure infrastructure;
   private Connector gitConnector;
