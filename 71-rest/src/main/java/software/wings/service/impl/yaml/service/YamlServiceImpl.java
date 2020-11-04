@@ -88,6 +88,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import io.harness.annotations.dev.OwnedBy;
@@ -899,7 +900,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * @return
    */
   private void validateYaml(String yamlString) throws ScannerException {
-    Yaml yamlObj = new Yaml();
+    Yaml yamlObj = new Yaml(new SafeConstructor());
 
     // We just load the yaml to see if its well formed.
     LinkedHashMap<String, Object> load = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
