@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.activity.entities.Activity;
@@ -61,6 +62,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly, int page, int size) {
     Activity activity = activityService.get(activityId);
+    Preconditions.checkState(activity != null, "Invalid activityID");
     List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
     Set<String> verificationTaskIds =
         verificationJobInstanceIds.stream()

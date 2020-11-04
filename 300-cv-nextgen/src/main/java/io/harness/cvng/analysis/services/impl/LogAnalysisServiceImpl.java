@@ -272,9 +272,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                      .greaterThanOrEq(startTime)
                                                      .field(LogAnalysisResultKeys.analysisEndTime)
                                                      .lessThan(endTime)
-                                                     .order(Sort.descending(LogAnalysisResultKeys.score))
+                                                     .order(Sort.descending(LogAnalysisResultKeys.overallRisk))
                                                      .asList(new FindOptions().limit(ANALYSIS_RISK_RESULTS_LIMIT));
-    Collections.sort(logAnalysisResults, Comparator.comparingDouble(LogAnalysisResult::getScore));
+    Collections.sort(logAnalysisResults, Comparator.comparingDouble(LogAnalysisResult::getOverallRisk));
     return logAnalysisResults;
   }
 

@@ -54,7 +54,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                              .map(logAnalysisResult
                                  -> AnalysisRisk.builder()
                                         .name(getQueryName(logAnalysisResult.getVerificationTaskId(), cvConfigs))
-                                        .risk((int) (logAnalysisResult.getScore() * 100))
+                                        .risk((int) (logAnalysisResult.getOverallRisk() * 100))
                                         .build())
                              .collect(Collectors.toList()));
     Collections.sort(analysisRisks, Comparator.comparingInt(AnalysisRisk::getRisk));

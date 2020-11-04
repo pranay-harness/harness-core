@@ -46,7 +46,6 @@ public class LogAnalysisDTO {
         .analysisStartTime(analysisStartTime)
         .analysisEndTime(analysisEndTime)
         .accountId(accountId)
-        .score(score)
         .verificationTaskId(verificationTaskId)
         .logAnalysisResults(logAnalysisResults)
         .overallRisk(score)

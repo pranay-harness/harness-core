@@ -328,8 +328,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(firstTask).isNotNull();
     assertThat(firstTask.getStartTime()).isEqualTo(Instant.parse("2020-07-27T10:29:00Z"));
     assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
-    assertThat(firstTask.getValidAfter())
-        .isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(Duration.ofMinutes(5)).toEpochMilli());
+    assertThat(firstTask.getValidAfter()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(Duration.ofMinutes(5)));
   }
 
   @Test
@@ -356,8 +355,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
     assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
-    assertThat(firstTask.getValidAfter())
-        .isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(DATA_COLLECTION_DELAY).toEpochMilli());
+    assertThat(firstTask.getValidAfter()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(DATA_COLLECTION_DELAY));
     assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
 
