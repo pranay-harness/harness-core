@@ -3,6 +3,7 @@ package software.wings.app;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
@@ -174,7 +175,7 @@ public class DelegateQueueTask implements Runnable {
       taskIds.forEach(taskId -> {
         if (taskWaitIds.containsKey(taskId)) {
           String errorMessage = delegateTasks.containsKey(taskId)
-              ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTasks.get(taskId))
+              ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTasks.get(taskId))
               : "Unable to determine proper error as delegate task could not be deserialized.";
           log.info("Marking task as failed - {}: {}", taskId, errorMessage);
 

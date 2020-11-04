@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -85,7 +86,6 @@ import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.time.Clock;
@@ -110,7 +110,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private DelegateService delegateService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
@@ -1541,7 +1540,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     when(delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, uuid)).thenReturn(delegateSelectionLogs);
 
-    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(null, delegateTask);
 
     String expectedErrorMessage =
         String.format(ERROR_MESSAGE, delegateSelectionLog.getDelegateId(), delegateSelectionLog.getDelegateName(),
@@ -1564,7 +1563,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     DelegateTask delegateTask = DelegateTask.builder().uuid(uuid).accountId(accountId).delegateId(delegateId).build();
 
-    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
 
     String expectedErrorMessage = "There were no active delegates to complete the task.";
 
