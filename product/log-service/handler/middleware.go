@@ -24,8 +24,12 @@ func TokenGenerationMiddleware(config config.Config, validateAccount bool) func(
 				}
 			}
 
-			// Get token from header
+			// Try to get token from the header or the URL param
 			inputToken := r.Header.Get(authHeader)
+			if inputToken == "" {
+				inputToken = r.FormValue(authHeader)
+			}
+
 			if inputToken == "" {
 				WriteBadRequest(w, errors.New("no token in header"))
 				return
@@ -54,8 +58,12 @@ func AuthMiddleware(config config.Config) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Get token from header
+			// Try to get token from the header or the URL param
 			inputToken := r.Header.Get(authHeader)
+			if inputToken == "" {
+				inputToken = r.FormValue(authHeader)
+			}
+
 			if inputToken == "" {
 				WriteBadRequest(w, errors.New("no token in header"))
 				return

@@ -33,6 +33,23 @@ func TestTokenGenerationMiddleware_Success(t *testing.T) {
 	assert.Equal(t, writer.Code, 200)
 }
 
+func TestTokenGenerationMiddleware_TokenInURL_Success(t *testing.T) {
+	var config config.Config
+	globalToken := "token"
+	config.Secrets.GlobalToken = globalToken
+	v := url.Values{}
+	v.Add("accountID", "account")
+	v.Add(authHeader, globalToken)
+	header := http.Header{}
+	httpReq := &http.Request{Form: v, Header: header}
+	fn := TokenGenerationMiddleware(config, true)
+	mockHandler := &MockHandler{}
+	handlerFunc := fn(mockHandler)
+	writer := httptest.NewRecorder()
+	handlerFunc.ServeHTTP(writer, httpReq)
+	assert.Equal(t, writer.Code, 200)
+}
+
 func TestTokenGenerationMiddleware_IncorrectToken(t *testing.T) {
 	var config config.Config
 	globalToken := "token"
@@ -91,6 +108,26 @@ func TestAuthMiddleware_Success(t *testing.T) {
 	v.Add("accountID", accountID)
 	v.Add("key", "key")
 	header.Add(authHeader, cookie)
+	httpReq := &http.Request{Form: v, Header: header}
+	fn := AuthMiddleware(config)
+	mockHandler := &MockHandler{}
+	handlerFunc := fn(mockHandler)
+	writer := httptest.NewRecorder()
+	handlerFunc.ServeHTTP(writer, httpReq)
+	assert.Equal(t, writer.Code, 200)
+}
+
+func TestAuthMiddleware_TokenInURL_Success(t *testing.T) {
+	var config config.Config
+	logSecret := "secret"
+	accountID := "account"
+	config.Secrets.LogSecret = logSecret
+	cookie := authcookie.NewSinceNow(accountID, 1*time.Hour, []byte(logSecret))
+	header := http.Header{}
+	v := url.Values{}
+	v.Add("accountID", accountID)
+	v.Add("key", "key")
+	v.Add(authHeader, cookie)
 	httpReq := &http.Request{Form: v, Header: header}
 	fn := AuthMiddleware(config)
 	mockHandler := &MockHandler{}
