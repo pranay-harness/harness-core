@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.reflection.CodeUtils;
 import io.harness.rule.Owner;
 import org.apache.commons.io.IOUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
@@ -51,6 +52,7 @@ public class AnnotationMatcherTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
+  @Ignore("As sonar does not work for bazel ignoring it")
   public void testAllCoverageClasses() throws IOException {
     Set<Class<? extends Object>> redesignClasses = new HashSet<>();
     Reflections reflectionsHarness = new Reflections("io.harness");

@@ -26,7 +26,6 @@ import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.spring.OrchestrationTestSpringAliasRegistrar;
@@ -112,7 +111,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+            .addAll(OrchestrationRegistrars.morphiaConverters)
             .build();
       }
     });

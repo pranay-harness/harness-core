@@ -39,7 +39,6 @@ public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration
 
   private static final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
 
-  @Inject
   public SpringPersistenceConfig(Injector injector, List<Class<? extends Converter>> converters) {
     this.injector = injector;
     this.advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();

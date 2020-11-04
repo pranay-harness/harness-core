@@ -5,9 +5,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.beans.converters.SweepingOutputReadMongoConverter;
-import io.harness.beans.converters.SweepingOutputWriteMongoConverter;
 import io.harness.orchestration.persistence.OrchestrationBasePersistenceConfig;
+import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
+import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.level.LevelReadConverter;
+import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
+import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
 import io.harness.spring.AliasRegistrar;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +25,9 @@ import java.util.Set;
 @EnableMongoRepositories(basePackages = {"io.harness.engine"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "orchestrationMongoTemplate")
 public class OrchestrationPersistenceConfig extends OrchestrationBasePersistenceConfig {
-  private static final List<Class<? extends Converter>> converters =
-      ImmutableList.of(SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class);
+  private static final List<Class<? extends Converter>> converters = ImmutableList.of(
+      SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class, AmbianceReadConverter.class,
+      AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class);
 
   @Inject
   public OrchestrationPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {

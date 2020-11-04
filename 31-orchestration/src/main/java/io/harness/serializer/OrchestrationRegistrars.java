@@ -6,6 +6,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
+import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
 import io.harness.serializer.spring.OrchestrationAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
@@ -40,5 +41,6 @@ public class OrchestrationRegistrars {
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+          .add(AmbianceMorphiaConverter.class)
           .build();
 }

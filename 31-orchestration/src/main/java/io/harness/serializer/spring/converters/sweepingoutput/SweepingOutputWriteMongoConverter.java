@@ -1,4 +1,4 @@
-package io.harness.beans.converters;
+package io.harness.serializer.spring.converters.sweepingoutput;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
