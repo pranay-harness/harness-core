@@ -304,6 +304,16 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     assertThat(multipleBarriersResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  public void shouldExecuteTaskChain() {
+    PlanExecution taskChainResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "task-chain-v1");
+
+    assertThat(taskChainResponse.getStatus()).isEqualTo(SUCCEEDED);
+  }
+
   private String fetchShellScriptLogs(List<NodeExecution> nodeExecutions, String name) {
     NodeExecution nodeExecution =
         nodeExecutions.stream().filter(ne -> name.equals(ne.getNode().getName())).findFirst().orElse(null);
