@@ -71,6 +71,9 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
+import software.wings.beans.LogColor;
+import software.wings.beans.LogHelper;
+import software.wings.beans.LogWeight;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.delegation.TerraformProvisionParameters;
@@ -280,7 +283,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
             code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
-          if (code == 0) {
+          if (code == 0 && !shouldSkipRefresh(parameters)) {
             command = format("terraform refresh -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform refresh -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
@@ -299,7 +302,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           } else if (code == 0 && parameters.getTerraformPlan() != null) {
             // case when we are inheriting the approved  plan
             saveTerraformPlanContentToFile(parameters, scriptDirectory);
-            saveExecutionLog(parameters, "\nUsing approved terraform plan \n", CommandExecutionStatus.RUNNING, INFO);
+            saveExecutionLog(parameters, color("\nUsing approved terraform plan \n", LogColor.Yellow, LogWeight.Bold),
+                CommandExecutionStatus.RUNNING, INFO);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = "terraform apply -input=false tfplan";
@@ -333,7 +337,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
 
-          if (code == 0) {
+          if (code == 0 && !shouldSkipRefresh(parameters)) {
             command = format("terraform refresh -input=false %s %s", targetArgs, varParams);
             commandToLog = format("terraform refresh -input=false %s %s", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
@@ -475,6 +479,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfBackendConfigsFile);
       FileUtils.deleteQuietly(new File(workingDir));
     }
+  }
+
+  private boolean shouldSkipRefresh(TerraformProvisionParameters parameters) {
+    return parameters.getTerraformPlan() != null && parameters.isSkipRefreshBeforeApplyingPlan();
   }
 
   private String collectEnvVarKeys(Map<String, String> envVars) {
@@ -765,6 +773,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .logLine(line)
             .executionResult(commandExecutionStatus)
             .build());
+  }
+
+  private String color(String line, LogColor color, LogWeight logWeight) {
+    return LogHelper.doneColoring(LogHelper.color(line, color, logWeight));
   }
 
   @AllArgsConstructor

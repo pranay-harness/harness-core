@@ -40,6 +40,12 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   private boolean templatized;
   private List<String> workspaces;
 
+  /**
+   * Boolean to indicate if we should skip updating terraform state using refresh command before applying an approved
+   * terraform plan
+   */
+  private boolean skipRefreshBeforeApplyingPlan;
+
   @Override
   public String variableKey() {
     return VARIABLE_KEY;
@@ -54,7 +60,8 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
       String sourceRepoBranch, String commitId, String path, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String description,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      List<NameValuePair> backendConfigs, String repoName, List<NameValuePair> environmentVariables) {
+      List<NameValuePair> backendConfigs, String repoName, List<NameValuePair> environmentVariables,
+      boolean skipRefreshBeforeApplyingPlan) {
     super(name, description, TERRAFORM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
         createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceRepoSettingId(sourceRepoSettingId);
@@ -65,6 +72,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     this.backendConfigs = backendConfigs;
     setRepoName(repoName);
     this.environmentVariables = environmentVariables;
+    this.skipRefreshBeforeApplyingPlan = skipRefreshBeforeApplyingPlan;
   }
 
   /**
@@ -83,12 +91,14 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     private List<NameValuePair.Yaml> backendConfigs;
     private List<NameValuePair.Yaml> environmentVariables;
     private String repoName;
+    private boolean skipRefreshBeforeApplyingPlan;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
         List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
         String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs,
-        String repoName, List<NameValuePair.Yaml> environmentVariables, String commitId) {
+        String repoName, List<NameValuePair.Yaml> environmentVariables, String commitId,
+        boolean skipRefreshBeforeApplyingPlan) {
       super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.sourceRepoBranch = sourceRepoBranch;
@@ -98,6 +108,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
       this.backendConfigs = backendConfigs;
       this.repoName = repoName;
       this.environmentVariables = environmentVariables;
+      this.skipRefreshBeforeApplyingPlan = skipRefreshBeforeApplyingPlan;
     }
   }
 }

@@ -15,6 +15,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
@@ -32,11 +33,13 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -63,6 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
@@ -78,7 +82,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private Map<String, EncryptedDataDetail> encryptedBackendConfigs;
   private Map<String, EncryptedDataDetail> encryptedEnvironmentVariables;
   private EncryptedDataDetail encryptedDataDetail;
-  private List<EncryptedDataDetail> sourceRepoEncryptyonDetails;
+  private List<EncryptedDataDetail> sourceRepoEncryptionDetails;
 
   TerraformProvisionTask terraformProvisionTask =
       new TerraformProvisionTask(DelegateTaskPackage.builder()
@@ -109,8 +113,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     encryptedEnvironmentVariables = new HashMap<>();
     encryptedEnvironmentVariables.put("key", encryptedDataDetail);
 
-    sourceRepoEncryptyonDetails = new ArrayList<>();
-    sourceRepoEncryptyonDetails.add(EncryptedDataDetail.builder().build());
+    sourceRepoEncryptionDetails = new ArrayList<>();
+    sourceRepoEncryptionDetails.add(EncryptedDataDetail.builder().build());
 
     doReturn(GIT_REPO_DIRECTORY).when(gitClientHelper).getRepoDirectory(any(GitOperationContext.class));
 
@@ -173,46 +177,109 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunApply() throws IOException, TimeoutException, InterruptedException {
-    FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
+    setupForApply();
 
     // regular apply
     TerraformProvisionParameters terraformProvisionParameters =
         createTerraformProvisionParameters(false, false, null, TerraformProvisionParameters.TerraformCommandUnit.Apply,
-            TerraformProvisionParameters.TerraformCommand.APPLY, false);
+            TerraformProvisionParameters.TerraformCommand.APPLY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 1);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+  }
 
-    // use approved plan
+  private void setupForApply() throws IOException {
+    FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
+    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
+    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC1_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+
     byte[] terraformPlan = "terraformPlan".getBytes();
-    terraformProvisionParameters = createTerraformProvisionParameters(false, false, terraformPlan,
-        TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformProvisionParameters.TerraformCommand.APPLY,
-        false);
-    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 2);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
+        terraformPlan, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+        TerraformProvisionParameters.TerraformCommand.APPLY, false, false);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform apply", "terraform output");
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+  }
 
+  /**
+   * should skip refresh
+   */
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC2_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+
+    byte[] terraformPlan = "terraformPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
+        terraformPlan, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+        TerraformProvisionParameters.TerraformCommand.APPLY, false, true);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verifyCommandExecuted("terraform init", "terraform workspace", "terraform apply", "terraform output");
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+  }
+
+  /**
+   *  should not skip refresh since not using approved plan
+   */
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC1_testPlanAndExport() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
     // run plan only and execute terraform show command
-    terraformProvisionParameters =
+    byte[] terraformPlan = "terraformPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
         createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Apply,
-            TerraformProvisionParameters.TerraformCommand.APPLY, true);
+            TerraformProvisionParameters.TerraformCommand.APPLY, true, false);
     doReturn(terraformPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
-    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 3);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
     assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformPlan);
+  }
 
-    FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
-    FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
+  /**
+   *  should not skip refresh since not using approved plan
+   */
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC2_testApplyPlanAndExport() throws IOException, TimeoutException, InterruptedException {
+    setupForApply();
+    // run plan only and execute terraform show command
+    byte[] terraformPlan = "terraformPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
+        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+            TerraformProvisionParameters.TerraformCommand.APPLY, true, true);
+    doReturn(terraformPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
+    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformPlan);
   }
 
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testSaveAndGetTerraformPlanFile() throws IOException {
+    String scriptDirectory = "repository/testSaveAndGetTerraformPlanFile";
+    FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
     byte[] planContent = "terraformPlanContent".getBytes();
-    String scriptDirectory = "repository/terraformTest";
     String workspacePath = "workspace";
     TerraformProvisionParameters terraformProvisionParameters =
         TerraformProvisionParameters.builder()
@@ -235,51 +302,149 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testRunDestroy() throws IOException, TimeoutException, InterruptedException {
-    FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
-
-    doReturn(new ByteArrayInputStream(new byte[] {}))
-        .when(delegateFileManager)
-        .downloadByFileId(any(DelegateAgentFileService.FileBucket.class), anyString(), anyString());
+  public void TC1_testRunDestroy() throws IOException, TimeoutException, InterruptedException {
+    setupForDestroyTests();
 
     // regular destroy with no plan exported
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
         TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-        TerraformProvisionParameters.TerraformCommand.DESTROY, false);
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 1);
-
-    // use exported plan
-    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
-    terraformProvisionParameters = createTerraformProvisionParameters(false, false, terraformDestroyPlan,
-        TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-        TerraformProvisionParameters.TerraformCommand.DESTROY, false);
-    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 2);
-
-    // run destroy plan only
-    terraformProvisionParameters =
-        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-            TerraformProvisionParameters.TerraformCommand.DESTROY, true);
-    doReturn(terraformDestroyPlan)
-        .when(terraformProvisionTaskSpy)
-        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
-    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 3);
-    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform destroy");
 
     FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
     FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
   }
 
+  /**
+   * Should not skip refresh even because not using approved plan
+   */
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void TC2_testRunDestroy() throws IOException, TimeoutException, InterruptedException {
+    setupForDestroyTests();
+
+    // regular destroy with no plan exported
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
+        TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false, true);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform destroy");
+
+    FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
+    FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
+  }
+
+  private void setupForDestroyTests() throws IOException {
+    setupForApply();
+
+    doReturn(new ByteArrayInputStream(new byte[] {}))
+        .when(delegateFileManager)
+        .downloadByFileId(any(DelegateAgentFileService.FileBucket.class), anyString(), anyString());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC1_destroyUsingPlan() throws InterruptedException, TimeoutException, IOException {
+    setupForDestroyTests();
+
+    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
+        terraformDestroyPlan, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false, false);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform apply");
+
+    FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
+    FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
+  }
+
+  /**
+   * Skip Terraform Refresh when using approved plan
+   */
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC2_destroyUsingPlan() throws InterruptedException, TimeoutException, IOException {
+    setupForDestroyTests();
+
+    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
+        terraformDestroyPlan, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false, true);
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyCommandExecuted("terraform init", "terraform workspace", "terraform apply");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC1_destroyRunPlanOnly() throws InterruptedException, TimeoutException, IOException {
+    setupForDestroyTests();
+
+    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
+        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+            TerraformProvisionParameters.TerraformCommand.DESTROY, true, false);
+    doReturn(terraformDestroyPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
+  }
+
+  /**
+   * Should not skip refresh even because not using approved plan
+   */
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void TC2_destroyRunPlanOnly() throws InterruptedException, TimeoutException, IOException {
+    setupForDestroyTests();
+
+    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
+        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+            TerraformProvisionParameters.TerraformCommand.DESTROY, true, true);
+    doReturn(terraformDestroyPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
+    verifyCommandExecuted(
+        "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
+  }
+
+  private void verifyCommandExecuted(String... commands) throws IOException, InterruptedException, TimeoutException {
+    ArgumentCaptor<String> listCaptor = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(terraformProvisionTaskSpy, atLeastOnce())
+        .executeShellCommand(
+            listCaptor.capture(), anyString(), any(TerraformProvisionParameters.class), any(Map.class), any());
+    assertThat(listCaptor.getAllValues()
+                   .stream()
+                   .map(s -> "terraform " + s.split("terraform")[1])
+                   .map(s -> s.split("\\s+"))
+                   .map(s -> s[0] + " " + s[1])
+                   .collect(Collectors.toList()))
+        .containsExactly(commands);
+  }
+
   private void verify(
-      TerraformExecutionData terraformExecutionData, TerraformProvisionParameters.TerraformCommand command, int i) {
-    Mockito.verify(mockEncryptionService, times(i)).decrypt(gitConfig, sourceRepoEncryptyonDetails, false);
-    Mockito.verify(gitClient, times(i)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
-    Mockito.verify(gitClientHelper, times(i)).getRepoDirectory(any(GitOperationContext.class));
-    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? i : i * 2;
+      TerraformExecutionData terraformExecutionData, TerraformProvisionParameters.TerraformCommand command) {
+    Mockito.verify(mockEncryptionService, times(1)).decrypt(gitConfig, sourceRepoEncryptionDetails, false);
+    Mockito.verify(gitClient, times(1)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
+    Mockito.verify(gitClientHelper, times(1)).getRepoDirectory(any(GitOperationContext.class));
+    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? 1 : 2;
     Mockito.verify(delegateFileManager, times(uploadTimes)).upload(any(DelegateFile.class), any(InputStream.class));
     assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
     assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
@@ -292,7 +457,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
       boolean exportPlanToApplyStep, byte[] terraformPlan,
       TerraformProvisionParameters.TerraformCommandUnit commandUnit,
-      TerraformProvisionParameters.TerraformCommand command, boolean saveTerraformJson) {
+      TerraformProvisionParameters.TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh) {
     Map<String, String> backendConfigs = new HashMap<>();
     backendConfigs.put("var1", "value1");
 
@@ -307,7 +472,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     return TerraformProvisionParameters.builder()
         .sourceRepo(gitConfig)
         .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
-        .sourceRepoEncryptionDetails(sourceRepoEncryptyonDetails)
+        .sourceRepoEncryptionDetails(sourceRepoEncryptionDetails)
         .scriptPath("scriptPath")
         .command(command)
         .commandUnit(commandUnit)
@@ -324,6 +489,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .encryptedEnvironmentVariables(encryptedEnvironmentVariables)
         .tfVarFiles(tfVarFiles)
         .saveTerraformJson(saveTerraformJson)
+        .skipRefreshBeforeApplyingPlan(skipRefresh)
         .build();
   }
 
@@ -331,8 +497,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testSaveAndGetTerraformPlanFileWorkspaceEmpty() throws IOException {
+    String scriptDirectory = "repository/testSaveAndGetTerraformPlanFileWorkspaceEmpty";
+    FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
     byte[] planContent = "terraformPlanContent".getBytes();
-    String scriptDirectory = "repository/terraformTest";
     TerraformProvisionParameters terraformProvisionParameters =
         TerraformProvisionParameters.builder()
             .terraformPlan(planContent)

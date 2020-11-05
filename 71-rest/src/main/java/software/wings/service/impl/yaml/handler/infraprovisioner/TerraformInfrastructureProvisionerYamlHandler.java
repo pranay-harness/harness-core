@@ -60,6 +60,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     if (isNotEmpty(bean.getEnvironmentVariables())) {
       yaml.setEnvironmentVariables(getSortedNameValuePairYamlList(bean.getEnvironmentVariables(), bean.getAppId()));
     }
+    yaml.setSkipRefreshBeforeApplyingPlan(bean.isSkipRefreshBeforeApplyingPlan());
     return yaml;
   }
 
@@ -111,6 +112,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
     bean.setCommitId(yaml.getCommitId());
     bean.setRepoName(yaml.getRepoName());
+    bean.setSkipRefreshBeforeApplyingPlan(yaml.isSkipRefreshBeforeApplyingPlan());
 
     if (isNotEmpty(yaml.getBackendConfigs())) {
       bean.setBackendConfigs(getNameValuePairList(yaml.getBackendConfigs()));

@@ -69,6 +69,12 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final byte[] terraformPlan;
   private final boolean saveTerraformJson;
 
+  /**
+   * Boolean to indicate if we should skip updating terraform state using refresh command before applying an approved
+   * terraform plan
+   */
+  private boolean skipRefreshBeforeApplyingPlan;
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> capabilities =
