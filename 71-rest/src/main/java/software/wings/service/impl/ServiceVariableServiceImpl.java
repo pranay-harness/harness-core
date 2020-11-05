@@ -365,9 +365,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .filter(ServiceVariableKeys.appId, appId)
-                                .filter(ServiceVariableKeys.templateId, serviceTemplateId));
+    List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
+                                                 .filter(ServiceVariableKeys.appId, appId)
+                                                 .filter(ServiceVariableKeys.templateId, serviceTemplateId)
+                                                 .asList();
+    deleteServiceVariables(appId, serviceVariables);
   }
 
   @Override
@@ -376,11 +378,20 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
                                                  .filter(ServiceVariableKeys.appId, appId)
                                                  .filter(ServiceVariableKeys.entityId, entityId)
                                                  .asList();
+    deleteServiceVariables(appId, serviceVariables);
+  }
+
+  private void deleteServiceVariables(String appId, List<ServiceVariable> serviceVariables) {
     for (ServiceVariable serviceVariable : serviceVariables) {
       if (wingsPersistence.delete(serviceVariable)) {
         auditServiceHelper.reportDeleteForAuditing(appId, serviceVariable);
       }
     }
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    pruneByService(appId, envId);
   }
 
   private void processEncryptedServiceVariable(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable) {

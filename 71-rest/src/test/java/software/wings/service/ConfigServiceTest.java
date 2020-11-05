@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
@@ -12,11 +13,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,8 +31,10 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.PARENT;
+import static software.wings.utils.WingsTestConstants.PATH;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import com.google.inject.Inject;
 
@@ -54,6 +62,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.Event;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
@@ -64,6 +73,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +100,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private ConfigFileAuthHandler configFileAuthHandler;
   @Mock private AppService appService;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks private EntityVersionService entityVersionService;
   @Inject @InjectMocks private ConfigService configService;
@@ -463,5 +474,57 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setName("Name00");
 
     return configFile;
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldPruneByEnvironment() {
+    configFileDeletionSetup(ENV_ID);
+
+    configService.pruneByEnvironment(APP_ID, ENV_ID);
+    verify(wingsPersistence, times(2)).delete(query);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            eq(ACCOUNT_ID), any(ConfigFile.class), isNull(), eq(Event.Type.DELETE), eq(false), eq(false));
+    verify(wingsPersistence, times(2)).save(any(EncryptedData.class));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldPruneByService() {
+    configFileDeletionSetup(SERVICE_ID);
+
+    configService.pruneByService(APP_ID, SERVICE_ID);
+    verify(wingsPersistence, times(2)).delete(query);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            eq(ACCOUNT_ID), any(ConfigFile.class), isNull(), eq(Event.Type.DELETE), eq(false), eq(false));
+    verify(wingsPersistence, times(2)).save(any(EncryptedData.class));
+  }
+
+  private void configFileDeletionSetup(String entityId) {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    ConfigFile encryptedConfigFile = createConfigFile("path", "uuid");
+
+    PageResponse<ConfigFile> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(configFile, encryptedConfigFile));
+    pageResponse.setTotal(2L);
+
+    PageRequest<ConfigFile> pageRequest = aPageRequest()
+                                              .addFilter("appId", Operator.EQ, APP_ID)
+                                              .addFilter("templateId", Operator.EQ, DEFAULT_TEMPLATE_ID)
+                                              .addFilter("entityId", Operator.EQ, entityId)
+                                              .build();
+
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    when(query.filter(ConfigFile.APP_ID_KEY, APP_ID)).thenReturn(query);
+    when(query.filter(eq(ID_KEY), anyString())).thenReturn(query);
+    when(query.get()).thenReturn(encryptedConfigFile);
+    when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    when(wingsPersistence.get(EncryptedData.class, encryptedConfigFile.getEncryptedFileId()))
+        .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
   }
 }

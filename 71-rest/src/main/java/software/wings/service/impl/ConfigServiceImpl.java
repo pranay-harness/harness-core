@@ -88,7 +88,6 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private SecretManager secretManager;
   @Inject private ActivityService activityService;
   @Inject private YamlPushService yamlPushService;
-  @Inject private AuditServiceHelper auditServiceHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -566,11 +565,13 @@ public class ConfigServiceImpl implements ConfigService {
   public void pruneByService(String appId, String entityId) {
     List<ConfigFile> configFiles = getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, entityId);
     if (configFiles != null) {
-      configFiles.forEach(configFile -> {
-        delete(appId, configFile.getUuid());
-        auditServiceHelper.reportDeleteForAuditing(appId, configFile);
-      });
+      configFiles.forEach(configFile -> { delete(appId, configFile.getUuid()); });
     }
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    pruneByService(appId, envId);
   }
 
   @Override

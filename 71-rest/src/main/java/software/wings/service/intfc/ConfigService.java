@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.service.intfc.ownership.OwnedByService;
 
@@ -24,7 +25,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 4/25/16.
  */
 @OwnedBy(CDC)
-public interface ConfigService extends OwnedByService, OwnedByHost {
+public interface ConfigService extends OwnedByService, OwnedByHost, OwnedByEnvironment {
   /**
    * List.
    *

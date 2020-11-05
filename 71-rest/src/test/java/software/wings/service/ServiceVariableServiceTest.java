@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -522,17 +524,21 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
+    deleteByEntityIdSetup();
+
+    serviceVariableService.pruneByService(APP_ID, "ENTITY_ID");
+    verify(wingsPersistence, times(2)).delete(any(ServiceVariable.class));
+  }
+
+  private void deleteByEntityIdSetup() {
     AuditServiceHelper auditServiceHelper = mock(AuditServiceHelper.class);
     doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
 
-    List<ServiceVariable> serviceVariables = asList(SERVICE_VARIABLE);
+    List<ServiceVariable> serviceVariables = asList(SERVICE_VARIABLE, ENCRYPTED_SERVICE_VARIABLE);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(query.filter(anyString(), any())).thenReturn(query);
     when(query.asList()).thenReturn(serviceVariables);
     when(wingsPersistence.delete(any(ServiceVariable.class))).thenReturn(true);
-
-    serviceVariableService.pruneByService(APP_ID, "ENTITY_ID");
-    verify(wingsPersistence, times(1)).delete(any(ServiceVariable.class));
   }
 
   /**
@@ -601,5 +607,16 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setUuid(SERVICE_VARIABLE_ID);
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.save(variable, false);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldPruneByEnvironment() {
+    deleteByEntityIdSetup();
+
+    serviceVariableService.pruneByEnvironment(APP_ID, ENV_ID);
+    verify(wingsPersistence, times(2)).delete(any(ServiceVariable.class));
+    verify(auditServiceHelper, times(2)).reportDeleteForAuditing(eq(APP_ID), any(ServiceVariable.class));
   }
 }

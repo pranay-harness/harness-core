@@ -453,9 +453,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldPruneDescendingObjects() {
     environmentService.pruneDescendingEntities(APP_ID, ENV_ID);
 
-    InOrder inOrder =
-        inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
+    InOrder inOrder = inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService,
+        workflowService, serviceVariableService, configService);
+    inOrder.verify(configService).pruneByEnvironment(APP_ID, ENV_ID);
     inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
+    inOrder.verify(serviceVariableService).pruneByEnvironment(APP_ID, ENV_ID);
   }
 
   @Test
