@@ -531,8 +531,34 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public Build getBuild(QueueReference queueReference, JenkinsConfig jenkinsConfig) throws IOException {
+    log.info("Retrieving queued item for job URL {}", queueReference.getQueueItemUrlPart());
+
     QueueItem queueItem = jenkinsServer.getQueueItem(queueReference);
     String buildUrl = null;
+
+    if (queueItem == null) {
+      log.info("Queue item value is null");
+      return null;
+    } else if (queueItem.getExecutable() == null) {
+      log.info("Executable value is null");
+      return null;
+    } else if (queueItem.getTask() == null) {
+      log.info("Task value is null");
+      return null;
+    } else {
+      log.info("Queued item {} returned successfully", queueItem);
+      log.info("Executable value {}", queueItem.getExecutable());
+      log.info("Task value {}", queueItem.getTask());
+    }
+
+    log.info("Executable number is {}", queueItem.getExecutable().getNumber());
+    log.info("Executable URL is {}", queueItem.getExecutable().getUrl());
+
+    log.info("Task URL is {}", queueItem.getTask().getUrl());
+    log.info("Task name is {}", queueItem.getTask().getName());
+
+    log.info("Queue item URL is {}", queueItem.getUrl());
+    log.info("Queue item ID is {}", queueItem.getId());
 
     if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
       buildUrl = getBuildUrl(jenkinsConfig.getJenkinsUrl(), getJobPathFromJenkinsJobUrl(queueItem.getTask().getUrl()),
@@ -541,14 +567,14 @@ public class JenkinsImpl implements Jenkins {
       configureExecutable(queueItem, buildUrl);
     }
 
-    if (queueItem == null || queueItem.getExecutable() == null) {
-      return null;
-    }
     Build build = jenkinsServer.getBuild(queueItem);
 
     if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
+      log.info("Retrieving build with URL {}", buildUrl);
       return createBuild(build, buildUrl);
     }
+
+    log.info("Retrieving build with URL {}", build.getUrl());
     return build;
   }
 

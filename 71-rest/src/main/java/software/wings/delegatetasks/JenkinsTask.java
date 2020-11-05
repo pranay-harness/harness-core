@@ -373,7 +373,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       Jenkins jenkins, QueueReference queueReference, JenkinsConfig jenkinsConfig) {
     Build jenkinsBuild = null;
     do {
-      log.info("Waiting for job {} to start execution", queueReference);
+      log.info(
+          "Waiting for job {} to start execution with URL {}", queueReference, queueReference.getQueueItemUrlPart());
       sleep(Duration.ofSeconds(1));
       try {
         jenkinsBuild = jenkins.getBuild(queueReference, jenkinsConfig);
