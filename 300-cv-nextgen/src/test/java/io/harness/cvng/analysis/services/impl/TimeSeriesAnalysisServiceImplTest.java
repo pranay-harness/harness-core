@@ -433,8 +433,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   public void testScheduleCanaryVerificationTaskAnalysis() {
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(VerificationJobType.CANARY);
     cvConfigService.save(newCVConfig());
-    String verificationTaskId =
-        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(10, ChronoUnit.MINUTES))
@@ -721,7 +719,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
     }
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
     return verificationJobInstance;
   }
   private void fillCommon(LearningEngineTask learningEngineTask, LearningEngineTaskType analysisType) {

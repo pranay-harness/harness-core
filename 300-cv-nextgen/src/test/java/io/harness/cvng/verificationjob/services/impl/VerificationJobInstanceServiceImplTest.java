@@ -55,8 +55,8 @@ import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -369,20 +369,21 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).isEmpty();
-    ProgressLog progressLog = ProgressLog.builder()
-                                  .startTime(verificationJobInstance.getStartTime())
-                                  .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
-                                  .analysisStatus(AnalysisStatus.SUCCESS)
-                                  .log("time series analysis done")
-                                  .build();
+    AnalysisProgressLog progressLog = AnalysisProgressLog.builder()
+                                          .startTime(verificationJobInstance.getStartTime())
+                                          .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
+                                          .analysisStatus(AnalysisStatus.SUCCESS)
+                                          .log("time series analysis done")
+                                          .build();
     verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
-    assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(0)).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(verificationJobInstance.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
 
     assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
-    progressLog = ProgressLog.builder()
+    progressLog = AnalysisProgressLog.builder()
                       .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
                       .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
@@ -391,10 +392,11 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(2);
-    assertThat(verificationJobInstance.getProgressLogs().get(1).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(1)).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
 
-    progressLog = ProgressLog.builder()
+    progressLog = AnalysisProgressLog.builder()
                       .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
                       .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
@@ -403,7 +405,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(3);
-    assertThat(verificationJobInstance.getProgressLogs().get(2).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(2)).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -416,15 +419,16 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).isEmpty();
-    ProgressLog progressLog = ProgressLog.builder()
-                                  .startTime(verificationJobInstance.getStartTime())
-                                  .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
-                                  .analysisStatus(AnalysisStatus.FAILED)
-                                  .build();
+    AnalysisProgressLog progressLog = AnalysisProgressLog.builder()
+                                          .startTime(verificationJobInstance.getStartTime())
+                                          .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
+                                          .analysisStatus(AnalysisStatus.FAILED)
+                                          .build();
     verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
-    assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.FAILED);
+    assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(0)).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.FAILED);
     assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
@@ -542,7 +546,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     VerificationJobInstance prodVerificationJobInstance =
         createVerificationJobInstance("prodVerificationJobInstance", "prod");
     verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
-        ProgressLog.builder()
+        AnalysisProgressLog.builder()
             .analysisStatus(AnalysisStatus.FAILED)
             .startTime(prodVerificationJobInstance.getStartTime())
             .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
@@ -588,7 +592,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     VerificationJobInstance prodVerificationJobInstance =
         createVerificationJobInstance("prodVerificationJobInstance", "prod", ExecutionStatus.RUNNING, CANARY);
     verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
-        ProgressLog.builder()
+        AnalysisProgressLog.builder()
             .analysisStatus(AnalysisStatus.SUCCESS)
             .startTime(prodVerificationJobInstance.getStartTime())
             .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))

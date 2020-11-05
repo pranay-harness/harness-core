@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.cvng.core.entities.DeploymentDataCollectionTask.MAX_RETRY_COUNT;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
@@ -43,6 +45,15 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
+import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -69,6 +80,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
   @Mock private Clock clock;
+  @Inject private VerificationJobService verificationJobService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
 
   private String cvConfigId;
   private String accountId;
@@ -398,6 +411,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testUpdateTaskStatus_deploymentDataCollectionDontRetryIfRetryCountExceeds() {
     Exception exception = new RuntimeException("exception msg");
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
     DataCollectionTask dataCollectionTask = createAndSave(QUEUED, Type.DEPLOYMENT);
     DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
                                           .status(DataCollectionExecutionStatus.FAILED)
@@ -421,6 +435,49 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(updated.getRetryCount()).isEqualTo(maxRetry);
     assertThat(updated.getException()).isEqualTo(exception.getMessage());
     assertThat(updated.getStacktrace()).isEqualTo(ExceptionUtils.getStackTrace(exception));
+
+    VerificationJobInstance jobInstanceWithProgressLog =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(jobInstanceWithProgressLog.getProgressLogs()).hasSize(1);
+    assertThat(jobInstanceWithProgressLog.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
+        .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
+                       .executionStatus(DataCollectionExecutionStatus.FAILED)
+                       .startTime(dataCollectionTask.getStartTime())
+                       .endTime(dataCollectionTask.getEndTime())
+                       .log("Data collection failed with exception: exception msg")
+                       .isFinalState(false)
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_deploymentSuccessful() {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    DataCollectionTask dataCollectionTask = createAndSave(QUEUED, Type.DEPLOYMENT);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(SUCCESS);
+    assertThat(updated.getRetryCount()).isEqualTo(0);
+    assertThat(updated.getException()).isNull();
+    assertThat(updated.getStacktrace()).isNull();
+    VerificationJobInstance jobInstanceWithProgressLog =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(jobInstanceWithProgressLog.getProgressLogs()).hasSize(1);
+    assertThat(jobInstanceWithProgressLog.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
+        .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
+                       .executionStatus(SUCCESS)
+                       .startTime(dataCollectionTask.getStartTime())
+                       .endTime(dataCollectionTask.getEndTime())
+                       .log("Data collection task successful")
+                       .isFinalState(false)
+                       .build());
   }
 
   @Test
@@ -643,5 +700,41 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setGroupId(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
+  }
+
+  private VerificationJobInstance createVerificationJobInstance() {
+    VerificationJobDTO verificationJobDTO = newVerificationJobDTO();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .accountId(accountId)
+            .executionStatus(ExecutionStatus.QUEUED)
+            .verificationJobIdentifier(verificationJob.getIdentifier())
+            .deploymentStartTime(Instant.ofEpochMilli(clock.millis()))
+            .resolvedJob(verificationJob)
+            .startTime(Instant.ofEpochMilli(clock.millis() + Duration.ofMinutes(2).toMillis()))
+            .build();
+
+    verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
+
+    verificationJobInstanceService.create(verificationJobInstance);
+    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    return verificationJobInstance;
+  }
+  private VerificationJobDTO newVerificationJobDTO() {
+    TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
+    testVerificationJob.setIdentifier(generateUuid());
+    testVerificationJob.setJobName(generateUuid());
+    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    testVerificationJob.setServiceIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(generateUuid());
+    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setEnvIdentifier(generateUuid());
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setDuration("15m");
+    testVerificationJob.setBaselineVerificationJobInstanceId(generateUuid());
+    return testVerificationJob;
   }
 }

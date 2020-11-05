@@ -16,7 +16,7 @@ public interface VerificationJobInstanceService {
   String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO);
   String create(VerificationJobInstance verificationJobInstance);
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
-  VerificationJobInstanceDTO get(String verificationTaskId);
+  VerificationJobInstanceDTO get(String verificationJobInstanceId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
   VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
   void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);

@@ -68,10 +68,16 @@ public class AppdynamicsTest extends WingsBaseTest {
   private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  @ClassRule
-  public static final HoverflyRule rule =
-      HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
-
+  @ClassRule public static HoverflyRule rule;
+  static {
+    try {
+      rule = HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
+    } catch (Exception e) {
+      // This is rarely failing in CI with port conflict exception. So retrying one more time.
+      // If you still face this issue in your PR's please notify me(kamal).
+      rule = HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
+    }
+  }
   @Before
   public void setup() throws IllegalAccessException {
     initMocks(this);

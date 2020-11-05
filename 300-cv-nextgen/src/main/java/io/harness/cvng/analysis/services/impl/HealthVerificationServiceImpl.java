@@ -76,7 +76,7 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
         verificationJobInstanceService.getVerificationJobInstance(task.getVerificationJobInstanceId());
     Preconditions.checkNotNull(jobInstance);
     verificationJobInstanceService.logProgress(jobInstance.getUuid(),
-        VerificationJobInstance.ProgressLog.builder()
+        VerificationJobInstance.AnalysisProgressLog.builder()
             .analysisStatus(status)
             .startTime(jobInstance.getPreActivityVerificationStartTime())
             .endTime(latestTimeOfAnalysis)

@@ -35,6 +35,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
+    checkIfVerificationTaskAlreadyExists(accountId, cvConfigId, verificationJobInstanceId);
     VerificationTask verificationTask =
         VerificationTask.builder()
             .accountId(accountId)
@@ -44,6 +45,18 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
             .build();
     hPersistence.save(verificationTask);
     return verificationTask.getUuid();
+  }
+
+  private void checkIfVerificationTaskAlreadyExists(
+      String accountId, String cvConfigId, String verificationJobInstanceId) {
+    Preconditions.checkState(hPersistence.createQuery(VerificationTask.class)
+                                 .filter(VerificationTaskKeys.accountId, accountId)
+                                 .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+                                 .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+                                 .get()
+            == null,
+        "VerificationTask already exist for accountId %s, cvConfigId %s, verificationJobInstance %s", accountId,
+        cvConfigId, verificationJobInstanceId);
   }
 
   @Override

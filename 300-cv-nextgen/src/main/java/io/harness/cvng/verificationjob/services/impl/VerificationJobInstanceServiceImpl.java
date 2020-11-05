@@ -41,7 +41,6 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
@@ -215,10 +214,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
         hPersistence.createUpdateOperations(VerificationJobInstance.class)
             .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
-    if ((progressLog.getEndTime().equals(verificationJobInstance.getEndTime()) && progressLog.isFinalState())
-        || AnalysisStatus.getFailedStatuses().contains(progressLog.getAnalysisStatus())) {
-      verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus,
-          AnalysisStatus.mapToVerificationJobExecutionStatus(progressLog.getAnalysisStatus()));
+    if (progressLog.shouldUpdateJobStatus(verificationJobInstance)) {
+      verificationJobInstanceUpdateOperations.set(
+          VerificationJobInstanceKeys.executionStatus, progressLog.getVerificationJobExecutionStatus());
     }
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
