@@ -6,6 +6,7 @@ package software.wings.service;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -395,5 +396,14 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(triggerService).pruneByApplication(APP_ID);
     inOrder.verify(workflowService).pruneByApplication(APP_ID);
     inOrder.verify(templateService).pruneByApplication(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnNullIfAppIsNotFoundById() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
+    String accountIdByAppId = appService.getAccountIdByAppId(APP_ID);
+    assertThat(accountIdByAppId).isNull();
   }
 }
