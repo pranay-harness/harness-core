@@ -1,8 +1,10 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.executionplan.CIExecutionPlanTestHelper.GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.HARSH;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,7 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.ci.pod.ConnectorDetails;
 import software.wings.beans.ci.pod.SecretVariableDetails;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
@@ -72,7 +73,8 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
             Response.success(ResponseDTO.newResponse(Optional.of(ciExecutionPlanTestHelper.getDockerConnectorDTO()))));
 
     when(delegateGrpcClientWrapper.executeSyncTask(any())).thenReturn(K8sTaskExecutionResponse.builder().build());
-    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ConnectorDetails.builder().build());
+    when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
+        .thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     when(secretVariableUtils.getSecretVariableDetails(any(), any()))
         .thenReturn(SecretVariableDetails.builder().build());
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
@@ -84,7 +86,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
             K8PodDetails.builder().clusterName("cluster").namespace("namespace").buildNumber(buildNumber).build());
 
     buildSetupUtils.executeCILiteEngineTask(
-        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), ambiance);
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance);
 
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
     verify(logServiceUtils, times(1)).getLogServiceConfig();

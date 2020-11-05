@@ -2,7 +2,7 @@ package io.harness.integrationstage;
 
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
-import static io.harness.common.CIExecutionConstants.HOME_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
@@ -65,6 +65,9 @@ public class BuildJobEnvInfoBuilder {
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
       List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
     // TODO Only kubernetes is supported currently
+    if (integrationStage.getInfrastructure() == null) {
+      throw new IllegalArgumentException("Input infrastructure is not set");
+    }
     if (integrationStage.getInfrastructure().getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, buildNumber))
@@ -187,7 +190,7 @@ public class BuildJobEnvInfoBuilder {
     if (!isEmpty(runStepInfo.getEnvironment())) {
       stepEnvVars.putAll(runStepInfo.getEnvironment());
     }
-    stepEnvVars.put(HOME_VARIABLE, workingDir);
+    stepEnvVars.put(HARNESS_WORKSPACE, workingDir);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
@@ -224,7 +227,7 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
-    envVarMap.put(HOME_VARIABLE, workingDir);
+    envVarMap.put(HARNESS_WORKSPACE, workingDir);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);

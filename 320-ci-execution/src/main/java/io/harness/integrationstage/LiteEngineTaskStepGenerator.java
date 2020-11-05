@@ -8,23 +8,24 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 @Singleton
 public class LiteEngineTaskStepGenerator {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
   @Inject private BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
 
-  LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElement executionElement, String branchName,
-      String gitConnectorIdentifier, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
-      String buildNumber, Integer liteEngineCounter, boolean usePVC, String accountId) {
+  LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElement executionElement, CodeBase ciCodebase,
+      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, String buildNumber, Integer liteEngineCounter,
+      boolean usePVC, String accountId) {
     boolean isFirstPod = isFirstPod(liteEngineCounter);
     BuildJobEnvInfo buildJobEnvInfo = buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
         integrationStage, ciExecutionArgs, executionElement.getSteps(), isFirstPod, buildNumber);
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
-          .gitConnectorIdentifier(gitConnectorIdentifier)
-          .branchName(branchName)
+          .ciCodebase(ciCodebase)
+          .skipGitClone(integrationStage.isSkipGitClone())
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
           .steps(executionElement)

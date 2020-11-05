@@ -5,9 +5,16 @@ import io.harness.beans.InputSetValidator;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.beans.ParameterField;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.yaml.core.*;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.ParallelStageElement;
+import io.harness.yaml.core.ParallelStepElement;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.extended.ci.codebase.CodeBaseType;
+import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 public class YamlKryoRegistrar implements KryoRegistrar {
   @Override
@@ -22,5 +29,8 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(InputSetValidatorType.class, 35008);
     kryo.register(ParallelStepElement.class, 35009);
     kryo.register(ParallelStageElement.class, 35010);
+    kryo.register(CodeBase.class, 35011);
+    kryo.register(CodeBaseType.class, 35012);
+    kryo.register(GitHubCodeBase.class, 35013);
   }
 }

@@ -1,12 +1,16 @@
 package io.harness.app.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ci.beans.entities.BuildNumber;
 import io.harness.core.ci.services.BuildNumberService;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
@@ -45,16 +49,26 @@ public class CIPipelineResource {
   @ApiOperation(value = "Execute a CI pipeline", nickname = "executePipeline")
   public RestResponse<String> runPipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
       @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @PathParam("identifier") @NotEmpty String pipelineId) {
+      @PathParam("identifier") @NotEmpty String pipelineId, @QueryParam("branch") String branch,
+      @QueryParam("tag") String tag) {
+    if ((isEmpty(branch) && isEmpty(tag)) || (!isEmpty(branch) && !isEmpty(tag))) {
+      throw new InvalidArgumentsException("Either one of branch or tag needs to be set");
+    }
+
     try {
       NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
       BuildNumber buildNumber = buildNumberService.increaseBuildNumber(accountId, orgId, projectId);
 
-      // TODO create manual execution source
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
+      if (!isEmpty(branch)) {
+        ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().branch(branch).build());
+      } else {
+        ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().tag(tag).build());
+      }
       ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, buildNumber.getBuildNumber());
     } catch (Exception e) {
       log.error("Failed to run input pipeline ", e);
+      throw e;
     }
 
     return null;

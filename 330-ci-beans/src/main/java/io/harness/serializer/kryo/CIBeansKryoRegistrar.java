@@ -13,6 +13,7 @@ import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
@@ -133,6 +134,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CIServiceInfo.class, 100065);
     kryo.register(UseFromStageInfraYaml.class, 100066);
     kryo.register(UseFromStageInfraYaml.UseFromStage.class, 100067);
-    kryo.register(Infrastructure.Type.class, 100068);
+    kryo.register(ManualExecutionSource.class, 100068);
+    kryo.register(Infrastructure.Type.class, 100069);
   }
 }

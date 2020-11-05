@@ -24,14 +24,15 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void getCIBuildJobEnvInfo() {
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    K8BuildJobEnvInfo actual =
-        (K8BuildJobEnvInfo) buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(ciExecutionPlanTestHelper.getIntegrationStage(),
-            ciExecutionArgs, ciExecutionPlanTestHelper.getExecutionSectionsWithLESteps(), true, "buildnumber22850");
+    K8BuildJobEnvInfo actual = (K8BuildJobEnvInfo) buildJobEnvInfoBuilder.getCIBuildJobEnvInfo(
+        ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs,
+        ciExecutionPlanTestHelper.getExpectedExecutionSectionsWithLESteps(false), true, "buildnumber22850");
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(podSetupInfo -> podSetupInfo.setName(""));
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(
         podSetupInfo -> podSetupInfo.getPvcParams().setClaimName(""));
 
     BuildJobEnvInfo expected = ciExecutionPlanTestHelper.getCIBuildJobEnvInfoOnFirstPod();
+
     assertThat(actual).isEqualTo(expected);
   }
 }

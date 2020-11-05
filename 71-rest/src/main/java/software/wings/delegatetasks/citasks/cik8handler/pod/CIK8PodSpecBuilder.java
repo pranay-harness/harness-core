@@ -74,7 +74,7 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
   private ContainerSpecBuilderResponse getInitContainer(
       ConnectorDetails gitConnector, String branchName, String commitId, String stepExecVolumeName, String workingDir) {
     GitCloneContainerParams gitCloneContainerParams = GitCloneContainerParams.builder()
-                                                          .gitConnectorDetails(gitConnector)
+                                                          .gitConnectorDetails(null)
                                                           .branchName(branchName)
                                                           .commitId(commitId)
                                                           .stepExecVolumeName(stepExecVolumeName)

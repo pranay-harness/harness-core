@@ -19,15 +19,16 @@ import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.variables.NGVariable;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -47,8 +48,8 @@ public class NgPipeline implements Pipeline, Visitable {
   Map<String, String> tags;
 
   List<NGVariable> variables;
+  private CodeBase ciCodebase;
   @Singular List<StageElementWrapper> stages;
-
   // For Visitor Framework Impl
   String metadata;
 

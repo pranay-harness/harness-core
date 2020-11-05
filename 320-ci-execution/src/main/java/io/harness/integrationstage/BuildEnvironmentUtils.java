@@ -28,27 +28,28 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_OWNER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_PRIVATE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_SCM;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_TAG;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.Repository;
 import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@UtilityClass
 public class BuildEnvironmentUtils {
   private static final String REPO_SCM = "git";
 
-  public Map<String, String> getBuildEnvironmentVariables(CIExecutionArgs ciExecutionArgs) {
+  public static Map<String, String> getBuildEnvironmentVariables(CIExecutionArgs ciExecutionArgs) {
     Map<String, String> envVarMap = new HashMap<>();
     if (ciExecutionArgs == null) {
       return envVarMap;
@@ -73,11 +74,19 @@ public class BuildEnvironmentUtils {
         envVarMap.putAll(getBuildRepoEnvvars(prWebhookEvent.getRepository()));
         envVarMap.put(DRONE_BUILD_EVENT, "pull_request");
       }
+    } else if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
+      ManualExecutionSource manualExecutionSource = (ManualExecutionSource) ciExecutionArgs.getExecutionSource();
+      if (!isEmpty(manualExecutionSource.getBranch())) {
+        envVarMap.put(DRONE_COMMIT_BRANCH, manualExecutionSource.getBranch());
+      }
+      if (!isEmpty(manualExecutionSource.getTag())) {
+        envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
+      }
     }
     return envVarMap;
   }
 
-  private Map<String, String> getBuildRepoEnvvars(Repository repository) {
+  private static Map<String, String> getBuildRepoEnvvars(Repository repository) {
     Map<String, String> envVarMap = new HashMap<>();
     setEnvironmentVariable(envVarMap, DRONE_REPO, repository.getSlug());
     setEnvironmentVariable(envVarMap, DRONE_REPO_SCM, REPO_SCM);
@@ -93,7 +102,7 @@ public class BuildEnvironmentUtils {
     return envVarMap;
   }
 
-  private Map<String, String> getBaseEnvVars(WebhookBaseAttributes baseAttributes) {
+  private static Map<String, String> getBaseEnvVars(WebhookBaseAttributes baseAttributes) {
     Map<String, String> envVarMap = new HashMap<>();
     setEnvironmentVariable(envVarMap, DRONE_BRANCH, baseAttributes.getTarget());
     setEnvironmentVariable(envVarMap, DRONE_SOURCE_BRANCH, baseAttributes.getSource());
@@ -116,7 +125,7 @@ public class BuildEnvironmentUtils {
     return envVarMap;
   }
 
-  private void setEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {
+  private static void setEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {
     if (value == null) {
       return;
     }

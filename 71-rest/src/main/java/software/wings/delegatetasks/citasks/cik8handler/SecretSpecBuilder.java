@@ -66,6 +66,8 @@ public class SecretSpecBuilder {
   private static final String USERNAME_PREFIX = "USERNAME_";
   private static final String PASSWORD_PREFIX = "PASSWORD_";
   private static final String ENDPOINT_PREFIX = "ENDPOINT_";
+  private static final String SSH_KEY = "SSH_KEY";
+  private static final String DRONE_NETRC_PASSWORD = "DRONE_NETRC_PASSWORD";
   private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
   private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
   private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
@@ -177,11 +179,11 @@ public class SecretSpecBuilder {
           }
 
           secretData.put(USERNAME_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(USERNAME_PREFIX + connectorDetailsEntry.getKey(), username));
+              getVariableSecret(USERNAME_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(username)));
           secretData.put(PASSWORD_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(PASSWORD_PREFIX + connectorDetailsEntry.getKey(), password));
+              getVariableSecret(PASSWORD_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(password)));
           secretData.put(ENDPOINT_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(ENDPOINT_PREFIX + connectorDetailsEntry.getKey(), registryUrl));
+              getVariableSecret(ENDPOINT_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(registryUrl)));
         }
       }
     }
@@ -189,8 +191,37 @@ public class SecretSpecBuilder {
     return secretData;
   }
 
-  private SecretParams getVariableSecret(String key, String secret) {
-    return SecretParams.builder().secretKey(key).value(encodeBase64(secret)).type(TEXT).build();
+  public Map<String, SecretParams> decryptGitSecretVariables(ConnectorDetails gitConnector) {
+    Map<String, SecretParams> secretData = new HashMap<>();
+    if (gitConnector == null) {
+      return secretData;
+    }
+
+    ConnectorInfoDTO connectorInfo = gitConnector.getConnectorDTO().getConnectorInfo();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
+    log.info(
+        "Decrypting git connector id:[{}], type:[{}]", connectorInfo.getIdentifier(), connectorInfo.getConnectorType());
+    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
+
+    GitAuthType gitAuthType = gitConfigDTO.getGitAuthType();
+    if (gitAuthType == GitAuthType.HTTP) {
+      GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+
+      String key = DRONE_NETRC_PASSWORD;
+      secretData.put(key,
+          getVariableSecret(
+              key, encodeBase64(new String(gitHTTPAuthenticationDTO.getPasswordRef().getDecryptedValue()))));
+    } else if (gitAuthType == GitAuthType.SSH) {
+      GitSSHAuthenticationDTO gitHTTPAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+
+      String key = SSH_KEY;
+      secretData.put(key, getVariableSecret(key, encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey())));
+    }
+    return secretData;
+  }
+
+  private SecretParams getVariableSecret(String key, String encodedSecret) {
+    return SecretParams.builder().secretKey(key).value(encodedSecret).type(TEXT).build();
   }
 
   public Secret createSecret(String secretName, String namespace, Map<String, String> data) {

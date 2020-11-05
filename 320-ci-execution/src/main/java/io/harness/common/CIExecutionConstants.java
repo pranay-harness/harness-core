@@ -8,6 +8,9 @@ import java.util.List;
 
 @UtilityClass
 public class CIExecutionConstants {
+  // Pipeline constants
+  public static final String CI_PIPELINE_CONFIG = "CI_PIPELINE_CONFIG";
+
   // Addon image
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
   public static final String ADDON_IMAGE_TAG = "v1.2-alpha";
@@ -15,6 +18,16 @@ public class CIExecutionConstants {
   // Lite-engine image
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
   public static final String LITE_ENGINE_IMAGE_TAG = "v1.2-alpha";
+
+  // Constants for implicit git clone step
+  public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
+  public static final String GIT_CLONE_STEP_NAME = "Git clone";
+  public static final String GIT_CLONE_IMAGE = "drone/git";
+  public static final Integer GIT_CLONE_DEPTH = 50;
+  public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
+  public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
+  public static final String GIT_URL_SUFFIX = ".git";
+  public static final String GIT_SSH_URL_PREFIX = "git@";
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
@@ -88,7 +101,7 @@ public class CIExecutionConstants {
 
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
-  public static final String HOME_VARIABLE = "HOME";
+  public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
 
   public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "account.harnessimage";
   // Deprecated
