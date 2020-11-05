@@ -68,9 +68,6 @@ smtp:
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
 
-globalWhitelistConfig:
-  filters: 127.0.0.1/8
-
 logging:
   level: INFO
   loggers:

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
+import static org.apache.commons.validator.routines.InetAddressValidator.getInstance;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.app.ManagerCacheRegistrar.WHITELIST_CACHE;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
@@ -21,12 +22,9 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
-import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Event.Type;
-import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.dl.WingsPersistence;
@@ -35,7 +33,10 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.WhitelistService;
 
-import java.util.Arrays;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
@@ -48,7 +49,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class WhitelistServiceImpl implements WhitelistService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private MainConfiguration mainConfiguration;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named(WHITELIST_CACHE) private Cache<String, WhitelistConfig> whitelistConfigCache;
@@ -80,7 +80,7 @@ public class WhitelistServiceImpl implements WhitelistService {
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
       }
     } else {
-      if (!InetAddressValidator.getInstance().isValid(filterCondition)) {
+      if (!getInstance().isValid(filterCondition)) {
         String msg = "Invalid ip address : " + filterCondition;
         log.warn(msg);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
@@ -110,7 +110,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     }
 
     List<Whitelist> whitelistConfigList = getWhitelistConfig(accountId);
-    return isValidIPAddress(ipAddress, whitelistConfigList);
+    return checkWhitelist(whitelistConfigList, ipAddress);
   }
 
   public List<Whitelist> getWhitelistConfig(String accountId) {
@@ -146,23 +146,9 @@ public class WhitelistServiceImpl implements WhitelistService {
     whitelistConfigCache.remove(accountId);
   }
 
-  private boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList) {
-    if (isEmpty(whitelistConfigList)) {
-      return true;
-    } else {
-      boolean isValidClientAddress = checkWhitelist(whitelistConfigList, ipAddress);
-      if (isValidClientAddress) {
-        return true;
-      } else {
-        // Check if the request originated from harness network
-        return checkDefaultWhitelist(mainConfiguration.getGlobalWhitelistConfig(), ipAddress);
-      }
-    }
-  }
-
   private boolean checkWhitelist(List<Whitelist> whitelistConfigList, String ipAddress) {
-    if (isEmpty(whitelistConfigList)) {
-      return false;
+    if (isEmpty(whitelistConfigList) || (getInstance().isValid(ipAddress) && isLocalAddress(ipAddress))) {
+      return true;
     }
     return whitelistConfigList.stream().anyMatch(whitelist -> {
       String condition = whitelist.getFilter();
@@ -187,34 +173,15 @@ public class WhitelistServiceImpl implements WhitelistService {
     });
   }
 
-  private boolean checkDefaultWhitelist(GlobalWhitelistConfig globalWhitelistConfig, String ipAddress) {
-    if (globalWhitelistConfig == null || isEmpty(globalWhitelistConfig.getFilters())) {
+  private boolean isLocalAddress(String ip) {
+    try {
+      InetAddress address = InetAddress.getByName(ip);
+      return address.isAnyLocalAddress() || address.isLoopbackAddress()
+          || NetworkInterface.getByInetAddress(address) != null;
+    } catch (SocketException | UnknownHostException e) {
+      log.warn("Unexpected Error", e);
       return false;
     }
-
-    String[] filters = globalWhitelistConfig.getFilters().split(",");
-
-    return Arrays.stream(filters).anyMatch(filter -> {
-      if (filter.contains("/")) {
-        try {
-          SubnetUtils subnetUtils = new SubnetUtils(filter);
-          boolean inRange = subnetUtils.getInfo().isInRange(ipAddress);
-          if (!inRange) {
-            log.warn("ip {} is not in range: {}", ipAddress, filter);
-          }
-          return inRange;
-        } catch (Exception ex) {
-          log.warn("Exception while checking if the ip {} is in range: {}", ipAddress, filter);
-          return false;
-        }
-      } else {
-        boolean matches = ipAddress.equals(filter);
-        if (!matches) {
-          log.warn("ip {} does not match configured ip filter: {}", ipAddress, filter);
-        }
-        return matches;
-      }
-    });
   }
 
   @Override
