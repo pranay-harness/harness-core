@@ -42,6 +42,7 @@ public class TimeSeriesAnalysisResource {
   @Path("/time-series-data")
   @Timed
   @ExceptionMetered
+  @LearningEngineAuth
   @ApiOperation(
       value = "get test timeseries data for a verification job and risk analysis", nickname = "getTimeSeriesRecords")
   public RestResponse<List<TimeSeriesRecordDTO>>

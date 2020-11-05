@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -19,6 +20,7 @@ import javax.ws.rs.QueryParam;
 @Api("webhook")
 @Path("webhook")
 @Produces("application/json")
+@NextGenManagerAuth
 public class WebhookResource {
   @Inject WebhookService webhookService;
 

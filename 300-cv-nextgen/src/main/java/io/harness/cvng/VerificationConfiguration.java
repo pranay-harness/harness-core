@@ -16,6 +16,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.ManagerAuthConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,6 +34,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   private ServiceHttpClientConfig managerClientConfig;
+  private ManagerAuthConfig managerAuthConfig;
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
 
   /**

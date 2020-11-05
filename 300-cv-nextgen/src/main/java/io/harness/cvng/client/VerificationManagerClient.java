@@ -1,7 +1,6 @@
 package io.harness.cvng.client;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
-import static io.harness.cvng.core.services.CVNextGenConstants.CV_NEXTGEN_RESOURCE_PREFIX;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
@@ -25,7 +24,6 @@ import retrofit2.http.Query;
 
 import java.util.List;
 import java.util.Set;
-import javax.ws.rs.container.ContainerRequestContext;
 
 public interface VerificationManagerClient {
   @GET("account/feature-flag-enabled")
@@ -53,10 +51,6 @@ public interface VerificationManagerClient {
       @Query("projectIdentifier") String projectIdentifier, @Query("query") String query,
       @Query("requestGuid") String requestGuid, @Body SplunkConnectorDTO splunkConnectorDTO);
 
-  @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
-  Call<RestResponse<Boolean>> authenticateUser(
-      @Query("containerRequestContext") ContainerRequestContext containerRequestContext);
-
   @POST("appdynamics/metric-data")
   Call<RestResponse<Set<AppdynamicsValidationResponse>>> getAppDynamicsMetricData(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
@@ -72,4 +66,8 @@ public interface VerificationManagerClient {
   Call<RestResponse<Set<AppDynamicsTier>>> getTiers(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("appDynamicsAppId") long appDynamicsAppId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
+
+  @POST("account/validate-delegate-token")
+  Call<RestResponse<Boolean>> authenticateDelegateRequest(
+      @Query("accountId") String accountId, @Query("delegateToken") String delegateToken);
 }

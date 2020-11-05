@@ -14,8 +14,8 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
-import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.service.intfc.security.NGSecretManagerService;
 
 import java.util.ArrayList;

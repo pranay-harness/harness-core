@@ -9,6 +9,7 @@ import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Path("/timeseries")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class TimeSeriesResource {
   @Inject private TimeSeriesService timeSeriesService;
 

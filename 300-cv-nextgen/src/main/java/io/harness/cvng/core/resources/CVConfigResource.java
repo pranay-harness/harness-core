@@ -8,6 +8,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
@@ -27,6 +28,7 @@ import javax.ws.rs.QueryParam;
 @Path("cv-config")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class CVConfigResource {
   @Inject private CVConfigService cvConfigService;
   @GET

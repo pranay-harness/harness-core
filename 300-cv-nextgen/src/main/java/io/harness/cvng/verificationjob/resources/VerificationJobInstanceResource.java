@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.ApiOperation;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
+@NextGenManagerAuth
 public class VerificationJobInstanceResource {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @GET

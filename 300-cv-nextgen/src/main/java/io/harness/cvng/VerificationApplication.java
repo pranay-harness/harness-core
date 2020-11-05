@@ -1,6 +1,9 @@
 package io.harness.cvng;
 
 import static com.google.inject.matcher.Matchers.not;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -73,10 +76,13 @@ import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -85,15 +91,19 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 @Slf4j
 public class VerificationApplication extends Application<VerificationConfiguration> {
@@ -211,7 +221,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     autoCreateCollectionsAndIndexes(injector);
-    registerAuthFilters(environment, injector);
+    registerAuthFilters(environment, injector, configuration);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
     registerOrchestrationIterator(injector);
@@ -409,7 +419,18 @@ public class VerificationApplication extends Application<VerificationConfigurati
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
-  private void registerAuthFilters(Environment environment, Injector injector) {
+  private void registerAuthFilters(
+      Environment environment, Injector injector, VerificationConfiguration configuration) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+    serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), configuration.getManagerAuthConfig().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(
+        MANAGER.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getManagerAuthConfig().getJwtAuthSecret());
+    environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 

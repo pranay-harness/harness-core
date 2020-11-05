@@ -10,6 +10,7 @@ import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Path("/timeseries-dashboard")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class TimeseriesDashboardResource {
   @Inject TimeSeriesDashboardService timeSeriesDashboardService;
 

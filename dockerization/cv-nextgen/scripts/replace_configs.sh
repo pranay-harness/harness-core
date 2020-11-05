@@ -44,3 +44,11 @@ fi
 if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml nextGen.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
+
+if [[ "" != "$MANAGER_JWT_AUTH_SECRET" ]]; then
+  yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtAuthSecret "$MANAGER_JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$MANAGER_JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$MANAGER_JWT_IDENTITY_SERVICE_SECRET"
+fi

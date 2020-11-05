@@ -10,6 +10,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
@@ -28,6 +29,7 @@ import javax.ws.rs.QueryParam;
 @Path("ds-config")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class DSConfigResource {
   @Inject private DSConfigService dsConfigService;
   @Inject private CVConfigService cvConfigService;

@@ -28,6 +28,7 @@ import software.wings.beans.Account;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.ResourceTestRule;
@@ -56,7 +57,8 @@ public class AccountResourceTest extends CategoryTest {
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new AccountResource(accountService, userService, licenseServiceProvider, accountPermissionUtils,
-              featureService, jobScheduler, gcpMarketPlaceApiHandler, sampleDataProviderServiceProvider))
+              featureService, jobScheduler, gcpMarketPlaceApiHandler, sampleDataProviderServiceProvider,
+              mock(AuthService.class)))
           .build();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

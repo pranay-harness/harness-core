@@ -7,12 +7,12 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
-import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;

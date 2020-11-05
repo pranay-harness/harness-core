@@ -8,6 +8,7 @@ import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -23,6 +24,7 @@ import javax.ws.rs.QueryParam;
 @Api("splunk/")
 @Path("splunk")
 @Produces("application/json")
+@NextGenManagerAuth
 public class SplunkResource {
   @Inject private SplunkService splunkService;
   @GET

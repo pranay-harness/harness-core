@@ -12,6 +12,7 @@ import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -28,6 +29,7 @@ import javax.ws.rs.QueryParam;
 @Path("/log-dashboard")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class LogDashboardResource {
   @Inject private LogDashboardService logDashboardService;
 
