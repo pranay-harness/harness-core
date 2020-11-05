@@ -636,8 +636,8 @@ software.wings:57-command-library-common:jar:0.0.1-SNAPSHOT
 software.wings:64-events-framework:jar:0.0.1-SNAPSHOT
 software.wings:69-connector-nextgen:jar:0.0.1-SNAPSHOT
 software.wings:70-cv-nextgen-commons:jar:0.0.1-SNAPSHOT
-software.wings:70-delegate-agent:jar:0.0.1-SNAPSHOT
-software.wings:70-delegate-service:jar:0.0.1-SNAPSHOT
+software.wings:420-delegate-agent:jar:0.0.1-SNAPSHOT
+software.wings:420-delegate-service:jar:0.0.1-SNAPSHOT
 stax:stax-api:jar:1.0.1
 stax:stax:jar:1.2.0
 wsdl4j:wsdl4j:jar:1.6.3
