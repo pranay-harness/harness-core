@@ -8,15 +8,22 @@ import com.google.inject.Singleton;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.app.MainConfiguration;
 
 @OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GcpMarketplaceSubscriberService implements Managed {
   @Inject private GcpMarketplaceTopicSubscriber gcpMarketplaceTopicSubscriber;
+  @Inject private MainConfiguration configuration;
 
   @Override
   public void start() {
+    if (!configuration.getGcpMarketplaceConfig().isEnabled()) {
+      log.info("Skipping subscribing to GCP marketplace");
+      return;
+    }
+
     try {
       gcpMarketplaceTopicSubscriber.subscribeAsync();
     } catch (Exception e) {
@@ -26,6 +33,8 @@ public class GcpMarketplaceSubscriberService implements Managed {
 
   @Override
   public void stop() {
-    gcpMarketplaceTopicSubscriber.stopAsync();
+    if (configuration.getGcpMarketplaceConfig().isEnabled()) {
+      gcpMarketplaceTopicSubscriber.stopAsync();
+    }
   }
 }

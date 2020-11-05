@@ -298,6 +298,10 @@ cacheConfig:
   cacheNamespace: ""
   disabledCaches: []
 
+gcpMarketplaceConfig:
+  enabled: false
+  subscriptionName: gcp-marketplace-topic-subscriber
+
 featuresEnabled: ""
 
 sampleTargetEnv: ""

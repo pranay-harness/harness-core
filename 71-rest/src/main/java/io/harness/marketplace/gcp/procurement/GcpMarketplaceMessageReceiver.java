@@ -58,13 +58,15 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       ack = processPubsubMessage(parseMessage(message));
     } catch (IOException e) {
       throw new GcpMarketplaceException(
-          String.format("Failed to handle GCP marketplace message %s.", message.getMessageId()), e);
+          String.format("Failed to handle GCP marketplace message %s.", message.getData().toStringUtf8()), e);
     }
 
     if (ack) {
       consumer.ack();
+      log.info("Acknowledged GCP marketplace message: {}", message.getData().toStringUtf8());
     } else {
       consumer.nack();
+      log.info("Not acknowledged GCP marketplace message: {}", message.getData().toStringUtf8());
     }
   }
 
@@ -130,6 +132,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     GCPMarketplaceCustomer customer = getCustomer(gcpAccountId);
 
     if (customer == null) {
+      log.info("Didn't find customer entry in DB for GCP Marketplace AccountId: {}", gcpAccountId);
       return false;
     }
 
@@ -179,6 +182,8 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
   }
 
   private void updateCustomer(GCPMarketplaceCustomer customer, Entitlement entitlement) {
+    log.info("Updating customer (accountId: {}), with data from GCP entitlement object: {}",
+        customer.getHarnessAccountId(), entitlement);
     GCPMarketplaceProductBuilder product = GCPMarketplaceProduct.builder();
     String productName = (String) entitlement.get(PRODUCT_NAME_FIELD);
     product.product(productName);
