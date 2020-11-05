@@ -32,4 +32,10 @@ public class BuildEnvironmentConstants {
   public static final String DRONE_COMMIT_AUTHOR_NAME = "DRONE_COMMIT_AUTHOR_NAME";
   public static final String DRONE_BUILD_ACTION = "DRONE_BUILD_ACTION";
   public static final String DRONE_BUILD_EVENT = "DRONE_BUILD_EVENT";
+
+  public static final String DRONE_TAG = "DRONE_TAG";
+  public static final String DRONE_NETRC_MACHINE = "DRONE_NETRC_MACHINE";
+  public static final String DRONE_NETRC_USERNAME = "DRONE_NETRC_USERNAME";
+  public static final String DRONE_NETRC_PASSWORD = "DRONE_NETRC_PASSWORD";
+  public static final String SSH_KEY = "SSH_KEY";
 }

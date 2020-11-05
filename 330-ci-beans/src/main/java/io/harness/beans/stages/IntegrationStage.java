@@ -39,8 +39,8 @@ public class IntegrationStage implements CIStage {
 
   private boolean runParallel;
   private String skipCondition;
-
   private boolean skipGitClone;
+
   private List<String> sharedPaths;
 
   private Infrastructure infrastructure;

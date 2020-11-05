@@ -1,5 +1,6 @@
 package io.harness.plancreators;
 
+import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGES_PLAN_CREATOR;
@@ -62,7 +63,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
   }
 
   private void addArgumentsToContext(NgPipeline pipeline, ExecutionPlanCreationContext context) {
-    context.addAttribute("CI_PIPELINE_CONFIG", pipeline);
+    context.addAttribute(CI_PIPELINE_CONFIG, pipeline);
   }
 
   private PlanNode preparePipelineNode(

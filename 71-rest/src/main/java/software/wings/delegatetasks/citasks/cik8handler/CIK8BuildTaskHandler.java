@@ -67,6 +67,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private CIK8CtlHandler kubeCtlHandler;
   @Inject private CIK8PodSpecBuilder podSpecBuilder;
   @Inject private K8sConnectorHelper k8sConnectorHelper;
+  @Inject private SecretSpecBuilder secretSpecBuilder;
 
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
@@ -91,9 +92,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       try {
         KubernetesClient kubernetesClient =
             k8sConnectorHelper.createKubernetesClient(cik8BuildTaskParams.getK8sConnector());
-        createGitSecret(kubernetesClient, namespace, gitConnectorDetails);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
-        createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+        createEnvVariablesSecrets(
+            kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, gitConnectorDetails);
         createPVCs(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
 
         if (cik8BuildTaskParams.getServicePodParams() != null) {
@@ -102,6 +103,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
             createServicePod(kubernetesClient, namespace, servicePodParams);
           }
         }
+
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         log.info("Creating pod with spec: {}", pod);
         kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
@@ -209,8 +211,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         (imageId, imageDetails) -> kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetails));
   }
 
-  private void createEnvVariablesSecrets(
-      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void createEnvVariablesSecrets(KubernetesClient kubernetesClient, String namespace,
+      CIK8PodParams<CIK8ContainerParams> podParams, ConnectorDetails gitConnectorDetails) {
     log.info("Creating env variables for pod name: {}", podParams.getName());
     List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
     String secretName = podParams.getName() + "-" + SECRET;
@@ -240,6 +242,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       }
     }
 
+    Map<String, String> gitSecretData = getAndUpdateGitSecretData(gitConnectorDetails, containerParamsList, secretName);
+    secretData.putAll(gitSecretData);
+
     if (!secretData.isEmpty()) {
       kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
     }
@@ -266,6 +271,21 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     if (!isEmpty(secretData)) {
       updateContainer(containerParams, secretName, secretData);
       return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
+    } else {
+      return Collections.emptyMap();
+    }
+  }
+
+  private Map<String, String> getAndUpdateGitSecretData(
+      ConnectorDetails gitConnector, List<CIK8ContainerParams> containerParamsList, String secretName) {
+    Map<String, SecretParams> gitSecretData = secretSpecBuilder.decryptGitSecretVariables(gitConnector);
+    if (!isEmpty(gitSecretData)) {
+      for (CIK8ContainerParams containerParams : containerParamsList) {
+        updateContainer(containerParams, secretName, gitSecretData);
+      }
+
+      return gitSecretData.values().stream().collect(
+          Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     } else {
       return Collections.emptyMap();
     }

@@ -26,7 +26,7 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldCreateLiteEngineTaskStepInfoFirstPod() {
     // input
-    ExecutionElement executionElement = ciExecutionPlanTestHelper.getExecutionElement();
+    ExecutionElement executionElement = ciExecutionPlanTestHelper.getExpectedExecutionElement(false);
     String branchName = "master";
     String gitConnectorIdentifier = "testGitConnector";
     IntegrationStage integrationStage = ciExecutionPlanTestHelper.getIntegrationStage();
@@ -36,9 +36,9 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     String accountId = "accountId";
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    LiteEngineTaskStepInfo actual =
-        liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
-            integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
+    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement,
+        ciExecutionPlanTestHelper.getCICodebase(), integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter,
+        usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
@@ -76,9 +76,8 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     String accountId = "accountId";
 
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
-    LiteEngineTaskStepInfo actual =
-        liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(executionElement, branchName, gitConnectorIdentifier,
-            integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
+    LiteEngineTaskStepInfo actual = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
+        executionElement, null, integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()

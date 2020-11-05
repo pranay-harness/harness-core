@@ -11,6 +11,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -43,28 +44,28 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotNull BuildJobEnvInfo buildJobEnvInfo;
-  @NotNull String gitConnectorIdentifier;
-  @NotNull String branchName;
   @NotNull boolean usePVC;
   @NotNull String accountId;
   @NotNull ExecutionElement steps;
+  CodeBase ciCodebase;
+  @NotNull boolean skipGitClone;
 
   @Builder
-  @ConstructorProperties({"accountId", "identifier", "name", "retry", "timeout", "buildJobEnvInfo",
-      "gitConnectorIdentifier", "branchName", "steps", "usePVC"})
+  @ConstructorProperties({"accountId", "identifier", "name", "retry", "timeout", "buildJobEnvInfo", "steps", "usePVC",
+      "ciCodebase", "skipGitClone"})
   public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry, Integer timeout,
-      BuildJobEnvInfo buildJobEnvInfo, String gitConnectorIdentifier, String branchName, ExecutionElement steps,
-      boolean usePVC) {
+      BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, boolean usePVC, CodeBase ciCodebase,
+      boolean skipGitClone) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.buildJobEnvInfo = buildJobEnvInfo;
-    this.gitConnectorIdentifier = gitConnectorIdentifier;
-    this.branchName = branchName;
     this.usePVC = usePVC;
     this.steps = steps;
+    this.ciCodebase = ciCodebase;
+    this.skipGitClone = skipGitClone;
   }
 
   @Override

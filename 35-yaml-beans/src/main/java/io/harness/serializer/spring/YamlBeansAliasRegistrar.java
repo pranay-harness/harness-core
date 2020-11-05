@@ -9,6 +9,9 @@ import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.UseFromStage;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.extended.ci.codebase.CodeBaseType;
+import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import java.util.Map;
 
@@ -27,5 +30,8 @@ public class YamlBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("io.harness.yaml.core.parallelStepElement", ParallelStepElement.class);
     orchestrationElements.put("io.harness.yaml.core.variables.StringNGVariable", StringNGVariable.class);
     orchestrationElements.put("io.harness.yaml.core.variables.NumberNGVariable", NumberNGVariable.class);
+    orchestrationElements.put("io.harness.yaml.extended.ci.CodeBase", CodeBase.class);
+    orchestrationElements.put("io.harness.yaml.extended.ci.CodeBaseType", CodeBaseType.class);
+    orchestrationElements.put("io.harness.yaml.extended.ci.impl.GitHubCodeBase", GitHubCodeBase.class);
   }
 }

@@ -2,38 +2,49 @@ package io.harness.integrationstage;
 
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
+import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 @Slf4j
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
   private static final String BUILD_NUMBER = "buildnumber";
-  private static final String YAML_RUN_STEP_STRING = "run";
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
   private static final SecureRandom random = new SecureRandom();
 
-  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(IntegrationStage integrationStage,
-      CIExecutionArgs ciExecutionArgs, String branchName, String gitConnectorIdentifier, String accountId) {
+  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(
+      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String accountId) {
     String buildNumber = BUILD_NUMBER + random.nextInt(100000); // TODO Have incremental build number
 
     List<ExecutionWrapper> mainEngineExecutionSections = new ArrayList<>();
@@ -47,8 +58,10 @@ public class CILiteEngineStepGroupUtils {
     boolean usePVC = containsManagerStep(executionSections);
 
     List<ExecutionWrapper> liteEngineExecutionSections = new ArrayList<>();
+    if (!integrationStage.isSkipGitClone()) {
+      liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs));
+    }
     int liteEngineCounter = 0;
-
     for (ExecutionWrapper executionWrapper : executionSections) {
       if (isLiteEngineStep(executionWrapper)) {
         liteEngineExecutionSections.add(executionWrapper);
@@ -57,7 +70,7 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter++;
           ExecutionWrapper liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
-                  ciExecutionArgs, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
+                  ciExecutionArgs, ciCodebase, buildNumber, usePVC, accountId);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
           // Also execute each lite engine step individually on main engine
@@ -72,9 +85,8 @@ public class CILiteEngineStepGroupUtils {
 
     if (isNotEmpty(liteEngineExecutionSections)) {
       liteEngineCounter++;
-      ExecutionWrapper liteEngineStepExecutionWrapper =
-          fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
-              ciExecutionArgs, branchName, gitConnectorIdentifier, buildNumber, usePVC, accountId);
+      ExecutionWrapper liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections,
+          liteEngineCounter, integrationStage, ciExecutionArgs, ciCodebase, buildNumber, usePVC, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
@@ -85,11 +97,11 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private ExecutionWrapper fetchLiteEngineStepExecutionWrapper(List<ExecutionWrapper> liteEngineExecutionSections,
-      Integer liteEngineCounter, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, String branchName,
-      String gitConnectorIdentifier, String buildNumber, boolean usePVC, String accountId) {
+      Integer liteEngineCounter, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
+      CodeBase ciCodebase, String buildNumber, boolean usePVC, String accountId) {
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
-        ExecutionElement.builder().steps(liteEngineExecutionSections).build(), branchName, gitConnectorIdentifier,
-        integrationStage, ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
+        ExecutionElement.builder().steps(liteEngineExecutionSections).build(), ciCodebase, integrationStage,
+        ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
 
     return StepElement.builder()
         .identifier(LITE_ENGINE_TASK + liteEngineCounter)
@@ -149,5 +161,27 @@ public class CILiteEngineStepGroupUtils {
       }
     }
     return ciStepExecEnvironment;
+  }
+
+  private StepElement getGitCloneStep(CIExecutionArgs ciExecutionArgs) {
+    Integer cloneDepth = GIT_CLONE_DEPTH;
+    if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
+      cloneDepth = GIT_CLONE_MANUAL_DEPTH;
+    }
+
+    Map<String, String> settings = new HashMap<>();
+    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
+    PluginStepInfo step = PluginStepInfo.builder()
+                              .identifier(GIT_CLONE_STEP_ID)
+                              .image(GIT_CLONE_IMAGE)
+                              .name(GIT_CLONE_STEP_NAME)
+                              .settings(settings)
+                              .build();
+    return StepElement.builder()
+        .identifier(GIT_CLONE_STEP_ID)
+        .name(GIT_CLONE_STEP_NAME)
+        .type(CIStepInfoType.PLUGIN.name().toLowerCase())
+        .stepSpecType(step)
+        .build();
   }
 }

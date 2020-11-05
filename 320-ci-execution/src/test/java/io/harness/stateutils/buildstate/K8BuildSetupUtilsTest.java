@@ -131,7 +131,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true);
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), null, true, null, true);
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -169,19 +169,23 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     String workDir = String.format("/%s/%s", STEP_EXEC, STEP_EXEC_WORKING_DIR);
-    assertThat(podParams.getContainerParamsList().get(1))
+    assertThat(podParams.getContainerParamsList().get(2))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getRunStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
             "envVars", "containerSecrets");
-    assertThat(podParams.getContainerParamsList().get(1).getContainerSecrets().getSecretVariableDetails())
+    assertThat(podParams.getContainerParamsList().get(2).getContainerSecrets().getSecretVariableDetails())
         .containsAnyElementsOf(secretVariableDetails);
-    assertThat(podParams.getContainerParamsList().get(1).getEnvVars()).containsAllEntriesOf(stepEnvVars);
+    assertThat(podParams.getContainerParamsList().get(2).getEnvVars()).containsAllEntriesOf(stepEnvVars);
 
     stepEnvVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
-        podParams.getContainerParamsList().get(2).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
-    assertThat(podParams.getContainerParamsList().get(2))
+        podParams.getContainerParamsList().get(3).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
+    assertThat(podParams.getContainerParamsList().get(3))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getPluginStepCIK8Container().build(), "envVars", "containerSecrets");
+
+    assertThat(podParams.getContainerParamsList().get(1))
+        .isEqualToIgnoringGivenFields(
+            ciExecutionPlanTestHelper.getGitCloneStepCIK8Container().build(), "envVars", "containerSecrets");
 
     assertThat(podParams.getContainerParamsList().get(0))
         .isEqualToIgnoringGivenFields(
@@ -221,9 +225,10 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     K8PodDetails k8PodDetails =
         K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
 
-    assertThatThrownBy(()
-                           -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-                               ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true))
+    assertThatThrownBy(
+        ()
+            -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
+                ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true, null, true))
         .isInstanceOf(Exception.class);
 
     verify(logServiceUtils, times(1)).getLogServiceConfig();

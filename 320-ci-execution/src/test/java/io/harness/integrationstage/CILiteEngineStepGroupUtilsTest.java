@@ -30,11 +30,10 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     List<ExecutionWrapper> executionWrapperWithLiteEngineSteps =
         ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs, "master", "testGitConnector",
-            "accountId");
+            ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs, null, "accountId");
 
     List<ExecutionWrapper> expectedExecutionWrapper = ciExecutionPlanTestHelper.getExpectedExecutionWrappers();
-    expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getIntegrationStage().getExecution().getSteps());
+    expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getExpectedExecutionElement(false).getSteps());
 
     assertThat(executionWrapperWithLiteEngineSteps.get(0)).isInstanceOf(StepElement.class);
     StepElement stepElement = (StepElement) executionWrapperWithLiteEngineSteps.get(0);
