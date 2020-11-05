@@ -108,6 +108,7 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
+import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
 import io.harness.rule.Owner;
@@ -262,6 +263,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
+
+    LogStreamingServiceConfig logSteamingServiceConfig =
+        LogStreamingServiceConfig.builder().serviceToken("token").baseUrl("http://localhost:8079").build();
+    when(mainConfiguration.getLogStreamingServiceConfig()).thenReturn(logSteamingServiceConfig);
 
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setCriticalDelegateTaskRejectAtLimit(100000);

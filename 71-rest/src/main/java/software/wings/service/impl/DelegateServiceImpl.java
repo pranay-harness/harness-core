@@ -899,12 +899,14 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts getDelegateScripts(
       String accountId, String version, String managerHost, String verificationHost) throws IOException {
-    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                                                                   .accountId(accountId)
-                                                                                   .version(version)
-                                                                                   .managerHost(managerHost)
-                                                                                   .verificationHost(verificationHost)
-                                                                                   .build());
+    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+        ScriptRuntimeParamMapInquiry.builder()
+            .accountId(accountId)
+            .version(version)
+            .managerHost(managerHost)
+            .verificationHost(verificationHost)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -963,6 +965,7 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateType;
     private boolean ceEnabled;
     private boolean ciEnabled;
+    private String logStreamingServiceBaseUrl;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1085,6 +1088,10 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateType", inquiry.getDelegateType());
       }
 
+      if (inquiry.getLogStreamingServiceBaseUrl() != null) {
+        params.put("logStreamingServiceBaseUrl", inquiry.getLogStreamingServiceBaseUrl());
+      }
+
       params.put("grpcServiceEnabled", String.valueOf(isCiEnabled));
       if (isCiEnabled) {
         params.put("grpcServiceConnectorPort", String.valueOf(delegateGrpcConfig.getPort()));
@@ -1187,15 +1194,17 @@ public class DelegateServiceImpl implements DelegateService {
         delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                                                                     .accountId(accountId)
-                                                                                     .version(version)
-                                                                                     .managerHost(managerHost)
-                                                                                     .verificationHost(verificationUrl)
-                                                                                     .delegateName(delegateName)
-                                                                                     .delegateProfile(delegateProfile)
-                                                                                     .delegateType(SHELL_SCRIPT)
-                                                                                     .build());
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationUrl)
+              .delegateName(delegateName)
+              .delegateProfile(delegateProfile)
+              .delegateType(SHELL_SCRIPT)
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
