@@ -50,7 +50,6 @@ import software.wings.audit.AuditConfig;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.UrlInfo;
-import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.jre.JreConfig;
@@ -107,7 +106,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
-  @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;

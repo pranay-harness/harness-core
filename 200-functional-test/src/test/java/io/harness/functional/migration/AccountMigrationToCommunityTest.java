@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.AccountType;
 import software.wings.features.GitOpsFeature;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +35,7 @@ public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTes
     assertThat(AccountType.COMMUNITY).isNotEqualTo(getAccountType());
 
     Map<String, Object> gitOpsComplyInfo = new HashMap<>();
-    gitOpsComplyInfo.put("sourceReposToRetain", Arrays.asList(Settings.TERRAFORM_MAIN_GIT_REPO.name()));
+    gitOpsComplyInfo.put("sourceReposToRetain", Collections.singletonList(Settings.TERRAFORM_MAIN_GIT_REPO.name()));
 
     Map<String, Map<String, Object>> requiredInfoToComply = new HashMap<>();
     requiredInfoToComply.put(GitOpsFeature.FEATURE_NAME, gitOpsComplyInfo);
@@ -48,9 +48,10 @@ public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTes
   private void makeAccountNonCompliant() {
     addSourceRepos();
 
-    addWhitelistedIP();
     addApiKey();
 
     addWorkflowWithJira();
+
+    addWhitelistedIP();
   }
 }
