@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,11 +29,14 @@ import javax.ws.rs.core.Response;
 public class CEViewResource {
   private CEViewService ceViewService;
   private CEReportScheduleService ceReportScheduleService;
+  private ViewCustomFieldService viewCustomFieldService;
 
   @Inject
-  public CEViewResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService) {
+  public CEViewResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService,
+      ViewCustomFieldService viewCustomFieldService) {
     this.ceViewService = ceViewService;
     this.ceReportScheduleService = ceReportScheduleService;
+    this.viewCustomFieldService = viewCustomFieldService;
   }
 
   @POST
@@ -70,6 +74,7 @@ public class CEViewResource {
   public Response delete(@QueryParam("accountId") String accountId, @QueryParam("viewId") String viewId) {
     ceViewService.delete(viewId, accountId);
     ceReportScheduleService.deleteAllByView(viewId, accountId);
+    viewCustomFieldService.deleteByViewId(viewId, accountId);
     RestResponse rr = new RestResponse("Successfully deleted the view");
     return prepareResponse(rr, Response.Status.OK);
   }

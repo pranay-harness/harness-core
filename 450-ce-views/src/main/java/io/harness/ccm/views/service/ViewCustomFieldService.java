@@ -17,4 +17,6 @@ public interface ViewCustomFieldService {
   ViewCustomField update(ViewCustomField viewCustomField);
 
   boolean delete(String uuid, String accountId);
+
+  boolean deleteByViewId(String viewId, String accountId);
 }

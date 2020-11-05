@@ -54,6 +54,15 @@ public class ViewCustomFieldDao {
     return hPersistence.delete(query);
   }
 
+  public boolean deleteByViewId(String viewId, String accountId) {
+    Query query = hPersistence.createQuery(ViewCustomField.class)
+                      .field(ViewCustomFieldKeys.accountId)
+                      .equal(accountId)
+                      .field(ViewCustomFieldKeys.viewId)
+                      .equal(viewId);
+    return hPersistence.delete(query);
+  }
+
   public ViewCustomField update(ViewCustomField viewCustomField) {
     Query query = hPersistence.createQuery(ViewCustomField.class)
                       .field(ViewCustomFieldKeys.accountId)

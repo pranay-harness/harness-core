@@ -15,6 +15,7 @@ import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewType;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -31,11 +32,14 @@ import javax.ws.rs.core.Response;
 
 public class CEViewResourceTest extends CategoryTest {
   private static CEViewService ceViewService = mock(CEViewService.class);
+  private static ViewCustomFieldService viewCustomFieldService = mock(ViewCustomFieldService.class);
   private static CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().instance(new CEViewResource(ceViewService, ceReportScheduleService)).build();
+      ResourceTestRule.builder()
+          .instance(new CEViewResource(ceViewService, ceReportScheduleService, viewCustomFieldService))
+          .build();
 
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String NAME = "VIEW_NAME";
