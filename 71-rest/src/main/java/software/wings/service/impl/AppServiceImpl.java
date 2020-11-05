@@ -510,10 +510,25 @@ public class AppServiceImpl implements AppService {
       return accountId;
     }
 
-    Application app = get(appId);
+    Application app = getNullable(appId);
+    if (app == null) {
+      return null;
+    }
     accountId = app.getAccountId();
     appIdToAccountIdCache.put(appId, accountId);
     return accountId;
+  }
+  @Override
+  public Application getNullable(String appId) {
+    Application application = wingsPersistence.get(Application.class, appId);
+    if (application == null) {
+      return null;
+    }
+
+    application.setYamlGitConfig(
+        yamlGitService.get(application.getAccountId(), application.getUuid(), EntityType.APPLICATION));
+
+    return application;
   }
 
   private void updateAppYamlGitConfig(Application savedApp, Application app, boolean performFullSync) {
