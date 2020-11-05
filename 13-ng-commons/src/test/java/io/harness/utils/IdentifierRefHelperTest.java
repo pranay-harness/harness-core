@@ -1,5 +1,6 @@
 package io.harness.utils;
 
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -160,5 +161,18 @@ public class IdentifierRefHelperTest extends CategoryTest {
 
     String fullyQualifiedIdentifier = IdentifierRefHelper.getFullyQualifiedIdentifierRefString(identifierRef);
     assertThat(fullyQualifiedIdentifier).isEqualTo("accountIdentifier/identifier");
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetIdentifier() {
+    String identifierRefAccount = "account.identifier";
+    String identifierRefOrg = "org.identifier";
+    String identifierRefProj = "identifier";
+
+    assertThat(IdentifierRefHelper.getIdentifier(identifierRefAccount)).isEqualTo("identifier");
+    assertThat(IdentifierRefHelper.getIdentifier(identifierRefOrg)).isEqualTo("identifier");
+    assertThat(IdentifierRefHelper.getIdentifier(identifierRefProj)).isEqualTo("identifier");
   }
 }

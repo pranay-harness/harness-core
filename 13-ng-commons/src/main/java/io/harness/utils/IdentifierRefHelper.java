@@ -72,4 +72,24 @@ public class IdentifierRefHelper {
     return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
   }
+
+  public String getIdentifier(String scopedIdentifierConfig) {
+    if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
+      throw new InvalidRequestException("scopedIdentifierConfig is null");
+    }
+    String identifier;
+    String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
+    if (identifierConfigStringSplit.length == 1) {
+      identifier = identifierConfigStringSplit[0];
+    } else if (identifierConfigStringSplit.length == 2) {
+      identifier = identifierConfigStringSplit[1];
+      Scope scope = getScope(identifierConfigStringSplit[0]);
+      if (scope == Scope.PROJECT || scope == null) {
+        throw new InvalidRequestException("Invalid Identifier Reference, Scope.PROJECT invalid.");
+      }
+    } else {
+      throw new InvalidRequestException("Invalid Identifier Reference.");
+    }
+    return identifier;
+  }
 }

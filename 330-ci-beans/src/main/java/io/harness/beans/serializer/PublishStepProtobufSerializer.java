@@ -22,6 +22,7 @@ import io.harness.product.ci.engine.proto.LocationType;
 import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
+import io.harness.utils.IdentifierRefHelper;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;
@@ -91,7 +92,7 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
   private Connector getConnector(Artifact artifact) {
     return Connector.newBuilder()
         .setAuth(getAuthType(artifact.getConnector().getType()))
-        .setId(artifact.getConnector().getConnectorRef())
+        .setId(IdentifierRefHelper.getIdentifier(artifact.getConnector().getConnectorRef()))
         .build();
   }
 
