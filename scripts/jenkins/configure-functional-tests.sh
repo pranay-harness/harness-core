@@ -12,7 +12,7 @@ sed -i "s|redis://redis2:26379|${REDIS_SENTINEL2}|" 71-rest/config.yml
 sed -i "s|redis://redis3:26379|${REDIS_SENTINEL3}|" 71-rest/config.yml
 sed -i "s|distributedLockImplementation: MONGO|distributedLockImplementation: REDIS|" 71-rest/config.yml
 
-sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 72-event-server/event-service-config.yml
+sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 350-event-server/event-service-config.yml
 sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 280-batch-processing/batch-processing-config.yml
 sed -i "s|uri: mongodb://localhost:27017/events|uri: ${MONGO_URI}_events|" 280-batch-processing/batch-processing-config.yml
 sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" 210-command-library-server/command-library-server-config.yml

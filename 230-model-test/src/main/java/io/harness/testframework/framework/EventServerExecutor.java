@@ -67,8 +67,8 @@ public class EventServerExecutor {
           return;
         }
         log.info("Execute the event-server from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "72-event-server", "target", "event-server-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "72-event-server", "event-service-config.yml");
+        final Path jar = Paths.get(directory.getPath(), "350-event-server", "target", "event-server-capsule.jar");
+        final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
         if (!new File(alpn).exists()) {
