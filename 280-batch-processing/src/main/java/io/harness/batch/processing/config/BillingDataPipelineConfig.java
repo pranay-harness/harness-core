@@ -12,4 +12,5 @@ public class BillingDataPipelineConfig {
   private String gcpProjectId;
   private String gcsBasePath;
   private String clusterDataGcsBucketName;
+  private String clusterDataGcsBackupBucketName;
 }

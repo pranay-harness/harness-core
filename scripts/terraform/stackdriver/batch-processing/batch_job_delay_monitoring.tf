@@ -34,21 +34,6 @@ resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
   display_name = join("_", [local.name_prefix, "ce_delayed_batch_jobs"])
   combiner     = "OR"
   conditions {
-    display_name = "ce_delayed_batch_jobs_per_account"
-    condition_threshold {
-      threshold_value = 0
-      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_delayed_batch_job.id}\""
-      duration        = "180s"
-      comparison      = "COMPARISON_GT"
-      aggregations {
-        group_by_fields      = ["metric.labels.accountId"]
-        alignment_period     = "300s"
-        per_series_aligner   = "ALIGN_SUM"
-        cross_series_reducer = "REDUCE_SUM"
-      }
-    }
-  }
-  conditions {
     display_name = "ce_delayed_batch_jobs_per_type"
     condition_threshold {
       threshold_value = 0
@@ -56,7 +41,7 @@ resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
       duration        = "180s"
       comparison      = "COMPARISON_GT"
       aggregations {
-        group_by_fields      = ["metric.labels.batchJobType"]
+        group_by_fields      = ["metric.labels.batchJobType", "metric.labels.accountId"]
         alignment_period     = "300s"
         per_series_aligner   = "ALIGN_SUM"
         cross_series_reducer = "REDUCE_SUM"

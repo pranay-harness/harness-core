@@ -41,6 +41,7 @@ billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
   clusterDataGcsBucketName: "clusterdata-qa"
+  clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
 
 smtp:
   type: SMTP
