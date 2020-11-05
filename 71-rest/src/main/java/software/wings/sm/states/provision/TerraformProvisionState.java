@@ -606,6 +606,7 @@ public abstract class TerraformProvisionState extends State {
             .terraformPlan(getTerraformPlanFromSecretManager(context))
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
+            .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
@@ -789,6 +790,7 @@ public abstract class TerraformProvisionState extends State {
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
+            .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);

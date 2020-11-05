@@ -288,6 +288,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
+                                                         .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
 
@@ -307,6 +308,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
   }
@@ -348,6 +350,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getVariables()).isNotEmpty();
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isFalse();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
   }
@@ -361,6 +364,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
+                                                         .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
     FileMetadata fileMetadata =
@@ -402,6 +406,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getVariables()).isNotEmpty();
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
     assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
     assertParametersEnvironmentVariables(parameters);
@@ -419,6 +424,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
+                                                         .skipRefreshBeforeApplyingPlan(false)
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
 
@@ -438,6 +444,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
     assertThat(parameters.getVariables()).isEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isFalse();
     assertParametersBackendConfigs(parameters);
   }
 
@@ -667,6 +674,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .environmentVariables(getTerraformEnvironmentVariables())
+                                                         .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
 
@@ -684,6 +692,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(createdTask.getData().getParameters()).isNotEmpty();
     TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
     assertThat(parameters.getEnvironmentVariables()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
     assertParametersEnvironmentVariables(parameters);
   }
 

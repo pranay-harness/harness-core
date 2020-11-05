@@ -62,6 +62,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
       + "- name: secret_key\n"
       + "  valueType: ENCRYPTED_TEXT\n"
       + "repoName: REPO_NAME\n"
+      + "skipRefreshBeforeApplyingPlan: true\n"
       + "sourceRepoBranch: master\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
       + "variables:\n"
@@ -115,6 +116,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
                                                          .repoName("REPO_NAME")
                                                          .variables(variables)
                                                          .backendConfigs(variables)
+                                                         .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
