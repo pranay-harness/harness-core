@@ -36,6 +36,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -50,7 +51,6 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.security.annotations.NextGenManagerAuth;
 
 import java.security.SecureRandom;
 import java.util.Arrays;

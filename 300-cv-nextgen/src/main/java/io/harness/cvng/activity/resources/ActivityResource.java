@@ -17,6 +17,7 @@ import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -36,6 +37,7 @@ import javax.ws.rs.QueryParam;
 @Path(ACTIVITY_RESOURCE)
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class ActivityResource {
   @Inject private ActivityService activityService;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;

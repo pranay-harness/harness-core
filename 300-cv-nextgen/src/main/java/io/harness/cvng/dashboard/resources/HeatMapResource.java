@@ -12,6 +12,7 @@ import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -29,6 +30,7 @@ import javax.ws.rs.QueryParam;
 @Path("/heatmap")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class HeatMapResource {
   @Inject private HeatMapService heatMapService;
 

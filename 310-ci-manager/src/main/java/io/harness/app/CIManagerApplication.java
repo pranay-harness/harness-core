@@ -44,6 +44,7 @@ import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
@@ -69,7 +70,6 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.service.impl.ci.CIServiceAuthSecretKey;
 
 import java.security.SecureRandom;

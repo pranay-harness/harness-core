@@ -10,7 +10,7 @@ import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.LearningEngineAuth;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
@@ -28,13 +28,13 @@ import javax.ws.rs.QueryParam;
 @Api("appdynamics")
 @Path("/appdynamics")
 @Produces("application/json")
+@NextGenManagerAuth
 public class AppDynamicsResource {
   @Inject private AppDynamicsService appDynamicsService;
   @POST
   @Path("/metric-data")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   @ApiOperation(value = "get metric data for given metric packs", nickname = "getAppdynamicsMetricData")
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,

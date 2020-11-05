@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -52,6 +53,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 
@@ -91,13 +93,14 @@ public class AccountResource {
   private final PersistentScheduler jobScheduler;
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
+  private final AuthService authService;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
       Provider<LicenseService> licenseServiceProvider, AccountPermissionUtils accountPermissionUtils,
       FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
       GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler,
-      Provider<SampleDataProviderService> sampleDataProviderServiceProvider) {
+      Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService) {
     this.accountService = accountService;
     this.userService = userService;
     this.licenseServiceProvider = licenseServiceProvider;
@@ -106,6 +109,7 @@ public class AccountResource {
     this.jobScheduler = jobScheduler;
     this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
     this.sampleDataProviderServiceProvider = sampleDataProviderServiceProvider;
+    this.authService = authService;
   }
 
   @GET
@@ -504,5 +508,16 @@ public class AccountResource {
       }
       return response;
     }
+  }
+
+  @POST
+  @Path("validate-delegate-token")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> validateDelegateToken(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateToken") @NotNull String delegateToken) {
+    authService.validateDelegateToken(accountId, substringAfter(delegateToken, "Delegate "));
+    return new RestResponse<>(true);
   }
 }

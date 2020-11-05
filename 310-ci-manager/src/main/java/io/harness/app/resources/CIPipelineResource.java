@@ -11,12 +11,12 @@ import io.harness.impl.CIPipelineExecutionService;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.annotations.NextGenManagerAuth;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;

@@ -11,6 +11,7 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
@@ -29,6 +30,7 @@ import javax.ws.rs.QueryParam;
 @Path("/metric-pack")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class MetricPackResource {
   @Inject private MetricPackService metricPackService;
 

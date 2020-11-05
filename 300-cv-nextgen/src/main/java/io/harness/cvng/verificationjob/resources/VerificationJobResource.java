@@ -8,6 +8,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Path("verification-job")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class VerificationJobResource {
   @Inject private VerificationJobService verificationJobService;
   @GET

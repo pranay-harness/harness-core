@@ -13,12 +13,12 @@ import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import software.wings.security.annotations.NextGenManagerAuth;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
