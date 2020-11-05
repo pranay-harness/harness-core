@@ -210,7 +210,6 @@ public class JenkinsTaskTest extends WingsBaseTest {
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, params);
-    verify(jenkins).getBuild(any(QueueReference.class), any(JenkinsConfig.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage()).isNotEmpty();
   }
