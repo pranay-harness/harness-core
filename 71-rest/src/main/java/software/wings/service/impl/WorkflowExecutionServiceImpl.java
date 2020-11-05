@@ -4798,19 +4798,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (EmptyPredicate.isEmpty(entityIds)) {
       return Collections.emptyList();
     }
-    final List<WorkflowExecution> workflowExecutions = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                           .project(WorkflowExecutionKeys.appId, true)
-                                                           .project(WorkflowExecutionKeys.status, true)
-                                                           .project(WorkflowExecutionKeys.workflowId, true)
-                                                           .project(WorkflowExecutionKeys.createdAt, true)
-                                                           .project(WorkflowExecutionKeys.uuid, true)
-                                                           .project(WorkflowExecutionKeys.startTs, true)
-                                                           .project(WorkflowExecutionKeys.endTs, true)
-                                                           .project(WorkflowExecutionKeys.name, true)
-                                                           .project(WorkflowExecutionKeys.envId, true)
-                                                           .field("_id")
-                                                           .in(entityIds)
-                                                           .asList();
+    final List<WorkflowExecution> workflowExecutions =
+        wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+            .project(WorkflowExecutionKeys.appId, true)
+            .project(WorkflowExecutionKeys.status, true)
+            .project(WorkflowExecutionKeys.workflowId, true)
+            .project(WorkflowExecutionKeys.createdAt, true)
+            .project(WorkflowExecutionKeys.uuid, true)
+            .project(WorkflowExecutionKeys.startTs, true)
+            .project(WorkflowExecutionKeys.endTs, true)
+            .project(WorkflowExecutionKeys.name, true)
+            .project(WorkflowExecutionKeys.envId, true)
+            .field("_id")
+            .in(entityIds)
+            .asList();
     workflowExecutions.sort(Comparator.comparing(item -> entityIds.indexOf(item.getUuid())));
     return workflowExecutions;
   }
