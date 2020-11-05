@@ -25,6 +25,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
+import io.harness.config.GcpMarketplaceConfig;
 import io.harness.config.MockServerConfig;
 import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
@@ -139,6 +140,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("gcpMarketplaceConfig") private GcpMarketplaceConfig gcpMarketplaceConfig;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;

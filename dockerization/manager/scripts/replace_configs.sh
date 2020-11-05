@@ -580,6 +580,14 @@ if [[ "" != "$CACHE_BACKEND" ]]; then
     yq write -i $CONFIG_FILE cacheConfig.cacheBackend "$CACHE_BACKEND"
 fi
 
+if [[ "" != "$GCP_MARKETPLACE_ENABLED" ]]; then
+    yq write -i $CONFIG_FILE gcpMarketplaceConfig.enabled "$GCP_MARKETPLACE_ENABLED"
+fi
+
+if [[ "" != "$GCP_MARKETPLACE_SUBSCRIPTION_NAME" ]]; then
+    yq write -i $CONFIG_FILE gcpMarketplaceConfig.subscriptionName "$GCP_MARKETPLACE_SUBSCRIPTION_NAME"
+fi
+
 if [[ "" != "$CURRENT_JRE" ]]; then
   yq write -i $CONFIG_FILE currentJre "$CURRENT_JRE"
 fi

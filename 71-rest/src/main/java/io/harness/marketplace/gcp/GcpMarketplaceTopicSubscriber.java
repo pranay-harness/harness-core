@@ -16,11 +16,13 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.Subscription;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.GcpMarketplaceException;
 import io.harness.marketplace.gcp.procurement.GcpMarketplaceMessageReceiver;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.procurement.GcpProductsRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.helpers.MessageFormatter;
+import software.wings.app.MainConfiguration;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 
@@ -30,6 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @OwnedBy(PL)
 @Slf4j
@@ -38,32 +42,34 @@ public class GcpMarketplaceTopicSubscriber {
   // This topic is on Google's side
   private static final String FULL_TOPIC_NAME = "projects/cloudcommerceproc-prod/topics/harness-public";
   private static final String GCP_PROJECT_ID = "harness-public";
-  private static final String GCP_SUBSCRIPTION_NAME = "marketplace-topic-subscriber";
   private static final String FULL_SUBSCRIPTION_FORMAT = "projects/{}/subscriptions/{}";
-  private static final String FULL_SUBSCRIPTION_NAME =
-      MessageFormatter.format(FULL_SUBSCRIPTION_FORMAT, GCP_PROJECT_ID, GCP_SUBSCRIPTION_NAME).getMessage();
 
   private Subscriber subscriber;
   @Inject private GcpProcurementService gcpProcurementService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private GcpProductsRegistry gcpProductsRegistry;
+  @Inject private MainConfiguration configuration;
 
   public void subscribeAsync() throws IOException {
+    String gcpSubscriptionName = configuration.getGcpMarketplaceConfig().getSubscriptionName();
+    String fullSubscriptionName =
+        MessageFormatter.format(FULL_SUBSCRIPTION_FORMAT, GCP_PROJECT_ID, gcpSubscriptionName).getMessage();
+
     FixedCredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials());
     SubscriptionAdminSettings subscriptionAdminSettings =
         SubscriptionAdminSettings.newBuilder().setCredentialsProvider(credentialsProvider).build();
 
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings)) {
-      Subscription sub = Subscription.newBuilder().setName(FULL_SUBSCRIPTION_NAME).setTopic(FULL_TOPIC_NAME).build();
+      Subscription sub = Subscription.newBuilder().setName(fullSubscriptionName).setTopic(FULL_TOPIC_NAME).build();
       try {
         subscriptionAdminClient.createSubscription(sub);
       } catch (AlreadyExistsException e) {
-        log.info("Subscription Already Exists. Subscription Name: {} Exception: {}", FULL_SUBSCRIPTION_NAME, e);
+        log.info("Subscription Already Exists. Subscription Name: {} Exception: {}", fullSubscriptionName, e);
       }
     }
 
-    ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(GCP_PROJECT_ID, GCP_SUBSCRIPTION_NAME);
+    ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(GCP_PROJECT_ID, gcpSubscriptionName);
     subscriber = Subscriber
                      .newBuilder(projectSubscriptionName,
                          new GcpMarketplaceMessageReceiver(
@@ -71,11 +77,18 @@ public class GcpMarketplaceTopicSubscriber {
                      .setCredentialsProvider(credentialsProvider)
                      .build();
 
-    log.info("Starting listening to pub/sub topic: {}", FULL_TOPIC_NAME);
-    subscriber.startAsync();
+    log.info("Starting listening to pub/sub topic: {}; subscription: {}", FULL_TOPIC_NAME, gcpSubscriptionName);
+    try {
+      subscriber.startAsync().awaitRunning(1, TimeUnit.MINUTES);
+    } catch (TimeoutException e) {
+      log.error("Failed to start listening to pub/sub topic: {}", FULL_TOPIC_NAME);
+      throw new GcpMarketplaceException(
+          String.format("Failed to start listening to pub/sub topic: %s.", FULL_TOPIC_NAME), e);
+    }
   }
 
   public void stopAsync() {
+    log.info("Stopping listening to pub/sub topic: {}", FULL_TOPIC_NAME);
     subscriber.stopAsync();
   }
 
