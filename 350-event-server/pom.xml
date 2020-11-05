@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>72-event-server</artifactId>
+    <artifactId>350-event-server</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.bwaldvogel</groupId>

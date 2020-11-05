@@ -96,10 +96,10 @@ cd ../..
 
 mkdir -p dist/event-server ;
 cd dist/event-server
-cp ../../72-event-server/target/event-server-capsule.jar .
-cp ../../72-event-server/key.pem .
-cp ../../72-event-server/cert.pem .
-cp ../../72-event-server/event-service-config.yml .
+cp ../../350-event-server/target/event-server-capsule.jar .
+cp ../../350-event-server/key.pem .
+cp ../../350-event-server/cert.pem .
+cp ../../350-event-server/event-service-config.yml .
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/event-server/scripts/ .
