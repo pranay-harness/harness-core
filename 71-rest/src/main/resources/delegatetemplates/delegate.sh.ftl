@@ -182,6 +182,12 @@ else
   sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
 fi
 
+if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
+  echo "logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}" >> config-delegate.yml
+else
+  sed -i.bak "s|^logStreamingServiceBaseUrl:.*$|logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}|" config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}
