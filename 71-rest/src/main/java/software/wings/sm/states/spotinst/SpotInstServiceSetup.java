@@ -200,14 +200,14 @@ public class SpotInstServiceSetup extends State {
                 spotInstSetupTaskResponse != null ? spotInstSetupTaskResponse.getLbDetailsForBGDeployments() : null)
             .build();
 
+    // Add these details only if spotInstSetupTaskResponse is not NULL
+    addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
+
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name(spotinstStateHelper.getSweepingOutputName(context, SPOTINST_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
             .value(spotInstSetupContextElement)
             .build());
-
-    // Add these details only if spotInstSetupTaskResponse is not NULL
-    addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
