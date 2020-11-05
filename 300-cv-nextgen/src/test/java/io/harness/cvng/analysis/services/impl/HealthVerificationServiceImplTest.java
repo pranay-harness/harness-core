@@ -189,10 +189,10 @@ public class HealthVerificationServiceImplTest extends CvNextGenTest {
 
     healthVerificationService.updateProgress(
         verificationTaskId, start.plus(Duration.ofMinutes(10)), AnalysisStatus.RUNNING, false);
-    ArgumentCaptor<VerificationJobInstance.ProgressLog> captor =
-        ArgumentCaptor.forClass(VerificationJobInstance.ProgressLog.class);
+    ArgumentCaptor<VerificationJobInstance.AnalysisProgressLog> captor =
+        ArgumentCaptor.forClass(VerificationJobInstance.AnalysisProgressLog.class);
     verify(verificationJobInstanceService).logProgress(eq(verificationJobInstanceId), captor.capture());
-    VerificationJobInstance.ProgressLog progressLog = captor.getValue();
+    VerificationJobInstance.AnalysisProgressLog progressLog = captor.getValue();
     assertThat(progressLog.getAnalysisStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(progressLog.getEndTime()).isEqualTo(start.plus(Duration.ofMinutes(10)));
   }

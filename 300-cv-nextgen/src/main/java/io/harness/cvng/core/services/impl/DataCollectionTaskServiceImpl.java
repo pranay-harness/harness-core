@@ -27,6 +27,8 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -54,6 +56,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private CVConfigService cvConfigService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private VerificationTaskService verificationTaskService;
+  // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
+  // Probabally by moving ProgressLog concept to a separate service and model.
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
 
   @Override
   public void save(DataCollectionTask dataCollectionTask) {
@@ -131,6 +136,17 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
       } else {
         enqueueNextTask(dataCollectionTask);
+        if (dataCollectionTask instanceof DeploymentDataCollectionTask) {
+          verificationJobInstanceService.logProgress(
+              verificationTaskService.getVerificationJobInstanceId(dataCollectionTask.getVerificationTaskId()),
+              DataCollectionProgressLog.builder()
+                  .executionStatus(dataCollectionTask.getStatus())
+                  .isFinalState(false)
+                  .startTime(dataCollectionTask.getStartTime())
+                  .endTime(dataCollectionTask.getEndTime())
+                  .log("Data collection task successful")
+                  .build());
+        }
       }
       if (dataCollectionTask.shouldQueueAnalysis()) {
         orchestrationService.queueAnalysis(dataCollectionTask.getVerificationTaskId(),
@@ -142,6 +158,17 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private void markDependentTasksFailed(DataCollectionTask task) {
+    if (task instanceof DeploymentDataCollectionTask) {
+      verificationJobInstanceService.logProgress(
+          verificationTaskService.getVerificationJobInstanceId(task.getVerificationTaskId()),
+          DataCollectionProgressLog.builder()
+              .executionStatus(task.getStatus())
+              .isFinalState(false)
+              .startTime(task.getStartTime())
+              .endTime(task.getEndTime())
+              .log("Data collection failed with exception: " + task.getException())
+              .build());
+    }
     String exceptionMsg =
         task.getStatus() == DataCollectionExecutionStatus.EXPIRED ? "Previous task timed out" : "Previous task failed";
     log.info("Marking queued task failed for verificationTaskId {}", task.getVerificationTaskId());

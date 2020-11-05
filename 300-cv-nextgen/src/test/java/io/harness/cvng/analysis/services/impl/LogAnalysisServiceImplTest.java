@@ -336,7 +336,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   public void testScheduleDeploymentLogAnalysisTask_testVerificationWithBaseline() {
     VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
     VerificationJobInstance baseline = newVerificationJobInstance();
-    String baselineJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String baselineJobInstanceId = verificationJobInstanceService.create(baseline);
     ((TestVerificationJob) verificationJobInstance.getResolvedJob())
         .setBaselineVerificationJobInstanceId(baselineJobInstanceId);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);

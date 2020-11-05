@@ -28,6 +28,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -283,7 +284,7 @@ public class LogClusterServiceImpl implements LogClusterService {
   @Override
   public void logDeploymentVerificationProgress(
       AnalysisInput analysisInput, AnalysisStatus analysisStatus, LogClusterLevel clusterLevel) {
-    ProgressLog progressLog = ProgressLog.builder()
+    ProgressLog progressLog = AnalysisProgressLog.builder()
                                   .startTime(analysisInput.getStartTime())
                                   .endTime(analysisInput.getEndTime())
                                   .analysisStatus(analysisStatus)

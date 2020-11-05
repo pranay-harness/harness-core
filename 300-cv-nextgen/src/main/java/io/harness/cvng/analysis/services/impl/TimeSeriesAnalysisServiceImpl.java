@@ -50,6 +50,7 @@ import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
@@ -109,7 +110,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public void logDeploymentVerificationProgress(AnalysisInput analysisInput, AnalysisStatus analysisStatus) {
-    ProgressLog progressLog = ProgressLog.builder()
+    ProgressLog progressLog = AnalysisProgressLog.builder()
                                   .startTime(analysisInput.getStartTime())
                                   .endTime(analysisInput.getEndTime())
                                   .analysisStatus(analysisStatus)

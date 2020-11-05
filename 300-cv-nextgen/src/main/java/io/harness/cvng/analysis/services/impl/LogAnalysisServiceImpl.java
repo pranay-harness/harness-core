@@ -50,6 +50,7 @@ import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
@@ -250,7 +251,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public void logDeploymentVerificationProgress(AnalysisInput inputs, AnalysisStatus finalStatus) {
     ProgressLog progressLog =
-        ProgressLog.builder()
+        AnalysisProgressLog.builder()
             .startTime(inputs.getStartTime())
             .endTime(inputs.getEndTime())
             .analysisStatus(finalStatus)

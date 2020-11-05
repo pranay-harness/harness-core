@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.cvng.core.utils.DateTimeUtils;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Duration;
@@ -11,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class ServiceGuardDataCollectionTask extends DataCollectionTask {
   public static final Duration SERVICE_GUARD_MAX_DATA_COLLECTION_DURATION = Duration.ofHours(2);

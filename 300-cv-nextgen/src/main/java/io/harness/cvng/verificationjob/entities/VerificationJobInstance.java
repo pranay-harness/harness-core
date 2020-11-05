@@ -1,10 +1,12 @@
 package io.harness.cvng.verificationjob.entities;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
+import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
@@ -21,6 +23,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -141,14 +145,53 @@ public class VerificationJobInstance
     }
     return progressLogs;
   }
-  @Value
-  @Builder
-  public static class ProgressLog {
-    AnalysisStatus analysisStatus;
+  @Data
+  @SuperBuilder
+  public abstract static class ProgressLog {
     Instant startTime;
     Instant endTime;
     boolean isFinalState;
     String log;
+    public abstract ExecutionStatus getVerificationJobExecutionStatus();
+    public boolean shouldUpdateJobStatus(VerificationJobInstance verificationJobInstance) {
+      return getEndTime().equals(verificationJobInstance.getEndTime()) && isFinalState() || isFailedStatus();
+    }
+
+    public abstract boolean isFailedStatus();
+  }
+  @Value
+  @EqualsAndHashCode(callSuper = true)
+  @SuperBuilder
+  public static class AnalysisProgressLog extends VerificationJobInstance.ProgressLog {
+    AnalysisStatus analysisStatus;
+
+    @Override
+    public ExecutionStatus getVerificationJobExecutionStatus() {
+      return AnalysisStatus.mapToVerificationJobExecutionStatus(analysisStatus);
+    }
+
+    @Override
+    public boolean isFailedStatus() {
+      return AnalysisStatus.getFailedStatuses().contains(analysisStatus);
+    }
+  }
+  @Value
+  @EqualsAndHashCode(callSuper = true)
+  @SuperBuilder
+  public static class DataCollectionProgressLog extends VerificationJobInstance.ProgressLog {
+    DataCollectionExecutionStatus executionStatus;
+
+    @Override
+    public boolean isFailedStatus() {
+      return DataCollectionExecutionStatus.getFailedStatuses().contains(executionStatus);
+    }
+
+    @Override
+    public ExecutionStatus getVerificationJobExecutionStatus() {
+      Preconditions.checkState(DataCollectionExecutionStatus.getFailedStatuses().contains(executionStatus),
+          "Final status can only be set for failed status: " + executionStatus);
+      return ExecutionStatus.FAILED;
+    }
   }
 
   public enum ExecutionStatus {
@@ -162,12 +205,15 @@ public class VerificationJobInstance
       return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);
     }
   }
-
+  private List<ProgressLog> getFinalStateProgressLogs() {
+    return getProgressLogs().stream().filter(progressLog -> progressLog.isFinalState).collect(Collectors.toList());
+  }
   public int getProgressPercentage() {
-    if (getProgressLogs().isEmpty()) {
+    List<ProgressLog> finalStateLogs = getFinalStateProgressLogs();
+    if (finalStateLogs.isEmpty()) {
       return 0;
     }
-    ProgressLog lastProgressLog = getProgressLogs().get(getProgressLogs().size() - 1);
+    ProgressLog lastProgressLog = finalStateLogs.get(getProgressLogs().size() - 1);
     Instant endTime = lastProgressLog.getEndTime();
     Duration total = getResolvedJob().getDuration();
     Duration completedTillNow = Duration.between(getStartTime(), endTime);
