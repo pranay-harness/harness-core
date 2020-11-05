@@ -11,6 +11,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByService;
 
 import java.util.List;
@@ -21,7 +22,7 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @OwnedBy(CDC)
-public interface ServiceVariableService extends OwnedByService {
+public interface ServiceVariableService extends OwnedByService, OwnedByEnvironment {
   /**
    * List page response.
    *
