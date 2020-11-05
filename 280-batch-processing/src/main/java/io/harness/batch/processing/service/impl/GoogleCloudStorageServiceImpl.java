@@ -35,11 +35,14 @@ public class GoogleCloudStorageServiceImpl {
 
     String projectId = dataPipelineConfig.getGcpProjectId();
     String bucketName = dataPipelineConfig.getClusterDataGcsBucketName();
+    String backupBucketName = dataPipelineConfig.getClusterDataGcsBackupBucketName();
     Storage storage =
         StorageOptions.newBuilder().setProjectId(projectId).setCredentials(credentials).build().getService();
-    BlobId blobId = BlobId.of(bucketName, objectName);
-    BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-    storage.create(blobInfo, Files.readAllBytes(Paths.get(filePath)));
-    log.info("File " + filePath + " uploaded to bucket " + bucketName + " as " + objectName);
+    for (String bucket : new String[] {bucketName, backupBucketName}) {
+      BlobId blobId = BlobId.of(bucket, objectName);
+      BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+      storage.create(blobInfo, Files.readAllBytes(Paths.get(filePath)));
+      log.info("File " + filePath + " uploaded to bucket " + bucket + " as " + objectName);
+    }
   }
 }

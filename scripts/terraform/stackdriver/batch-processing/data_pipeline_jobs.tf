@@ -17,6 +17,7 @@ resource "google_monitoring_alert_policy" "ce_failed_data_pipeline_jobs" {
     ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
   ["${local.slack_dev_channel}"]))
 
+  enabled      = false
   display_name = join("_", [local.name_prefix, "ce_failed_data_pipeline_jobs"])
   combiner     = "OR"
   conditions {
@@ -41,4 +42,5 @@ resource "google_monitoring_alert_policy" "ce_failed_data_pipeline_jobs" {
 
     mime_type = "text/markdown"
   }
+
 }
