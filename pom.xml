@@ -45,8 +45,6 @@
         <!--<module>64-events-framework</module>-->
         <!--<module>69-connector-nextgen</module>-->
         <!--<module>70-cv-nextgen-commons</module>-->
-        <!--<module>70-delegate-agent</module>-->
-        <!--<module>70-delegate-service</module>-->
         <module>71-rest</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
@@ -68,6 +66,8 @@
         <module>330-ci-beans</module>
         <module>350-event-server</module>
 
+        <!--<module>420-delegate-agent</module>-->
+        <!--<module>420-delegate-service</module>-->
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
         <!--<module>990-commons-test</module>-->

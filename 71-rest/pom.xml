@@ -795,6 +795,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>420-delegate-agent</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>420-delegate-service</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>450-ce-views</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -816,16 +826,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>70-cv-nextgen-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>70-delegate-agent</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>70-delegate-service</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->

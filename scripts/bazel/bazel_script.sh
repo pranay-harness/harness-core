@@ -133,8 +133,8 @@ build_bazel_module 57-command-library-common
 build_bazel_module 64-events-framework
 build_bazel_module 69-connector-nextgen
 build_bazel_module 70-cv-nextgen-commons
-build_bazel_module 70-delegate-agent
-build_bazel_module 70-delegate-service
+build_bazel_module 420-delegate-agent
+build_bazel_module 420-delegate-service
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
 build_java_proto_module 13-grpc-api
