@@ -173,8 +173,14 @@ public class AccountChangeHandler implements EventHandler {
                   .count();
     }
 
-    boolean isPresentInSalesforce =
-        salesforceApiCheck.isSalesForceIntegrationEnabled() && salesforceApiCheck.isPresentInSalesforce(account);
+    boolean isPresentInSalesforce = false;
+    try {
+      isPresentInSalesforce =
+          salesforceApiCheck.isSalesForceIntegrationEnabled() && salesforceApiCheck.isPresentInSalesforce(account);
+    } catch (Exception e) {
+      log.error("Exception while querying Salesforce for account {} ", account.getUuid(), e);
+    }
+
     if (isPresentInSalesforce) {
       name = salesforceApiCheck.getSalesforceAccountName();
     }

@@ -1,12 +1,13 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.segment.SalesforceConfig;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 import software.wings.beans.Account;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 @OwnedBy(PL)
 @Slf4j
@@ -116,7 +118,7 @@ public class SalesforceApiCheck {
     while (true) {
       loginResponseString = login();
       count++;
-      if (EmptyPredicate.isNotEmpty(loginResponseString)) {
+      if (isNotEmpty(loginResponseString)) {
         break;
       }
       if (count >= MAX_RETRIES) {
@@ -128,7 +130,13 @@ public class SalesforceApiCheck {
     JSONObject json = new JSONObject(loginResponseString);
     String baseUri = json.getString(INSTANCE_URL) + REST_ENDPOINT + "/v47.0/query";
 
-    String uri = new URIBuilder().setPath(baseUri).setCustomQuery(queryString).toString();
+    String uri = null;
+    try {
+      uri = new URIBuilder(baseUri).setCustomQuery(queryString).toString();
+    } catch (URISyntaxException e) {
+      log.error("Salesforce error in uri building ", e);
+    }
+
     HttpGet httpGet = new HttpGet(uri);
     Header oauthHeader = new BasicHeader(AUTHORIZATION, "OAuth " + json.getString(ACCESS_TOKEN));
     httpGet.addHeader(oauthHeader);
@@ -167,7 +175,7 @@ public class SalesforceApiCheck {
     while (true) {
       responseString = querySalesforce(queryString);
       count++;
-      if (EmptyPredicate.isNotEmpty(responseString)) {
+      if (isNotEmpty(responseString)) {
         return responseString;
       }
       if (count >= MAX_RETRIES) {
@@ -180,7 +188,7 @@ public class SalesforceApiCheck {
   private boolean isFoundInSalesforce(String accountId, String queryString) {
     String responseString = retryQueryResponse(queryString);
 
-    if (EmptyPredicate.isEmpty(responseString)) {
+    if (isEmpty(responseString)) {
       return false;
     }
 
