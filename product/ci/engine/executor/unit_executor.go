@@ -78,7 +78,7 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.Sta
 
 	callbackToken := step.GetCallbackToken()
 	taskID := step.GetTaskId()
-	statusErr := sendStepStatus(ctx, accountID, callbackToken, taskID, numRetries, timeTaken,
+	statusErr := sendStepStatus(ctx, step.GetId(), accountID, callbackToken, taskID, numRetries, timeTaken,
 		stepOutput, err, e.log)
 	if statusErr != nil {
 		e.log.Errorw("Failed to send step status. Bailing out stage execution", "step_id", step.GetId(), zap.Error(err))

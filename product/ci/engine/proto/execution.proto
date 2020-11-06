@@ -73,3 +73,20 @@ message Execution {
   repeated Step steps = 1;
   string account_id = 2;
 }
+
+message UpdateStateRequest {
+  enum Action {
+    UNKNOWN = 0;
+    PAUSE = 1;
+    RESUME = 2;
+  }
+  Action action = 1;
+}
+
+message UpdateStateResponse {
+}
+
+service LiteEngine {
+  // Synchronous RPC to execute a step
+  rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
+}

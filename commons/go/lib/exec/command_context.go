@@ -73,7 +73,7 @@ func (o *osCmdContext) Start() error {
 		return err
 	}
 
-	o.log.Debugw("cmd started", o.String(), "pid", o.Pid())
+	o.log.Debugw("cmd started", "cmd", o.String(), "pid", o.Pid())
 	o.wait = make(chan struct{})
 	go func() {
 		select {

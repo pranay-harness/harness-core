@@ -18,6 +18,7 @@ import (
 	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -146,7 +147,7 @@ func TestStageRun(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -314,4 +315,22 @@ func TestStopIntegrationSvcSuccess(t *testing.T) {
 	}
 	err := e.stopIntegrationSvc(ctx, port)
 	assert.Nil(t, err)
+}
+
+func TestWaitForRunningState(t *testing.T) {
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	e := &stageExecutor{
+		log: log.Sugar(),
+	}
+
+	s := state.ExecutionState()
+	s.SetState(state.PAUSED)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		s.SetState(state.RUNNING)
+		ch := s.ResumeSignal()
+		ch <- true
+	}()
+
+	e.waitForRunningState()
 }
