@@ -101,6 +101,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                   .taskMode(null)
                   .chainEnd(true)
                   .passThroughData(taskChainResponse.getPassThroughData())
+                  .metadata(taskChainResponse.getMetadata())
                   .build()));
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(
           ambiance, nodeExecution.getResolvedStepParameters(), taskChainResponse.getPassThroughData(), null);
@@ -119,6 +120,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                 .taskMode(mode)
                 .chainEnd(taskChainResponse.isChainEnd())
                 .passThroughData(taskChainResponse.getPassThroughData())
+                .metadata(taskChainResponse.getMetadata())
                 .build()));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);

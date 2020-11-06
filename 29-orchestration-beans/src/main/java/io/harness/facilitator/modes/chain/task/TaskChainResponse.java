@@ -9,6 +9,8 @@ import io.harness.tasks.Task;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Map;
+
 @OwnedBy(CDC)
 @Value
 @Builder(buildMethodName = "internalBuild")
@@ -16,6 +18,7 @@ public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
   Task task;
+  Map<String, String> metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {
