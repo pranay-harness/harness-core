@@ -7,18 +7,24 @@ import (
 	"os"
 
 	"github.com/alexflint/go-arg"
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/engine/executor"
+	"github.com/wings-software/portal/product/ci/engine/grpc"
 	logger "github.com/wings-software/portal/product/ci/logger/util"
+	"go.uber.org/zap"
 )
 
 const (
 	applicationName = "CI-lite-engine"
 	deployable      = "ci-lite-engine"
+
+	port = 20001
 )
 
 var (
 	executeStage    = executor.ExecuteStage
 	newRemoteLogger = logger.GetRemoteLogger
+	engineServer    = grpc.NewEngineServer
 )
 
 // schema for executing a stage
@@ -62,8 +68,9 @@ func main() {
 	log := remoteLogger.BaseLogger
 	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
 
-	log.Infow("CI lite engine is starting")
+	startServer(remoteLogger)
 
+	log.Infow("Starting stage execution")
 	switch {
 	case args.Stage != nil:
 		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.ServicePorts, args.Stage.Debug, log)
@@ -80,4 +87,24 @@ func main() {
 		os.Exit(1) // Exit the lite engine with status code of 1
 	}
 	log.Infow("CI lite engine completed execution, now exiting")
+}
+
+// starts grpc server in background for pausing/resuming stage execution
+func startServer(rl *logs.RemoteLogger) {
+	log := rl.BaseLogger
+
+	log.Infow("Starting CI engine server for pause/resume ops", "port", port)
+	s, err := engineServer(port, log)
+	if err != nil {
+		log.Errorw("error on running CI engine server", "port", port, "error_msg", zap.Error(err))
+		rl.Writer.Close()
+		os.Exit(1) // Exit engine with exit code 1
+	}
+
+	// Start grpc server in separate goroutine. It will cater to pausing/resuming stage execution.
+	go func() {
+		if err := s.Start(); err != nil {
+			log.Errorw("error in CI engine grpc server", "port", port, "error_msg", zap.Error(err))
+		}
+	}()
 }

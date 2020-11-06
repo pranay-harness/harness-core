@@ -10,6 +10,7 @@ import (
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
 )
 
@@ -71,6 +72,7 @@ func (e *stageExecutor) Run() error {
 	var stepExecErr error
 	for _, step := range execution.GetSteps() {
 		if !cleanupOnly {
+			e.waitForRunningState()
 			stepExecErr = e.executeStep(ctx, step, execution.GetAccountId())
 			if stepExecErr != nil {
 				cleanupOnly = true
@@ -79,6 +81,27 @@ func (e *stageExecutor) Run() error {
 		e.cleanupStep(ctx, step)
 	}
 	return stepExecErr
+}
+
+// waits for execution state to be in running state
+func (e *stageExecutor) waitForRunningState() {
+	s := state.ExecutionState()
+	stateVal := s.GetState()
+	e.log.Infow("Current execution state", "state", state.ExecutionStateStr(stateVal))
+	if stateVal == state.RUNNING {
+		return
+	}
+
+	// Stage is paused. Wait for resume signal to proceed.
+	ch := s.ResumeSignal()
+	for {
+		switch {
+		case <-ch:
+			if s.GetState() == state.RUNNING {
+				return
+			}
+		}
+	}
 }
 
 // executeStep method executes a unit step or a parallel step
