@@ -268,6 +268,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   private boolean delete(Query<Instance> query, long time) {
     // todo(abhinav): find way to limit query and iterate
+    query.filter(InstanceKeys.isDeleted, false);
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
     setUnset(updateOperations, "deletedAt", time);
     setUnset(updateOperations, "isDeleted", true);
