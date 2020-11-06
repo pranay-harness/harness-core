@@ -770,6 +770,7 @@ public class CommandStateTest extends WingsBaseTest {
                                 .safeDisplayServiceVariables(emptyMap())
                                 .deploymentType("ECS")
                                 .accountId(ACCOUNT_ID)
+                                .delegateSelectors(Collections.emptyList())
                                 .build()})
                         .timeout(TimeUnit.MINUTES.toMillis(30))
                         .build())

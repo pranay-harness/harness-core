@@ -27,6 +27,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -40,6 +41,8 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -131,6 +134,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -171,6 +175,8 @@ public class CommandState extends State {
   @NotEmpty @SchemaIgnore private String connectionAttributes;
 
   @SchemaIgnore private boolean executeOnDelegate;
+
+  @NotEmpty @Getter @Setter @Attributes(title = "selectors") private List<String> delegateSelectors;
 
   @NotEmpty @SchemaIgnore private String host;
 
@@ -391,7 +397,8 @@ public class CommandState extends State {
               .serviceTemplateId(serviceTemplateId)
               .appContainer(service.getAppContainer())
               .accountId(accountId)
-              .timeout(getTimeoutMillis());
+              .timeout(getTimeoutMillis())
+              .delegateSelectors(getDelegateSelectors(context));
 
       getHostConnectionDetails(context, host, commandExecutionContextBuilder);
 
@@ -897,7 +904,8 @@ public class CommandState extends State {
               .accountId(accountId)
               .timeout(getTimeoutMillis())
               .executeOnDelegate(executeOnDelegate)
-              .deploymentType(deploymentType != null ? deploymentType.name() : null);
+              .deploymentType(deploymentType != null ? deploymentType.name() : null)
+              .delegateSelectors(getDelegateSelectors(context));
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
@@ -968,6 +976,18 @@ public class CommandState extends State {
     }
 
     return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
+  }
+
+  @NotNull
+  private List<String> getDelegateSelectors(ExecutionContext context) {
+    List<String> renderedSelectorsSet = new ArrayList<>();
+
+    if (EmptyPredicate.isNotEmpty(delegateSelectors)) {
+      for (String selector : delegateSelectors) {
+        renderedSelectorsSet.add(context.renderExpression(selector));
+      }
+    }
+    return renderedSelectorsSet;
   }
 
   private void setPropertiesFromFeatureFlags(

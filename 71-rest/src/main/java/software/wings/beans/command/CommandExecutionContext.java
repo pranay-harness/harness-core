@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
@@ -10,6 +11,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_SIMPLE_HTTP
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -81,6 +84,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
+  private List<String> delegateSelectors;
 
   // new fields for multi artifact
   private Map<String, Artifact> multiArtifactMap;
@@ -137,6 +141,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     multiArtifact = other.multiArtifact;
     artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
     artifactFileName = other.artifactFileName;
+    delegateSelectors = other.delegateSelectors;
   }
 
   /**
@@ -195,9 +200,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     String region = null;
     DeploymentType dType = DeploymentType.valueOf(getDeploymentType());
+    List<ExecutionCapability> capabilities = new ArrayList<>();
     switch (dType) {
       case KUBERNETES:
-        List<ExecutionCapability> capabilities = new ArrayList<>();
         SettingValue config = cloudProviderSetting.getValue();
         if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
           capabilities.addAll(config.fetchRequiredExecutionCapabilities());
@@ -216,32 +221,42 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
         return capabilities;
       case WINRM:
-        return singletonList(WinrmHostValidationCapability.builder()
-                                 .validationInfo(BasicValidationInfo.builder()
-                                                     .accountId(accountId)
-                                                     .appId(appId)
-                                                     .activityId(activityId)
-                                                     .executeOnDelegate(executeOnDelegate)
-                                                     .publicDns(host == null ? null : host.getPublicDns())
-                                                     .build())
-                                 .winRmConnectionAttributes(winrmConnectionAttributes)
-                                 .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
-                                 .build());
+        capabilities.add(WinrmHostValidationCapability.builder()
+                             .validationInfo(BasicValidationInfo.builder()
+                                                 .accountId(accountId)
+                                                 .appId(appId)
+                                                 .activityId(activityId)
+                                                 .executeOnDelegate(executeOnDelegate)
+                                                 .publicDns(host == null ? null : host.getPublicDns())
+                                                 .build())
+                             .winRmConnectionAttributes(winrmConnectionAttributes)
+                             .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+                             .build());
+        if (isNotEmpty(delegateSelectors)) {
+          capabilities.add(
+              SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
+        }
+        return capabilities;
       case SSH:
-        return singletonList(SSHHostValidationCapability.builder()
-                                 .validationInfo(BasicValidationInfo.builder()
-                                                     .accountId(accountId)
-                                                     .appId(appId)
-                                                     .activityId(activityId)
-                                                     .executeOnDelegate(executeOnDelegate)
-                                                     .publicDns(host == null ? null : host.getPublicDns())
-                                                     .build())
-                                 .hostConnectionAttributes(hostConnectionAttributes)
-                                 .bastionConnectionAttributes(bastionConnectionAttributes)
-                                 .hostConnectionCredentials(hostConnectionCredentials)
-                                 .bastionConnectionCredentials(bastionConnectionCredentials)
-                                 .sshExecutionCredential((SSHExecutionCredential) executionCredential)
-                                 .build());
+        capabilities.add(SSHHostValidationCapability.builder()
+                             .validationInfo(BasicValidationInfo.builder()
+                                                 .accountId(accountId)
+                                                 .appId(appId)
+                                                 .activityId(activityId)
+                                                 .executeOnDelegate(executeOnDelegate)
+                                                 .publicDns(host == null ? null : host.getPublicDns())
+                                                 .build())
+                             .hostConnectionAttributes(hostConnectionAttributes)
+                             .bastionConnectionAttributes(bastionConnectionAttributes)
+                             .hostConnectionCredentials(hostConnectionCredentials)
+                             .bastionConnectionCredentials(bastionConnectionCredentials)
+                             .sshExecutionCredential((SSHExecutionCredential) executionCredential)
+                             .build());
+        if (isNotEmpty(delegateSelectors)) {
+          capabilities.add(
+              SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
+        }
+        return capabilities;
       case AWS_CODEDEPLOY:
         return singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
       case ECS:
@@ -293,6 +308,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
+    private List<String> delegateSelectors;
 
     // new fields for multi artifact
     private Map<String, Artifact> multiArtifactMap;
@@ -518,6 +534,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder delegateSelectors(List<String> tags) {
+      this.delegateSelectors = tags;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .accountId(accountId)
@@ -561,7 +582,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .multiArtifact(multiArtifact)
           .artifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
           .artifactFileName(artifactFileName)
-          .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
+          .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
+          .delegateSelectors(delegateSelectors);
     }
 
     public CommandExecutionContext build() {
@@ -608,6 +630,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
+      commandExecutionContext.setDelegateSelectors(delegateSelectors);
       return commandExecutionContext;
     }
   }

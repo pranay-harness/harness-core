@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -29,6 +31,7 @@ import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCap
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class CommandExecutionContextTest extends WingsBaseTest {
@@ -71,6 +74,23 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredExecutionCapabilitiesWithDelegateSelectorsWinrm() {
+    CommandExecutionContext executionContext =
+        contextBuilder.deploymentType(DeploymentType.WINRM.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainWinrmSettingAttribute())
+            .delegateSelectors(Arrays.asList("selector1", "selector2", "selector3"))
+            .executeOnDelegate(false)
+            .build();
+
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    assertThat(executionCapabilities).hasSize(2);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(WinrmHostValidationCapability.class);
+    assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
+  }
+
+  @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesSSH() {
@@ -83,6 +103,24 @@ public class CommandExecutionContextTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredExecutionCapabilitiesWithDelegateSelectorsSSH() {
+    CommandExecutionContext executionContext =
+        contextBuilder.deploymentType(DeploymentType.SSH.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainSshSettingAttribute())
+            .executionCredential(aSSHExecutionCredential().withSshUser(USER_NAME).withSshPassword(PASSWORD).build())
+            .delegateSelectors(Arrays.asList("selector1", "selector2", "selector3"))
+            .executeOnDelegate(true)
+            .build();
+
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    assertThat(executionCapabilities).hasSize(2);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
+    assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
   }
 
   @Test
