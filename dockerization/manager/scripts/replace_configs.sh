@@ -209,6 +209,10 @@ if [[ "" != "$SAMPLE_TARGET_STATUS_HOST" ]]; then
   yq write -i $CONFIG_FILE sampleTargetStatusHost "$SAMPLE_TARGET_STATUS_HOST"
 fi
 
+if [[ "" != "$GLOBAL_WHITELIST" ]]; then
+  yq write -i $CONFIG_FILE globalWhitelistConfig.filters "$GLOBAL_WHITELIST"
+fi
+
 if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
 fi

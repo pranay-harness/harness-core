@@ -27,9 +27,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
+import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.features.api.PremiumFeature;
@@ -58,6 +60,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private Account account;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private MainConfiguration mainConfig;
 
   @InjectMocks @Inject private WhitelistService whitelistService;
   @Mock private PremiumFeature ipWhitelistingFeature;
@@ -80,6 +83,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(accountService.get(anyString())).thenReturn(account);
+    when(mainConfig.getGlobalWhitelistConfig()).thenReturn(getHarnessDefaults());
     when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(true);
 
     setUserRequestContext();
@@ -89,6 +93,10 @@ public class WhitelistServiceTest extends WingsBaseTest {
     User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
     user.setUserRequestContext(UserRequestContext.builder().accountId(ACCOUNT_ID).build());
     UserThreadLocal.set(user);
+  }
+
+  private GlobalWhitelistConfig getHarnessDefaults() {
+    return GlobalWhitelistConfig.builder().filters("192.168.128.0/24,127.0.0.1/8").build();
   }
 
   /**
@@ -153,6 +161,9 @@ public class WhitelistServiceTest extends WingsBaseTest {
     assertThat(valid).isFalse();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_5);
+    assertThat(valid).isTrue();
+
+    valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_6);
     assertThat(valid).isTrue();
 
     valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_7);
