@@ -22,6 +22,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.common.NGTaskType;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -90,6 +91,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
     List<ManifestAttributes> manifests = serviceOutcome.getManifests();
     Validator.notEmptyCheck("Manifests can't be empty", manifests);
+    Validator.notEmptyCheck("Timeout cannot be empty", k8sRollingStepParameters.getTimeout().getValue());
 
     K8sManifest k8sManifest = getK8sManifest(manifests);
     List<ValuesManifest> aggregatedValuesManifests = getAggregatedValuesManifests(manifests);
@@ -137,7 +139,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(600000 /*k8sRollingStepParameters.getTimeout().getValue()*/)
+                                  .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(
+                                      k8sRollingStepParameters.getTimeout().getValue()))
                                   .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -177,19 +180,21 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
             .commandName(K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
-            .timeoutIntervalInMin(10 /*stepParameters.getTimeout().getValue()*/)
+            .timeoutIntervalInMin(
+                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
             .valuesYamlList(renderedValuesList)
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
             .accountId(accountId)
             .build();
 
-    TaskData taskData = TaskData.builder()
-                            .parameters(new Object[] {k8sRollingDeployRequest})
-                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
-                            .async(true)
-                            .build();
+    TaskData taskData =
+        TaskData.builder()
+            .parameters(new Object[] {k8sRollingDeployRequest})
+            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
+            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
+            .async(true)
+            .build();
 
     final Task delegateTask = prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
 
