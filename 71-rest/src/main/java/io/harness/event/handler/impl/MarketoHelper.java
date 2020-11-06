@@ -174,6 +174,18 @@ public class MarketoHelper {
     if (userInvite != null && userInvite.getFreemiumAssistedOption() != null) {
       leadBuilder.freemiumassistedoption(userInvite.getFreemiumAssistedOption());
     }
+
+    if (userInvite != null && userInvite.getCountry() != null) {
+      leadBuilder.country(userInvite.getCountry());
+    }
+
+    if (userInvite != null && userInvite.getState() != null) {
+      leadBuilder.state(userInvite.getState());
+    }
+
+    if (userInvite != null && userInvite.getPhone() != null) {
+      leadBuilder.phone(userInvite.getPhone());
+    }
     return leadBuilder.build();
   }
 

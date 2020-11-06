@@ -8,7 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.TrialSignupOptions;
 import software.wings.beans.utm.UtmInfo;
+
+import java.util.List;
 
 @OwnedBy(PL)
 @Data
@@ -21,4 +24,6 @@ public class OauthUserInfo {
   String name;
   String login;
   UtmInfo utmInfo;
+  List<TrialSignupOptions.Products> freemiumProducts;
+  Boolean freemiumAssistedOption;
 }

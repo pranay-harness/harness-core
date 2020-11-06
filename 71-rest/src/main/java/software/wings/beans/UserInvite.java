@@ -56,6 +56,12 @@ public class UserInvite extends Base implements AccountAccess {
 
   private String familyName;
 
+  @Getter @Setter private String phone;
+
+  @Getter @Setter private String country;
+
+  @Getter @Setter private String state;
+
   @Getter @Setter private List<String> freemiumProducts;
 
   @Getter @Setter private Boolean freemiumAssistedOption;

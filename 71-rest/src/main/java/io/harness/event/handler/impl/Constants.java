@@ -26,4 +26,7 @@ public interface Constants {
   String ORIGINAL_TIMESTAMP_NAME = "originalTimestamp";
   String FREEMIUM_PRODUCTS = "freemiumProducts";
   String FREEMIUM_ASSISTED_OPTION = "freemiumAssistedOption";
+  String COUNTRY = "country";
+  String STATE = "state";
+  String PHONE = "phone";
 }
