@@ -8,10 +8,13 @@ import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CATEGORY;
 import static io.harness.event.handler.impl.Constants.COMPANY_NAME;
+import static io.harness.event.handler.impl.Constants.COUNTRY;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.FREEMIUM_ASSISTED_OPTION;
 import static io.harness.event.handler.impl.Constants.FREEMIUM_PRODUCTS;
+import static io.harness.event.handler.impl.Constants.PHONE;
+import static io.harness.event.handler.impl.Constants.STATE;
 import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
 import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
@@ -918,10 +921,21 @@ public class EventPublishHelper {
     if (isNotEmpty(freemiumProducts)) {
       properties.put(FREEMIUM_PRODUCTS, String.join(", ", freemiumProducts));
     }
-
     Boolean freemiumAssistedOption = userInvite.getFreemiumAssistedOption();
     if (freemiumAssistedOption != null) {
       properties.put(FREEMIUM_ASSISTED_OPTION, String.valueOf(freemiumAssistedOption));
+    }
+    String country = userInvite.getCountry();
+    if (country != null) {
+      properties.put(COUNTRY, country);
+    }
+    String state = userInvite.getState();
+    if (state != null) {
+      properties.put(STATE, state);
+    }
+    String phone = userInvite.getPhone();
+    if (phone != null) {
+      properties.put(PHONE, phone);
     }
     return properties;
   }

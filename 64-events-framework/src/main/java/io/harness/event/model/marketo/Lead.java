@@ -13,7 +13,10 @@ public class Lead {
   private String email;
   private String firstName;
   private String lastName;
+  private String phone;
   private String company;
+  private String country;
+  private String state;
   private String Harness_Account_ID__c_lead;
   private String Free_Trial_Status__c;
   private String Freemium_Invite_URL__c;

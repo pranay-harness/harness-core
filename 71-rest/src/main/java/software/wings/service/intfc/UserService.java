@@ -61,13 +61,6 @@ public interface UserService extends OwnedByAccount {
   @ValidationGroups(Create.class) User register(@Valid User user);
 
   /**
-   * Start the trial registration with an email.
-   *
-   * @param email the email of the user who is registering for a trial account.
-   */
-  boolean trialSignup(String email);
-
-  /**
    * Start the trial registration with an user invite.
    *
    * @param userInvite user invite with registration info
@@ -284,7 +277,7 @@ public interface UserService extends OwnedByAccount {
   /**
    * Send login invitation email
    *
-   * @param userInvite  user invite
+   * @param user  user
    * @param account     account
    */
   void sendUserInvitationToOnlySsoAccountMail(Account account, User user);

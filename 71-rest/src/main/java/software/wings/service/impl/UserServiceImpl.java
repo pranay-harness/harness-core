@@ -122,6 +122,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
+import software.wings.beans.TrialSignupOptions;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.beans.User.UserKeys;
@@ -218,7 +219,6 @@ public class UserServiceImpl implements UserService {
   private static final String ADD_ACCOUNT_EMAIL_TEMPLATE_NAME = "add_account";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
-  private static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
   private static final String JOIN_EXISTING_TEAM_TEMPLATE_NAME = "join_existing_team";
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
   private static final String EXC_MSG_RESET_PASS_LINK_NOT_GEN = "Reset password link could not be generated";
@@ -441,50 +441,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean postCustomEvent(String accountId, String event) {
     eventPublishHelper.publishCustomEvent(accountId, event);
-    return true;
-  }
-
-  /**
-   * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
-   * invitation completion.
-   */
-  @Override
-  public boolean trialSignup(String email) {
-    final String emailAddress = email.trim().toLowerCase();
-    validateTrialSignup(emailAddress);
-
-    UserInvite userInvite = signupService.getUserInviteByEmail(emailAddress);
-    if (userInvite == null) {
-      // Create a new user invite to track the invitation status
-      userInvite = new UserInvite();
-      userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
-      userInvite.setEmail(emailAddress);
-      userInvite.setCompleted(false);
-
-      String inviteId = wingsPersistence.save(userInvite);
-      userInvite.setUuid(inviteId);
-
-      String url = format(INVITE_URL_FORMAT, userInvite.getEmail(), userInvite.getUuid());
-      // Send an email invitation for the trial user to finish up the sign-up with additional information
-      // such as password, account/company name information.
-      sendVerificationEmail(userInvite, url);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, null, inviteId, userInvite.getCompanyName());
-    } else if (userInvite.isCompleted()) {
-      if (spamChecker.isSpam(userInvite)) {
-        return false;
-      }
-      // HAR-7590: If user invite has completed. Send an email saying so and ask the user to login directly.
-      signupService.sendTrialSignupCompletedEmail(userInvite);
-    } else {
-      if (spamChecker.isSpam(userInvite)) {
-        return false;
-      }
-
-      String url = format(INVITE_URL_FORMAT, userInvite.getEmail(), userInvite.getUuid());
-      // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
-      sendVerificationEmail(userInvite, url);
-    }
-
     return true;
   }
 
@@ -1093,20 +1049,11 @@ public class UserServiceImpl implements UserService {
         format(INVITE_URL_FORMAT, userInvite.getEmail(), userInvite.getUuid()), userInvite.getAccountId());
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, String accountId)
-      throws URISyntaxException {
-    Map<String, String> model = new HashMap<>();
-    model.put("name", email);
-    model.put("url", buildAbsoluteUrl(url, accountId));
-    return model;
-  }
-
   private Map<String, String> getEmailVerificationTemplateModel(
-      String email, String url, Map<String, String> params, String accountId) {
+      String name, String url, Map<String, String> params, String accountId) {
     Map<String, String> model = new HashMap<>();
-    model.put("name", email);
+    model.put("name", name);
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    // This uses the setPath. The method above uses setFragment() which adds a # to the url.
     model.put("url", authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
     return model;
   }
@@ -1122,22 +1069,11 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendVerificationEmail(UserInvite userInvite, String url) {
-    try {
-      Map<String, String> templateModel =
-          getEmailVerificationTemplateModel(userInvite.getEmail(), url, userInvite.getAccountId());
-      signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
-    } catch (URISyntaxException e) {
-      log.error("Verification email couldn't be sent for userInviteId={} & accountId={}", userInvite.getUuid(),
-          userInvite.getAccountId(), e);
-    }
-  }
-
   @Override
   public void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
     Map<String, String> templateModel =
-        getEmailVerificationTemplateModel(userInvite.getEmail(), url, params, userInvite.getAccountId());
-    signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
+        getEmailVerificationTemplateModel(userInvite.getName(), url, params, userInvite.getAccountId());
+    signupService.sendTrialSignupVerificationEmail(userInvite, templateModel);
   }
 
   private boolean sendEmail(String toEmail, String templateName, Map<String, String> templateModel) {
@@ -1502,6 +1438,12 @@ public class UserServiceImpl implements UserService {
                           .withAppId(GLOBAL_APP_ID)
                           .withLicenseInfo(licenseInfo)
                           .build();
+
+    TrialSignupOptions trialSignupOptions = new TrialSignupOptions();
+    trialSignupOptions.setAssistedOption(existingInvite.getFreemiumAssistedOption());
+    trialSignupOptions.populateProducts(existingInvite.getFreemiumProducts());
+    account.setTrialSignupOptions(trialSignupOptions);
+
     // Create an trial account which license expires in 15 days.
     account = setupAccount(account, shouldCreateSampleApp);
     String accountId = account.getUuid();
@@ -1558,8 +1500,11 @@ public class UserServiceImpl implements UserService {
 
     throwExceptionIfUserIsAlreadyRegistered(user.getEmail());
 
+    TrialSignupOptions trialSignupOptions =
+        new TrialSignupOptions(userInfo.getFreemiumProducts(), userInfo.getFreemiumAssistedOption());
+
     // Create a trial account whose license expires in 15 days.
-    Account account = createAccountWithTrialLicense(user);
+    Account account = createAccountWithTrialLicense(user, trialSignupOptions);
 
     // For trial user just signed up, it will be assigned to the account admin role.
     user = assignUserToAccountAdminGroup(user, account);
@@ -1622,7 +1567,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private Account createAccountWithTrialLicense(User user) {
+  private Account createAccountWithTrialLicense(User user, TrialSignupOptions trialSignupOptions) {
     LicenseInfo licenseInfo = getTrialLicense();
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     Account account = Account.Builder.anAccount()
@@ -1631,6 +1576,8 @@ public class UserServiceImpl implements UserService {
                           .withAppId(GLOBAL_APP_ID)
                           .withLicenseInfo(licenseInfo)
                           .build();
+
+    account.setTrialSignupOptions(trialSignupOptions);
 
     account = setupAccount(account, false);
     return account;
