@@ -1,5 +1,7 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
@@ -22,6 +24,9 @@ public class PipelineDtoMapper {
   public NgPipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
     try {
       NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+      if (isEmpty(ngPipeline.getStages())) {
+        throw new InvalidRequestException("stages cannot be empty for the given pipeline");
+      }
       return NgPipelineEntity.builder()
           .ngPipeline(ngPipeline)
           .yamlPipeline(yaml)
@@ -60,6 +65,9 @@ public class PipelineDtoMapper {
 
   private int getNumberOfStages(NgPipeline pipeline) {
     List<StageElementWrapper> stages = pipeline.getStages();
+    if (isEmpty(stages)) {
+      return 0;
+    }
     int count = 0;
     for (StageElementWrapper wrapper : stages) {
       if (wrapper.getClass() == StageElement.class) {

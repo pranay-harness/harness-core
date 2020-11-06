@@ -38,30 +38,32 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     Set<String> responsesToBeDeleted = new HashSet<>();
 
     while (true) {
-      Query<DelegateAsyncTaskResponse> taskResponseQuery =
-          persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
-              .field(DelegateAsyncTaskResponseKeys.processAfter)
-              .lessThan(currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
+      try {
+        Query<DelegateAsyncTaskResponse> taskResponseQuery =
+            persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
+                .field(DelegateAsyncTaskResponseKeys.processAfter)
+                .lessThan(currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
 
-      UpdateOperations<DelegateAsyncTaskResponse> updateOperations =
-          persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
-              .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
+        UpdateOperations<DelegateAsyncTaskResponse> updateOperations =
+            persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
+                .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
 
-      DelegateAsyncTaskResponse lockedAsyncTaskResponse =
-          persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
+        DelegateAsyncTaskResponse lockedAsyncTaskResponse =
+            persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
 
-      if (lockedAsyncTaskResponse == null) {
-        break;
-      }
+        if (lockedAsyncTaskResponse == null) {
+          break;
+        }
 
-      log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
-
-      waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
-          (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));
-
-      responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
-      if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
-        deleteProcessedResponses(responsesToBeDeleted);
+        log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
+        waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
+            (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));
+        responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
+        if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
+          deleteProcessedResponses(responsesToBeDeleted);
+        }
+      } catch (Exception ex) {
+        log.info(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()));
       }
     }
 
