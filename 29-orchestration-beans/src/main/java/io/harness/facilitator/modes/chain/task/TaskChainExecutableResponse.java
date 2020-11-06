@@ -10,6 +10,8 @@ import io.harness.tasks.TaskMode;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Map;
+
 @OwnedBy(CDC)
 @Redesign
 @Value
@@ -19,4 +21,5 @@ public class TaskChainExecutableResponse implements TaskSpawningExecutableRespon
   TaskMode taskMode;
   boolean chainEnd;
   PassThroughData passThroughData;
+  Map<String, String> metadata;
 }

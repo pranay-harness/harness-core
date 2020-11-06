@@ -4,5 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import java.util.Collections;
+import java.util.Map;
+
 @OwnedBy(CDC)
-public interface ExecutableResponse {}
+public interface ExecutableResponse {
+  default Map<String, String> getMetadata() {
+    return Collections.emptyMap();
+  }
+}
