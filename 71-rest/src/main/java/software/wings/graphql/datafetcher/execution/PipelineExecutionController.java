@@ -126,15 +126,19 @@ public class PipelineExecutionController {
                  .collect(Collectors.toList());
     }
 
-    Pipeline pipeline = workflowExecution.getPipelineExecution().getPipeline();
+    if (workflowExecution.getPipelineExecution() != null
+        && workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+      Pipeline pipeline = workflowExecution.getPipelineExecution().getPipeline();
+      builder.pipelineStageExecutions(workflowExecution.getPipelineExecution()
+                                          .getPipelineStageExecutions()
+                                          .stream()
+                                          .map(exec
+                                              -> populatePipelineStageExecution(workflowExecution.getUuid(), pipeline,
+                                                  exec, workflowExecution.getExecutionArgs()))
+                                          .collect(Collectors.toList()));
+    }
+
     builder.id(workflowExecution.getUuid())
-        .pipelineStageExecutions(workflowExecution.getPipelineExecution()
-                                     .getPipelineStageExecutions()
-                                     .stream()
-                                     .map(exec
-                                         -> populatePipelineStageExecution(workflowExecution.getUuid(), pipeline, exec,
-                                             workflowExecution.getExecutionArgs()))
-                                     .collect(Collectors.toList()))
         .pipelineId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
         .createdAt(workflowExecution.getCreatedAt())
