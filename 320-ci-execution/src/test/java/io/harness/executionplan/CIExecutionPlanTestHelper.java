@@ -157,6 +157,7 @@ public class CIExecutionPlanTestHelper {
 
   private static final String COMMIT_MESSAGE = "foo=bar";
   private static final String COMMIT_LINK = "foo/bar";
+  private static final String COMMIT = "e9a0d31c5ac677ec1e06fb3ab69cd1d2cc62a74a";
 
   private static final String MOUNT_PATH = "/step-exec";
   private static final String VOLUME_NAME = "step-exec";
@@ -995,7 +996,8 @@ public class CIExecutionPlanTestHelper {
   }
 
   public CIExecutionArgs getPRCIExecutionArgs() {
-    WebhookBaseAttributes core = WebhookBaseAttributes.builder().link(COMMIT_LINK).message(COMMIT_MESSAGE).build();
+    WebhookBaseAttributes core =
+        WebhookBaseAttributes.builder().link(COMMIT_LINK).message(COMMIT_MESSAGE).after(COMMIT).build();
     Repository repo = Repository.builder().branch(REPO_BRANCH).name(REPO_NAME).namespace(REPO_NAMESPACE).build();
 
     WebhookEvent webhookEvent = PRWebhookEvent.builder().baseAttributes(core).repository(repo).build();
@@ -1018,6 +1020,9 @@ public class CIExecutionPlanTestHelper {
     envVarMap.put("DRONE_COMMIT_MESSAGE", COMMIT_MESSAGE);
     envVarMap.put("DRONE_BUILD_NUMBER", BUILD_NUMBER + "");
     envVarMap.put("DRONE_BUILD_EVENT", "pull_request");
+    envVarMap.put("DRONE_COMMIT_SHA", COMMIT);
+    envVarMap.put("DRONE_COMMIT_AFTER", COMMIT);
+    envVarMap.put("DRONE_COMMIT", COMMIT);
     return envVarMap;
   }
 
@@ -1051,6 +1056,13 @@ public class CIExecutionPlanTestHelper {
   public ExecutionPlanCreationContextImpl getExecutionPlanCreationContextWithExecutionArgs() {
     ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
     context.addAttribute(ExecutionArgs.EXEC_ARGS, getCIExecutionArgs());
+    context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
+    return context;
+  }
+
+  public ExecutionPlanCreationContextImpl getWebhookPlanContextWithExecArgs() {
+    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
+    context.addAttribute(ExecutionArgs.EXEC_ARGS, getPRCIExecutionArgs());
     context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
     return context;
   }

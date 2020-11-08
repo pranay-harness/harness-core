@@ -56,11 +56,15 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @Singleton
 @Slf4j
 public class GitClientHelper {
+  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+).git";
+  private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
                                                                 .maximumSize(2000)
                                                                 .expireAfterAccess(1, TimeUnit.HOURS)
@@ -70,6 +74,34 @@ public class GitClientHelper {
                                                                     return new Object();
                                                                   }
                                                                 });
+
+  public static String getGitRepo(String url) {
+    Matcher m = GIT_URL.matcher(url);
+    try {
+      if (m.find() == true) {
+        return m.toMatchResult().group(5);
+      } else {
+        throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
+      }
+
+    } catch (Exception e) {
+      throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE, e);
+    }
+  }
+
+  public static String getGitOwner(String url) {
+    Matcher m = GIT_URL.matcher(url);
+    try {
+      if (m.find() == true) {
+        return m.toMatchResult().group(4);
+      } else {
+        throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
+      }
+
+    } catch (Exception e) {
+      throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+  }
 
   String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
     if (repositoryType == null) {

@@ -11,7 +11,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.harness.CIExecutionServiceModule;
-import io.harness.NGPipelineCommonsModule;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIBuildInfoService;
@@ -119,7 +118,6 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(CIExecutionServiceModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
-    install(NGPipelineCommonsModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
     install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()

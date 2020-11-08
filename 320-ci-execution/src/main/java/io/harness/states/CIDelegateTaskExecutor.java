@@ -32,7 +32,7 @@ public class CIDelegateTaskExecutor implements TaskExecutor<HDelegateTask> {
     String accountId = task.getAccountId();
     TaskData taskData = task.getData();
     final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                        .parked(true)
+                                                        .parked(taskData.isParked())
                                                         .accountId(accountId)
                                                         .taskType(taskData.getTaskType())
                                                         .taskParameters(extractTaskParameters(taskData))

@@ -13,6 +13,9 @@ import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
+import io.harness.states.CIDelegateTaskExecutor;
+import io.harness.tasks.TaskExecutor;
+import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 public class CIExecutionServiceModule extends AbstractModule {
@@ -27,7 +30,6 @@ public class CIExecutionServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(OrchestrationModule.getInstance());
     install(CIBeansModule.getInstance());
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
@@ -38,6 +40,9 @@ public class CIExecutionServiceModule extends AbstractModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
+    MapBinder<String, TaskExecutor> taskExecutorMap =
+        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
+    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
   }
 
   @Provides

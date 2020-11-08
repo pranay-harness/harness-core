@@ -4,6 +4,7 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.states.BuildEnvSetupStep;
+import io.harness.states.BuildStatusStep;
 import io.harness.states.BuildStep;
 import io.harness.states.CIPipelineSetupStep;
 import io.harness.states.CleanupStep;
@@ -32,5 +33,6 @@ public class ExecutionRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(PublishStep.STEP_TYPE, PublishStep.class));
     stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class));
     stateClasses.add(Pair.of(CIPipelineSetupStep.STEP_TYPE, CIPipelineSetupStep.class));
+    stateClasses.add(Pair.of(BuildStatusStep.STEP_TYPE, BuildStatusStep.class));
   }
 }

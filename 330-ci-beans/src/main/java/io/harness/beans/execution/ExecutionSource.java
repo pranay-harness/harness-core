@@ -5,6 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
 public interface ExecutionSource {
-  enum Type { Webhook, MANUAL }
+  enum Type { WEBHOOK, MANUAL }
   ExecutionSource.Type getType();
 }

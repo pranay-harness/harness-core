@@ -51,7 +51,7 @@ public class BuildDtoMapper {
     ExecutionSource executionSource = ciBuild.getExecutionSource();
     if (executionSource != null) {
       ciBuildResponseDTO.setTriggerType(executionSource.getType().toString().toLowerCase());
-      if (executionSource.getType() == ExecutionSource.Type.Webhook) {
+      if (executionSource.getType() == ExecutionSource.Type.WEBHOOK) {
         WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
         ciBuildResponseDTO.setAuthor(convertGitAuthor(webhookExecutionSource.getUser()));
         if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {

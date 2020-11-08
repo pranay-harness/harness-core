@@ -60,7 +60,7 @@ public class BuildEnvironmentUtils {
       return envVarMap;
     }
 
-    if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.Webhook) {
+    if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.WEBHOOK) {
       WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) ciExecutionArgs.getExecutionSource();
       if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
         BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();

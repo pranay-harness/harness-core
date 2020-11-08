@@ -26,6 +26,8 @@ import io.harness.azure.impl.AzureAutoScaleSettingsClientImpl;
 import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
+import io.harness.cistatus.service.GithubService;
+import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.git.NGGitService;
@@ -732,6 +734,7 @@ public class DelegateModule extends AbstractModule {
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
+    bind(GithubService.class).to(GithubServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
 
     MapBinder<Class<? extends ArtifactSourceDelegateRequest>, Class<? extends DelegateArtifactTaskHandler>>
