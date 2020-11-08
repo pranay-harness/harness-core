@@ -221,7 +221,8 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     return datastore.run(queryBuilder.build());
   }
 
-  private <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
+  @Override
+  public <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
     if (isEmpty(pageRequest.getLimit()) || pageRequest.getLimit().equals(UNLIMITED)) {
       return 0;
     }

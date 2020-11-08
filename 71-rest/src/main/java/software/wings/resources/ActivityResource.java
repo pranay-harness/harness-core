@@ -18,9 +18,11 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SortOrder;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
@@ -34,7 +36,10 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
@@ -42,6 +47,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
@@ -128,6 +134,15 @@ public class ActivityResource {
       @BeanParam PageRequest<Log> request) {
     request.addFilter("activityId", EQ, activityId);
     request.addFilter("commandUnitName", EQ, unitName);
+    if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      if (request.getUriInfo() != null && request.getUriInfo().getQueryParameters() != null) {
+        List<SortOrder> orders = populateSortOrder(request.getUriInfo().getQueryParameters());
+        if (isNotEmpty(request.getOrders())) {
+          orders.addAll(request.getOrders());
+        }
+        request.setOrders(orders);
+      }
+    }
     return new RestResponse<>(logService.list(appId, request));
   }
 
@@ -193,5 +208,28 @@ public class ActivityResource {
       response = dataStoreService.list(ThirdPartyApiCallLog.class, request);
     }
     return new RestResponse<>(response);
+  }
+
+  private static List<SortOrder> populateSortOrder(MultivaluedMap<String, String> map) {
+    List<SortOrder> sortOrders = new ArrayList<>();
+    Pattern sortField = Pattern.compile("sort\\[[0-9]+]\\[field]");
+    int fieldCount = 0;
+    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+      String key = entry.getKey();
+      if (sortField.matcher(key).matches()) {
+        fieldCount++;
+      }
+    }
+    for (int index = 0; index < fieldCount; index++) {
+      String key = "sort[" + index + "]";
+      final String name = map.getFirst(key + "[field]");
+      final String direction = map.getFirst(key + "[direction]");
+      if (StringUtils.isNotBlank(direction)) {
+        SortOrder sortOrder =
+            SortOrder.Builder.aSortOrder().withField(name, SortOrder.OrderType.valueOf(direction)).build();
+        sortOrders.add(sortOrder);
+      }
+    }
+    return sortOrders;
   }
 }

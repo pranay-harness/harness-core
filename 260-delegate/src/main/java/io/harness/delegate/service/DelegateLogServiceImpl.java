@@ -34,6 +34,7 @@ import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateLogService;
@@ -57,6 +58,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class DelegateLogServiceImpl implements DelegateLogService {
+  // 10 KB Activity logs batch size
+  private static final int ACTIVITY_LOGS_BATCH_SIZE = 1024 * 10;
+
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
@@ -185,10 +189,11 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                                        .findFirst()
                                                        .orElse(RUNNING);
 
-        String logText = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
+        String logText =
+            StringUtils.left(logBatch.stream().map(Log::getLogLine).collect(joining("\n")), ACTIVITY_LOGS_BATCH_SIZE);
         Log logObject = logBatch.get(0);
         logObject.setLogLine(logText);
-        logObject.setLinesCount(logBatch.size());
+        logObject.setLinesCount(StringUtils.countMatches(logText, "\n"));
         logObject.setCommandExecutionStatus(commandUnitStatus);
         logObject.setCreatedAt(System.currentTimeMillis());
         log.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
