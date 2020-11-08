@@ -37,7 +37,7 @@ public class DXCodeCoverage extends CategoryTest {
     classes.addAll(reflectionsWings.getTypesAnnotatedWith(OwnedBy.class));
 
     List<String> modulesByDX = new ArrayList<>();
-    modulesByDX.add("69-connector-nextgen");
+    modulesByDX.add("440-connector-nextgen");
     modulesByDX.add("136-git-sync-manager");
 
     List<String> nameSet = new ArrayList<>();

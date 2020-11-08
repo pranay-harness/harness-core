@@ -6,21 +6,54 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>70-cv-nextgen-commons</artifactId>
+    <artifactId>440-connector-nextgen</artifactId>
     <dependencies>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smoketurner</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.guice</groupId>
+            <artifactId>spring-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>24-common-entities</artifactId>
+            <artifactId>22-ng-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>69-connector-nextgen</artifactId>
+            <artifactId>23-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>23-delegate-service-driver</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>35-yaml-beans</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>

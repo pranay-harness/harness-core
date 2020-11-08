@@ -72,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>69-connector-nextgen</artifactId>
+            <artifactId>440-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
