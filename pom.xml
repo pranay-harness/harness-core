@@ -43,8 +43,6 @@
         <!--<module>50-delegate-task-grpc-service</module>-->
         <!--<module>57-command-library-common</module>-->
         <!--<module>64-events-framework</module>-->
-        <!--<module>69-connector-nextgen</module>-->
-        <!--<module>70-cv-nextgen-commons</module>-->
         <module>71-rest</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
@@ -68,6 +66,8 @@
 
         <!--<module>420-delegate-agent</module>-->
         <!--<module>420-delegate-service</module>-->
+        <!--<module>430-cv-nextgen-commons</module>-->
+        <!--<module>440-connector-nextgen</module>-->
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
         <!--<module>990-commons-test</module>-->

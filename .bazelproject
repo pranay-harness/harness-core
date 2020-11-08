@@ -37,10 +37,10 @@ directories:
   50-delegate-task-grpc-service
   57-command-library-common
   64-events-framework
-  69-connector-nextgen
-  70-cv-nextgen-commons
   420-delegate-agent
   420-delegate-service
+  430-cv-nextgen-commons
+  440-connector-nextgen
   450-ce-views
   490-ce-commons
   990-commons-test

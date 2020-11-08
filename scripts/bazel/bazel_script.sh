@@ -35,7 +35,7 @@ fi
 
 build_bazel_module() {
   module=$1
-  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
 
   mvn -B install:install-file \
    -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
@@ -51,7 +51,7 @@ build_bazel_module() {
 build_bazel_tests() {
   module=$1
 
-  bazel ${bazelrc} build //${module}:supporter-test ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:supporter-test ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
 
   mvn -B install:install-file \
    -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
@@ -90,7 +90,6 @@ build_proto_module() {
    -f scripts/bazel/proto_pom.xml
 }
 
-build_bazel_module 990-commons-test
 build_bazel_module 12-commons
 build_bazel_module 13-ng-commons
 build_bazel_module 13-grpc-api
@@ -131,12 +130,14 @@ build_bazel_module 47-pipeline-service
 build_bazel_module 50-delegate-task-grpc-service
 build_bazel_module 57-command-library-common
 build_bazel_module 64-events-framework
-build_bazel_module 69-connector-nextgen
-build_bazel_module 70-cv-nextgen-commons
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
+build_bazel_module 430-cv-nextgen-commons
+build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
+build_bazel_module 990-commons-test
+
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
