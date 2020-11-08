@@ -9,6 +9,8 @@ import java.util.List;
 public interface DataStoreService {
   <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate);
 
+  <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest);
+
   <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest);
   <T extends GoogleDataStoreAware> PageResponse<T> list(
       Class<T> clazz, PageRequest<T> pageRequest, boolean getTotalRecords);

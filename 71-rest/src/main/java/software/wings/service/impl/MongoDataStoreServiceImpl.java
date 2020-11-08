@@ -62,6 +62,12 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   }
 
   @Override
+  public <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
+    // return wingsPersistence.convertToQuery(clazz, pageRequest).asKeyList().size();
+    return 0; // ToDo (Yogesh)
+  }
+
+  @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String id) {
     Query<? extends GoogleDataStoreAware> query =
         wingsPersistence.createQuery(clazz, excludeAuthority).filter("_id", id);
