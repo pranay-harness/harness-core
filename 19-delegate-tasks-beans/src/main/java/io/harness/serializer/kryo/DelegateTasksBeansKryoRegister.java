@@ -19,6 +19,7 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.OSType;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
@@ -144,6 +145,9 @@ import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSSwitchRoutesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
+import io.harness.delegate.task.ci.CIBuildPushParameters;
+import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
+import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
@@ -392,5 +396,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(JSONObject.class, 19374);
     kryo.register(CVConnectorTaskParams.class, 19375);
     kryo.register(CVConnectorTaskResponse.class, 19376);
+    kryo.register(BuildStatusPushResponse.class, 19377);
+    kryo.register(BuildStatusPushResponse.Status.class, 19378);
+    kryo.register(CIBuildPushParameters.class, 19379);
+    kryo.register(CIBuildPushTaskType.class, 19380);
+    kryo.register(CIBuildStatusPushParameters.class, 19381);
   }
 }

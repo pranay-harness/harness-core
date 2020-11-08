@@ -12,6 +12,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsDelegateTask;
+import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.git.GitFetchTaskNG;
@@ -381,6 +382,7 @@ public enum TaskType {
   DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER, DockerTestConnectionDelegateTask.class),
   NG_AWS_TASK(TaskGroup.AWS, AwsDelegateTask.class),
   JIRA_TASK_NG(TaskGroup.JIRA_NG, JiraTaskNG.class),
+  BUILD_STATUS(TaskGroup.CI, CIBuildStatusPushTask.class),
   JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG, JiraTestConnectionTaskNG.class);
 
   private final TaskGroup taskGroup;

@@ -15,6 +15,8 @@ import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.Repository;
+import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
@@ -136,5 +138,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UseFromStageInfraYaml.UseFromStage.class, 100067);
     kryo.register(ManualExecutionSource.class, 100068);
     kryo.register(Infrastructure.Type.class, 100069);
+    kryo.register(WebhookBaseAttributes.class, 100070);
+    kryo.register(Repository.class, 100071);
   }
 }

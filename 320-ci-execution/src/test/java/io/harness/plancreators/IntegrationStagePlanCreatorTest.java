@@ -2,6 +2,8 @@ package io.harness.plancreators;
 
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.HARSH;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +50,26 @@ public class IntegrationStagePlanCreatorTest extends CIExecutionTest {
         integrationStagePlanCreator.createPlan(integrationStage, executionPlanCreationContextWithExecutionArgs);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
+    assertThat(planNodes.get(0).getIdentifier()).isEqualTo(integrationStage.getIdentifier());
+    assertThat(
+        planNodes.stream().anyMatch(
+            node -> "EXECUTION".equals(node.getIdentifier()) && "SECTION_CHAIN".equals(node.getStepType().getType())))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testIntegrationPlanForWebhookExecution() {
+    ExecutionPlanCreationContextImpl executionPlanCreationContext =
+        ciExecutionPlanTestHelper.getWebhookPlanContextWithExecArgs();
+    ExecutionPlanCreatorResponse plan =
+        integrationStagePlanCreator.createPlan(integrationStage, executionPlanCreationContext);
+    assertThat(plan.getPlanNodes()).isNotNull();
+    List<PlanNode> planNodes = plan.getPlanNodes();
+    List<PlanNode> commitStatusPlanNodes =
+        planNodes.stream().filter(planNode -> planNode.getName().equals("POST_COMMIT_STATUS")).collect(toList());
+    assertThat(commitStatusPlanNodes.size()).isEqualTo(2);
     assertThat(planNodes.get(0).getIdentifier()).isEqualTo(integrationStage.getIdentifier());
     assertThat(
         planNodes.stream().anyMatch(

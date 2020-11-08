@@ -1,6 +1,6 @@
 package io.harness.beans.execution;
 
-import static io.harness.beans.execution.ExecutionSource.Type.Webhook;
+import static io.harness.beans.execution.ExecutionSource.Type.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -16,6 +16,6 @@ public class WebhookExecutionSource implements ExecutionSource {
 
   @Override
   public Type getType() {
-    return Webhook;
+    return WEBHOOK;
   }
 }

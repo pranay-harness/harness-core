@@ -3,6 +3,7 @@ package io.harness.serializer.spring;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.spring.AliasRegistrar;
+import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 
 import java.util.Map;
 
@@ -11,5 +12,7 @@ public class NGPipelineAliasRegistrar implements AliasRegistrar {
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("io.harness.ngpipeline.pipeline.beans.yaml.ngPipeline", NgPipeline.class);
     orchestrationElements.put("io.harness.ngpipeline.pipeline.beans.entities.ngPipelineEntity", NgPipelineEntity.class);
+    orchestrationElements.put(
+        "io.harness.ngpipeline.status.BuildStatusUpdateParameter", BuildStatusUpdateParameter.class);
   }
 }

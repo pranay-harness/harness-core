@@ -11,6 +11,7 @@ import static io.harness.git.model.GitRepositoryType.TRIGGER;
 import static io.harness.git.model.GitRepositoryType.YAML;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -122,6 +123,38 @@ public class GitClientHelperTest extends CategoryTest {
                                                                                   .build());
     assertThat(repoDirectory)
         .isEqualTo("./repository/gitFileDownloads/accountId/id/my-repo/9d0502fc8d289f365a3fdcb24607c878b68fad36");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromHTTPURL() {
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/portal.git");
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetREPOFromHTTPURL() {
+    final String repoName = GitClientHelper.getGitRepo("https://github.com/wings-software/portal.git");
+    assertThat(repoName).isEqualTo("portal");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromSSHURL() {
+    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software/portal.git");
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetREPOFromSSHURL() {
+    final String repoName = GitClientHelper.getGitRepo("git@github.com:wings-software/portal.git");
+    assertThat(repoName).isEqualTo("portal");
   }
 
   @Test
