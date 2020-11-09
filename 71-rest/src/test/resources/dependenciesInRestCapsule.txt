@@ -593,7 +593,7 @@ org.yaml:snakeyaml:jar:1.26
 org.zeroturnaround:zt-exec:jar:1.9
 ru.vyarus:guice-validator:jar:1.2.0
 software.amazon.ion:ion-java:jar:1.0.2
-software.wings:12-commons:jar:0.0.1-SNAPSHOT
+software.wings:980-commons:jar:0.0.1-SNAPSHOT
 software.wings:13-grpc-api-proto:jar:0.0.1-SNAPSHOT
 software.wings:13-grpc-api:jar:0.0.1-SNAPSHOT
 software.wings:13-ng-commons:jar:0.0.1-SNAPSHOT

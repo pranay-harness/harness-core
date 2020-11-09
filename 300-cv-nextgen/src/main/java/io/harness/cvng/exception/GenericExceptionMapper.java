@@ -18,7 +18,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * The Class GenericExceptionMapper.
  *
- * The current implementation is taken from 71-rest, it hasn't been moved to 12-commons as this one will evolve over
+ * The current implementation is taken from 71-rest, it hasn't been moved to 980-commons as this one will evolve over
  * time
  * @param <T> the generic type
  */

@@ -12,7 +12,6 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//:lombok",
-        "//12-commons:module",
         "//13-grpc-api:module",
         "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
         "//13-grpc-api/src/main/proto:13_grpc_api_proto",
@@ -51,6 +50,7 @@ java_library(
         "//490-ce-commons:module",
         "//57-command-library-common:module",
         "//64-events-framework:module",
+        "//980-commons:module",
         "@data_collection_dsl//:io_harness_cv_data_collection_dsl",
         "@jira_client//jar",
         "@maven//:aopalliance_aopalliance",
@@ -726,10 +726,10 @@ java_library(
     data = ["//:resource"],
     resources = [
         "//:resource",
-        "//12-commons/src/main/resources:resource",
-        "//12-commons/src/main/resources-filtered:resource",
-        "//12-commons/src/test/resources:resource",
         "//71-rest/src/main/resources:resource",
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -752,17 +752,17 @@ java_library(
     ],
     resources = [
         "//:resource",
-        "//12-commons/src/main/resources:resource",
-        "//12-commons/src/main/resources-filtered:resource",
-        "//12-commons/src/test/resources:resource",
         "//71-rest/src/main/resources:resource",
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//12-commons/src/main/resources",
-        "//12-commons/src/main/resources-filtered:resources",
-        "//12-commons/src/test/resources",
         "//71-rest/src/main/resources",
+        "//980-commons/src/main/resources",
+        "//980-commons/src/main/resources-filtered:resources",
+        "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [

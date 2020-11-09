@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>12-commons</artifactId>
+    <artifactId>980-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

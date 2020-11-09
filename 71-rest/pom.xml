@@ -710,11 +710,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>13-grpc-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -826,6 +821,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
