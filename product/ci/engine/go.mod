@@ -11,6 +11,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/cespare/xxhash v1.1.0
 	github.com/gofrs/uuid v3.3.0+incompatible
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1

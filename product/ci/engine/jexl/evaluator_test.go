@@ -137,7 +137,7 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 
 	oldClient := newExpressionEvalClient
 	defer func() { newExpressionEvalClient = oldClient }()
-	newExpressionEvalClient = func(ip string, port uint, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
+	newExpressionEvalClient = func(ip string, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
 		return nil, errors.New("client create error")
 	}
 
@@ -195,7 +195,7 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	mClient := dmgrpc.NewMockExpressionEvalClient(ctrl)
 	mClient.EXPECT().CloseConn().Return(nil)
 	mClient.EXPECT().Client().Return(c)
-	newExpressionEvalClient = func(ip string, port uint, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
+	newExpressionEvalClient = func(ip string, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
 		return mClient, nil
 	}
 
@@ -243,7 +243,7 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	mClient := dmgrpc.NewMockExpressionEvalClient(ctrl)
 	mClient.EXPECT().CloseConn().Return(nil)
 	mClient.EXPECT().Client().Return(c)
-	newExpressionEvalClient = func(ip string, port uint, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
+	newExpressionEvalClient = func(ip string, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
 		return mClient, nil
 	}
 
@@ -302,7 +302,7 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	mClient := dmgrpc.NewMockExpressionEvalClient(ctrl)
 	mClient.EXPECT().CloseConn().Return(nil)
 	mClient.EXPECT().Client().Return(c)
-	newExpressionEvalClient = func(ip string, port uint, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
+	newExpressionEvalClient = func(ip string, log *zap.SugaredLogger) (dclient.ExpressionEvalClient, error) {
 		return mClient, nil
 	}
 

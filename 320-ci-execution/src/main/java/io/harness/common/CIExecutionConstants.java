@@ -13,11 +13,11 @@ public class CIExecutionConstants {
 
   // Addon image
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "v1.2-alpha";
+  public static final String ADDON_IMAGE_TAG = "v1.4-alpha";
 
   // Lite-engine image
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v1.2-alpha";
+  public static final String LITE_ENGINE_IMAGE_TAG = "v1.4-alpha";
 
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
@@ -91,7 +91,7 @@ public class CIExecutionConstants {
   public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
   public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";
   public static final String DELEGATE_SERVICE_ID_VARIABLE_VALUE = "delegate-grpc-service";
-  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE = "delegate-service";
+  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE = "delegate-service:8080";
 
   public static final String HARNESS_ACCOUNT_ID_VARIABLE = "HARNESS_ACCOUNT_ID";
   public static final String HARNESS_PROJECT_ID_VARIABLE = "HARNESS_PROJECT_ID";

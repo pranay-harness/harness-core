@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
@@ -174,7 +175,7 @@ func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) 
 		return nil, err
 	}
 
-	e.log.Infow("Deserialized execution", "execution", execution.String())
+	e.log.Infow("Deserialized execution", "execution", msgToStr(execution, e.log))
 	return execution, nil
 }
 
@@ -190,4 +191,14 @@ func ExecuteStage(input, tmpFilePath string, svcPorts []uint, debug bool, log *z
 		return err
 	}
 	return nil
+}
+
+func msgToStr(msg *pb.Execution, log *zap.SugaredLogger) string {
+	m := jsonpb.Marshaler{}
+	jsonMsg, err := m.MarshalToString(msg)
+	if err != nil {
+		log.Errorw("failed to convert stage to json", zap.Error(err))
+		return msg.String()
+	}
+	return jsonMsg
 }
