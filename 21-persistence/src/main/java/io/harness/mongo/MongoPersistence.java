@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.MongoUtils.setUnsetOnInsert;
+import static io.harness.persistence.HQuery.allChecks;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
@@ -17,6 +18,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.CreatedAtAware;
@@ -35,10 +38,12 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateOpsImpl;
@@ -57,6 +62,22 @@ import java.util.Set;
 @Singleton
 @Slf4j
 public class MongoPersistence implements HPersistence {
+  @Override
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
+    return query(cls, req, allChecks);
+  }
+
+  @Override
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks) {
+    AdvancedDatastore advancedDatastore = getDatastore(cls);
+    Query<T> query = advancedDatastore.createQuery(cls);
+
+    ((HQuery) query).setQueryChecks(queryChecks);
+    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
+
+    return PageController.queryPageRequest(advancedDatastore, query, mapper, cls, req);
+  }
+
   @Value
   @Builder
   private static class Info {

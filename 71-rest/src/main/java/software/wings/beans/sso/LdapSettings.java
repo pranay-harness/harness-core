@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
@@ -22,7 +23,9 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -83,9 +86,15 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
     if (!connectionSettings.getBindPassword().equals(LdapConstants.MASKED_STRING)) {
       String oldEncryptedBindPassword = connectionSettings.getEncryptedBindPassword();
       if (isNotEmpty(oldEncryptedBindPassword)) {
-        secretManager.deleteSecretUsingUuid(oldEncryptedBindPassword);
+        secretManager.deleteSecret(accountId, oldEncryptedBindPassword, new HashMap<>(), false);
       }
-      String encryptedBindPassword = secretManager.encrypt(accountId, connectionSettings.getBindPassword(), null);
+      SecretText secretText = SecretText.builder()
+                                  .value(connectionSettings.getBindPassword())
+                                  .hideFromListing(true)
+                                  .name(UUID.randomUUID().toString())
+                                  .scopedToAccount(true)
+                                  .build();
+      String encryptedBindPassword = secretManager.saveSecretText(accountId, secretText, false);
       connectionSettings.setEncryptedBindPassword(encryptedBindPassword);
       connectionSettings.setBindPassword(LdapConstants.MASKED_STRING);
     }

@@ -23,7 +23,8 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
     String encryptedPassword = null;
     if (artifactoryConfig.hasCredentials()) {
-      encryptedPassword = getEncryptedValue(artifactoryConfig, "password", false);
+      encryptedPassword =
+          getEncryptedYamlRef(artifactoryConfig.getAccountId(), artifactoryConfig.getEncryptedPassword());
     }
 
     Yaml yaml = Yaml.builder()

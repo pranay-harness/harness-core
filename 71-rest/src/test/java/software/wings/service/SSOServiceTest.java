@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,7 +84,7 @@ public class SSOServiceTest extends WingsBaseTest {
         .thenReturn(Optional.of(encryptedDataDetail));
     when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.USER_PASSWORD_KEY), any(), eq(null)))
         .thenReturn(Optional.of(encryptedDataDetail));
-    when(SECRET_MANAGER.deleteSecretUsingUuid(anyString())).thenReturn(true);
+    when(SECRET_MANAGER.deleteSecret(anyString(), anyString(), eq(new HashMap<>()), eq(false))).thenReturn(true);
     when(encryptedDataDetail.getEncryptedData()).thenReturn(encryptedData);
     when(encryptedData.getUuid()).thenReturn("UUID");
     LdapConnectionSettings connectionSettings = new LdapConnectionSettings();

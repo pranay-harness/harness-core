@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -35,19 +34,25 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.category.element.UnitTests;
+import io.harness.datacollection.utils.EmptyPredicate;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
@@ -55,6 +60,8 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretMigrationEventListener;
+import io.harness.secrets.SecretService;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -72,7 +79,6 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
@@ -85,6 +91,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -108,7 +115,6 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UsageRestrictions;
-import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UsageRestrictions.AppEnvRestriction.AppEnvRestrictionBuilder;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
@@ -119,7 +125,6 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
-import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -167,17 +172,22 @@ public class KmsTest extends WingsBaseTest {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceVariableResource serviceVariableResource;
   @Inject private SecretManagementDelegateService delegateService;
-  @Inject private QueueConsumer<KmsTransitionEvent> kmsTransitionConsumer;
+  @Inject private QueueConsumer<MigrateSecretTask> kmsTransitionConsumer;
+  @Inject private LocalEncryptor localEncryptor;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private KmsEncryptor kmsEncryptor;
   @Mock private PremiumFeature secretsManagementFeature;
   @Mock protected AuditServiceHelper auditServiceHelper;
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private SecretService secretService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject @InjectMocks private EntityVersionService entityVersionService;
+  private SecretMigrationEventListener transitionEventListener;
 
   private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
@@ -190,7 +200,6 @@ public class KmsTest extends WingsBaseTest {
   private String workflowExecutionId;
   private String workflowName;
   private String envId;
-  private KmsTransitionEventListener transitionEventListener;
   @Mock private FeatureFlagService featureFlagService;
 
   @Inject KryoSerializer kryoSerializer;
@@ -212,26 +221,26 @@ public class KmsTest extends WingsBaseTest {
         anEnvironment().environmentType(EnvironmentType.PROD).appId(appId).accountId(accountId).build());
     workflowExecutionId =
         wingsPersistence.save(WorkflowExecution.builder().name(workflowName).appId(appId).envId(envId).build());
-    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
+
+    when(kmsEncryptor.encryptSecret(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+      if (args[2] instanceof KmsConfig) {
+        return encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
+      }
+      return localEncryptor.encryptSecret(
+          (String) args[0], (String) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
+    when(kmsEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedRecord) args[0], (KmsConfig) args[1]);
+      if (args[2] instanceof KmsConfig) {
+        return decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
+      }
+      return localEncryptor.fetchSecretValue(
+          (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(globalEncryptDecryptClient.encrypt(anyString(), any(), any(KmsConfig.class))).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
-    });
-
-    when(globalEncryptDecryptClient.decrypt(anyObject(), anyString(), any(KmsConfig.class))).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[2]);
-    });
-
+    when(kmsEncryptorsRegistry.getKmsEncryptor(any(KmsConfig.class))).thenReturn(kmsEncryptor);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
     when(delegateProxyFactory.get(eq(EncryptionService.class), any(SyncTaskContext.class)))
@@ -239,17 +248,17 @@ public class KmsTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject(), anyObject());
-    FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(secretService, "kmsRegistry", kmsEncryptorsRegistry, true);
+    FieldUtils.writeField(encryptionService, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory, true);
-    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
     FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
     FieldUtils.writeField(configService, "secretManager", secretManager, true);
     FieldUtils.writeField(settingValidationService, "newRelicService", newRelicService, true);
     FieldUtils.writeField(settingsService, "settingValidationService", settingValidationService, true);
-    FieldUtils.writeField(encryptionService, "secretManagementDelegateService", secretManagementDelegateService, true);
     FieldUtils.writeField(infrastructureMappingService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsResource, "kmsService", kmsService, true);
     FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
+    FieldUtils.writeField(secretManager, "secretService", secretService, true);
     userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -265,19 +274,20 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
 
-    KmsConfig savedConfig =
-        (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
-    assertThat(savedConfig).isNull();
+    LocalEncryptionConfig localEncryptionConfig =
+        (LocalEncryptionConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
+    assertThat(localEncryptionConfig).isNotNull();
 
     kmsResource.saveGlobalKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
-    savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
+    KmsConfig savedConfig =
+        (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
     kmsConfig.setUuid(savedConfig.getUuid());
     assertThat(savedConfig).isEqualTo(kmsConfig);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void getGetGlobalKmsConfig() {
@@ -304,39 +314,32 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setName("Global config");
     globalKmsConfig.setDefault(true);
-    kmsResource.saveGlobalKmsConfig(accountId, globalKmsConfig);
+    kmsId = kmsResource.saveGlobalKmsConfig(accountId, globalKmsConfig).getResource();
 
     String randomAccountId = UUID.randomUUID().toString();
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(randomAccountId, kmsId, secretName, fileToSave.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToSave)), false);
+    SecretFile secretFile = SecretFile.builder()
+                                .name(secretName)
+                                .kmsId(kmsId)
+                                .inheritScopesFromSM(true)
+                                .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToSave)))
+                                .build();
+    String secretFileId = secretManager.saveSecretFile(randomAccountId, secretFile);
     assertThat(secretFileId).isNotNull();
 
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    boolean result = secretManager.updateFile(randomAccountId, newSecretName, secretFileId, fileToUpdate.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToUpdate)), false);
+    secretFile = SecretFile.builder()
+                     .name(newSecretName)
+                     .kmsId(kmsId)
+                     .inheritScopesFromSM(true)
+                     .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToUpdate)))
+                     .build();
+    boolean result = secretManager.updateSecretFile(randomAccountId, secretFileId, secretFile);
     assertThat(result).isTrue();
-
-    assertThat(secretManager.deleteFile(randomAccountId, secretFileId)).isTrue();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void validateConfig() {
-    KmsConfig kmsConfig = getKmsConfig();
-    kmsConfig.setAccountId(accountId);
-    kmsConfig.setAccessKey("invalidKey");
-
-    try {
-      kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
-      fail("Saved invalid kms config");
-    } catch (SecretManagementException e) {
-      assertThat(true).isTrue();
-    }
+    assertThat(secretManager.deleteSecret(randomAccountId, secretFileId, new HashMap<>(), true)).isTrue();
   }
 
   @Test
@@ -432,59 +435,6 @@ public class KmsTest extends WingsBaseTest {
     assertThat(modifiedSavedConfig.getKmsArn()).isEqualTo(savedConfig.getKmsArn());
     assertThat(modifiedSavedConfig.getName()).isEqualTo(kmsConfig.getName());
     assertThat(modifiedSavedConfig.isDefault()).isEqualTo(false);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void localNullEncryption() {
-    final char[] keyToEncrypt = null;
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
-    assertThat(encryptedData.getEncryptedValue()).isNull();
-    assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
-
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
-    assertThat(decryptedValue).isNull();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void localEncryption() {
-    final String keyToEncrypt = UUID.randomUUID().toString();
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
-    assertThat(keyToEncrypt).isNotEqualTo(new String(encryptedData.getEncryptedValue()));
-
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
-    assertThat(new String(decryptedValue)).isEqualTo(keyToEncrypt);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void kmsNullEncryption() {
-    final KmsConfig kmsConfig = getKmsConfig();
-    final char[] keyToEncrypt = null;
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
-    assertThat(encryptedData.getEncryptedValue()).isNull();
-    assertThat(isBlank(encryptedData.getEncryptionKey())).isFalse();
-
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
-    assertThat(decryptedValue).isNull();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void kmsEncryption() {
-    final KmsConfig kmsConfig = getKmsConfig();
-    final String keyToEncrypt = UUID.randomUUID().toString();
-    final EncryptedData encryptedData =
-        kmsService.encrypt(keyToEncrypt.toCharArray(), UUID.randomUUID().toString(), kmsConfig);
-    assertThat(keyToEncrypt).isNotEqualTo(new String(encryptedData.getEncryptedValue()));
-
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
-    assertThat(new String(decryptedValue)).isEqualTo(keyToEncrypt);
   }
 
   @Test
@@ -775,7 +725,7 @@ public class KmsTest extends WingsBaseTest {
     encryptedData = query.get();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
     assertThat(encryptedData.getKmsId()).isNotNull();
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
@@ -800,7 +750,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
+    assertThat(secretChangeLog.getDescription()).isEqualTo(" Changed secret");
 
     secretChangeLog = changeLogs.get(1);
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
@@ -817,7 +767,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .templateId(UUID.randomUUID().toString())
@@ -854,7 +804,7 @@ public class KmsTest extends WingsBaseTest {
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
     secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    secretId = secretManager.saveSecret(accountId, secretText);
+    secretId = secretManager.saveSecretText(accountId, secretText, false);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -940,7 +890,7 @@ public class KmsTest extends WingsBaseTest {
     encryptedData = query.get();
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
     assertThat(encryptedData.getKmsId()).isEqualTo(kmsConfig.getUuid());
     assertThat(encryptedData.getEncryptionKey()).isNotNull();
     assertThat(encryptedData.getEncryptedValue()).isNotNull();
@@ -1029,7 +979,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
+    assertThat(secretChangeLog.getDescription()).isEqualTo(" Changed secret");
 
     secretChangeLog = changeLogs.get(1);
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
@@ -1065,71 +1015,19 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user2.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user2.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user2.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
+    assertThat(secretChangeLog.getDescription()).isEqualTo(" Changed secret");
 
     secretChangeLog = changeLogs.get(1);
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user1.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user1.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user1.getName());
-    assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
+    assertThat(secretChangeLog.getDescription()).isEqualTo(" Changed secret");
 
     secretChangeLog = changeLogs.get(2);
     assertThat(secretChangeLog.getUser().getUuid()).isEqualTo(user.getUuid());
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(user.getEmail());
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(user.getName());
     assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void updateSettingAttributeAfterKmsEnabled() {
-    String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-    String savedAttributeId = wingsPersistence.save(settingAttribute);
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertThat(savedAttribute).isEqualTo(settingAttribute);
-    assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(1);
-    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                                .filter("type", SettingVariableTypes.APP_DYNAMICS)
-                                                .asList();
-    assertThat(encryptedDataList).hasSize(1);
-    EncryptedData encryptedData = encryptedDataList.get(0);
-    assertThat(encryptedData.getEncryptionKey()).isEqualTo(accountId);
-    assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-
-    final KmsConfig kmsConfig = getKmsConfig();
-    kmsResource.saveKmsConfig(accountId, kmsConfig);
-
-    final String newPassWord = UUID.randomUUID().toString();
-    final AppDynamicsConfig newAppDynamicsConfig = getAppDynamicsConfig(accountId, newPassWord);
-
-    String updatedAppId = UUID.randomUUID().toString();
-    String updatedName = UUID.randomUUID().toString();
-    final Map<String, Object> keyValuePairs = new HashMap<>();
-    keyValuePairs.put("name", updatedName);
-    keyValuePairs.put("appId", updatedAppId);
-    keyValuePairs.put("value", newAppDynamicsConfig);
-
-    wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
-
-    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
-                            .filter(EncryptedDataKeys.accountId, accountId)
-                            .filter(EncryptedDataKeys.type, SettingVariableTypes.APP_DYNAMICS)
-                            .asList();
-    assertThat(encryptedDataList).hasSize(1);
-    encryptedData = encryptedDataList.get(0);
-    assertThat(accountId).isNotEqualTo(encryptedData.getEncryptionKey());
-    assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-    // test decryption
-    savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    assertThat(savedConfig.getPassword()).isNull();
-    encryptionService.decrypt(
-        savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId), false);
-    assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(newPassWord);
   }
 
   @Test
@@ -1163,7 +1061,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1223,7 +1121,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1265,8 +1163,9 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    SecretText secretText =
+        SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).scopedToAccount(true).build();
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
@@ -1294,14 +1193,15 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    SecretText secretText =
+        SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).scopedToAccount(true).build();
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     EncryptedData secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertThat(secretByName).isNotNull();
     assertThat(secretByName.getName()).isEqualTo(secretName);
     assertThat(secretByName.getUuid()).isEqualTo(secretId);
-    assertThat(secretByName.isScopedToAccount()).isFalse();
+    assertThat(secretByName.isScopedToAccount()).isTrue();
   }
 
   @Test
@@ -1312,7 +1212,7 @@ public class KmsTest extends WingsBaseTest {
     String secretValue = UUID.randomUUID().toString();
 
     AppEnvRestrictionBuilder appEnvRestrictionBuilder =
-        AppEnvRestriction.builder()
+        UsageRestrictions.AppEnvRestriction.builder()
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .envFilter(EnvFilter.builder().filterTypes(ImmutableSet.of(EnvFilter.FilterType.PROD)).build());
 
@@ -1325,7 +1225,7 @@ public class KmsTest extends WingsBaseTest {
                                    .appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build()))
                                    .build())
             .build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
@@ -1366,7 +1266,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     // try with invalid secret id
     final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -1379,7 +1279,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(generateUuid()))
                                                 .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name("var1")
+                                                .name("name")
                                                 .value(generateUuid().toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
@@ -1403,7 +1303,7 @@ public class KmsTest extends WingsBaseTest {
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
     secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    secretId = secretManager.saveSecret(accountId, secretText);
+    secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1459,7 +1359,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, false);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1503,7 +1403,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1542,7 +1442,7 @@ public class KmsTest extends WingsBaseTest {
     String updatedSecretValue = UUID.randomUUID().toString();
     SecretText updatedSecretText =
         SecretText.builder().name(updatedSecretName).kmsId(kmsId).value(updatedSecretValue).build();
-    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretText);
+    String updatedSecretId = secretManager.saveSecretText(accountId, updatedSecretText, true);
 
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
@@ -2120,7 +2020,7 @@ public class KmsTest extends WingsBaseTest {
 
       // read the values and compare
       PageResponse<SettingAttribute> attributeQuery = wingsPersistence.query(
-          SettingAttribute.class, aPageRequest().addFilter("accountId", Operator.EQ, accountId).build());
+          SettingAttribute.class, aPageRequest().addFilter("accountId", SearchFilter.Operator.EQ, accountId).build());
       assertThat(attributeQuery).hasSize(numOfSettingAttributes);
       for (SettingAttribute settingAttribute : attributeQuery) {
         assertThat(settingAttribute).isEqualTo(encryptedEntities.get(settingAttribute.getUuid()));
@@ -2204,8 +2104,13 @@ public class KmsTest extends WingsBaseTest {
 
       String secretName = UUID.randomUUID().toString();
       File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-      String secretFileId = secretManager.saveFile(randomAccountId, kmsId, secretName, fileToSave.length(), null,
-          new BoundedInputStream(new FileInputStream(fileToSave)), false);
+      SecretFile secretFile = SecretFile.builder()
+                                  .name(secretName)
+                                  .kmsId(kmsId)
+                                  .inheritScopesFromSM(true)
+                                  .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToSave)))
+                                  .build();
+      String secretFileId = secretManager.saveSecretFile(randomAccountId, secretFile);
       String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                  .filter(EncryptedDataKeys.accountId, randomAccountId)
                                  .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -2357,8 +2262,13 @@ public class KmsTest extends WingsBaseTest {
     // now make the same file encrypted
     String secretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    String secretFileId = secretManager.saveFile(renameAccountId, kmsId, secretName, fileToUpdate.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToUpdate)), false);
+    SecretFile secretFile = SecretFile.builder()
+                                .name(secretName)
+                                .kmsId(kmsId)
+                                .inheritScopesFromSM(true)
+                                .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToUpdate)))
+                                .build();
+    String secretFileId = secretManager.saveSecretFile(renameAccountId, secretFile);
     configFile.setEncrypted(true);
     configFile.setEncryptedFileId(secretFileId);
     configService.update(configFile, null);
@@ -2378,9 +2288,9 @@ public class KmsTest extends WingsBaseTest {
     assertThat(encryptedData.getParents()).hasSize(1);
     assertThat(encryptedData.containsParent(configFileId, CONFIG_FILE)).isTrue();
     assertThat(encryptedData.getEncryptionKey()).isEqualTo(renameAccountId);
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.CONFIG_FILE);
+    assertThat(encryptedData.getType()).isEqualTo(CONFIG_FILE);
     assertThat(encryptedData.isEnabled()).isTrue();
-    assertThat(isNotEmpty(encryptedData.getKmsId())).isTrue();
+    assertThat(EmptyPredicate.isNotEmpty(encryptedData.getKmsId())).isTrue();
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
 
     // now make the same file not encrypted
@@ -2397,8 +2307,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
         .isEqualTo(1);
-    List<SecretChangeLog> changeLogs =
-        secretManager.getChangeLogs(renameAccountId, secretFileId, SettingVariableTypes.CONFIG_FILE);
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(renameAccountId, secretFileId, CONFIG_FILE);
     assertThat(changeLogs).hasSize(1);
     SecretChangeLog changeLog = changeLogs.get(0);
     assertThat(changeLog.getAccountId()).isEqualTo(renameAccountId);
@@ -2406,7 +2315,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(changeLog.getUser().getName()).isEqualTo(userName);
     assertThat(changeLog.getUser().getEmail()).isEqualTo(userEmail);
     assertThat(changeLog.getUser().getUuid()).isEqualTo(user.getUuid());
-    assertThat(changeLog.getDescription()).isEqualTo("File uploaded");
+    assertThat(changeLog.getDescription()).isEqualTo("Created");
   }
 
   @Test
@@ -2490,8 +2399,13 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(randomAccountId, kmsId, secretName, fileToSave.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToSave)), false);
+    SecretFile secretFile = SecretFile.builder()
+                                .name(secretName)
+                                .kmsId(kmsId)
+                                .inheritScopesFromSM(true)
+                                .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToSave)))
+                                .build();
+    String secretFileId = secretManager.saveSecretFile(randomAccountId, secretFile);
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                .filter(EncryptedDataKeys.accountId, randomAccountId)
@@ -2532,7 +2446,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(numOfEncryptedValsForKms + 1);
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                                .filter("type", SettingVariableTypes.CONFIG_FILE)
+                                                .filter("type", CONFIG_FILE)
                                                 .filter("accountId", randomAccountId)
                                                 .asList();
     assertThat(encryptedFileData).hasSize(1);
@@ -2542,8 +2456,13 @@ public class KmsTest extends WingsBaseTest {
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    secretManager.updateFile(randomAccountId, newSecretName, encryptedUuid, fileToUpdate.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToUpdate)), false);
+    SecretFile updateSecretFile = SecretFile.builder()
+                                      .name(newSecretName)
+                                      .kmsId(kmsId)
+                                      .inheritScopesFromSM(true)
+                                      .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToUpdate)))
+                                      .build();
+    secretManager.updateSecretFile(randomAccountId, encryptedUuid, updateSecretFile);
 
     download = configService.download(randomAppId, configFileId);
     assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
@@ -2553,7 +2472,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(numOfEncryptedValsForKms + 1);
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                            .filter("type", SettingVariableTypes.CONFIG_FILE)
+                            .filter("type", CONFIG_FILE)
                             .filter("accountId", randomAccountId)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
@@ -2565,7 +2484,7 @@ public class KmsTest extends WingsBaseTest {
     }
     List<SecretUsageLog> usageLogs =
         (List<SecretUsageLog>) secretManagementResource
-            .getUsageLogs(aPageRequest().build(), randomAccountId, encryptedUuid, SettingVariableTypes.CONFIG_FILE)
+            .getUsageLogs(aPageRequest().build(), randomAccountId, encryptedUuid, CONFIG_FILE)
             .getResource();
     assertThat(usageLogs).hasSize(numOfAccess);
 
@@ -2576,8 +2495,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(usageLog.getAppId()).isEqualTo(randomAppId);
     }
 
-    List<SecretChangeLog> changeLogs =
-        secretManager.getChangeLogs(randomAccountId, secretFileId, SettingVariableTypes.CONFIG_FILE);
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(randomAccountId, secretFileId, CONFIG_FILE);
     assertThat(changeLogs).hasSize(2);
     SecretChangeLog changeLog = changeLogs.get(0);
     assertThat(changeLog.getAccountId()).isEqualTo(randomAccountId);
@@ -2585,7 +2503,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(changeLog.getUser().getName()).isEqualTo(userName);
     assertThat(changeLog.getUser().getEmail()).isEqualTo(userEmail);
     assertThat(changeLog.getUser().getUuid()).isEqualTo(user.getUuid());
-    assertThat(changeLog.getDescription()).isEqualTo("Changed Name and File");
+    assertThat(changeLog.getDescription()).isEqualTo("Changed name & secret");
 
     changeLog = changeLogs.get(1);
     assertThat(changeLog.getAccountId()).isEqualTo(randomAccountId);
@@ -2593,7 +2511,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(changeLog.getUser().getName()).isEqualTo(userName);
     assertThat(changeLog.getUser().getEmail()).isEqualTo(userEmail);
     assertThat(changeLog.getUser().getUuid()).isEqualTo(user.getUuid());
-    assertThat(changeLog.getDescription()).isEqualTo("File uploaded");
+    assertThat(changeLog.getDescription()).isEqualTo("Created");
   }
 
   @Test
@@ -2628,8 +2546,13 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId = secretManager.saveFile(renameAccountId, kmsId, secretName, fileToSave.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToSave)), false);
+    SecretFile secretFile = SecretFile.builder()
+                                .name(secretName)
+                                .kmsId(kmsId)
+                                .inheritScopesFromSM(true)
+                                .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToSave)))
+                                .build();
+    String secretFileId = secretManager.saveSecretFile(renameAccountId, secretFile);
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                .filter(EncryptedDataKeys.accountId, renameAccountId)
                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -2671,7 +2594,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(numOfEncryptedValsForKms + 1);
 
     List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                                .filter("type", SettingVariableTypes.CONFIG_FILE)
+                                                .filter("type", CONFIG_FILE)
                                                 .filter("accountId", renameAccountId)
                                                 .asList();
     assertThat(encryptedFileData).hasSize(1);
@@ -2679,8 +2602,13 @@ public class KmsTest extends WingsBaseTest {
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    secretManager.updateFile(renameAccountId, newSecretName, encryptedUuid, fileToUpdate.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToUpdate)), false);
+    SecretFile secretFileUpdate = SecretFile.builder()
+                                      .name(secretName)
+                                      .kmsId(kmsId)
+                                      .inheritScopesFromSM(true)
+                                      .fileContent(ByteStreams.toByteArray(new FileInputStream(fileToUpdate)))
+                                      .build();
+    secretManager.updateSecretFile(renameAccountId, encryptedUuid, secretFileUpdate);
 
     download = configService.download(renameAppId, configFileId);
     assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))
@@ -2691,37 +2619,10 @@ public class KmsTest extends WingsBaseTest {
 
     encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
                             .filter(EncryptedDataKeys.accountId, renameAccountId)
-                            .filter(EncryptedDataKeys.type, SettingVariableTypes.CONFIG_FILE)
+                            .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
     assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void kmsExceptionTest() {
-    KmsConfig kmsConfig = getKmsConfig();
-    kmsConfig.setKmsArn("invalid krn");
-    String toEncrypt = UUID.randomUUID().toString();
-    try {
-      delegateService.encrypt(accountId, toEncrypt.toCharArray(), kmsConfig);
-      fail("should have been failed");
-    } catch (SecretManagementDelegateException e) {
-      assertThat(true).isTrue();
-    }
-
-    kmsConfig = getKmsConfig();
-    try {
-      delegateService.decrypt(EncryptedData.builder()
-                                  .encryptionKey(UUID.randomUUID().toString())
-                                  .encryptedValue(toEncrypt.toCharArray())
-                                  .build(),
-          kmsConfig);
-      fail("should have been failed");
-    } catch (SecretManagementDelegateException e) {
-      assertThat(true).isTrue();
-    }
   }
 
   @Test
@@ -2736,7 +2637,8 @@ public class KmsTest extends WingsBaseTest {
 
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
-    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    String yamlRef =
+        secretManager.getEncryptedYamlRef(appDynamicsConfig.getAccountId(), appDynamicsConfig.getEncryptedPassword());
 
     for (int i = 1; i < numOfSettingAttributes; i++) {
       appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
@@ -2758,7 +2660,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isNotNull();
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
     assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes);
 
     for (String attributeId : attributeIds) {
@@ -2786,7 +2688,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
       assertThat(encryptedData.isEnabled()).isTrue();
       assertThat(encryptedData.getKmsId()).isNotNull();
-      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
       assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
       assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       i++;
@@ -2808,7 +2710,8 @@ public class KmsTest extends WingsBaseTest {
 
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
-    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    String yamlRef =
+        secretManager.getEncryptedYamlRef(appDynamicsConfig.getAccountId(), appDynamicsConfig.getEncryptedPassword());
     for (int i = 1; i < numOfSettingAttributes; i++) {
       appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
       settingAttribute = getSettingAttribute(appDynamicsConfig);
@@ -2828,7 +2731,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
     assertThat(encryptedData.isEnabled()).isTrue();
     assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
     assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes);
 
     for (String attributeId : attributeIds) {
@@ -2857,7 +2760,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
       assertThat(encryptedData.isEnabled()).isTrue();
       assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
-      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
       assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
       assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       i++;
@@ -2877,11 +2780,12 @@ public class KmsTest extends WingsBaseTest {
 
     wingsPersistence.save(settingAttribute);
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                                .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                                                .filter("type", SettingVariableTypes.SECRET_TEXT)
                                                 .asList();
     assertThat(encryptedDataList).hasSize(1);
 
-    String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
+    String yamlRef =
+        secretManager.getEncryptedYamlRef(appDynamicsConfig.getAccountId(), appDynamicsConfig.getEncryptedPassword());
 
     String randomPassword = UUID.randomUUID().toString();
     appDynamicsConfig = getAppDynamicsConfig(accountId, randomPassword, yamlRef);
@@ -2889,7 +2793,7 @@ public class KmsTest extends WingsBaseTest {
 
     SettingAttribute attributeCopy = settingsService.save(settingAttribute);
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                            .filter("type", SettingVariableTypes.APP_DYNAMICS)
+                            .filter("type", SettingVariableTypes.SECRET_TEXT)
                             .asList();
     assertThat(encryptedDataList).hasSize(1);
 
@@ -2910,7 +2814,7 @@ public class KmsTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
-    String secretId = secretManager.saveSecret(accountId, secretText);
+    String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -3009,7 +2913,7 @@ public class KmsTest extends WingsBaseTest {
       if (i == numOfUpdates) {
         assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
       } else {
-        assertThat(secretChangeLog.getDescription()).isEqualTo("Changed password");
+        assertThat(secretChangeLog.getDescription()).isEqualTo(" Changed secret");
       }
     }
   }
@@ -3038,11 +2942,11 @@ public class KmsTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {
-    transitionEventListener = new KmsTransitionEventListener(kmsTransitionConsumer);
+    transitionEventListener = new SecretMigrationEventListener(kmsTransitionConsumer);
     FieldUtils.writeField(transitionEventListener, "timer", new TimerScheduledExecutorService(), true);
     FieldUtils.writeField(transitionEventListener, "queueController", new ConfigurationController(1), true);
     FieldUtils.writeField(transitionEventListener, "queueConsumer", transitionKmsQueue, true);
-    FieldUtils.writeField(transitionEventListener, "secretManager", secretManager, true);
+    FieldUtils.writeField(transitionEventListener, "secretService", secretService, true);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();

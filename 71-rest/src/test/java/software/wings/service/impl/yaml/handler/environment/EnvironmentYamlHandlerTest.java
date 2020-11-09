@@ -317,7 +317,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
         .thenReturn(Arrays.asList(new Key(ServiceTemplate.class, "ServiceTemplate", SERVICE_TEMPLATE_ID)));
     when(mockServiceVariableService.get(APP_ID, SERVICE_VARIABLE_ID)).thenReturn(parentServiceVariable);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(parentService);
-    when(secretManager.getEncryptedYamlRef(any())).thenReturn(existing_1_override.getValue());
+    when(secretManager.getEncryptedYamlRef(any(), any())).thenReturn(existing_1_override.getValue());
 
     Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
     yaml.setVariableOverrides(Arrays.asList(existing_1_override));

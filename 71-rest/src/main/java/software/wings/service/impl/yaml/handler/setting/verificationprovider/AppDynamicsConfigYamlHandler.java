@@ -21,7 +21,7 @@ public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandle
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(config.getType())
                     .username(config.getUsername())
-                    .password(getEncryptedValue(config, "password", false))
+                    .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
                     .accountName(config.getAccountname())
                     .controllerUrl(config.getControllerUrl())
                     .build();

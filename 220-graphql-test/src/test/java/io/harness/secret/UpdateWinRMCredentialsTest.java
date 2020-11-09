@@ -43,8 +43,8 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
   }
 
   private String getUpdateWinRMCredentialNameInput() {
-    String passwordSecretId =
-        secretManager.saveSecret(accountId, SecretText.builder().name("winrmPasswordSecretId").build());
+    String passwordSecretId = secretManager.saveSecretText(
+        accountId, SecretText.builder().name("winrmPasswordSecretId").value("abc").build(), false);
     String input = $GQL(/*
     {
     secretType: WINRM_CREDENTIAL,

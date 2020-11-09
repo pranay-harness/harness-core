@@ -19,6 +19,7 @@ public class EncryptedFileController {
         .name(encryptedFile.getName())
         .usageScope(usageScopeController.populateUsageScope(encryptedFile.getUsageRestrictions()))
         .scopedToAccount(encryptedFile.isScopedToAccount())
+        .inheritScopesFromSM(encryptedFile.isInheritScopesFromSM())
         .build();
   }
 }

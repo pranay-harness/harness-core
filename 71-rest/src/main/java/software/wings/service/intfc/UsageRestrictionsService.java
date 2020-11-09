@@ -133,6 +133,9 @@ public interface UsageRestrictionsService {
   void validateSetupUsagesOnUsageRestrictionsUpdate(
       String accountId, Map<String, Set<String>> setupUsages, UsageRestrictions newUsageRestrictions);
 
+  boolean isUsageRestrictionsSubset(
+      String accountId, UsageRestrictions usageRestrictions, UsageRestrictions parentRestrictions);
+
   /**
    * This method checks whether usages restriction and scoping to account is allowed for current user
    * @param accountId
@@ -184,4 +187,8 @@ public interface UsageRestrictionsService {
    * performed before an application is deleted to prevent dangling references to deleted applications.
    */
   int removeAppEnvReferences(String accountId, String appId, String envId);
+
+  UsageRestrictions getMaximumAllowedUsageRestrictionsForUser(String accountId, UsageRestrictions usageRestrictions);
+
+  UsageRestrictions getCommonRestrictions(UsageRestrictions usageRestrictions1, UsageRestrictions usageRestrictions2);
 }

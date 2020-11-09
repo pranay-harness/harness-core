@@ -33,6 +33,6 @@ public class EncryptedTextHelper {
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
     SecretText secretText = SecretText.builder().name(name).value(secret).build();
-    return secretManager.saveSecret(accountId, secretText);
+    return secretManager.saveSecretText(accountId, secretText, false);
   }
 }

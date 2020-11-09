@@ -17,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
 import lombok.extern.slf4j.Slf4j;
@@ -114,12 +113,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           Type variableType = serviceVariable.getType();
           String value = null;
           if (Type.ENCRYPTED_TEXT == variableType) {
-            try {
-              value = secretManager.getEncryptedYamlRef(serviceVariable);
-            } catch (IllegalAccessException e) {
-              throw new EncryptDecryptException(
-                  format("Could not find yaml ref for %s", serviceVariable.getValue()), e);
-            }
+            value =
+                secretManager.getEncryptedYamlRef(serviceVariable.getAccountId(), serviceVariable.getEncryptedValue());
           } else if (Type.TEXT == variableType) {
             if (serviceVariable.getValue() != null) {
               value = String.valueOf(serviceVariable.getValue());

@@ -19,8 +19,10 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.utils.AccountPermissionUtils;
 
@@ -48,13 +50,16 @@ public class GcpSecretsManagerResource {
   private GcpSecretsManagerService gcpSecretsManagerService;
   private AccountPermissionUtils accountPermissionUtils;
   private MainConfiguration configuration;
+  private UsageRestrictionsService usageRestrictionsService;
 
   @Inject
   GcpSecretsManagerResource(GcpSecretsManagerService gcpSecretsManagerService,
-      AccountPermissionUtils accountPermissionUtils, MainConfiguration mainConfiguration) {
+      AccountPermissionUtils accountPermissionUtils, MainConfiguration mainConfiguration,
+      UsageRestrictionsService usageRestrictionsService) {
     this.gcpSecretsManagerService = gcpSecretsManagerService;
     this.accountPermissionUtils = accountPermissionUtils;
     this.configuration = mainConfiguration;
+    this.usageRestrictionsService = usageRestrictionsService;
   }
 
   @PUT
@@ -63,16 +68,18 @@ public class GcpSecretsManagerResource {
       @FormDataParam("name") String name, @FormDataParam("keyName") String keyName,
       @FormDataParam("keyRing") String keyRing, @FormDataParam("projectId") String projectId,
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
-      @FormDataParam("isDefault") boolean isDefault, @FormDataParam("credentials") InputStream uploadedInputStream)
-      throws IOException {
+      @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
+      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      UsageRestrictions usageRestrictions =
+          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
       GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
-
+      gcpKmsConfig.setUsageRestrictions(usageRestrictions);
       RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
       if (response == null) {
         response = new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig, true));
@@ -88,8 +95,11 @@ public class GcpSecretsManagerResource {
       @FormDataParam("keyName") String keyName, @FormDataParam("keyRing") String keyRing,
       @FormDataParam("projectId") String projectId, @FormDataParam("region") String region,
       @FormDataParam("encryptionType") EncryptionType encryptionType, @FormDataParam("isDefault") boolean isDefault,
+      @FormDataParam("usageRestrictions") String usageRestrictionsString,
       @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      UsageRestrictions usageRestrictions =
+          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
@@ -97,6 +107,7 @@ public class GcpSecretsManagerResource {
       gcpKmsConfig.setUuid(secretMangerId);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
+      gcpKmsConfig.setUsageRestrictions(usageRestrictions);
       return new RestResponse<>(gcpSecretsManagerService.updateGcpKmsConfig(accountId, gcpKmsConfig));
     }
   }
@@ -106,15 +117,18 @@ public class GcpSecretsManagerResource {
       @FormDataParam("name") String name, @FormDataParam("keyName") String keyName,
       @FormDataParam("keyRing") String keyRing, @FormDataParam("projectId") String projectId,
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
-      @FormDataParam("isDefault") boolean isDefault, @FormDataParam("credentials") InputStream uploadedInputStream)
-      throws IOException {
+      @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
+      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      UsageRestrictions usageRestrictions =
+          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
       GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
+      gcpKmsConfig.setUsageRestrictions(usageRestrictions);
       return new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig, true));
     }
   }

@@ -25,7 +25,8 @@ public class HttpHelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml, Htt
 
     if (isNotBlank(httpHelmRepoConfig.getUsername())) {
       yaml.setUsername(httpHelmRepoConfig.getUsername());
-      yaml.setPassword(getEncryptedValue(httpHelmRepoConfig, "password", false));
+      yaml.setPassword(
+          getEncryptedYamlRef(httpHelmRepoConfig.getAccountId(), httpHelmRepoConfig.getEncryptedPassword()));
     }
 
     toYaml(yaml, settingAttribute, appId);

@@ -22,7 +22,7 @@ public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yam
                     .type(config.getType())
                     .splunkUrl(config.getSplunkUrl())
                     .username(config.getUsername())
-                    .password(getEncryptedValue(config, "password", false))
+                    .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

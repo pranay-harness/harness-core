@@ -1,6 +1,8 @@
 package io.harness.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
@@ -10,13 +12,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretScopeMetadata;
+import io.harness.exception.SecretManagementException;
 import io.harness.secrets.setupusage.SecretSetupUsageService;
 import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
@@ -25,6 +30,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,16 +68,11 @@ public class SecretsRBACServiceImpl implements SecretsRBACService {
   }
 
   @Override
-  public boolean hasAccessToEditSecret(String accountId, ScopedEntity scopedEntity) {
-    return usageRestrictionsService.userHasPermissionsToChangeEntity(
-        accountId, MANAGE_SECRETS, scopedEntity.getUsageRestrictions(), scopedEntity.isScopedToAccount());
-  }
-
-  @Override
-  public boolean hasAccessToReadSecrets(
-      String accountId, List<ScopedEntity> scopedEntities, String appId, String envId) {
-    for (ScopedEntity scopedEntity : scopedEntities) {
-      if (!hasAccessToReadSecret(accountId, scopedEntity, appId, envId)) {
+  public boolean hasAccessToEditSecrets(String accountId, Set<SecretScopeMetadata> secretsScopeMetadata) {
+    for (SecretScopeMetadata secretScopeMetadata : secretsScopeMetadata) {
+      if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, MANAGE_SECRETS,
+              secretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
+              secretScopeMetadata.getCalculatedScopes().isScopedToAccount())) {
         return false;
       }
     }
@@ -79,32 +80,109 @@ public class SecretsRBACServiceImpl implements SecretsRBACService {
   }
 
   @Override
-  public boolean hasAccessToReadSecret(String accountId, ScopedEntity scopedEntity) {
-    return hasAccessToReadSecretInternal(accountId, scopedEntity, null, null);
+  public boolean hasAccessToEditSecret(String accountId, SecretScopeMetadata secretScopeMetadata) {
+    return hasAccessToEditSecrets(accountId, Sets.newHashSet(secretScopeMetadata));
   }
 
   @Override
-  public boolean hasAccessToReadSecret(String accountId, ScopedEntity scopedEntity, String appId, String envId) {
-    return hasAccessToReadSecretInternal(accountId, scopedEntity, appId, envId);
+  public boolean hasAccessToReadSecrets(
+      String accountId, Set<SecretScopeMetadata> secretsScopeMetadata, String appId, String envId) {
+    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
+        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, PermissionAttribute.Action.READ);
+    Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
+    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
+
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMapForAccount = envService.getAppIdEnvMap(appsByAccountId);
+
+    for (SecretScopeMetadata secretScopeMetadata : secretsScopeMetadata) {
+      if (!usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appId, envId,
+              secretScopeMetadata.getCalculatedScopes().getUsageRestrictions(), restrictionsFromUserPermissions,
+              appEnvMapFromPermissions, appIdEnvMapForAccount,
+              secretScopeMetadata.getCalculatedScopes().isScopedToAccount())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
-  public void canReplacePermissions(String accountId, ScopedEntity newScopedEntity, ScopedEntity oldScopedEntity,
-      String secretId, boolean validateReferences) {
+  public boolean hasAccessToAccountScopedSecrets(String accountId) {
+    return userService.hasPermission(accountId, MANAGE_SECRETS);
+  }
+
+  @Override
+  public List<SecretScopeMetadata> filterSecretsByReadPermission(
+      String accountId, List<SecretScopeMetadata> secretsScopeMetadata, String appId, String envId) {
+    List<SecretScopeMetadata> filteredList = new ArrayList<>();
+    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
+    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
+        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, PermissionAttribute.Action.READ);
+    Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
+    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
+
+    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMapForAccount = envService.getAppIdEnvMap(appsByAccountId);
+
+    for (SecretScopeMetadata secretScopeMetadata : secretsScopeMetadata) {
+      if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appId, envId,
+              secretScopeMetadata.getCalculatedScopes().getUsageRestrictions(), restrictionsFromUserPermissions,
+              appEnvMapFromPermissions, appIdEnvMapForAccount,
+              secretScopeMetadata.getCalculatedScopes().isScopedToAccount())) {
+        filteredList.add(secretScopeMetadata);
+      }
+    }
+    return filteredList;
+  }
+
+  @Override
+  public boolean hasAccessToReadSecret(
+      String accountId, SecretScopeMetadata secretScopeMetadata, String appId, String envId) {
+    return hasAccessToReadSecrets(accountId, Sets.newHashSet(secretScopeMetadata), appId, envId);
+  }
+
+  @Override
+  public void canReplacePermissions(String accountId, SecretScopeMetadata newSecretScopeMetadata,
+      SecretScopeMetadata oldSecretScopeMetadata, boolean validateReferences) {
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(accountId, MANAGE_SECRETS,
-        oldScopedEntity.getUsageRestrictions(), newScopedEntity.getUsageRestrictions(),
-        newScopedEntity.isScopedToAccount());
-    if (!Objects.equals(oldScopedEntity.getUsageRestrictions(), newScopedEntity.getUsageRestrictions())
+        oldSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
+        newSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
+        newSecretScopeMetadata.getCalculatedScopes().isScopedToAccount());
+
+    if (!newSecretScopeMetadata.isInheritScopesFromSM()
+        && !newSecretScopeMetadata.getSecretScopes().isScopedToAccount()) {
+      if (!usageRestrictionsService.isUsageRestrictionsSubset(accountId,
+              newSecretScopeMetadata.getSecretScopes().getUsageRestrictions(),
+              newSecretScopeMetadata.getSecretsManagerScopes().getUsageRestrictions())) {
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+            "The provided secret scopes are less restrictive than the scopes associated with the Secrets Manager",
+            USER);
+      }
+    }
+
+    if (!Objects.equals(newSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
+            oldSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions())
         && validateReferences) {
       // Validate if change of the usage scope is resulting in with dangling references in service/environments.
-      checkIfUsagesAreInScope(accountId, secretId, newScopedEntity.getUsageRestrictions());
+      checkIfUsagesAreInScope(accountId, oldSecretScopeMetadata.getSecretId(),
+          newSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions());
     }
   }
 
   @Override
-  public void canSetPermissions(String accountId, ScopedEntity scopedEntity) {
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
-        accountId, MANAGE_SECRETS, scopedEntity.getUsageRestrictions(), scopedEntity.isScopedToAccount());
+  public void canSetPermissions(String accountId, SecretScopeMetadata secretScopeMetadata) {
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, MANAGE_SECRETS,
+        secretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
+        secretScopeMetadata.getCalculatedScopes().isScopedToAccount());
+    if (!secretScopeMetadata.isInheritScopesFromSM() && !secretScopeMetadata.getSecretScopes().isScopedToAccount()) {
+      if (!usageRestrictionsService.isUsageRestrictionsSubset(accountId,
+              secretScopeMetadata.getSecretScopes().getUsageRestrictions(),
+              secretScopeMetadata.getSecretsManagerScopes().getUsageRestrictions())) {
+        throw new SecretManagementException(
+            SECRET_MANAGEMENT_ERROR, "Given secret scopes are more relaxed than the secrets manager scopes", USER);
+      }
+    }
   }
 
   @Override
@@ -123,20 +201,13 @@ public class SecretsRBACServiceImpl implements SecretsRBACService {
     }
   }
 
-  private boolean hasAccessToReadSecretInternal(
-      String accountId, ScopedEntity scopedEntity, String appId, String envId) {
-    boolean isAccountAdmin = userService.hasPermission(accountId, MANAGE_SECRETS);
-    RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
-        usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, PermissionAttribute.Action.READ);
-    Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
-    UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
-
-    Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
-    Map<String, List<Base>> appIdEnvMapForAccount = envService.getAppIdEnvMap(appsByAccountId);
-
-    return usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appId, envId,
-        scopedEntity.getUsageRestrictions(), restrictionsFromUserPermissions, appEnvMapFromPermissions,
-        appIdEnvMapForAccount, scopedEntity.isScopedToAccount());
+  @Override
+  public boolean isScopeInConflict(EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
+    if (encryptedData.isInheritScopesFromSM() || encryptedData.isScopedToAccount()) {
+      return false;
+    }
+    return !usageRestrictionsService.isUsageRestrictionsSubset(
+        encryptedData.getAccountId(), encryptedData.getUsageRestrictions(), secretManagerConfig.getUsageRestrictions());
   }
 
   private boolean hasUserContext() {

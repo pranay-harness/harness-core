@@ -20,7 +20,6 @@ import io.harness.version.VersionInfoManager;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.InstanceEvent;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.helpers.ext.mail.EmailData;
@@ -33,7 +32,6 @@ import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
-import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
   @Provides
@@ -70,18 +68,6 @@ public class ManagerQueueModule extends AbstractModule {
   @Singleton
   QueueConsumer<CollectEvent> collectQueueConsumer(Injector injector, PublisherConfiguration config) {
     return QueueFactory.createQueueConsumer(injector, CollectEvent.class, ofSeconds(5), null, config);
-  }
-
-  @Provides
-  @Singleton
-  QueuePublisher<KmsTransitionEvent> kmsTransitionQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, KmsTransitionEvent.class, null, config);
-  }
-
-  @Provides
-  @Singleton
-  QueueConsumer<KmsTransitionEvent> kmsTransitionQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, KmsTransitionEvent.class, ofSeconds(30), null, config);
   }
 
   @Provides
@@ -169,7 +155,6 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
-    bind(new TypeLiteral<QueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
     bind(new TypeLiteral<QueueListener<DeploymentEvent>>() {}).to(DeploymentEventListener.class);
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
     bind(new TypeLiteral<QueueListener<GenericEvent>>() {}).to(GenericEventListener.class);

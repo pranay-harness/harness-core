@@ -7,6 +7,7 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -38,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -278,8 +280,14 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           .filter(header -> header.encrypted)
           .filter(header -> !header.value.equals(MASKED_STRING))
           .forEach(header -> {
+            SecretText secretText = SecretText.builder()
+                                        .value(header.value)
+                                        .hideFromListing(true)
+                                        .name(UUID.randomUUID().toString())
+                                        .scopedToAccount(true)
+                                        .build();
             header.encryptedValue =
-                enabledConnectorsRefSecrets ? header.value : secretManager.encrypt(accountId, header.value, null);
+                enabledConnectorsRefSecrets ? header.value : secretManager.saveSecretText(accountId, secretText, false);
             header.value = enabledConnectorsRefSecrets ? header.value : MASKED_STRING;
             secretIdsToFieldNameMap.put(header.value, "header." + header.key);
           });
@@ -290,8 +298,14 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           .filter(option -> option.encrypted)
           .filter(option -> !option.value.equals(MASKED_STRING))
           .forEach(option -> {
+            SecretText secretText = SecretText.builder()
+                                        .value(option.value)
+                                        .hideFromListing(true)
+                                        .name(UUID.randomUUID().toString())
+                                        .scopedToAccount(true)
+                                        .build();
             option.encryptedValue =
-                enabledConnectorsRefSecrets ? option.value : secretManager.encrypt(accountId, option.value, null);
+                enabledConnectorsRefSecrets ? option.value : secretManager.saveSecretText(accountId, secretText, false);
             option.value = enabledConnectorsRefSecrets ? option.value : MASKED_STRING;
             secretIdsToFieldNameMap.put(option.value, "option." + option.key);
           });

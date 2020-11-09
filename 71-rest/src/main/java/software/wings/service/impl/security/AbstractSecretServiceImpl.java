@@ -14,7 +14,6 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.SimpleEncryption;
@@ -22,7 +21,6 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -32,7 +30,6 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.security.KmsService;
 
 import java.util.UUID;
 
@@ -43,13 +40,11 @@ import java.util.UUID;
 @Slf4j
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;
-  static final String REASON_KEY = "reason";
   protected static final String ID_KEY = "_id";
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected SecretManagerConfigService secretManagerConfigService;
-  @Inject private KmsService kmsService;
   @Inject private AccountService accountService;
   @Inject protected AlertService alertService;
   @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
@@ -77,39 +72,6 @@ public abstract class AbstractSecretServiceImpl {
     return decryptLocal(encryptedData);
   }
 
-  char[] decryptVaultToken(EncryptedData encryptedVaultToken) {
-    EncryptionType encryptionType = encryptedVaultToken.getEncryptionType();
-    String accountId = encryptedVaultToken.getAccountId();
-    switch (encryptionType) {
-      case LOCAL:
-        // Newly created Vault config should never be encrypted by KMS.
-        return decryptLocal(encryptedVaultToken);
-      case KMS:
-        // This is for backward compatibility. Existing vault configs may still have their root token
-        // encrypted by KMS.
-        KmsConfig kmsConfig = kmsService.getKmsConfig(accountId, encryptedVaultToken.getKmsId());
-        char[] decrypted = kmsService.decrypt(encryptedVaultToken, accountId, kmsConfig);
-
-        // Runtime migration of vault root token from KMS to LOCAL at time of reading
-        try {
-          EncryptedData reencryptedData = encryptLocal(decrypted);
-          encryptedVaultToken.setEncryptionType(reencryptedData.getEncryptionType());
-          encryptedVaultToken.setEncryptionKey(reencryptedData.getEncryptionKey());
-          encryptedVaultToken.setEncryptedValue(reencryptedData.getEncryptedValue());
-          encryptedVaultToken.setKmsId(null);
-          wingsPersistence.save(encryptedVaultToken);
-          log.info("Successfully migrated vault token {} from KMS to LOCAL encryption.", encryptedVaultToken.getName());
-        } catch (WingsException e) {
-          log.warn(
-              "Failed in migrating vault token " + encryptedVaultToken.getName() + " from KMS to LOCAL encryption.", e);
-        }
-
-        return decrypted;
-      default:
-        throw new IllegalStateException("Unexpected Vault root token encryption type: " + encryptionType);
-    }
-  }
-
   protected void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
     Account account = accountService.get(accountId);
     if (account.isLocalEncryptionEnabled()) {
@@ -132,14 +94,13 @@ public abstract class AbstractSecretServiceImpl {
   protected boolean deleteSecretManagerAndGenerateAudit(String accountId, SecretManagerConfig secretManagerConfig) {
     boolean deleted = false;
     if (secretManagerConfig != null) {
-      String secretManagerConfigId = secretManagerConfig.getUuid();
-      deleted = wingsPersistence.delete(SecretManagerConfig.class, secretManagerConfigId);
+      deleted = secretManagerConfigService.delete(accountId, secretManagerConfig);
       if (deleted) {
         auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, secretManagerConfig);
       }
 
       KmsSetupAlert kmsSetupAlert =
-          KmsSetupAlert.builder().kmsId(secretManagerConfigId).message(secretManagerConfig.getName()).build();
+          KmsSetupAlert.builder().kmsId(secretManagerConfig.getUuid()).message(secretManagerConfig.getName()).build();
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
     }
     return deleted;

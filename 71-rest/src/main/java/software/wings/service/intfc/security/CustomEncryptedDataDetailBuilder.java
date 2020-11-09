@@ -11,5 +11,4 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 public interface CustomEncryptedDataDetailBuilder {
   EncryptedDataDetail buildEncryptedDataDetail(
       EncryptedData encryptedData, CustomSecretsManagerConfig customSecretsManagerConfig);
-  void validateSecret(EncryptedData encryptedData, CustomSecretsManagerConfig customSecretsManagerConfig);
 }

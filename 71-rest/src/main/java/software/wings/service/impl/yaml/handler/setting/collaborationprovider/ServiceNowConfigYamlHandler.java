@@ -36,7 +36,7 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
                     .type(jiraConfig.getType())
                     .baseUrl(jiraConfig.getBaseUrl())
                     .username(jiraConfig.getUsername())
-                    .password(getEncryptedValue(jiraConfig, "password", false))
+                    .password(getEncryptedYamlRef(jiraConfig.getAccountId(), jiraConfig.getEncryptedPassword()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

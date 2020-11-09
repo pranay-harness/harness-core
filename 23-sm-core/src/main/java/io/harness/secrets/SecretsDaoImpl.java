@@ -21,6 +21,8 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -122,6 +125,8 @@ public class SecretsDaoImpl implements SecretsDao {
       } else {
         updateOperations.unset(EncryptedDataKeys.usageRestrictions);
       }
+      updateOperations.set(
+          EncryptedDataKeys.inheritScopesFromSM, secretUpdateData.getUpdatedSecret().isInheritScopesFromSM());
       updateOperations.set(EncryptedDataKeys.scopedToAccount, secretUpdateData.getUpdatedSecret().isScopedToAccount());
     }
     if (updatedEncryptedData != null) {
@@ -129,7 +134,7 @@ public class SecretsDaoImpl implements SecretsDao {
       updateOperations.set(EncryptedDataKeys.encryptedValue, updatedEncryptedData.getEncryptedValue());
       if (secretUpdateData.getUpdatedSecret() instanceof SecretFile && secretUpdateData.isValueChanged()) {
         updateOperations.set(
-            EncryptedDataKeys.fileSize, ((SecretFile) secretUpdateData.getUpdatedSecret()).getFileSize());
+            EncryptedDataKeys.fileSize, ((SecretFile) secretUpdateData.getUpdatedSecret()).getFileContent().length);
       }
     }
     updateOperations.set(EncryptedDataKeys.kmsId, secretUpdateData.getUpdatedSecret().getKmsId());
@@ -155,6 +160,11 @@ public class SecretsDaoImpl implements SecretsDao {
   }
 
   @Override
+  public PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) {
+    return hPersistence.query(EncryptedData.class, pageRequest);
+  }
+
+  @Override
   public MorphiaIterator<EncryptedData, EncryptedData> listSecretsBySecretManager(
       String accountId, String secretManagerId, boolean shouldIncludeSecretManagerSecrets) {
     Query<EncryptedData> query = hPersistence.createQuery(EncryptedData.class)
@@ -166,5 +176,15 @@ public class SecretsDaoImpl implements SecretsDao {
           .notIn(Lists.newArrayList(VAULT, KMS, GCP_KMS, CYBERARK, AZURE_VAULT, AWS_SECRETS_MANAGER));
     }
     return query.fetch();
+  }
+
+  @Override
+  public MorphiaIterator<EncryptedData, EncryptedData> listSecretsBySecretIds(String accountId, Set<String> secretIds) {
+    return hPersistence.createQuery(EncryptedData.class)
+        .field(EncryptedDataKeys.ID_KEY)
+        .in(secretIds)
+        .field(EncryptedDataKeys.accountId)
+        .equal(accountId)
+        .fetch();
   }
 }

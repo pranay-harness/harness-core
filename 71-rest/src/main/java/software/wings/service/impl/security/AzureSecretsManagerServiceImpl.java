@@ -6,8 +6,6 @@ import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingVariableTypes.AZURE_VAULT;
 
 import com.google.common.base.Preconditions;
@@ -114,10 +112,10 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     if (savedSecretsManagerConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-      query.criteria(ACCOUNT_ID_KEY)
+      query.criteria(EncryptedDataKeys.accountId)
           .equal(secretsManagerConfig.getAccountId())
           .or(query.criteria(ID_KEY).equal(secretsManagerConfig.getSecretKey()),
-              query.criteria(SECRET_NAME_KEY).equal(secretsManagerConfig.getName() + secretNameSuffix));
+              query.criteria(EncryptedDataKeys.name).equal(secretsManagerConfig.getName() + secretNameSuffix));
       EncryptedData savedEncryptedData = query.get();
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
@@ -168,7 +166,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Override
   public boolean deleteConfig(String accountId, String configId) {
     long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.accountId, accountId)
                      .filter(EncryptedDataKeys.kmsId, configId)
                      .filter(EncryptedDataKeys.encryptionType, EncryptionType.AZURE_VAULT)
                      .count(upToOne);

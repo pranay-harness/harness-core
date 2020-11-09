@@ -27,8 +27,10 @@ public class JenkinsConfigVerificationYamlHandler
             .type(jenkinsConfig.getType())
             .url(jenkinsConfig.getJenkinsUrl())
             .username(jenkinsConfig.getUsername())
-            .password(getEncryptedValue(jenkinsConfig, "password", true))
-            .token(jenkinsConfig.getEncryptedToken() != null ? getEncryptedValue(jenkinsConfig, "token", true) : null)
+            .password(getEncryptedYamlRef(jenkinsConfig.getAccountId(), jenkinsConfig.getEncryptedPassword()))
+            .token(jenkinsConfig.getEncryptedToken() != null
+                    ? getEncryptedYamlRef(jenkinsConfig.getAccountId(), jenkinsConfig.getEncryptedToken())
+                    : null)
             .authMechanism(jenkinsConfig.getAuthMechanism())
             .build();
     toYaml(yaml, settingAttribute, appId);

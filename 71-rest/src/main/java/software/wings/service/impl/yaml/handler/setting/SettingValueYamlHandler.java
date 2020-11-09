@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -7,9 +8,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
@@ -65,14 +64,11 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   protected abstract SettingAttribute toBean(SettingAttribute previous, ChangeContext<Y> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException;
 
-  protected String getEncryptedValue(EncryptableSetting settingValue, String fieldName, boolean encryptMultipleFields) {
-    try {
-      return encryptMultipleFields ? secretManager.getEncryptedYamlRef(settingValue, fieldName)
-                                   : secretManager.getEncryptedYamlRef(settingValue);
-    } catch (IllegalAccessException e) {
-      log.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
-      throw new WingsException(e);
+  protected String getEncryptedYamlRef(String accountId, String secretId) {
+    if (isEmpty(accountId) || isEmpty(secretId)) {
+      return null;
     }
+    return secretManager.getEncryptedYamlRef(accountId, secretId);
   }
 
   protected void toYaml(Y yaml, SettingAttribute settingAttribute, String appId) {

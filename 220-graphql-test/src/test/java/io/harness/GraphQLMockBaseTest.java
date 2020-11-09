@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.EncryptedData;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.exception.SecretManagementException;
 import io.harness.rule.GraphQLWithWingsRule;
 import io.harness.security.encryption.EncryptionType;
@@ -14,7 +15,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.VaultConfig;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
     }
     char[] encryptedValue = value == null
         ? null
-        : KmsEncryptDecryptClient.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+        : AwsKmsEncryptor.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)
@@ -48,7 +48,7 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
   }
 
   protected char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
-    return KmsEncryptDecryptClient.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+    return AwsKmsEncryptor.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
   }
 

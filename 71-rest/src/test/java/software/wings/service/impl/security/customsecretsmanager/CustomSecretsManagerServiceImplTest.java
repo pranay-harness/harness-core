@@ -23,6 +23,8 @@ import com.google.inject.Inject;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.encryptors.CustomEncryptor;
+import io.harness.encryptors.CustomEncryptorsRegistry;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
@@ -30,6 +32,7 @@ import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataParams;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,7 +46,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -57,18 +59,21 @@ import java.util.Set;
 
 public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
-  @Mock private CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder;
+  @Mock private CustomEncryptorsRegistry customEncryptorsRegistry;
+  @Mock private CustomEncryptor customEncryptor;
   @Inject @InjectMocks private TemplateService templateService;
   @Inject @InjectMocks private TemplateGalleryService templateGalleryService;
   @Inject @InjectMocks private CustomSecretsManagerService customSecretsManagerService;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     initMocks(this);
     Account account = getAccount(AccountType.PAID);
     account.setUuid(GLOBAL_ACCOUNT_ID);
     when(accountService.get(GLOBAL_ACCOUNT_ID)).thenReturn(account);
     templateGalleryService.loadHarnessGallery();
+    when(customEncryptorsRegistry.getCustomEncryptor(CUSTOM)).thenReturn(customEncryptor);
+    FieldUtils.writeField(customSecretsManagerService, "customEncryptorsRegistry", customEncryptorsRegistry, true);
   }
 
   private String obtainTemplate(ScriptType scriptType) {

@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
+import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -60,8 +61,10 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -299,7 +302,7 @@ public class SSOServiceImpl implements SSOService {
           .validateLdapConnectionSettings(ldapSettings, encryptedDataDetail);
     } finally {
       if (temporaryEncryption) {
-        secretManager.deleteSecretUsingUuid(encryptedDataDetail.getEncryptedData().getUuid());
+        secretManager.deleteSecret(accountId, encryptedDataDetail.getEncryptedData().getUuid(), new HashMap<>(), false);
       }
     }
   }
@@ -320,7 +323,7 @@ public class SSOServiceImpl implements SSOService {
           .validateLdapUserSettings(ldapSettings, encryptedDataDetail);
     } finally {
       if (temporaryEncryption) {
-        secretManager.deleteSecretUsingUuid(encryptedDataDetail.getEncryptedData().getUuid());
+        secretManager.deleteSecret(accountId, encryptedDataDetail.getEncryptedData().getUuid(), new HashMap<>(), false);
       }
     }
   }
@@ -341,7 +344,7 @@ public class SSOServiceImpl implements SSOService {
           .validateLdapGroupSettings(ldapSettings, encryptedDataDetail);
     } finally {
       if (temporaryEncryption) {
-        secretManager.deleteSecretUsingUuid(encryptedDataDetail.getEncryptedData().getUuid());
+        secretManager.deleteSecret(accountId, encryptedDataDetail.getEncryptedData().getUuid(), new HashMap<>(), false);
       }
     }
   }
@@ -349,8 +352,13 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public LdapResponse validateLdapAuthentication(LdapSettings ldapSettings, String identifier, String password) {
     EncryptedDataDetail settingsEncryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
-
-    String encryptedPassword = secretManager.encrypt(ldapSettings.getAccountId(), password, null);
+    SecretText secretText = SecretText.builder()
+                                .value(password)
+                                .hideFromListing(true)
+                                .name(UUID.randomUUID().toString())
+                                .scopedToAccount(true)
+                                .build();
+    String encryptedPassword = secretManager.saveSecretText(ldapSettings.getAccountId(), secretText, false);
     EncryptedDataDetail passwordEncryptedDataDetail =
         secretManager
             .encryptedDataDetails(ldapSettings.getAccountId(), LdapConstants.USER_PASSWORD_KEY, encryptedPassword, null)
@@ -364,7 +372,8 @@ public class SSOServiceImpl implements SSOService {
       return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
           .authenticate(ldapSettings, settingsEncryptedDataDetail, identifier, passwordEncryptedDataDetail);
     } finally {
-      secretManager.deleteSecretUsingUuid(passwordEncryptedDataDetail.getEncryptedData().getUuid());
+      secretManager.deleteSecret(ldapSettings.getAccountId(), passwordEncryptedDataDetail.getEncryptedData().getUuid(),
+          new HashMap<>(), false);
     }
   }
 

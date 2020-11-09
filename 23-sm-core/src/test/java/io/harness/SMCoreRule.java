@@ -15,6 +15,13 @@ import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
+import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
+import io.harness.encryptors.clients.AzureVaultEncryptor;
+import io.harness.encryptors.clients.CyberArkVaultEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.HashicorpVaultEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -23,8 +30,10 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
+import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsFileService;
 import io.harness.secrets.SecretsRBACService;
@@ -95,6 +104,18 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(SecretManagerConfigService.class).toInstance(mock(SecretManagerConfigService.class));
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
+
         binder()
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER.getName()))
@@ -115,42 +136,47 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         binder()
             .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
-            .toInstance(mock(VaultEncryptor.class));
+            .to(HashicorpVaultEncryptor.class);
 
         binder()
             .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.AWS_VAULT_ENCRYPTOR.getName()))
-            .toInstance(mock(VaultEncryptor.class));
+            .to(AwsSecretsManagerEncryptor.class);
 
         binder()
             .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
-            .toInstance(mock(VaultEncryptor.class));
+            .to(AzureVaultEncryptor.class);
 
         binder()
             .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
-            .toInstance(mock(VaultEncryptor.class));
+            .to(CyberArkVaultEncryptor.class);
 
         binder()
             .bind(KmsEncryptor.class)
             .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
-            .toInstance(mock(KmsEncryptor.class));
+            .to(AwsKmsEncryptor.class);
 
         binder()
             .bind(KmsEncryptor.class)
             .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
-            .toInstance(mock(KmsEncryptor.class));
+            .to(GcpKmsEncryptor.class);
 
         binder()
             .bind(KmsEncryptor.class)
             .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
-            .toInstance(mock(KmsEncryptor.class));
+            .to(LocalEncryptor.class);
 
         binder()
             .bind(KmsEncryptor.class)
-            .annotatedWith(Names.named(Encryptors.GLOBAL_KMS_ENCRYPTOR.getName()))
-            .toInstance(mock(KmsEncryptor.class));
+            .annotatedWith(Names.named(Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR.getName()))
+            .to(GcpKmsEncryptor.class);
+
+        binder()
+            .bind(KmsEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.GLOBAL_AWS_KMS_ENCRYPTOR.getName()))
+            .to(AwsKmsEncryptor.class);
 
         binder()
             .bind(CustomEncryptor.class)
@@ -160,6 +186,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         bind(SecretsFileService.class).toInstance(mock(SecretsFileService.class));
         bind(SecretsAuditService.class).toInstance(mock(SecretsAuditService.class));
         bind(SecretsRBACService.class).toInstance(mock(SecretsRBACService.class));
+        bind(SecretsManagerRBACService.class).toInstance(mock(SecretsManagerRBACService.class));
       }
     });
     modules.add(new VersionModule());

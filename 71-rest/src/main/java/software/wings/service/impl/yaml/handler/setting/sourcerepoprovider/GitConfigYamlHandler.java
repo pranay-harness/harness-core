@@ -25,7 +25,9 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
             .type(gitConfig.getType())
             .url(gitConfig.getRepoUrl())
             .username(gitConfig.getUsername())
-            .password(gitConfig.getEncryptedPassword() != null ? getEncryptedValue(gitConfig, "password", false) : null)
+            .password(gitConfig.getEncryptedPassword() != null
+                    ? getEncryptedYamlRef(gitConfig.getAccountId(), gitConfig.getEncryptedPassword())
+                    : null)
             .branch(gitConfig.getBranch())
             .keyAuth(gitConfig.isKeyAuth())
             .sshKeyName(

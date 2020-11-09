@@ -9,6 +9,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryptors.clients.CyberArkVaultEncryptor;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -24,7 +25,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.io.InputStream;
 import java.util.List;
@@ -38,7 +38,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
   private static final String SM_NAME = "CyberArk Secrets Manager";
   private static final String APP_ID = "testappid";
 
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private CyberArkVaultEncryptor cyberArkVaultEncryptor;
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -89,7 +89,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
 
       // Verifying the secret decryption
       cyberArkConfig.setClientCertificate(clientCertificate);
-      char[] decrypted = secretManagementDelegateService.decrypt(data, cyberArkConfig);
+      char[] decrypted = cyberArkVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, cyberArkConfig);
       assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
       String decryptedSecret = String.valueOf(decrypted);
       log.info("Decrypted value: {}", decryptedSecret);

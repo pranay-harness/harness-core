@@ -43,6 +43,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -1209,6 +1210,15 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(fieldEnd2.exists()).thenReturn(query2);
     when(query2.fetch()).thenReturn(iterator2);
     doReturn(false).when(iterator2).hasNext();
+
+    Query<SecretManagerConfig> query3 = mock(Query.class);
+    FieldEnd fieldEnd3 = mock(FieldEnd.class);
+    MorphiaIterator iterator3 = mock(MorphiaIterator.class);
+
+    when(mockWingsPersistence.createQuery(eq(SecretManagerConfig.class))).thenReturn(query3);
+    when(query3.filter(anyString(), anyString())).thenReturn(query3);
+    when(query3.fetch()).thenReturn(iterator3);
+    doReturn(false).when(iterator3).hasNext();
 
     when(settingServiceHelper.getUsageRestrictions(settingAttribute))
         .thenReturn(settingAttribute.getUsageRestrictions());

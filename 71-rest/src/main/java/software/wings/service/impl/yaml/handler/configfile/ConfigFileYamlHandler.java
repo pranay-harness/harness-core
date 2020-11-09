@@ -96,11 +96,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
     String fileName;
     if (bean.isEncrypted()) {
-      try {
-        fileName = secretManager.getEncryptedYamlRef(bean);
-      } catch (IllegalAccessException e) {
-        throw new WingsException(e);
-      }
+      String encryptedFieldRefId = bean.getEncryptedFileId();
+      fileName = secretManager.getEncryptedYamlRef(bean.getAccountId(), encryptedFieldRefId);
     } else {
       fileName = Utils.normalize(bean.getRelativeFilePath());
     }

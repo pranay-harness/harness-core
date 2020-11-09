@@ -11,7 +11,6 @@ import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesClusterConfig.Yaml;
@@ -40,87 +39,80 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         kubernetesClusterConfig.getUsername() != null ? String.valueOf(kubernetesClusterConfig.getUsername()) : null);
     yaml.setSkipValidation(kubernetesClusterConfig.isSkipValidation());
 
-    String fieldName = null;
     String encryptedYamlRef;
-    try {
-      if (kubernetesClusterConfig.isUseEncryptedUsername()) {
-        fieldName = "username";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setUsernameSecretId(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedPassword() != null) {
-        fieldName = "password";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setPassword(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedCaCert() != null) {
-        fieldName = "caCert";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setCaCert(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedClientCert() != null) {
-        fieldName = "clientCert";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setClientCert(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedClientKey() != null) {
-        fieldName = "clientKey";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setClientKey(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedClientKeyPassphrase() != null) {
-        fieldName = "clientKeyPassphrase";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setClientKeyPassphrase(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedServiceAccountToken() != null) {
-        fieldName = "serviceAccountToken";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setServiceAccountToken(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedOidcSecret() != null) {
-        fieldName = "oidcSecret";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setOidcSecret(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedOidcClientId() != null) {
-        fieldName = "oidcClientId";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setOidcClientId(encryptedYamlRef);
-      }
-
-      if (kubernetesClusterConfig.getEncryptedOidcPassword() != null) {
-        fieldName = "oidcPassword";
-        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
-        yaml.setOidcPassword(encryptedYamlRef);
-      }
-
-      yaml.setOidcIdentityProviderUrl(kubernetesClusterConfig.getOidcIdentityProviderUrl());
-      yaml.setOidcUsername(kubernetesClusterConfig.getOidcUsername());
-      yaml.setOidcGrantType(kubernetesClusterConfig.getOidcGrantType());
-      yaml.setOidcScopes(kubernetesClusterConfig.getOidcScopes());
-      yaml.setAuthType(kubernetesClusterConfig.getAuthType());
-
-      yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
-
-      if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
-        CCMConfig.Yaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
-        yaml.setContinuousEfficiencyConfig(ccmConfigYaml);
-      }
-      toYaml(yaml, settingAttribute, appId);
-
-    } catch (IllegalAccessException e) {
-      log.warn("Invalid " + fieldName + ". Should be a valid url to a secret");
-      throw new WingsException(e);
+    if (kubernetesClusterConfig.isUseEncryptedUsername()) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedUsername());
+      yaml.setUsernameSecretId(encryptedYamlRef);
     }
+
+    if (kubernetesClusterConfig.getEncryptedPassword() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedPassword());
+      yaml.setPassword(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedCaCert() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedCaCert());
+      yaml.setCaCert(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedClientCert() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedClientCert());
+      yaml.setClientCert(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedClientKey() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedClientKey());
+      yaml.setClientKey(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedClientKeyPassphrase() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedClientKeyPassphrase());
+      yaml.setClientKeyPassphrase(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedServiceAccountToken() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedServiceAccountToken());
+      yaml.setServiceAccountToken(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedOidcSecret() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedOidcSecret());
+      yaml.setOidcSecret(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedOidcClientId() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedOidcClientId());
+      yaml.setOidcClientId(encryptedYamlRef);
+    }
+
+    if (kubernetesClusterConfig.getEncryptedOidcPassword() != null) {
+      encryptedYamlRef = secretManager.getEncryptedYamlRef(
+          kubernetesClusterConfig.getAccountId(), kubernetesClusterConfig.getEncryptedOidcPassword());
+      yaml.setOidcPassword(encryptedYamlRef);
+    }
+
+    yaml.setOidcIdentityProviderUrl(kubernetesClusterConfig.getOidcIdentityProviderUrl());
+    yaml.setOidcUsername(kubernetesClusterConfig.getOidcUsername());
+    yaml.setOidcGrantType(kubernetesClusterConfig.getOidcGrantType());
+    yaml.setOidcScopes(kubernetesClusterConfig.getOidcScopes());
+    yaml.setAuthType(kubernetesClusterConfig.getAuthType());
+
+    yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
+
+    if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
+      CCMConfig.Yaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
+      yaml.setContinuousEfficiencyConfig(ccmConfigYaml);
+    }
+    toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 

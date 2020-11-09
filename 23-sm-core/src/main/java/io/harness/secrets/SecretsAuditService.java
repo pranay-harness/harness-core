@@ -6,13 +6,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretUpdateData;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 public interface SecretsAuditService {
-  void logSecretCreateEvent(@Valid @NotNull EncryptedData newRecord);
-  void logSecretUpdateEvent(@Valid @NotNull EncryptedData oldRecord, @Valid @NotNull EncryptedData updatedRecord,
-      @Valid @NotNull SecretUpdateData secretUpdateData);
-  void logSecretDeleteEvent(@Valid @NotNull EncryptedData deletedRecord);
+  void logSecretCreateEvent(@NotNull EncryptedData newRecord);
+  void logSecretUpdateEvent(@NotNull EncryptedData oldRecord, @NotNull EncryptedData updatedRecord,
+      @NotNull SecretUpdateData secretUpdateData);
+  void logSecretDeleteEvent(@NotNull EncryptedData deletedRecord);
 }

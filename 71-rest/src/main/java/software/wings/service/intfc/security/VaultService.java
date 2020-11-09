@@ -9,10 +9,7 @@ import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
-import software.wings.settings.SettingVariableTypes;
 
-import java.io.File;
-import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -20,24 +17,9 @@ import java.util.List;
  */
 @OwnedBy(PL)
 public interface VaultService {
-  String VAULT_VAILDATION_URL = "harness_vault_validation";
-  String DEFAULT_BASE_PATH = "/harness";
-  String DEFAULT_SECRET_ENGINE_NAME = "secret";
-  String KEY_VALUE_SECRET_ENGINE_TYPE = "kv";
-  String DEFAULT_KEY_NAME = "value";
-  String PATH_SEPARATOR = "/";
-  String KEY_SPEARATOR = "#";
-
-  EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData encryptedData);
-
-  char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig);
-
   String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
-
-  boolean isReadOnly(String vaultConfigId);
 
   List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig);
 
@@ -50,15 +32,6 @@ public interface VaultService {
   void renewToken(VaultConfig vaultConfig);
 
   void renewAppRoleClientToken(VaultConfig vaultConfig);
-
-  EncryptedData encryptFile(
-      String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData);
-
-  File decryptFile(File file, String accountId, EncryptedData encryptedData);
-
-  void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output);
-
-  void deleteSecret(String accountId, String path, VaultConfig vaultConfig);
 
   List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
 

@@ -76,7 +76,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig), 5, TimeUnit.SECONDS, true);
+            () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

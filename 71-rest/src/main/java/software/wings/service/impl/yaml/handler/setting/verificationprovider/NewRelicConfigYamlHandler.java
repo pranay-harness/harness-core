@@ -22,7 +22,7 @@ public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Y
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(config.getType())
-                    .apiKey(getEncryptedValue(config, "apiKey", false))
+                    .apiKey(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiKey()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

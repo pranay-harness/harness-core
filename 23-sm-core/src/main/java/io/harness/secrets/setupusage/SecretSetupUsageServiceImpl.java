@@ -31,9 +31,17 @@ import java.util.Set;
 @Singleton
 @Slf4j
 public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
-  @Inject private SecretsDao secretsDao;
-  @Inject private SecretManagerConfigService secretManagerConfigService;
-  @Inject private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
+  private final SecretsDao secretsDao;
+  private final SecretManagerConfigService secretManagerConfigService;
+  private final SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
+
+  @Inject
+  public SecretSetupUsageServiceImpl(SecretsDao secretsDao, SecretManagerConfigService secretManagerConfigService,
+      SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry) {
+    this.secretsDao = secretsDao;
+    this.secretManagerConfigService = secretManagerConfigService;
+    this.secretSetupUsageBuilderRegistry = secretSetupUsageBuilderRegistry;
+  }
 
   private void populateParentHelperMaps(Map<SettingVariableTypes, Set<String>> parentIdsByType,
       Map<String, Set<EncryptedDataParent>> parentsByParentId, Set<EncryptedDataParent> parents) {

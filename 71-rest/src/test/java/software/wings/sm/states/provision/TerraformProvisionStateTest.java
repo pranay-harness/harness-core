@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
@@ -58,7 +57,6 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.stream.BoundedInputStream;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import org.apache.commons.io.FileUtils;
@@ -89,7 +87,6 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -604,9 +601,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(
         ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
         .isEqualTo(PROVISIONER_ID);
-    verify(secretManager, times(1))
-        .saveFile(anyString(), anyString(), anyString(), any(UsageRestrictions.class), any(BoundedInputStream.class),
-            anyBoolean(), anyBoolean());
+    verify(secretManager, times(1)).saveSecretFile(anyString(), any());
     // once for saving the tfplan content, once for saving the tfplan json variable
     verify(sweepingOutputService, times(2)).save(any(SweepingOutputInstance.class));
     verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.WORKFLOW));
@@ -758,7 +753,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(sweepingOutputInstance);
     state.deleteTerraformPlanFromSecretManager(executionContext);
     verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
-    verify(secretManager, times(1)).deleteFile(ACCOUNT_ID, terraformPlanSecretManagerId);
+    verify(secretManager, times(1)).deleteSecret(ACCOUNT_ID, terraformPlanSecretManagerId, new HashMap<>(), false);
     verify(sweepingOutputService, times(1)).deleteById(APP_ID, sweepingOutputInstanceUUID);
   }
 

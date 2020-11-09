@@ -61,7 +61,7 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig), 10, TimeUnit.SECONDS, true);
+            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig), 20, TimeUnit.SECONDS, true);
       } catch (SecretManagementDelegateException e) {
         throw e;
       } catch (Exception e) {

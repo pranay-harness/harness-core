@@ -87,7 +87,6 @@ import software.wings.api.InstanceEvent;
 import software.wings.api.InstanceFetchStateExecutionSummary;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.api.K8sDeploymentInfo;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
 import software.wings.api.KubernetesSwapServiceSelectorsExecutionData;
@@ -967,7 +966,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(K8sWorkloadRecommendation.class);
     set.add(K8sYaml.class);
     set.add(KeywordsAware.class);
-    set.add(KmsTransitionEvent.class);
     set.add(KubernetesContainerTask.class);
     set.add(LabeledLogRecord.class);
     set.add(LambdaSpecification.class);

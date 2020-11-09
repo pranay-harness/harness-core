@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.MigrateSecretTask;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
@@ -18,7 +20,6 @@ import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
@@ -42,13 +43,12 @@ import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.rules.WingsRule;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,9 +75,10 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected ConfigService configService;
   @Inject protected EncryptionService encryptionService;
-  @Inject protected QueueConsumer<KmsTransitionEvent> transitionKmsQueue;
+  @Inject protected QueueConsumer<MigrateSecretTask> transitionKmsQueue;
   @Inject protected SettingsService settingsService;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject protected LocalSecretManagerService localSecretManagerService;
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
@@ -86,7 +87,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     }
     char[] encryptedValue = value == null
         ? null
-        : KmsEncryptDecryptClient.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+        : AwsKmsEncryptor.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)
@@ -99,7 +100,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
-    return KmsEncryptDecryptClient.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+    return AwsKmsEncryptor.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
   }
 
@@ -118,9 +119,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
       throw new SecretManagementException(
           ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
     }
-    char[] encryptedValue = value == null
-        ? null
-        : KmsEncryptDecryptClient.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+    char[] encryptedValue =
+        value == null ? null : AwsKmsEncryptor.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
 
     return EncryptedData.builder()
         .encryptionKey(plainTextKey)
@@ -136,20 +136,14 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     return "Cyberark1".toCharArray();
   }
 
-  protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
+  protected EncryptedData encrypt(String accountId, String name, String value, VaultConfig vaultConfig,
+      EncryptedData savedEncryptedData) throws IOException {
     if (vaultConfig.getAuthToken().equals("invalidKey")) {
       throw new SecretManagementException("invalidKey");
     }
-    String keyUrl = settingType + "/" + name;
-    if (savedEncryptedData != null) {
-      savedEncryptedData.setEncryptionKey(keyUrl);
-      savedEncryptedData.setEncryptedValue(value == null ? keyUrl.toCharArray() : value.toCharArray());
-      return savedEncryptedData;
-    }
 
     return EncryptedData.builder()
-        .encryptionKey(keyUrl)
+        .encryptionKey(name)
         .encryptedValue(value == null ? null : value.toCharArray())
         .encryptionType(EncryptionType.VAULT)
         .enabled(true)
@@ -173,6 +167,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     vaultConfig.setEncryptionType(EncryptionType.VAULT);
     vaultConfig.setSecretEngineName("secret");
     vaultConfig.setSecretEngineVersion(2);
+    vaultConfig.setUsageRestrictions(
+        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
     return vaultConfig;
   }
 
@@ -201,6 +197,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     kmsConfig.setAccessKey(generateUuid());
     kmsConfig.setSecretKey(generateUuid());
     kmsConfig.setEncryptionType(EncryptionType.KMS);
+    kmsConfig.setUsageRestrictions(
+        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
     return kmsConfig;
   }
 
@@ -209,6 +207,8 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         new GcpKmsConfig("gcpKms", "projectId", "region", "keyRing", "keyName", "{\"abc\": \"value\"}".toCharArray());
     gcpKmsConfig.setDefault(true);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setUsageRestrictions(
+        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
     return gcpKmsConfig;
   }
 
@@ -219,11 +219,13 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   protected CyberArkConfig getCyberArkConfig(String clientCertificate) {
     final CyberArkConfig cyberArkConfig = new CyberArkConfig();
     cyberArkConfig.setName("myCyberArk");
-    cyberArkConfig.setDefault(true);
+    cyberArkConfig.setDefault(false);
     cyberArkConfig.setCyberArkUrl("https://app.harness.io"); // Just a valid URL.
     cyberArkConfig.setAppId(generateUuid());
     cyberArkConfig.setClientCertificate(clientCertificate);
     cyberArkConfig.setEncryptionType(EncryptionType.CYBERARK);
+    cyberArkConfig.setUsageRestrictions(
+        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
     return cyberArkConfig;
   }
 

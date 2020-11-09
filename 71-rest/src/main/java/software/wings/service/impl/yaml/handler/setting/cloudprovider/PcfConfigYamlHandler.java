@@ -23,9 +23,11 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .username(useEncryptedUsername ? null : String.valueOf(pcfConfig.getUsername()))
-                    .usernameSecretId(useEncryptedUsername ? getEncryptedValue(pcfConfig, "username", true) : null)
+                    .usernameSecretId(useEncryptedUsername
+                            ? getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedUsername())
+                            : null)
                     .endpointUrl(pcfConfig.getEndpointUrl())
-                    .password(getEncryptedValue(pcfConfig, "password", true))
+                    .password(getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedPassword()))
                     .type(pcfConfig.getType())
                     .skipValidation(pcfConfig.isSkipValidation())
                     .build();

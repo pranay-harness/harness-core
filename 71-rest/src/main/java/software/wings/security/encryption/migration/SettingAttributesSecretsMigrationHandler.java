@@ -156,7 +156,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
   private boolean migrateSecret(
       @NonNull String secretId, @NonNull String encryptedFieldName, @NonNull SettingAttribute settingAttribute) {
     EncryptedData secret = wingsPersistence.get(EncryptedData.class, secretId);
-    if (secret == null || secret.getType() == SECRET_TEXT) {
+    if (secret == null || (secret.getType() == SECRET_TEXT && !secret.isHideFromListing())) {
       return true;
     }
 

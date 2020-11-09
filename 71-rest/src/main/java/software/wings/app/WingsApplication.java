@@ -121,6 +121,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -226,7 +227,6 @@ import software.wings.service.impl.infrastructuredefinition.InfrastructureDefini
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
-import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -751,7 +751,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 2);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
-    queueListenerController.register(injector.getInstance(KmsTransitionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SecretMigrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);

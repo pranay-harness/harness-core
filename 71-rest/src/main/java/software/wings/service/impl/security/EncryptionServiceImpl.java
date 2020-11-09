@@ -5,10 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import static io.harness.security.SimpleEncryption.CHARSET;
-import static io.harness.security.encryption.EncryptionType.CUSTOM;
+import static io.harness.security.encryption.SecretManagerType.CUSTOM;
+import static io.harness.security.encryption.SecretManagerType.KMS;
+import static io.harness.security.encryption.SecretManagerType.VAULT;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -18,24 +21,23 @@ import com.google.inject.name.Named;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.encryptors.CustomEncryptor;
+import io.harness.encryptors.CustomEncryptorsRegistry;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.SecretManagementException;
 import io.harness.secrets.SecretsDelegateCacheService;
-import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AwsSecretsManagerConfig;
-import software.wings.beans.AzureVaultConfig;
-import software.wings.beans.CyberArkConfig;
-import software.wings.beans.GcpKmsConfig;
-import software.wings.beans.KmsConfig;
-import software.wings.beans.VaultConfig;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -52,17 +54,22 @@ import java.util.concurrent.Future;
 @Singleton
 @Slf4j
 public class EncryptionServiceImpl implements EncryptionService {
-  private final SecretManagementDelegateService secretManagementDelegateService;
-  private final SecretsDelegateCacheService secretsDelegateCacheService;
   private final ExecutorService threadPoolExecutor;
+  private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  private final CustomEncryptorsRegistry customEncryptorsRegistry;
+  private final SecretsDelegateCacheService secretsDelegateCacheService;
 
   @Inject
-  public EncryptionServiceImpl(SecretManagementDelegateService secretManagementDelegateService,
-      SecretsDelegateCacheService secretsDelegateCacheService,
-      @Named("asyncExecutor") ExecutorService threadPoolExecutor) {
-    this.secretManagementDelegateService = secretManagementDelegateService;
-    this.secretsDelegateCacheService = secretsDelegateCacheService;
+  public EncryptionServiceImpl(VaultEncryptorsRegistry vaultEncryptorsRegistry,
+      KmsEncryptorsRegistry kmsEncryptorsRegistry, CustomEncryptorsRegistry customEncryptorsRegistry,
+      @Named("asyncExecutor") ExecutorService threadPoolExecutor,
+      SecretsDelegateCacheService secretsDelegateCacheService) {
     this.threadPoolExecutor = threadPoolExecutor;
+    this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
+    this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
+    this.customEncryptorsRegistry = customEncryptorsRegistry;
+    this.secretsDelegateCacheService = secretsDelegateCacheService;
   }
 
   @Override
@@ -136,7 +143,7 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail, boolean fromCache) {
-    if (fromCache && encryptedDataDetail.getEncryptionConfig().getEncryptionType() == CUSTOM) {
+    if (fromCache && encryptedDataDetail.getEncryptionConfig().getType() == CUSTOM) {
       return secretsDelegateCacheService.get(encryptedDataDetail.getIdentifier(),
           secretUniqueIdentifier -> getDecryptedValueInternal(encryptedDataDetail));
     }
@@ -148,58 +155,27 @@ public class EncryptionServiceImpl implements EncryptionService {
   }
 
   private char[] getDecryptedValueInternal(EncryptedDataDetail encryptedDataDetail) {
+    EncryptedRecord record = encryptedDataDetail.getEncryptedData();
+    EncryptionConfig config = encryptedDataDetail.getEncryptionConfig();
     char[] decryptedValue;
-    switch (encryptedDataDetail.getEncryptionConfig().getEncryptionType()) {
-      case LOCAL:
-        SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
-        decryptedValue = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
-        break;
-
-      case KMS:
-        decryptedValue = secretManagementDelegateService.decrypt(
-            encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case GCP_KMS:
-        decryptedValue = secretManagementDelegateService.decrypt(
-            encryptedDataDetail.getEncryptedData(), (GcpKmsConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case VAULT:
-        decryptedValue = secretManagementDelegateService.decrypt(
-            encryptedDataDetail.getEncryptedData(), (VaultConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case AWS_SECRETS_MANAGER:
-        decryptedValue = secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
-            (AwsSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case AZURE_VAULT:
-        decryptedValue = secretManagementDelegateService.decrypt(
-            encryptedDataDetail.getEncryptedData(), (AzureVaultConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case CYBERARK:
-        decryptedValue = secretManagementDelegateService.decrypt(
-            encryptedDataDetail.getEncryptedData(), (CyberArkConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      case CUSTOM:
-        decryptedValue = secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
-            (CustomSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
-        break;
-
-      default:
-        throw new IllegalStateException(
-            "invalid encryption type: " + encryptedDataDetail.getEncryptedData().getEncryptionType());
+    if (config.getType().equals(KMS)) {
+      KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(config);
+      decryptedValue = kmsEncryptor.fetchSecretValue(config.getAccountId(), record, config);
+    } else if (config.getType().equals(VAULT)) {
+      VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType());
+      decryptedValue = vaultEncryptor.fetchSecretValue(config.getAccountId(), record, config);
+    } else if (config.getType().equals(CUSTOM)) {
+      CustomEncryptor customEncryptor = customEncryptorsRegistry.getCustomEncryptor(config.getEncryptionType());
+      decryptedValue = customEncryptor.fetchSecretValue(config.getAccountId(), record, config);
+    } else {
+      throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR,
+          String.format("Encryptor for fetch secret task for encryption config %s not configured", config.getName()),
+          USER);
     }
-
     if (decryptedValue != null && encryptedDataDetail.getEncryptedData().isBase64Encoded()) {
       byte[] decodedBytes = EncodingUtils.decodeBase64(decryptedValue);
       decryptedValue = CHARSET.decode(ByteBuffer.wrap(decodedBytes)).array();
     }
-
     return decryptedValue;
   }
 }

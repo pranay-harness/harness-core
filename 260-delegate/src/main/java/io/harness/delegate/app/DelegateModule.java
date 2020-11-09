@@ -259,8 +259,7 @@ import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerDelegateServiceImpl;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
+import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationImpl;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverDelegateServiceImpl;
@@ -313,7 +312,7 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
+import software.wings.service.intfc.security.CustomSecretsManagerValidation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
@@ -755,7 +754,7 @@ public class DelegateModule extends AbstractModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CustomSecretsManagerDelegateService.class).to(CustomSecretsManagerDelegateServiceImpl.class);
+    bind(CustomSecretsManagerValidation.class).to(CustomSecretsManagerValidationImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
 
     binder()
@@ -795,14 +794,17 @@ public class DelegateModule extends AbstractModule {
 
     binder()
         .bind(KmsEncryptor.class)
-        .annotatedWith(Names.named(Encryptors.GLOBAL_KMS_ENCRYPTOR.getName()))
+        .annotatedWith(Names.named(Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR.getName()))
         .to(GcpKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_AWS_KMS_ENCRYPTOR.getName()))
+        .to(AwsKmsEncryptor.class);
 
     binder()
         .bind(CustomEncryptor.class)
         .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
         .to(CustomSecretsManagerEncryptor.class);
-
-    bind(KmsEncryptDecryptClient.class);
   }
 }

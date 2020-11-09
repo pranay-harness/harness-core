@@ -4,6 +4,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.SimpleEncryption.CHARSET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -29,12 +30,12 @@ import io.harness.secrets.SecretsDao;
 import io.harness.secrets.validation.validators.AzureSecretManagerValidator;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.stream.BoundedInputStream;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.security.SecureRandom;
 import java.util.Optional;
 
 public class AzureSecretManagerValidatorTest extends CategoryTest {
@@ -145,14 +146,10 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
   public void testCreateEncryptedFile_shouldPass() {
     String accountId = UUIDGenerator.generateUuid();
     String name = "onlyalphanumeric123";
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
     HarnessSecret secret = SecretFile.builder()
                                .name(name)
                                .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
                                .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretManagerConfig.getSecretManagerCapabilities()).thenReturn(Lists.list(CREATE_FILE_SECRET));
@@ -168,14 +165,10 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
   public void testCreateEncryptedFile_invalidName_shouldThrowError() {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid() + ")";
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
     HarnessSecret secret = SecretFile.builder()
                                .name(name)
                                .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
                                .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretManagerConfig.getSecretManagerCapabilities()).thenReturn(Lists.list(CREATE_FILE_SECRET));
@@ -195,15 +188,10 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
   public void testCreateEncryptedFile_exceedFileLimits_shouldThrowError() {
     String accountId = UUIDGenerator.generateUuid();
     String name = "onlyalphanumeric123";
-    long fileSize = 70000;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
-    HarnessSecret secret = SecretFile.builder()
-                               .name(name)
-                               .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
-                               .build();
+    SecureRandom secureRandom = new SecureRandom();
+    byte[] bytes = new byte[24001];
+    secureRandom.nextBytes(bytes);
+    HarnessSecret secret = SecretFile.builder().name(name).kmsId(accountId).fileContent(bytes).build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretManagerConfig.getSecretManagerCapabilities()).thenReturn(Lists.list(CREATE_FILE_SECRET));
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
@@ -223,11 +211,11 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
     String accountId = UUIDGenerator.generateUuid();
     String name = "onlyalphanumeric123";
     String kmsId = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
-    HarnessSecret secret =
-        SecretFile.builder().name(name).kmsId(kmsId).fileSize(fileSize).boundedInputStream(boundedInputStream).build();
+    HarnessSecret secret = SecretFile.builder()
+                               .name(name)
+                               .kmsId(kmsId)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
+                               .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
     EncryptedData existingRecord = EncryptedData.builder()
@@ -248,11 +236,11 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid() + ")";
     String kmsId = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
-    HarnessSecret secret =
-        SecretFile.builder().name(name).kmsId(kmsId).fileSize(fileSize).boundedInputStream(boundedInputStream).build();
+    HarnessSecret secret = SecretFile.builder()
+                               .name(name)
+                               .kmsId(kmsId)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
+                               .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
     EncryptedData existingRecord = EncryptedData.builder()
@@ -279,11 +267,10 @@ public class AzureSecretManagerValidatorTest extends CategoryTest {
     String accountId = UUIDGenerator.generateUuid();
     String name = "onlyalphanumeric123";
     String kmsId = UUIDGenerator.generateUuid();
-    long fileSize = 70000;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
-    HarnessSecret secret =
-        SecretFile.builder().name(name).kmsId(kmsId).fileSize(fileSize).boundedInputStream(boundedInputStream).build();
+    SecureRandom secureRandom = new SecureRandom();
+    byte[] bytes = new byte[24001];
+    secureRandom.nextBytes(bytes);
+    HarnessSecret secret = SecretFile.builder().name(name).kmsId(kmsId).fileContent(bytes).build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
     EncryptedData existingRecord = EncryptedData.builder()

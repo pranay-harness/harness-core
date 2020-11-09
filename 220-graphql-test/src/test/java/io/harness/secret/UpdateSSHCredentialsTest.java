@@ -81,7 +81,8 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
   }
 
   private String getUpdateSSHCredentialInput() {
-    String sshKeySecretId = secretManager.saveSecret(accountId, SecretText.builder().name("sshKeySecretId").build());
+    String sshKeySecretId = secretManager.saveSecretText(
+        accountId, SecretText.builder().name("sshKeySecretId").value("abc").build(), false);
     String queryVariable = $GQL(/*
   {
       secretType: SSH_CREDENTIAL,
@@ -127,8 +128,8 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
   }
 
   private String getkerberosUpdateInput() {
-    String passwordSecretId =
-        secretManager.saveSecret(accountId, SecretText.builder().name("kerberosPasswordSecretId").build());
+    String passwordSecretId = secretManager.saveSecretText(
+        accountId, SecretText.builder().name("kerberosPasswordSecretId").value("abc").build(), false);
     String queryVariable = $GQL(/*
 
     {

@@ -18,7 +18,6 @@ import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.Usage;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,7 +91,7 @@ public class CustomDashboardFeature extends AbstractPremiumFeature implements Co
       PageRequest<DashboardSettings> pageRequest = aPageRequest()
                                                        .withLimit(String.valueOf(limit))
                                                        .withOffset(String.valueOf(offset))
-                                                       .addFilter(SecretManager.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                                       .addFilter("accountId", Operator.EQ, accountId)
                                                        .build();
       pageResponse = dashboardSettingsService.getDashboardSettingSummary(accountId, pageRequest);
       dashboardSettings.addAll(pageResponse.getResponse());

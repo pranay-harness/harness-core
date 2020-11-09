@@ -1,6 +1,7 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Singleton;
 
@@ -27,6 +28,9 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
+    if (isEmpty(encryptedRecord.getEncryptionKey())) {
+      return null;
+    }
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());
     return simpleEncryption.decryptChars(encryptedRecord.getEncryptedValue());
   }

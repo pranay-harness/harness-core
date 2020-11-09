@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
+import software.wings.service.intfc.security.CustomSecretsManagerValidation;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  * @author marklu on 2019-06-12
  */
 public class SecretManagerValidationTest extends CategoryTest {
-  @Mock CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
+  @Mock CustomSecretsManagerValidation customSecretsManagerValidation;
 
   public static class TestSecretManagerValidation extends AbstractSecretManagerValidation {
     Object[] parameters;
@@ -156,7 +156,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptionConfig.getEncryptionType()).thenReturn(CUSTOM);
     when(encryptionConfig.getValidationCriteria()).thenReturn("localhost");
     validation.setParameters(new Object[] {encryptionConfig});
-    when(customSecretsManagerDelegateService.isExecutableOnDelegate(encryptionConfig)).thenReturn(true);
+    when(customSecretsManagerValidation.isExecutableOnDelegate(encryptionConfig)).thenReturn(true);
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
@@ -171,7 +171,7 @@ public class SecretManagerValidationTest extends CategoryTest {
     when(encryptionConfig.getEncryptionType()).thenReturn(CUSTOM);
     when(encryptionConfig.getValidationCriteria()).thenReturn("localhost");
     validation.setParameters(new Object[] {encryptionConfig});
-    when(customSecretsManagerDelegateService.isExecutableOnDelegate(encryptionConfig)).thenReturn(false);
+    when(customSecretsManagerValidation.isExecutableOnDelegate(encryptionConfig)).thenReturn(false);
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
     assertThat(result.isValidated()).isFalse();

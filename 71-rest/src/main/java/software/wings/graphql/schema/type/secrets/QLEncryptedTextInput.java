@@ -14,4 +14,5 @@ public class QLEncryptedTextInput {
   private String secretReference;
   private QLUsageScope usageScope;
   private boolean scopedToAccount;
+  private boolean inheritScopesFromSM;
 }

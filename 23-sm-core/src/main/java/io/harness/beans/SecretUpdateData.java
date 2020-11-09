@@ -38,7 +38,7 @@ public class SecretUpdateData {
       this.referenceChanged = !Objects.equals(newSecretText.getPath(), existingRecord.getPath());
     } else if (updatedSecret instanceof SecretFile) {
       SecretFile newSecretFile = (SecretFile) updatedSecret;
-      this.valueChanged = newSecretFile.getFileSize() != 0;
+      this.valueChanged = isNotEmpty(newSecretFile.getFileContent());
       this.parametersChanged = false;
       this.referenceChanged = false;
     } else {
@@ -49,7 +49,8 @@ public class SecretUpdateData {
 
     this.usageScopeChanged =
         !Objects.equals(updatedSecret.getUsageRestrictions(), existingRecord.getUsageRestrictions())
-        || updatedSecret.isScopedToAccount() != existingRecord.isScopedToAccount();
+        || updatedSecret.isScopedToAccount() != existingRecord.isScopedToAccount()
+        || updatedSecret.isInheritScopesFromSM() != existingRecord.isInheritScopesFromSM();
   }
 
   public String getChangeSummary() {

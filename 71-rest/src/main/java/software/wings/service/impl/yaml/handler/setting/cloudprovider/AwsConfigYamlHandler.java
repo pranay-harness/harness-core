@@ -18,13 +18,16 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    String secretValueYamlRef =
-        isNotEmpty(awsConfig.getEncryptedSecretKey()) ? getEncryptedValue(awsConfig, "secretKey", true) : null;
+    String secretValueYamlRef = isNotEmpty(awsConfig.getEncryptedSecretKey())
+        ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey())
+        : null;
     boolean useEncryptedAccessKey = awsConfig.isUseEncryptedAccessKey();
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .accessKey(getAccessKey(awsConfig))
-                    .accessKeySecretId(useEncryptedAccessKey ? getEncryptedValue(awsConfig, "accessKey", true) : null)
+                    .accessKeySecretId(useEncryptedAccessKey
+                            ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedAccessKey())
+                            : null)
                     .secretKey(secretValueYamlRef)
                     .type(awsConfig.getType())
                     .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())

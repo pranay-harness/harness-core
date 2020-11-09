@@ -9,9 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
-import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingVariableTypes.GCP_KMS;
 import static software.wings.utils.Utils.isJSONValid;
 
@@ -23,8 +20,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
@@ -36,7 +35,6 @@ import software.wings.beans.GcpKmsConfig.GcpKmsConfigKeys;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.HarnessUserGroupService;
-import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 
 import java.util.Arrays;
@@ -46,16 +44,16 @@ import java.util.regex.Pattern;
 @Slf4j
 public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements GcpSecretsManagerService {
   private static final String CREDENTIAL_SUFFIX = "_credentials";
-  @Inject private GcpKmsService gcpKmsService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
 
   @Override
   public GcpKmsConfig getGcpKmsConfig(String accountId, String configId) {
     GcpKmsConfig gcpKmsConfig = wingsPersistence.createQuery(GcpKmsConfig.class)
                                     .field(ID_KEY)
                                     .equal(configId)
-                                    .field(ACCOUNT_ID_KEY)
+                                    .field(SecretManagerConfigKeys.accountId)
                                     .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
                                     .get();
     Preconditions.checkNotNull(
@@ -67,9 +65,9 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   @Override
   public GcpKmsConfig getGlobalKmsConfig() {
     GcpKmsConfig gcpKmsConfig = wingsPersistence.createQuery(GcpKmsConfig.class)
-                                    .field(ACCOUNT_ID_KEY)
+                                    .field(SecretManagerConfigKeys.accountId)
                                     .equal(GLOBAL_ACCOUNT_ID)
-                                    .field(ENCRYPTION_TYPE_KEY)
+                                    .field(SecretManagerConfigKeys.encryptionType)
                                     .equal(EncryptionType.GCP_KMS)
                                     .get();
     if (gcpKmsConfig == null) {
@@ -123,6 +121,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
     savedGcpKmsConfig.setName(gcpKmsConfig.getName());
     savedGcpKmsConfig.setDefault(gcpKmsConfig.isDefault());
+    savedGcpKmsConfig.setUsageRestrictions(gcpKmsConfig.getUsageRestrictions());
 
     if (SECRET_MASK.equals(String.valueOf(gcpKmsConfig.getCredentials()))) {
       updateCallWithMaskedSecretKey = true;
@@ -247,10 +246,10 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     if (gcpKmsConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-      query.criteria(ACCOUNT_ID_KEY)
+      query.criteria(EncryptedDataKeys.accountId)
           .equal(gcpKmsConfig.getAccountId())
           .or(query.criteria(ID_KEY).equal(gcpKmsConfig.getCredentials()),
-              query.criteria(SECRET_NAME_KEY).equal(gcpKmsConfig.getName() + CREDENTIAL_SUFFIX));
+              query.criteria(EncryptedDataKeys.name).equal(gcpKmsConfig.getName() + CREDENTIAL_SUFFIX));
       EncryptedData savedEncryptedData = query.get();
       if (savedEncryptedData != null) {
         savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
@@ -264,7 +263,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   @Override
   public boolean deleteGcpKmsConfig(String accountId, String configId) {
     long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.accountId, accountId)
                      .filter(EncryptedDataKeys.kmsId, configId)
                      .filter(EncryptedDataKeys.encryptionType, EncryptionType.GCP_KMS)
                      .count(upToOne);
@@ -277,7 +276,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     GcpKmsConfig gcpKmsConfig = wingsPersistence.createQuery(GcpKmsConfig.class)
                                     .field(ID_KEY)
                                     .equal(configId)
-                                    .field(ACCOUNT_ID_KEY)
+                                    .field(SecretManagerConfigKeys.accountId)
                                     .equal(accountId)
                                     .get();
     checkNotNull(gcpKmsConfig, "No GCP KMS configuration found with id " + configId);
@@ -298,7 +297,8 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   public void validateSecretsManagerConfig(String accountId, GcpKmsConfig gcpKmsConfig) {
     String randomString = UUIDGenerator.generateUuid();
     try {
-      gcpKmsService.encrypt(randomString, accountId, gcpKmsConfig, null);
+      kmsEncryptorsRegistry.getKmsEncryptor(gcpKmsConfig)
+          .encryptSecret(gcpKmsConfig.getAccountId(), randomString, gcpKmsConfig);
     } catch (Exception e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, e, USER);

@@ -56,7 +56,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
     accountId = generateUuid();
     appId = generateUuid();
     for (int i = 0; i < 10; i++) {
-      String secretName = "secret-1";
+      String secretName = "secret-" + i;
       String secretValue = generateUuid();
       String secretId = secretManagementResource
                             .saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())

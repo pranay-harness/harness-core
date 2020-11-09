@@ -64,21 +64,4 @@ public class CustomEncryptedDataDetailBuilderImplTest extends CategoryTest {
     verify(managerDecryptionService, times(1)).decrypt(any(EncryptableSetting.class), any());
     verify(secretManager, times(1)).getEncryptionDetails(any(EncryptableSetting.class));
   }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_validateSecret() {
-    CustomSecretsManagerConfig config = obtainConfig(HOST_CONNECTION_ATTRIBUTES);
-    config.setConnectorTemplatized(true);
-    EncryptedData encryptedData = mock(EncryptedData.class);
-    String shellScript = config.getCustomSecretsManagerShellScript().getScriptString();
-    when(expressionEvaluator.substitute(eq(shellScript), any())).thenReturn(shellScript);
-    customSecretsManagerEncryptionService.validateSecret(encryptedData, config);
-
-    verify(expressionEvaluator, times(2)).substitute(eq(shellScript), any());
-    verify(customSecretsManagerConnectorHelper, times(1)).setConnectorInConfig(any(), any());
-    verify(managerDecryptionService, times(1)).decrypt(any(EncryptableSetting.class), any());
-    verify(secretManager, times(1)).getEncryptionDetails(any(EncryptableSetting.class));
-  }
 }

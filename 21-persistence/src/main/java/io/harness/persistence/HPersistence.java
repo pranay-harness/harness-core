@@ -5,6 +5,8 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
 import io.harness.annotation.StoreIn;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.health.HealthMonitor;
 import io.harness.persistence.HQuery.QueryChecks;
@@ -340,6 +342,27 @@ public interface HPersistence extends HealthMonitor {
   <T extends PersistentEntity> String merge(T entity);
 
   int RETRIES = 3;
+
+  /**
+   * Query.
+   *
+   * @param <T> the generic type
+   * @param cls the cls
+   * @param req the req
+   * @return the page response
+   */
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
+
+  /**
+   * Query page response.
+   *
+   * @param <T>          the type parameter
+   * @param cls          the cls
+   * @param req          the req
+   * @param queryChecks  the query checks
+   * @return             the page response
+   */
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
 
   interface Executor<R> {
     R execute();

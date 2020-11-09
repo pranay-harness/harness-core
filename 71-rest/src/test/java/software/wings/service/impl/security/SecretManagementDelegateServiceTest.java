@@ -2,33 +2,22 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
-
 import com.microsoft.azure.keyvault.KeyVaultClient;
-import com.microsoft.azure.keyvault.models.KeyVaultErrorException;
 import io.harness.CategoryTest;
-import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.CommandExecutionException;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.azure.KeyVaultADALAuthenticator;
 import io.harness.helpers.ext.cyberark.CyberArkReadResponse;
 import io.harness.helpers.ext.cyberark.CyberArkRestClient;
 import io.harness.helpers.ext.cyberark.CyberArkRestClientFactory;
 import io.harness.rule.Owner;
-import io.harness.secrets.SecretsDelegateCacheService;
-import io.harness.security.encryption.EncryptedRecord;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
@@ -38,19 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
-import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
-import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
 import java.io.IOException;
 
@@ -64,17 +46,11 @@ import java.io.IOException;
     {"okhttp3.*", "javax.security.*", "org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*", "sun.*"})
 public class SecretManagementDelegateServiceTest extends CategoryTest {
   private SecretManagementDelegateServiceImpl secretManagementDelegateService;
-  private TimeLimiter timeLimiter = new SimpleTimeLimiter();
-  @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
-  @Mock private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
-  @Mock private SecretsDelegateCacheService secretsDelegateCacheService;
-  @Mock private CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
 
   @Before
   public void setup() throws Exception {
     initMocks(this);
-    secretManagementDelegateService = spy(new SecretManagementDelegateServiceImpl(timeLimiter, kmsEncryptDecryptClient,
-        gcpKmsEncryptDecryptClient, customSecretsManagerDelegateService, secretsDelegateCacheService));
+    secretManagementDelegateService = new SecretManagementDelegateServiceImpl();
   }
 
   @Test
@@ -116,49 +92,6 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
     assertThatCode(() -> secretManagementDelegateService.validateCyberArkConfig(cyberArkConfig))
         .isInstanceOf(SecretManagementDelegateException.class)
         .hasMessage("Failed to query the CyberArk REST endpoint. Please check your configurations and try again");
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_customSecretsManagerConfig_decrypt_shouldSucceed() {
-    EncryptedData data = mock(EncryptedData.class);
-    CustomSecretsManagerConfig config = mock(CustomSecretsManagerConfig.class);
-    when(customSecretsManagerDelegateService.fetchSecret(data, config)).thenReturn("value".toCharArray());
-    char[] secret = secretManagementDelegateService.decrypt(data, config);
-    assertThat(secret).isEqualTo("value".toCharArray());
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_customSecretsManagerConfig_decrypt_shouldFailWithRetry() {
-    EncryptedData data = mock(EncryptedData.class);
-    CustomSecretsManagerConfig config = mock(CustomSecretsManagerConfig.class);
-    when(customSecretsManagerDelegateService.fetchSecret(data, config)).thenThrow(CommandExecutionException.class);
-    assertThatCode(() -> secretManagementDelegateService.decrypt(data, config))
-        .isInstanceOf(SecretManagementDelegateException.class)
-        .hasMessage("Decryption failed after 3 retries");
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_azureVault_decrypt_shouldFail() {
-    EncryptedRecord encryptedRecord = mock(EncryptedRecord.class);
-    AzureVaultConfig azureVaultConfig = mock(AzureVaultConfig.class);
-    KeyVaultClient keyVaultClient = PowerMockito.mock(KeyVaultClient.class);
-    mockStatic(KeyVaultADALAuthenticator.class);
-    when(encryptedRecord.getPath()).thenReturn("secret");
-    when(encryptedRecord.getEncryptedValue()).thenReturn("value".toCharArray());
-    when(azureVaultConfig.getClientId()).thenReturn("clientId");
-    when(azureVaultConfig.getSecretKey()).thenReturn("secretKey");
-    when(azureVaultConfig.getEncryptionServiceUrl()).thenReturn("encryptionServiceUrl");
-    when(KeyVaultADALAuthenticator.getClient(azureVaultConfig.getClientId(), azureVaultConfig.getSecretKey()))
-        .thenReturn(keyVaultClient);
-    when(keyVaultClient.getSecret(any(), any(), any())).thenThrow(KeyVaultErrorException.class);
-    assertThatCode(() -> secretManagementDelegateService.decrypt(encryptedRecord, azureVaultConfig))
-        .isInstanceOf(SecretManagementDelegateException.class);
   }
 
   private CyberArkConfig getCyberArkConfig(String url) {

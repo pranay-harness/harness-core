@@ -3,7 +3,8 @@ package io.harness.encryptors;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.encryptors.Encryptors.AWS_KMS_ENCRYPTOR;
 import static io.harness.encryptors.Encryptors.GCP_KMS_ENCRYPTOR;
-import static io.harness.encryptors.Encryptors.GLOBAL_KMS_ENCRYPTOR;
+import static io.harness.encryptors.Encryptors.GLOBAL_AWS_KMS_ENCRYPTOR;
+import static io.harness.encryptors.Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR;
 import static io.harness.encryptors.Encryptors.LOCAL_ENCRYPTOR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -31,7 +32,7 @@ import java.util.Optional;
 public class KmsEncryptorsRegistry {
   private final Injector injector;
   private final Map<EncryptionType, Encryptors> registeredEncryptors;
-  private static final Encryptors GLOBAL = GLOBAL_KMS_ENCRYPTOR;
+  private final Map<EncryptionType, Encryptors> globalEncryptors;
 
   @Inject
   public KmsEncryptorsRegistry(Injector injector) {
@@ -40,11 +41,16 @@ public class KmsEncryptorsRegistry {
     registeredEncryptors.put(LOCAL, LOCAL_ENCRYPTOR);
     registeredEncryptors.put(KMS, AWS_KMS_ENCRYPTOR);
     registeredEncryptors.put(GCP_KMS, GCP_KMS_ENCRYPTOR);
+
+    globalEncryptors = new EnumMap<>(EncryptionType.class);
+    globalEncryptors.put(KMS, GLOBAL_AWS_KMS_ENCRYPTOR);
+    globalEncryptors.put(GCP_KMS, GLOBAL_GCP_KMS_ENCRYPTOR);
   }
 
   public KmsEncryptor getKmsEncryptor(EncryptionConfig encryptionConfig) {
-    Encryptors encryptor =
-        encryptionConfig.isGlobalKms() ? GLOBAL : registeredEncryptors.get(encryptionConfig.getEncryptionType());
+    Encryptors encryptor = encryptionConfig.isGlobalKms()
+        ? globalEncryptors.get(encryptionConfig.getEncryptionType())
+        : registeredEncryptors.get(encryptionConfig.getEncryptionType());
     return Optional.ofNullable(encryptor)
         .flatMap(type -> Optional.of(injector.getInstance(Key.get(KmsEncryptor.class, Names.named(type.getName())))))
         .<SecretManagementDelegateException>orElseThrow(() -> {

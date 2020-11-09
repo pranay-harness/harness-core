@@ -48,7 +48,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig), 5, TimeUnit.SECONDS, true);
+            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
@@ -100,7 +100,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig), 5, TimeUnit.SECONDS, true);
+            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
@@ -179,7 +179,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> fetchSecretInternal(encryptedRecord, vaultConfig), 5, TimeUnit.SECONDS, true);
+            () -> fetchSecretInternal(encryptedRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

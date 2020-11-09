@@ -23,13 +23,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 
 @Slf4j
 public class SecretsFunctionalTest extends AbstractFunctionalTest {
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private EncryptionService encryptionService;
 
   String vaultId = null;
   VaultConfig vaultConfig;
@@ -99,7 +99,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
     // Verifying the secret decryption
     EncryptedData data = encryptedDataList.get(0);
     data.setEncryptionKey("SECRET_TEXT/" + secretsNewName);
-    String decrypted = SecretsUtils.getValueFromName(secretManagementDelegateService, data, vaultConfig);
+    String decrypted = SecretsUtils.getValueFromName(encryptionService, data, vaultConfig);
     assertThat(decrypted).isEqualTo(secretValue);
 
     boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);

@@ -22,7 +22,7 @@ public class LogzConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(config.getType())
                     .logzUrl(config.getLogzUrl())
-                    .token(getEncryptedValue(config, "token", false))
+                    .token(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedToken()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

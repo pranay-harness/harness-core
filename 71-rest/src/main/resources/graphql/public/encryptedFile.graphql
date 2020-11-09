@@ -5,4 +5,5 @@ type EncryptedFile implements Secret {
   id: String
   usageScope: UsageScope
   scopedToAccount: Boolean
+  inheritScopesFromSM: Boolean
 }

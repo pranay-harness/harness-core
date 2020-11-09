@@ -6,7 +6,6 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -19,6 +18,10 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
@@ -33,33 +36,31 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.security.GcpKmsService;
-import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
-import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;
 import java.util.Optional;
 
 public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;
-  @Mock private SecretManager secretManager;
-  @Mock private VaultService vaultService;
-  @Mock private GcpKmsService gcpKmsService;
-  @Mock private LocalEncryptionService localEncryptionService;
+  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private FileService fileService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
+  @Mock private FileService fileService;
+  @Mock private VaultEncryptor vaultEncryptor;
+  @Mock private KmsEncryptor kmsEncryptor;
   private static final String ACCOUNT = "Account";
   private static final String IDENTIFIER = "Account";
   private NGSecretServiceImpl ngSecretService;
 
   @Before
   public void setup() {
-    ngSecretService = spy(new NGSecretServiceImpl(ngSecretManagerService, secretManager, vaultService, gcpKmsService,
-        localEncryptionService, wingsPersistence, fileService, secretManagerConfigService));
+    ngSecretService = spy(new NGSecretServiceImpl(vaultEncryptorsRegistry, kmsEncryptorsRegistry,
+        ngSecretManagerService, wingsPersistence, fileService, secretManagerConfigService));
+    when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
+    when(kmsEncryptorsRegistry.getKmsEncryptor(any())).thenReturn(kmsEncryptor);
   }
 
   @Test
@@ -75,14 +76,12 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     doReturn(Optional.empty()).when(ngSecretService).get(any(), any(), any(), any());
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
         .thenReturn(Optional.of(secretManagerConfig));
-    when(vaultService.encrypt(any(), any(), any(), any(), any(), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
 
     EncryptedData savedData = ngSecretService.createSecretText(secretTextDTO);
     assertThat(savedData.getName()).isEqualTo(secretTextDTO.getName());
-    verify(secretManager).validateSecretPath(any(), anyString());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    verify(vaultService).encrypt(any(), any(), any(), any(), any(), any());
-    verify(secretManager).saveEncryptedData(any());
+    verify(vaultEncryptor).createSecret(any(), any(), any(), any());
   }
 
   @Test
@@ -102,15 +101,13 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
         .thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     doNothing().when(ngSecretService).deleteSecretInSecretManager(any(), any(), any());
-    when(vaultService.encrypt(any(), any(), any(), any(), any(), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
 
     boolean success = ngSecretService.updateSecretText(ACCOUNT, null, null, IDENTIFIER, secretTextUpdateDTO);
     assertThat(success).isTrue();
-    verify(secretManager).validateSecretPath(any(), anyString());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    verify(vaultService).encrypt(any(), any(), any(), any(), any(), any());
+    verify(vaultEncryptor).createSecret(any(), any(), any(), any());
     verify(ngSecretService).deleteSecretInSecretManager(any(), any(), any());
-    verify(secretManager).saveEncryptedData(any());
   }
 
   @Test

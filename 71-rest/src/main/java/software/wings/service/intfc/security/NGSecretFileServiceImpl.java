@@ -1,12 +1,12 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.service.intfc.security.SecretManager.ILLEGAL_CHARACTERS;
-import static software.wings.service.intfc.security.SecretManager.containsIllegalCharacters;
+import static io.harness.security.SimpleEncryption.CHARSET;
 
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
@@ -14,53 +14,77 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsFileService;
+import io.harness.security.encryption.EncryptedRecord;
+import io.harness.security.encryption.EncryptedRecordData;
 import lombok.AllArgsConstructor;
-import software.wings.beans.GcpKmsConfig;
-import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretFileServiceImpl implements NGSecretFileService {
+  private final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;.]";
   private final NGSecretManagerService ngSecretManagerService;
   private final NGSecretService ngSecretService;
-  private final VaultService vaultService;
-  private final GcpKmsService gcpKmsService;
-  private final LocalEncryptionService localEncryptionService;
+  private final VaultEncryptorsRegistry vaultRegistry;
+  private final KmsEncryptorsRegistry kmsRegistry;
+  private final SecretsFileService secretFileService;
   private final WingsPersistence wingsPersistence;
   private final SecretManagerConfigService secretManagerConfigService;
   private final FileService fileService;
-  private final SecretManager secretManager;
 
   private EncryptedData encrypt(String accountIdentifier, SecretManagerConfig secretManagerConfig, String name,
       byte[] bytes, EncryptedData savedEncryptedData) {
+    String fileContent = new String(CHARSET.decode(ByteBuffer.wrap(encodeBase64ToByteArray(bytes))).array());
+    EncryptedRecord encryptedRecord;
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
-        return vaultService.encryptFile(
-            accountIdentifier, (VaultConfig) secretManagerConfig, name, bytes, savedEncryptedData);
+        VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
+        if (savedEncryptedData == null) {
+          encryptedRecord = vaultEncryptor.createSecret(accountIdentifier, name, fileContent, secretManagerConfig);
+        } else {
+          encryptedRecord = vaultEncryptor.updateSecret(
+              accountIdentifier, name, fileContent, savedEncryptedData, secretManagerConfig);
+        }
+        break;
       case GCP_KMS:
-        return gcpKmsService.encryptFile(
-            accountIdentifier, (GcpKmsConfig) secretManagerConfig, name, bytes, savedEncryptedData);
       case LOCAL:
-        return localEncryptionService.encryptFile(
-            accountIdentifier, (LocalEncryptionConfig) secretManagerConfig, name, bytes);
+        encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
+                              .encryptSecret(accountIdentifier, fileContent, secretManagerConfig);
+        String encryptedFileId =
+            secretFileService.createFile(name, accountIdentifier, encryptedRecord.getEncryptedValue());
+        encryptedRecord = EncryptedRecordData.builder()
+                              .encryptedValue(encryptedFileId.toCharArray())
+                              .encryptionKey(encryptedRecord.getEncryptionKey())
+                              .build();
+        break;
       default:
         throw new UnsupportedOperationException(
             "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
     }
+    return EncryptedData.builder()
+        .name(name)
+        .encryptedValue(encryptedRecord.getEncryptedValue())
+        .encryptionKey(encryptedRecord.getEncryptionKey())
+        .base64Encoded(true)
+        .fileSize(bytes.length)
+        .build();
   }
 
   @Override
@@ -122,7 +146,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       savedEncryptedData.setAccountId(metadata.getAccountIdentifier());
       metadata.setSecretManagerName(secretManagerConfigOptional.get().getName()); // TODO{phoenikx} remove this later
       savedEncryptedData.setNgMetadata(metadata);
-      secretManager.saveEncryptedData(savedEncryptedData);
+      wingsPersistence.save(savedEncryptedData);
 
       return savedEncryptedData;
     } else {
@@ -159,8 +183,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       if (secretManagerConfigOptional.isPresent()) {
         // If name has changed, delete the old file (we do not allow reference with files)
         if (!dto.getName().equals(encryptedData.getName())) {
-          ngSecretService.deleteSecretInSecretManager(
-              account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+          ngSecretService.deleteSecretInSecretManager(account, encryptedData, secretManagerConfigOptional.get());
         }
         switch (secretManagerConfigOptional.get().getEncryptionType()) {
           case LOCAL:
@@ -187,7 +210,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         encryptedData.getNgMetadata().setTags(dto.getTags());
 
         // save to DB and return
-        secretManager.saveEncryptedData(encryptedData);
+        wingsPersistence.save(savedEncryptedData);
         return true;
       } else {
         throw new SecretManagementException(
@@ -195,5 +218,10 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       }
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "No such secret file found", USER);
+  }
+
+  private boolean containsIllegalCharacters(String name) {
+    String[] parts = name.split(ILLEGAL_CHARACTERS, 2);
+    return parts.length > 1;
   }
 }

@@ -481,8 +481,7 @@ public class SettingsServiceImpl implements SettingsService {
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
         // Runtime check using intersection of usage scopes of secretIds.
-        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest,
-            isAccountAdmin, restrictionsFromUserPermissions, appEnvMapFromUserPermissions, appIdEnvMap);
+        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
       }
     }
 

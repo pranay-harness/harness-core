@@ -72,7 +72,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig), 10, TimeUnit.SECONDS, true);
+            () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -116,7 +116,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig), 10, TimeUnit.SECONDS, true);
+            () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -159,7 +159,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig), 5, TimeUnit.SECONDS, true);
+            () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);

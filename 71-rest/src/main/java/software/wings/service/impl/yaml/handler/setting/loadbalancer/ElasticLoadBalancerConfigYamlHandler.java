@@ -25,7 +25,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
                     .region(config.getRegion().name())
                     .loadBalancerName(config.getLoadBalancerName())
                     .accessKey(config.getAccessKey())
-                    .secretKey(getEncryptedValue(config, "secretKey", false))
+                    .secretKey(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedSecretKey()))
                     .useEc2IamCredentials(config.isUseEc2IamCredentials())
                     .build();
     toYaml(yaml, settingAttribute, appId);

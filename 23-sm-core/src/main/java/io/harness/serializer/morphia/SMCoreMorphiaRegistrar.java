@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.beans.EncryptedData;
+import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretUsageLog;
@@ -30,6 +31,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SecretManagerConfig.class);
     set.add(SecretUsageLog.class);
     set.add(VaultConfig.class);
+    set.add(MigrateSecretTask.class);
   }
 
   @Override

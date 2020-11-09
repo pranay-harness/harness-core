@@ -4,9 +4,9 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
-import static io.harness.eraro.ErrorCode.FILE_SIZE_EXCEEDS_LIMIT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.SimpleEncryption.CHARSET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -31,7 +31,6 @@ import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.stream.BoundedInputStream;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -380,7 +379,7 @@ public class BaseSecretValidatorTest extends CategoryTest {
   public void testCreate_validateSecretFile_emptyFileCheck_shouldThrowError() {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid();
-    HarnessSecret secret = SecretFile.builder().name(name).kmsId(accountId).fileSize(0).build();
+    HarnessSecret secret = SecretFile.builder().name(name).kmsId(accountId).fileContent(new byte[0]).build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
     try {
@@ -395,42 +394,13 @@ public class BaseSecretValidatorTest extends CategoryTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testCreate_validateSecretFile_fileSizeCheck_shouldThrowError() {
-    String accountId = UUIDGenerator.generateUuid();
-    String name = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize - 100);
-    HarnessSecret secret = SecretFile.builder()
-                               .name(name)
-                               .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
-                               .build();
-    SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
-    when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
-    try {
-      baseSecretValidator.validateSecret(accountId, secret, secretManagerConfig);
-      fail("Should have thrown an error as the file is larger than accepted");
-    } catch (SecretManagementException e) {
-      assertThat(e.getCode()).isEqualTo(FILE_SIZE_EXCEEDS_LIMIT);
-    }
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
   public void testCreate_validateSecretFile_SMCapabilityCheck_shouldThrowError() {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
     HarnessSecret secret = SecretFile.builder()
                                .name(name)
                                .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
                                .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
@@ -449,14 +419,10 @@ public class BaseSecretValidatorTest extends CategoryTest {
   public void testCreateEncryptedFile_shouldPass() {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
     HarnessSecret secret = SecretFile.builder()
                                .name(name)
                                .kmsId(accountId)
-                               .fileSize(fileSize)
-                               .boundedInputStream(boundedInputStream)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
                                .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretManagerConfig.getSecretManagerCapabilities()).thenReturn(Lists.list(CREATE_FILE_SECRET));
@@ -577,44 +543,15 @@ public class BaseSecretValidatorTest extends CategoryTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testUpdate_validateSecretFile_fileSizeCheck_shouldThrowError() {
-    String accountId = UUIDGenerator.generateUuid();
-    String name = UUIDGenerator.generateUuid();
-    String kmsId = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize - 100);
-    HarnessSecret secret =
-        SecretFile.builder().name(name).kmsId(kmsId).fileSize(fileSize).boundedInputStream(boundedInputStream).build();
-    SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
-    when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
-    EncryptedData existingRecord = EncryptedData.builder()
-                                       .name(UUIDGenerator.generateUuid())
-                                       .type(CONFIG_FILE)
-                                       .encryptionType(EncryptionType.KMS)
-                                       .accountId(accountId)
-                                       .kmsId(kmsId)
-                                       .build();
-    try {
-      baseSecretValidator.validateSecretUpdate(secret, existingRecord, secretManagerConfig);
-      fail("Should have thrown an error as the file is larger than accepted");
-    } catch (SecretManagementException e) {
-      assertThat(e.getCode()).isEqualTo(FILE_SIZE_EXCEEDS_LIMIT);
-    }
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
   public void testSecretFileUpdate_shouldPass() {
     String accountId = UUIDGenerator.generateUuid();
     String name = UUIDGenerator.generateUuid();
     String kmsId = UUIDGenerator.generateUuid();
-    long fileSize = 1500;
-    BoundedInputStream boundedInputStream = mock(BoundedInputStream.class);
-    when(boundedInputStream.getSize()).thenReturn(fileSize + 100);
-    HarnessSecret secret =
-        SecretFile.builder().name(name).kmsId(kmsId).fileSize(fileSize).boundedInputStream(boundedInputStream).build();
+    HarnessSecret secret = SecretFile.builder()
+                               .name(name)
+                               .kmsId(kmsId)
+                               .fileContent(UUIDGenerator.generateUuid().getBytes(CHARSET))
+                               .build();
     SecretManagerConfig secretManagerConfig = mock(SecretManagerConfig.class);
     when(secretsDao.getSecretByName(accountId, name)).thenReturn(Optional.empty());
     EncryptedData existingRecord = EncryptedData.builder()
