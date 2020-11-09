@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,8 +35,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +55,10 @@ public class BillingDataHelperTest extends AbstractDataFetcherTestBase {
   final long currentTime = System.currentTimeMillis();
   final long[] calendar = {currentTime};
   private static final long ONE_DAY_MILLIS = 86400000;
+  private final BigDecimal TOTAL_COST = new BigDecimal("10.660");
+  private final BigDecimal TOTAL_TREND_COST = new BigDecimal(5);
+  private Instant END_TIME = Instant.ofEpochMilli(1571509800000l);
+  private Instant START_TIME = Instant.ofEpochMilli(1570645800000l);
 
   @Before
   public void setup() throws SQLException {
@@ -206,6 +213,39 @@ public class BillingDataHelperTest extends AbstractDataFetcherTestBase {
         .isEqualTo(Double.valueOf(100.00));
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetBillingTrendWhenQueryThrowsException() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    Statement mockStatement = mock(Statement.class);
+    Connection mockConnection = mock(Connection.class);
+    when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
+    when(mockConnection.createStatement()).thenReturn(mockStatement);
+    when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
+
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
+    QLTrendStatsCostData data =
+        billingDataHelper.getBillingAmountData(ACCOUNT1_ID, aggregationFunction, Collections.emptyList());
+    assertThat(data).isNull();
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testGetBillingAmountData() throws SQLException {
+    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeEndTimeFilter(currentTime));
+    filters.add(makeStartTimeFilter(currentTime - ONE_DAY_MILLIS));
+
+    QLTrendStatsCostData data = billingDataHelper.getBillingAmountData(ACCOUNT1_ID, aggregationFunction, filters);
+    assertThat(data).isNotNull();
+    assertThat(data.getTotalCostData().getCost()).isEqualTo(BigDecimal.valueOf(19.0));
+    assertThat(data.getTotalCostData().getMinStartTime()).isEqualTo(currentTime - ONE_DAY_MILLIS);
+    assertThat(data.getTotalCostData().getMaxStartTime()).isEqualTo(currentTime);
+  }
+
   public QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
@@ -253,6 +293,7 @@ public class BillingDataHelperTest extends AbstractDataFetcherTestBase {
           calendar[0] = calendar[0] + 3600000;
           return new Timestamp(calendar[0]);
         });
+
     returnResultSet(5);
   }
 

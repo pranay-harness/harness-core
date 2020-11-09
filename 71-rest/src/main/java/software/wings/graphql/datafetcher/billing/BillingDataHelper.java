@@ -485,4 +485,122 @@ public class BillingDataHelper {
     }
     return (double) BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
   }
+
+  // Used by trend stats and forecast cost dataFetchers
+  public QLTrendStatsCostData getBillingAmountData(
+      String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
+    BillingDataQueryMetadata queryData =
+        billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
+    String query = queryData.getQuery();
+    log.info("Billing data query {}", query);
+    ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        return fetchBillingAmount(queryData, resultSet);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          log.error(
+              "Failed to execute query in BillingTrendStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          log.warn(
+              "Failed to execute query in BillingTrendStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
+  }
+
+  private QLTrendStatsCostData fetchBillingAmount(BillingDataQueryMetadata queryData, ResultSet resultSet)
+      throws SQLException {
+    QLBillingAmountData totalCostData = null;
+    QLBillingAmountData idleCostData = null;
+    QLBillingAmountData unallocatedCostData = null;
+    QLBillingAmountData systemCostData = null;
+    while (null != resultSet && resultSet.next()) {
+      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+        switch (field) {
+          case SUM:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              totalCostData =
+                  QLBillingAmountData.builder()
+                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
+                      .minStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .maxStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .build();
+            }
+            break;
+          case IDLECOST:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              idleCostData = QLBillingAmountData.builder()
+                                 .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()))
+                                 .minStartTime(resultSet
+                                                   .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                                       utils.getDefaultCalendar())
+                                                   .getTime())
+                                 .maxStartTime(resultSet
+                                                   .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                                       utils.getDefaultCalendar())
+                                                   .getTime())
+                                 .build();
+            }
+            break;
+          case UNALLOCATEDCOST:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              unallocatedCostData =
+                  QLBillingAmountData.builder()
+                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
+                      .minStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .maxStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .build();
+            }
+            break;
+          case SYSTEMCOST:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              systemCostData =
+                  QLBillingAmountData.builder()
+                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SYSTEMCOST.getFieldName()))
+                      .minStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .maxStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .build();
+            }
+            break;
+          default:
+        }
+      }
+    }
+    return QLTrendStatsCostData.builder()
+        .totalCostData(totalCostData)
+        .idleCostData(idleCostData)
+        .unallocatedCostData(unallocatedCostData)
+        .systemCostData(systemCostData)
+        .build();
+  }
 }
