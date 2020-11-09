@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.verificationjob.beans.Sensitivity.LOW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -15,12 +16,15 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.time.Duration;
 import java.util.List;
 
 public class VerificationJobServiceImplTest extends CvNextGenTest {
@@ -153,5 +157,39 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setEnvIdentifier("${envIdentifier}");
     testVerificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
     return testVerificationJobDTO;
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testdoesAVerificationJobExistsForThisProjectWhenNoJobExists() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    boolean doesAVerificationJobExists =
+        verificationJobService.doesAVerificationJobExistsForThisProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAVerificationJobExists).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testdoesAVerificationJobExistsForThisProjectWhenAJobExists() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    verificationJobService.save(createVerificationJob(orgIdentifier, projectIdentifier));
+    boolean doesAVerificationJobExists =
+        verificationJobService.doesAVerificationJobExistsForThisProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAVerificationJobExists).isTrue();
+  }
+
+  private VerificationJob createVerificationJob(String orgIdentifier, String projectIdentifier) {
+    CanaryVerificationJob verificationJob = new CanaryVerificationJob();
+    verificationJob.setAccountId(accountId);
+    verificationJob.setOrgIdentifier(orgIdentifier);
+    verificationJob.setProjectIdentifier(projectIdentifier);
+    verificationJob.setServiceIdentifier(generateUuid(), false);
+    verificationJob.setEnvIdentifier(generateUuid(), false);
+    verificationJob.setDuration(Duration.ZERO);
+    verificationJob.setSensitivity(LOW);
+    return verificationJob;
   }
 }

@@ -2,6 +2,7 @@ package io.harness.cvng.activity.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
@@ -140,5 +141,35 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     assertThat(kubernetesActivity.getEnvironmentIdentifier()).isEqualTo(kubernetesActivitySourceDTO.getEnvIdentifier());
     assertThat(kubernetesActivity.getActivityStartTime()).isEqualTo(activityStartTime);
     assertThat(kubernetesActivity.getActivityEndTime()).isEqualTo(activityEndTime);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({UnitTests.class})
+  public void testDoesAActivitySourceExistsForTheCaseWhenNoSourceAdded() {
+    boolean doesAActivitySourceExistsForThisProject =
+        kubernetesActivitySourceService.doesAActivitySourceExistsForThisProject(
+            accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAActivitySourceExistsForThisProject).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({UnitTests.class})
+  public void testDoesAActivitySourceExistsForTheCaseWhenSourceExists() {
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO = KubernetesActivitySourceDTO.builder()
+                                                                  .connectorIdentifier(generateUuid())
+                                                                  .serviceIdentifier(generateUuid())
+                                                                  .envIdentifier(generateUuid())
+                                                                  .namespace(generateUuid())
+                                                                  .clusterName(generateUuid())
+                                                                  .workloadName(generateUuid())
+                                                                  .build();
+    kubernetesActivitySourceService.saveKubernetesSource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    boolean doesAActivitySourceExistsForThisProject =
+        kubernetesActivitySourceService.doesAActivitySourceExistsForThisProject(
+            accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAActivitySourceExistsForThisProject).isTrue();
   }
 }
