@@ -129,7 +129,7 @@ func sendRequest(ctx context.Context, request *pb.ExpressionRequest, log *zap.Su
 		return nil, errors.New(fmt.Sprintf("%s delegate service ID is not set", delegateSvcIDEnv))
 	}
 
-	c, err := newExpressionEvalClient(endpoint, grpc.Port, log)
+	c, err := newExpressionEvalClient(endpoint, log)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not create expression service client")
 	}

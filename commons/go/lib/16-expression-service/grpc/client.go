@@ -2,7 +2,6 @@
 package grpc
 
 import (
-	"fmt"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -28,14 +27,13 @@ type ExpressionEvalClient interface {
 }
 
 type expressionEvalClient struct {
-	port       uint
 	conn       *grpc.ClientConn
 	log        *zap.SugaredLogger
 	grpcClient pb.ExpressionEvaulatorServiceClient
 }
 
 // NewExpressionEvalClient creates a expression evaluator client
-func NewExpressionEvalClient(ip string, port uint, log *zap.SugaredLogger) (ExpressionEvalClient, error) {
+func NewExpressionEvalClient(ip string, log *zap.SugaredLogger) (ExpressionEvalClient, error) {
 	// Default gRPC Call options - can be made configurable if the need arises
 	// Retries are ENABLED by default for all RPCs on the below codes. To disable retries, pass in a zero value
 	// Example: client.EvaluateExpression(ctx, req, grpc_retry.WithMax(0))
@@ -50,7 +48,7 @@ func NewExpressionEvalClient(ip string, port uint, log *zap.SugaredLogger) (Expr
 	// Configure interceptors for stream/unary RPCs to use default gRPC opts
 	// TODO: Add TLS (CI-119)
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", ip, port),
+		ip,
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
@@ -61,7 +59,6 @@ func NewExpressionEvalClient(ip string, port uint, log *zap.SugaredLogger) (Expr
 
 	c := pb.NewExpressionEvaulatorServiceClient(conn)
 	client := expressionEvalClient{
-		port:       port,
 		log:        log,
 		conn:       conn,
 		grpcClient: c,

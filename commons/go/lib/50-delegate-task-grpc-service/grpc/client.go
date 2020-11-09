@@ -2,7 +2,6 @@
 package grpc
 
 import (
-	"fmt"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -28,14 +27,13 @@ type TaskServiceClient interface {
 }
 
 type taskServiceClient struct {
-	port       uint
 	conn       *grpc.ClientConn
 	log        *zap.SugaredLogger
 	grpcClient pb.TaskServiceClient
 }
 
 // NewTaskServiceClient creates a delegate task service client
-func NewTaskServiceClient(ip string, port uint, log *zap.SugaredLogger) (TaskServiceClient, error) {
+func NewTaskServiceClient(ip string, log *zap.SugaredLogger) (TaskServiceClient, error) {
 	// Default gRPC Call options - can be made configurable if the need arises
 	// Retries are ENABLED by default for all RPCs on the below codes. To disable retries, pass in a zero value
 	// Example: client.SendTaskStatus(ctx, req, grpc_retry.WithMax(0))
@@ -50,7 +48,7 @@ func NewTaskServiceClient(ip string, port uint, log *zap.SugaredLogger) (TaskSer
 	// Configure interceptors for stream/unary RPCs to use default gRPC opts
 	// TODO: Add TLS (CI-119)
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", ip, port),
+		ip,
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
@@ -61,7 +59,6 @@ func NewTaskServiceClient(ip string, port uint, log *zap.SugaredLogger) (TaskSer
 
 	c := pb.NewTaskServiceClient(conn)
 	client := taskServiceClient{
-		port:       port,
 		log:        log,
 		conn:       conn,
 		grpcClient: c,

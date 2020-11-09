@@ -106,7 +106,7 @@ func TestSendStatusClientCreateErr(t *testing.T) {
 
 	oldClient := newTaskServiceClient
 	defer func() { newTaskServiceClient = oldClient }()
-	newTaskServiceClient = func(ip string, port uint, log *zap.SugaredLogger) (dclient.TaskServiceClient, error) {
+	newTaskServiceClient = func(ip string, log *zap.SugaredLogger) (dclient.TaskServiceClient, error) {
 		return nil, errors.New("client create error")
 	}
 
