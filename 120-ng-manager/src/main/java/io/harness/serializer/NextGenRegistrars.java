@@ -12,6 +12,7 @@ public class NextGenRegistrars {
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
+          .addAll(NGTriggerRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -19,6 +20,7 @@ public class NextGenRegistrars {
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
+          .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .add(NextGenMorphiaClassesRegistrar.class)
           .build();
 
@@ -26,6 +28,7 @@ public class NextGenRegistrars {
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
           .addAll(SecretManagerClientRegistrars.aliasRegistrars)
           .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
+          .addAll(NGTriggerRegistrars.aliasRegistrars)
           .addAll(CDNGRegistrars.aliasRegistrars)
           .build();
 }

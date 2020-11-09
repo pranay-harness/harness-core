@@ -72,6 +72,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>40-ng-triggers</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>440-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

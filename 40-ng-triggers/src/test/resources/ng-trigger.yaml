@@ -1,0 +1,33 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  target:
+    targetIdentifier: myPipeline
+    type: Pipeline
+    spec:
+      runtimeInputYaml:  yaml
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        event: Pull Request
+        actions:
+          - open
+          - closed
+        payloadConditions:
+          - key: sourceBranch
+            operator: regex
+            value: ^pr-[0-9a-f]{7}$
+          - key: targetBranch
+            operator: regex
+            value: ^pr-[0-9a-f]{7}$
+          - key: title
+            operator: regex
+            value: ^pr-[0-9a-f]{7}$
+          - key: ${pull_request.number}
+            operator: regex
+            value: ^pr-[0-9a-f]{7}$
+        pathFilters:
+          - path1  (Folder / file / regex)
+          - path2

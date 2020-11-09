@@ -11,6 +11,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import io.harness.NGTriggersModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -125,6 +126,7 @@ public class NextGenModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
+    install(NGTriggersModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
