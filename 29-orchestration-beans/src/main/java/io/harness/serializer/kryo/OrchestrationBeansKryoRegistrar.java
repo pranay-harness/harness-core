@@ -27,7 +27,6 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
-import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.skip.SkipType;
 import io.harness.state.StepType;
@@ -66,7 +65,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
-    kryo.register(InputArgs.class, 2518);
     kryo.register(StepResponseNotifyData.class, 2519);
     kryo.register(FailureInfo.class, 2520);
     kryo.register(StepOutcome.class, 2521);
