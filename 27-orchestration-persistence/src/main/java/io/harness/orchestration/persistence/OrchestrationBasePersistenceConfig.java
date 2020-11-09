@@ -37,13 +37,15 @@ public abstract class OrchestrationBasePersistenceConfig extends SpringPersisten
   }
 
   @Bean(name = "orchestrationMongoTemplate")
-  public MongoTemplate orchestrationMongoTemplate() throws GeneralException {
+  public MongoTemplate orchestrationMongoTemplate() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
     TypeInformationMapper typeMapper =
         OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap(aliasRegistrars)).build();
     MongoTypeMapper mongoTypeMapper =
         new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(typeMapper));
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
+    MongoMappingContext mappingContext = mongoMappingContext();
+    mappingContext.setAutoIndexCreation(false);
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
     converter.setTypeMapper(mongoTypeMapper);
     converter.setCustomConversions(collectConverters());
     converter.setCodecRegistryProvider(mongoDbFactory());

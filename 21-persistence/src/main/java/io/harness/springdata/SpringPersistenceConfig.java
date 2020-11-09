@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
@@ -65,7 +66,9 @@ public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration
   @Override
   public MongoTemplate mongoTemplate() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(this.mongoDbFactory());
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, this.mongoMappingContext());
+    MongoMappingContext mappingContext = this.mongoMappingContext();
+    mappingContext.setAutoIndexCreation(false);
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
     converter.setCustomConversions(collectConverters());
     converter.setCodecRegistryProvider(this.mongoDbFactory());
     converter.afterPropertiesSet();
