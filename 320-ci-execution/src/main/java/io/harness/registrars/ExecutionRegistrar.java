@@ -11,6 +11,7 @@ import io.harness.states.CleanupStep;
 import io.harness.states.GitCloneStep;
 import io.harness.states.IntegrationStageStep;
 import io.harness.states.LiteEngineTaskStep;
+import io.harness.states.PluginStep;
 import io.harness.states.PublishStep;
 import io.harness.states.RestoreCacheStep;
 import io.harness.states.RunStep;
@@ -34,5 +35,6 @@ public class ExecutionRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class));
     stateClasses.add(Pair.of(CIPipelineSetupStep.STEP_TYPE, CIPipelineSetupStep.class));
     stateClasses.add(Pair.of(BuildStatusStep.STEP_TYPE, BuildStatusStep.class));
+    stateClasses.add(Pair.of(PluginStep.STEP_TYPE, PluginStep.class));
   }
 }
