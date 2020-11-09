@@ -44,7 +44,9 @@ public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
     TypeInformationMapper typeMapper = ConnectorTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
     MongoTypeMapper mongoTypeMapper =
         new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Collections.singletonList(typeMapper));
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
+    MongoMappingContext mappingContext = mongoMappingContext();
+    mappingContext.setAutoIndexCreation(false);
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
     converter.setTypeMapper(mongoTypeMapper);
     converter.setCustomConversions(customConversions());
     converter.setCodecRegistryProvider(mongoDbFactory());
