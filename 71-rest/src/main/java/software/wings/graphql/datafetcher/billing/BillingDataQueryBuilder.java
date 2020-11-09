@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -53,6 +54,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.billing.QLCEEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -75,6 +77,7 @@ public class BillingDataQueryBuilder {
   private static final String STANDARD_TIME_ZONE = "GMT";
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
+  public static final String BILLING_DATA_PRE_AGGREGATED_TABLE = "billing_data_aggregated t0";
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final String EMPTY = "";
   protected static final String INVALID_FILTER_MSG = "Invalid combination of group by and filters";
@@ -82,6 +85,7 @@ public class BillingDataQueryBuilder {
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
+  @Inject FeatureFlagService featureFlagService;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -126,15 +130,21 @@ public class BillingDataQueryBuilder {
     // Reorder group by entity list to first group by cluster/application
     groupBy = getGroupByOrderedByDrillDown(groupBy);
 
+    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
+
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
     if (isCostTrendQuery) {
       decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
-    }
-
-    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
-      selectQuery.addCustomFromTable(schema.getBillingDataTable());
-    } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
     }
 
     if (isValidGroupByTime(groupByTime)) {
@@ -171,15 +181,21 @@ public class BillingDataQueryBuilder {
 
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
 
-    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
-
-    decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
-
     if (!shouldUseHourlyData(filters, accountId)) {
-      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
     }
+
+    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
+
+    decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
 
     if (isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)) {
       addInstanceTypeFilter(filters);
@@ -213,7 +229,12 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
     if (!shouldUseHourlyData(filters, accountId)) {
-      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
     }
@@ -1524,5 +1545,30 @@ public class BillingDataQueryBuilder {
 
   protected List<QLBillingDataFilter> removeInstanceTypeFilter(List<QLBillingDataFilter> filters) {
     return filters.stream().filter(filter -> filter.getInstanceType() == null).collect(Collectors.toList());
+  }
+
+  // Checking if any non supported group by for pre-aggregation is present
+  private boolean isValidGroupByForPreAggregation(List<QLCCMEntityGroupBy> entityGroupBy) {
+    return !entityGroupBy.stream().anyMatch(groupBy
+        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.Node
+            || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
+            || groupBy == QLCCMEntityGroupBy.LaunchType);
+  }
+
+  private boolean areFiltersValidForPreAggregation(List<QLBillingDataFilter> filters) {
+    return !filters.stream().anyMatch(filter
+        -> filter.getNodeInstanceId() != null || filter.getTaskId() != null || filter.getLaunchType() != null
+            || filter.getCloudServiceName() != null || filter.getParentInstanceId() != null
+            || filter.getInstanceName() != null);
+  }
+
+  private List<QLCCMAggregationFunction> getSupportedAggregations(List<QLCCMAggregationFunction> aggregationFunctions) {
+    return aggregationFunctions.stream()
+        .filter(aggregationFunction
+            -> aggregationFunction.getColumnName().equalsIgnoreCase(schema.getBillingAmount().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getUnallocatedCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getSystemCost().getColumnNameSQL()))
+        .collect(Collectors.toList());
   }
 }
