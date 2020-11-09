@@ -31,7 +31,7 @@ public class ViewEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     BigQuery bigQuery = bigQueryService.get();
     return QLCEViewEntityStatsData.builder()
         .data(viewsBillingService.getEntityStatsDataPoints(
-            bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName))
+            bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, offset))
         .build();
   }
 
