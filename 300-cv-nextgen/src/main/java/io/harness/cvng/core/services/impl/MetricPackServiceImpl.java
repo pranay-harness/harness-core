@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -41,16 +41,16 @@ import java.util.stream.Collectors;
 public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
-          "/appdynamics/metric-packs/resource-pack.yml");
+          "/appdynamics/metric-packs/infrastructure-pack.yml");
   private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
   public static final String APPDYNAMICS_PERFORMANCE_PACK_DSL;
   private static final URL APPDYNAMICS_QUALITY_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/quality-pack.datacollection");
   public static final String APPDYNAMICS_QUALITY_PACK_DSL;
-  private static final URL APPDYNAMICS_RESOURCE_PACK_DSL_PATH =
-      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/resource-pack.datacollection");
-  public static final String APPDYNAMICS_RESOURCE_PACK_DSL;
+  private static final URL APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/infrastructure-pack.datacollection");
+  public static final String APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
   static {
     String peformancePackDsl = null;
     String qualityPackDsl = null;
@@ -58,7 +58,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     try {
       peformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       qualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
-      resourcePackDsl = Resources.toString(APPDYNAMICS_RESOURCE_PACK_DSL_PATH, Charsets.UTF_8);
+      resourcePackDsl = Resources.toString(APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
@@ -66,7 +66,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     }
     APPDYNAMICS_PERFORMANCE_PACK_DSL = peformancePackDsl;
     APPDYNAMICS_QUALITY_PACK_DSL = qualityPackDsl;
-    APPDYNAMICS_RESOURCE_PACK_DSL = resourcePackDsl;
+    APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = resourcePackDsl;
   }
 
   @Inject private HPersistence hPersistence;
@@ -276,8 +276,8 @@ public class MetricPackServiceImpl implements MetricPackService {
         return APPDYNAMICS_PERFORMANCE_PACK_DSL;
       case ERRORS_PACK_IDENTIFIER:
         return APPDYNAMICS_QUALITY_PACK_DSL;
-      case RESOURCE_PACK_IDENTIFIER:
-        return APPDYNAMICS_RESOURCE_PACK_DSL;
+      case INFRASTRUCTURE_PACK_IDENTIFIER:
+        return APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
 
       default:
         throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());

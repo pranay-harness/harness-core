@@ -475,7 +475,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
   }
 
   @Test
@@ -516,7 +516,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
   }
 
   @Test
@@ -559,7 +559,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
   }
 
   @Test
@@ -603,7 +603,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isEqualTo(-1);
-    assertThat(categoryRiskMap.get(CVMonitoringCategory.RESOURCES)).isEqualTo(-1);
+    assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
   }
   @Test
   @Owner(developers = KAMAL)

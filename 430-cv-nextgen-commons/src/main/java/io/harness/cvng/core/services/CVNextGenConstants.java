@@ -18,7 +18,7 @@ public interface CVNextGenConstants {
   Duration DATA_COLLECTION_DELAY = Duration.ofMinutes(2);
   String PERFORMANCE_PACK_IDENTIFIER = "Performance";
   String ERRORS_PACK_IDENTIFIER = "Errors";
-  String RESOURCE_PACK_IDENTIFIER = "Resources";
+  String INFRASTRUCTURE_PACK_IDENTIFIER = "Infrastructure";
   String SPLUNK_RESOURCE_PATH = "cv-nextgen/splunk/";
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
   String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
