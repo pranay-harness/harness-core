@@ -90,7 +90,7 @@ build_proto_module() {
    -f scripts/bazel/proto_pom.xml
 }
 
-build_bazel_module 12-commons
+build_bazel_module 980-commons
 build_bazel_module 13-ng-commons
 build_bazel_module 13-grpc-api
 build_bazel_module 14-api-services-beans

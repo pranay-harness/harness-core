@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
         "//13-grpc-api:module",
         "//14-api-services-beans:module",
+        "//980-commons:module",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
         "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
         "@maven//:com_amazonaws_aws_java_sdk_codedeploy",

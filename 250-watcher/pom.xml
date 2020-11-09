@@ -30,11 +30,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>13-grpc-api</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
@@ -42,6 +37,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>21-delegate-agent-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

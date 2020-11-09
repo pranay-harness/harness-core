@@ -96,8 +96,8 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
-        "//12-commons/src/main/resources:resource",
-        "//12-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -110,7 +110,7 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = [
-        "//12-commons/src/test/resources:resource",
+        "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:private"],
     deps = [

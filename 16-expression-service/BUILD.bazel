@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//12-commons:module",
         "//13-grpc-api:maven_deps",
         "//13-grpc-api:module",
+        "//980-commons:module",
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:io_grpc_grpc_netty",
