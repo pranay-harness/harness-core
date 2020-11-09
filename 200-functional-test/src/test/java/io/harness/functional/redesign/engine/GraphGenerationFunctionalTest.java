@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.EdgeList;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.GraphVertex;
@@ -44,6 +45,7 @@ import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Application;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -290,6 +292,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                       mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
+                      mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
@@ -335,6 +338,21 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     public StepParameters deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       JsonNode node = p.getCodec().readTree(p);
       return new StepParameters() {};
+    }
+  }
+
+  @JsonDeserialize(using = AmbianceTestDeserializer.class)
+  private abstract static class AmbianceTestMixin {}
+
+  private static class AmbianceTestDeserializer extends StdDeserializer<Ambiance> {
+    AmbianceTestDeserializer() {
+      super(Ambiance.class);
+    }
+
+    @Override
+    public Ambiance deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      JsonNode node = p.getCodec().readTree(p);
+      return new Ambiance(new HashMap<>(), new ArrayList<>(), "");
     }
   }
 }
