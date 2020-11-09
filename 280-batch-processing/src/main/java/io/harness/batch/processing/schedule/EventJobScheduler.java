@@ -218,6 +218,14 @@ public class EventJobScheduler {
                   .contains(accountId)) {
         return;
       }
+      if (BatchJobType.INSTANCE_BILLING_AGGREGATION == batchJobType
+          && !ImmutableSet
+                  .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
+                      "hW63Ny6rQaaGsKkVjE0pJA", "0DdbKsBzRu-A9iYzPB7c0A")
+                  .contains(accountId)) {
+        return;
+      }
+
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);

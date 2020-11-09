@@ -3,6 +3,7 @@ package io.harness.batch.processing.billing.timeseries.service.impl;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -72,6 +73,16 @@ public class BillingDataServiceImplTest extends CategoryTest {
              billingDataService.INSERT_STATEMENT, BatchJobType.INSTANCE_BILLING_HOURLY)))
         .thenReturn(statement);
     when(mockConnection.prepareStatement(billingDataService.PURGE_DATA_QUERY)).thenReturn(statement);
+    when(mockConnection.prepareStatement(
+             BillingDataTableNameProvider.replaceTableName(
+                 billingDataService.PREAGG_QUERY_PREFIX, BatchJobType.INSTANCE_BILLING_AGGREGATION)
+             + BillingDataTableNameProvider.replaceTableName(
+                   billingDataService.PREAGG_QUERY_SUFFIX, BatchJobType.INSTANCE_BILLING)))
+        .thenReturn(statement);
+    when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
+             billingDataService.DELETE_EXISTING_PREAGG, BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(statement);
+
     when(mockConnection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(any())).thenReturn(resultSet);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
@@ -151,6 +162,46 @@ public class BillingDataServiceImplTest extends CategoryTest {
     List<InstanceBillingData> instanceBillingData = billingDataService.read(
         ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0);
     assertThat(instanceBillingData.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGeneratePreAggBillingDataDBUnavailable() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(false);
+    boolean result = billingDataService.generatePreAggBillingData(
+        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGeneratePreAggBillingData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    boolean result = billingDataService.generatePreAggBillingData(
+        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testCleanPreAggBillingDataWithError() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(false);
+    boolean result = billingDataService.cleanPreAggBillingData(
+        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testCleanPreAggBillingData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    boolean result = billingDataService.cleanPreAggBillingData(
+        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    assertThat(result).isTrue();
   }
 
   private void mockResultSet() throws SQLException {
