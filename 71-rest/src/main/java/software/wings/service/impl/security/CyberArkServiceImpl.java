@@ -7,12 +7,7 @@ import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingVariableTypes.CYBERARK;
 
 import com.google.inject.Inject;
@@ -23,8 +18,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
@@ -52,36 +47,9 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   @Inject private AccountService accountService;
 
   @Override
-  public char[] decrypt(EncryptedData data, String accountId, CyberArkConfig cyberArkConfig) {
-    int failedAttempts = 0;
-    while (true) {
-      try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(accountId)
-                                              .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(data.getName())
-                                              .build();
-        boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
-        cyberArkConfig.setCertValidationRequired(isCertValidationRequired);
-        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-            .decrypt(data, cyberArkConfig);
-      } catch (WingsException e) {
-        failedAttempts++;
-        log.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
-            failedAttempts, e);
-        if (failedAttempts == NUM_OF_RETRIES) {
-          throw e;
-        }
-        sleep(ofMillis(1000));
-      }
-    }
-  }
-
-  @Override
   public CyberArkConfig getConfig(String accountId, String configId) {
     CyberArkConfig cyberArkConfig = wingsPersistence.createQuery(CyberArkConfig.class)
-                                        .filter(ACCOUNT_ID_KEY, accountId)
+                                        .filter(SecretManagerConfigKeys.accountId, accountId)
                                         .filter(ID_KEY, configId)
                                         .get();
     if (cyberArkConfig != null) {
@@ -95,7 +63,10 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   public String saveConfig(String accountId, CyberArkConfig cyberArkConfig) {
     cyberArkConfig.setAccountId(accountId);
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
-
+    if (cyberArkConfig.isDefault()) {
+      throw new SecretManagementException(
+          CYBERARK_OPERATION_ERROR, "Cyberark Secrets Manager cannot be set to default", USER);
+    }
     CyberArkConfig oldConfigForAudit = null;
     CyberArkConfig savedConfig = null;
     boolean credentialChanged = true;
@@ -164,10 +135,10 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     if (savedConfig != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-      query.criteria(ACCOUNT_ID_KEY)
+      query.criteria(EncryptedDataKeys.accountId)
           .equal(cyberArkConfig.getAccountId())
           .or(query.criteria(ID_KEY).equal(savedConfig.getClientCertificate()),
-              query.criteria(SECRET_NAME_KEY).equal(cyberArkConfig.getName() + CLIENT_CERTIFICATE_NAME_SUFFIX));
+              query.criteria(EncryptedDataKeys.name).equal(cyberArkConfig.getName() + CLIENT_CERTIFICATE_NAME_SUFFIX));
       savedEncryptedData = query.get();
     }
     if (savedEncryptedData != null && encryptedData != null) {
@@ -196,7 +167,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
   @Override
   public boolean deleteConfig(String accountId, String configId) {
     long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.accountId, accountId)
                      .filter(EncryptedDataKeys.kmsId, configId)
                      .filter(EncryptedDataKeys.encryptionType, EncryptionType.CYBERARK)
                      .count(upToOne);

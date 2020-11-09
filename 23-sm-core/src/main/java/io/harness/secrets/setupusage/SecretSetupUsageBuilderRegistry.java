@@ -21,12 +21,12 @@ import java.util.Optional;
 
 @OwnedBy(PL)
 @Singleton
-class SecretSetupUsageBuilderRegistry {
+public class SecretSetupUsageBuilderRegistry {
   @Inject private Injector injector;
   private final Map<SettingVariableTypes, SecretSetupUsageBuilders> registeredSecretSetupUsageBuilders =
       new EnumMap<>(SettingVariableTypes.class);
 
-  SecretSetupUsageBuilderRegistry() {
+  public SecretSetupUsageBuilderRegistry() {
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.AWS, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.AZURE, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.GCP, SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER);
@@ -82,7 +82,7 @@ class SecretSetupUsageBuilderRegistry {
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.CONFIG_FILE, CONFIG_FILE_SETUP_USAGE_BUILDER);
   }
 
-  Optional<SecretSetupUsageBuilder> getSecretSetupUsageBuilder(SettingVariableTypes type) {
+  public Optional<SecretSetupUsageBuilder> getSecretSetupUsageBuilder(SettingVariableTypes type) {
     return Optional.ofNullable(registeredSecretSetupUsageBuilders.get(type))
         .flatMap(builder
             -> Optional.of(

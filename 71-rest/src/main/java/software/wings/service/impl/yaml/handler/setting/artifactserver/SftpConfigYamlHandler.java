@@ -20,7 +20,7 @@ public class SftpConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SftpC
                     .type(sftpConfig.getType())
                     .url(sftpConfig.getSftpUrl())
                     .username(sftpConfig.getUsername())
-                    .password(getEncryptedValue(sftpConfig, "password", false))
+                    .password(getEncryptedYamlRef(sftpConfig.getAccountId(), sftpConfig.getEncryptedPassword()))
                     .domain(sftpConfig.getDomain())
                     .build();
     toYaml(yaml, settingAttribute, appId);

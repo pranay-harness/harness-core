@@ -1,27 +1,37 @@
 package io.harness.secrets;
 
+import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretScopeMetadata;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 
 import java.util.List;
-import javax.validation.Valid;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 public interface SecretsRBACService {
-  boolean hasAccessToEditSecret(@NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity);
+  boolean hasAccessToEditSecret(@NotEmpty String accountId, @NotNull SecretScopeMetadata secretScopeMetadata);
 
-  boolean hasAccessToReadSecret(@NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity);
+  boolean hasAccessToEditSecrets(@NotEmpty String accountId, @NotNull Set<SecretScopeMetadata> secretScopeMetadata);
 
   boolean hasAccessToReadSecret(
-      @NotEmpty String accountId, @Valid @NotNull ScopedEntity scopedEntity, @NotEmpty String appId, String envId);
+      @NotEmpty String accountId, @NotNull SecretScopeMetadata secretScopeMetadata, String appId, String envId);
 
-  boolean hasAccessToReadSecrets(String accountId, List<ScopedEntity> scopedEntities, String appId, String envId);
+  boolean hasAccessToReadSecrets(
+      @NotEmpty String accountId, @NotNull Set<SecretScopeMetadata> secretsScopeMetadata, String appId, String envId);
 
-  void canReplacePermissions(@NotEmpty String accountId, @NotNull ScopedEntity newScopedEntity,
-      @NotNull ScopedEntity oldScopedEntity, @NotEmpty String secretId, boolean validateReferences);
+  boolean hasAccessToAccountScopedSecrets(@NotEmpty String accountId);
 
-  void canSetPermissions(@NotEmpty String accountId, @NotNull ScopedEntity scopedEntity);
+  List<SecretScopeMetadata> filterSecretsByReadPermission(@NotEmpty String accountId,
+      @NotNull List<SecretScopeMetadata> secretScopeMetadataList, String appId, String envId);
 
-  UsageRestrictions getDefaultUsageRestrictions(String accountId);
+  void canReplacePermissions(@NotEmpty String accountId, @NotNull SecretScopeMetadata newSecretScopeMetadata,
+      @NotNull SecretScopeMetadata oldSecretScopeMetadata, boolean validateReferences);
+
+  void canSetPermissions(@NotEmpty String accountId, @NotNull SecretScopeMetadata secretScopeMetadata);
+
+  UsageRestrictions getDefaultUsageRestrictions(@NotEmpty String accountId);
+
+  boolean isScopeInConflict(EncryptedData encryptedData, SecretManagerConfig secretManagerConfig);
 }

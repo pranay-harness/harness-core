@@ -65,7 +65,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"encryptionKey", "encryptedValue", "backupEncryptionKey", "backupEncryptedValue"})
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -141,6 +141,8 @@ public class EncryptedData
   private boolean scopedToAccount;
 
   private UsageRestrictions usageRestrictions;
+
+  private boolean inheritScopesFromSM;
 
   @FdIndex private Long nextMigrationIteration;
 

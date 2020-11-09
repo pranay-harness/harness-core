@@ -1,6 +1,7 @@
 package io.harness.secrets.validation.validators;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -38,8 +39,8 @@ public class AzureSecretManagerValidator extends BaseSecretValidator {
     }
   }
 
-  private void verifyFileSizeWithinLimit(long size) {
-    if (size > AZURE_SECRET_CONTENT_SIZE_LIMIT) {
+  private void verifyFileSizeWithinLimit(byte[] fileContent) {
+    if (isNotEmpty(fileContent) && fileContent.length > AZURE_SECRET_CONTENT_SIZE_LIMIT) {
       String message = "Azure Secrets Manager limits secret value to " + AZURE_SECRET_CONTENT_SIZE_LIMIT + " bytes.";
       throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER_SRE);
     }
@@ -66,7 +67,7 @@ public class AzureSecretManagerValidator extends BaseSecretValidator {
   public void validateSecretFile(String accountId, SecretFile secretFile, SecretManagerConfig secretManagerConfig) {
     super.validateSecretFile(accountId, secretFile, secretManagerConfig);
     validateSecretName(secretFile.getName());
-    verifyFileSizeWithinLimit(secretFile.getFileSize());
+    verifyFileSizeWithinLimit(secretFile.getFileContent());
   }
 
   @Override
@@ -74,8 +75,6 @@ public class AzureSecretManagerValidator extends BaseSecretValidator {
       SecretFile secretFile, EncryptedData existingRecord, SecretManagerConfig secretManagerConfig) {
     super.validateSecretFileUpdate(secretFile, existingRecord, secretManagerConfig);
     validateSecretName(secretFile.getName());
-    if (secretFile.getBoundedInputStream() != null) {
-      verifyFileSizeWithinLimit(secretFile.getFileSize());
-    }
+    verifyFileSizeWithinLimit(secretFile.getFileContent());
   }
 }

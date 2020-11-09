@@ -22,7 +22,6 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import lombok.AllArgsConstructor;
@@ -210,12 +209,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           Type variableType = serviceVariable.getType();
           String value = null;
           if (Type.ENCRYPTED_TEXT == variableType) {
-            try {
-              value = secretManager.getEncryptedYamlRef(serviceVariable);
-            } catch (IllegalAccessException e) {
-              throw new EncryptDecryptException(
-                  format("Could not find yaml ref for %s", serviceVariable.getValue()), e);
-            }
+            value =
+                secretManager.getEncryptedYamlRef(serviceVariable.getAccountId(), serviceVariable.getEncryptedValue());
           } else if (Type.TEXT == variableType) {
             if (serviceVariable.getValue() != null) {
               value = String.valueOf(serviceVariable.getValue());

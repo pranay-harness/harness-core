@@ -21,8 +21,8 @@ public class SumoConfigYamlHandler extends VerificationProviderYamlHandler<Yaml,
                     .type(config.getType())
                     .harnessApiVersion(getHarnessApiVersion())
                     .sumoUrl(config.getSumoUrl())
-                    .accessId(getEncryptedValue(config, "accessId", true))
-                    .accessKey(getEncryptedValue(config, "accessKey", true))
+                    .accessId(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedAccessId()))
+                    .accessKey(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedAccessKey()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

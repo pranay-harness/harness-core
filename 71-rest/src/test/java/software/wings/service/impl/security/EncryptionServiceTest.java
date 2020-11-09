@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -15,6 +16,10 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.encryptors.CustomEncryptorsRegistry;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.security.SimpleEncryption;
@@ -23,6 +28,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretManagerType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,6 +49,10 @@ public class EncryptionServiceTest extends CategoryTest {
   @Mock private SecretsDelegateCacheService secretsDelegateCacheService;
   @Mock private EncryptedDataDetail encryptedDataDetail1;
   @Mock private EncryptedDataDetail encryptedDataDetail2;
+  @Mock private KmsEncryptorsRegistry kmsRegistry;
+  @Mock private VaultEncryptorsRegistry vaultRegistry;
+  @Mock private CustomEncryptorsRegistry customRegistry;
+  @Mock private KmsEncryptor kmsEncryptor;
 
   private EncryptionServiceImpl encryptionService;
   private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(4);
@@ -50,18 +60,20 @@ public class EncryptionServiceTest extends CategoryTest {
   @Before
   public void setUp() {
     initMocks(this);
-
-    encryptionService =
-        new EncryptionServiceImpl(secretManagementDelegateService, secretsDelegateCacheService, threadPoolExecutor);
-
+    encryptionService = new EncryptionServiceImpl(
+        vaultRegistry, kmsRegistry, customRegistry, threadPoolExecutor, secretsDelegateCacheService);
     EncryptionConfig encryptionConfig = mock(KmsConfig.class);
     when(encryptionConfig.getEncryptionType()).thenReturn(EncryptionType.KMS);
+    when(encryptionConfig.getType()).thenReturn(SecretManagerType.KMS);
+    when(kmsRegistry.getKmsEncryptor(any())).thenReturn(kmsEncryptor);
 
     when(encryptedDataDetail1.getFieldName()).thenReturn("value");
     when(encryptedDataDetail1.getEncryptionConfig()).thenReturn(encryptionConfig);
+    when(encryptedDataDetail1.getEncryptedData()).thenReturn(mock(EncryptedRecordData.class));
 
     when(encryptedDataDetail2.getFieldName()).thenReturn("value");
     when(encryptedDataDetail2.getEncryptionConfig()).thenReturn(encryptionConfig);
+    when(encryptedDataDetail2.getEncryptedData()).thenReturn(mock(EncryptedRecordData.class));
   }
 
   @Test
@@ -69,6 +81,7 @@ public class EncryptionServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testBatchDecryption() {
     String accountId = UUIDGenerator.generateUuid();
+    when(kmsEncryptor.fetchSecretValue(any(), any(), any())).thenReturn("YWRzYXNk".toCharArray());
     List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =
         SecurityTestUtils.getEncryptableSettingWithEncryptionDetailsList(
             accountId, Lists.newArrayList(encryptedDataDetail1, encryptedDataDetail2));
@@ -89,7 +102,8 @@ public class EncryptionServiceTest extends CategoryTest {
   public void testGetDecryptedValue() {
     byte[] encryptedBytes =
         new SimpleEncryption("TestEncryptionKey").encrypt(EncodingUtils.encodeBase64("Dummy").getBytes(CHARSET));
-
+    when(kmsEncryptor.fetchSecretValue(any(), any(), any()))
+        .thenReturn(EncodingUtils.encodeBase64("Dummy").toCharArray());
     EncryptedRecordData encryptedRecordData =
         EncryptedRecordData.builder()
             .encryptionType(EncryptionType.LOCAL)
@@ -97,9 +111,9 @@ public class EncryptionServiceTest extends CategoryTest {
             .base64Encoded(true)
             .encryptedValue(CHARSET.decode(ByteBuffer.wrap(encryptedBytes)).array())
             .build();
-
+    LocalEncryptionConfig localEncryptionConfig = LocalEncryptionConfig.builder().build();
     EncryptedDataDetail build = EncryptedDataDetail.builder()
-                                    .encryptionConfig(new LocalEncryptionConfig())
+                                    .encryptionConfig(localEncryptionConfig)
                                     .encryptedData(encryptedRecordData)
                                     .build();
 

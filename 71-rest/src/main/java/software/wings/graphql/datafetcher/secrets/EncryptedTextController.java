@@ -36,6 +36,7 @@ public class EncryptedTextController {
         .secretManagerId(encryptedText.getKmsId())
         .name(encryptedText.getName())
         .usageScope(usageScopeController.populateUsageScope(encryptedText.getUsageRestrictions()))
+        .inheritScopesFromSM(encryptedText.isInheritScopesFromSM())
         .build();
   }
 
@@ -61,20 +62,17 @@ public class EncryptedTextController {
       throw new InvalidRequestException("Supply either the secret path or the secret value");
     }
 
-    if (secretValue != null) {
-      secretManager.validateThatSecretManagerSupportsText(accountId, secretMangerId);
-    }
-
     SecretText secretText =
         SecretText.builder()
-            .name(secretName)
-            .kmsId(secretMangerId)
             .value(secretValue)
             .path(path)
+            .name(secretName)
+            .kmsId(secretMangerId)
             .usageRestrictions(usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId))
             .scopedToAccount(encryptedText.isScopedToAccount())
+            .inheritScopesFromSM(encryptedText.isInheritScopesFromSM())
             .build();
-    return secretManager.saveSecret(accountId, secretText);
+    return secretManager.saveSecretText(accountId, secretText, true);
   }
 
   public void updateEncryptedText(QLEncryptedTextUpdate encryptedTextUpdate, String encryptedTextId, String accountId) {
@@ -106,7 +104,6 @@ public class EncryptedTextController {
 
     // Updating the value
     if (encryptedTextUpdate.getValue().isPresent()) {
-      secretManager.validateThatSecretManagerSupportsText(accountId, exitingEncryptedData.getKmsId());
       value = encryptedTextUpdate.getValue().getValue().orElse(null);
       secretReference = null;
       if (isBlank(value)) {
@@ -136,13 +133,21 @@ public class EncryptedTextController {
           encryptedTextUpdate.getScopedToAccount().getValue().orElse(exitingEncryptedData.isScopedToAccount());
     }
 
+    boolean inheritScopesFromSM = exitingEncryptedData.isInheritScopesFromSM();
+    if (encryptedTextUpdate.getInheritScopesFromSM() != null
+        && encryptedTextUpdate.getInheritScopesFromSM().isPresent()) {
+      inheritScopesFromSM =
+          encryptedTextUpdate.getInheritScopesFromSM().getValue().orElse(exitingEncryptedData.isScopedToAccount());
+    }
+
     SecretText secretText = SecretText.builder()
-                                .name(name)
                                 .value(value)
                                 .path(secretReference)
+                                .name(name)
                                 .usageRestrictions(usageRestrictions)
                                 .scopedToAccount(scopedToAccount)
+                                .inheritScopesFromSM(inheritScopesFromSM)
                                 .build();
-    secretManager.updateSecret(accountId, encryptedTextId, secretText);
+    secretManager.updateSecretText(accountId, encryptedTextId, secretText, true);
   }
 }

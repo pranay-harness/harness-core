@@ -15,12 +15,13 @@ public class AzureArtifactsPATConfigYamlHandler extends AzureArtifactsYamlHandle
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AzureArtifactsPATConfig azureArtifactsPATConfig = (AzureArtifactsPATConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(azureArtifactsPATConfig.getType())
-                    .azureDevopsUrl(azureArtifactsPATConfig.getAzureDevopsUrl())
-                    .pat(getEncryptedValue(azureArtifactsPATConfig, "pat", false))
-                    .build();
+    Yaml yaml =
+        Yaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(azureArtifactsPATConfig.getType())
+            .azureDevopsUrl(azureArtifactsPATConfig.getAzureDevopsUrl())
+            .pat(getEncryptedYamlRef(azureArtifactsPATConfig.getAccountId(), azureArtifactsPATConfig.getEncryptedPat()))
+            .build();
 
     toYaml(yaml, settingAttribute, appId);
     return yaml;

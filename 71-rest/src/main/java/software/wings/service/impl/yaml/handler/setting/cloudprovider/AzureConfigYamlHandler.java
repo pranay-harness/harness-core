@@ -20,7 +20,7 @@ public class AzureConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Azure
                     .type(azureConfig.getType())
                     .clientId(azureConfig.getClientId())
                     .tenantId(azureConfig.getTenantId())
-                    .key(getEncryptedValue(azureConfig, "key", false))
+                    .key(getEncryptedYamlRef(azureConfig.getAccountId(), azureConfig.getEncryptedKey()))
                     .azureEnvironmentType(azureConfig.getAzureEnvironmentType())
                     .build();
     toYaml(yaml, settingAttribute, appId);

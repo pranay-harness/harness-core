@@ -10,9 +10,9 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.BASH;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
@@ -20,6 +20,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.encryptors.CustomEncryptorsRegistry;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
@@ -30,7 +31,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.impl.security.AbstractSecretServiceImpl;
-import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 
 import java.util.HashSet;
@@ -38,18 +38,19 @@ import java.util.Optional;
 import java.util.Set;
 
 @OwnedBy(PL)
+@Singleton
 public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements CustomSecretsManagerService {
-  private CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
-  private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
-  private CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder;
+  private final CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
+  private final CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
+  private final CustomEncryptorsRegistry customEncryptorsRegistry;
 
   @Inject
-  CustomSecretsManagerServiceImpl(CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper,
+  public CustomSecretsManagerServiceImpl(CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper,
       CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper,
-      CustomEncryptedDataDetailBuilder customEncryptedDataDetailBuilder) {
+      CustomEncryptorsRegistry customEncryptorsRegistry) {
     this.customSecretsManagerShellScriptHelper = customSecretsManagerShellScriptHelper;
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
-    this.customEncryptedDataDetailBuilder = customEncryptedDataDetailBuilder;
+    this.customEncryptorsRegistry = customEncryptorsRegistry;
   }
 
   @Override
@@ -108,7 +109,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   @Override
   public boolean deleteSecretsManager(String accountId, String configId) {
     long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(EncryptedDataKeys.accountId, accountId)
                      .filter(EncryptedDataKeys.kmsId, configId)
                      .filter(EncryptedDataKeys.encryptionType, CUSTOM)
                      .count(upToOne);
@@ -189,8 +190,8 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
 
   private void validateConnectivity(
       CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
-    EncryptedData encryptedData = EncryptedData.builder().name("Test Variables").parameters(testVariables).build();
-    customEncryptedDataDetailBuilder.validateSecret(encryptedData, customSecretsManagerConfig);
+    customEncryptorsRegistry.getCustomEncryptor(customSecretsManagerConfig.getEncryptionType())
+        .validateReference(customSecretsManagerConfig.getAccountId(), testVariables, customSecretsManagerConfig);
   }
 
   private void setShellScriptInConfig(CustomSecretsManagerConfig customSecretsManagerConfig) {

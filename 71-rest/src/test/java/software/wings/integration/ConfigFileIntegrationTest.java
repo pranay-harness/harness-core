@@ -22,13 +22,10 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.EncryptedData;
 import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -61,9 +58,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -249,88 +243,6 @@ public class ConfigFileIntegrationTest extends IntegrationTestBase {
     assertThat(updatedConfigFile.getEntityId()).isNotNull().isEqualTo(serviceTemplate.getUuid());
     assertThat(updatedConfigFile.getEntityType()).isNotNull().isEqualTo(EntityType.SERVICE_TEMPLATE);
     assertThat(updatedConfigFile.getParentConfigFileId()).isEqualTo(originalConfigFile.getUuid());
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skipping the integration test")
-  public void shouldOverrideEncryptedConfigFile() throws IOException {
-    ConfigFile configFile = getConfigFile();
-    configFile.setEncrypted(true);
-
-    String secretName = UUID.randomUUID().toString();
-    InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, configFile.getSize(), null,
-        new BoundedInputStream(new BoundedInputStream(inputStream)), false);
-
-    configFile.setAppId(service.getAppId());
-    configFile.setName(fileName);
-    configFile.setFileName(fileName);
-    configFile.setEncryptedFileId(secretFileId);
-    String configId = configService.save(configFile, null);
-    inputStream.close();
-
-    ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
-    assertThat(originalConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", fileName);
-    assertThat(originalConfigFile.getDefaultVersion()).isEqualTo(1);
-    assertThat(originalConfigFile.isEncrypted()).isTrue();
-
-    // Updated config file
-    ConfigFile newConfigFile = getConfigFile();
-    newConfigFile.setEncrypted(true);
-    newConfigFile.setAppId(service.getAppId());
-    newConfigFile.setName(fileName);
-    newConfigFile.setFileName(fileName);
-    newConfigFile.setUuid(configId);
-    newConfigFile.setEncryptedFileId(secretFileId);
-
-    configService.update(newConfigFile, new BoundedInputStream(null));
-    ConfigFile updatedConfigFile = configService.get(service.getAppId(), configId);
-    assertThat(updatedConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", newConfigFile.getFileName());
-    assertThat(updatedConfigFile.getDefaultVersion()).isEqualTo(2);
-    assertThat(updatedConfigFile.isEncrypted()).isTrue();
-
-    File decryptedFile = configService.download(configFile.getAppId(), configFile.getUuid());
-    String decryptedText = String.join("", Files.readAllLines(decryptedFile.toPath(), Charset.forName("ISO-8859-1")));
-    assertThat(decryptedText).isEqualTo(INPUT_TEXT);
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skipping the integration test")
-  public void shouldSaveEncryptedServiceConfigFile() throws IOException {
-    String secretName = UUID.randomUUID().toString();
-    InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
-    String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, configFile.getSize(), null,
-        new BoundedInputStream(new BoundedInputStream(inputStream)), false);
-
-    ConfigFile appConfigFile = getConfigFile();
-    appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
-    appConfigFile.setEncrypted(true);
-    appConfigFile.setAppId(service.getAppId());
-    appConfigFile.setName(fileName);
-    appConfigFile.setFileName(fileName);
-    appConfigFile.setEncryptedFileId(secretFileId);
-
-    String configId = configService.save(appConfigFile, null);
-    inputStream.close();
-
-    ConfigFile configFile = configService.get(service.getAppId(), configId);
-    assertThat(configFile).isNotNull().hasFieldOrPropertyWithValue("fileName", fileName);
-
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
-
-    File encryptedFile = testFolder.newFile();
-    fileService.download(savedFileId, encryptedFile, FileBucket.CONFIGS);
-    String encryptedText = String.join("", Files.readAllLines(encryptedFile.toPath(), Charset.forName("ISO-8859-1")));
-    assertThat(encryptedText).isNotEmpty().isNotEqualTo(INPUT_TEXT);
-
-    File decryptedFile = configService.download(configFile.getAppId(), configFile.getUuid());
-    String decryptedText = String.join("", Files.readAllLines(decryptedFile.toPath(), Charset.forName("ISO-8859-1")));
-    assertThat(decryptedText).isEqualTo(INPUT_TEXT);
   }
 
   private File createRandomFile(String fileName) throws IOException {

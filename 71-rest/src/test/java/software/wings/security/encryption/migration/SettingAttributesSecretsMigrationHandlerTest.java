@@ -121,6 +121,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
                         .kmsId(generateUuid())
                         .enabled(true)
                         .accountId(accountId)
+                        .hideFromListing(true)
                         .build();
 
     String secretId = wingsPersistence.save(encryptedData);
@@ -180,6 +181,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     createSettingAttribute();
     featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     encryptedData.setType(SECRET_TEXT);
+    encryptedData.setHideFromListing(false);
     wingsPersistence.save(encryptedData);
 
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
@@ -256,7 +258,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
         wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     assertThat(encryptedDataList.size()).isEqualTo(4);
     encryptedDataList.forEach(encryptedData -> {
-      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APM_VERIFICATION);
+      assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
       assertThat(encryptedData.getParents()).isEmpty();
     });
 

@@ -738,6 +738,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
                                                 .kmsId("kmsId")
                                                 .name("name")
                                                 .type(JENKINS)
+                                                .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                                 .build());
     char[] password = "amazonkms:".concat(secretId).toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.builder()

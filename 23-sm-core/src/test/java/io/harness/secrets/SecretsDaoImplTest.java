@@ -239,12 +239,12 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
     encryptedData = encryptedDataOptional.get();
 
     SecretFile secretFile = SecretFile.builder()
-                                .fileSize(1200)
                                 .kmsId(encryptedData.getKmsId())
                                 .hideFromListing(encryptedData.isHideFromListing())
                                 .name(UUIDGenerator.generateUuid())
                                 .scopedToAccount(true)
                                 .usageRestrictions(null)
+                                .fileContent(UUIDGenerator.generateUuid().getBytes())
                                 .build();
     SecretUpdateData secretUpdateData = new SecretUpdateData(secretFile, encryptedData);
     EncryptedRecord encryptedRecord = EncryptedData.builder()
@@ -256,7 +256,7 @@ public class SecretsDaoImplTest extends SMCoreTestBase {
     assertThat(updatedEncryptedData.getEncryptedValue()).isEqualTo(encryptedRecord.getEncryptedValue());
     assertThat(updatedEncryptedData.getEncryptionKey()).isEqualTo(encryptedRecord.getEncryptionKey());
     assertThat(updatedEncryptedData.getName()).isEqualTo(secretFile.getName());
-    assertThat(updatedEncryptedData.getFileSize()).isEqualTo(secretFile.getFileSize());
+    assertThat(updatedEncryptedData.getFileSize()).isEqualTo(secretFile.getFileContent().length);
     assertThat(updatedEncryptedData.getUsageRestrictions()).isEqualTo(secretFile.getUsageRestrictions());
     assertThat(updatedEncryptedData.isScopedToAccount()).isEqualTo(secretFile.isScopedToAccount());
   }

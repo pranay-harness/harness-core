@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.expression.SecretFunctor;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -26,21 +25,19 @@ import java.util.Set;
 @OwnedBy(PL)
 @Slf4j
 public class CustomEncryptedDataDetailBuilderImpl implements CustomEncryptedDataDetailBuilder {
-  private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
-  private SecretManager secretManager;
-  private ManagerDecryptionService managerDecryptionService;
-  private ExpressionEvaluator expressionEvaluator;
-  private FeatureFlagService featureFlagService;
+  private final CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
+  private final SecretManager secretManager;
+  private final ManagerDecryptionService managerDecryptionService;
+  private final ExpressionEvaluator expressionEvaluator;
 
   @Inject
   public CustomEncryptedDataDetailBuilderImpl(CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper,
       SecretManager secretManager, ManagerDecryptionService managerDecryptionService,
-      ExpressionEvaluator expressionEvaluator, FeatureFlagService featureFlagService) {
+      ExpressionEvaluator expressionEvaluator) {
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
     this.secretManager = secretManager;
     this.managerDecryptionService = managerDecryptionService;
     this.expressionEvaluator = expressionEvaluator;
-    this.featureFlagService = featureFlagService;
   }
 
   public EncryptedDataDetail buildEncryptedDataDetail(
@@ -73,11 +70,6 @@ public class CustomEncryptedDataDetailBuilderImpl implements CustomEncryptedData
         .encryptedData(encryptedRecordData)
         .encryptionConfig(customSecretsManagerConfig)
         .build();
-  }
-
-  public void validateSecret(EncryptedData encryptedData, CustomSecretsManagerConfig customSecretsManagerConfig) {
-    EncryptedDataDetail encryptedDataDetail = buildEncryptedDataDetail(encryptedData, customSecretsManagerConfig);
-    managerDecryptionService.fetchSecretValue(customSecretsManagerConfig.getAccountId(), encryptedDataDetail);
   }
 
   private String resolveVariables(String accountId, String script, Set<EncryptedDataParams> parameters) {

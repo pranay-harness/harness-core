@@ -15,7 +15,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
+import software.wings.service.intfc.security.CustomSecretsManagerValidation;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -25,7 +25,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public abstract class AbstractSecretManagerValidation extends AbstractDelegateValidateTask {
-  @Inject private transient CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
+  @Inject private transient CustomSecretsManagerValidation customSecretsManagerValidation;
 
   AbstractSecretManagerValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
       Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -103,7 +103,7 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
 
   private DelegateConnectionResult validateCustomSecretManager(CustomSecretsManagerConfig encryptionConfig) {
     String validationCritera = encryptionConfig.getValidationCriteria();
-    boolean isValidated = customSecretsManagerDelegateService.isExecutableOnDelegate(encryptionConfig);
+    boolean isValidated = customSecretsManagerValidation.isExecutableOnDelegate(encryptionConfig);
     return DelegateConnectionResult.builder().criteria(validationCritera).validated(isValidated).build();
   }
 }

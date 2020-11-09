@@ -22,7 +22,8 @@ public class SpotInstConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Sp
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .spotInstAccountId(spotInstConfig.getSpotInstAccountId())
-                    .spotInstToken(getEncryptedValue(spotInstConfig, "spotInstToken", false))
+                    .spotInstToken(
+                        getEncryptedYamlRef(spotInstConfig.getAccountId(), spotInstConfig.getEncryptedSpotInstToken()))
                     .type(spotInstConfig.getType())
                     .build();
     toYaml(yaml, settingAttribute, appId);

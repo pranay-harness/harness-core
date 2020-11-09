@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.VaultConfig;
 import software.wings.service.impl.security.VaultServiceImpl;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +36,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
   private static final String APPROLE_VAULT_NAME = "Test Vault AppRole";
   private static final String QA_VAULT_URL = "https://vaultqa.harness.io";
 
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private EncryptionService encryptionService;
   @Inject private VaultServiceImpl vaultService;
 
   @Test
@@ -85,8 +85,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
 
       vaultConfigWithAppRoleSecret.setAuthToken(
           vaultService.appRoleLogin(vaultConfigWithAppRoleSecret).getClientToken());
-      String decrypted =
-          SecretsUtils.getValueFromName(secretManagementDelegateService, data, vaultConfigWithAppRoleSecret);
+      String decrypted = SecretsUtils.getValueFromName(encryptionService, data, vaultConfigWithAppRoleSecret);
       assertThat(decrypted).isEqualTo(secretText.getValue());
 
       boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretsId);

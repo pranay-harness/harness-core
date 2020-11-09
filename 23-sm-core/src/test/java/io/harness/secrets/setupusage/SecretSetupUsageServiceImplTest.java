@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
@@ -29,9 +28,7 @@ import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.Matchers;
-import org.mockito.Mock;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.HashMap;
@@ -40,10 +37,10 @@ import java.util.Optional;
 import java.util.Set;
 
 public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
-  @Mock private SecretManagerConfigService secretManagerConfigService;
-  @Mock private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
+  private SecretManagerConfigService secretManagerConfigService;
+  private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;
   @Inject private SecretsDao secretsDao;
-  @Inject @InjectMocks private SecretSetupUsageServiceImpl secretSetupUsageService;
+  private SecretSetupUsageServiceImpl secretSetupUsageService;
   private SecretSetupUsageBuilder secretSetupUsageBuilder;
   private EncryptedData encryptedData;
   private String accountId;
@@ -51,7 +48,10 @@ public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
 
   @Before
   public void setup() {
-    initMocks(this);
+    secretManagerConfigService = mock(SecretManagerConfigService.class);
+    secretSetupUsageBuilderRegistry = mock(SecretSetupUsageBuilderRegistry.class);
+    secretSetupUsageService =
+        new SecretSetupUsageServiceImpl(secretsDao, secretManagerConfigService, secretSetupUsageBuilderRegistry);
     accountId = UUIDGenerator.generateUuid();
 
     encryptionDetail = EncryptionDetail.builder()

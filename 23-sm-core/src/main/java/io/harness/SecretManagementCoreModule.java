@@ -1,10 +1,27 @@
 package io.harness;
 
+import static java.time.Duration.ofSeconds;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
+import io.harness.beans.MigrateSecretTask;
+import io.harness.config.PublisherConfiguration;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueConsumer;
+import io.harness.queue.QueueController;
+import io.harness.queue.QueueListener;
+import io.harness.queue.QueuePublisher;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secretmanagers.SecretsManagerRBACService;
+import io.harness.secrets.SecretMigrationEventListener;
+import io.harness.secrets.SecretService;
+import io.harness.secrets.SecretServiceImpl;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsDao;
 import io.harness.secrets.SecretsDaoImpl;
@@ -18,6 +35,8 @@ import io.harness.secrets.validation.SecretValidators;
 import io.harness.secrets.validation.validators.AwsSecretManagerValidator;
 import io.harness.secrets.validation.validators.AzureSecretManagerValidator;
 import io.harness.secrets.validation.validators.VaultSecretManagerValidator;
+import io.harness.secrets.yamlhandlers.SecretYamlHandler;
+import io.harness.secrets.yamlhandlers.SecretYamlHandlerImpl;
 
 public class SecretManagementCoreModule extends AbstractModule {
   private static SecretManagementCoreModule instance;
@@ -29,10 +48,25 @@ public class SecretManagementCoreModule extends AbstractModule {
     return instance;
   }
 
+  @Provides
+  @Singleton
+  QueuePublisher<MigrateSecretTask> kmsTransitionQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, MigrateSecretTask.class, null, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<MigrateSecretTask> kmsTransitionQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, MigrateSecretTask.class, ofSeconds(30), null, config);
+  }
+
   @Override
   protected void configure() {
     bind(SecretsDao.class).to(SecretsDaoImpl.class);
     bind(SecretSetupUsageService.class).to(SecretSetupUsageServiceImpl.class);
+    bind(SecretService.class).to(SecretServiceImpl.class);
+    bind(SecretYamlHandler.class).to(SecretYamlHandlerImpl.class);
+    bind(new TypeLiteral<QueueListener<MigrateSecretTask> >() {}).to(SecretMigrationEventListener.class);
 
     binder()
         .bind(SecretValidator.class)
@@ -63,5 +97,7 @@ public class SecretManagementCoreModule extends AbstractModule {
     requireBinding(SecretsFileService.class);
     requireBinding(SecretsAuditService.class);
     requireBinding(SecretsRBACService.class);
+    requireBinding(QueueController.class);
+    requireBinding(SecretsManagerRBACService.class);
   }
 }

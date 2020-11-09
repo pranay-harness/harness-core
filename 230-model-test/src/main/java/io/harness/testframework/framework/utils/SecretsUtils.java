@@ -8,13 +8,15 @@ import com.google.gson.JsonObject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.VaultConfig;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.HashSet;
 import java.util.List;
@@ -74,8 +76,12 @@ public class SecretsUtils {
   }
 
   public static String getValueFromName(
-      SecretManagementDelegateService secretManagementDelegateService, EncryptedData data, VaultConfig vaultConfig) {
-    return new String(secretManagementDelegateService.decrypt(data, vaultConfig));
+      EncryptionService encryptionService, EncryptedData data, VaultConfig vaultConfig) {
+    return new String(encryptionService.getDecryptedValue(EncryptedDataDetail.builder()
+                                                              .encryptedData(SecretManager.buildRecordData(data))
+                                                              .encryptionConfig(vaultConfig)
+                                                              .build(),
+        false));
   }
 
   public static JsonElement getUsageRestDataAsJson(SecretText secretText) {

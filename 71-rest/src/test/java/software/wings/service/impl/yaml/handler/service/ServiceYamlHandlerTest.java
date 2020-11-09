@@ -79,10 +79,18 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Before
   public void setUp() throws Exception {
     Application application = Builder.anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build();
-    ServiceVariable enc_1 =
-        ServiceVariable.builder().name("enc_1").type(Type.ENCRYPTED_TEXT).value("some-secret".toCharArray()).build();
-    ServiceVariable enc_2 =
-        ServiceVariable.builder().name("enc_2").type(Type.ENCRYPTED_TEXT).value("other-secret".toCharArray()).build();
+    ServiceVariable enc_1 = ServiceVariable.builder()
+                                .name("enc_1")
+                                .type(Type.ENCRYPTED_TEXT)
+                                .encryptedValue("some-secret")
+                                .accountId(ACCOUNT_ID)
+                                .build();
+    ServiceVariable enc_2 = ServiceVariable.builder()
+                                .name("enc_2")
+                                .type(Type.ENCRYPTED_TEXT)
+                                .encryptedValue("other-secret")
+                                .accountId(ACCOUNT_ID)
+                                .build();
     ServiceVariable var_1 = ServiceVariable.builder().name("var_1").type(Type.TEXT).value("var".toCharArray()).build();
     service = Service.builder()
                   .appId(APP_ID)
@@ -95,8 +103,9 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                   .serviceVariables(Arrays.asList(enc_1, enc_2, var_1))
                   .deploymentTypeTemplateId(WingsTestConstants.TEMPLATE_ID)
                   .build();
-    when(secretManager.getEncryptedYamlRef(enc_1)).thenReturn("safeharness:some-secret");
-    when(secretManager.getEncryptedYamlRef(enc_2)).thenReturn("amazonkms:other-secret");
+    when(secretManager.getEncryptedYamlRef(ACCOUNT_ID, enc_1.getEncryptedValue()))
+        .thenReturn("safeharness:some-secret");
+    when(secretManager.getEncryptedYamlRef(ACCOUNT_ID, enc_2.getEncryptedValue())).thenReturn("amazonkms:other-secret");
     doNothing().when(harnessTagYamlHelper).updateYamlWithHarnessTagLinks(any(), any(), any());
     when(yamlHelper.getAppId(ACCOUNT_ID, validYamlFilePath)).thenReturn(APP_ID);
     when(yamlHelper.getServiceName(validYamlFilePath)).thenReturn(SERVICE_NAME);

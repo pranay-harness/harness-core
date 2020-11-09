@@ -87,8 +87,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   public LdapResponse authenticate(LdapSettings settings, EncryptedDataDetail settingsEncryptedDataDetail,
       String username, EncryptedDataDetail passwordEncryptedDataDetail) {
     settings.decryptFields(settingsEncryptedDataDetail, encryptionService);
-    String password;
-    password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
+    String password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail, false));
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     return helper.authenticate(settings.getUserSettingsList(), username, password);
   }

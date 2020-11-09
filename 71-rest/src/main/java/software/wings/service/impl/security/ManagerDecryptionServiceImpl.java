@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
-  private DelegateProxyFactory delegateProxyFactory;
+  private final DelegateProxyFactory delegateProxyFactory;
 
   @Inject
   public ManagerDecryptionServiceImpl(DelegateProxyFactory delegateProxyFactory) {
@@ -141,14 +141,6 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     } catch (Exception e) {
       throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
     }
-  }
-
-  @Override
-  public char[] fetchSecretValue(String accountId, EncryptedDataDetail encryptedDataDetail) {
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build();
-    return delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
-        .getDecryptedValue(encryptedDataDetail, false);
   }
 
   private void replaceEncryptedFieldsWithDecryptedValues(List<EncryptedDataDetail> encryptedDataDetails,

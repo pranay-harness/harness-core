@@ -2,29 +2,16 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
-import static io.harness.data.encoding.EncodingUtils.decodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
-import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
-import static io.harness.security.SimpleEncryption.CHARSET;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 import static software.wings.settings.SettingVariableTypes.KMS;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -32,29 +19,18 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
-import io.harness.data.structure.UUIDGenerator;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
-import software.wings.beans.SyncTaskContext;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingVariableTypes;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -65,65 +41,8 @@ import java.util.UUID;
 @Singleton
 @Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
-  @Inject private FileService fileService;
-  @Inject private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Inject private KryoSerializer kryoSerializer;
-
-  @Override
-  public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
-    if (kmsConfig == null || value == null) {
-      return encryptLocal(value);
-    }
-
-    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
-      // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
-      log.info("Encrypt secret with global KMS secret manager for account {}", accountId);
-      return globalEncryptDecryptClient.encrypt(accountId, value, kmsConfig);
-    } else {
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(accountId)
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-          .encrypt(accountId, value, kmsConfig);
-    }
-  }
-
-  @Override
-  public char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig) {
-    if (kmsConfig == null || data.getEncryptedValue() == null) {
-      return decryptLocal(data);
-    }
-
-    if (GLOBAL_ACCOUNT_ID.equals(kmsConfig.getAccountId())) {
-      // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
-      log.info("Decrypt secret with global KMS secret manager for account {}", accountId);
-      return globalEncryptDecryptClient.decrypt(data, accountId, kmsConfig);
-    } else {
-      // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
-      int failedAttempts = 0;
-      while (true) {
-        try {
-          SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                                .accountId(accountId)
-                                                .timeout(Duration.ofSeconds(5).toMillis())
-                                                .appId(GLOBAL_APP_ID)
-                                                .correlationId(data.getName())
-                                                .build();
-          return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-              .decrypt(data, kmsConfig);
-        } catch (WingsException e) {
-          failedAttempts++;
-          log.info("KMS Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
-          if (failedAttempts == NUM_OF_RETRIES) {
-            throw e;
-          }
-          sleep(ofMillis(1000));
-        }
-      }
-    }
-  }
+  @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
 
   @Override
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
@@ -133,9 +52,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public KmsConfig getGlobalKmsConfig() {
     KmsConfig globalKmsConfig = wingsPersistence.createQuery(KmsConfig.class)
-                                    .field(ACCOUNT_ID_KEY)
+                                    .field(SecretManagerConfigKeys.accountId)
                                     .equal(GLOBAL_ACCOUNT_ID)
-                                    .field(ENCRYPTION_TYPE_KEY)
+                                    .field(SecretManagerConfigKeys.encryptionType)
                                     .equal(EncryptionType.KMS)
                                     .get();
     if (globalKmsConfig == null) {
@@ -300,67 +219,10 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
   }
 
-  @Override
-  public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, byte[] inputBytes) {
-    checkNotNull(kmsConfig, "KMS secret manager can't be null");
-    byte[] bytes = encodeBase64ToByteArray(inputBytes);
-    EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
-    fileData.setName(name);
-    fileData.setAccountId(accountId);
-    fileData.setType(SettingVariableTypes.CONFIG_FILE);
-    fileData.setBase64Encoded(true);
-    char[] encryptedValue = fileData.getEncryptedValue();
-    BaseFile baseFile = new BaseFile();
-    baseFile.setFileName(name);
-    baseFile.setAccountId(accountId);
-    baseFile.setFileUuid(UUIDGenerator.generateUuid());
-    String fileId = fileService.saveFile(
-        baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
-    fileData.setEncryptedValue(fileId.toCharArray());
-    fileData.setFileSize(inputBytes.length);
-    return fileData;
-  }
-
-  @Override
-  public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
-    try {
-      KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(kmsConfig, "KMS configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      byte[] bytes = Files.toByteArray(file);
-      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
-      char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
-      Files.write(fileData, file);
-      return file;
-    } catch (IOException ioe) {
-      throw new SecretManagementException(KMS_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
-    }
-  }
-
-  @Override
-  public void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output) {
-    try {
-      KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(kmsConfig, "KMS configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      byte[] bytes = Files.toByteArray(file);
-      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
-      char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
-      output.write(fileData, 0, fileData.length);
-      output.flush();
-    } catch (IOException ioe) {
-      throw new SecretManagementException(
-          KMS_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
-    }
-  }
-
   private void validateKms(String accountId, KmsConfig kmsConfig) {
     try {
-      encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+      kmsEncryptorsRegistry.getKmsEncryptor(kmsConfig).encryptSecret(
+          accountId, UUID.randomUUID().toString(), kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);

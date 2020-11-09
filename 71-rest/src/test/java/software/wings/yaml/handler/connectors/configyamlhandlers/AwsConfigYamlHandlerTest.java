@@ -65,19 +65,22 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testToYamlUseEncryptedAccessKey() throws IllegalAccessException {
-    char[] accessKey = "accessKeyValue".toCharArray();
+    String accessKey = "accessKeyValue";
     String secretKey = "secretKeyValue";
     AwsConfig awsConfig = AwsConfig.builder()
                               .useEc2IamCredentials(false)
                               .useEncryptedAccessKey(true)
-                              .accessKey(accessKey)
                               .encryptedSecretKey(secretKey)
+                              .encryptedAccessKey(accessKey)
+                              .accountId("accountId")
                               .build();
     SettingAttribute settingAttribute = new SettingAttribute();
 
     settingAttribute.setValue(awsConfig);
-    when(secretManager.getEncryptedYamlRef(awsConfig, "accessKey")).thenReturn(String.valueOf(accessKey));
-    when(secretManager.getEncryptedYamlRef(awsConfig, "secretKey")).thenReturn(secretKey);
+    when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedAccessKey()))
+        .thenReturn(String.valueOf(accessKey));
+    when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
+        .thenReturn(secretKey);
     AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKeySecretId()).isEqualTo(String.valueOf(accessKey));
     assertThat(yaml.getAccessKey()).isEqualTo(null);
@@ -95,11 +98,13 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                               .useEncryptedAccessKey(false)
                               .accessKey(accessKey)
                               .encryptedSecretKey(secretKey)
+                              .accountId("accountId")
                               .build();
     SettingAttribute settingAttribute = new SettingAttribute();
 
     settingAttribute.setValue(awsConfig);
-    when(secretManager.getEncryptedYamlRef(awsConfig, "secretKey")).thenReturn(secretKey);
+    when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
+        .thenReturn(secretKey);
     AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKey()).isEqualTo(String.valueOf(accessKey));
     assertThat(yaml.getAccessKeySecretId()).isEqualTo(null);

@@ -33,14 +33,12 @@ public class SecretManagerTest extends GraphQLTest {
   @Inject SecretManagerConfigService secretManagerConfigService;
   Account account;
   SecretManagerConfig secretManagerConfig;
-  String SECRET_MANAGER_UUID = "1";
   String SECRET_MANAGER_NAME = "test secret manager";
 
   @Before
   public void setUp() {
     account = accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
-    secretManagerConfig = AwsSecretsManagerConfig.builder().name("test secret manager").build();
-    secretManagerConfig.setUuid(SECRET_MANAGER_UUID);
+    secretManagerConfig = AwsSecretsManagerConfig.builder().name(SECRET_MANAGER_NAME).build();
     secretManagerConfig.setAccountId(account.getUuid());
     secretManagerConfigService.save(secretManagerConfig);
   }
@@ -57,7 +55,7 @@ public class SecretManagerTest extends GraphQLTest {
   }
 }
 */ SecretManagerTest.class);
-    String query = String.format(secretManagerQueryPattern, SECRET_MANAGER_UUID);
+    String query = String.format(secretManagerQueryPattern, secretManagerConfig.getUuid());
     final QLTestObject qlSecretManagerObject = qlExecute(query, account.getUuid());
     assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.id)).isEqualTo(secretManagerConfig.getUuid());
     assertThat(qlSecretManagerObject.get(QLSecretManagerKeys.name)).isEqualTo(secretManagerConfig.getName());

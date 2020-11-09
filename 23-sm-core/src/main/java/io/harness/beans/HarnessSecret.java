@@ -22,5 +22,6 @@ public class HarnessSecret implements ScopedEntity {
   UsageRestrictions usageRestrictions;
   boolean scopedToAccount;
   boolean hideFromListing;
+  boolean inheritScopesFromSM;
   Map<String, String> runtimeParameters;
 }

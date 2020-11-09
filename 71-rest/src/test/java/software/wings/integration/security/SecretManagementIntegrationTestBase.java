@@ -4,22 +4,16 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretChangeLog;
-import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
-import io.harness.exception.WingsException;
-import io.harness.expression.SecretString;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
 import io.harness.secretmanagers.SecretManagerConfigService;
-import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Before;
@@ -31,10 +25,6 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.Base64;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -133,76 +123,6 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     assertThat(updated).isTrue();
   }
 
-  void testUpdateEncryptedFile(VaultConfig savedVaultConfig) {
-    String secretUuid = null;
-    try {
-      secretUuid = createEncryptedFile("FooBarEncryptedFile", "configfiles/config1.txt");
-      // Old encrypted data referred to an old path in Vault.
-      EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
-      updateEncryptedFileWithNoContent("FooBarEncryptedFile", secretUuid);
-      verifyEncryptedFileValue(secretUuid, "Config file 1", savedVaultConfig);
-    } catch (IOException e) {
-      fail("Failed with IOException");
-    } finally {
-      // Clean up.
-      if (secretUuid != null) {
-        deleteEncryptedFile(secretUuid);
-      }
-    }
-  }
-
-  void testUpdateSecretText(KmsConfig savedKmsConfig) {
-    String secretUuid = null;
-    try {
-      secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
-      updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", savedKmsConfig);
-    } finally {
-      // Clean up.
-      if (secretUuid != null) {
-        deleteSecretText(secretUuid);
-      }
-    }
-  }
-
-  void testUpdateSecretTextNameOnly(SecretManagerConfig secretManagerConfig) {
-    String secretUuid = null;
-    try {
-      secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
-      updateSecretText(secretUuid, "FooBarSecret_Modified", SecretString.SECRET_MASK, null);
-      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue", secretManagerConfig);
-    } finally {
-      // Clean up.
-      if (secretUuid != null) {
-        deleteSecretText(secretUuid);
-      }
-    }
-  }
-
-  void testUpdateSecretText(VaultConfig savedVaultConfig) {
-    String secretUuid = null;
-    try {
-      secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
-      // Old encrypted data referred to an old path in Vault.
-      EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
-      updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", savedVaultConfig);
-
-      try {
-        secretManagementDelegateService.decrypt(oldEncryptedData, savedVaultConfig);
-        fail("Secrets with the old path should no longer exist after updating the name.");
-      } catch (WingsException e) {
-        // Exception expected, ignore.
-      }
-    } finally {
-      // Clean up.
-      if (secretUuid != null) {
-        deleteSecretText(secretUuid);
-      }
-      deleteVaultConfig(savedVaultConfig.getUuid());
-    }
-  }
-
   void importSecretTextsFromCsv(String secretCsvFilePath) {
     File fileToImport = new File(getClass().getClassLoader().getResource(secretCsvFilePath).getFile());
 
@@ -248,63 +168,11 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     assertThat(restResponse.getResource().size() > 0).isTrue();
   }
 
-  void verifySecret(
-      String secretUuid, String expectedName, String expectedValue, SecretManagerConfig secretManagerConfig) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
-    assertThat(encryptedData).isNotNull();
-
-    assertThat(encryptedData.getName()).isEqualTo(expectedName);
-
-    final char[] decrypted;
-    if (secretManagerConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-      vaultConfig.setAuthToken(this.vaultToken);
-      decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
-    } else {
-      KmsConfig savedKmsConfig =
-          (KmsConfig) secretManagerConfigService.getSecretManager(accountId, secretManagerConfig.getUuid());
-      // decrypted = kmsService.decrypt(encryptedData, accountId, savedKmsConfig);
-      decrypted = secretManagementDelegateService.decrypt(encryptedData, savedKmsConfig);
-    }
-    assertThat(isNotEmpty(decrypted)).isTrue();
-    assertThat(new String(decrypted)).isEqualTo(expectedValue);
-  }
-
   void verifySecretTextExists(String secretName) {
     EncryptedData encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getPath()).isNull();
     assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
-  }
-
-  void verifyEncryptedFileValue(String encryptedFileUuid, String expectedValue, SecretManagerConfig secretManagerConfig)
-      throws IOException {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFileUuid);
-    assertThat(encryptedData).isNotNull();
-    assertThat(encryptedData.getFileSize() > 0).isTrue();
-
-    final char[] decrypted;
-    if (secretManagerConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-      vaultConfig.setAuthToken(this.vaultToken);
-      decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
-    } else {
-      String fileId = new String(encryptedData.getEncryptedValue());
-      InputStream inputStream = fileService.openDownloadStream(fileId, FileBucket.CONFIGS);
-      char[] fileContent = IOUtils.toString(inputStream, Charset.defaultCharset()).toCharArray();
-      encryptedData.setEncryptedValue(fileContent);
-
-      KmsConfig savedKmsConfig =
-          (KmsConfig) secretManagerConfigService.getSecretManager(accountId, secretManagerConfig.getUuid());
-      // decrypted = kmsService.decrypt(encryptedData, accountId, savedKmsConfig);
-      decrypted = secretManagementDelegateService.decrypt(encryptedData, savedKmsConfig);
-    }
-
-    String retrievedFileValue = encryptedData.isBase64Encoded()
-        ? new String(Base64.getDecoder().decode(new String(decrypted)))
-        : new String(decrypted);
-    assertThat(isNotEmpty(decrypted)).isTrue();
-    assertThat(retrievedFileValue).isEqualTo(expectedValue);
   }
 
   List<SettingAttribute> listSettingAttributes() {
@@ -363,24 +231,6 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     assertThat(deleteRestResponse.getResponseMessages()).isEmpty();
     assertThat(deleteRestResponse.getResource()).isTrue();
     assertThat(wingsPersistence.get(KmsConfig.class, kmsConfigId)).isNull();
-  }
-
-  void testUpdateEncryptedFile(KmsConfig savedKmsConfig) throws IOException {
-    String secretUuid = null;
-    try {
-      secretUuid = createEncryptedFile("FooBarEncryptedFile", "configfiles/config1.txt");
-      updateEncryptedFileWithNoContent("FooBarEncryptedFile", secretUuid);
-      verifyEncryptedFileValue(secretUuid, "Config file 1", savedKmsConfig);
-    } finally {
-      // Clean up.
-      if (secretUuid != null) {
-        deleteEncryptedFile(secretUuid);
-      }
-    }
-  }
-
-  String createGlobalKmsConfig(KmsConfig kmsConfig) {
-    return createKmsConfigInternal(kmsConfig, "/kms/save-global-kms");
   }
 
   String createKmsConfig(KmsConfig kmsConfig) {

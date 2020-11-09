@@ -33,6 +33,7 @@ import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
+import migrations.all.AddRestrictionsToSecretManagerConfig;
 import migrations.all.AddScopedToAccountAttributeToEncryptedData;
 import migrations.all.AddTagManagementPermissionToAdminUserGroup;
 import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
@@ -407,6 +408,7 @@ public class MigrationList {
         .add(Pair.of(348, PerpetualTaskIteratorMigration.class))
         .add(Pair.of(349, ManageCustomDashboardPermissionMigration.class))
         .add(Pair.of(350, CreateCustomDashboardPermissionMigration.class))
+        .add(Pair.of(351, AddRestrictionsToSecretManagerConfig.class))
         .build();
   }
 }

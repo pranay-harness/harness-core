@@ -23,17 +23,19 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
 
-    Yaml yaml =
-        Yaml.builder()
-            .harnessApiVersion(getHarnessApiVersion())
-            .type(jenkinsConfig.getType())
-            .url(jenkinsConfig.getJenkinsUrl())
-            .username(jenkinsConfig.getUsername())
-            .password(jenkinsConfig.getEncryptedPassword() != null ? getEncryptedValue(jenkinsConfig, "password", true)
-                                                                   : null)
-            .token(jenkinsConfig.getEncryptedToken() != null ? getEncryptedValue(jenkinsConfig, "token", true) : null)
-            .authMechanism(jenkinsConfig.getAuthMechanism())
-            .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .type(jenkinsConfig.getType())
+                    .url(jenkinsConfig.getJenkinsUrl())
+                    .username(jenkinsConfig.getUsername())
+                    .password(jenkinsConfig.getEncryptedPassword() != null
+                            ? getEncryptedYamlRef(jenkinsConfig.getAccountId(), jenkinsConfig.getEncryptedPassword())
+                            : null)
+                    .token(jenkinsConfig.getEncryptedToken() != null
+                            ? getEncryptedYamlRef(jenkinsConfig.getAccountId(), jenkinsConfig.getEncryptedToken())
+                            : null)
+                    .authMechanism(jenkinsConfig.getAuthMechanism())
+                    .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }

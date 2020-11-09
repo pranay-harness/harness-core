@@ -5,7 +5,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.doNothing;
 
 import com.google.inject.Inject;
 
@@ -43,7 +42,6 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void testCreatingEncryptedTextWithReference() {
-    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
     QLEncryptedTextInput encryptedText = QLEncryptedTextInput.builder()
                                              .name(secretName)
                                              .secretManagerId(secretManagerId)
@@ -53,27 +51,7 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
         QLCreateSecretInput.builder().secretType(QLSecretType.ENCRYPTED_TEXT).encryptedText(encryptedText).build();
     encryptedTextController.createEncryptedText(createSecretInput, accountId);
     SecretText secretText = SecretText.builder().name(secretName).kmsId(secretManagerId).path(secretReference).build();
-    verify(secretManager, times(1)).saveSecret(eq(accountId), eq(secretText));
-  }
-
-  @Test
-  @Owner(developers = DEEPAK)
-  @Category(UnitTests.class)
-  public void testUpdatingEncryptedTextWithReference() {
-    // Case when we had value earlier
-    EncryptedData existingSecretValue =
-        EncryptedData.builder().encryptedValue("value".toCharArray()).name(secretName).build();
-    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
-    when(secretManager.getSecretById(accountId, secretId)).thenReturn(existingSecretValue);
-    QLEncryptedTextUpdate createSecretInput = QLEncryptedTextUpdate.builder()
-                                                  .name(RequestField.absent())
-                                                  .value(RequestField.absent())
-                                                  .usageScope(RequestField.absent())
-                                                  .secretReference(RequestField.ofNullable(secretReference))
-                                                  .build();
-    encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
-    SecretText secretText = SecretText.builder().name(secretName).path(secretReference).build();
-    verify(secretManager, times(1)).updateSecret(eq(accountId), eq(secretId), eq(secretText));
+    verify(secretManager, times(1)).saveSecretText(eq(accountId), eq(secretText), eq(true));
   }
 
   @Test
@@ -82,7 +60,6 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
   public void testUpdatingReferenceWithReference() {
     // Case when we had reference earlier
     EncryptedData existingSecretValue = EncryptedData.builder().path(secretReference).name(secretName).build();
-    doNothing().when(secretManager).validateThatSecretManagerSupportsText(accountId, secretManagerId);
     when(secretManager.getSecretById(accountId, secretId)).thenReturn(existingSecretValue);
     QLEncryptedTextUpdate createSecretInput = QLEncryptedTextUpdate.builder()
                                                   .name(RequestField.absent())
@@ -92,6 +69,6 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
                                                   .build();
     encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
     SecretText secretText = SecretText.builder().name(secretName).path(newSecretReference).build();
-    verify(secretManager, times(1)).updateSecret(eq(accountId), eq(secretId), eq(secretText));
+    verify(secretManager, times(1)).updateSecretText(eq(accountId), eq(secretId), eq(secretText), eq(true));
   }
 }

@@ -94,27 +94,6 @@ public interface WingsPersistence extends HPersistence {
    */
   <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid);
 
-  /**
-   * Query.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @param req the req
-   * @return the page response
-   */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
-
-  /**
-   * Query page response.
-   *
-   * @param <T>          the type parameter
-   * @param cls          the cls
-   * @param req          the req
-   * @param queryChecks  the query checks
-   * @return             the page response
-   */
-  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
-
   // convertToQuery converts a PageRequest object to a Query object with the same search filters.
   <T extends PersistentEntity> Query<T> convertToQuery(Class<T> cls, PageRequest<T> req);
   <T extends PersistentEntity> Query<T> convertToQuery(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);

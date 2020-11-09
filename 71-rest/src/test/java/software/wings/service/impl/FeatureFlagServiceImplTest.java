@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.FeatureName.ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS;
 import static software.wings.beans.FeatureName.CV_DEMO;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static software.wings.beans.FeatureName.SEARCH_REQUEST;
@@ -43,7 +42,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetFeatureFlag_WhenFlagNotPresentInDB() {
-    Optional<FeatureFlag> featureFlag = featureFlagService.getFeatureFlag(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS);
+    Optional<FeatureFlag> featureFlag = featureFlagService.getFeatureFlag(SEARCH_REQUEST);
     assertThat(featureFlag.isPresent()).isFalse();
   }
 
@@ -51,19 +50,18 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetFeatureFlag_WhenFlagPresentInDB() {
-    FeatureFlag featureFlag =
-        FeatureFlag.builder().name(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS.name()).enabled(true).build();
+    FeatureFlag featureFlag = FeatureFlag.builder().name(SEARCH_REQUEST.name()).enabled(true).build();
     wingsPersistence.save(featureFlag);
-    Optional<FeatureFlag> featureFlagInDb = featureFlagService.getFeatureFlag(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS);
+    Optional<FeatureFlag> featureFlagInDb = featureFlagService.getFeatureFlag(SEARCH_REQUEST);
     assertThat(featureFlagInDb.isPresent()).isTrue();
-    assertThat(featureFlagInDb.get().getName()).isEqualTo(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS.name());
+    assertThat(featureFlagInDb.get().getName()).isEqualTo(SEARCH_REQUEST.name());
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testIsEnabled_WhenFlagNotPresentInDB() {
-    boolean featureFlagEnabled = featureFlagService.isEnabled(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS, null);
+    boolean featureFlagEnabled = featureFlagService.isEnabled(SEARCH_REQUEST, null);
     assertThat(featureFlagEnabled).isFalse();
   }
 
@@ -71,10 +69,9 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testIsEnabled_WhenFlagPresentInDB() {
-    FeatureFlag featureFlag =
-        FeatureFlag.builder().name(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS.name()).enabled(true).build();
+    FeatureFlag featureFlag = FeatureFlag.builder().name(SEARCH_REQUEST.name()).enabled(true).build();
     wingsPersistence.save(featureFlag);
-    boolean featureFlagEnabled = featureFlagService.isEnabled(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS, null);
+    boolean featureFlagEnabled = featureFlagService.isEnabled(SEARCH_REQUEST, null);
     assertThat(featureFlagEnabled).isTrue();
   }
 

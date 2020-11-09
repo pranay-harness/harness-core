@@ -40,7 +40,8 @@ public class CreateWinRMSecretTest extends GraphQLTest {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    secretId = secretManager.saveSecret(accountId, SecretText.builder().name("sshPasswordSecretId").build());
+    SecretText secretText = SecretText.builder().name("sshPasswordSecretId").value("abc").build();
+    secretId = secretManager.saveSecretText(accountId, secretText, false);
   }
 
   private String getCreateWinRMCredentialInput() {

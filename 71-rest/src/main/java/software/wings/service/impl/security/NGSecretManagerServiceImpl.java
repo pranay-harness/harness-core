@@ -33,7 +33,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
-import software.wings.service.intfc.security.LocalEncryptionService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -47,7 +47,7 @@ import javax.validation.constraints.NotNull;
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Inject private SecretManager secretManager;
   @Inject private VaultService vaultService;
-  @Inject private LocalEncryptionService localEncryptionService;
+  @Inject private LocalSecretManagerService localSecretManagerService;
   @Inject private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private WingsPersistence wingsPersistence;
@@ -90,7 +90,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
           return secretManagerConfig;
         case LOCAL:
-          localEncryptionService.saveLocalEncryptionConfig(
+          localSecretManagerService.saveLocalEncryptionConfig(
               secretManagerConfig.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
           return secretManagerConfig;
         default:
@@ -117,7 +117,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
                 accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
             return true;
           case LOCAL:
-            localEncryptionService.validateLocalEncryptionConfig(
+            localSecretManagerService.validateLocalEncryptionConfig(
                 accountIdentifier, (LocalEncryptionConfig) secretManagerConfigOptional.get());
             return true;
           default:
@@ -168,7 +168,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
     SecretManagerConfig accountSecretManagerConfig =
         secretManagerConfigService.getGlobalSecretManager(accountIdentifier);
     if (accountSecretManagerConfig == null || accountSecretManagerConfig.getEncryptionType() != GCP_KMS) {
-      accountSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountIdentifier);
+      accountSecretManagerConfig = localSecretManagerService.getEncryptionConfig(accountIdentifier);
       accountSecretManagerConfig.setUuid(null);
       accountSecretManagerConfig.setEncryptionType(LOCAL);
     }

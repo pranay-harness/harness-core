@@ -25,7 +25,6 @@ import io.harness.beans.SecretUpdateData;
 import io.harness.exception.SecretManagementException;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.stream.BoundedInputStream;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,8 +49,7 @@ public class BaseSecretValidator implements SecretValidator {
   }
 
   protected void validateSecretFile(String accountId, SecretFile secretFile, SecretManagerConfig secretManagerConfig) {
-    validateFileIsNotEmpty(secretFile.getFileSize());
-    validateFileWithinSizeLimit(secretFile.getFileSize(), secretFile.getBoundedInputStream());
+    validateFileIsNotEmpty(secretFile.getFileContent());
     isSMCapabletoEncryptFile(secretManagerConfig);
   }
 
@@ -66,7 +64,7 @@ public class BaseSecretValidator implements SecretValidator {
 
   protected void validateSecretFileUpdate(
       SecretFile secretFile, EncryptedData existingRecord, SecretManagerConfig secretManagerConfig) {
-    validateFileWithinSizeLimit(secretFile.getFileSize(), secretFile.getBoundedInputStream());
+    // Method for extensions to override
   }
 
   private void checkForDuplicateName(String accountId, String name) {
@@ -118,17 +116,9 @@ public class BaseSecretValidator implements SecretValidator {
     }
   }
 
-  private void validateFileIsNotEmpty(long fileSize) {
-    if (fileSize <= 0) {
+  private void validateFileIsNotEmpty(byte[] fileContent) {
+    if (isEmpty(fileContent)) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Encrypted file is empty", USER);
-    }
-  }
-
-  private void validateFileWithinSizeLimit(long actualFileSize, BoundedInputStream boundedInputStream) {
-    if (boundedInputStream.getSize() > 0 && boundedInputStream.getSize() < actualFileSize) {
-      Map<String, String> params = new HashMap<>();
-      params.put("size", boundedInputStream.getSize() / (1024 * 1024) + " MB");
-      throw new SecretManagementException(FILE_SIZE_EXCEEDS_LIMIT, null, USER, Collections.unmodifiableMap(params));
     }
   }
 
@@ -159,10 +149,19 @@ public class BaseSecretValidator implements SecretValidator {
     }
   }
 
+  private void validateScopes(HarnessSecret secret) {
+    if (secret.isInheritScopesFromSM() && (secret.isScopedToAccount() || secret.getUsageRestrictions() != null)) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Invalid scopes, please either select to inherit scopes from Secret Manager or provide your own scopes. You cannot do both.",
+          USER);
+    }
+  }
+
   @Override
   public void validateSecret(String accountId, HarnessSecret secret, SecretManagerConfig secretManagerConfig) {
     validateSecretName(secret.getName());
     checkForDuplicateName(accountId, secret.getName());
+    validateScopes(secret);
     if (secret instanceof SecretText) {
       SecretText secretText = (SecretText) secret;
       validateSecretText(accountId, secretText, secretManagerConfig);
@@ -176,6 +175,7 @@ public class BaseSecretValidator implements SecretValidator {
   public void validateSecretUpdate(
       HarnessSecret secret, EncryptedData existingRecord, SecretManagerConfig secretManagerConfig) {
     SecretUpdateData secretUpdateData = new SecretUpdateData(secret, existingRecord);
+    validateScopes(secret);
     isValidSecretUpdate(secretUpdateData);
     if (secretUpdateData.isNameChanged()) {
       validateSecretName(secretUpdateData.getUpdatedSecret().getName());
@@ -187,6 +187,14 @@ public class BaseSecretValidator implements SecretValidator {
     } else {
       SecretFile secretFile = (SecretFile) secret;
       validateSecretFileUpdate(secretFile, existingRecord, secretManagerConfig);
+    }
+  }
+
+  public static void validateFileWithinSizeLimit(long requestContentLength, long maximumFileSize) {
+    if (maximumFileSize < requestContentLength) {
+      Map<String, String> params = new HashMap<>();
+      params.put("size", maximumFileSize / (1024 * 1024) + " MB");
+      throw new SecretManagementException(FILE_SIZE_EXCEEDS_LIMIT, null, USER, Collections.unmodifiableMap(params));
     }
   }
 }

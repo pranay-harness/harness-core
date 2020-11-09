@@ -20,7 +20,7 @@ public class SmbConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SmbCon
                     .type(smbConfig.getType())
                     .url(smbConfig.getSmbUrl())
                     .username(smbConfig.getUsername())
-                    .password(getEncryptedValue(smbConfig, "password", false))
+                    .password(getEncryptedYamlRef(smbConfig.getAccountId(), smbConfig.getEncryptedPassword()))
                     .domain(smbConfig.getDomain())
                     .build();
     toYaml(yaml, settingAttribute, appId);

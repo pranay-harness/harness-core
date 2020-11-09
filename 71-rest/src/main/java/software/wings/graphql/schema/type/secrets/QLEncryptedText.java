@@ -14,4 +14,5 @@ public class QLEncryptedText implements QLSecret {
   private String id;
   private QLUsageScope usageScope;
   private boolean scopedToAccount;
+  private boolean inheritScopesFromSM;
 }

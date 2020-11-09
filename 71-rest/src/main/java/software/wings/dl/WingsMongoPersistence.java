@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
 import static io.harness.exception.WingsException.USER;
@@ -19,13 +20,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.dropwizard.lifecycle.Managed;
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretParentsUpdateDetail;
 import io.harness.beans.SecretText;
 import io.harness.encryption.EncryptionReflectUtils;
@@ -255,22 +254,11 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
-    return query(cls, req, allChecks);
-  }
-
-  @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks) {
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
-    AdvancedDatastore advancedDatastore = getDatastore(cls);
-    Query<T> query = advancedDatastore.createQuery(cls);
-
-    ((HQuery) query).setQueryChecks(queryChecks);
-    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
-
-    return PageController.queryPageRequest(advancedDatastore, query, mapper, cls, req);
+    return super.query(cls, req, queryChecks);
   }
 
   @Override
@@ -536,7 +524,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       encryptedRefField.setAccessible(true);
       Optional<char[]> secretOptional = Optional.ofNullable((char[]) encryptedField.get(object));
 
-      if (secretOptional.isPresent()) {
+      if (secretOptional.isPresent() && isNotEmpty(secretOptional.get())) {
         char[] secret = secretOptional.get();
         String encryptedId = encryptPlainTextSecret(encryptedField, secret, object, savedObject);
         encryptedRefField.set(object, encryptedId);
@@ -554,61 +542,34 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
     String encryptedId;
     if (savedSecretOptional.isPresent()) {
-      encryptedId = updateSecret(object.getAccountId(), savedSecretOptional.get(), secret, encryptedField.getName());
+      encryptedId = updateSecret(object.getAccountId(), savedSecretOptional.get(), secret);
     } else {
-      encryptedId = createSecret(object.getAccountId(), secret, encryptedField.getName(), object.getSettingType());
+      encryptedId = createSecret(object.getAccountId(), secret, object.getSettingType());
     }
     return encryptedId;
   }
 
-  private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret,
-      @NonNull String fieldName) {
-    EncryptedData updatedEncryptedData =
-        secretManager.encrypt(accountId, encryptedData.getType(), secret, encryptedData,
-            SecretText.builder()
-                .path(encryptedData.getPath())
-                .parameters(encryptedData.getParameters())
-                .name(encryptedData.getName())
-                .scopedToAccount(encryptedData.isScopedToAccount())
-                .usageRestrictions(encryptedData.getUsageRestrictions())
-                .build());
-    encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
-    encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
-    encryptedData.setEncryptionType(updatedEncryptedData.getEncryptionType());
-    encryptedData.setKmsId(updatedEncryptedData.getKmsId());
-    encryptedData.setBackupEncryptionKey(updatedEncryptedData.getBackupEncryptionKey());
-    encryptedData.setBackupEncryptedValue(updatedEncryptedData.getBackupEncryptedValue());
-    encryptedData.setBackupKmsId(updatedEncryptedData.getBackupKmsId());
-    encryptedData.setBackupEncryptionType(updatedEncryptedData.getBackupEncryptionType());
-    String changeLogDescription = "Changed ".concat(fieldName);
-
-    String encryptedId = save(encryptedData);
-    saveSecretChangeLog(accountId, encryptedId, changeLogDescription);
-    return encryptedId;
+  private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret) {
+    secretManager.updateSecretText(accountId, encryptedData.getUuid(),
+        SecretText.builder()
+            .value(String.valueOf(secret))
+            .name(encryptedData.getName())
+            .scopedToAccount(encryptedData.isScopedToAccount())
+            .usageRestrictions(encryptedData.getUsageRestrictions())
+            .hideFromListing(true)
+            .build(),
+        false);
+    return encryptedData.getUuid();
   }
 
-  private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull String fieldName,
-      @NonNull SettingVariableTypes type) {
-    EncryptedData encryptedData = secretManager.encrypt(
-        accountId, type, secret, null, SecretText.builder().name(UUID.randomUUID().toString()).build());
-    encryptedData.setAccountId(accountId);
-    String changeLogDescription = "Created";
-
-    String encryptedId = save(encryptedData);
-    saveSecretChangeLog(accountId, encryptedId, changeLogDescription);
-    return encryptedId;
-  }
-
-  private void saveSecretChangeLog(
-      @NonNull String accountId, @NonNull String encryptedId, @NonNull String changeLogDescription) {
-    Optional.ofNullable(UserThreadLocal.get()).ifPresent(user -> {
-      save(SecretChangeLog.builder()
-               .accountId(accountId)
-               .encryptedDataId(encryptedId)
-               .description(changeLogDescription)
-               .user(EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build())
-               .build());
-    });
+  private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull SettingVariableTypes type) {
+    return secretManager.saveSecretText(accountId,
+        (SecretText) SecretText.builder()
+            .value(String.valueOf(secret))
+            .name(UUID.randomUUID().toString())
+            .hideFromListing(true)
+            .build(),
+        false);
   }
 
   private <T extends PersistentEntity> void updateEncryptionReferencesIfNecessary(

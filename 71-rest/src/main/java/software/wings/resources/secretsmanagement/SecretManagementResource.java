@@ -10,6 +10,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretChangeLog;
+import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
@@ -28,9 +30,9 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.UuidAware;
 import io.harness.rest.RestResponse;
 import io.harness.secrets.setupusage.SecretSetupUsage;
+import io.harness.secrets.validation.BaseSecretValidator;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
-import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -40,13 +42,14 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.UsageRestrictions;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -126,6 +129,14 @@ public class SecretManagementResource {
     return new RestResponse<>(secretManager.getSecretManager(accountId, secretsManagerConfigId));
   }
 
+  @GET
+  @Path("/create-secret-allowed-scopes")
+  public RestResponse<UsageRestrictions> getAllowedUsageScopesToCreateSecret(
+      @QueryParam("accountId") final String accountId,
+      @QueryParam("secretsManagerConfigId") final String secretsManagerConfigId) {
+    return new RestResponse<>(secretManager.getAllowedUsageScopesToCreateSecret(accountId, secretsManagerConfigId));
+  }
+
   /*
    * Deprecated, use PUT /transition-config call instead of GET call
    * Templatized secret managers are not supported using this call.
@@ -168,7 +179,7 @@ public class SecretManagementResource {
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Adding a secret");
-      return new RestResponse<>(secretManager.saveSecret(accountId, secretText));
+      return new RestResponse<>(secretManager.saveSecretText(accountId, secretText, true));
     }
   }
 
@@ -185,7 +196,7 @@ public class SecretManagementResource {
   @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuid, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.updateSecret(accountId, uuid, secretText));
+    return new RestResponse<>(secretManager.updateSecretText(accountId, uuid, secretText, true));
   }
 
   @DELETE
@@ -196,7 +207,7 @@ public class SecretManagementResource {
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Deleting a secret");
-      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, new HashMap<>()));
+      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, new HashMap<>(), true));
     }
   }
 
@@ -213,7 +224,7 @@ public class SecretManagementResource {
       @QueryParam("uuid") final String uuId, @Body Map<String, String> runtimeParameters) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Deleting a secret");
-      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, runtimeParameters));
+      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, runtimeParameters, true));
     }
   }
 
@@ -226,15 +237,27 @@ public class SecretManagementResource {
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("runtimeParameters") final String runtimeParametersString,
-      @FormDataParam("scopedToAccount") final boolean scopedToAccount) {
+      @FormDataParam("scopedToAccount") final boolean scopedToAccount,
+      @FormDataParam("inheritScopesFromSM") final boolean inheritScopesFromSM) throws IOException {
     Map<String, String> runtimeParameters = new HashMap<>();
     if (!StringUtils.isEmpty(runtimeParametersString)) {
       runtimeParameters = JsonUtils.asObject(runtimeParametersString, new TypeReference<Map<String, String>>() {});
     }
-    return new RestResponse<>(secretManager.saveFile(accountId, kmsId, name, request.getContentLengthLong(),
-        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit()),
-        runtimeParameters, scopedToAccount));
+    BaseSecretValidator.validateFileWithinSizeLimit(
+        request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
+    SecretFile secretFile =
+        SecretFile.builder()
+            .fileContent(ByteStreams.toByteArray(uploadedInputStream))
+            .name(name)
+            .kmsId(kmsId)
+            .hideFromListing(false)
+            .scopedToAccount(scopedToAccount)
+            .runtimeParameters(runtimeParameters)
+            .usageRestrictions(usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString))
+            .inheritScopesFromSM(inheritScopesFromSM)
+            .build();
+
+    return new RestResponse<>(secretManager.saveSecretFile(accountId, secretFile));
   }
 
   @POST
@@ -246,20 +269,25 @@ public class SecretManagementResource {
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("runtimeParameters") final String runtimeParametersString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("scopedToAccount") final boolean scopedToAccount) {
-    // HAR-9736: If the user doesn't make any change in the secret file update, null is expected for now.
-    if (uploadedInputStream == null) {
-      // fill in with an empty input stream
-      uploadedInputStream = new ByteArrayInputStream(new byte[0]);
-    }
+      @FormDataParam("scopedToAccount") final boolean scopedToAccount,
+      @FormDataParam("inheritScopesFromSM") final boolean inheritScopesFromSM) throws IOException {
     Map<String, String> runtimeParameters = new HashMap<>();
     if (!StringUtils.isEmpty(runtimeParametersString)) {
       runtimeParameters = JsonUtils.asObject(runtimeParametersString, new TypeReference<Map<String, String>>() {});
     }
-    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId, request.getContentLengthLong(),
-        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit()),
-        runtimeParameters, scopedToAccount));
+    BaseSecretValidator.validateFileWithinSizeLimit(
+        request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
+    SecretFile secretFile =
+        SecretFile.builder()
+            .fileContent(uploadedInputStream == null ? null : ByteStreams.toByteArray(uploadedInputStream))
+            .name(name)
+            .hideFromListing(false)
+            .scopedToAccount(scopedToAccount)
+            .runtimeParameters(runtimeParameters)
+            .usageRestrictions(usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString))
+            .inheritScopesFromSM(inheritScopesFromSM)
+            .build();
+    return new RestResponse<>(secretManager.updateSecretFile(accountId, fileId, secretFile));
   }
 
   /*
@@ -270,16 +298,16 @@ public class SecretManagementResource {
   @Deprecated
   @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteFile(
-      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
-    return new RestResponse<>(secretManager.deleteFile(accountId, uuId, new HashMap<>()));
+      @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String existingRecordId) {
+    return new RestResponse<>(secretManager.deleteSecret(accountId, existingRecordId, new HashMap<>(), true));
   }
 
   @POST
   @Path("/delete-file")
   @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteFilePost(@QueryParam("accountId") final String accountId,
-      @QueryParam("uuid") final String uuId, @Body Map<String, String> runtimeParameters) {
-    return new RestResponse<>(secretManager.deleteFile(accountId, uuId, runtimeParameters));
+      @QueryParam("uuid") final String existingRecordId, @Body Map<String, String> runtimeParameters) {
+    return new RestResponse<>(secretManager.deleteSecret(accountId, existingRecordId, runtimeParameters, true));
   }
 
   @GET

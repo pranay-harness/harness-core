@@ -19,10 +19,16 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
-import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.secrets.SecretService;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.testlib.RealMongo;
@@ -42,23 +48,20 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.Event.Type;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.CyberArkResource;
-import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.LocalEncryptionService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -77,12 +80,18 @@ public class CyberArkTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
 
   @Mock private AccountService accountService;
-  @Inject private LocalEncryptionService localEncryptionService;
+  @Inject private LocalSecretManagerService localSecretManagerService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private PremiumFeature secretsManagementFeature;
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Mock protected AuditServiceHelper auditServiceHelper;
+  @Mock private KmsEncryptor kmsEncryptor;
+  @Mock private VaultEncryptor vaultEncryptor;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Inject private LocalEncryptor localEncryptor;
+  @Inject @InjectMocks private SecretService secretService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private CyberArkService cyberArkService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
@@ -114,32 +123,29 @@ public class CyberArkTest extends WingsBaseTest {
 
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
 
-    when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
+    when(kmsEncryptor.encryptSecret(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+      if (args[2] instanceof KmsConfig) {
+        return encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
+      }
+      return localEncryptor.encryptSecret(
+          (String) args[0], (String) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(secretManagementDelegateService.decrypt(anyObject(), any(CyberArkConfig.class))).then(invocation -> {
+    when(kmsEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (CyberArkConfig) args[1]);
+      if (args[2] instanceof KmsConfig) {
+        return decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
+      }
+      return localEncryptor.fetchSecretValue(
+          (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(globalEncryptDecryptClient.encrypt(anyString(), any(), any(KmsConfig.class))).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
-    });
-
-    when(globalEncryptDecryptClient.decrypt(anyObject(), anyString(), any(KmsConfig.class))).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return decrypt((EncryptedData) args[0], (KmsConfig) args[2]);
-    });
-
+    when(vaultEncryptor.validateReference(anyString(), anyObject(), anyObject())).thenReturn(true);
+    when(kmsEncryptorsRegistry.getKmsEncryptor(any(KmsConfig.class))).thenReturn(kmsEncryptor);
+    when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
-    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
-    });
     when(secretManagementDelegateService.validateCyberArkConfig(any(CyberArkConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
       return validateCyberArkConfig((CyberArkConfig) args[0]);
@@ -147,11 +153,13 @@ public class CyberArkTest extends WingsBaseTest {
 
     FieldUtils.writeField(cyberArkService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
-    FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
-    FieldUtils.writeField(secretManager, "cyberArkService", cyberArkService, true);
     FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
     FieldUtils.writeField(cyberArkResource, "cyberArkService", cyberArkService, true);
     FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
+    FieldUtils.writeField(secretService, "kmsRegistry", kmsEncryptorsRegistry, true);
+    FieldUtils.writeField(secretService, "vaultRegistry", vaultEncryptorsRegistry, true);
+    FieldUtils.writeField(encryptionService, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);
+    FieldUtils.writeField(encryptionService, "vaultEncryptorsRegistry", vaultEncryptorsRegistry, true);
     userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -162,7 +170,7 @@ public class CyberArkTest extends WingsBaseTest {
       kmsId = kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
       kmsConfig = kmsService.getKmsConfig(accountId, kmsId);
     } else {
-      localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+      localEncryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
     }
   }
 
@@ -201,8 +209,8 @@ public class CyberArkTest extends WingsBaseTest {
 
     cyberArkResource.saveCyberArkConfig(cyberArkConfig.getAccountId(), cyberArkConfig);
 
-    CyberArkConfig savedConfig =
-        (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(cyberArkConfig.getAccountId());
+    CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getSecretManager(
+        cyberArkConfig.getAccountId(), cyberArkConfig.getUuid());
     assertThat(savedConfig.getName()).isEqualTo(cyberArkConfig.getName());
     assertThat(savedConfig.getAccountId()).isEqualTo(cyberArkConfig.getAccountId());
   }
@@ -222,8 +230,8 @@ public class CyberArkTest extends WingsBaseTest {
     CyberArkConfig cyberArkConfig = saveCyberArkConfig(clientCertificate);
     String name = cyberArkConfig.getName();
 
-    CyberArkConfig savedConfig =
-        (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(cyberArkConfig.getAccountId());
+    CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getSecretManager(
+        cyberArkConfig.getAccountId(), cyberArkConfig.getUuid());
     assertThat(savedConfig.getName()).isEqualTo(name);
     List<EncryptedData> encryptedDataList =
         wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
@@ -259,73 +267,23 @@ public class CyberArkTest extends WingsBaseTest {
   public void testEncryptDecryptArtifactoryConfig() {
     String queryAsPath = "Address=components;Username=svc_account";
     String secretName = "TestSecret";
-    String secretValue = "MySecretValue";
 
-    saveCyberArkConfig();
-
+    CyberArkConfig cyberArkConfig = saveCyberArkConfig();
+    SecretText secretText = SecretText.builder()
+                                .name(secretName)
+                                .kmsId(cyberArkConfig.getUuid())
+                                .path(queryAsPath)
+                                .inheritScopesFromSM(true)
+                                .hideFromListing(true)
+                                .build();
     // Encrypt of path reference will use a CyberArk decryption to validate the reference
-    EncryptedData encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, null, null,
-        SecretText.builder().path(queryAsPath).name(secretName).usageRestrictions(new UsageRestrictions()).build());
+    String encryptedDataId = secretManager.saveSecretText(accountId, secretText, true);
+    EncryptedData encryptedData = secretManager.getSecretById(accountId, encryptedDataId);
 
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.CYBERARK);
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
+    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
     assertThat(encryptedData.getEncryptedValue()).isNull();
-
-    // Encrypt of real secret text will use a LOCAL Harness SecretStore to encrypt, since CyberArk doesn't support
-    // creating new reference now.
-    encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, secretValue.toCharArray(), null,
-        SecretText.builder().name(secretName).usageRestrictions(new UsageRestrictions()).build());
-
-    assertThat(encryptedData).isNotNull();
-    if (isGlobalKmsEnabled) {
-      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-      assertThat(encryptedData.getKmsId()).isEqualTo(kmsId);
-    } else {
-      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-    }
-    assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
-    assertThat(encryptedData.getEncryptedValue()).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  @RealMongo
-  public void testEncryptDecryptJenkinsConfig() {
-    saveCyberArkConfig();
-
-    String password = UUID.randomUUID().toString();
-    JenkinsConfig jenkinsConfig = getJenkinsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(jenkinsConfig);
-    String savedAttributeId = wingsPersistence.save(kryoSerializer.clone(settingAttribute));
-
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    JenkinsConfig savedJenkinsConfig = (JenkinsConfig) savedAttribute.getValue();
-
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails(savedJenkinsConfig, accountId, null);
-    assertThat(encryptedDataDetails).hasSize(1);
-
-    char[] decryptedValue;
-
-    EncryptedData encryptedPasswordData =
-        wingsPersistence.get(EncryptedData.class, savedJenkinsConfig.getEncryptedPassword());
-    assertThat(encryptedPasswordData).isNotNull();
-    assertThat(encryptedPasswordData.getType()).isEqualTo(SettingVariableTypes.JENKINS);
-    if (isGlobalKmsEnabled) {
-      assertThat(encryptedPasswordData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-      assertThat(encryptedPasswordData.getKmsId()).isEqualTo(kmsId);
-      decryptedValue = kmsService.decrypt(encryptedPasswordData, accountId, kmsConfig);
-    } else {
-      assertThat(encryptedPasswordData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-      decryptedValue = localEncryptionService.decrypt(encryptedPasswordData, accountId, localEncryptionConfig);
-    }
-
-    assertThat(decryptedValue).isNotNull();
-    assertThat(new String(decryptedValue)).isEqualTo(new String(jenkinsConfig.getPassword()));
-
-    assertThat(savedJenkinsConfig.getEncryptedToken()).isNull();
   }
 
   @Test
@@ -337,13 +295,13 @@ public class CyberArkTest extends WingsBaseTest {
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
 
-    cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
+    String configId = cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
 
-    CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+    CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getSecretManager(accountId, configId);
     assertThat(savedConfig.getClientCertificate()).isEqualTo(cyberArkConfig.getClientCertificate());
     assertThat(savedConfig.getAppId()).isEqualTo(cyberArkConfig.getAppId());
     assertThat(savedConfig.getName()).isEqualTo(cyberArkConfig.getName());
-    assertThat(savedConfig.isDefault()).isEqualTo(true);
+    assertThat(savedConfig.isDefault()).isEqualTo(false);
 
     String newName = UUID.randomUUID().toString();
     cyberArkConfig.setUuid(savedConfig.getUuid());

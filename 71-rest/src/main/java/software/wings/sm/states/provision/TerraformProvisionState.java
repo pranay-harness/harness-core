@@ -46,6 +46,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileMetadata;
+import io.harness.beans.SecretFile;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -55,7 +56,6 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import io.harness.stream.BoundedInputStream;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
@@ -114,7 +114,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -285,8 +284,16 @@ public abstract class TerraformProvisionState extends State {
 
     String planName = getPlanName(context);
 
-    String terraformPlanSecretManagerId = secretManager.saveFile(context.getAccountId(), null, planName, null,
-        new BoundedInputStream(new ByteArrayInputStream(terraformPlan)), true, true);
+    SecretFile secretFile = SecretFile.builder()
+                                .fileContent(terraformPlan)
+                                .name(planName)
+                                .hideFromListing(true)
+                                .kmsId(null)
+                                .scopedToAccount(true)
+                                .usageRestrictions(null)
+                                .runtimeParameters(new HashMap<>())
+                                .build();
+    String terraformPlanSecretManagerId = secretManager.saveSecretFile(context.getAccountId(), secretFile);
 
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
@@ -328,7 +335,7 @@ public abstract class TerraformProvisionState extends State {
 
     String terraformPlanSecretManagerId =
         ((TerraformPlanParam) sweepingOutputInstance.getValue()).getTerraformPlanSecretManagerId();
-    secretManager.deleteFile(context.getAccountId(), terraformPlanSecretManagerId);
+    secretManager.deleteSecret(context.getAccountId(), terraformPlanSecretManagerId, new HashMap<>(), false);
 
     // delete the plan reference from sweeping output
     sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());

@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.FAILED;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
@@ -514,7 +513,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
         Arrays.asList(change1, change2), Status.QUEUED, true, false, "", commitId, "");
     gitSyncService.logActivitiesForFailedChanges(failedYamlFileChangeMap, accountId, false, commitMessage);
     List<GitFileActivity> gitFileActivities = wingsPersistence.createQuery(GitFileActivity.class)
-                                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                                  .filter(GitFileActivityKeys.accountId, accountId)
                                                   .filter("commitId", commitId)
                                                   .asList();
     assertThat(gitFileActivities.size()).isEqualTo(2);

@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +19,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -29,13 +33,12 @@ import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.GcpKmsConfig;
-import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 import software.wings.service.intfc.FileService;
@@ -60,30 +63,34 @@ public class NGSecretServiceImpl implements NGSecretService {
   private static final String PROJECT_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.projectIdentifier;
 
+  private final VaultEncryptorsRegistry vaultRegistry;
+  private final KmsEncryptorsRegistry kmsRegistry;
   private final NGSecretManagerService ngSecretManagerService;
-  private final SecretManager secretManager;
-  private final VaultService vaultService;
-  private final GcpKmsService gcpKmsService;
-  private final LocalEncryptionService localEncryptionService;
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
   private final SecretManagerConfigService secretManagerConfigService;
 
   private EncryptedData encrypt(
       @NotNull EncryptedData encryptedData, String secretValue, SecretManagerConfig secretManagerConfig) {
+    EncryptedRecord encryptedRecord;
     switch (encryptedData.getEncryptionType()) {
       case VAULT:
-        return vaultService.encrypt(encryptedData.getName(), secretValue, encryptedData.getAccountId(),
-            SettingVariableTypes.SECRET_TEXT, (VaultConfig) secretManagerConfig, encryptedData);
+        VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
+        encryptedRecord = vaultEncryptor.createSecret(
+            encryptedData.getAccountId(), encryptedData.getName(), secretValue, secretManagerConfig);
+        break;
       case GCP_KMS:
-        return gcpKmsService.encrypt(
-            secretValue, encryptedData.getAccountId(), (GcpKmsConfig) secretManagerConfig, encryptedData);
       case LOCAL:
-        return localEncryptionService.encrypt(
-            secretValue.toCharArray(), encryptedData.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
+        encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
+                              .encryptSecret(encryptedData.getAccountId(), secretValue, secretManagerConfig);
+        break;
       default:
         throw new UnsupportedOperationException("Encryption type not supported: " + encryptedData.getEncryptionType());
     }
+    return EncryptedData.builder()
+        .encryptionKey(encryptedRecord.getEncryptionKey())
+        .encryptedValue(encryptedRecord.getEncryptedValue())
+        .build();
   }
 
   @Override
@@ -113,7 +120,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
 
       // validate format of path as per type of secret manager
-      secretManager.validateSecretPath(secretManagerConfig.getEncryptionType(), data.getPath());
+      validatePath(data.getPath(), secretManagerConfig.getEncryptionType());
 
       // decrypt secrets (e.g. auth token etc.) before sending to delegate
       secretManagerConfigService.decryptEncryptionConfigSecrets(
@@ -131,7 +138,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         data.setEncryptionKey(encryptedData.getEncryptionKey());
         data.setEncryptedValue(encryptedData.getEncryptedValue());
       }
-      secretManager.saveEncryptedData(data);
+      wingsPersistence.save(data);
       return data;
     } else {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "No such secret manager found", USER);
@@ -189,7 +196,7 @@ public class NGSecretServiceImpl implements NGSecretService {
               metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
 
       if (secretManagerConfigOptional.isPresent()) {
-        secretManager.validateSecretPath(secretManagerConfigOptional.get().getEncryptionType(), dto.getPath());
+        validatePath(dto.getPath(), secretManagerConfigOptional.get().getEncryptionType());
 
         // decrypt secret fields of secret manager
         secretManagerConfigService.decryptEncryptionConfigSecrets(account, secretManagerConfigOptional.get(), false);
@@ -197,7 +204,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         // if name has been changed, delete old text if it was created inline
         if (!encryptedData.getName().equals(dto.getName())
             && !Optional.ofNullable(encryptedData.getPath()).isPresent()) {
-          deleteSecretInSecretManager(account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+          deleteSecretInSecretManager(account, encryptedData, secretManagerConfigOptional.get());
         }
 
         // set updated values
@@ -216,7 +223,7 @@ public class NGSecretServiceImpl implements NGSecretService {
           encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
           encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
         }
-        secretManager.saveEncryptedData(encryptedData);
+        wingsPersistence.save(encryptedData);
         return true;
       }
     }
@@ -240,7 +247,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       if (secretManagerConfigOptional.isPresent()) {
         // if  secret text was created inline (not referenced), delete the secret in secret manager also
         if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
-          deleteSecretInSecretManager(accountIdentifier, encryptedData.getPath(), secretManagerConfigOptional.get());
+          deleteSecretInSecretManager(accountIdentifier, encryptedData, secretManagerConfigOptional.get());
         }
         if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
           switch (secretManagerConfigOptional.get().getEncryptionType()) {
@@ -259,10 +266,11 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   public void deleteSecretInSecretManager(
-      String accountIdentifier, String path, SecretManagerConfig secretManagerConfig) {
+      String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
-        vaultService.deleteSecret(accountIdentifier, path, (VaultConfig) secretManagerConfig);
+        vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
+            .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
         return;
       case LOCAL:
       case GCP_KMS:
@@ -373,5 +381,12 @@ public class NGSecretServiceImpl implements NGSecretService {
       String projectIdentifier, SettingVariableTypes type, String searchTerm) {
     Query<EncryptedData> query = getSearchQuery(accountIdentifier, orgIdentifier, projectIdentifier, type, searchTerm);
     return query.asList();
+  }
+
+  private void validatePath(String path, EncryptionType encryptionType) {
+    if (path != null && encryptionType == VAULT && path.indexOf('#') < 0) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.", USER);
+    }
   }
 }

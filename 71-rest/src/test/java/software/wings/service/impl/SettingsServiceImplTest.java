@@ -341,30 +341,26 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never())
-        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
     verify(usageRestrictionsService, times(1))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(true);
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(null);
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never())
-        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
     verify(usageRestrictionsService, times(2))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.emptySet());
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never())
-        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.singleton(PASSWORD));
     settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, times(1))
-        .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
+    verify(secretManager, times(1)).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
   }

@@ -15,6 +15,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.encryptors.clients.AzureVaultEncryptor;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -29,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -47,7 +47,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   // private static final String SECRET_KEY = "9h.8Hfn64yHbe?i..lT_Gpg6Qq3?B86s";
   private static final String SECRET_KEY = new ScmSecret().decryptToString(new SecretName("qa_azure_vault_secret_key"));
 
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private AzureVaultEncryptor azureVaultEncryptor;
   @Inject private WingsPersistence wingsPersistence;
 
   private AzureVaultConfig azureVaultConfig;
@@ -83,7 +83,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
     assertNotNull(data);
 
-    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
     assertTrue(isNotEmpty(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);
@@ -105,7 +105,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
     assertNotNull(data);
 
-    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
     assertTrue(isNotEmpty(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);
@@ -127,7 +127,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     EncryptedData data = wingsPersistence.get(EncryptedData.class, secretId);
     assertNotNull(data);
 
-    char[] decrypted = secretManagementDelegateService.decrypt(data, azureVaultConfig);
+    char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
     assertTrue(isNotEmpty(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);

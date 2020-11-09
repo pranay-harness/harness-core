@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,6 +30,9 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+
+import java.util.HashMap;
+import java.util.UUID;
 
 @OwnedBy(PL)
 @Singleton
@@ -71,7 +75,13 @@ public class LdapBasedAuthHandler implements AuthHandler {
       }
       LdapSettings settings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
       EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
-      String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);
+      SecretText secretText = SecretText.builder()
+                                  .value(password)
+                                  .hideFromListing(true)
+                                  .name(UUID.randomUUID().toString())
+                                  .scopedToAccount(true)
+                                  .build();
+      String encryptedPassword = secretManager.saveSecretText(settings.getAccountId(), secretText, false);
       EncryptedDataDetail passwordEncryptedDataDetail =
           secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword, null).get();
       try {
@@ -88,7 +98,8 @@ public class LdapBasedAuthHandler implements AuthHandler {
         }
         throw new WingsException(INVALID_CREDENTIAL, USER);
       } finally {
-        secretManager.deleteSecretUsingUuid(passwordEncryptedDataDetail.getEncryptedData().getUuid());
+        secretManager.deleteSecret(
+            settings.getAccountId(), passwordEncryptedDataDetail.getEncryptedData().getUuid(), new HashMap<>(), false);
       }
     }
   }

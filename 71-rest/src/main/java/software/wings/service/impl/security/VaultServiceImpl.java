@@ -1,8 +1,6 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.encoding.EncodingUtils.decodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -11,17 +9,13 @@ import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
-import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -32,7 +26,9 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
@@ -56,13 +52,7 @@ import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
-import software.wings.settings.SettingVariableTypes;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -78,75 +68,23 @@ import java.util.Optional;
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService, RuntimeCredentialsInjector {
   private static final String TOKEN_SECRET_NAME_SUFFIX = "_token";
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
-
+  private static final int NUM_OF_RETRIES = 3;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private AccountService accountService;
 
   @Override
-  public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
-      VaultConfig vaultConfig, EncryptedData encryptedData) {
-    if (vaultConfig.isReadOnly() && (encryptedData == null || isEmpty(encryptedData.getPath()))) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-          "Cannot use a read only vault to add an inline encrypted text or file. Add the secret in vault and refer it from here",
-          USER);
-    }
-
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
-    vaultConfig.setCertValidationRequired(isCertValidationRequired);
-    return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-        .encrypt(name, value, accountId, settingType, vaultConfig, encryptedData);
-  }
-
-  @Override
-  public char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig) {
-    // HAR-7605: Shorter timeout for decryption tasks, and it should retry on timeout or failure.
-    int failedAttempts = 0;
-    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
-    vaultConfig.setCertValidationRequired(isCertValidationRequired);
-    while (true) {
-      try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(accountId)
-                                              .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(data.getName())
-                                              .build();
-
-        return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-            .decrypt(data, vaultConfig);
-      } catch (WingsException e) {
-        failedAttempts++;
-        log.info("Vault Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
-        if (failedAttempts == NUM_OF_RETRIES) {
-          throw e;
-        }
-        sleep(ofMillis(1000));
-      }
-    }
-  }
-
-  @Override
   public VaultConfig getVaultConfig(String accountId, String entityId) {
-    Query<VaultConfig> query =
-        wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(ID_KEY, entityId);
+    Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
+                                   .filter(SecretManagerConfigKeys.accountId, accountId)
+                                   .filter(ID_KEY, entityId);
     return getVaultConfigInternal(query);
-  }
-
-  @Override
-  public boolean isReadOnly(String configId) {
-    VaultConfig vaultConfig = (VaultConfig) wingsPersistence.get(SecretManagerConfig.class, configId);
-    if (vaultConfig == null) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Vault config not found", USER);
-    }
-    return vaultConfig.isReadOnly();
   }
 
   @Override
   public VaultConfig getVaultConfigByName(String accountId, String name) {
     Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
-                                   .filter(ACCOUNT_ID_KEY, accountId)
+                                   .filter(SecretManagerConfigKeys.accountId, accountId)
                                    .filter(EncryptedDataKeys.name, name);
     return getVaultConfigInternal(query);
   }
@@ -163,12 +101,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
 
       if (encryptedToken != null) {
-        char[] decryptToken = decryptVaultToken(encryptedToken);
+        char[] decryptToken = decryptLocal(encryptedToken);
         vaultConfig.setAuthToken(String.valueOf(decryptToken));
       }
 
       if (encryptedSecretId != null) {
-        char[] decryptedSecretId = decryptVaultToken(encryptedSecretId);
+        char[] decryptedSecretId = decryptLocal(encryptedSecretId);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
       boolean isCertValidationRequired = vaultConfig.isCertValidationRequired();
@@ -196,7 +134,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .field(ACCOUNT_ID_KEY)
+                                     .field(SecretManagerConfigKeys.accountId)
                                      .equal(accountId)
                                      .field(EncryptedDataKeys.name)
                                      .equal(vaultConfigId + secretNameSuffix);
@@ -220,7 +158,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
     // Get by auth token encrypted record by Id or name.
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .field(ACCOUNT_ID_KEY)
+                                     .field(SecretManagerConfigKeys.accountId)
                                      .equal(accountId)
                                      .field(ID_KEY)
                                      .equal(secretFieldUuid);
@@ -388,7 +326,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
-    String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
+    String basePath =
+        isEmpty(vaultConfig.getBasePath()) ? VaultConfig.DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
     vaultConfig.setAccountId(accountId);
 
@@ -432,7 +371,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
     long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(ACCOUNT_ID_KEY, accountId)
+                     .filter(SecretManagerConfigKeys.accountId, accountId)
                      .filter(EncryptedDataKeys.kmsId, vaultConfigId)
                      .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                      .count(upToOne);
@@ -515,73 +454,14 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
 
       if (tokenData != null) {
-        char[] decryptedToken = decryptVaultToken(tokenData);
+        char[] decryptedToken = decryptLocal(tokenData);
         vaultConfig.setAuthToken(String.valueOf(decryptedToken));
       }
       if (secretIdData != null) {
-        char[] decryptedSecretId = decryptVaultToken(secretIdData);
+        char[] decryptedSecretId = decryptLocal(secretIdData);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }
-  }
-
-  @Override
-  public EncryptedData encryptFile(
-      String accountId, VaultConfig vaultConfig, String name, byte[] inputBytes, EncryptedData savedEncryptedData) {
-    checkNotNull(vaultConfig, "Vault configuration can't be null");
-    byte[] bytes = encodeBase64ToByteArray(inputBytes);
-    EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
-        SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
-    fileData.setAccountId(accountId);
-    fileData.setName(name);
-    fileData.setType(SettingVariableTypes.CONFIG_FILE);
-    fileData.setBase64Encoded(true);
-    fileData.setFileSize(inputBytes.length);
-    return fileData;
-  }
-
-  @Override
-  public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
-    try {
-      VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(vaultConfig, "Vault configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
-      Files.write(fileData, file);
-      return file;
-    } catch (IOException ioe) {
-      throw new SecretManagementException(
-          VAULT_OPERATION_ERROR, "Failed to decrypt data into an output file", ioe, USER);
-    }
-  }
-
-  @Override
-  public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
-    try {
-      VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
-      checkNotNull(vaultConfig, "Vault configuration can't be null");
-      checkNotNull(encryptedData, "Encrypted data record can't be null");
-      char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      byte[] fileData =
-          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
-      output.write(fileData, 0, fileData.length);
-      output.flush();
-    } catch (IOException ioe) {
-      throw new SecretManagementException(
-          VAULT_OPERATION_ERROR, "Failed to decrypt data into an output stream", ioe, USER);
-    }
-  }
-
-  @Override
-  public void deleteSecret(String accountId, String path, VaultConfig vaultConfig) {
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
-    vaultConfig.setCertValidationRequired(isCertValidationRequired);
-    delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
-        .deleteVaultSecret(path, vaultConfig);
   }
 
   @Override
@@ -614,7 +494,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
     }
     if (!vaultConfig.isReadOnly()) {
-      encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, VAULT, vaultConfig, null);
+      vaultEncryptorsRegistry.getVaultEncryptor(EncryptionType.VAULT)
+          .createSecret(accountId, VaultConfig.VAULT_VAILDATION_URL, Boolean.TRUE.toString(), vaultConfig);
     }
   }
 

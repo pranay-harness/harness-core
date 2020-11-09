@@ -16,12 +16,17 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.KmsEncryptorsRegistry;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
+import io.harness.secrets.SecretsFileService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,13 +35,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.security.GcpKmsService;
-import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
-import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.security.VaultService;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -44,13 +45,14 @@ import java.util.Optional;
 public class NGSecretFileServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;
   @Mock private NGSecretService ngSecretService;
-  @Mock private VaultService vaultService;
-  @Mock private GcpKmsService gcpKmsService;
-  @Mock private LocalEncryptionService localEncryptionService;
+  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Mock private SecretsFileService secretsFileService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private FileService fileService;
-  @Mock private SecretManager secretManager;
+  @Mock private VaultEncryptor vaultEncryptor;
+  @Mock private KmsEncryptor kmsEncryptor;
   private NGSecretFileServiceImpl ngSecretFileService;
   private static final String ACCOUNT = "Account";
   private static final String IDENTIFIER = "Account";
@@ -60,8 +62,10 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
   @Before
   public void setup() {
     ngSecretFileService =
-        spy(new NGSecretFileServiceImpl(ngSecretManagerService, ngSecretService, vaultService, gcpKmsService,
-            localEncryptionService, wingsPersistence, secretManagerConfigService, fileService, secretManager));
+        spy(new NGSecretFileServiceImpl(ngSecretManagerService, ngSecretService, vaultEncryptorsRegistry,
+            kmsEncryptorsRegistry, secretsFileService, wingsPersistence, secretManagerConfigService, fileService));
+    when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
+    when(kmsEncryptorsRegistry.getKmsEncryptor(any())).thenReturn(kmsEncryptor);
   }
 
   private SecretFileDTO getSecretFileDTO() {
@@ -87,13 +91,12 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
         .thenReturn(Optional.ofNullable(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
     EncryptedData savedData = ngSecretFileService.create(secretFileDTO, null);
 
-    assertThat(savedData.getName()).isEqualTo(encryptedData.getName());
+    assertThat(savedData.getName()).isEqualTo(secretFileDTO.getName());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
+    verify(wingsPersistence).save(any(EncryptedData.class));
   }
 
   @Test
@@ -141,13 +144,14 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
         .thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.updateSecret(any(), any(), any(), any(), any())).thenReturn(encryptedData);
     boolean success = ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, null);
     assertThat(success).isEqualTo(true);
     verify(ngSecretService, times(0)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
+    verify(wingsPersistence).save(any(EncryptedData.class));
   }
 
   @Test
@@ -163,13 +167,13 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
         .thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    when(vaultService.encryptFile(any(), any(), any(), any(byte[].class), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
+    when(vaultEncryptor.updateSecret(any(), any(), any(), any(), any())).thenReturn(encryptedData);
     boolean success = ngSecretFileService.update(ACCOUNT, null, null, IDENTIFIER, secretFileUpdateDTO, null);
     assertThat(success).isEqualTo(true);
     verify(ngSecretService, times(1)).deleteSecretInSecretManager(any(), any(), any());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
-    verify(vaultService).encryptFile(any(), any(), any(), any(byte[].class), any());
-    verify(secretManager).saveEncryptedData(any(EncryptedData.class));
+    verify(wingsPersistence).save(any(EncryptedData.class));
   }
 
   @Test

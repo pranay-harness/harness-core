@@ -54,7 +54,8 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   public void testValidateConfigBadUrl() throws IOException, IllegalAccessException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
     SumoDelegateServiceImpl sumoDelegateService = new SumoDelegateServiceImpl();
-    FieldUtils.writeField(sumoDelegateService, "encryptionService", new EncryptionServiceImpl(null, null, null), true);
+    FieldUtils.writeField(
+        sumoDelegateService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
     String exceptionMsg = "";
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());

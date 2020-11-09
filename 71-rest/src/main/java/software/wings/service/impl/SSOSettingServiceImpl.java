@@ -55,6 +55,7 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -273,7 +274,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException(
           "Deleting SSO provider with linked user groups is not allowed. Unlink the user groups first.");
     }
-    secretManager.deleteSecretUsingUuid(settings.getConnectionSettings().getEncryptedBindPassword());
+    secretManager.deleteSecret(
+        settings.getAccountId(), settings.getConnectionSettings().getEncryptedBindPassword(), new HashMap<>(), false);
     wingsPersistence.delete(settings);
     LdapGroupSyncJob.delete(jobScheduler, this, settings.getAccountId(), settings.getUuid());
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(settings.getAccountId(), settings);

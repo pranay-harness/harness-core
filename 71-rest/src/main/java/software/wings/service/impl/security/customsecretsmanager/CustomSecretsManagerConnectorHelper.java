@@ -14,21 +14,24 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
-import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 
 import java.util.Optional;
 import java.util.Set;
 
 @OwnedBy(PL)
 class CustomSecretsManagerConnectorHelper {
-  private SettingsService settingsService;
+  private final WingsPersistence wingsPersistence;
 
   @Inject
-  CustomSecretsManagerConnectorHelper(SettingsService settingsService) {
-    this.settingsService = settingsService;
+  CustomSecretsManagerConnectorHelper(WingsPersistence wingsPersistence) {
+    this.wingsPersistence = wingsPersistence;
   }
 
   void setConnectorInConfig(
@@ -47,7 +50,7 @@ class CustomSecretsManagerConnectorHelper {
   private EncryptableSetting getConnector(
       @NotEmpty String accountId, @NotEmpty String connectorId, @NotEmpty ScriptType scriptType) {
     EncryptableSetting encryptableSetting =
-        (EncryptableSetting) Optional.ofNullable(settingsService.getSettingValueById(accountId, connectorId))
+        (EncryptableSetting) Optional.ofNullable(getSettingValueById(accountId, connectorId))
             .<InvalidArgumentsException>orElseThrow(() -> {
               String errorMessage = String.format("Connector with id %s was not found", connectorId);
               throw new InvalidArgumentsException(errorMessage, USER);
@@ -70,5 +73,16 @@ class CustomSecretsManagerConnectorHelper {
           throw new InvalidArgumentsException(errorMessage, USER);
         })
         .getValue();
+  }
+
+  private SettingValue getSettingValueById(String accountId, String connectorId) {
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.accountId, accountId)
+                                            .filter(SettingAttribute.ID_KEY, connectorId)
+                                            .get();
+    if (settingAttribute != null) {
+      return settingAttribute.getValue();
+    }
+    return null;
   }
 }

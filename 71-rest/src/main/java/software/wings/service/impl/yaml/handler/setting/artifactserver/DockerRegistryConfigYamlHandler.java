@@ -29,7 +29,7 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
                  .type(dockerConfig.getType())
                  .url(dockerConfig.getDockerRegistryUrl())
                  .username(dockerConfig.getUsername())
-                 .password(getEncryptedValue(dockerConfig, "password", false))
+                 .password(getEncryptedYamlRef(dockerConfig.getAccountId(), dockerConfig.getEncryptedPassword()))
                  .build();
     } else {
       yaml = Yaml.builder()

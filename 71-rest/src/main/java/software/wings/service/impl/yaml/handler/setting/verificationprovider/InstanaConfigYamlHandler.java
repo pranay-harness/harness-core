@@ -15,7 +15,7 @@ public class InstanaConfigYamlHandler extends VerificationProviderYamlHandler<Ya
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(config.getType())
                     .instanaUrl(config.getInstanaUrl())
-                    .apiToken(getEncryptedValue(config, "apiToken", false))
+                    .apiToken(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiToken()))
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;

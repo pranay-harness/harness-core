@@ -33,5 +33,6 @@ public interface NGSecretService {
   List<EncryptedData> searchSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SettingVariableTypes type, String searchTerm);
 
-  void deleteSecretInSecretManager(String accountIdentifier, String path, SecretManagerConfig secretManagerConfig);
+  void deleteSecretInSecretManager(
+      String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig);
 }

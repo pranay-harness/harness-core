@@ -30,6 +30,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import java.util.HashMap;
+
 @Slf4j
 public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecretInput, QLDeleteSecretPayload> {
   @Inject private SecretManager secretManager;
@@ -50,7 +52,7 @@ public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecr
     if (encryptedData != null) {
       if (encryptedData.getType() == SECRET_TEXT && inputSecretType == ENCRYPTED_TEXT
           || encryptedData.getType() == CONFIG_FILE && inputSecretType == ENCRYPTED_FILE) {
-        secretManager.deleteSecret(accountId, secretId);
+        secretManager.deleteSecret(accountId, secretId, new HashMap<>(), true);
       } else {
         throwInvalidSecretException(secretId);
       }
