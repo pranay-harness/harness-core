@@ -276,4 +276,14 @@ public class CVConfigServiceImpl implements CVConfigService {
         .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
         .asList();
   }
+
+  @Override
+  public boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier) {
+    long numberOfCVConfigs = hPersistence.createQuery(CVConfig.class)
+                                 .filter(CVConfigKeys.accountId, accountId)
+                                 .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                 .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                 .count();
+    return numberOfCVConfigs > 0;
+  }
 }

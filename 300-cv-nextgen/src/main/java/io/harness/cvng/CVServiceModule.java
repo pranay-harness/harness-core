@@ -39,6 +39,7 @@ import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
+import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -55,6 +56,7 @@ import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
+import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
@@ -185,6 +187,7 @@ public class CVServiceModule extends AbstractModule {
       bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
       bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
       bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+      bind(CVSetupService.class).to(CVSetupServiceImpl.class);
 
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);

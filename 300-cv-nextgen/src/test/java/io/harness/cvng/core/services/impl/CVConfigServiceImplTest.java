@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -458,5 +459,25 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setGroupId(groupId);
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testDoesAnyCVConfigExistsInProjectWhenNoCVConfigExists() {
+    boolean doesAnyCVConfigExists =
+        cvConfigService.doesAnyCVConfigExistsInProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAnyCVConfigExists).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testDoesAnyCVConfigExistsInProjectWhenCVConfigExists() {
+    List<CVConfig> cvConfigs = createCVConfigs(4);
+    save(cvConfigs);
+    boolean doesAnyCVConfigExists =
+        cvConfigService.doesAnyCVConfigExistsInProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(doesAnyCVConfigExists).isTrue();
   }
 }

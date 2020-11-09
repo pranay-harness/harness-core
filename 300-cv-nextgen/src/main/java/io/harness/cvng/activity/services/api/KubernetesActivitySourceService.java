@@ -13,4 +13,6 @@ public interface KubernetesActivitySourceService {
       String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO);
   boolean saveKubernetesActivities(String accountId, String activitySourceId, List<KubernetesActivityDTO> activities);
   void enqueueDataCollectionTask(KubernetesActivitySource activitySource);
+
+  boolean doesAActivitySourceExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);
 }

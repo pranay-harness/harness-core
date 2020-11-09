@@ -98,4 +98,15 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
 
     log.info("Enqueued activity source successfully: {}", activitySource.getUuid());
   }
+
+  @Override
+  public boolean doesAActivitySourceExistsForThisProject(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    long numberOfActivitySources = hPersistence.createQuery(KubernetesActivitySource.class)
+                                       .filter(KubernetesActivitySourceKeys.accountId, accountId)
+                                       .filter(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                       .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                       .count();
+    return numberOfActivitySources > 0;
+  }
 }

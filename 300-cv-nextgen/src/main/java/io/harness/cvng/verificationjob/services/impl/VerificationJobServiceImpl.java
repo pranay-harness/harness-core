@@ -79,4 +79,15 @@ public class VerificationJobServiceImpl implements VerificationJobService {
         .map(verificationJob -> verificationJob.getVerificationJobDTO())
         .collect(Collectors.toList());
   }
+
+  @Override
+  public boolean doesAVerificationJobExistsForThisProject(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    long numberOfVerificationJobs = hPersistence.createQuery(VerificationJob.class)
+                                        .filter(VerificationJobKeys.accountId, accountId)
+                                        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+                                        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
+                                        .count();
+    return numberOfVerificationJobs > 0;
+  }
 }

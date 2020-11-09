@@ -38,4 +38,5 @@ public interface CVConfigService {
 
   List<CVConfig> getCVConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
+  boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
 }
