@@ -3,6 +3,9 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,8 +41,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.List;
 public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private DataFetcherUtils utils;
   @Mock TimeScaleDBService timeScaleDBService;
+  @Mock BillingDataHelper billingDataHelper;
   @Inject @InjectMocks BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
 
   @Mock ResultSet resultSet;
@@ -69,7 +71,26 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
-
+    List<QLBillingDataFilter> filters = createFilter();
+    when(billingDataHelper.getFiltersForForecastCost(filters)).thenReturn(filters);
+    when(billingDataHelper.getBillingAmountData(any(), any(), anyList()))
+        .thenReturn(QLTrendStatsCostData.builder()
+                        .totalCostData(QLBillingAmountData.builder()
+                                           .cost(TOTAL_COST)
+                                           .maxStartTime(END_TIME.toEpochMilli())
+                                           .minStartTime(START_TIME.toEpochMilli())
+                                           .build())
+                        .build());
+    when(billingDataHelper.getStartTimeFilter(anyList()))
+        .thenReturn(QLTimeFilter.builder().value(START_TIME.toEpochMilli()).build());
+    when(billingDataHelper.getEndTimeFilter(anyList()))
+        .thenReturn(QLTimeFilter.builder().value(END_TIME.toEpochMilli()).build());
+    when(billingDataHelper.isYearRequired(any(), any())).thenReturn(false);
+    when(billingDataHelper.getTotalCostFormattedDate(START_TIME, false)).thenReturn("Oct 09");
+    when(billingDataHelper.getTotalCostFormattedDate(END_TIME, false)).thenReturn("Oct 19");
+    when(billingDataHelper.getStartInstantForForecastCost()).thenReturn(START_TIME);
+    when(billingDataHelper.getEndInstantForForecastCost(filters)).thenReturn(END_TIME);
+    when(billingDataHelper.formatNumber(anyDouble())).then(i -> String.valueOf(i.getArgumentAt(0, Double.class)));
     mockResultSet();
   }
 
@@ -86,28 +107,6 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(data).isNotNull();
     assertThat(data.getTotalCost().getStatsValue()).isEqualTo("$10.66");
     assertThat(data.getTotalCost().getStatsDescription()).isEqualTo("of Oct 09 - Oct 19");
-    assertThat(data.getCostTrend().getStatsValue()).isEqualTo("113.2");
-    assertThat(data.getCostTrend().getStatsDescription()).isEqualTo("$5.66 over Sep 11 - Oct 09");
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetBillingTrendWithForecast() throws SQLException {
-    prepareDataForTrend();
-
-    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
-    List<QLBillingDataFilter> filters = createForecastFilter();
-    QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-    assertThat(data).isNotNull();
-    assertThat(data.getTotalCost().getStatsValue()).isEqualTo("$10.66");
-    assertThat(data.getTotalCost().getStatsDescription()).isEqualTo("of Oct 09 - Oct 19");
-    assertThat(data.getCostTrend().getStatsValue()).isEqualTo("NA");
-    assertThat(data.getCostTrend().getStatsDescription()).isNotEqualTo("-");
-    assertThat(data.getForecastCost().getStatsValue()).isEqualTo("-");
-    assertThat(data.getForecastCost().getStatsDescription()).isEqualTo("-");
-    assertThat(data.getEfficiencyScore().getStatsValue()).isEqualTo("-1");
   }
 
   private void prepareDataForTrend() throws SQLException {
@@ -131,6 +130,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenReturn(null);
     when(timeScaleDBService.isValid()).thenReturn(true);
+    when(billingDataHelper.getBillingAmountData(any(), any(), anyList())).thenReturn(null);
 
     List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
     QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
@@ -152,36 +152,10 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
         .isInstanceOf(InvalidRequestException.class);
   }
 
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testGetBillingTrendWhenQueryThrowsException() throws SQLException {
-    when(timeScaleDBService.isValid()).thenReturn(true);
-    Statement mockStatement = mock(Statement.class);
-    Connection mockConnection = mock(Connection.class);
-    when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
-    when(mockConnection.createStatement()).thenReturn(mockStatement);
-    when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
-
-    List<QLCCMAggregationFunction> aggregationFunction = Arrays.asList(makeBillingAmtAggregation());
-    QLBillingTrendStats data = (QLBillingTrendStats) billingTrendStatsDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-    assertThat(data.getTotalCost()).isNull();
-  }
-
   private List<QLBillingDataFilter> createFilter() {
     String[] appIdFilterValues = new String[] {""};
     return Arrays.asList(
         makeApplicationFilter(appIdFilterValues), startTimeFilter(START_TIME), endTimeFilter(END_TIME));
-  }
-
-  private List<QLBillingDataFilter> createForecastFilter() {
-    String[] clusterIdFilterValues = new String[] {""};
-    List<QLBillingDataFilter> forecastFilter = new ArrayList<>();
-    forecastFilter.add(makeClusterFilter(clusterIdFilterValues));
-    forecastFilter.add(startTimeFilter(START_TIME));
-    forecastFilter.add(endTimeFilter(Instant.now().plus(5, ChronoUnit.DAYS)));
-    return forecastFilter;
   }
 
   public QLCCMAggregationFunction makeBillingAmtAggregation() {

@@ -53,6 +53,7 @@ import software.wings.graphql.datafetcher.artifactSource.batch.ArtifactSourceBat
 import software.wings.graphql.datafetcher.artifactSource.batch.ArtifactSourceBatchDataLoader;
 import software.wings.graphql.datafetcher.audit.ChangeContentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.audit.ChangeSetConnectionDataFetcher;
+import software.wings.graphql.datafetcher.billing.BillingForecastCostDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingJobProcessedDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsEntityDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingStatsFilterValuesDataFetcher;
@@ -246,6 +247,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ArtifactConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactSourceDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactSourceBatchDataFetcher.class);
+    bindDataFetcherWithAnnotation(BillingForecastCostDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingJobProcessedDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsEntityDataFetcher.class);
     bindDataFetcherWithAnnotation(BillingStatsFilterValuesDataFetcher.class);

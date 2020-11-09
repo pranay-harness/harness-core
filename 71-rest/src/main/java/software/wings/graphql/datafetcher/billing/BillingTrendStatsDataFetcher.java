@@ -3,11 +3,9 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
-import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -20,10 +18,6 @@ import software.wings.security.annotations.AuthRule;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -76,14 +70,10 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
 
   protected QLBillingTrendStats getData(
       @NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
-    QLTrendStatsCostData billingAmountData = getBillingAmountData(accountId, aggregateFunction, filters);
+    QLTrendStatsCostData billingAmountData =
+        billingDataHelper.getBillingAmountData(accountId, aggregateFunction, filters);
     if (billingAmountData != null && billingAmountData.getTotalCostData() != null) {
       BigDecimal totalBillingAmount = billingAmountData.getTotalCostData().getCost();
-      Instant endInstantForForecastCost = billingDataHelper.getEndInstantForForecastCost(filters);
-      BigDecimal forecastCost = billingDataHelper.getNewForecastCost(
-          getBillingAmountData(accountId, aggregateFunction, billingDataHelper.getFiltersForForecastCost(filters))
-              .getTotalCostData(),
-          endInstantForForecastCost);
       BigDecimal unallocatedCost = null;
       if (isUnallocatedCostRequired(aggregateFunction) && billingAmountData.getUnallocatedCostData() != null) {
         unallocatedCost = billingAmountData.getUnallocatedCostData().getCost();
@@ -91,8 +81,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       return QLBillingTrendStats.builder()
           .totalCost(getTotalBillingStats(billingAmountData.getTotalCostData(), filters))
           .costTrend(getBillingTrend(accountId, totalBillingAmount, aggregateFunction, filters))
-          .forecastCost(getForecastBillingStats(forecastCost, billingDataHelper.getStartInstantForForecastCost(),
-              endInstantForForecastCost.plus(1, ChronoUnit.SECONDS)))
           .idleCost(getIdleCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData()))
           .unallocatedCost(getUnallocatedCostStats(unallocatedCost, billingAmountData.getTotalCostData()))
           .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData(),
@@ -136,7 +124,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
 
     List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
         filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
-    QLTrendStatsCostData prevBillingAmountData = getBillingAmountData(accountId, aggregateFunction, trendFilters);
+    QLTrendStatsCostData prevBillingAmountData =
+        billingDataHelper.getBillingAmountData(accountId, aggregateFunction, trendFilters);
 
     if (prevBillingAmountData != null && prevBillingAmountData.getTotalCostData() != null
         && prevBillingAmountData.getIdleCostData() != null
@@ -173,25 +162,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .statsDescription(null)
         .statsValue(String.valueOf(currentEfficiencyScore))
         .statsTrend(efficiencyTrend)
-        .build();
-  }
-
-  private QLBillingStatsInfo getForecastBillingStats(
-      BigDecimal forecastCost, Instant startInstant, Instant endInstant) {
-    String forecastCostDescription = EMPTY_VALUE;
-    String forecastCostValue = EMPTY_VALUE;
-    if (forecastCost != null) {
-      boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
-      String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
-      String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
-      forecastCostDescription = String.format(FORECAST_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
-      forecastCostValue =
-          String.format(FORECAST_COST_VALUE, billingDataHelper.formatNumber(getRoundedDoubleValue(forecastCost)));
-    }
-    return QLBillingStatsInfo.builder()
-        .statsLabel(FORECAST_COST_LABEL)
-        .statsDescription(forecastCostDescription)
-        .statsValue(forecastCostValue)
         .build();
   }
 
@@ -301,7 +271,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
         filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
     QLBillingAmountData prevBillingAmountData =
-        getBillingAmountData(accountId, aggregateFunction, trendFilters).getTotalCostData();
+        billingDataHelper.getBillingAmountData(accountId, aggregateFunction, trendFilters).getTotalCostData();
     Instant filterStartTime =
         Instant.ofEpochMilli(billingDataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(billingDataHelper.getEndTimeFilter(trendFilters).getValue().longValue());
@@ -333,123 +303,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .statsLabel(TREND_COST_LABEL)
         .statsDescription(trendCostDescription)
         .statsValue(trendCostValue)
-        .build();
-  }
-
-  public QLTrendStatsCostData getBillingAmountData(
-      String accountId, List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
-    BillingDataQueryMetadata queryData =
-        billingDataQueryBuilder.formTrendStatsQuery(accountId, aggregateFunction, filters);
-    String query = queryData.getQuery();
-    log.info("Billing data query {}", query);
-    ResultSet resultSet = null;
-    boolean successful = false;
-    int retryCount = 0;
-    while (!successful && retryCount < MAX_RETRY) {
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           Statement statement = connection.createStatement()) {
-        resultSet = statement.executeQuery(query);
-        successful = true;
-        return fetchBillingAmount(queryData, resultSet);
-      } catch (SQLException e) {
-        retryCount++;
-        if (retryCount >= MAX_RETRY) {
-          log.error(
-              "Failed to execute query in BillingTrendStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
-              queryData.getQuery(), accountId, e);
-        } else {
-          log.warn(
-              "Failed to execute query in BillingTrendStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
-              queryData.getQuery(), accountId, retryCount);
-        }
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
-    return null;
-  }
-
-  private QLTrendStatsCostData fetchBillingAmount(BillingDataQueryMetadata queryData, ResultSet resultSet)
-      throws SQLException {
-    QLBillingAmountData totalCostData = null;
-    QLBillingAmountData idleCostData = null;
-    QLBillingAmountData unallocatedCostData = null;
-    QLBillingAmountData systemCostData = null;
-    while (null != resultSet && resultSet.next()) {
-      for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-        switch (field) {
-          case SUM:
-            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
-              totalCostData =
-                  QLBillingAmountData.builder()
-                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SUM.getFieldName()))
-                      .minStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .maxStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .build();
-            }
-            break;
-          case IDLECOST:
-            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
-              idleCostData = QLBillingAmountData.builder()
-                                 .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.IDLECOST.getFieldName()))
-                                 .minStartTime(resultSet
-                                                   .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                                       utils.getDefaultCalendar())
-                                                   .getTime())
-                                 .maxStartTime(resultSet
-                                                   .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                                       utils.getDefaultCalendar())
-                                                   .getTime())
-                                 .build();
-            }
-            break;
-          case UNALLOCATEDCOST:
-            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
-              unallocatedCostData =
-                  QLBillingAmountData.builder()
-                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()))
-                      .minStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .maxStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .build();
-            }
-            break;
-          case SYSTEMCOST:
-            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
-              systemCostData =
-                  QLBillingAmountData.builder()
-                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SYSTEMCOST.getFieldName()))
-                      .minStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .maxStartTime(resultSet
-                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
-                                            utils.getDefaultCalendar())
-                                        .getTime())
-                      .build();
-            }
-            break;
-          default:
-        }
-      }
-    }
-    return QLTrendStatsCostData.builder()
-        .totalCostData(totalCostData)
-        .idleCostData(idleCostData)
-        .unallocatedCostData(unallocatedCostData)
-        .systemCostData(systemCostData)
         .build();
   }
 

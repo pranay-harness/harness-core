@@ -20,6 +20,12 @@ extend type Query {
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingTrendStats)
 
+  billingForecastCost(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): BillingStatsData @dataFetcher(name: billingForecastCost)
+
   gcpBillingTrendStats(filters: [CCMFilter]): BillingStatsData @dataFetcher(name: gcpBillingTrendStats)
 
   idleCostTrendStats(
