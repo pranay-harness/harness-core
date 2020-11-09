@@ -16,6 +16,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
@@ -98,8 +100,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   @Override
   public List<QLCEViewEntityStatsDataPoint> getEntityStatsDataPoints(BigQuery bigQuery,
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction,
-      List<QLCEViewSortCriteria> sort, String cloudProviderTableName) {
+      List<QLCEViewSortCriteria> sort, String cloudProviderTableName, Integer limit, Integer offset) {
     SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, false);
+    query.addCustomization(new PgLimitClause(limit));
+    query.addCustomization(new PgOffsetClause(offset));
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query.toString()).build();
     TableResult result;
     try {

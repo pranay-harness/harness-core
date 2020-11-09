@@ -4,6 +4,7 @@ import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelpe
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.fetchStringValue;
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.getNumericValue;
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
+import static software.wings.graphql.datafetcher.billing.CloudTimeSeriesStatsDataFetcher.OTHERS;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.BigQuery;
@@ -15,9 +16,11 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint.QLBillingDataPointBuilder;
@@ -27,6 +30,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,7 @@ public class ViewTimeSeriesStatsDataFetcher
   @Inject ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
   @Inject BigQueryService bigQueryService;
+  @Inject BillingDataHelper billingDataHelper;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -97,7 +102,54 @@ public class ViewTimeSeriesStatsDataFetcher
   protected QLData postFetch(String accountId, List<QLCEViewGroupBy> groupByList,
       List<QLCEViewAggregation> aggregations, List<QLCEViewSortCriteria> sort, QLData qlData, Integer limit,
       boolean includeOthers) {
-    return null;
+    QLViewTimeSeriesData data = (QLViewTimeSeriesData) qlData;
+    Map<String, Double> aggregatedDataPerUniqueId = new HashMap<>();
+    data.getStats().forEach(dataPoint -> {
+      for (QLBillingDataPoint entry : dataPoint.getValues()) {
+        QLReference qlReference = entry.getKey();
+        if (qlReference != null && qlReference.getId() != null) {
+          String key = qlReference.getId();
+          if (aggregatedDataPerUniqueId.containsKey(key)) {
+            aggregatedDataPerUniqueId.put(key, entry.getValue().doubleValue() + aggregatedDataPerUniqueId.get(key));
+          } else {
+            aggregatedDataPerUniqueId.put(key, entry.getValue().doubleValue());
+          }
+        }
+      }
+    });
+    if (aggregatedDataPerUniqueId.isEmpty()) {
+      return qlData;
+    }
+    List<String> selectedIdsAfterLimit = billingDataHelper.getElementIdsAfterLimit(aggregatedDataPerUniqueId, limit);
+
+    return QLViewTimeSeriesData.builder().stats(getDataAfterLimit(data, selectedIdsAfterLimit, includeOthers)).build();
+  }
+
+  private List<TimeSeriesDataPoints> getDataAfterLimit(
+      QLViewTimeSeriesData data, List<String> selectedIdsAfterLimit, boolean includeOthers) {
+    List<TimeSeriesDataPoints> limitProcessedData = new ArrayList<>();
+    data.getStats().forEach(dataPoint -> {
+      List<QLBillingDataPoint> limitProcessedValues = new ArrayList<>();
+      QLBillingDataPoint others =
+          QLBillingDataPoint.builder().key(QLReference.builder().id(OTHERS).name(OTHERS).build()).value(0).build();
+      for (QLBillingDataPoint entry : dataPoint.getValues()) {
+        String key = entry.getKey().getId();
+        if (selectedIdsAfterLimit.contains(key)) {
+          limitProcessedValues.add(entry);
+        } else {
+          others.setValue(others.getValue().doubleValue() + entry.getValue().doubleValue());
+        }
+      }
+
+      if (others.getValue().doubleValue() > 0 && includeOthers) {
+        others.setValue(billingDataHelper.getRoundedDoubleValue(others.getValue().doubleValue()));
+        limitProcessedValues.add(others);
+      }
+
+      limitProcessedData.add(
+          TimeSeriesDataPoints.builder().time(dataPoint.getTime()).values(limitProcessedValues).build());
+    });
+    return limitProcessedData;
   }
 
   @Override

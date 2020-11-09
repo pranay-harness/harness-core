@@ -19,7 +19,7 @@ public interface ViewsBillingService {
 
   List<QLCEViewEntityStatsDataPoint> getEntityStatsDataPoints(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
-      String cloudProviderTableName);
+      String cloudProviderTableName, Integer limit, Integer offset);
 
   TableResult getTimeSeriesStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
       List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort, String cloudProviderTableName);

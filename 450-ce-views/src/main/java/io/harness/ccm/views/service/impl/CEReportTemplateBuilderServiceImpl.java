@@ -105,6 +105,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String DOWNWARD_ARROW = "&darr;";
   private static final String PERCENT = "%";
   private static final String DOLLAR = "$";
+  private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
+  private static final Integer DEFAULT_OFFSET = 0;
   private static final Color[] COLORS = {new Color(72, 165, 243), new Color(147, 133, 241), new Color(83, 205, 124),
       new Color(255, 188, 9), new Color(243, 92, 97), new Color(55, 214, 203), new Color(236, 97, 181),
       new Color(255, 142, 60), new Color(178, 96, 9), new Color(25, 88, 173)};
@@ -148,8 +150,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     }
 
     // Generating table data
-    List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(
-        bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName);
+    List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(bigQuery, filters,
+        groupBy, aggregationFunction, sortCriteria, cloudProviderTableName, DEFAULT_LIMIT, DEFAULT_OFFSET);
     if (tableData == null || tableData.isEmpty()) {
       throw new InvalidRequestException("Exception while generating report. No data to for table");
     }
