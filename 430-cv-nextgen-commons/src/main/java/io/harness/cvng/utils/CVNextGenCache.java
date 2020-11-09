@@ -7,15 +7,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-
 import com.mongodb.BasicDBObject;
 import io.harness.entity.HarnessApiKey;
 import io.harness.entity.HarnessApiKey.HarnessApiKeyKeys;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CVNextGenCache {
@@ -43,6 +41,9 @@ public class CVNextGenCache {
               HarnessApiKey harnessApiKey = hPersistence.createQuery(HarnessApiKey.class, excludeAuthority)
                                                 .filter(HarnessApiKeyKeys.clientType, clientType)
                                                 .get();
+              if (harnessApiKey == null) {
+                return null;
+              }
               return harnessApiKey.getEncryptedKey();
             }
           });
