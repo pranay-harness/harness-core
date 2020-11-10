@@ -104,7 +104,7 @@ public class OverviewPageStatsDataFetcher
       log.info("Sample data generation enabled for accountId:{}", accountId);
       if (utils.isSampleClusterDataPresent()) {
         isClusterDataPresent = true;
-        isCeEnabledCloudProviderPresent = true;
+        overviewStatsDataBuilder.isSampleClusterPresent(true);
         log.info("sample data is present");
       }
     }

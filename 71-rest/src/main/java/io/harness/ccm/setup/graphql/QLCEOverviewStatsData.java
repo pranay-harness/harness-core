@@ -18,4 +18,5 @@ public class QLCEOverviewStatsData {
   Boolean gcpConnectorsPresent;
   Boolean applicationDataPresent;
   Boolean clusterDataPresent;
+  @Builder.Default Boolean isSampleClusterPresent = false;
 }
