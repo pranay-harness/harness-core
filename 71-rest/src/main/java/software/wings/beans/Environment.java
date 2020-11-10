@@ -5,17 +5,18 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -26,7 +27,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
@@ -39,17 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-/**
- * Environment bean class.
- *
- * @author Rishi
- */
-
-@NgUniqueIndex(name = "yaml", fields = { @Field(EnvironmentKeys.appId)
-                                         , @Field(EnvironmentKeys.name) })
-@CdIndex(name = "accountIdCreatedAt",
-    fields = { @Field(EnvironmentKeys.accountId)
-               , @Field(value = EnvironmentKeys.createdAt, type = IndexType.DESC) })
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
@@ -57,6 +46,21 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "environments", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(EnvironmentKeys.appId)
+                 .field(EnvironmentKeys.name)
+                 .build())
+        .add(CreatedAtSortCompoundMongoIndex.builder()
+                 .name("accountIdCreatedAt")
+                 .field(EnvironmentKeys.accountId)
+                 .build())
+        .build();
+  }
+
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName @Trimmed private String name;

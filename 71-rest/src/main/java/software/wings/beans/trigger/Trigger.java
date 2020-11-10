@@ -5,15 +5,16 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,6 @@ import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.ManifestTriggerCondition.ManifestTriggerConditionKeys;
-import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
@@ -54,23 +54,33 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("name") })
-@CdIndex(name = "conditionArtifactStreamId",
-    fields =
-    {
-      @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
-      , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
-    })
-@CdIndex(name = "conditionAppManifestId",
-    fields =
-    {
-      @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
-      , @Field(TriggerKeys.condition + "." + ManifestTriggerConditionKeys.appManifestId)
-    })
-@CdIndex(name = "artifactSelectionsArtifactStreamId",
-    fields = { @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId) })
+
 public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(TriggerKeys.appId)
+                 .field(TriggerKeys.name)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("conditionArtifactStreamId")
+                 .field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+                 .field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("conditionAppManifestId")
+                 .field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+                 .field(TriggerKeys.condition + "." + ManifestTriggerConditionKeys.appManifestId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactSelectionsArtifactStreamId")
+                 .field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private String name;
   @FdIndex private String accountId;
   private String description;
