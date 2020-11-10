@@ -39,6 +39,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.BarrierInstance.BarrierInstanceKeys;
 import software.wings.beans.BarrierInstancePipeline;
@@ -127,6 +128,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       return barrierInstance;
     }
 
+    boolean updated = false;
+
     // First lets try to fill up all the missing data that is available already
     final BarrierInstancePipeline pipeline = barrierInstance.getPipeline();
     // Grouping by on workflowId + pipelineStageId Because If a workflow is added twice manually in pipeline in same
@@ -154,6 +157,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           for (BarrierInstanceWorkflow workflow : workflows) {
             if (keys.hasNext()) {
               workflow.setPipelineStageExecutionId(keys.next().getId().toString());
+              updated = true;
             } else {
               break;
             }
@@ -180,6 +184,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           for (BarrierInstanceWorkflow workflow : workflows) {
             if (keys.hasNext()) {
               workflow.setWorkflowExecutionId(keys.next().getId().toString());
+              updated = true;
             } else {
               break;
             }
@@ -205,6 +210,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             continue;
           }
           workflow.setPhaseExecutionId(keys.next().getId().toString());
+          updated = true;
           if (keys.hasNext()) {
             log.error("More than one execution instance for the same phase state");
           }
@@ -227,6 +233,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             continue;
           }
           workflow.setStepExecutionId(keys.next().getId().toString());
+          updated = true;
           if (keys.hasNext()) {
             log.error("More than one execution instance for the same phase state");
           }
@@ -239,8 +246,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     // Update the DB to not need to make the same queries again
-    wingsPersistence.merge(barrierInstance);
-    log.info("{} Time taken till first database merge update: {}", DEBUG_LINE, getDuration(startTime));
+    if (updated) {
+      barrierInstance.setNextIteration(System.currentTimeMillis() + ofMinutes(1).toMillis());
+      wingsPersistence.merge(barrierInstance);
+    }
 
     // Lets construct a barrier
     Forcer forcer = buildForcer(barrierInstance);
@@ -263,8 +272,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     log.info("{} Time taken till completion of pushdown: {}", DEBUG_LINE, getDuration(startTime));
-    barrierInstance.setState(state.name());
-    wingsPersistence.merge(barrierInstance);
+    UpdateOperations<BarrierInstance> updateOperations =
+        wingsPersistence.createUpdateOperations(BarrierInstance.class).set(BarrierInstanceKeys.state, state.name());
+    wingsPersistence.update(barrierInstance, updateOperations);
     log.info("{} Time taken till second database merge update: {}", DEBUG_LINE, getDuration(startTime));
     return barrierInstance;
   }
