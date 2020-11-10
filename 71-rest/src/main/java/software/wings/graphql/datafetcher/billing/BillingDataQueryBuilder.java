@@ -132,7 +132,8 @@ public class BillingDataQueryBuilder {
 
     if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
       if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
-          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
         selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
         aggregateFunction = getSupportedAggregations(aggregateFunction);
       } else {
@@ -1560,6 +1561,17 @@ public class BillingDataQueryBuilder {
         -> filter.getNodeInstanceId() != null || filter.getTaskId() != null || filter.getLaunchType() != null
             || filter.getCloudServiceName() != null || filter.getParentInstanceId() != null
             || filter.getInstanceName() != null);
+  }
+
+  private boolean areAggregationsValidForPreAggregation(List<QLCCMAggregationFunction> aggregateFunctions) {
+    return !aggregateFunctions.stream().anyMatch(aggregationFunction
+        -> aggregationFunction.getColumnName().equals(schema.getEffectiveCpuLimit().getColumnNameSQL())
+            || aggregationFunction.getColumnName().equals(schema.getEffectiveCpuRequest().getColumnNameSQL())
+            || aggregationFunction.getColumnName().equals(schema.getEffectiveMemoryLimit().getColumnNameSQL())
+            || aggregationFunction.getColumnName().equals(schema.getEffectiveMemoryRequest().getColumnNameSQL())
+            || aggregationFunction.getColumnName().equals(schema.getEffectiveCpuUtilizationValue().getColumnNameSQL())
+            || aggregationFunction.getColumnName().equals(
+                   schema.getEffectiveMemoryUtilizationValue().getColumnNameSQL()));
   }
 
   private List<QLCCMAggregationFunction> getSupportedAggregations(List<QLCCMAggregationFunction> aggregationFunctions) {
