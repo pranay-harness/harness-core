@@ -36,6 +36,8 @@ public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CI
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
         ambiance, SweepingOutputRefObject.builder().name(CALLBACK_IDS).build());
 
+    log.info("Waiting on response for task id {} and step Id {}",
+        stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()), stepParameters.getIdentifier());
     return AsyncExecutableResponse.builder()
         .callbackId(stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()))
         .build();
@@ -48,6 +50,7 @@ public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CI
         (StepStatusTaskResponseData) responseDataMap.values().iterator().next();
     StepStatus stepStatus = stepStatusTaskResponseData.getStepStatus();
 
+    log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepParameters.getIdentifier());
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       return StepResponse.builder()
           .status(Status.SUCCEEDED)

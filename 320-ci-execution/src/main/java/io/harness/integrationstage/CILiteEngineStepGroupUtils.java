@@ -57,6 +57,10 @@ public class CILiteEngineStepGroupUtils {
 
     boolean usePVC = containsManagerStep(executionSections);
 
+    log.info(
+        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {} with pvc {}",
+        integrationStage.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), usePVC);
+
     List<ExecutionWrapper> liteEngineExecutionSections = new ArrayList<>();
     if (!integrationStage.isSkipGitClone()) {
       liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs));
@@ -92,6 +96,9 @@ public class CILiteEngineStepGroupUtils {
       // Also execute each lite engine step individually on main engine
       mainEngineExecutionSections.addAll(liteEngineExecutionSections);
     }
+
+    log.info("Creation execution section for BuildId {} with {} number of lite engine steps",
+        ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), liteEngineCounter);
 
     return mainEngineExecutionSections;
   }

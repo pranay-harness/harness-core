@@ -67,6 +67,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
+    log.info("Started plan creation for integration stage from execution source: {}", integrationStage.getIdentifier(),
+        ciExecutionArgs.getExecutionSource().getType());
     BuildNumberDetails buildNumber = ciExecutionArgs.getBuildNumberDetails();
 
     ExecutionElement execution = integrationStage.getExecution();

@@ -1,6 +1,7 @@
 package io.harness.impl;
 
 import static io.harness.beans.executionargs.ExecutionArgs.EXEC_ARGS;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,8 +12,10 @@ import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
+import io.harness.logging.AutoLogContext;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.plan.Plan;
+import io.harness.util.CIExecutionAutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -30,22 +33,30 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
     Map<String, Object> contextAttributes = new HashMap<>();
     contextAttributes.put(EXEC_ARGS, ciExecutionArgs);
 
-    Plan plan = executionPlanCreatorService.createPlanForPipeline(
-        ngPipelineEntity.getNgPipeline(), ngPipelineEntity.getAccountId(), contextAttributes);
-    // TODO set user before execution which will be available once we build authentication
-    // User user = UserThreadLocal.get()
-    Map<String, String> setupAbstractions = new HashMap<>();
-    setupAbstractions.put("accountId", ngPipelineEntity.getAccountId());
-    setupAbstractions.put("pipelineId", ngPipelineEntity.getIdentifier());
-    setupAbstractions.put("orgIdentifier", ngPipelineEntity.getOrgIdentifier());
-    setupAbstractions.put("projectIdentifier", ngPipelineEntity.getProjectIdentifier());
-    setupAbstractions.put("userEmail", "harsh.jain@harness.io");
-    setupAbstractions.put("userId", "harsh");
-    setupAbstractions.put("userName", "harsh jain");
+    try (AutoLogContext ignore =
+             new CIExecutionAutoLogContext(ngPipelineEntity.getIdentifier(), ngPipelineEntity.getProjectIdentifier(),
+                 ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getAccountId(), OVERRIDE_ERROR)) {
+      log.info("Started plan creation for pipeline from execution source: {}",
+          ciExecutionArgs.getExecutionSource().getType());
+      Plan plan = executionPlanCreatorService.createPlanForPipeline(
+          ngPipelineEntity.getNgPipeline(), ngPipelineEntity.getAccountId(), contextAttributes);
 
-    PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions);
-    createCIBuild(ngPipelineEntity, ciExecutionArgs, planExecution, buildNumber);
-    return planExecution;
+      // TODO set user before execution which will be available once we build authentication
+      // User user = UserThreadLocal.get()
+      Map<String, String> setupAbstractions = new HashMap<>();
+      setupAbstractions.put("accountId", ngPipelineEntity.getAccountId());
+      setupAbstractions.put("pipelineId", ngPipelineEntity.getIdentifier());
+      setupAbstractions.put("orgIdentifier", ngPipelineEntity.getOrgIdentifier());
+      setupAbstractions.put("projectIdentifier", ngPipelineEntity.getProjectIdentifier());
+      setupAbstractions.put("userEmail", "harsh.jain@harness.io");
+      setupAbstractions.put("userId", "harsh");
+      setupAbstractions.put("userName", "harsh jain");
+
+      log.info("Started pipeline execution from execution source: {}", ciExecutionArgs.getExecutionSource().getType());
+      PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions);
+      createCIBuild(ngPipelineEntity, ciExecutionArgs, planExecution, buildNumber);
+      return planExecution;
+    }
   }
 
   private CIBuild createCIBuild(NgPipelineEntity ngPipelineEntity, CIExecutionArgs ciExecutionArgs,
@@ -61,6 +72,9 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
                           .accountIdentifier(ngPipelineEntity.getAccountId())
                           .executionId(planExecution.getUuid())
                           .build();
+
+    log.info("Created CI Build number {} for pipeline execution from execution source: {}", ciBuild.getBuildNumber(),
+        ciExecutionArgs.getExecutionSource().getType());
 
     return ciBuildService.save(ciBuild);
   }
