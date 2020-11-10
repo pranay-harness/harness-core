@@ -3,6 +3,7 @@ package io.harness.managerclient;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoResponse;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -16,7 +17,6 @@ import software.wings.beans.Log;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -35,8 +35,8 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Body Log logObject);
 
   @POST("agent/delegates/{delegateId}/state-executions")
-  Call<RestResponse> saveApiCallLogs(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
-      @Body List<ThirdPartyApiCallLog> logObject);
+  Call<RestResponse> saveApiCallLogs(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
 
   @POST(LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveLogs(@Query("accountId") String accountId, @Query("appId") String appId,

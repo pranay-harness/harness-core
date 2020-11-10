@@ -1477,6 +1477,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactVariable.class, 7195);
     kryo.register(UserLockoutInfo.class, 7196);
     kryo.register(AwsAmiAllPhaseRollbackData.class, 7197);
+    kryo.register(ThirdPartyApiCallLog.ThirdPartyApiCallField.class, 71100);
+    kryo.register(ThirdPartyApiCallLog.FieldType.class, 71101);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);

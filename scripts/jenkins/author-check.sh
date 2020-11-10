@@ -54,6 +54,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Kamal Joshi <kamal.joshi@harness.io>$" |\
     grep -iv "^Karan Siwach <karan.siwach@harness.io>$" |\
     grep -iv "^Lazar Matovic <lazar.matovic@harness.io>$" |\
+    grep -iv "^Lucas Mari <lucas.mari@harness.io>$" |\
     grep -iv "^Magdalene Lee <magdalene.lee@harness.io>$" |\
     grep -iv "^Mark Lu <mark.lu@harness.io>$" |\
     grep -iv "^Marko Barjaktarovic <marko.barjaktarovic@harness.io>$" |\
@@ -69,6 +70,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Nandan Chandrashekar <nandan.chandrashekar@harness.io>$" |\
     grep -iv "^Nataraja Maruthi <nataraja@harness.io>$" |\
     grep -iv "^Nemanja Lukovic <nemanja.lukovic@harness.io>$" |\
+    grep -iv "^Nicolas Bantar <nicolas.bantar@harness.io>$" |\
     grep -iv "^Nikhil Ranjan <nikhil.ranjan@harness.io>$" |\
     grep -iv "^Nikola Obucina <nikola.obucina@harness.io>$" |\
     grep -iv "^Nikunj Badjatya <nikunj.badjatya@harness.io>$" |\
