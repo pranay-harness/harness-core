@@ -30,7 +30,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
         "@maven//:com_github_scribejava_scribejava_apis",
         "@maven//:com_github_scribejava_scribejava_core",
-        "@maven//:com_github_tomakehurst_wiremock",
         "@maven//:com_google_api_client_google_api_client",
         "@maven//:com_google_apis_google_api_services_container",
         "@maven//:com_google_code_findbugs_annotations",
@@ -114,6 +113,7 @@ java_library(
         "module",
         "//:lombok",
         "//990-commons-test:module",
+        "@maven//:com_github_tomakehurst_wiremock",
     ],
 )
 

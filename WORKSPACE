@@ -1431,7 +1431,6 @@ maven_install(
         "com.squareup.retrofit:retrofit:1.9.0",
         "com.squareup.wire:wire-runtime:2.2.0",
         "com.sumologic.api.client:sumo-java-client:2.5",
-        "com.sun.activation:javax.activation:1.2.0",
         "com.sun.istack:istack-commons-runtime:3.0.8",
         "com.sun.mail:javax.mail:1.5.6",
         "com.sun.xml.fastinfoset:FastInfoset:1.2.16",
@@ -1877,6 +1876,7 @@ maven_install(
         "xml-resolver:xml-resolver:1.2",
         "xpp3:xpp3:1.1.3.3",
         "io.netty:netty-all:4.1.51.Final",
+        "com.github.spullara.mustache.java:compiler:0.9.5",
     ],
     excluded_artifacts = [
     ],
@@ -1912,7 +1912,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "data_collection_dsl",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.9-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.12-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
