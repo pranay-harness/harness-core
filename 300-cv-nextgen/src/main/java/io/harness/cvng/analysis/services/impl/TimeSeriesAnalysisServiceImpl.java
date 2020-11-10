@@ -595,7 +595,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
         .greaterThanOrEq(startTime)
         .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
-        .lessThan(endTime)
+        .lessThanOrEq(endTime)
         .order(Sort.descending(TimeSeriesRiskSummaryKeys.analysisEndTime))
         .get();
   }

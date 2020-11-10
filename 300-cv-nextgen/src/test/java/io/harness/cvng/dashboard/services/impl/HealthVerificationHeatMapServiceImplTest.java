@@ -3,12 +3,15 @@ package io.harness.cvng.dashboard.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -23,6 +26,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -36,7 +40,10 @@ import org.mockito.MockitoAnnotations;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
   @Mock private CVConfigService cvConfigService;
@@ -222,6 +229,63 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     HealthVerificationHeatMap errorsHeatmap = heatMaps.get(2);
     validateHeatMaps(errorsHeatmap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
         HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK, CVMonitoringCategory.PERFORMANCE);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAggregatedRisk() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+
+    Set<CategoryRisk> preActivityRisks =
+        heatMapService.getAggregatedRisk(activityId, HealthVerificationPeriod.PRE_ACTIVITY);
+    Set<CategoryRisk> postActivityRisks =
+        heatMapService.getAggregatedRisk(activityId, HealthVerificationPeriod.POST_ACTIVITY);
+
+    assertThat(preActivityRisks).isNotNull();
+    assertThat(postActivityRisks).isNotNull();
+
+    assertThat(preActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(postActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+
+    for (CategoryRisk categoryRisk : preActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(100.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+
+    for (CategoryRisk categoryRisk : postActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(100.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetVerificationRisk() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+
+    Set<String> taskIds = new HashSet<>();
+    taskIds.add(verificationTaskId);
+    when(verificationTaskService.getVerificationTaskIds(eq(accountId), anyString())).thenReturn(taskIds);
+
+    Optional<Double> risk = heatMapService.getVerificationRisk(
+        VerificationJobInstance.builder().accountId(accountId).uuid(verificationJobInstanceId).build());
+
+    assertThat(risk).isPresent();
+    assertThat(risk.get()).isEqualTo(0.0);
   }
 
   private void validateHeatMaps(HealthVerificationHeatMap heatMap, Double riskScore, Instant endTime,

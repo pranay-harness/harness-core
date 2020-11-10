@@ -60,9 +60,10 @@ public class ActivityVerificationState extends AnalysisState {
     } else if (isAllAnalysesComplete() && healthVerificationPeriod.equals(HealthVerificationPeriod.POST_ACTIVITY)) {
       this.setStatus(AnalysisStatus.SUCCESS);
     }
-    healthVerificationService.updateProgress(
-        getInputs().getVerificationTaskId(), analysisCompletedUntil, getStatus(), false);
-
+    if (analysisCompletedUntil.toEpochMilli() != 0) {
+      healthVerificationService.updateProgress(
+          getInputs().getVerificationTaskId(), analysisCompletedUntil, getStatus(), false);
+    }
     // TODO: When should we mark this as failed/error ?
     // TODO: What to do if the analysis had stopped for some reason for one of the underlying configs.
     return this.getStatus();

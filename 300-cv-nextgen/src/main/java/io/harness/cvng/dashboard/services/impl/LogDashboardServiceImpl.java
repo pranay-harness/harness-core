@@ -69,6 +69,14 @@ public class LogDashboardServiceImpl implements LogDashboardService {
   public PageResponse<AnalyzedLogDataDTO> getActivityLogs(String activityId, String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier, Long startTimeMillis,
       Long endTimeMillis, boolean anomalousOnly, int page, int size) {
+    List<String> cvConfigIds = getCVConfigIdsForActivity(accountId, activityId);
+    List<LogAnalysisTag> tags = anomalousOnly ? Arrays.asList(LogAnalysisTag.UNEXPECTED, LogAnalysisTag.UNKNOWN)
+                                              : Arrays.asList(LogAnalysisTag.values());
+    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
+        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+  }
+
+  private List<String> getCVConfigIdsForActivity(String accountId, String activityId) {
     Activity activity = activityService.get(activityId);
     List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
     Set<String> verificationTaskIds =
@@ -77,29 +85,31 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                 -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
-    List<String> cvConfigIds = verificationTaskIds.stream()
-                                   .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
-                                   .collect(Collectors.toList());
-    List<LogAnalysisTag> tags = anomalousOnly ? Arrays.asList(LogAnalysisTag.UNEXPECTED, LogAnalysisTag.UNKNOWN)
-                                              : Arrays.asList(LogAnalysisTag.values());
-    return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
-        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+    return verificationTaskIds.stream()
+        .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
+        .collect(Collectors.toList());
   }
 
   @Override
   public SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifier, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis) {
+    List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, category);
+    List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    return getLogCountByTagForConfigs(accountId, cvConfigIds, startTimeMillis, endTimeMillis);
+  }
+
+  private SortedSet<LogDataByTag> getLogCountByTagForConfigs(
+      String accountId, List<String> cvConfigIds, long startTimeMillis, long endTimeMillis) {
     Map<Long, Map<LogAnalysisTag, Integer>> logTagCountMap = new HashMap<>();
     List<LogDataByTag> logDataByTagList = new ArrayList<>();
 
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    List<CVConfig> configs = cvConfigService.getConfigsOfProductionEnvironments(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, category);
-    List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
-    for (String cvConfigId : cvConfigIds) {
-      String verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
+
+    for (String verificationTaskId : cvConfigIds) {
+      // String verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
       List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(
           verificationTaskId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime);
       analysisResults.forEach(result -> {
@@ -127,6 +137,13 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     SortedSet<LogDataByTag> sortedReturnSet = new TreeSet<>(logDataByTagList);
     log.info("In getLogCountByTag, returning a set of size {}", sortedReturnSet.size());
     return sortedReturnSet;
+  }
+
+  @Override
+  public SortedSet<LogDataByTag> getLogCountByTagForActivity(String accountId, String projectIdentifier,
+      String orgIdentifier, String activityId, Instant startTime, Instant endTime) {
+    List<String> cvConfigIds = getCVConfigIdsForActivity(accountId, activityId);
+    return getLogCountByTagForConfigs(accountId, cvConfigIds, startTime.toEpochMilli(), endTime.toEpochMilli());
   }
 
   private PageResponse<AnalyzedLogDataDTO> getLogs(String accountId, String projectIdentifier, String orgIdentifier,

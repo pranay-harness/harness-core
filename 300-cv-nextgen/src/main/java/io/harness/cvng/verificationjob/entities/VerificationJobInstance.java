@@ -9,6 +9,7 @@ import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
@@ -136,7 +137,7 @@ public class VerificationJobInstance
   }
 
   public Instant getEndTime() {
-    return getStartTime().plus(resolvedJob.getDuration());
+    return getStartTime().plus(getExecutionDuration());
   }
 
   public List<ProgressLog> getProgressLogs() {
@@ -209,16 +210,29 @@ public class VerificationJobInstance
     return getProgressLogs().stream().filter(progressLog -> progressLog.isFinalState).collect(Collectors.toList());
   }
   public int getProgressPercentage() {
+    // TODO: Reexamine this logic. This will return 0 for anything that's not marked as a final state.
     List<ProgressLog> finalStateLogs = getFinalStateProgressLogs();
     if (finalStateLogs.isEmpty()) {
       return 0;
     }
-    ProgressLog lastProgressLog = finalStateLogs.get(getProgressLogs().size() - 1);
+    ProgressLog lastProgressLog = finalStateLogs.get(finalStateLogs.size() - 1);
     Instant endTime = lastProgressLog.getEndTime();
-    Duration total = getResolvedJob().getDuration();
+    Duration total = getExecutionDuration();
     Duration completedTillNow = Duration.between(getStartTime(), endTime);
 
     return (int) (completedTillNow.get(ChronoUnit.SECONDS) * 100.0 / total.get(ChronoUnit.SECONDS));
+  }
+
+  private Duration getExecutionDuration() {
+    Duration jobDuration = getResolvedJob().getDuration();
+    if (VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType())) {
+      return jobDuration;
+    }
+    return jobDuration.plus(jobDuration);
+  }
+
+  private boolean isHealthJob() {
+    return !VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType());
   }
 
   public Duration getTimeRemainingMs(Instant currentTime) {
@@ -231,8 +245,12 @@ public class VerificationJobInstance
       if (percentage == 0) {
         return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
       }
-      Duration durationTillNow = Duration.between(
-          Collections.max(Arrays.asList(getStartTime(), Instant.ofEpochMilli(createdAt))), currentTime);
+      Instant startTimeForDuration = getStartTime();
+      if (!isHealthJob()) {
+        startTimeForDuration = Collections.max(Arrays.asList(getStartTime(), Instant.ofEpochMilli(createdAt)));
+      }
+      Duration durationTillNow = Duration.between(startTimeForDuration, currentTime);
+
       Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
       return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }

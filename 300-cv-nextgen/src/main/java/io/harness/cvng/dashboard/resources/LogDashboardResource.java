@@ -16,6 +16,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import java.time.Instant;
 import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -90,6 +91,21 @@ public class LogDashboardResource {
         logDashboardService.getLogCountByTag(accountId, projectIdentifier, orgIdentifier, serviceIdentifier,
             environmentIdentifier, monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null,
             startTimeMillis, endTimeMillis));
+  }
+
+  @GET
+  @Path("/{activityId}/log-count-by-tags")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ApiOperation(value = "get a sorted tag vs logs list for an activity", nickname = "getTagCountForActivity")
+  public RestResponse<SortedSet<LogDataByTag>> getTagCountForActivity(@QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
+      @NotNull @PathParam("activityId") String activityId) {
+    return new RestResponse<>(logDashboardService.getLogCountByTagForActivity(accountId, projectIdentifier,
+        orgIdentifier, activityId, Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis)));
   }
 
   @GET

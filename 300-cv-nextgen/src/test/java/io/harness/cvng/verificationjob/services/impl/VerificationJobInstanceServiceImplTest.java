@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.beans.ActivityVerificationStatus;
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
@@ -483,10 +484,10 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(deploymentActivityVerificationResultDTO.getPreProductionDeploymentSummary()).isNull();
     assertThat(deploymentActivityVerificationResultDTO.getPostDeploymentSummary()).isNull();
     assertThat(deploymentActivityVerificationResultDTO.getProductionDeploymentSummary())
-        .isEqualTo(DeploymentActivityVerificationResultDTO.DeploymentSummary.builder()
+        .isEqualTo(ActivityVerificationSummary.builder()
                        .total(1)
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .riskScore(null)
+                       .riskScore(-1.0)
                        .notStarted(1)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)

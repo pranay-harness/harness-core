@@ -5,6 +5,7 @@ import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.ng.beans.PageResponse;
 
+import java.time.Instant;
 import java.util.SortedSet;
 
 public interface LogDashboardService {
@@ -18,6 +19,9 @@ public interface LogDashboardService {
   SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis);
+
+  SortedSet<LogDataByTag> getLogCountByTagForActivity(String accountId, String projectIdentifier, String orgIdentifier,
+      String activityId, Instant startTimeMillis, Instant endTimeMillis);
 
   PageResponse<AnalyzedLogDataDTO> getActivityLogs(String activityId, String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier, Long startTimeMillis,

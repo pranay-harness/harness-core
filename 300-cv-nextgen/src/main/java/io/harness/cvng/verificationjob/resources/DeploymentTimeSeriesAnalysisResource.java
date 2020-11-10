@@ -8,7 +8,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.LearningEngineAuth;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -29,7 +29,7 @@ public class DeploymentTimeSeriesAnalysisResource {
   @GET
   @Path("/{verificationJobInstanceId}")
   @Timed
-  @LearningEngineAuth
+  @NextGenManagerAuth
   @ExceptionMetered
   @ApiOperation(value = "get metrics for given verificationJob", nickname = "getMetrics")
   public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(

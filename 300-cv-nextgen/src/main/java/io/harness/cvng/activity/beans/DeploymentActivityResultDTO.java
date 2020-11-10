@@ -17,7 +17,7 @@ public class DeploymentActivityResultDTO {
   Set<String> environments;
   DeploymentResultSummary deploymentResultSummary;
 
-  @Value
+  @Data
   @Builder
   public static class DeploymentVerificationJobInstanceSummary {
     int progressPercentage;
@@ -27,6 +27,9 @@ public class DeploymentActivityResultDTO {
     String environmentName;
     String jobName;
     String verificationJobInstanceId;
+    String activityId;
+    long activityStartTime;
+    long durationInSeconds;
     ActivityVerificationStatus status;
     AdditionalInfo additionalInfo;
   }

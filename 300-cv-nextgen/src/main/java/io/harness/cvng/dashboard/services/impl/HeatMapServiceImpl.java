@@ -302,6 +302,7 @@ public class HeatMapServiceImpl implements HeatMapService {
     return getCategoryRiskScoresForSpecificServiceEnv(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
   }
+
   private CategoryRisksDTO getCategoryRiskScoresForSpecificServiceEnv(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, String serviceIdentifier,
       String envIdentifier) {
@@ -313,6 +314,8 @@ public class HeatMapServiceImpl implements HeatMapService {
       @Nullable CVMonitoringCategory cvMonitoringCategory, @Nullable Instant endTime) {
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
     Map<CVMonitoringCategory, Integer> categoryScoreMap = new HashMap<>();
+    Instant roundedDownTime = roundDownTo5MinBoundary(clock.instant());
+
     Set<CVMonitoringCategory> cvMonitoringCategories;
     if (cvMonitoringCategory != null) {
       cvMonitoringCategories = Collections.singleton(cvMonitoringCategory);
@@ -334,7 +337,7 @@ public class HeatMapServiceImpl implements HeatMapService {
         heatMapQuery.field(HeatMapKeys.heatMapBucketStartTime).lessThan(endTime);
       }
       HeatMap latestHeatMap = heatMapQuery.get();
-      Instant roundedDownTime = roundDownTo5MinBoundary(clock.instant());
+
       if (latestHeatMap != null) {
         SortedSet<HeatMapRisk> risks = new TreeSet<>(latestHeatMap.getHeatMapRisks());
         if (risks.last().getEndTime().isAfter(roundedDownTime.minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES))) {
@@ -355,9 +358,10 @@ public class HeatMapServiceImpl implements HeatMapService {
 
     return CategoryRisksDTO.builder()
         .categoryRisks(categoryRiskList)
-        .endTimeEpoch(latestAnalysisTime.equals(Instant.MIN) ? 0 : latestAnalysisTime.toEpochMilli())
+        .endTimeEpoch(
+            latestAnalysisTime.equals(Instant.MIN) ? roundedDownTime.toEpochMilli() : latestAnalysisTime.toEpochMilli())
         .startTimeEpoch(latestAnalysisTime.equals(Instant.MIN)
-                ? 0
+                ? roundedDownTime.minus(HeatMapResolution.FIFTEEN_MINUTES.getResolution()).toEpochMilli()
                 : latestAnalysisTime.minus(heatMapResolution.getResolution()).toEpochMilli())
         .build();
   }

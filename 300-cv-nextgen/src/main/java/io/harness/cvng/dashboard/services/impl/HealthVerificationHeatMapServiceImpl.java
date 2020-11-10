@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
@@ -11,6 +12,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
@@ -23,17 +25,25 @@ import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.HealthVerificationHeatMapKeys;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class HealthVerificationHeatMapServiceImpl implements HealthVerificationHeatMapService {
@@ -59,6 +69,77 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     updateActivityRiskScore(verificationTaskId, overallRisk, cvConfig, activity, healthVerificationPeriod, endTime);
     log.info("Updated the health verification risk score for verificationTaskId {}, category {}, period {} to {}",
         verificationTaskId, cvConfig.getCategory(), healthVerificationPeriod, overallRisk);
+  }
+
+  @Override
+  public Optional<Double> getVerificationRisk(VerificationJobInstance verificationJobInstance) {
+    Set<String> taskIds = verificationTaskService.getVerificationTaskIds(
+        verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
+    List<Double> risks = new ArrayList<>();
+    Query<HealthVerificationHeatMap> heatMapQuery =
+        hPersistence.createQuery(HealthVerificationHeatMap.class)
+            .field(HealthVerificationHeatMapKeys.aggregationId)
+            .in(taskIds)
+            .filter(HealthVerificationHeatMapKeys.aggregationLevel,
+                HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK)
+            .order(Sort.ascending(HealthVerificationHeatMapKeys.endTime));
+
+    hPersistence.getDatastore(HealthVerificationHeatMap.class)
+        .createAggregation(HealthVerificationHeatMap.class)
+        .match(heatMapQuery)
+        .project(projection(HealthVerificationHeatMapKeys.riskScore), projection(HealthVerificationHeatMapKeys.endTime),
+            projection("verificationTaskId"), projection("category"))
+        .group(id(grouping(HealthVerificationHeatMapKeys.aggregationId)),
+            grouping(HealthVerificationHeatMapKeys.endTime, accumulator("$last", "endTime")),
+            grouping(HealthVerificationHeatMapKeys.riskScore, accumulator("$last", "riskScore")))
+        .aggregate(HealthVerificationHeatMap.class)
+        .forEachRemaining(healthVerificationHeatMap -> { risks.add(healthVerificationHeatMap.getRiskScore()); });
+    if (isNotEmpty(risks)) {
+      return Optional.of(Collections.max(risks));
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public List<Optional<Double>> getRisksOfVerification(List<VerificationJobInstance> verificationJobInstances) {
+    List<Optional<Double>> optionalRisks = new ArrayList<>();
+    verificationJobInstances.forEach(
+        verificationJobInstance -> { optionalRisks.add(getVerificationRisk(verificationJobInstance)); });
+
+    return optionalRisks;
+  }
+
+  @Override
+  public Set<CategoryRisk> getAggregatedRisk(String activityId, HealthVerificationPeriod healthVerificationPeriod) {
+    Preconditions.checkNotNull(activityId, "activityId is null when trying to get aggregated risk");
+    Map<CVMonitoringCategory, Double> scoreMap = new HashMap<>();
+    Set<CategoryRisk> categoryRisks = new HashSet<>();
+    List<HealthVerificationHeatMap> heatMaps =
+        hPersistence.createQuery(HealthVerificationHeatMap.class, excludeAuthority)
+            .filter(HealthVerificationHeatMapKeys.activityId, activityId)
+            .filter(HealthVerificationHeatMapKeys.aggregationLevel, AggregationLevel.ACTIVITY)
+            .asList();
+    if (isEmpty(heatMaps)) {
+      Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
+        categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build());
+      });
+      return categoryRisks;
+    }
+
+    heatMaps.forEach(heatMap -> {
+      Double risk = heatMap.getRiskScore() * 100;
+      categoryRisks.add(CategoryRisk.builder().category(heatMap.getCategory()).risk(risk).build());
+      scoreMap.put(heatMap.getCategory(), heatMap.getRiskScore());
+    });
+
+    Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
+      if (!scoreMap.containsKey(category)) {
+        categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build());
+      }
+    });
+
+    return categoryRisks;
   }
 
   private void updateActivityRiskScore(String verificationTaskId, Double overallRisk, CVConfig cvConfig,
