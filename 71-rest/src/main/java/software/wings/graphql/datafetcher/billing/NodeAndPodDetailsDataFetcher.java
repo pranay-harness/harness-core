@@ -213,7 +213,7 @@ public class NodeAndPodDetailsDataFetcher
     } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
       instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
       return QLNodeAndPodDetailsTableData.builder()
-          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, new ArrayList<>(instanceIds)))
+          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIdsWithCluster))
           .build();
     }
 
