@@ -22,11 +22,14 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -44,6 +47,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -73,6 +77,10 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@CdIndex(name = "accountId_endTs",
+    fields =
+    { @Field(WorkflowExecutionKeys.accountId)
+      , @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC) })
 public class WorkflowExecution
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -103,11 +111,6 @@ public class WorkflowExecution
                  .field(WorkflowExecutionKeys.workflowType)
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.infraMappingIds)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_endTs")
-                 .field(WorkflowExecutionKeys.accountId)
-                 .field(WorkflowExecutionKeys.endTs)
                  .build())
         .add(CreatedAtSortCompoundMongoIndex.builder()
                  .name("accountId_createdAt2")
