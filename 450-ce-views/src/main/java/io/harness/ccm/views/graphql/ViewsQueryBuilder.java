@@ -7,6 +7,7 @@ import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.Converter;
+import com.healthmarketscience.sqlbuilder.CustomCondition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
@@ -43,6 +44,7 @@ public class ViewsQueryBuilder {
   private static final String distinct = " DISTINCT(%s)";
   private static final String aliasStartTimeMaxMin = "%s_%s";
   private static final String labelsFilter = "CONCAT(labels.key, ':', labels.value)";
+  private static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -184,6 +186,10 @@ public class ViewsQueryBuilder {
     query.addCustomFromTable(cloudProviderTableName);
     for (QLCEViewFilter filter : filters) {
       QLCEViewFieldInput viewFieldInput = filter.getField();
+      String searchString = "";
+      if (filter.getValues().length != 0) {
+        searchString = filter.getValues()[0];
+      }
       switch (viewFieldInput.getIdentifier()) {
         case AWS:
         case GCP:
@@ -191,17 +197,23 @@ public class ViewsQueryBuilder {
         case COMMON:
           query.addAliasedColumn(
               new CustomSql(String.format(distinct, viewFieldInput.getFieldId())), viewFieldInput.getFieldId());
+          query.addCondition(
+              new CustomCondition(String.format(searchFilter, viewFieldInput.getFieldId(), searchString)));
           break;
         case LABEL:
           if (viewFieldInput.getFieldId().equals(ViewsMetaDataFields.LABEL_KEY.getFieldName())) {
             query.addCustomGroupings(ViewsMetaDataFields.LABEL_KEY.getAlias());
             query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
                 ViewsMetaDataFields.LABEL_KEY.getAlias());
+            query.addCondition(new CustomCondition(
+                String.format(searchFilter, ViewsMetaDataFields.LABEL_KEY.getFieldName(), searchString)));
           } else {
             query.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
             query.addCondition(getCondition(getLabelKeyFilter(new String[] {viewFieldInput.getFieldName()})));
             query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
                 ViewsMetaDataFields.LABEL_VALUE.getAlias());
+            query.addCondition(new CustomCondition(
+                String.format(searchFilter, ViewsMetaDataFields.LABEL_VALUE.getFieldName(), searchString)));
           }
           query.addCustomJoin(leftJoinLabels);
           break;
@@ -229,6 +241,8 @@ public class ViewsQueryBuilder {
           }
           query.addAliasedColumn(new CustomSql(String.format(distinct, customField.getSqlFormula())),
               modifyStringToComplyRegex(customField.getName()));
+          query.addCondition(
+              new CustomCondition(String.format(searchFilter, customField.getSqlFormula(), searchString)));
           break;
         default:
           throw new InvalidRequestException("Invalid View Field Identifier " + viewFieldInput.getIdentifier());
