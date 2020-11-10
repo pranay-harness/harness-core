@@ -22,6 +22,8 @@ public abstract class DSConfig {
   private String productName;
   private String connectorIdentifier;
   private String envIdentifier;
+  private String monitoringSourceIdentifier;
+  private String monitoringSourceName;
 
   public abstract DataSourceType getType();
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(List<CVConfig> existingCVConfigs);
@@ -40,6 +42,8 @@ public abstract class DSConfig {
     this.productName = cvConfig.getProductName();
     this.connectorIdentifier = cvConfig.getConnectorIdentifier();
     this.envIdentifier = cvConfig.getEnvIdentifier();
+    this.monitoringSourceIdentifier = cvConfig.getMonitoringSourceIdentifier();
+    this.monitoringSourceName = cvConfig.getMonitoringSourceName();
   }
 
   protected void fillCommonFields(CVConfig cvConfig) {
@@ -50,5 +54,7 @@ public abstract class DSConfig {
     cvConfig.setProductName(productName);
     cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setEnvIdentifier(envIdentifier);
+    cvConfig.setMonitoringSourceIdentifier(monitoringSourceIdentifier);
+    cvConfig.setMonitoringSourceName(monitoringSourceName);
   }
 }

@@ -48,6 +48,7 @@ import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -189,9 +190,19 @@ public class CVServiceModule extends AbstractModule {
       bind(AnalysisService.class).to(AnalysisServiceImpl.class);
       bind(CVSetupService.class).to(CVSetupServiceImpl.class);
 
+      bindTheMonitoringSourceImportStatusCreators();
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
+  }
+
+  private void bindTheMonitoringSourceImportStatusCreators() {
+    bind(MonitoringSourceImportStatusCreator.class)
+        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+        .to(AppDynamicsService.class);
+    bind(MonitoringSourceImportStatusCreator.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkService.class);
   }
 
   @Provides

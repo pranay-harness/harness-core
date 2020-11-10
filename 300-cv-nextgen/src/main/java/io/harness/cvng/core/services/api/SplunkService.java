@@ -5,7 +5,7 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 
 import java.util.List;
 
-public interface SplunkService {
+public interface SplunkService extends MonitoringSourceImportStatusCreator {
   List<SplunkSavedSearch> getSavedSearches(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String requestGuid);
 

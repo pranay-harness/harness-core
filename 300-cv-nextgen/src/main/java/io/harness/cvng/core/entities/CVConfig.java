@@ -63,6 +63,8 @@ public abstract class CVConfig
   private String perpetualTaskId;
   private String productName;
   private String groupId;
+  @NotNull private String monitoringSourceIdentifier;
+  @NotNull private String monitoringSourceName;
 
   @FdIndex private Long analysisOrchestrationIteration;
 

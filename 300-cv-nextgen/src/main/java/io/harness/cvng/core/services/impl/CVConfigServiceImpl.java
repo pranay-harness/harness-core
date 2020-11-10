@@ -29,10 +29,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -274,6 +276,38 @@ public class CVConfigServiceImpl implements CVConfigService {
         .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
         .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+        .asList();
+  }
+
+  @Override
+  public List<String> getMonitoringSourceIds(
+      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset) {
+    BasicDBObject cvConfigQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
+    conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
+    cvConfigQuery.put("$and", conditions);
+    List<String> allMonitoringSourceIds =
+        hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.monitoringSourceIdentifier, cvConfigQuery);
+    Collections.reverse(allMonitoringSourceIds);
+    return Optional.ofNullable(allMonitoringSourceIds)
+        .orElseGet(Collections::emptyList)
+        .stream()
+        .skip(offset)
+        .limit(limit)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<CVConfig> listByMonitoringSources(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier) {
+    return hPersistence.createQuery(CVConfig.class)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .field(CVConfigKeys.monitoringSourceIdentifier)
+        .in(monitoringSourceIdentifier)
         .asList();
   }
 

@@ -9,6 +9,8 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
@@ -50,5 +52,10 @@ public class SplunkServiceImpl implements SplunkService {
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof SplunkConnectorDTO,
         "ConnectorConfig should be of type Splunk");
     return (SplunkConnectorDTO) connectorDTO.get().getConnectorConfig();
+  }
+
+  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
+      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
+    throw new UnsupportedOperationException("Not Implemented yet");
   }
 }

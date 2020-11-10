@@ -25,6 +25,10 @@ public interface CVConfigService {
   List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
       String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> getProductNames(String accountId, String connectorIdentifier);
+  List<String> getMonitoringSourceIds(
+      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset);
+  List<CVConfig> listByMonitoringSources(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier);
 
   void setCollectionTaskId(String cvConfigId, String dataCollectionTaskId);
   List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
