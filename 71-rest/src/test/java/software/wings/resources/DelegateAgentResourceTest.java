@@ -48,6 +48,7 @@ import io.harness.managerclient.WatcherVersionQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.Before;
@@ -100,6 +101,7 @@ public class DelegateAgentResourceTest {
       mock(ArtifactCollectionResponseHandler.class);
   private static ManifestCollectionResponseHandler manifestCollectionResponseHandler =
       mock(ManifestCollectionResponseHandler.class);
+  private static KryoSerializer kryoSerializer = mock(KryoSerializer.class);
 
   @Parameter public String apiUrl;
 
@@ -113,7 +115,7 @@ public class DelegateAgentResourceTest {
       ResourceTestRule.builder()
           .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
-              instanceSyncResponseHandler, manifestCollectionResponseHandler))
+              instanceSyncResponseHandler, manifestCollectionResponseHandler, kryoSerializer))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -418,6 +420,9 @@ public class DelegateAgentResourceTest {
                           .delegateTaskId(generateUuid())
                           .build());
     }
+
+    when(kryoSerializer.asObject(any(byte[].class))).thenReturn(apiCallLogs);
+
     RestResponse<String> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/" + DELEGATE_ID + "/state-executions?delegateId=" + DELEGATE_ID

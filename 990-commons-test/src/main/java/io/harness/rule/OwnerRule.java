@@ -160,6 +160,8 @@ public class OwnerRule implements TestRule {
   public static final String TMACARI = "tudor.macari";
   public static final String NAMAN = "naman.verma";
   public static final String DEEPAK_PUTHRAYA = "deepak.puthraya";
+  public static final String LUCAS = "lucas.mari";
+  public static final String NICOLAS = "nicolas.bantar";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -197,6 +199,7 @@ public class OwnerRule implements TestRule {
           .put(JUHI, defaultUserInfo(JUHI).slack("UL1KX4K1S").build())
           .put(KAMAL, defaultUserInfo(KAMAL).slack("UKFQ1PQBH").team(CONTINUOUS_VERIFICATION).build())
           .put(KARAN, defaultUserInfo(KARAN).slack("U015LRX21FD").team(PLATFORM).build())
+          .put(LUCAS, defaultUserInfo(LUCAS).slack("U01C8MPTS2J").team(DELEGATE).build())
           .put(MARKO, defaultUserInfo(MARKO).slack("UVDT91N9W").team(DELEGATE).build())
           .put(MATT, defaultUserInfo(MATT).slack("U019QR7TA7M").team(DELEGATE).build())
           .put(MEENAKSHI, UserInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
@@ -205,6 +208,7 @@ public class OwnerRule implements TestRule {
           .put(MOHIT, defaultUserInfo(MOHIT).slack("USB6NTE22").team(PLATFORM).build())
           .put(NATARAJA, defaultUserInfo(NATARAJA).slack("UDQAS9J5C").team(PLATFORM).build())
           .put(NEMANJA, defaultUserInfo(NEMANJA).slack("U016F8DDQSC").team(CONTINUOUS_VERIFICATION).build())
+          .put(NICOLAS, defaultUserInfo(NICOLAS).slack("U01C8MPQVQE").team(DELEGATE).build())
           .put(NIKOLA, defaultUserInfo(NIKOLA).slack("U011CFJ4YDV").team(PLATFORM).build())
           .put(NIKUNJ, defaultUserInfo(NIKUNJ).slack("U019JUP10AF").team(CONTINUOUS_EFFICIENCY).build())
           .put(PARNIAN, defaultUserInfo(PARNIAN).slack("U89A5MLQK").team(CONTINUOUS_VERIFICATION).build())

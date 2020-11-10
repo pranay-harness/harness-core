@@ -33,7 +33,10 @@ import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 import software.wings.beans.Log;
@@ -61,16 +64,19 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   // 10 KB Activity logs batch size
   private static final int ACTIVITY_LOGS_BATCH_SIZE = 1024 * 10;
 
+  private final String LOGS_COMMON_MESSAGE_ERROR = "Unexpected Cache eviction accountId={}, logs={}, removalCause={}";
+
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
   private ManagerClient managerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
   private VerificationServiceClient verificationServiceClient;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
   public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService,
-      VerificationServiceClient verificationServiceClient) {
+      VerificationServiceClient verificationServiceClient, KryoSerializer kryoSerializer) {
     this.managerClient = managerClient;
     this.verificationServiceClient = verificationServiceClient;
     this.cache = Caffeine.newBuilder()
@@ -88,6 +94,8 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                   .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
                                   .removalListener(this ::dispatchCVActivityLogs)
                                   .build();
+    this.kryoSerializer = kryoSerializer;
+
     Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-log-service").build())
         .scheduleAtFixedRate(
             ()
@@ -147,7 +155,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error(LOGS_COMMON_MESSAGE_ERROR, accountId, logs, removalCause);
       return;
     }
     logs.stream()
@@ -212,7 +220,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   private void dispatchApiCallLogs(String accountId, List<ThirdPartyApiCallLog> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error(LOGS_COMMON_MESSAGE_ERROR, accountId, logs, removalCause);
       return;
     }
     logs.stream()
@@ -226,7 +234,15 @@ public class DelegateLogServiceImpl implements DelegateLogService {
           logsList.forEach(logObject -> logObject.setDelegateId(delegateId));
           try {
             log.info("Dispatching {} api call logs for [{}] [{}]", logsList.size(), stateExecutionId, accountId);
-            RestResponse restResponse = execute(managerClient.saveApiCallLogs(delegateId, accountId, logsList));
+
+            log.debug("Converting the logs into a byte array.");
+            byte[] logsListAsBytes = kryoSerializer.asBytes(logsList);
+            RequestBody logsAsRequestBody =
+                RequestBody.create(MediaType.parse("application/octet-stream"), logsListAsBytes);
+            log.debug("Logs successfully converted!");
+
+            RestResponse restResponse =
+                execute(managerClient.saveApiCallLogs(delegateId, accountId, logsAsRequestBody));
             log.info("Dispatched {} api call logs for [{}] [{}]",
                 restResponse == null || restResponse.getResource() != null ? logsList.size() : 0, stateExecutionId,
                 accountId);
@@ -240,7 +256,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   private void dispatchCVActivityLogs(String accountId, List<CVActivityLog> logs, RemovalCause removalCause) {
     if (accountId == null || logs.isEmpty()) {
-      log.error("Unexpected Cache eviction accountId={}, logs={}, removalCause={}", accountId, logs, removalCause);
+      log.error(LOGS_COMMON_MESSAGE_ERROR, accountId, logs, removalCause);
       return;
     }
     Iterables.partition(logs, 100).forEach(batch -> {

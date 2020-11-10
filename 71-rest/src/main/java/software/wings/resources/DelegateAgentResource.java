@@ -38,6 +38,7 @@ import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.serializer.KryoSerializer;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -82,12 +83,14 @@ public class DelegateAgentResource {
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
   private ManifestCollectionResponseHandler manifestCollectionResponseHandler;
+  private KryoSerializer kryoSerializer;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler) {
+      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
+      KryoSerializer kryoSerializer) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -96,6 +99,7 @@ public class DelegateAgentResource {
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
     this.manifestCollectionResponseHandler = manifestCollectionResponseHandler;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @DelegateAuth
@@ -350,10 +354,14 @@ public class DelegateAgentResource {
   @Path("{delegateId}/state-executions")
   @Timed
   @ExceptionMetered
-  public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
-      List<ThirdPartyApiCallLog> logs) {
+  public void saveApiCallLogs(
+      @PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId, byte[] logsBlob) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+      log.info("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
+      List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
+      log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
+
       wingsPersistence.save(logs);
     }
   }

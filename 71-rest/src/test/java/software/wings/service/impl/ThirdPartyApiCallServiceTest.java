@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,19 +35,19 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
   private String appId;
   @Inject private DelegateAgentResource delegateResource;
   @Inject private ActivityResource activityResource;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     accountId = generateUuid();
     appId = generateUuid();
     stateExecutionId = generateUuid();
-    delegateId = delegateId;
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testSaveAndGetApiCallLogs() throws Exception {
+  public void testSaveAndGetApiCallLogs() {
     int numOfApiCallLogs = 10;
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();
     for (int i = 0; i < numOfApiCallLogs; i++) {
@@ -78,7 +79,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
                           .createdAt(i + 1)
                           .build());
     }
-    delegateResource.saveApiCallLogs(delegateId, accountId, apiCallLogs);
+    delegateResource.saveApiCallLogs(delegateId, accountId, kryoSerializer.asBytes(apiCallLogs));
 
     RestResponse<List<ThirdPartyApiCallLog>> restResponse =
         activityResource.listLogs(appId, stateExecutionId, 0, 0, aPageRequest().build());
