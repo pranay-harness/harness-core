@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HINGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -54,7 +54,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
                                                  .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HINGER)
   @Category(UnitTests.class)
   public void shouldGetSmbPaths() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session
@@ -72,7 +72,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HINGER)
   @Category(UnitTests.class)
   public void shouldGetSmbConnectionHost() {
     assertThat(smbHelperService.getSMBConnectionHost(SHARE_URL)).isNotEmpty().isEqualTo("10.0.0.1");
@@ -80,7 +80,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HINGER)
   @Category(UnitTests.class)
   public void shouldGetSmbSharedFolder() {
     assertThat(smbHelperService.getSharedFolderName(SHARE_URL)).isNotEmpty().isEqualTo("share");
@@ -88,7 +88,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HINGER)
   @Category(UnitTests.class)
   public void shouldGetSmbArtifactDetails() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session
