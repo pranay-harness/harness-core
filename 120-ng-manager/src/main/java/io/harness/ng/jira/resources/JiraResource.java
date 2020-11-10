@@ -5,9 +5,11 @@ import com.google.inject.Inject;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
-import io.harness.cdng.jira.resources.response.JiraIssueDTO;
-import io.harness.cdng.jira.resources.response.JiraProjectDTO;
-import io.harness.cdng.jira.resources.response.JiraProjectResponse;
+import io.harness.cdng.jira.resources.response.JiraProjectResponseDTO;
+import io.harness.cdng.jira.resources.response.JiraProjectStatusesResponseDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -91,15 +93,29 @@ public class JiraResource {
   }
 
   @GET
-  @Path("get-projects")
+  @Path("getProjects")
   @ApiOperation(value = "Get jira projects", nickname = "getJiraProjects")
-  public ResponseDTO<JiraProjectResponse> getProjects(@QueryParam("connectorRef") String jiraConnectorIdentifier,
+  public ResponseDTO<JiraProjectResponseDTO> getProjects(@QueryParam("connectorRef") String jiraConnectorIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     List<JiraProjectDTO> jiraProjectDTOList =
         jiraResourceService.getProjects(connectorRef, orgIdentifier, projectIdentifier);
-    return ResponseDTO.newResponse(JiraProjectResponse.builder().jiraProjects(jiraProjectDTOList).build());
+    return ResponseDTO.newResponse(JiraProjectResponseDTO.builder().jiraProjects(jiraProjectDTOList).build());
+  }
+
+  @GET
+  @Path("getProjectStatuses")
+  @ApiOperation(value = "Get jira project statuses", nickname = "getJiraProjectStatuses")
+  public ResponseDTO<JiraProjectStatusesResponseDTO> getJiraProjectStatuses(
+      @QueryParam("connectorRef") String jiraConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("projectId") String projectId) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    List<JiraIssueTypeDTO> projectStatuses =
+        jiraResourceService.getProjectStatuses(connectorRef, orgIdentifier, projectIdentifier, projectId);
+    return ResponseDTO.newResponse(JiraProjectStatusesResponseDTO.builder().jiraIssueTypeList(projectStatuses).build());
   }
 }

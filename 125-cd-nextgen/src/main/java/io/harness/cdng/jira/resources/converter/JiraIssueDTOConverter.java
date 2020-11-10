@@ -1,6 +1,6 @@
 package io.harness.cdng.jira.resources.converter;
 
-import io.harness.cdng.jira.resources.response.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import lombok.experimental.UtilityClass;
 

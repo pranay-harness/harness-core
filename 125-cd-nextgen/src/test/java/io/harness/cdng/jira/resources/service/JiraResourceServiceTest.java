@@ -13,8 +13,9 @@ import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
-import io.harness.cdng.jira.resources.response.JiraIssueDTO;
-import io.harness.cdng.jira.resources.response.JiraProjectDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -262,6 +263,50 @@ public class JiraResourceServiceTest extends CategoryTest {
         .thenReturn(ErrorNotifyResponseData.builder().errorMessage("Error").build());
 
     assertThatThrownBy(() -> jiraResourceService.getProjects(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetProjectStatuses() {
+    final String projectId = "CDNG";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.SUCCESS)
+                        .statuses(new ArrayList<>())
+                        .build());
+
+    List<JiraIssueTypeDTO> projectStatuses =
+        jiraResourceService.getProjectStatuses(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectId);
+
+    assertThat(projectStatuses).isNotNull();
+    assertThat(projectStatuses).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetProjectStatusesFailure() {
+    final String projectId = "CDNG";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.FAILURE)
+                        .errorMessage("Error Message")
+                        .build());
+
+    assertThatThrownBy(
+        () -> jiraResourceService.fetchIssue(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectId))
         .isInstanceOf(HarnessJiraException.class);
   }
 
