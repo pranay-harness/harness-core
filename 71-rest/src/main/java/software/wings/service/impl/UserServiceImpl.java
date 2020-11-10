@@ -1500,8 +1500,13 @@ public class UserServiceImpl implements UserService {
 
     throwExceptionIfUserIsAlreadyRegistered(user.getEmail());
 
-    TrialSignupOptions trialSignupOptions =
-        new TrialSignupOptions(userInfo.getFreemiumProducts(), userInfo.getFreemiumAssistedOption());
+    TrialSignupOptions trialSignupOptions = new TrialSignupOptions();
+    trialSignupOptions.setAssistedOption(userInfo.getFreemiumAssistedOption());
+    if (userInfo.getFreemiumProducts() != null) {
+      trialSignupOptions.setProductsSelected(userInfo.getFreemiumProducts());
+    } else {
+      trialSignupOptions.populateProducts();
+    }
 
     // Create a trial account whose license expires in 15 days.
     Account account = createAccountWithTrialLicense(user, trialSignupOptions);
