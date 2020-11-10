@@ -58,7 +58,6 @@ public abstract class InfrastructureMapping
     return ImmutableList.<MongoIndex>builder()
         .add(CreatedAtSortCompoundMongoIndex.builder()
                  .name("infra_mapping_appId_envId_serviceId")
-                 .unique(true)
                  .field(InfrastructureMappingKeys.appId)
                  .field(InfrastructureMappingKeys.envId)
                  .field(InfrastructureMappingKeys.serviceId)

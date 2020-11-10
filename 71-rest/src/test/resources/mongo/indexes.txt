@@ -333,7 +333,7 @@ infrastructureMapping {"name": "app_envId_serviceTemplateId", "background": true
 infrastructureMapping {"name": "app_infratype", "background": true} {"appId": 1, "infraMappingType": 1}
 infrastructureMapping {"name": "computeProviderSettingId_1", "background": true} {"computeProviderSettingId": 1}
 infrastructureMapping {"name": "createdAt_1", "background": true} {"createdAt": 1}
-infrastructureMapping {"name": "infra_mapping_appId_envId_serviceId", "unique": true} {"appId": 1, "envId": 1, "serviceId": 1, "createdAt": -1}
+infrastructureMapping {"name": "infra_mapping_appId_envId_serviceId", "background": true} {"appId": 1, "envId": 1, "serviceId": 1, "createdAt": -1}
 infrastructureMapping {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 infrastructureMapping {"name": "yaml", "unique": true} {"appId": 1, "envId": 1, "name": 1}
 infrastructureProvisioner {"name": "accountIdCreatedAtIdx", "background": true} {"accountId": 1, "createdAt": -1}
