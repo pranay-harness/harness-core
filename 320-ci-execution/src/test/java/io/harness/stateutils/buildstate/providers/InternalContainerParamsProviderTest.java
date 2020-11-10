@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
@@ -47,8 +47,8 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void getLiteEngineContainerParams() {
-    BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
-    K8PodDetails k8PodDetails = K8PodDetails.builder().buildNumber(buildNumber).build();
+    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder().buildNumber(1L).build();
+    K8PodDetails k8PodDetails = K8PodDetails.builder().buildNumberDetails(buildNumberDetails).build();
 
     ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorDTO(ConnectorDTO.builder().build()).build();
     Map<String, ConnectorDetails> publishArtifactConnectorDetailsMap = new HashMap<>();

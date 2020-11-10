@@ -8,7 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.impl.CIPipelineExecutionService;
@@ -57,15 +57,16 @@ public class CIPipelineResource {
 
     try {
       NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
-      BuildNumber buildNumber = buildNumberService.increaseBuildNumber(accountId, orgId, projectId);
+      BuildNumberDetails buildNumberDetails = buildNumberService.increaseBuildNumber(accountId, orgId, projectId);
 
-      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumber(buildNumber).build();
+      CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumberDetails(buildNumberDetails).build();
       if (!isEmpty(branch)) {
         ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().branch(branch).build());
       } else {
         ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().tag(tag).build());
       }
-      ciPipelineExecutionService.executePipeline(ngPipelineEntity, ciExecutionArgs, buildNumber.getBuildNumber());
+      ciPipelineExecutionService.executePipeline(
+          ngPipelineEntity, ciExecutionArgs, buildNumberDetails.getBuildNumber());
     } catch (Exception e) {
       log.error("Failed to run input pipeline ", e);
       throw e;

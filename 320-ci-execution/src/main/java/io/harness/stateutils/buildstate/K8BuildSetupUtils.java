@@ -343,7 +343,7 @@ public class K8BuildSetupUtils {
   @NotNull
   private Map<String, String> getLogServiceEnvVariables(K8PodDetails k8PodDetails) throws Exception {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = k8PodDetails.getBuildNumber().getAccountIdentifier();
+    final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
 
     // Make a call to the log service and get back the token
@@ -358,10 +358,10 @@ public class K8BuildSetupUtils {
   private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
       ConnectorDetails gitConnector) throws URISyntaxException {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = k8PodDetails.getBuildNumber().getAccountIdentifier();
-    final String projectID = k8PodDetails.getBuildNumber().getProjectIdentifier();
-    final String orgID = k8PodDetails.getBuildNumber().getOrgIdentifier();
-    final Long buildNumber = k8PodDetails.getBuildNumber().getBuildNumber();
+    final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
+    final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
+    final String orgID = k8PodDetails.getBuildNumberDetails().getOrgIdentifier();
+    final Long buildNumber = k8PodDetails.getBuildNumberDetails().getBuildNumber();
     final String stageID = k8PodDetails.getStageID();
 
     // Add log service environment variables

@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 
 import javax.ws.rs.core.HttpHeaders;
 
@@ -25,7 +25,7 @@ public class WebhookTriggerProcessor implements TriggerProcessor {
   }
 
   public CIExecutionArgs generateExecutionArgs(
-      String pipelineId, String eventPayload, HttpHeaders httpHeaders, BuildNumber buildNumber) {
+      String pipelineId, String eventPayload, HttpHeaders httpHeaders, BuildNumberDetails buildNumberDetails) {
     // TODO Add branch if require
 
     WebhookExecutionSource webhookExecutionSource =
@@ -33,7 +33,7 @@ public class WebhookTriggerProcessor implements TriggerProcessor {
     return CIExecutionArgs.builder()
         .executionSource(webhookExecutionSource)
         .inputSet(WebhookTriggerExecutionInputSet.builder().payload(eventPayload).build())
-        .buildNumber(buildNumber)
+        .buildNumberDetails(buildNumberDetails)
         .build();
   }
 }

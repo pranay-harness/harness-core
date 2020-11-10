@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.engine.expressions.EngineExpressionService;
@@ -66,7 +66,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldExecuteCILiteEngineTask() throws Exception {
-    BuildNumber buildNumber = BuildNumber.builder().buildNumber(1L).build();
+    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder().buildNumber(1L).build();
     Call<ResponseDTO<Optional<ConnectorDTO>>> connectorRequest = mock(Call.class);
     when(connectorRequest.execute())
         .thenReturn(
@@ -82,8 +82,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(
-            K8PodDetails.builder().clusterName("cluster").namespace("namespace").buildNumber(buildNumber).build());
+        .thenReturn(K8PodDetails.builder()
+                        .clusterName("cluster")
+                        .namespace("namespace")
+                        .buildNumberDetails(buildNumberDetails)
+                        .build());
 
     buildSetupUtils.executeCILiteEngineTask(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance);

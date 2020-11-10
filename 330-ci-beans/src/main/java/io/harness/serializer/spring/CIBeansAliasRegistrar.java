@@ -35,7 +35,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.spring.AliasRegistrar;
 
@@ -63,7 +63,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("testStepInfo", TestStepInfo.class);
     orchestrationElements.put("saveCacheStepInfo", SaveCacheStepInfo.class);
     orchestrationElements.put("restoreCacheStepInfo", RestoreCacheStepInfo.class);
-    orchestrationElements.put("buildNumber", BuildNumber.class);
+    orchestrationElements.put("buildNumberDetails", BuildNumberDetails.class);
     orchestrationElements.put("typeInfo", TypeInfo.class);
     orchestrationElements.put("integrationStage", IntegrationStage.class);
     orchestrationElements.put("container", Container.class);
