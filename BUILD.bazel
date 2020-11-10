@@ -85,6 +85,7 @@ modules = [
     "//50-delegate-task-grpc-service",
     "//57-command-library-common",
     "//64-events-framework",
+    "//240-capability",
     "//440-connector-nextgen",
     "//430-cv-nextgen-commons",
     "//420-delegate-agent",

@@ -37,7 +37,6 @@ import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
-import io.harness.delegate.service.CapabilityServiceImpl;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.delegate.service.DelegateCVActivityLogServiceImpl;
@@ -127,7 +126,6 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTa
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDeployCommandHandler;
-import software.wings.delegatetasks.delegatecapability.CapabilityService;
 import software.wings.delegatetasks.k8s.taskhandler.K8sApplyTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
@@ -522,7 +520,6 @@ public class DelegateModule extends AbstractModule {
     install(TimeModule.getInstance());
     install(NGDelegateModule.getInstance());
 
-    bind(CapabilityService.class).to(CapabilityServiceImpl.class);
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(DelegatePropertyService.class).to(DelegatePropertyServiceImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
