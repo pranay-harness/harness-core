@@ -36,5 +36,9 @@ public class TrialSignupOptions {
     this.productsSelected = products;
   }
 
+  public void populateProducts() {
+    this.productsSelected = Arrays.asList(Products.CD, Products.CE, Products.CI);
+  }
+
   public enum Products { CD, CE, CI }
 }
