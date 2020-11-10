@@ -150,15 +150,12 @@ public class SecretsRBACServiceImpl implements SecretsRBACService {
         newSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),
         newSecretScopeMetadata.getCalculatedScopes().isScopedToAccount());
 
-    if (!newSecretScopeMetadata.isInheritScopesFromSM()
-        && !newSecretScopeMetadata.getSecretScopes().isScopedToAccount()) {
-      if (!usageRestrictionsService.isUsageRestrictionsSubset(accountId,
-              newSecretScopeMetadata.getSecretScopes().getUsageRestrictions(),
-              newSecretScopeMetadata.getSecretsManagerScopes().getUsageRestrictions())) {
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-            "The provided secret scopes are less restrictive than the scopes associated with the Secrets Manager",
-            USER);
-      }
+    if (!newSecretScopeMetadata.isInheritScopesFromSM() && !newSecretScopeMetadata.getSecretScopes().isScopedToAccount()
+        && !usageRestrictionsService.isUsageRestrictionsSubset(accountId,
+               newSecretScopeMetadata.getSecretScopes().getUsageRestrictions(),
+               newSecretScopeMetadata.getSecretsManagerScopes().getUsageRestrictions())) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "The usage scope of the secret is wider than the usage scope associated with the Secrets Manager", USER);
     }
 
     if (!Objects.equals(newSecretScopeMetadata.getCalculatedScopes().getUsageRestrictions(),

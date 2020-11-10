@@ -1233,11 +1233,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
       for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
-        count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+        int settingAttributeCount = removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+        count += settingAttributeCount;
 
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
-        if (count > 0) {
+        if (settingAttributeCount > 0) {
           settingsService.updateUsageRestrictionsInternal(settingAttribute.getUuid(), usageRestrictions);
           log.info("Reference to application {} has been removed in setting attribute {} with id {} in account {}",
               appId, settingAttribute.getName(), settingAttribute.getUuid(), accountId);
@@ -1248,11 +1249,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
       for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
-        count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+        int encryptedDataCount = removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+        count += encryptedDataCount;
 
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
-        if (count > 0) {
+        if (encryptedDataCount > 0) {
           secretManager.updateUsageRestrictionsForSecretOrFile(
               accountId, encryptedData.getUuid(), usageRestrictions, false, false);
           log.info("Reference to application {} has been removed in encrypted text/file {} with id {} in account {}",
@@ -1264,8 +1266,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     try (HIterator<SecretManagerConfig> iterator = getSecretManagerConfigWithUsageRestrictionsIterator(accountId)) {
       for (SecretManagerConfig secretManagerConfig : iterator) {
         UsageRestrictions usageRestrictions = secretManagerConfig.getUsageRestrictions();
-        count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
-        if (count > 0) {
+        int secretManagerConfigCount = removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+        count += secretManagerConfigCount;
+        if (secretManagerConfigCount > 0) {
           secretManager.updateUsageRestrictionsForSecretManagerConfig(
               accountId, secretManagerConfig.getUuid(), usageRestrictions);
           log.info("Reference to application {} has been removed in secrets manager {} with id {} in account {}", appId,
