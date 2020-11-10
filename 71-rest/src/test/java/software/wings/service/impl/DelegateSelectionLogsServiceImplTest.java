@@ -436,7 +436,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Missing selector " + selector + " with origin " + selectorOrigin);
+        .isEqualTo("The selector " + selector + " is configured in " + selectorOrigin
+            + ", but is not attached to this Delegate.");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
 
@@ -448,7 +449,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Missing selector " + selector + " with origin " + selectorOrigin);
+        .isEqualTo("The selector " + selector + " is configured in " + selectorOrigin
+            + ", but is not attached to this Delegate.");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
   }

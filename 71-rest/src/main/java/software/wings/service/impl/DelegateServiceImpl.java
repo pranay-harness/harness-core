@@ -309,8 +309,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String JRE_TAR_PATH = "jreTarPath";
   public static final String JRE_VERSION_KEY = "jreVersion";
   private static final String ENV_ENV_VAR = "ENV";
-  public static final String TASK_SELECTORS = "TASK_SELECTORS";
-  public static final String TASK_CATEGORY = "TASK_CATEGORY";
+  public static final String TASK_SELECTORS = "Task Selectors";
+  public static final String TASK_CATEGORY_MAP = "Task Category Map";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -2141,11 +2141,10 @@ public class DelegateServiceImpl implements DelegateService {
       TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
       TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
       if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
-        SelectorCapability selectorCapability =
-            SelectorCapability.builder()
-                .selectors(mapFromTaskType.getSelectors())
-                .selectorOrigin(TASK_CATEGORY + ": " + mapFromTaskType.getTaskGroup())
-                .build();
+        SelectorCapability selectorCapability = SelectorCapability.builder()
+                                                    .selectors(mapFromTaskType.getSelectors())
+                                                    .selectorOrigin(TASK_CATEGORY_MAP)
+                                                    .build();
         selectorCapabilities.add(selectorCapability);
       }
     }

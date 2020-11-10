@@ -198,7 +198,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Missing selector " + selector + " with origin " + selectorOrigin)
+                     .message("The selector " + selector + " is configured in " + selectorOrigin
+                         + ", but is not attached to this Delegate.")
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(MISSING_SELECTOR_GROUP_ID)
                      .build());

@@ -52,7 +52,7 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
 import static software.wings.service.impl.DelegateServiceImpl.DOCKER_DELEGATE;
 import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGATE;
-import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY;
+import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -2581,7 +2581,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                            .map(c -> (SelectorCapability) c)
                                                            .collect(Collectors.toList());
 
-    assertThat(selectorsCapabilityList.get(0).getSelectorOrigin()).isEqualTo(TASK_CATEGORY + ": " + TaskGroup.HTTP);
+    assertThat(selectorsCapabilityList.get(0).getSelectorOrigin()).isEqualTo(TASK_CATEGORY_MAP);
     assertThat(selectorsCapabilityList.get(0).getSelectors()).isEqualTo(sampleMap.getSelectors());
   }
 
