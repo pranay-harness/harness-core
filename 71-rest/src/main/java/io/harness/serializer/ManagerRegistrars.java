@@ -89,6 +89,6 @@ public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
-          .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+          .addAll(OrchestrationRegistrars.morphiaConverters)
           .build();
 }
