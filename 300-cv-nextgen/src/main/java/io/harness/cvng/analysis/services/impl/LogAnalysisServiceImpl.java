@@ -358,7 +358,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .field(LogAnalysisResultKeys.analysisEndTime)
         .greaterThanOrEq(startTime)
         .field(LogAnalysisResultKeys.analysisEndTime)
-        .lessThan(endTime)
+        .lessThanOrEq(endTime)
         .order(Sort.descending(LogAnalysisResultKeys.analysisEndTime))
         .get();
   }

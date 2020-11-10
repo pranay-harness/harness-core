@@ -17,12 +17,12 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import io.harness.cvng.activity.beans.ActivityVerificationStatus;
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.DeploymentVerificationJobInstanceSummaryBuilder;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO.DeploymentSummary;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionType;
@@ -41,6 +41,7 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
@@ -91,6 +92,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private DeploymentAnalysisService deploymentAnalysisService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private Clock clock;
+  @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   // TODO: this is only used in test. Get rid of this API
   @Override
   public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
@@ -173,8 +175,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
       orchestrationService.queueAnalysis(verificationTaskId,
-          verificationJob.getPreActivityTimeRange(verificationJobInstance.getStartTime()).get().getStartTime(),
-          verificationJob.getPreActivityTimeRange(verificationJobInstance.getStartTime()).get().getEndTime());
+          verificationJobInstance.getPreActivityVerificationStartTime(),
+          verificationJobInstance.getPreActivityVerificationStartTime().plus(verificationJob.getDuration()));
     });
 
     markRunning(verificationJobInstance.getUuid());
@@ -256,7 +258,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
         .productionDeploymentSummary(
             getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
-        .postDeploymentSummary(getDeploymentSummary(postDeploymentVerificationJobInstances))
+        .postDeploymentSummary(getActivityVerificationSummary(postDeploymentVerificationJobInstances))
         .build();
   }
 
@@ -384,6 +386,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         return deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
       case TEST:
         return deploymentAnalysisService.getLoadTestAdditionalInfo(accountId, verificationJobInstance);
+      case HEALTH:
+        return null;
       default:
         throw new IllegalStateException(
             "Failed to get additional info due to unknown type: " + verificationJobInstance.getResolvedJob().getType());
@@ -400,8 +404,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       case RUNNING:
         return ActivityVerificationStatus.IN_PROGRESS;
       case SUCCESS:
-        Optional<Double> riskScore = deploymentAnalysisService.getLatestRiskScore(
-            verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
+        Optional<Double> riskScore = getLatestRiskScore(verificationJobInstance);
         if (riskScore.isPresent()) {
           if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
             return ActivityVerificationStatus.VERIFICATION_PASSED;
@@ -415,30 +418,62 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  @Nullable
-  private DeploymentSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances) {
+  private Optional<Double> getLatestRiskScore(VerificationJobInstance verificationJobInstance) {
+    if (verificationJobInstance != null
+        && VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
+      return deploymentAnalysisService.getLatestRiskScore(
+          verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
+    } else {
+      return healthVerificationHeatMapService.getVerificationRisk(verificationJobInstance);
+    }
+  }
+
+  @Override
+  public ActivityVerificationSummary getActivityVerificationSummary(
+      List<VerificationJobInstance> verificationJobInstances) {
     if (isEmpty(verificationJobInstances)) {
       return null;
     }
-    VerificationJobInstance minVerificationInstanceJob =
-        Collections.min(verificationJobInstances, Comparator.comparing(VerificationJobInstance::getStartTime));
-    VerificationJobInstance maxDuration =
-        Collections.max(verificationJobInstances, Comparator.comparing(vji -> vji.getResolvedJob().getDuration()));
-    int progressPercentage =
-        verificationJobInstances.stream().mapToInt(VerificationJobInstance::getProgressPercentage).sum()
-        / verificationJobInstances.size();
-    long timeRemainingMs =
-        verificationJobInstances.stream()
-            .mapToLong(
-                verificationJobInstance -> verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
-            .max()
-            .getAsLong();
+    List<Optional<Double>> risks = new ArrayList<>();
+    verificationJobInstances.forEach(
+        verificationJobInstance -> { risks.add(getLatestRiskScore(verificationJobInstance)); });
+    return summarizeVerificationJobInstances(verificationJobInstances, risks);
+  }
+
+  @Nullable
+  public ActivityVerificationSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances) {
+    if (isEmpty(verificationJobInstances)) {
+      return null;
+    }
     List<Optional<Double>> latestRiskScores =
         verificationJobInstances.stream()
             .map(verificationJobInstance
                 -> deploymentAnalysisService.getLatestRiskScore(
                     verificationJobInstance.getAccountId(), verificationJobInstance.getUuid()))
             .collect(Collectors.toList());
+    return summarizeVerificationJobInstances(verificationJobInstances, latestRiskScores);
+  }
+
+  private ActivityVerificationSummary summarizeVerificationJobInstances(
+      List<VerificationJobInstance> verificationJobInstances, List<Optional<Double>> latestRiskScores) {
+    if (isEmpty(verificationJobInstances) || isEmpty(latestRiskScores)) {
+      return null;
+    }
+    VerificationJobInstance minVerificationInstanceJob =
+        Collections.min(verificationJobInstances, Comparator.comparing(VerificationJobInstance::getStartTime));
+    VerificationJobInstance maxDuration =
+        Collections.max(verificationJobInstances, Comparator.comparing(vji -> vji.getResolvedJob().getDuration()));
+    int progressPercentage = verificationJobInstances.size() == 0
+        ? 0
+        : verificationJobInstances.stream().mapToInt(VerificationJobInstance::getProgressPercentage).sum()
+            / verificationJobInstances.size();
+    long timeRemainingMs =
+        verificationJobInstances.stream()
+            .mapToLong(
+                verificationJobInstance -> verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
+            .max()
+            .getAsLong();
+
     int total = verificationJobInstances.size();
     int progress = 0;
     int passed = 0;
@@ -476,11 +511,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                                               .filter(optionalRiskScore -> optionalRiskScore.isPresent())
                                               .mapToDouble(riskScore -> riskScore.get())
                                               .max();
-    Double maxRiskScore = null;
+    Double maxRiskScore = -1.0;
     if (optionalMaxRiskScore.isPresent()) {
       maxRiskScore = optionalMaxRiskScore.getAsDouble();
     }
-    return DeploymentSummary.builder()
+    return ActivityVerificationSummary.builder()
         .startTime(minVerificationInstanceJob.getStartTime().toEpochMilli())
         .durationMs(maxDuration.getResolvedJob().getDuration().toMillis())
         .remainingTimeMs(timeRemainingMs)
@@ -511,10 +546,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                        .progressPercentage(verificationJobInstance.getProgressPercentage())
                        .remainingTimeMs(verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .riskScore(deploymentAnalysisService
-                                      .getLatestRiskScore(
-                                          verificationJobInstance.getAccountId(), verificationJobInstance.getUuid())
-                                      .orElse(null))
+                       .riskScore(getLatestRiskScore(verificationJobInstance).orElse(null))
                        .build())
             .collect(Collectors.toList());
     return DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary.builder()

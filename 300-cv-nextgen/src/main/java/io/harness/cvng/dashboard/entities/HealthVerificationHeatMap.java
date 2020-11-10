@@ -41,7 +41,7 @@ public class HealthVerificationHeatMap implements UuidAware, PersistentEntity, C
                  .field(HealthVerificationHeatMapKeys.aggregationId)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("insertionIdx")
+                 .name("fetchIdx")
                  .field(HealthVerificationHeatMapKeys.category)
                  .field(HealthVerificationHeatMapKeys.healthVerificationPeriod)
                  .field(HealthVerificationHeatMapKeys.aggregationLevel)

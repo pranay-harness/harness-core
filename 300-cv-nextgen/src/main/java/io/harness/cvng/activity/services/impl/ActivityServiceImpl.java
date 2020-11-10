@@ -1,14 +1,21 @@
 package io.harness.cvng.activity.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.activity.beans.ActivityDashboardDTO;
+import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
+import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
+import io.harness.cvng.activity.beans.ActivityVerificationStatus;
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
@@ -17,10 +24,12 @@ import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
@@ -32,9 +41,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,6 +64,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
+  @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
 
   @Override
   public Activity get(String activityId) {
@@ -119,10 +132,18 @@ public class ActivityServiceImpl implements ActivityService {
             .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
             .build();
     List<String> verificationJobInstanceIds = getVerificationJobInstanceIds(deploymentActivities);
+
     verificationJobInstanceService.addResultsToDeploymentResultSummary(
         accountId, verificationJobInstanceIds, deploymentResultSummary);
 
     String serviceName = getServiceNameFromActivity(deploymentActivities.get(0));
+
+    updateDeploymentVerificationJobInstanceSummariesWithActivityId(
+        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries(), deploymentActivities);
+    updateDeploymentVerificationJobInstanceSummariesWithActivityId(
+        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries(), deploymentActivities);
+    updateDeploymentVerificationJobInstanceSummariesWithActivityId(
+        deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries(), deploymentActivities);
 
     DeploymentActivityResultDTO deploymentActivityResultDTO = DeploymentActivityResultDTO.builder()
                                                                   .deploymentTag(deploymentTag)
@@ -134,6 +155,26 @@ public class ActivityServiceImpl implements ActivityService {
     deploymentActivityResultDTO.setEnvironments(environments);
 
     return deploymentActivityResultDTO;
+  }
+
+  private void updateDeploymentVerificationJobInstanceSummariesWithActivityId(
+      List<DeploymentVerificationJobInstanceSummary> deploymentResultSummary, List<DeploymentActivity> activities) {
+    Map<String, DeploymentActivity> verificationJobInstanceIdActivityMap = new HashMap<>();
+    if (activities != null) {
+      activities.forEach(deploymentActivity -> {
+        deploymentActivity.getVerificationJobInstanceIds().forEach(
+            jobInstanceId -> verificationJobInstanceIdActivityMap.put(jobInstanceId, deploymentActivity));
+      });
+    }
+
+    if (deploymentResultSummary != null) {
+      deploymentResultSummary.forEach(deploymentVerificationJobInstanceSummary -> {
+        DeploymentActivity activity = verificationJobInstanceIdActivityMap.get(
+            deploymentVerificationJobInstanceSummary.getVerificationJobInstanceId());
+        deploymentVerificationJobInstanceSummary.setActivityId(activity.getUuid());
+        deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
+      });
+    }
   }
 
   @Override
@@ -214,6 +255,7 @@ public class ActivityServiceImpl implements ActivityService {
       } else {
         if (groupByTagMap.size() < RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE) {
           deploymentGroupByTag = DeploymentGroupByTag.builder().deploymentTag(activity.getDeploymentTag()).build();
+          groupByTagMap.put(activity.getDeploymentTag(), deploymentGroupByTag);
           result.add(deploymentGroupByTag);
         } else {
           // ignore the tag that is not in the latest 5 tags.
@@ -239,6 +281,113 @@ public class ActivityServiceImpl implements ActivityService {
     } else {
       throw new IllegalStateException("Activity not found for verificationJobInstanceId: " + verificationJobInstanceId);
     }
+  }
+
+  @Override
+  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, Instant startTime, Instant endTime) {
+    Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                        .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+                                        .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                                        .field(ActivityKeys.activityStartTime)
+                                        .greaterThanOrEq(startTime)
+                                        .field(ActivityKeys.activityStartTime)
+                                        .lessThan(endTime);
+
+    if (isNotEmpty(environmentIdentifier)) {
+      activityQuery = activityQuery.filter(ActivityKeys.environmentIdentifier, environmentIdentifier);
+    }
+    List<Activity> activities = activityQuery.asList();
+
+    List<ActivityDashboardDTO> activityDashboardDTOList = new ArrayList<>();
+    if (isNotEmpty(activities)) {
+      activities.forEach(activity -> {
+        ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
+            verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
+
+        activityDashboardDTOList.add(ActivityDashboardDTO.builder()
+                                         .activityType(activity.getType())
+                                         .activityId(activity.getUuid())
+                                         .activityName(activity.getActivityName())
+                                         .environmentIdentifier(activity.getEnvironmentIdentifier())
+                                         .serviceIdentifier(activity.getServiceIdentifier())
+                                         .activityStartTime(activity.getActivityStartTime().toEpochMilli())
+                                         .activityVerificationSummary(summary)
+                                         .verificationStatus(summary == null ? ActivityVerificationStatus.NOT_STARTED
+                                                                             : summary.getAggregatedStatus())
+                                         .build());
+      });
+    }
+    return activityDashboardDTOList;
+  }
+
+  @Override
+  public ActivityVerificationResultDTO getActivityVerificationResult(String accountId, String activityId) {
+    Preconditions.checkNotNull(activityId, "ActivityId cannot be null while trying to fetch result");
+    return getResultForAnActivity(get(activityId));
+  }
+
+  private ActivityVerificationResultDTO getResultForAnActivity(Activity activity) {
+    List<VerificationJobInstance> verificationJobInstances =
+        verificationJobInstanceService.get(activity.getVerificationJobInstanceIds());
+
+    ActivityVerificationSummary summary =
+        verificationJobInstanceService.getActivityVerificationSummary(verificationJobInstances);
+
+    if (summary != null) {
+      Set<CategoryRisk> preActivityRisks =
+          healthVerificationHeatMapService.getAggregatedRisk(activity.getUuid(), HealthVerificationPeriod.PRE_ACTIVITY);
+      Set<CategoryRisk> postActivityRisks = healthVerificationHeatMapService.getAggregatedRisk(
+          activity.getUuid(), HealthVerificationPeriod.POST_ACTIVITY);
+
+      Double overallRisk = summary.getRiskScore() == null ? -1 : 100 * summary.getRiskScore();
+      return ActivityVerificationResultDTO.builder()
+          .preActivityRisks(preActivityRisks)
+          .postActivityRisks(postActivityRisks)
+          .activityName(activity.getActivityName())
+          .activityId(activity.getUuid())
+          .activityStartTime(activity.getActivityStartTime().toEpochMilli())
+          .activityType(activity.getType())
+          .environmentIdentifier(activity.getEnvironmentIdentifier())
+          .serviceIdentifier(activity.getServiceIdentifier())
+          .progressPercentage(summary.getProgressPercentage())
+          .status(summary.getAggregatedStatus())
+          .remainingTimeMs(summary.getRemainingTimeMs())
+          .endTime(activity.getActivityStartTime().toEpochMilli() + summary.getDurationMs())
+          .overallRisk(overallRisk.intValue())
+          .build();
+    }
+    return null;
+  }
+
+  @Override
+  public List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
+      String orgIdentifier, String projectIdentifier, int limitCounter) {
+    if (limitCounter == 0) {
+      limitCounter = RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE;
+    }
+
+    List<Activity> activities = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                    .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+                                    .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                                    .field(ActivityKeys.type)
+                                    .notIn(Arrays.asList(ActivityType.DEPLOYMENT))
+                                    .order(Sort.descending(ActivityKeys.activityStartTime))
+                                    .asList(new FindOptions().limit(limitCounter));
+
+    if (isEmpty(activities)) {
+      log.info("No recent activities found for org {}, project {}", orgIdentifier, projectIdentifier);
+      return null;
+    }
+
+    List<ActivityVerificationResultDTO> activityResultList = new ArrayList<>();
+    activities.forEach(activity -> {
+      ActivityVerificationResultDTO resultDTO = getResultForAnActivity(activity);
+      if (resultDTO != null) {
+        activityResultList.add(resultDTO);
+      }
+    });
+    return activityResultList;
   }
 
   private String getServiceNameFromActivity(Activity activity) {

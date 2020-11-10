@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.activity.beans.ActivityDashboardDTO;
+import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
@@ -23,6 +25,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import retrofit2.http.Body;
 
+import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -117,5 +120,39 @@ public class ActivityResource {
       @NotNull @Valid @Body List<KubernetesActivityDTO> activities) {
     return new RestResponse<>(
         kubernetesActivitySourceService.saveKubernetesActivities(accountId, activitySourceId, activities));
+  }
+
+  @GET
+  @Path("list")
+  @ApiOperation(value = "list all activities between a given time range for an environment, project, org",
+      nickname = "listActivitiesForDashboard")
+  public RestResponse<List<ActivityDashboardDTO>>
+  listActivitiesForDashboard(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
+    return new RestResponse(activityService.listActivitiesInTimeRange(orgIdentifier, projectIdentifier,
+        environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Path("recent-activity-verifications")
+  @ApiOperation(
+      value = "get a list of recent activity verification results", nickname = "getRecentActivityVerificationResults")
+  public RestResponse<List<ActivityVerificationResultDTO>>
+  getRecentActivityVerificationResults(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("size") int size) {
+    return new RestResponse(
+        activityService.getRecentActivityVerificationResults(orgIdentifier, projectIdentifier, size));
+  }
+
+  @GET
+  @Path("/{activityId}/activity-risks")
+  @ApiOperation(value = "get activity verification result", nickname = "getActivityVerificationResult")
+  public RestResponse<ActivityVerificationResultDTO> getActivityVerificationResult(
+      @NotNull @QueryParam("accountId") String accountId, @NotNull @PathParam("activityId") String activityId) {
+    return new RestResponse(activityService.getActivityVerificationResult(accountId, activityId));
   }
 }

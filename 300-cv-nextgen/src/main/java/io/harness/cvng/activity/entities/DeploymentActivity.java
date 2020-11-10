@@ -11,6 +11,7 @@ import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -63,8 +64,19 @@ public class DeploymentActivity extends Activity {
     verificationJobInstance.setOldVersionHosts(this.getOldVersionHosts());
     verificationJobInstance.setNewVersionHosts(this.getNewVersionHosts());
     verificationJobInstance.setNewHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
-    verificationJobInstance.setStartTime(this.getVerificationStartTime());
     verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
+
+    // Set the properties needed for a health verification instance
+    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
+    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
+
+    if (!VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
+      verificationJobInstance.setStartTime(preactivityStart);
+    } else {
+      verificationJobInstance.setStartTime(this.getVerificationStartTime());
+    }
+    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
+    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
   }
 
   @Override
@@ -89,6 +101,8 @@ public class DeploymentActivity extends Activity {
 
   @JsonIgnore
   public Instant getVerificationStartTime() {
-    return DateTimeUtils.roundDownTo1MinBoundary(Instant.ofEpochMilli(this.verificationStartTime));
+    return this.verificationStartTime == null
+        ? null
+        : DateTimeUtils.roundDownTo1MinBoundary(Instant.ofEpochMilli(this.verificationStartTime));
   }
 }

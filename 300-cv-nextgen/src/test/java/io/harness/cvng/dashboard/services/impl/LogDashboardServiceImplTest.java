@@ -64,7 +64,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
   @Mock private LogAnalysisService mockLogAnalysisService;
   @Mock private CVConfigService mockCvConfigService;
   @Mock private ActivityService mockActivityService;
-  @Inject private VerificationTaskService verificationTaskService;
+  @Mock private VerificationTaskService mockVerificationTaskService;
 
   @Before
   public void setUp() throws Exception {
@@ -77,6 +77,12 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(logDashboardService, "logAnalysisService", mockLogAnalysisService, true);
     FieldUtils.writeField(logDashboardService, "cvConfigService", mockCvConfigService, true);
     FieldUtils.writeField(logDashboardService, "activityService", mockActivityService, true);
+    FieldUtils.writeField(logDashboardService, "verificationTaskService", mockVerificationTaskService, true);
+    when(mockVerificationTaskService.getServiceGuardVerificationTaskId(anyString(), anyString()))
+        .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
+
+    when(mockVerificationTaskService.create(anyString(), anyString()))
+        .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
   }
 
   @Test
@@ -275,6 +281,43 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testGetLogCountByTagForActivity() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+
+    String activityId = "activityId";
+    String verificationJobInstanceId = "verificationJobInstanceId";
+    String verificationTaskId = generateUuid();
+    Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    when(mockActivityService.get(activityId)).thenReturn(activity);
+
+    Set<String> verificationTaskIds = new HashSet<>();
+    verificationTaskIds.add(verificationTaskId);
+
+    when(mockVerificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+        .thenReturn(verificationTaskIds);
+    when(mockVerificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
+
+    when(mockLogAnalysisService.getAnalysisResults(
+             cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))
+        .thenReturn(resultList);
+
+    SortedSet<LogDataByTag> timeTagCountMap = logDashboardService.getLogCountByTagForActivity(
+        accountId, projectIdentifier, orgIdentifier, activityId, startTime, endTime);
+
+    assertThat(timeTagCountMap).isNotEmpty();
+    assertThat(timeTagCountMap.size()).isEqualTo(1);
+    List<LogDataByTag.CountByTag> countMap = timeTagCountMap.first().getCountByTags();
+    assertThat(countMap.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testGetLogCountByTag_nothingInRange() {
     String cvConfigId = generateUuid();
     Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
@@ -297,6 +340,41 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetLogCountByTagForActivity_nothingInRange() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+
+    String activityId = "activityId";
+    String verificationJobInstanceId = "verificationJobInstanceId";
+    String verificationTaskId = generateUuid();
+    Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    when(mockActivityService.get(activityId)).thenReturn(activity);
+
+    Set<String> verificationTaskIds = new HashSet<>();
+    verificationTaskIds.add(verificationTaskId);
+
+    when(mockVerificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+        .thenReturn(verificationTaskIds);
+    when(mockVerificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
+
+    when(mockLogAnalysisService.getAnalysisResults(
+             cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime))
+        .thenReturn(resultList);
+
+    SortedSet<LogDataByTag> timeTagCountMap =
+        logDashboardService.getLogCountByTagForActivity(accountId, projectIdentifier, orgIdentifier, activityId,
+            startTime.plus(10, ChronoUnit.MINUTES), startTime.plus(15, ChronoUnit.MINUTES));
+
+    assertThat(timeTagCountMap).isEmpty();
+  }
+
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetActivityLogs() {
@@ -304,18 +382,18 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     String activityId = "activityId";
     String cvConfigId = "cvConfigId";
+    String verificationTaskId = generateUuid();
     String verificationJobInstanceId = "verificationJobInstanceId";
     Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
     activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
     when(mockActivityService.get(activityId)).thenReturn(activity);
 
     Set<String> verificationTaskIds = new HashSet<>();
-    verificationTaskService.create(accountId, cvConfigId);
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     verificationTaskIds.add(verificationTaskId);
-    SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
-    splunkCVConfig.setUuid(cvConfigId);
-    hPersistence.save(splunkCVConfig);
+
+    when(mockVerificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+        .thenReturn(verificationTaskIds);
+    when(mockVerificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
 
     List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
     List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
@@ -372,7 +450,6 @@ public class LogDashboardServiceImplTest extends CvNextGenTest {
     return clusterList;
   }
   private CVConfig createCvConfig(String cvConfigId, String serviceIdentifier) {
-    verificationTaskService.create(accountId, cvConfigId);
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     splunkCVConfig.setUuid(cvConfigId);
     splunkCVConfig.setServiceIdentifier(serviceIdentifier);

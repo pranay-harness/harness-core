@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.services.api;
 
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
@@ -32,4 +33,6 @@ public interface VerificationJobInstanceService {
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
   Optional<String> getLastSuccessfulTestVerificationJobExecutionId(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
+  ActivityVerificationSummary getActivityVerificationSummary(List<VerificationJobInstance> verificationJobInstances);
+  ActivityVerificationSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances);
 }
