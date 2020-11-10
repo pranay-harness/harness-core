@@ -18,6 +18,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -62,7 +63,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateLogServiceImpl implements DelegateLogService {
   // 10 KB Activity logs batch size
-  private static final int ACTIVITY_LOGS_BATCH_SIZE = 1024 * 10;
+  static final int ACTIVITY_LOGS_BATCH_SIZE = 1024 * 10;
 
   private final String LOGS_COMMON_MESSAGE_ERROR = "Unexpected Cache eviction accountId={}, logs={}, removalCause={}";
 
@@ -197,8 +198,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                                        .findFirst()
                                                        .orElse(RUNNING);
 
-        String logText =
-            StringUtils.left(logBatch.stream().map(Log::getLogLine).collect(joining("\n")), ACTIVITY_LOGS_BATCH_SIZE);
+        String logText = trimAndIndicate(logBatch);
         Log logObject = logBatch.get(0);
         logObject.setLogLine(logText);
         logObject.setLinesCount(StringUtils.countMatches(logText, "\n"));
@@ -216,6 +216,18 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         log.error("Finished printing lost logs");
       }
     }
+  }
+
+  @VisibleForTesting
+  String trimAndIndicate(List<Log> logBatch) {
+    final String logLines = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
+    if (StringUtils.length(logLines) > ACTIVITY_LOGS_BATCH_SIZE) {
+      return new StringBuilder()
+          .append(StringUtils.left(logLines, ACTIVITY_LOGS_BATCH_SIZE))
+          .append("\nThe above log messages are truncated to 10KB\n")
+          .toString();
+    }
+    return logLines;
   }
 
   private void dispatchApiCallLogs(String accountId, List<ThirdPartyApiCallLog> logs, RemovalCause removalCause) {
