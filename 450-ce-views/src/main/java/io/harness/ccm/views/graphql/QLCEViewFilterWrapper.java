@@ -12,4 +12,5 @@ public class QLCEViewFilterWrapper {
   QLCEViewFilter idFilter;
   QLCEViewTimeFilter timeFilter;
   QLCEViewMetadataFilter viewMetadataFilter;
+  QLCEViewRule ruleFilter;
 }

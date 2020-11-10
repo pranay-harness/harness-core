@@ -19,8 +19,11 @@ import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewIdOperator;
 import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.ccm.views.entities.ViewVisualization;
@@ -31,9 +34,11 @@ import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint.QLCEViewEntityStatsDataPointBuilder;
 import io.harness.ccm.views.graphql.QLCEViewFieldInput;
 import io.harness.ccm.views.graphql.QLCEViewFilter;
+import io.harness.ccm.views.graphql.QLCEViewFilterOperator;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
+import io.harness.ccm.views.graphql.QLCEViewRule;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
@@ -57,6 +62,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -283,10 +289,17 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort, String cloudProviderTableName,
       boolean isTimeTruncGroupByRequired) {
     List<ViewRule> viewRuleList = new ArrayList<>();
-    List<QLCEViewGroupBy> modifiedGroupBy = new ArrayList<>();
+    List<QLCEViewGroupBy> modifiedGroupBy = new ArrayList<>(groupBy);
     List<ViewField> customFields = new ArrayList<>();
 
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+
+    List<QLCEViewRule> rules = getRuleFilters(filters);
+    if (!rules.isEmpty()) {
+      for (QLCEViewRule rule : rules) {
+        viewRuleList.add(convertQLCEViewRuleToViewRule(rule));
+      }
+    }
 
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
@@ -301,8 +314,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
           modifiedGroupBy =
               getModifiedGroupBy(groupBy, defaultGroupByField, defaultTimeGranularity, isTimeTruncGroupByRequired);
         }
-      } else {
-        modifiedGroupBy = groupBy;
       }
       customFields = customFieldService.getCustomFieldsPerView(viewId);
     }
@@ -313,8 +324,37 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         customFields, cloudProviderTableName);
   }
 
+  private ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
+    List<ViewCondition> conditionsList = new ArrayList<>();
+    for (QLCEViewFilter filter : rule.getConditions()) {
+      conditionsList.add(ViewIdCondition.builder()
+                             .values(Arrays.asList(filter.getValues()))
+                             .viewField(getViewField(filter.getField()))
+                             .viewOperator(mapQLCEViewFilterOperatorToViewIdOperator(filter.getOperator()))
+                             .build());
+    }
+    return ViewRule.builder().viewConditions(conditionsList).build();
+  }
+
+  private ViewIdOperator mapQLCEViewFilterOperatorToViewIdOperator(QLCEViewFilterOperator operator) {
+    if (operator.equals(QLCEViewFilterOperator.IN)) {
+      return ViewIdOperator.IN;
+    } else if (operator.equals(QLCEViewFilterOperator.NOT_IN)) {
+      return ViewIdOperator.NOT_IN;
+    }
+    return null;
+  }
+  public ViewField getViewField(QLCEViewFieldInput field) {
+    return ViewField.builder()
+        .fieldId(field.getFieldId())
+        .fieldName(field.getFieldName())
+        .identifier(field.getIdentifier())
+        .identifierName(field.getIdentifier().getDisplayName())
+        .build();
+  }
+
   private static Optional<QLCEViewFilterWrapper> getViewMetadataFilter(List<QLCEViewFilterWrapper> filters) {
-    return filters.stream().filter(f -> f.getViewMetadataFilter().getViewId() != null).findFirst();
+    return filters.stream().filter(f -> f.getViewMetadataFilter() != null).findFirst();
   }
 
   private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
@@ -326,6 +366,13 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   private static List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream().filter(f -> f.getIdFilter() != null).map(f -> f.getIdFilter()).collect(Collectors.toList());
+  }
+
+  private static List<QLCEViewRule> getRuleFilters(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getRuleFilter() != null)
+        .map(f -> f.getRuleFilter())
+        .collect(Collectors.toList());
   }
 
   /*
