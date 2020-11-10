@@ -22,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
+import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.kubernetes.client.informer.SharedIndexInformer;
@@ -131,6 +132,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
+    assertThat(K8sClusterHelper.isSeen(CLUSTER_ID)).isTrue();
   }
 
   @Test
