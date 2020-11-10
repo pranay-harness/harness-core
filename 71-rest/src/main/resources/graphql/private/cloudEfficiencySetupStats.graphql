@@ -81,6 +81,7 @@ type OverviewStatsData {
   gcpConnectorsPresent: Boolean
   applicationDataPresent: Boolean
   clusterDataPresent: Boolean
+  isSampleClusterPresent: Boolean
 }
 
 input CESetupFilter {
