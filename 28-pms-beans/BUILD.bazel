@@ -14,8 +14,6 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
-        "//26-pms-contracts/src/main/proto:26_pms_contracts_proto",
     ],
 )
 

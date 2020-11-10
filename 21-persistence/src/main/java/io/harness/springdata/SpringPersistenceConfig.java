@@ -4,7 +4,6 @@ import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.MongoClient;
@@ -78,10 +77,5 @@ public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration
   protected CustomConversions collectConverters() {
     List<?> converterInstances = converters.stream().map(injector::getInstance).collect(Collectors.toList());
     return new MongoCustomConversions(converterInstances);
-  }
-
-  @Override
-  public boolean autoIndexCreation() {
-    return false;
   }
 }
