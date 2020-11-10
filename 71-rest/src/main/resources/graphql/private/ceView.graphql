@@ -80,6 +80,7 @@ input CEViewFilterWrapper {
   timeFilter: CEViewTimeFilter
   idFilter: CEViewFilter
   viewMetadataFilter: CEViewMetadataFilter
+  ruleFilter: CEViewRule
 }
 
 input CEViewMetadataFilter {
