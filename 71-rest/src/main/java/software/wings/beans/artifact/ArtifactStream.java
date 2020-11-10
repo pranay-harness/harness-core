@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -13,10 +15,9 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -41,18 +42,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/**
- * ArtifactStream bean class.
- *
- * @author Rishi
- */
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("serviceId"), @Field("name") })
-@CdIndex(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
-                                                     , @Field("nextCleanupIteration") })
 // TODO: ASR: add compound index with setting_id + name
 // TODO: ASR: change all apis to work with Service.artifactStreamIds instead of serviceId - including UI
 // TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)
@@ -66,6 +58,23 @@ import java.util.regex.Pattern;
 @HarnessEntity(exportable = true)
 public abstract class ArtifactStream
     extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(ArtifactStreamKeys.appId)
+                 .field(ArtifactStreamKeys.serviceId)
+                 .field(ArtifactStreamKeys.name)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactStream_cleanup")
+                 .field(ArtifactStreamKeys.artifactStreamType)
+                 .field(ArtifactStreamKeys.nextCleanupIteration)
+                 .build())
+        .build();
+  }
+
   protected static final String dateFormat = "HHMMSS";
   protected static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^.{}\\s-]*}");
   protected static final Pattern extractParametersPattern = Pattern.compile("\\$\\{(.*?)}");
