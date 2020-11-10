@@ -73,7 +73,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagType;
 import software.wings.beans.InformationNotification;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -686,24 +685,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
           serviceTemplate =
               serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
-          if (serviceTemplate != null) {
-            // Clone Infrastructure Mappings
-            List<InfrastructureMapping> infrastructureMappings = serviceTemplate.getInfrastructureMappings();
-            if (infrastructureMappings != null) {
-              for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
-                try {
-                  infrastructureMapping.setUuid(null);
-                  infrastructureMapping.setEnvId(savedClonedEnv.getUuid());
-                  infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
-                  infrastructureMappingService.save(infrastructureMapping, true, null);
-                } catch (Exception e) {
-                  log.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
-                      infrastructureMapping.getName(), infrastructureMapping.getUuid(),
-                      infrastructureMapping.getEnvId(), e);
-                }
-              }
-            }
-          }
           if (serviceTemplate != null) {
             // Clone Service Config Files
             cloneServiceVariables(savedClonedEnv, serviceTemplate.getServiceVariablesOverrides(),
