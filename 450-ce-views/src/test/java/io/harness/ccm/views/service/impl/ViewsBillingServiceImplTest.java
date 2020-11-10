@@ -89,7 +89,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getFilterValueStats() {
     List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(clusterId).build());
+    filters.add(QLCEViewFilter.builder().field(clusterId).values(new String[] {""}).build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(CLUSTER);
@@ -100,7 +100,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getFilterValueStatsLabelKey() {
     List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(labelKey).build());
+    filters.add(QLCEViewFilter.builder().field(labelKey).values(new String[] {""}).build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(LABEL_KEY);
@@ -111,7 +111,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getFilterValueStatsLabelValue() {
     List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(labelValue).build());
+    filters.add(QLCEViewFilter.builder().field(labelValue).values(new String[] {""}).build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(LABEL_VALUE);
