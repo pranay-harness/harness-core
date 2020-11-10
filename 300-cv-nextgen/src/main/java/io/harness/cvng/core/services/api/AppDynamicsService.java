@@ -8,7 +8,7 @@ import io.harness.cvng.core.entities.MetricPack;
 import java.util.List;
 import java.util.Set;
 
-public interface AppDynamicsService {
+public interface AppDynamicsService extends MonitoringSourceImportStatusCreator {
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       List<MetricPack> metricPacks);

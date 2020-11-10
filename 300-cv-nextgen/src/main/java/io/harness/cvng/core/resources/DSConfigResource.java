@@ -1,11 +1,17 @@
 package io.harness.cvng.core.resources;
 
+import static io.harness.NGCommonEntityConstants.ORG_KEY;
+import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.NGResourceFilterConstants.PAGE_KEY;
+import static io.harness.NGResourceFilterConstants.SIZE_KEY;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.DSConfig;
+import io.harness.cvng.core.beans.MonitoringSourceDTO;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
@@ -19,6 +25,7 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -33,6 +40,7 @@ import javax.ws.rs.QueryParam;
 public class DSConfigResource {
   @Inject private DSConfigService dsConfigService;
   @Inject private CVConfigService cvConfigService;
+
   @GET
   @Timed
   @ExceptionMetered
@@ -71,5 +79,18 @@ public class DSConfigResource {
       @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier) {
     return new RestResponse<>(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @GET
+  @Path("/listMonitoringSources")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "gets list of monitoring sources", nickname = "listMonitoringSources")
+  public RestResponse<List<MonitoringSourceDTO>> listMonitoringSources(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(SIZE_KEY) @DefaultValue("100") int size) {
+    return new RestResponse<>(
+        dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, size, page));
   }
 }

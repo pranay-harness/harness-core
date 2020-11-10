@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -13,6 +15,10 @@ import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
+import io.harness.cvng.core.beans.AppdynamicsImportStatus;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -80,5 +86,27 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
         .execute(verificationManagerClient.getTiers(appDynamicsConnectorDTO.getAccountId(), orgIdentifier,
             projectIdentifier, appDynamicsAppId, appDynamicsConnectorDTO))
         .getResource();
+  }
+
+  @Override
+  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
+      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
+    Preconditions.checkState(
+        isNotEmpty(cvConfigsGroupedByMonitoringSource), "The cv configs belonging to a monitoring source is empty");
+    Set<String> applicationSet = cvConfigsGroupedByMonitoringSource.stream()
+                                     .map(config -> ((AppDynamicsCVConfig) config).getApplicationName())
+                                     .collect(Collectors.toSet());
+    Set<String> envIdentifiersList =
+        cvConfigsGroupedByMonitoringSource.stream().map(CVConfig::getEnvIdentifier).collect(Collectors.toSet());
+    CVConfig firstCVConfigForReference = cvConfigsGroupedByMonitoringSource.get(0);
+    List<AppDynamicsApplication> appDynamicsApplications =
+        getApplications(firstCVConfigForReference.getAccountId(), firstCVConfigForReference.getConnectorIdentifier(),
+            firstCVConfigForReference.getOrgIdentifier(), firstCVConfigForReference.getProjectIdentifier());
+    return AppdynamicsImportStatus.builder()
+        .numberOfApplications(isNotEmpty(applicationSet) ? applicationSet.size() : 0)
+        .numberOfEnvironments(isNotEmpty(envIdentifiersList) ? envIdentifiersList.size() : 0)
+        .totalNumberOfApplications(isNotEmpty(appDynamicsApplications) ? appDynamicsApplications.size() : 0)
+        .totalNumberOfEnvironments(totalNumberOfEnvironments)
+        .build();
   }
 }

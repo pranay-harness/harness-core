@@ -2,6 +2,7 @@ package io.harness.cvng.client;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -12,6 +13,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 public interface NextGenClient {
@@ -35,4 +37,9 @@ public interface NextGenClient {
   Call<ResponseDTO<ServiceResponseDTO>> getService(@Path("serviceIdentifier") String serviceIdentifier,
       @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
+
+  @GET("environments")
+  Call<ResponseDTO<PageResponse<EnvironmentResponseDTO>>> listEnvironmentsForProject(@Query("page") int page,
+      @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Query("sort") List<String> sort);
 }

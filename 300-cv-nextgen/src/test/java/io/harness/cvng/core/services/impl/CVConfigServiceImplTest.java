@@ -54,6 +54,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   private String serviceInstanceIdentifier;
   private String projectIdentifier;
   private String orgIdentifier;
+  private String monitoringSourceIdentifier;
+  private String monitoringSourceName;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -64,6 +66,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     serviceInstanceIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
+    monitoringSourceIdentifier = generateUuid();
+    monitoringSourceName = generateUuid();
     when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return EnvironmentResponseDTO.builder()
@@ -404,6 +408,50 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
   }
 
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testGetMonitoringSourceIds() {
+    String MONITORING_SOURCE_SUFFIX = "Monitoring Source Id ";
+    List<CVConfig> cvConfigs = createCVConfigs(50);
+    for (int i = 0; i < 50; i++) {
+      cvConfigs.get(i).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + i);
+    }
+    save(cvConfigs);
+
+    // Testing for limit
+    List<String> firstPageMonitoringIds =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, 20, 0);
+    assertThat(firstPageMonitoringIds.size()).isEqualTo(20);
+
+    // Testing the second page
+    List<String> secondPageMonitoringIds =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, 20, 20);
+    assertThat(secondPageMonitoringIds.size()).isEqualTo(20);
+
+    // Checking that the elements returned in first 20 and next are different
+    firstPageMonitoringIds.removeAll(secondPageMonitoringIds);
+    assertThat(firstPageMonitoringIds.size()).isEqualTo(20);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testlistByMonitoringSources() {
+    String MONITORING_SOURCE_SUFFIX = "Monitoring Source Id ";
+    List<CVConfig> cvConfigs = createCVConfigs(10);
+    for (int i = 0; i < 3; i++) {
+      cvConfigs.get(i).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + "0");
+    }
+    for (int i = 0; i < 3; i++) {
+      cvConfigs.get(i + 3).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + "1");
+    }
+    save(cvConfigs);
+    List<CVConfig> cvConfigsList = cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier,
+        Arrays.asList(MONITORING_SOURCE_SUFFIX + "0", MONITORING_SOURCE_SUFFIX + "1"));
+    assertThat(cvConfigsList.size()).isEqualTo(6);
+  }
+
   private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {
     AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
     appDynamicsDSConfig.setIdentifier(identifier);
@@ -434,6 +482,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
     assertThat(actual.getProductName()).isEqualTo(expected.getProductName());
     assertThat(actual.getType()).isEqualTo(expected.getType());
+    assertThat(actual.getMonitoringSourceIdentifier()).isEqualTo(expected.getMonitoringSourceIdentifier());
+    assertThat(actual.getMonitoringSourceName()).isEqualTo(expected.getMonitoringSourceName());
   }
 
   public List<CVConfig> createCVConfigs(int n) {
@@ -459,6 +509,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setGroupId(groupId);
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
+    cvConfig.setMonitoringSourceIdentifier(monitoringSourceIdentifier);
+    cvConfig.setMonitoringSourceName(monitoringSourceName);
   }
 
   @Test
