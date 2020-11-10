@@ -10,6 +10,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
+import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
 import io.harness.serializer.KryoSerializer;
 import io.kubernetes.client.informer.SharedInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
@@ -98,11 +99,13 @@ public class K8sWatchServiceDelegate {
       DefaultK8sMetricsClient k8sMetricsClient = new DefaultK8sMetricsClient(apiClient);
 
       String kubeSystemUid = getKubeSystemUid(k8sMetricsClient);
+
       ClusterDetails clusterDetails = ClusterDetails.builder()
                                           .cloudProviderId(params.getCloudProviderId())
                                           .clusterId(params.getClusterId())
                                           .clusterName(params.getClusterName())
                                           .kubeSystemUid(kubeSystemUid)
+                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId()))
                                           .build();
 
       SharedInformerFactory sharedInformerFactory =
@@ -124,6 +127,7 @@ public class K8sWatchServiceDelegate {
       CrdWorkloadFetcher crdWorkloadFetcher = new CrdWorkloadFetcher(apiClient);
       K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores, crdWorkloadFetcher);
 
+      // get seen clusters
       watcherFactory.createNodeWatcher(apiClient, clusterDetails, sharedInformerFactory);
       watcherFactory.createPVWatcher(apiClient, clusterDetails, sharedInformerFactory);
 
@@ -134,6 +138,8 @@ public class K8sWatchServiceDelegate {
       log.info("Starting AllRegisteredInformers for watch {}", id);
       sharedInformerFactory.startAllRegisteredInformers();
 
+      // cluster is seen/old now, any new onAdd event older than 2 hours will be ignored.
+      K8sClusterHelper.setAsSeen(params.getClusterId());
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
     });
 

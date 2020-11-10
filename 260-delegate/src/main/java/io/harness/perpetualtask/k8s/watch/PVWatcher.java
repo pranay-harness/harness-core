@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 @Slf4j
 public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   private final String clusterId;
+  private final boolean isClusterSeen;
   private final Set<String> publishedPVs;
   private final EventPublisher eventPublisher;
   private final StorageV1Api storageV1Api;
@@ -51,6 +52,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
         "Creating new PVWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
 
     this.clusterId = params.getClusterId();
+    this.isClusterSeen = params.isSeen();
     this.publishedPVs = new ConcurrentSkipListSet<>();
     this.eventPublisher = eventPublisher;
 
@@ -83,7 +85,12 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
     try {
       log.debug(EVENT_LOG_MSG, persistentVolume.getMetadata().getUid(), EventType.ADDED);
 
-      publishPVInfo(persistentVolume);
+      DateTime creationTimestamp = persistentVolume.getMetadata().getCreationTimestamp();
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+        publishPVInfo(persistentVolume);
+      } else {
+        publishedPVs.add(persistentVolume.getMetadata().getUid());
+      }
 
       publishedPVs.add(persistentVolume.getMetadata().getUid());
     } catch (Exception ex) {

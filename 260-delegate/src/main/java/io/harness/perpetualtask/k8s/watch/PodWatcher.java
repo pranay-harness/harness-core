@@ -33,14 +33,15 @@ import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 public class PodWatcher implements ResourceEventHandler<V1Pod> {
@@ -55,6 +56,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
   private final PodInfo podInfoPrototype;
   private final PodEvent podEventPrototype;
+  private final boolean isClusterSeen;
 
   private final K8sControllerFetcher controllerFetcher;
 
@@ -71,7 +73,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     log.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.clusterId = params.getClusterId();
-    this.publishedPods = new HashSet<>();
+    this.isClusterSeen = params.isSeen();
+    this.publishedPods = new ConcurrentSkipListSet<>();
     this.eventPublisher = eventPublisher;
 
     podInfoPrototype = PodInfo.newBuilder()
@@ -109,7 +112,12 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     try {
       log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
 
-      eventReceived(pod);
+      DateTime creationTimestamp = pod.getMetadata().getCreationTimestamp();
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+        eventReceived(pod);
+      } else {
+        publishedPods.add(pod.getMetadata().getUid());
+      }
     } catch (Exception ex) {
       log.error(FAILED_PUBLISH_MSG, EventType.ADDED, ex);
     }

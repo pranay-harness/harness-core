@@ -33,6 +33,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
   private final Set<String> publishedNodes;
 
   private final String clusterId;
+  private final boolean isClusterSeen;
   private final NodeInfo nodeInfoPrototype;
   private final NodeEvent nodeEventPrototype;
 
@@ -46,6 +47,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
         "Creating new NodeWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
 
     this.clusterId = params.getClusterId();
+    this.isClusterSeen = params.isSeen();
     this.eventPublisher = eventPublisher;
     this.publishedNodes = new ConcurrentSkipListSet<>();
     this.nodeInfoPrototype = NodeInfo.newBuilder()
@@ -93,7 +95,12 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
     try {
       log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
-      publishNodeInfo(node);
+      DateTime creationTimestamp = node.getMetadata().getCreationTimestamp();
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+        publishNodeInfo(node);
+      } else {
+        publishedNodes.add(node.getMetadata().getUid());
+      }
     } catch (Exception ex) {
       log.error(ERROR_PUBLISH_MSG, EventType.ADDED, ex);
     }
