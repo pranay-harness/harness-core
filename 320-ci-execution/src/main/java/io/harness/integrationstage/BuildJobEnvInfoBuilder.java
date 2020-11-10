@@ -44,6 +44,7 @@ import io.harness.util.PortFinder;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.PVCParams;
@@ -59,11 +60,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class BuildJobEnvInfoBuilder {
   private static final SecureRandom random = new SecureRandom();
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
       List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
+    log.info("Creating CI Build Job info for integration stage {} and build number {}",
+        integrationStage.getIdentifier(), buildNumber);
     // TODO Only kubernetes is supported currently
     if (integrationStage.getInfrastructure() == null) {
       throw new IllegalArgumentException("Input infrastructure is not set");

@@ -773,6 +773,8 @@ public class CIExecutionPlanTestHelper {
     NgPipeline ngPipeline = NgPipeline.builder().stages(getStages()).build();
     return NgPipelineEntity.builder()
         .identifier("testPipelineIdentifier")
+        .orgIdentifier("orgIdentifier")
+        .projectIdentifier("projectIdentifier")
         .accountId("accountId")
         .ngPipeline(ngPipeline)
         .build();
