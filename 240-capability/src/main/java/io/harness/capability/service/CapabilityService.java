@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.delegatecapability;
+package io.harness.capability.service;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import org.apache.commons.lang3.tuple.Pair;

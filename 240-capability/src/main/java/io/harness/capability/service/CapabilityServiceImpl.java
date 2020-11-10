@@ -1,4 +1,4 @@
-package io.harness.delegate.service;
+package io.harness.capability.service;
 
 import com.google.inject.Singleton;
 
@@ -7,7 +7,6 @@ import io.harness.exception.GeneralException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Delegate;
-import software.wings.delegatetasks.delegatecapability.CapabilityService;
 import software.wings.service.impl.DelegateObserver;
 
 import java.util.Set;
