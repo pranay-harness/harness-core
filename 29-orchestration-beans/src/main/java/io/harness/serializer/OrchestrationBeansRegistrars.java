@@ -3,6 +3,8 @@ package io.harness.serializer;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
+import io.harness.pms.serializer.spring.PmsContractsAliasRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.SweepingOutputConverter;
@@ -17,6 +19,7 @@ public class OrchestrationBeansRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(TimeoutEngineRegistrars.kryoRegistrars)
+          .add(PmsContractsKryoRegistrar.class)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
 
@@ -31,6 +34,7 @@ public class OrchestrationBeansRegistrars {
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
           .addAll(PersistenceRegistrars.aliasRegistrars)
           .addAll(TimeoutEngineRegistrars.aliasRegistrars)
+          .add(PmsContractsAliasRegistrar.class)
           .add(OrchestrationBeansAliasRegistrar.class)
           .build();
 
