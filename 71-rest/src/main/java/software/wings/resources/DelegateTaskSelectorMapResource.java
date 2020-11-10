@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ public class DelegateTaskSelectorMapResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<List<TaskSelectorMap>> list(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(selectorMapService.list(accountId));
   }
@@ -49,6 +51,7 @@ public class DelegateTaskSelectorMapResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<TaskSelectorMap> add(
       @QueryParam("accountId") @NotEmpty String accountId, TaskSelectorMap taskSelectorMap) {
     taskSelectorMap.setAccountId(accountId);
@@ -59,6 +62,7 @@ public class DelegateTaskSelectorMapResource {
   @Path("/{taskSelectorMapId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<TaskSelectorMap> update(@PathParam("taskSelectorMapId") @NotEmpty String taskSelectorMapId,
       @QueryParam("accountId") @NotEmpty String accountId, TaskSelectorMap taskSelectorMap) {
     taskSelectorMap.setAccountId(accountId);
@@ -70,6 +74,7 @@ public class DelegateTaskSelectorMapResource {
   @Path("/{taskSelectorMapId}/task-selectors")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<TaskSelectorMap> addTaskSelector(
       @PathParam("taskSelectorMapId") @NotEmpty String taskSelectorMapId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selector") @NotEmpty String taskSelector) {
@@ -80,6 +85,7 @@ public class DelegateTaskSelectorMapResource {
   @Path("/{taskSelectorMapId}/task-selectors")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<TaskSelectorMap> deleteTaskSelector(
       @PathParam("taskSelectorMapId") @NotEmpty String taskSelectorMapId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selector") @NotEmpty String taskSelector) {
