@@ -55,7 +55,7 @@ public class BuildEnvironmentUtils {
       return envVarMap;
     }
 
-    envVarMap.put(DRONE_BUILD_NUMBER, ciExecutionArgs.getBuildNumber().getBuildNumber().toString());
+    envVarMap.put(DRONE_BUILD_NUMBER, ciExecutionArgs.getBuildNumberDetails().getBuildNumber().toString());
     if (ciExecutionArgs.getExecutionSource() == null) {
       return envVarMap;
     }

@@ -20,12 +20,12 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@FieldNameConstants(innerTypeName = "BuildNumberKeys")
-@Entity(value = "buildNumber", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "BuildNumberDetailsKeys")
+@Entity(value = "buildNumberDetails", noClassnameStored = true)
 @StoreIn("harnessci")
-@Document("buildNumber")
+@Document("buildNumberDetails")
 @HarnessEntity(exportable = true)
-public class BuildNumber implements PersistentEntity {
+public class BuildNumberDetails implements PersistentEntity {
   @Field("pipeline_identifier") private String pipelineIdentifier;
   @Builder.Default private Long buildNumber = 0L;
   @FdIndex private String accountIdentifier;

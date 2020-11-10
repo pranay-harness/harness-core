@@ -3,7 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
@@ -15,7 +15,7 @@ import java.util.Set;
 public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(BuildNumber.class);
+    set.add(BuildNumberDetails.class);
     set.add(CIBuild.class);
     set.add(K8PodDetails.class);
     set.add(StepTaskDetails.class);

@@ -3,7 +3,7 @@ package io.harness.beans.sweepingoutputs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
   private String namespace;
-  private BuildNumber buildNumber;
+  private BuildNumberDetails buildNumberDetails;
   private String stageID;
   private String clusterName;
   private long lastUpdatedAt;

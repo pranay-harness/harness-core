@@ -1,5 +1,5 @@
 package io.harness.app.dao.repositories;
 
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 
-public interface CustomBuildNumberDao { BuildNumber increaseBuildNumber(String pipelineIdentifier); }
+public interface CustomBuildNumberDao { BuildNumberDetails increaseBuildNumber(String pipelineIdentifier); }

@@ -69,7 +69,7 @@ import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.common.CIExecutionConstants;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -987,7 +987,7 @@ public class CIExecutionPlanTestHelper {
   public CIExecutionArgs getCIExecutionArgs() {
     return CIExecutionArgs.builder()
         .executionSource(ManualExecutionSource.builder().branch(REPO_BRANCH).build())
-        .buildNumber(BuildNumber.builder().buildNumber(BUILD_NUMBER).build())
+        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(BUILD_NUMBER).build())
         .build();
   }
 
@@ -1003,7 +1003,7 @@ public class CIExecutionPlanTestHelper {
     WebhookEvent webhookEvent = PRWebhookEvent.builder().baseAttributes(core).repository(repo).build();
     ExecutionSource prExecutionSource = WebhookExecutionSource.builder().webhookEvent(webhookEvent).build();
     return CIExecutionArgs.builder()
-        .buildNumber(BuildNumber.builder().buildNumber(BUILD_NUMBER).build())
+        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(BUILD_NUMBER).build())
         .executionSource(prExecutionSource)
         .build();
   }
@@ -1033,7 +1033,7 @@ public class CIExecutionPlanTestHelper {
     WebhookEvent webhookEvent = BranchWebhookEvent.builder().baseAttributes(core).repository(repo).build();
     ExecutionSource prExecutionSource = WebhookExecutionSource.builder().webhookEvent(webhookEvent).build();
     return CIExecutionArgs.builder()
-        .buildNumber(BuildNumber.builder().buildNumber(BUILD_NUMBER).build())
+        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(BUILD_NUMBER).build())
         .executionSource(prExecutionSource)
         .build();
   }

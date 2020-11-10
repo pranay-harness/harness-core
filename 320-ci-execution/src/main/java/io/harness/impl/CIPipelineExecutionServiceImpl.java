@@ -36,6 +36,7 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
     // User user = UserThreadLocal.get()
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", ngPipelineEntity.getAccountId());
+    setupAbstractions.put("pipelineId", ngPipelineEntity.getIdentifier());
     setupAbstractions.put("orgIdentifier", ngPipelineEntity.getOrgIdentifier());
     setupAbstractions.put("projectIdentifier", ngPipelineEntity.getProjectIdentifier());
     setupAbstractions.put("userEmail", "harsh.jain@harness.io");

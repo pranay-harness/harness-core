@@ -55,7 +55,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sGCPInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
@@ -85,7 +85,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StepTaskDetails.class, 100014);
     kryo.register(BuildStandardVariables.class, 100015);
     kryo.register(CIExecutionArgs.class, 100016);
-    kryo.register(BuildNumber.class, 100017);
+    kryo.register(BuildNumberDetails.class, 100017);
     kryo.register(IntegrationStage.class, 100018);
     kryo.register(Container.class, 100019);
     kryo.register(Container.Resources.class, 100020);

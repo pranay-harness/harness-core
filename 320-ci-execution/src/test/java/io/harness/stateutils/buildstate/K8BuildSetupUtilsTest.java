@@ -32,7 +32,7 @@ import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -119,16 +119,16 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     PodSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0);
 
-    BuildNumber buildNumber = BuildNumber.builder()
-                                  .accountIdentifier(accountID)
-                                  .orgIdentifier(orgID)
-                                  .projectIdentifier(projectID)
-                                  .buildNumber(buildID)
-                                  .build();
+    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
+                                                .accountIdentifier(accountID)
+                                                .orgIdentifier(orgID)
+                                                .projectIdentifier(projectID)
+                                                .buildNumber(buildID)
+                                                .build();
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
     K8PodDetails k8PodDetails =
-        K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
+        K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), null, true, null, true);
@@ -214,16 +214,16 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     PodSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0);
 
-    BuildNumber buildNumber = BuildNumber.builder()
-                                  .accountIdentifier(accountID)
-                                  .orgIdentifier(orgID)
-                                  .projectIdentifier(projectID)
-                                  .buildNumber(buildID)
-                                  .build();
+    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
+                                                .accountIdentifier(accountID)
+                                                .orgIdentifier(orgID)
+                                                .projectIdentifier(projectID)
+                                                .buildNumber(buildID)
+                                                .build();
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
     K8PodDetails k8PodDetails =
-        K8PodDetails.builder().namespace(namespace).buildNumber(buildNumber).stageID(stageID).build();
+        K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
     assertThatThrownBy(
         ()

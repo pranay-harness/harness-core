@@ -23,7 +23,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
-import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -67,7 +67,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
-    BuildNumber buildNumber = ciExecutionArgs.getBuildNumber();
+    BuildNumberDetails buildNumber = ciExecutionArgs.getBuildNumberDetails();
 
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
@@ -111,13 +111,13 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private ExecutionPlanCreatorResponse createExecutionPlanForManualExecution(IntegrationStage integrationStage,
-      ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context, BuildNumber buildNumber,
-      String podName) {
+      ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context,
+      BuildNumberDetails buildNumberDetails, String podName) {
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
-    final PlanNode integrationStageNode =
-        prepareIntegrationStageNode(integrationStage, planForExecution, podName, buildNumber, adviserObtainments);
+    final PlanNode integrationStageNode = prepareIntegrationStageNode(
+        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(integrationStageNode)
@@ -127,8 +127,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private ExecutionPlanCreatorResponse createExecutionPlanForWebhookExecution(IntegrationStage integrationStage,
-      ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context, BuildNumber buildNumber,
-      String podName, String sha, String connectorRef) {
+      ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context,
+      BuildNumberDetails buildNumberDetails, String podName, String sha, String connectorRef) {
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
     PlanNode buildStatusFailedStepNode = BuildStatusStepNodeCreator.prepareBuildStatusStepNode(
         FAILED_STATUS, "Integration stage failed", sha, integrationStage.getIdentifier(), connectorRef);
@@ -150,8 +150,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
             .parameters(OnFailAdviserParameters.builder().nextNodeId(buildStatusFailedStepNode.getUuid()).build())
             .build());
 
-    final PlanNode integrationStageNode =
-        prepareIntegrationStageNode(integrationStage, planForExecution, podName, buildNumber, adviserObtainments);
+    final PlanNode integrationStageNode = prepareIntegrationStageNode(
+        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments);
 
     // TODO Harsh Check whether we also have to add pending status
     return ExecutionPlanCreatorResponse.builder()
@@ -173,7 +173,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private PlanNode prepareIntegrationStageNode(IntegrationStage integrationStage,
-      ExecutionPlanCreatorResponse planForExecution, String podName, BuildNumber buildNumber,
+      ExecutionPlanCreatorResponse planForExecution, String podName, BuildNumberDetails buildNumberDetails,
       ArrayList<AdviserObtainment> adviserObtainments) {
     final String deploymentStageUid = generateUuid();
 
@@ -185,7 +185,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .group(GROUP_NAME)
         .stepParameters(
             IntegrationStageStepParameters.builder()
-                .buildNumber(buildNumber)
+                .buildNumberDetails(buildNumberDetails)
                 .podName(podName)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))
