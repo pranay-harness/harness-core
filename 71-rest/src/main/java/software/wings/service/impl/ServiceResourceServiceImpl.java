@@ -1258,8 +1258,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public boolean exists(String appId, String serviceId) {
     return wingsPersistence.createQuery(Service.class)
-               .filter(Service.APP_ID_KEY, appId)
-               .filter(Service.ID_KEY, serviceId)
+               .filter(ServiceKeys.appId, appId)
+               .filter(ServiceKeys.uuid, serviceId)
                .getKey()
         != null;
   }
@@ -2803,8 +2803,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           wingsPersistence.createUpdateOperations(Service.class).set("isK8sV2", true);
 
       Query<Service> query = wingsPersistence.createQuery(Service.class)
-                                 .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
-                                 .filter(Service.ID_KEY, applicationManifest.getServiceId())
+                                 .filter(ServiceKeys.appId, applicationManifest.getAppId())
+                                 .filter(ServiceKeys.uuid, applicationManifest.getServiceId())
                                  .filter(ServiceKeys.deploymentType, KUBERNETES.name());
 
       wingsPersistence.update(query, updateOperations);
@@ -2823,8 +2823,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.isPcfV2, true);
 
       Query<Service> query = wingsPersistence.createQuery(Service.class)
-                                 .filter(Service.APP_ID_KEY, applicationManifest.getAppId())
-                                 .filter(Service.ID_KEY, applicationManifest.getServiceId())
+                                 .filter(ServiceKeys.appId, applicationManifest.getAppId())
+                                 .filter(ServiceKeys.uuid, applicationManifest.getServiceId())
                                  .filter(ServiceKeys.deploymentType, PCF.name());
 
       wingsPersistence.update(query, updateOperations);
@@ -2970,7 +2970,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Service> listByArtifactStreamId(String appId, String artifactStreamId) {
     return wingsPersistence.createQuery(Service.class)
-        .filter(Service.APP_ID_KEY, appId)
+        .filter(ServiceKeys.appId, appId)
         .filter(ServiceKeys.artifactStreamIds, artifactStreamId)
         .asList();
   }

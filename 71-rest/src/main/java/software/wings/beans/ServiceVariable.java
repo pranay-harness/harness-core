@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -12,10 +14,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
@@ -51,13 +54,6 @@ import javax.validation.constraints.NotNull;
       , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
           @Field("name")
     })
-@CdIndex(name = "app_entityId", fields = { @Field("appId")
-                                           , @Field("entityId") })
-@CdIndex(name = "app_env_templateId", fields = { @Field("appId")
-                                                 , @Field("envId"), @Field("templateId") })
-@CdIndex(name = "appEntityIdx",
-    fields = { @Field("appId")
-               , @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC), })
 @Data
 @Builder
 @NoArgsConstructor
@@ -68,6 +64,26 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "serviceVariables", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ServiceVariable extends Base implements EncryptableSetting {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("app_entityId")
+                 .field(ServiceVariableKeys.appId)
+                 .field(ServiceVariableKeys.entityId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("app_env_templateId")
+                 .field(ServiceVariableKeys.appId)
+                 .field(ServiceVariableKeys.envId)
+                 .field(ServiceVariableKeys.templateId)
+                 .build())
+        .add(CreatedAtSortCompoundMongoIndex.builder()
+                 .name("appEntityIdx")
+                 .field(ServiceVariableKeys.appId)
+                 .field(ServiceVariableKeys.entityId)
+                 .build())
+        .build();
+  }
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */
@@ -221,5 +237,8 @@ public class ServiceVariable extends Base implements EncryptableSetting {
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String entityId = "entityId";
+    public static final String envId = "envId";
+    public static final String templateId = "templateId";
   }
 }
