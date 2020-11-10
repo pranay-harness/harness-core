@@ -110,6 +110,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
     StateMachine sm = stateMachineGenerator.generateForRollbackExecution(APP_ID, WORKFLOW_EXECUTION_ID);
     assertThat(sm).isNotNull();
     assertThat(sm.getStates()).hasSize(4);
+    assertThat(sm.getTransitions()).hasSize(1);
     assertThat(sm.getChildStateMachines()).hasSize(4);
   }
 

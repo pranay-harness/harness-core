@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.STAGE_EXECUTION;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 
@@ -15,6 +16,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -63,7 +65,15 @@ public class RollbackStateMachineGenerator {
     final OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow modifiedOrchestrationWorkflow =
         modifyOrchestrationForRollback(appId, orchestrationWorkflow, successfulExecutionId);
-    modifiedOrchestrationWorkflow.setGraph(modifiedOrchestrationWorkflow.generateGraph());
+    // We do not run post deployment steps during rollback so remove the transition link to Postdeployment steps from
+    // graph
+    Graph graph = modifiedOrchestrationWorkflow.generateGraph();
+    graph.setLinks(graph.getLinks()
+                       .stream()
+                       .filter(link -> link.getTo() != modifiedOrchestrationWorkflow.getPostDeploymentSteps().getUuid())
+                       .collect(toList()));
+    modifiedOrchestrationWorkflow.setGraph(graph);
+
     return new StateMachine(workflow, workflow.getDefaultVersion(), modifiedOrchestrationWorkflow.getGraph(),
         workflowService.stencilMap(appId), false);
   }
@@ -72,6 +82,11 @@ public class RollbackStateMachineGenerator {
       String appId, OrchestrationWorkflow orchestrationWorkflow, String successfulExecutionId) {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) orchestrationWorkflow.cloneInternal();
+
+    // We do not want to run pre-deployment steps during rollback
+    if (canaryOrchestrationWorkflow.getPreDeploymentSteps() != null) {
+      canaryOrchestrationWorkflow.setPreDeploymentSteps(new PhaseStep(PRE_DEPLOYMENT));
+    }
 
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
       phase.setName(STAGING_PHASE_NAME + WHITE_SPACE + phase.getName());
