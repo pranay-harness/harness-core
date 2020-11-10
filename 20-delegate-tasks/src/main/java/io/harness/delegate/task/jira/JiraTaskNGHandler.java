@@ -11,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
+import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraProjectData;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
@@ -21,11 +22,19 @@ import net.rcarz.jiraclient.Issue.FluentCreate;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.Resource;
+import net.rcarz.jiraclient.RestException;
 import net.rcarz.jiraclient.TimeTracking;
 import net.rcarz.jiraclient.Transition;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import net.rcarz.jiraclient.Project;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -242,6 +251,24 @@ public class JiraTaskNGHandler {
       return JiraTaskNGResponse.builder().executionStatus(SUCCESS).projects(jiraProjectDataList).build();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
+    }
+  }
+
+  public JiraTaskNGResponse getStatuses(JiraTaskNGParameters jiraTaskNGParameters) {
+    try {
+      JiraClient jiraClient = getJiraClient(jiraTaskNGParameters);
+      URI uri = jiraClient.getRestClient().buildURI(
+          Resource.getBaseUri() + "project/" + jiraTaskNGParameters.getProject() + "/statuses");
+      JSON response = jiraClient.getRestClient().get(uri);
+
+      List<JiraIssueType> issueTypeStatuses = new ArrayList<>();
+      ((JSONArray) response).forEach(r -> issueTypeStatuses.add(new JiraIssueType((JSONObject) r)));
+
+      return JiraTaskNGResponse.builder().executionStatus(SUCCESS).statuses(issueTypeStatuses).build();
+    } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
+      String errorMessage = "Failed to fetch statuses from Jira server.";
       log.error(errorMessage, e);
       return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
     }

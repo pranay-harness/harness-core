@@ -14,7 +14,9 @@ import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentCreate;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.RestClient;
 import net.rcarz.jiraclient.TimeTracking;
+import net.sf.json.JSONArray;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -26,6 +28,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -247,6 +251,39 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
 
     JiraTaskNGResponse jiraTaskNGResponse =
         jiraTaskNGHandler.fetchIssue(createJiraTaskParametersBuilder().approvalField("approvalField").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetStatuses() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    RestClient restClient = Mockito.mock(RestClient.class);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    when(jiraClient.getRestClient()).thenReturn(restClient);
+    when(restClient.get(any(URI.class))).thenReturn(new JSONArray());
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getStatuses(createJiraTaskParametersBuilder().project("CDNG").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(jiraTaskNGResponse.getStatuses()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetStatusesFailure() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    RestClient restClient = Mockito.mock(RestClient.class);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    when(jiraClient.getRestClient()).thenReturn(restClient);
+    when(restClient.get(any(URI.class))).thenThrow(new IOException());
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getStatuses(createJiraTaskParametersBuilder().project("CDNG").build());
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 

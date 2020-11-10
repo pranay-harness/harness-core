@@ -1,6 +1,11 @@
 package io.harness.cdng.jira.resources.response;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -12,6 +17,8 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JiraProjectResponse {
+@JsonInclude(NON_NULL)
+@ApiModel(value = "JiraProjectResponse")
+public class JiraProjectResponseDTO {
   List<JiraProjectDTO> jiraProjects;
 }

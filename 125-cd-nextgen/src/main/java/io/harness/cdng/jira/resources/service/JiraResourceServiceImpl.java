@@ -13,11 +13,13 @@ import com.google.inject.name.Named;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.converter.JiraIssueDTOConverter;
+import io.harness.cdng.jira.resources.converter.JiraIssueTypeDTOConverter;
 import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConverter;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
-import io.harness.cdng.jira.resources.response.JiraIssueDTO;
-import io.harness.cdng.jira.resources.response.JiraProjectDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
 import io.harness.common.NGTaskType;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
@@ -27,6 +29,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
+import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
@@ -64,26 +67,11 @@ public class JiraResourceServiceImpl implements JiraResourceService {
 
   @Override
   public boolean validateCredentials(IdentifierRef jiraConnectionRef, String orgIdentifier, String projectIdentifier) {
-    JiraConnectorDTO connector = getConnector(jiraConnectionRef);
-    BaseNGAccess baseNGAccess =
-        getBaseNGAccess(jiraConnectionRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    JiraTaskNGParametersBuilder taskParametersBuilder = JiraTaskNGParameters.builder().jiraAction(JiraAction.AUTH);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNGParameters.builder()
-                                              .accountId(jiraConnectionRef.getAccountIdentifier())
-                                              .jiraAction(JiraAction.AUTH)
-                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
-                                              .jiraConnectorDTO(connector)
-                                              .build();
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectionRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
 
-    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
-
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
-    }
-    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
     if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
       throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
     }
@@ -94,27 +82,13 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   @Override
   public String createTicket(
       IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, CreateJiraTicketRequest request) {
-    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
-    BaseNGAccess baseNGAccess =
-        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    JiraTaskNGParametersBuilder taskParametersBuilder =
+        JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromCreate.apply(request).jiraAction(
+            JiraAction.CREATE_TICKET);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromCreate()
-                                              .apply(request)
-                                              .accountId(jiraConnectorRef.getAccountIdentifier())
-                                              .jiraAction(JiraAction.CREATE_TICKET)
-                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
-                                              .jiraConnectorDTO(connector)
-                                              .build();
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
 
-    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
-
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
-    }
-    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
     if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
       throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
     }
@@ -125,27 +99,12 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   @Override
   public String updateTicket(
       IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, UpdateJiraTicketRequest request) {
-    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
-    BaseNGAccess baseNGAccess =
-        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    JiraTaskNGParametersBuilder taskParametersBuilder =
+        JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromUpdate.apply(request).jiraAction(
+            JiraAction.UPDATE_TICKET);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNgParametersBuilderConverter.toJiraTaskNGParametersBuilderFromUpdate()
-                                              .apply(request)
-                                              .accountId(jiraConnectorRef.getAccountIdentifier())
-                                              .jiraAction(JiraAction.UPDATE_TICKET)
-                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
-                                              .jiraConnectorDTO(connector)
-                                              .build();
-
-    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
-
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
-    }
-    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
     if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
       throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
     }
@@ -156,27 +115,12 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   @Override
   public JiraIssueDTO fetchIssue(
       IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String jiraIssueId) {
-    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
-    BaseNGAccess baseNGAccess =
-        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    JiraTaskNGParametersBuilder taskParametersBuilder =
+        JiraTaskNGParameters.builder().issueId(jiraIssueId).jiraAction(JiraAction.FETCH_ISSUE);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNGParameters.builder()
-                                              .issueId(jiraIssueId)
-                                              .accountId(jiraConnectorRef.getAccountIdentifier())
-                                              .jiraAction(JiraAction.FETCH_ISSUE)
-                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
-                                              .jiraConnectorDTO(connector)
-                                              .build();
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
 
-    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
-
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
-    }
-    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
     if (jiraTaskResponse.getExecutionStatus() != RUNNING) {
       throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
     }
@@ -187,26 +131,11 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   @Override
   public List<JiraProjectDTO> getProjects(
       IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier) {
-    JiraConnectorDTO connector = getConnector(jiraConnectorRef);
-    BaseNGAccess baseNGAccess =
-        getBaseNGAccess(jiraConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    JiraTaskNGParametersBuilder taskParametersBuilder =
+        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_PROJECTS);
 
-    JiraTaskNGParameters taskParameters = JiraTaskNGParameters.builder()
-                                              .accountId(jiraConnectorRef.getAccountIdentifier())
-                                              .jiraAction(JiraAction.GET_PROJECTS)
-                                              .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
-                                              .jiraConnectorDTO(connector)
-                                              .build();
-
-    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
-
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
-    }
-    JiraTaskNGResponse jiraTaskResponse = (JiraTaskNGResponse) responseData;
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
     if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
       throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
     }
@@ -218,9 +147,55 @@ public class JiraResourceServiceImpl implements JiraResourceService {
                    .id(project.getId())
                    .key(project.getKey())
                    .name(project.getName())
-                   .issueTypes(project.getIssueTypes())
+                   .issueTypes(project.getIssueTypes()
+                                   .stream()
+                                   .map(JiraIssueTypeDTOConverter.toJiraIssueTypeDTO)
+                                   .collect(Collectors.toList()))
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<JiraIssueTypeDTO> getProjectStatuses(
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String projectId) {
+    JiraTaskNGParametersBuilder taskParametersBuilder =
+        JiraTaskNGParameters.builder().project(projectId).jiraAction(JiraAction.GET_STATUSES);
+
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
+
+    if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
+      throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    return jiraTaskResponse.getStatuses()
+        .stream()
+        .map(JiraIssueTypeDTOConverter.toJiraIssueTypeDTO)
+        .collect(Collectors.toList());
+  }
+
+  private JiraTaskNGResponse obtainJiraTaskNGResponse(IdentifierRef jiraConnectionRef, String orgIdentifier,
+      String projectIdentifier, JiraTaskNGParametersBuilder jiraTaskNGParametersBuilder) {
+    JiraConnectorDTO connector = getConnector(jiraConnectionRef);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(jiraConnectionRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+
+    JiraTaskNGParameters taskParameters =
+        jiraTaskNGParametersBuilder.accountId(jiraConnectionRef.getAccountIdentifier())
+            .encryptionDetails(getEncryptionDetails(connector, baseNGAccess))
+            .jiraConnectorDTO(connector)
+            .build();
+
+    final DelegateTaskRequest delegateTaskRequest = createDelegateTaskRequest(baseNGAccess, taskParameters);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+
+    if (responseData instanceof ErrorNotifyResponseData) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
+      throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    return (JiraTaskNGResponse) responseData;
   }
 
   private JiraConnectorDTO getConnector(IdentifierRef jiraConnectorRef) {
