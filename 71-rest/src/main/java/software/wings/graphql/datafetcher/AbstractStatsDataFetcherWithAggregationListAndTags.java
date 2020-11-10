@@ -137,12 +137,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
           || aggregateFunction.getColumnName().equalsIgnoreCase(BillingDataTableKeys.avgMemoryUtilization)) {
         billingStackedTimeSeriesDataPoints = billingStackedTimeSeriesData.getMemoryUtilMetrics();
       }
-      billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
-        List<QLBillingDataPoint> dataPoints =
-            getLabelDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByLabelLevel1,
-                aggregateFunction.getOperationType(), includeOthers);
-        billingStackedTimeSeriesDataPoint.setValues(dataPoints);
-      });
+      if (billingStackedTimeSeriesDataPoints != null) {
+        billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
+          List<QLBillingDataPoint> dataPoints =
+              getLabelDataPoints(accountId, billingStackedTimeSeriesDataPoint.getValues(), groupByLabelLevel1,
+                  aggregateFunction.getOperationType(), includeOthers);
+          billingStackedTimeSeriesDataPoint.setValues(dataPoints);
+        });
+      }
     });
   }
 
