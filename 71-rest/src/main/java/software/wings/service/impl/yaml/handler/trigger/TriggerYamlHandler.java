@@ -171,6 +171,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     Trigger existingTrigger = yamlHelper.getTrigger(appId, change.getFilePath());
 
     Trigger trigger = toBean(appId, changeContext, changeSetContext);
+
     if (existingTrigger == null) {
       trigger = triggerService.save(trigger);
     } else {

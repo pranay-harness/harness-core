@@ -6,6 +6,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -124,6 +125,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -180,6 +182,7 @@ import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -3430,5 +3433,58 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
     assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getVersion))
         .containsExactlyInAnyOrder("1", "5");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveNonWebhookTriggerWithExpressionValue() {
+    Map<String, String> variables = new HashMap<>();
+    variables.put("SERVICE", "${expression}");
+    pipelineCondTrigger.setWorkflowVariables(variables);
+
+    Pipeline testPipeline = Pipeline.builder()
+                                .appId(APP_ID)
+                                .uuid(PIPELINE_ID)
+                                .services(singletonList(Service.builder().uuid(SERVICE_ID).name("testService").build()))
+                                .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(aVariable().name("SERVICE").value("Service").type(VariableType.ENTITY).build());
+    testPipeline.setPipelineVariables(userVariables);
+
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(testPipeline);
+
+    assertThatThrownBy(() -> triggerService.save(pipelineCondTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Expressions are not allowed for Entity Variables for Workflow Variables");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldSaveNonWebhookTriggerWithNonExpressionValueAs() {
+    Map<String, String> variables = new HashMap<>();
+    variables.put("ENV", "nonExpressionValue");
+    variables.put("textVar", "${expression}");
+
+    pipelineCondTrigger.setWorkflowVariables(variables);
+
+    Pipeline testPipeline = Pipeline.builder()
+                                .appId(APP_ID)
+                                .uuid(PIPELINE_ID)
+                                .services(singletonList(Service.builder().uuid(SERVICE_ID).name("testService").build()))
+                                .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(aVariable().name("textVar").value("TEXT_VAR").type(VariableType.TEXT).build());
+    userVariables.add(aVariable().name("ENV").value("env").type(VariableType.ENTITY).build());
+    testPipeline.setPipelineVariables(userVariables);
+
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(testPipeline);
+    Trigger trigger = triggerService.save(pipelineCondTrigger);
+
+    assertThat(trigger.getUuid()).isNotEmpty();
+    assertThat(trigger.getCondition()).isInstanceOf(PipelineTriggerCondition.class);
   }
 }
