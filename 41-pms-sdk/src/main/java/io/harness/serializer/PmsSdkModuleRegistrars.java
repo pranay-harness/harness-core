@@ -6,15 +6,19 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.PmsSdkKryoRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(CDC)
 @UtilityClass
-public class PipelineServiceModuleRegistrars {
+public class PmsSdkModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(OrchestrationRegistrars.kryoRegistrars).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .add(PmsSdkKryoRegistrar.class)
+          .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()

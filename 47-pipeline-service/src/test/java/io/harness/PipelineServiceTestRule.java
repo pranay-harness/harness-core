@@ -104,9 +104,6 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(OrchestrationModule.getInstance());
     modules.add(mongoTypeModule(annotations));
 
-    PipelineServiceConfiguration configuration = PipelineServiceConfiguration.builder().build();
-    modules.add(new PipelineServiceModule(configuration));
-
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

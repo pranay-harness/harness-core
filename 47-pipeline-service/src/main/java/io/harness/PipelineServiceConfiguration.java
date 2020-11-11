@@ -1,13 +1,27 @@
 package io.harness;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Singleton;
+
+import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import io.dropwizard.jetty.ConnectorFactory;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.logging.FileAppenderFactory;
+import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
+import io.dropwizard.request.logging.RequestLogFactory;
+import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.reflections.Reflections;
 
 import java.util.ArrayList;
@@ -15,32 +29,81 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.ws.rs.Path;
 
-@Getter
-@Builder
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Singleton
 public class PipelineServiceConfiguration extends Configuration {
-  public static final String SERVICE_ID = "ng-manager";
-  public static final String RESOURCE_PACKAGE = "io.harness.pipeline.resources";
+  public static final String RESOURCE_PACKAGE = "io.harness.pms.resources";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("cdGrpcClientConfig") private GrpcClientConfig cdGrpcClientConfig;
+  @JsonProperty("cvGrpcClientConfig") private GrpcClientConfig cvGrpcClientConfig;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
+
+  public PipelineServiceConfiguration() {
+    DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
+    defaultServerFactory.setJerseyRootPath("/api");
+    defaultServerFactory.setRegisterDefaultExceptionMappers(Boolean.FALSE);
+    defaultServerFactory.setAdminContextPath("/admin");
+    defaultServerFactory.setAdminConnectors(singletonList(getDefaultAdminConnectorFactory()));
+    defaultServerFactory.setApplicationConnectors(singletonList(getDefaultApplicationConnectorFactory()));
+    defaultServerFactory.setRequestLogFactory(getDefaultLogbackAccessRequestLogFactory());
+    defaultServerFactory.setMaxThreads(512);
+    super.setServerFactory(defaultServerFactory);
+  }
+
+  @Override
+  public void setServerFactory(ServerFactory factory) {
+    DefaultServerFactory defaultServerFactory = (DefaultServerFactory) factory;
+    ((DefaultServerFactory) getServerFactory())
+        .setApplicationConnectors(defaultServerFactory.getApplicationConnectors());
+    ((DefaultServerFactory) getServerFactory()).setAdminConnectors(defaultServerFactory.getAdminConnectors());
+    ((DefaultServerFactory) getServerFactory()).setRequestLogFactory(defaultServerFactory.getRequestLogFactory());
+    ((DefaultServerFactory) getServerFactory()).setMaxThreads(defaultServerFactory.getMaxThreads());
+  }
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost("{{host}}");
-    defaultSwaggerBundleConfiguration.setTitle("Pipeline Service API Reference");
+    defaultSwaggerBundleConfiguration.setHost("{{localhost}}");
+    defaultSwaggerBundleConfiguration.setTitle("PMS API Reference");
+    defaultSwaggerBundleConfiguration.setVersion("2.0");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
+  }
+
+  private ConnectorFactory getDefaultApplicationConnectorFactory() {
+    final HttpConnectorFactory factory = new HttpConnectorFactory();
+    factory.setPort(12101);
+    return factory;
+  }
+
+  private ConnectorFactory getDefaultAdminConnectorFactory() {
+    final HttpConnectorFactory factory = new HttpConnectorFactory();
+    factory.setPort(12102);
+    return factory;
+  }
+
+  private RequestLogFactory getDefaultLogbackAccessRequestLogFactory() {
+    LogbackAccessRequestLogFactory logbackAccessRequestLogFactory = new LogbackAccessRequestLogFactory();
+    FileAppenderFactory<IAccessEvent> fileAppenderFactory = new FileAppenderFactory<>();
+    fileAppenderFactory.setArchive(true);
+    fileAppenderFactory.setCurrentLogFilename("access.log");
+    fileAppenderFactory.setThreshold(Level.ALL.toString());
+    fileAppenderFactory.setArchivedLogFilenamePattern("access.%d.log.gz");
+    fileAppenderFactory.setArchivedFileCount(14);
+    logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
+    return logbackAccessRequestLogFactory;
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
