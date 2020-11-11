@@ -1,6 +1,5 @@
 package io.harness.facilitator.sync;
 
-import static io.harness.facilitator.modes.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,7 +29,7 @@ public class SyncFacilitatorTest extends OrchestrationTestBase {
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
     FacilitatorResponse response = syncFacilitator.facilitate(ambiance, null, parameters, null);
     assertThat(response).isNotNull();
-    assertThat(response.getExecutionMode()).isEqualTo(SYNC);
+    assertThat(response.getExecutionMode()).isEqualTo(ExecutionMode.SYNC);
     assertThat(response.getInitialWait()).isEqualTo(Duration.ofSeconds(0));
   }
 }

@@ -1,8 +1,8 @@
 package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.facilitator.modes.ExecutionMode.ASYNC;
-import static io.harness.facilitator.modes.ExecutionMode.SYNC;
+import static io.harness.pms.execution.ExecutionMode.ASYNC;
+import static io.harness.pms.execution.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

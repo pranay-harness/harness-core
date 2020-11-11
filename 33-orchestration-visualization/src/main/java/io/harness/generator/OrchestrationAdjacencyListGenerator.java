@@ -1,7 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.facilitator.modes.ExecutionMode.isChainMode;
+import static io.harness.execution.ExecutionModeUtils.isChainMode;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -23,7 +23,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

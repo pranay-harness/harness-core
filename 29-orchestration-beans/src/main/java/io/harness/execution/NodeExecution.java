@@ -8,7 +8,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutableResponse;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;

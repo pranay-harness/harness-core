@@ -18,7 +18,7 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.skip.SkipType;

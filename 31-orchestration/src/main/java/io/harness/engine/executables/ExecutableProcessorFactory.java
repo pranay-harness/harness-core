@@ -15,7 +15,7 @@ import io.harness.engine.executables.invokers.SyncStrategy;
 import io.harness.engine.executables.invokers.TaskChainStrategy;
 import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.tasks.TaskMode;
 
 @OwnedBy(CDC)
