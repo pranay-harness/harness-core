@@ -8,7 +8,6 @@ import com.google.protobuf.Message;
 
 import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
-import io.harness.exception.DataFormatException;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
@@ -90,7 +89,6 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
       this.message = any.unpack(clazz);
     } catch (ClassNotFoundException | InvalidProtocolBufferException e) {
       log.error("message type is {} createdAt {} occuredAt {} attr {}", type, createdAt, occurredAt, attributes);
-      throw new DataFormatException("Unable to parse message for type: " + type, e);
     }
   }
 }

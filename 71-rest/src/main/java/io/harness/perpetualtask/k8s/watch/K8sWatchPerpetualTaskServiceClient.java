@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 
 import io.harness.beans.DelegateTask;
+import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
+import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -23,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class K8sWatchPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private ClusterRecordService clusterRecordService;
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
   private static final String CLUSTER_ID = "clusterId";
@@ -34,6 +37,10 @@ public class K8sWatchPerpetualTaskServiceClient implements PerpetualTaskServiceC
     String cloudProviderId = clientParams.get(CLOUD_PROVIDER_ID);
     String clusterId = clientParams.get(CLUSTER_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
+    ClusterRecord clusterRecord = clusterRecordService.get(clusterId);
+    if (null != clusterRecord && null != clusterRecord.getCluster().getClusterName()) {
+      clusterName = clusterRecord.getCluster().getClusterName();
+    }
     K8sClusterConfig config = k8sClusterConfigFactory.getK8sClusterConfig(clusterId);
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(config));
 
