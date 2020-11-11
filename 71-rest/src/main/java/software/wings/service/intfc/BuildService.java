@@ -160,6 +160,16 @@ public interface BuildService<T> {
   }
 
   /**
+   * Get projectId
+   *
+   * @param config the  config
+   * @return the projectId fetched from GKE cluster metadata server
+   */
+  default String getProjectId(T config) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Get SMB paths
    *
    * @param config the  config

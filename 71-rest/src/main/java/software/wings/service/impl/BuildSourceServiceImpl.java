@@ -127,6 +127,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
+    if (gcpConfig.isUseDelegate()) {
+      return getBuildService(settingAttribute, appId, GCS.name()).getProjectId(gcpConfig);
+    }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
   }
 
@@ -613,6 +616,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
+    if (gcpConfig.isUseDelegate()) {
+      return getBuildService(settingAttribute).getProjectId(gcpConfig);
+    }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
   }
 

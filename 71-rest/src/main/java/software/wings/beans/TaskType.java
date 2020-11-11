@@ -156,6 +156,7 @@ public enum TaskType {
   GCS_GET_ARTIFACT_PATHS(TaskGroup.GCS, ServiceImplDelegateTask.class),
   GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class),
   GCS_GET_BUCKETS(TaskGroup.GCS, ServiceImplDelegateTask.class),
+  GCS_GET_PROJECT_ID(TaskGroup.GCS, ServiceImplDelegateTask.class),
   GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class),
   SFTP_GET_BUILDS(TaskGroup.SFTP, ServiceImplDelegateTask.class),
   SFTP_GET_ARTIFACT_PATHS(TaskGroup.SFTP, ServiceImplDelegateTask.class),

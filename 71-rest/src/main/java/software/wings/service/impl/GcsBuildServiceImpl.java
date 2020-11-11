@@ -55,6 +55,11 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   }
 
   @Override
+  public String getProjectId(GcpConfig gcpConfig) {
+    return gcsService.getProjectId(gcpConfig);
+  }
+
+  @Override
   public List<JobDetails> getJobs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     return null;

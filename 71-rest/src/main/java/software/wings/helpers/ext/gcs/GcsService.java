@@ -34,6 +34,14 @@ public interface GcsService {
   String getProject(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
+   * Get GCS project Id from GKE metadata server
+   *
+   * @param gcpConfig GCP Config
+   * @return GCS project
+   */
+  String getProjectId(GcpConfig gcpConfig);
+
+  /**
    * Get artifact paths for a given repo from the given bucket.
    *
    * @param gcpConfig  GCS config

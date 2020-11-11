@@ -19,10 +19,13 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.json.JSONObject;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -31,6 +34,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -268,6 +272,22 @@ public class GcsServiceImpl implements GcsService {
   }
 
   @Override
+  public String getProjectId(GcpConfig gcpConfig) {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+                          .header("Metadata-Flavor", "Google")
+                          .url("http://metadata.google.internal/computeMetadata/v1/project/project-id")
+                          .build();
+    try {
+      okhttp3.Response response = client.newCall(request).execute();
+      return response.body().string();
+    } catch (IOException | NullPointerException e) {
+      log.error("GCS_TASK - Failed to get projectId due to: ", e);
+      throw new ArtifactServerException("Can not retrieve project-id from from cluster meta");
+    }
+  }
+
+  @Override
   public Map<String, String> listBuckets(
       GcpConfig gcpConfig, String projectId, List<EncryptedDataDetail> encryptedDataDetails) {
     Storage.Buckets bucketsObj;
@@ -279,7 +299,12 @@ public class GcsServiceImpl implements GcsService {
 
     // List buckets for current project in service account if project is empty
     if (isEmpty(projectId)) {
-      projectId = new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
+      if (gcpConfig.isUseDelegate()) {
+        projectId = getProjectId(gcpConfig);
+      } else {
+        projectId =
+            new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
+      }
     }
 
     try {
