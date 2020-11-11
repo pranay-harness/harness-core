@@ -38,6 +38,7 @@ public class ExecutionToDtoMapper {
         .executionStatus(pipelineExecutionSummary.getExecutionStatus())
         .tags(TagMapper.convertToMap(pipelineExecutionSummary.getTags()))
         .deploymentId("DeploymentIdPlaceHolder")
+        .inputSetYaml(pipelineExecutionSummary.getInputSetYaml())
         .triggerInfo(pipelineExecutionSummary.getTriggerInfo())
         .failedStagesCount(getCountForGivenStatus(
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.FAILED))
@@ -45,6 +46,7 @@ public class ExecutionToDtoMapper {
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.SUCCESS))
         .runningStagesCount(getCountForGivenStatus(
             pipelineExecutionSummary.getStageExecutionSummarySummaryElements(), ExecutionStatus.RUNNING))
+        .totalStagesCount(getTotalCountForStages(pipelineExecutionSummary.getStageExecutionSummarySummaryElements()))
         .errorInfo(pipelineExecutionSummary.getErrorInfo())
         .build();
   }
@@ -84,11 +86,28 @@ public class ExecutionToDtoMapper {
 
   private long getCountForGivenStatus(
       List<StageExecutionSummary> stageExecutionSummaries, ExecutionStatus requiredStatus) {
-    return stageExecutionSummaries.stream()
-        .filter(stageExecutionSummary -> !(stageExecutionSummary instanceof ParallelStageExecutionSummary))
-        .map(stageExecutionSummary -> (CDStageExecutionSummary) stageExecutionSummary)
-        .map(CDStageExecutionSummary::getExecutionStatus)
-        .filter(status -> status == requiredStatus)
-        .count();
+    int count = 0;
+    for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
+      if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
+        count += getCountForGivenStatus(
+            ((ParallelStageExecutionSummary) stageExecutionSummary).getStageExecutionSummaries(), requiredStatus);
+      } else if (((CDStageExecutionSummary) stageExecutionSummary).getExecutionStatus() == requiredStatus) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  private long getTotalCountForStages(List<StageExecutionSummary> stageExecutionSummaries) {
+    int count = 0;
+    for (StageExecutionSummary stageExecutionSummary : stageExecutionSummaries) {
+      if (stageExecutionSummary instanceof ParallelStageExecutionSummary) {
+        count += getTotalCountForStages(
+            ((ParallelStageExecutionSummary) stageExecutionSummary).getStageExecutionSummaries());
+      } else {
+        count++;
+      }
+    }
+    return count;
   }
 }

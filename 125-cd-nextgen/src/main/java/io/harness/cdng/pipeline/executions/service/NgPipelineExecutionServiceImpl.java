@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
@@ -129,8 +130,10 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   }
 
   @Override
-  public PipelineExecutionSummary createPipelineExecutionSummary(
-      String accountId, String orgId, String projectId, PlanExecution planExecution, NgPipeline ngPipeline) {
+  public PipelineExecutionSummary createPipelineExecutionSummary(String accountId, String orgId, String projectId,
+      PlanExecution planExecution, CDPipelineSetupParameters cdPipelineSetupParameters) {
+    NgPipeline ngPipeline = cdPipelineSetupParameters.getNgPipeline();
+    String inputSetYaml = cdPipelineSetupParameters.getInputSetPipelineYaml();
     Map<String, String> stageIdentifierToPlanNodeId = new HashMap<>();
     planExecution.getPlan()
         .getNodes()
@@ -149,6 +152,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
                 ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build())
             .planExecutionId(planExecution.getUuid())
             .startedAt(planExecution.getStartTs())
+            .inputSetYaml(inputSetYaml)
             .build();
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
         pipelineExecutionSummary, ngPipeline, stageIdentifierToPlanNodeId);

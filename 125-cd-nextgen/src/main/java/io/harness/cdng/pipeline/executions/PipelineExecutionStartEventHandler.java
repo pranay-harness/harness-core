@@ -11,7 +11,6 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +32,9 @@ public class PipelineExecutionStartEventHandler implements SyncOrchestrationEven
     if (!Objects.equals(planNode.getGroup(), StepOutcomeGroup.PIPELINE.name())) {
       return;
     }
-    NgPipeline ngPipeline = ((CDPipelineSetupParameters) planNode.getStepParameters()).getNgPipeline();
-    ngPipelineExecutionService.createPipelineExecutionSummary(accountId, orgId, projectId, planExecution, ngPipeline);
+    CDPipelineSetupParameters cdPipelineSetupParameters = (CDPipelineSetupParameters) planNode.getStepParameters();
+
+    ngPipelineExecutionService.createPipelineExecutionSummary(
+        accountId, orgId, projectId, planExecution, cdPipelineSetupParameters);
   }
 }

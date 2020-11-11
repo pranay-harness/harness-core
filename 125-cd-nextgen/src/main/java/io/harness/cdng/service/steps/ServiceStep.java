@@ -3,6 +3,7 @@ package io.harness.cdng.service.steps;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -199,9 +200,9 @@ public class ServiceStep implements Step, TaskChainExecutable<ServiceStepParamet
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return ServiceEntity.builder()
-        .identifier(serviceConfig.getIdentifier().getValue())
-        .name(serviceConfig.getName().getValue())
-        .description(serviceConfig.getDescription().getValue())
+        .identifier(getParameterFieldValue(serviceConfig.getIdentifier()))
+        .name(getParameterFieldValue(serviceConfig.getName()))
+        .description(getParameterFieldValue(serviceConfig.getDescription()))
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)

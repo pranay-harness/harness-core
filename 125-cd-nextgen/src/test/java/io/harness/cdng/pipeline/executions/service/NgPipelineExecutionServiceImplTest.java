@@ -18,7 +18,9 @@ import static org.mockito.Mockito.when;
 
 import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
@@ -28,6 +30,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -35,12 +38,16 @@ import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.ngpipeline.pipeline.executions.TriggerType;
+import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -62,6 +69,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -248,5 +256,48 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     assertThat(stepTypeToYamlTypeMapping.size()).isEqualTo(ExecutionNodeType.values().length);
     assertThat(stepTypeToYamlTypeMapping.get(ExecutionNodeType.DEPLOYMENT_STAGE_STEP))
         .isEqualTo(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getYamlType());
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testCreatePipelineExecution() {
+    NgPipeline ngPipeline = NgPipeline.builder().identifier("identifier").name("name").build();
+    CDPipelineSetupParameters cdPipelineSetupParameters =
+        CDPipelineSetupParameters.builder().inputSetPipelineYaml("inputSet").ngPipeline(ngPipeline).build();
+    PlanExecution planExecution =
+        PlanExecution.builder().uuid("planExecutionUuid").plan(Plan.builder().nodes(new ArrayList<>()).build()).build();
+    ArgumentCaptor<PipelineExecutionSummary> pipelineExecutionSummaryArgumentCaptor =
+        ArgumentCaptor.forClass(PipelineExecutionSummary.class);
+    PipelineExecutionSummary pipelineExecutionSummary =
+        PipelineExecutionSummary.builder()
+            .accountIdentifier(ACCOUNT_ID)
+            .orgIdentifier(ORG_ID)
+            .projectIdentifier(PROJECT_ID)
+            .pipelineName(ngPipeline.getName())
+            .pipelineIdentifier(ngPipeline.getIdentifier())
+            .executionStatus(ExecutionStatus.RUNNING)
+            .triggerInfo(ExecutionTriggerInfo.builder()
+                             .triggerType(TriggerType.MANUAL)
+                             .triggeredBy(EmbeddedUser.builder()
+                                              .uuid("lv0euRhKRCyiXWzS7pOg6g")
+                                              .email("admin@harness.io")
+                                              .name("Admin")
+                                              .build())
+                             .build())
+            .planExecutionId(planExecution.getUuid())
+            .startedAt(planExecution.getStartTs())
+            .inputSetYaml("inputSet")
+            .build();
+
+    when(pipelineExecutionRepository.save(any(PipelineExecutionSummary.class)))
+        .thenReturn(PipelineExecutionSummary.builder().build());
+
+    ngPipelineExecutionService.createPipelineExecutionSummary(
+        ACCOUNT_ID, ORG_ID, PROJECT_ID, planExecution, cdPipelineSetupParameters);
+
+    verify(pipelineExecutionRepository).save(pipelineExecutionSummaryArgumentCaptor.capture());
+
+    assertThat(pipelineExecutionSummaryArgumentCaptor.getValue()).isEqualTo(pipelineExecutionSummary);
   }
 }
