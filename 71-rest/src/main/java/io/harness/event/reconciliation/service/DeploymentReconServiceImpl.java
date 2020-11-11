@@ -134,7 +134,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         }
 
         Map<String, String> tsdbRunningWFs = getRunningWFsFromTSDB(accountId, durationStartTs, durationEndTs);
-        statusMismatchDetected = isStatusMismatchedAndUpdated(accountId, tsdbRunningWFs);
+        statusMismatchDetected = isStatusMismatchedAndUpdated(tsdbRunningWFs);
 
         DetectionStatus detectionStatus;
         ReconcilationAction action;
@@ -378,13 +378,9 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     return runningWFs;
   }
 
-  protected boolean isStatusMismatchedAndUpdated(String accountId, Map<String, String> tsdbRunningWFs) {
+  protected boolean isStatusMismatchedAndUpdated(Map<String, String> tsdbRunningWFs) {
     boolean statusMismatch = false;
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
-                                         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                                         .filter(WorkflowExecutionKeys.accountId, accountId)
-                                         .field(WorkflowExecutionKeys.startTs)
-                                         .exists()
                                          .field(WorkflowExecutionKeys.uuid)
                                          .hasAnyOf(tsdbRunningWFs.keySet())
                                          .project(WorkflowExecutionKeys.serviceExecutionSummaries, false);
