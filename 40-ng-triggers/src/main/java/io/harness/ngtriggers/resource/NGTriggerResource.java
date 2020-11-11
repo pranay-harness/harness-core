@@ -36,8 +36,8 @@ import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-@Api("ngtriggers")
-@Path("ngtriggers")
+@Api("triggers")
+@Path("triggers")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
