@@ -27,7 +27,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml =
         webhookTriggerConditionHandler.toYaml(webHookTriggerCondition, "APP_ID");
 
-    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+    assertThat(webhookEventTriggerConditionYaml.getBranchRegex().equals(webHookTriggerCondition.getBranchRegex()))
         .isTrue();
   }
 
@@ -37,13 +37,13 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   public void upsertFromYaml() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
                                                                             .action(asList("closed"))
-                                                                            .branchName("abc")
+                                                                            .branchRegex("abc")
                                                                             .repositoryType("GITHUB")
                                                                             .build();
     WebHookTriggerCondition webHookTriggerCondition =
         webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml);
 
-    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+    assertThat(webhookEventTriggerConditionYaml.getBranchRegex().equals(webHookTriggerCondition.getBranchRegex()))
         .isTrue();
   }
 
@@ -53,13 +53,13 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   public void upsertFromYamlForBitBucket() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
                                                                             .action(asList("repo:push"))
-                                                                            .branchName("abc")
+                                                                            .branchRegex("abc")
                                                                             .repositoryType("BITBUCKET")
                                                                             .build();
     WebHookTriggerCondition webHookTriggerCondition =
         webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml);
 
-    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+    assertThat(webhookEventTriggerConditionYaml.getBranchRegex().equals(webHookTriggerCondition.getBranchRegex()))
         .isTrue();
   }
 }

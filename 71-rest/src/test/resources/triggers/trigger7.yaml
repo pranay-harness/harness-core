@@ -11,7 +11,7 @@ triggerCondition:
 - type: WEBHOOK
   action:
   - closed
-  branchName: test*
+  branchRegex: test*
   eventType:
   - pull_request
   repositoryType: GITHUB
