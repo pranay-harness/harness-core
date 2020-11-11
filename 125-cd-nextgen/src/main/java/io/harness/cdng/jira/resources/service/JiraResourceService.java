@@ -3,6 +3,7 @@ package io.harness.cdng.jira.resources.service;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -19,5 +20,7 @@ public interface JiraResourceService {
       IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String jiraIssueId);
   List<JiraProjectDTO> getProjects(IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier);
   List<JiraIssueTypeDTO> getProjectStatuses(
-      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String projectId);
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String projectKey);
+  List<JiraFieldDTO> getFieldsOptions(
+      IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier, String projectKey);
 }

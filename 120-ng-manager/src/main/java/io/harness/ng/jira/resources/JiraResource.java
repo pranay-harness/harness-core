@@ -5,8 +5,10 @@ import com.google.inject.Inject;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.JiraFieldResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectStatusesResponseDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -111,11 +113,25 @@ public class JiraResource {
   public ResponseDTO<JiraProjectStatusesResponseDTO> getJiraProjectStatuses(
       @QueryParam("connectorRef") String jiraConnectorIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("projectId") String projectId) {
+      @QueryParam("projectKey") String projectKey) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     List<JiraIssueTypeDTO> projectStatuses =
-        jiraResourceService.getProjectStatuses(connectorRef, orgIdentifier, projectIdentifier, projectId);
+        jiraResourceService.getProjectStatuses(connectorRef, orgIdentifier, projectIdentifier, projectKey);
     return ResponseDTO.newResponse(JiraProjectStatusesResponseDTO.builder().jiraIssueTypeList(projectStatuses).build());
+  }
+
+  @GET
+  @Path("getFieldsOptions")
+  @ApiOperation(value = "Get jira fields options", nickname = "getJiraFieldsOptions")
+  public ResponseDTO<JiraFieldResponseDTO> getJiraFieldsOptions(
+      @QueryParam("connectorRef") String jiraConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("projectKey") String projectKey) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    List<JiraFieldDTO> fieldsOptions =
+        jiraResourceService.getFieldsOptions(connectorRef, orgIdentifier, projectIdentifier, projectKey);
+    return ResponseDTO.newResponse(JiraFieldResponseDTO.builder().jiraFields(fieldsOptions).build());
   }
 }

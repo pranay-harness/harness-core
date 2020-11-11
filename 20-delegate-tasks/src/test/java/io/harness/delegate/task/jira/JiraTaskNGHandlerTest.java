@@ -12,11 +12,13 @@ import io.harness.rule.Owner;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentCreate;
+import net.rcarz.jiraclient.Issue.SearchResult;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.RestClient;
 import net.rcarz.jiraclient.TimeTracking;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -43,6 +45,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
@@ -309,6 +312,38 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
     PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
 
     JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.getProjects(createJiraTaskParametersBuilder().build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetFieldsAndOptions() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    SearchResult searchResult = Mockito.mock(SearchResult.class);
+    RestClient restClient = Mockito.mock(RestClient.class);
+
+    when(jiraClient.getRestClient()).thenReturn(restClient);
+    when(restClient.get(any(URI.class))).thenReturn(new JSONObject());
+    when(jiraClient.searchIssues(any(), anyInt())).thenReturn(searchResult);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getFieldsOptions(createJiraTaskParametersBuilder().project("CDNG").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetFieldsAndOptionsFailure() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+
+    when(jiraClient.searchIssues(any(), anyInt())).thenThrow(new JiraException("Exception"));
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getFieldsOptions(createJiraTaskParametersBuilder().build());
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 

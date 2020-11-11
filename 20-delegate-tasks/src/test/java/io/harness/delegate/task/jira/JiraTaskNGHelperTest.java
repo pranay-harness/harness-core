@@ -157,6 +157,26 @@ public class JiraTaskNGHelperTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestGetJiraTaskResponseGetFieldsAndOptions() {
+    JiraTaskNGResponse mockedResponse =
+        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    JiraTaskNGParameters jiraTaskNGParameters =
+        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_FIELDS_OPTIONS).build();
+
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(jiraTaskNGHandler.getFieldsOptions(jiraTaskNGParameters)).thenReturn(mockedResponse);
+
+    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
+
+    assertThat(jiraTaskResponse).isNotNull();
+    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestGetJiraTaskResponseUnknownJiraAction() {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     JiraTaskNGParameters jiraTaskNGParameters =

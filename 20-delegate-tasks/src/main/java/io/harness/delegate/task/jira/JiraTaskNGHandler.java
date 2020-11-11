@@ -11,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
+import io.harness.jira.JiraField;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraProjectData;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,9 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.rcarz.jiraclient.Project;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -269,6 +273,48 @@ public class JiraTaskNGHandler {
       return JiraTaskNGResponse.builder().executionStatus(SUCCESS).statuses(issueTypeStatuses).build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch statuses from Jira server.";
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
+    }
+  }
+
+  public JiraTaskNGResponse getFieldsOptions(JiraTaskNGParameters jiraTaskNGParameters) {
+    URI uri;
+    Issue.SearchResult issues;
+    JiraClient jiraClient;
+    try {
+      jiraClient = getJiraClient(jiraTaskNGParameters);
+      String jqlQuery = "project = " + jiraTaskNGParameters.getProject();
+      issues = jiraClient.searchIssues(jqlQuery, 1);
+    } catch (JiraException | RuntimeException e) {
+      String errorMessage =
+          "Failed to fetch issues from Jira server for project - " + jiraTaskNGParameters.getProject();
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
+    }
+
+    Issue issue = null;
+    if (CollectionUtils.isNotEmpty(issues.issues)) {
+      issue = issues.issues.get(0);
+    }
+    String issueKey = (issue == null) ? (jiraTaskNGParameters.getProject() + "-1") : issue.getKey();
+
+    try {
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/" + issueKey + "/editmeta");
+      JSON response = jiraClient.getRestClient().get(uri);
+
+      List<JiraField> jiraFields = new ArrayList<>();
+
+      JSONObject jsonFields = ((JSONObject) response).getJSONObject("fields");
+      jsonFields.keySet().forEach(keyStr -> {
+        String kk = (String) keyStr;
+        JSONObject fieldData = jsonFields.getJSONObject(kk);
+        jiraFields.add(new JiraField(fieldData, kk));
+      });
+
+      return JiraTaskNGResponse.builder().fields(jiraFields).executionStatus(SUCCESS).build();
+    } catch (URISyntaxException | IOException | RestException | RuntimeException e) {
+      String errorMessage = "Failed to fetch editmeta from Jira server. Issue - " + issueKey;
       log.error(errorMessage, e);
       return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
     }
