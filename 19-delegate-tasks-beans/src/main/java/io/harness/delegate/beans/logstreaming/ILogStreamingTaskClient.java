@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
 import java.io.OutputStream;
@@ -24,4 +25,13 @@ public interface ILogStreamingTaskClient {
    * Provides an output stream for writing log messages (e.g. to be given to the ProcessExecutor)
    */
   OutputStream obtainLogOutputStream(LogLevel logLevel, String baseLogKeySuffix);
+
+  /**
+   * Provides an instance of LogCallback interface implementation for backward compatibility reasons, to be used in
+   * delegate task implementations, instead of direct constructor invocation. LogService and accountId are provided by
+   * the delegate, while appId and activityId should be available as part of task parameters. Please make sure that your
+   * task parameters class implements {@link software.wings.beans.entityinterface.ApplicationAccess} and {@link
+   * io.harness.delegate.task.ActivityAccess} interfaces.
+   */
+  LogCallback obtainLogCallback(String commandName);
 }

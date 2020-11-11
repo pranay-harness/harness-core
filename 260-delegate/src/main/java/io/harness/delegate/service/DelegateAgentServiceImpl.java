@@ -101,10 +101,8 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
-import io.harness.delegate.beans.logstreaming.LogStreamingTaskClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -120,6 +118,9 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.AutoLogContext;
+import io.harness.logstreaming.DelegateAgentLogStreamingClient;
+import io.harness.logstreaming.LogStreamingTaskClient;
+import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
@@ -173,6 +174,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
 import software.wings.delegatetasks.DelegateLogService;
@@ -1833,6 +1835,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return null;
     }
 
+    // Generate base log key that will be used for writing logs to log streaming service
     StringBuilder logBaseKey = new StringBuilder();
     for (Entry<String, String> entry : delegateTaskPackage.getLogStreamingAbstractions().entrySet()) {
       if (logBaseKey.length() != 0) {
@@ -1841,13 +1844,28 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logBaseKey.append(entry.getKey() + ":" + entry.getValue());
     }
 
-    return LogStreamingTaskClient.builder()
-        .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
-        .accountId(delegateTaskPackage.getAccountId())
-        .token(delegateTaskPackage.getLogStreamingToken())
-        .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
-        .baseLogKey(logBaseKey.toString())
-        .build();
+    LogStreamingTaskClientBuilder logStreamingTaskClientBuilder =
+        LogStreamingTaskClient.builder()
+            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+            .accountId(delegateTaskPackage.getAccountId())
+            .token(delegateTaskPackage.getLogStreamingToken())
+            .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
+            .baseLogKey(logBaseKey.toString())
+            .logService(delegateLogService);
+
+    // Extract appId and activityId from task params, in case LogCallback logging has to be used for backward
+    // compatibility reasons
+    Object[] taskParameters = delegateTaskPackage.getData().getParameters();
+    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof ApplicationAccess
+        && taskParameters[0] instanceof ActivityAccess) {
+      ApplicationAccess applicationAccess = (ApplicationAccess) taskParameters[0];
+      logStreamingTaskClientBuilder.appId(applicationAccess.getAppId());
+
+      ActivityAccess activityAccess = (ActivityAccess) taskParameters[0];
+      logStreamingTaskClientBuilder.activityId(activityAccess.getActivityId());
+    }
+
+    return logStreamingTaskClientBuilder.build();
   }
 
   private Optional<LogSanitizer> getLogSanitizer(Pair<String, Set<String>> activitySecrets) {
