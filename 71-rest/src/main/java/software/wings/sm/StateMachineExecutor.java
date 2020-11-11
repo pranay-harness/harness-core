@@ -126,9 +126,11 @@ import software.wings.sm.ElementNotifyResponseData.ElementNotifyResponseDataBuil
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BarrierState;
+import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
+import software.wings.sm.states.WorkflowState;
 import software.wings.sm.status.StateStatusUpdateInfo;
 
 import java.time.Duration;
@@ -327,8 +329,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
 
-    if (state instanceof EnvState) {
-      EnvState envState = (EnvState) state;
+    if (state instanceof EnvState || state instanceof EnvLoopState) {
+      WorkflowState envState = (WorkflowState) state;
       stateExecutionInstance.setPipelineStageElementId(envState.getPipelineStageElementId());
       stateExecutionInstance.setPipelineStageParallelIndex(envState.getPipelineStageParallelIndex());
       stateExecutionInstance.setStageName(envState.getStageName());

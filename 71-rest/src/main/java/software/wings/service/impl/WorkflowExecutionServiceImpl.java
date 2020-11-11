@@ -2814,7 +2814,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             "NOt able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
             workflow.getOrchestrationWorkflow());
         Map<String, String> wfVars =
-            getWFVarFromPipelineVar(workflowVariables, workflowExecution, pipeline, pipelineStageElementId);
+            getWFVarFromPipelineVar(workflowVariables, workflowExecution, pipeline, workflow, pipelineStageElementId);
         return workflowService.fetchDeploymentMetadata(
             appId, workflow, wfVars, null, null, withDefaultArtifact, workflowExecution, includes);
       }
@@ -2996,8 +2996,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return result;
   }
 
-  private Map<String, String> getWFVarFromPipelineVar(
-      Map<String, String> pipelineVars, WorkflowExecution execution, Pipeline pipeline, String pipelineStageElementId) {
+  @VisibleForTesting
+  protected Map<String, String> getWFVarFromPipelineVar(Map<String, String> pipelineVars, WorkflowExecution execution,
+      Pipeline pipeline, Workflow workflow, String pipelineStageElementId) {
     String appId = pipeline.getAppId();
     Pipeline newPipeline = pipelineService.getPipeline(appId, pipeline.getUuid());
     Map<String, String> pipelineExecWFVars = execution.getExecutionArgs().getWorkflowVariables();
@@ -3016,8 +3017,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                             .findFirst()
                                             .orElse(null);
     if (stageElement != null) {
-      String workflowId = (String) stageElement.getProperties().get("workflowId");
-      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
       // handle default value
       for (Variable var : workflow.getOrchestrationWorkflow().getUserVariables()) {
         mappedWFVars.put(var.getName(), var.getValue());
@@ -3075,19 +3074,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         break;
       }
     }
-    Map<String, String> wfVariables = getWFVarFromPipelineVar(
-        executionArgs.getWorkflowVariables(), pipelineExecution, pipeline, pipelineStageElementId);
+
     notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId, workflowId);
     notNullCheck("No Runtime Input Vars for the given PipelineStage: " + pipelineStageElementId, runtimeInputsConfig);
-    if (isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
-      throw new InvalidRequestException(
-          "NO Runtime Input Vars for the given PipelineStage: \" + pipelineStageElementId");
-    }
-
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId, workflow);
     notNullCheck("Cannot find workflow associated with given PipelineStage: " + pipelineStageElementId,
         workflow.getOrchestrationWorkflow());
+
+    Map<String, String> wfVariables = getWFVarFromPipelineVar(
+        executionArgs.getWorkflowVariables(), pipelineExecution, pipeline, workflow, pipelineStageElementId);
+    if (isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+      throw new InvalidRequestException(
+          "NO Runtime Input Vars for the given PipelineStage: \" + pipelineStageElementId");
+    }
 
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
 

@@ -31,6 +31,10 @@ public interface WorkflowState {
   boolean isContinued();
   void setContinued(boolean continued);
 
+  String getPipelineStageElementId();
+  int getPipelineStageParallelIndex();
+  String getStageName();
+
   String getName();
 
   String getDisableAssertion();

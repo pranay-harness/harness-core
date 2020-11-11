@@ -1139,4 +1139,47 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifact_variables), eq(expectedArtifactVars));
     verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifacts), eq(expectedArtifacts));
   }
+
+  @Test
+  @Owner(developers = {DEEPAK_PUTHRAYA})
+  @Category(UnitTests.class)
+  public void testGetWFVariablesForPipelineVars() {
+    final String pipelineStageElementId = "KZPqXENuRbKqkuISe07JAQ";
+    final String appID = "nCLN8c84SqWPr44sqg65JQ";
+
+    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+    Pipeline pipeline =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    final Map<String, String> pipelineVars = ImmutableMap.<String, String>builder()
+                                                 .put("pipelineInfra", "CzcfKUN2Q_eCrlrV66r4ug")
+                                                 .put("service1", "NA2uRPKLTqm9VU3dPENb-g")
+                                                 .build();
+    when(pipelineService.getPipeline(eq(appID), anyString())).thenReturn(pipeline);
+
+    final Map<String, String> wfVars = ImmutableMap.<String, String>builder()
+                                           .put("env", "imRBOGz2ReyY89dr4K-vrQ")
+                                           .put("pipelineInfra", "CzcfKUN2Q_eCrlrV66r4ug")
+                                           .put("pipelineBuildNumber", "123456")
+                                           .put("xxz", "hello world")
+                                           .build();
+
+    WorkflowExecution wfExecution =
+        WorkflowExecution.builder().executionArgs(ExecutionArgs.builder().workflowVariables(wfVars).build()).build();
+
+    Map<String, String> actual = workflowExecutionServiceSpy.getWFVarFromPipelineVar(pipelineVars, wfExecution,
+        Pipeline.builder().appId(appID).uuid(PIPELINE_ID).build(), workflow, pipelineStageElementId);
+    Map<String, String> expected = ImmutableMap.<String, String>builder()
+                                       .put("AppDynamics_Server", "1E9uuNwoTKq6go8vOz6oRA")
+                                       .put("AppDynamics_Tier", "214198")
+                                       .put("Environment", "imRBOGz2ReyY89dr4K-vrQ")
+                                       .put("InfraDefinition_KUBERNETES", "CzcfKUN2Q_eCrlrV66r4ug")
+                                       .put("xxz", "hello world")
+                                       .put("message", "Stage 1 message")
+                                       .put("AppDynamics_Application", "15588")
+                                       .put("buildNumber", "123456")
+                                       .put("ServiceId", "NA2uRPKLTqm9VU3dPENb-g")
+                                       .build();
+
+    assertThat(actual).isEqualTo(expected);
+  }
 }

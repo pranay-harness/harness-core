@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.VariableType.ENTITY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -50,12 +51,10 @@ import software.wings.sm.WorkflowStandardParams;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -368,7 +367,6 @@ public class WorkflowExecutionServiceHelper {
     for (PipelineStage pipelineStage : pipelineStages) {
       PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
       if (pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
-        Map<String, String> resolvedVariablesValues = pipelineStageElement.getWorkflowVariables();
         String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
         if (isEmpty(workflowId)) {
           throw new InvalidRequestException(
@@ -393,73 +391,55 @@ public class WorkflowExecutionServiceHelper {
           return new ArrayList<>();
         }
 
-        List<String> runtimeVarNames = runtimeInputsConfig.getRuntimeInputVariables();
-        List<Variable> runtimeVariables =
-            variables.stream().filter(t -> runtimeVarNames.contains(t.getName())).collect(toList());
-        // Map these to pipeline variables
-        Set<String> pipelineVarsName =
-            runtimeVariables.stream()
-                .map(v -> ExpressionEvaluator.getName(resolvedVariablesValues.get(v.getName())))
-                .collect(Collectors.toSet());
         List<Variable> vars = pipeline.getPipelineVariables();
         ExecutionArgs args = pipelineExecution.getExecutionArgs();
         if (args.getWorkflowVariables() == null) {
           args.setWorkflowVariables(new HashMap<>());
         }
-        Set<String> toMapRelatedFields = new HashSet<>();
-        for (Variable variable : vars) {
-          String defaultValuePresent = args.getWorkflowVariables().get(variable.getName());
-          if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
-            variable.setValue(defaultValuePresent);
-          }
-          if (variable.obtainEntityType() != null && variable.getRuntimeInput()) {
-            if (variable.getMetadata() == null || variable.getMetadata().get(Variable.RELATED_FIELD) == null) {
-              continue;
-            }
-            Set<String> relatedFields =
-                Stream.of(String.valueOf(variable.getMetadata().get(Variable.RELATED_FIELD)).split(","))
-                    .collect(Collectors.toSet());
-            if (vars.stream()
-                    .filter(var -> !var.getRuntimeInput())
-                    .map(Variable::getName)
-                    .anyMatch(relatedFields::contains)) {
-              toMapRelatedFields.add(variable.getName());
-            }
-          }
-
-          if (variable.obtainEntityType() != null && !variable.getRuntimeInput()) {
-            toMapRelatedFields.add(variable.getName());
-            if (variable.getMetadata() == null || variable.getMetadata().get(Variable.RELATED_FIELD) == null) {
-              continue;
-            }
-            Set<String> relatedFields =
-                Stream.of(String.valueOf(variable.getMetadata().get(Variable.RELATED_FIELD)).split(","))
-                    .collect(Collectors.toSet());
-            toMapRelatedFields.addAll(vars.stream()
-                                          .filter(Variable::getRuntimeInput)
-                                          .map(Variable::getName)
-                                          .filter(relatedFields::contains)
-                                          .collect(Collectors.toSet()));
-          }
-        }
-
-        for (Variable variable : vars) {
-          if (toMapRelatedFields.contains(variable.getName())) {
-            // Workflow Variables remove runtime -> pipelineExecution.getExecutionArgs().getWorkflowVariables()
-            PipelineServiceImpl.setParentAndRelatedFieldsForRuntime(pipeline.getPipelineVariables(),
-                pipelineExecution.getExecutionArgs().getWorkflowVariables(), variable.getName(), variable,
-                variable.obtainEntityType());
-          }
-        }
-
-        return vars.stream().filter(v -> pipelineVarsName.contains(v.getName())).collect(toList());
+        Map<String, String> resolvedVariablesValues = pipelineStageElement.getWorkflowVariables();
+        return getRuntimeVariablesForStage(args, runtimeInputsConfig, variables, vars, resolvedVariablesValues);
       }
     }
     throw new InvalidRequestException(
         " No PipelineStage found for given PipelineStageElementId: " + pipelineStageElementId);
   }
 
-  private boolean isNotNewVar(String defaultValuePresent) {
+  @VisibleForTesting
+  public static List<Variable> getRuntimeVariablesForStage(ExecutionArgs args, RuntimeInputsConfig runtimeInputsConfig,
+      List<Variable> workflowVariables, List<Variable> pipelineVariables, Map<String, String> resolvedVariablesValues) {
+    List<Variable> runtimeVariables =
+        workflowVariables.stream()
+            .filter(t -> runtimeInputsConfig.getRuntimeInputVariables().contains(t.getName()))
+            .collect(toList());
+
+    Set<String> pipelineVarsName = runtimeVariables.stream()
+                                       .map(v -> ExpressionEvaluator.getName(resolvedVariablesValues.get(v.getName())))
+                                       .collect(Collectors.toSet());
+
+    Set<String> runtimePipelineVarNames =
+        pipelineVariables.stream().filter(Variable::getRuntimeInput).map(Variable::getName).collect(Collectors.toSet());
+    Map<String, String> wfVariables = new HashMap<>();
+    for (Map.Entry<String, String> entry : args.getWorkflowVariables().entrySet()) {
+      if (!runtimePipelineVarNames.contains(entry.getKey())) {
+        wfVariables.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    for (Variable variable : pipelineVariables) {
+      String defaultValuePresent = args.getWorkflowVariables().get(variable.getName());
+      if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
+        variable.setValue(defaultValuePresent);
+      }
+      if (variable.obtainEntityType() != null) {
+        PipelineServiceImpl.setParentAndRelatedFieldsForRuntime(
+            pipelineVariables, wfVariables, variable.getName(), variable, variable.obtainEntityType());
+      }
+    }
+
+    return pipelineVariables.stream().filter(v -> pipelineVarsName.contains(v.getName())).collect(toList());
+  }
+
+  private static boolean isNotNewVar(String defaultValuePresent) {
     return !(matchesVariablePattern(defaultValuePresent) && !defaultValuePresent.contains("."));
   }
 }

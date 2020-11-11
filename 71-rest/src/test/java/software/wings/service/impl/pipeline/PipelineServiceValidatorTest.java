@@ -16,7 +16,6 @@ import static software.wings.service.impl.pipeline.PipelineServiceValidator.vali
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.RepairActionCode;
@@ -109,7 +108,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
+  @Category(UnitTests.class)
   public void validateRuntimeInputsConfig() {
     PipelineStageElement pse1 = builder().build();
     assertThat(pipelineServiceValidator.validateRuntimeInputsConfig(pse1, "ACCOUNT_ID", Collections.emptyList()))
@@ -187,7 +186,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
     when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
     RuntimeInputsConfig runtimeInputsConfig6 = RuntimeInputsConfig.builder()
-                                                   .runtimeInputVariables(asList("var1", "var2"))
+                                                   .runtimeInputVariables(asList("var1"))
                                                    .timeout(60001L)
                                                    .userGroupIds(asList("UG_ID"))
                                                    .timeoutAction(RepairActionCode.END_EXECUTION)
@@ -200,11 +199,11 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
+  @Category(UnitTests.class)
   public void validateRuntimeInputsConfigVariableValuesEntityType() {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
-                                                  .runtimeInputVariables(asList("var1", "var2"))
+                                                  .runtimeInputVariables(asList("var1"))
                                                   .timeout(60001L)
                                                   .userGroupIds(asList("UG_ID"))
                                                   .timeoutAction(RepairActionCode.END_EXECUTION)
@@ -221,11 +220,11 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
+  @Category(UnitTests.class)
   public void validateRuntimeInputsConfigVariableValuesNonEntityType() {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "abc")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
-                                                  .runtimeInputVariables(asList("var1", "var2"))
+                                                  .runtimeInputVariables(asList("var1"))
                                                   .timeout(60001L)
                                                   .userGroupIds(asList("UG_ID"))
                                                   .timeoutAction(RepairActionCode.END_EXECUTION)
@@ -253,7 +252,7 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = POOJA)
-  @Category(FunctionalTests.class)
+  @Category(UnitTests.class)
   public void validateRuntimeInputsConfigVariableRelatedFieldRuntime() {
     PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "${abc}")).build();
     RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
