@@ -11,13 +11,12 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorFilterHelper;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.apis.dto.*;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
+import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
@@ -39,9 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -51,6 +48,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorRepository connectorRepository;
   private final ConnectorFilterHelper connectorFilterHelper;
   private Map<String, ConnectionValidator> connectionValidatorMap;
+  private final CatalogueHelper catalogueHelper;
   EntitySetupUsageClient entitySetupUsageClient;
 
   @Override
@@ -234,5 +232,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       connector.setStatus(connectorConnectivityDetailsBuilder.build());
       connectorRepository.save(connector);
     }
+  }
+
+  @Override
+  public ConnectorCatalogueResponseDTO getConnectorCatalogue() {
+    return ConnectorCatalogueResponseDTO.builder()
+        .catalogue(catalogueHelper.getConnectorTypeToCategoryMapping())
+        .build();
   }
 }

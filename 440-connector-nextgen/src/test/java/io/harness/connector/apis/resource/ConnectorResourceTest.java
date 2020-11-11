@@ -1,21 +1,12 @@
 package io.harness.connector.apis.resource;
 
-import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
-import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
-import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.apis.dto.*;
+import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
@@ -35,7 +26,16 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+
+import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
+import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
@@ -44,6 +44,8 @@ public class ConnectorResourceTest extends CategoryTest {
   ConnectorInfoDTO connectorInfo;
   ConnectorDTO connectorRequest;
   String accountIdentifier = "accountIdentifier";
+  ConnectorCatalogueResponseDTO catalogueResponseDTO;
+  private final CatalogueHelper catalogueHelper = new CatalogueHelper();
 
   @Before
   public void setUp() throws Exception {
@@ -63,6 +65,13 @@ public class ConnectorResourceTest extends CategoryTest {
             .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
+    catalogueResponseDTO = setUpCatalogueResponse();
+  }
+
+  private ConnectorCatalogueResponseDTO setUpCatalogueResponse() {
+    return ConnectorCatalogueResponseDTO.builder()
+        .catalogue(catalogueHelper.getConnectorTypeToCategoryMapping())
+        .build();
   }
 
   @Test
@@ -156,5 +165,21 @@ public class ConnectorResourceTest extends CategoryTest {
     ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
     Mockito.verify(connectorService, times(1)).testConnection(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void getConnectorCatalogueTest() {
+    when(connectorService.getConnectorCatalogue()).thenReturn(catalogueResponseDTO);
+    final ResponseDTO<ConnectorCatalogueResponseDTO> response =
+        connectorResource.getConnectorCatalogue("accountIdentifier");
+    assertThat(response).isNotNull();
+    final List<ConnectorCatalogueItem> catalogue = response.getData().getCatalogue();
+    assertThat(catalogue.size()).isEqualTo(ConnectorCategory.values().length);
+    final int totalConnectorsWithinAllCategories =
+        catalogue.stream().map(item -> item.getConnectors().size()).mapToInt(i -> i.intValue()).sum();
+    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length);
+    Mockito.verify(connectorService, times(1)).getConnectorCatalogue();
   }
 }
