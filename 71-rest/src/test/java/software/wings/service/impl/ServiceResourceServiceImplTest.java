@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -52,6 +53,8 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -65,10 +68,14 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
@@ -97,6 +104,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private NotificationService notificationService;
+  @Mock private CommandService commandService;
   @Inject @InjectMocks private ServiceResourceServiceImpl serviceResourceService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @InjectMocks private ServiceResourceServiceImpl mockedServiceResourceService;
@@ -104,6 +112,9 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Mock private ResourceLookupService resourceLookupService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
+
+  @Captor ArgumentCaptor<Command> commandCaptor;
+  @Captor ArgumentCaptor<Boolean> booleanCaptor;
 
   @Before
   public void setUp() throws Exception {
@@ -700,5 +711,27 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     serviceResourceService.update(service);
 
     verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(service);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSaveClonedCommandWithNewName() {
+    ServiceCommand clonedServiceCommand = ServiceCommand.Builder.aServiceCommand()
+                                              .withAccountId(ACCOUNT_ID)
+                                              .withAppId(APP_ID)
+                                              .withName("Name-clone")
+                                              .withServiceId(SERVICE_ID)
+                                              .withCommand(Command.Builder.aCommand()
+                                                               .withCommandType(CommandType.OTHER)
+                                                               .withName("Name")
+                                                               .withAccountId(ACCOUNT_ID)
+                                                               .build())
+                                              .build();
+    serviceResourceService.addServiceCommand(APP_ID, SERVICE_ID, clonedServiceCommand, false);
+    verify(commandService).save(commandCaptor.capture(), booleanCaptor.capture());
+
+    assertThat(commandCaptor.getValue().getName()).isEqualTo(clonedServiceCommand.getName());
+    assertThat(booleanCaptor.getValue()).isFalse();
   }
 }
