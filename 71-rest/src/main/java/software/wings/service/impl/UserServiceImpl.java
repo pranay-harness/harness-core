@@ -2240,7 +2240,11 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       log.info("User [{}] not found in Cache. Load it from DB", userId);
       user = get(userId);
-      userCache.put(user.getUuid(), user);
+      try {
+        userCache.put(user.getUuid(), user);
+      } catch (Exception ex) {
+        log.error("Exception occurred while putting User from DB to cache", ex);
+      }
     }
 
     return user;

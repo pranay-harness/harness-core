@@ -239,6 +239,7 @@ import software.wings.beans.Tag;
 import software.wings.beans.TaskType;
 import software.wings.beans.TechStack;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
+import software.wings.beans.TrialSignupOptions;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource;
@@ -1709,5 +1710,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
     kryo.register(AzureVMSSAllPhaseRollbackData.class, 8092);
+
+    kryo.register(TrialSignupOptions.class, 8093);
+    kryo.register(TrialSignupOptions.Products.class, 8094);
   }
 }
