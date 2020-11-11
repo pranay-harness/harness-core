@@ -3,6 +3,7 @@ package io.harness.cvng.activity.services.impl;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
 import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,5 +110,19 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
                                        .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
                                        .count();
     return numberOfActivitySources > 0;
+  }
+
+  @Override
+  public int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier) {
+    BasicDBObject scopeIdentifiersFilter = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(KubernetesActivitySourceKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier));
+    conditions.add(new BasicDBObject(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier));
+    scopeIdentifiersFilter.put("$and", conditions);
+    List<String> serviceIdentifiers =
+        hPersistence.getCollection(KubernetesActivitySource.class)
+            .distinct(KubernetesActivitySourceKeys.serviceIdentifier, scopeIdentifiersFilter);
+    return serviceIdentifiers.size();
   }
 }

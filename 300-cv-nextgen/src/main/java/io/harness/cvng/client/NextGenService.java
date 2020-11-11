@@ -22,6 +22,11 @@ public interface NextGenService {
   ServiceResponseDTO getService(
       String serviceIdentifier, String accountId, String orgIdentifier, String projectIdentifier);
 
+  int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier);
+
+  PageResponse<ServiceResponseDTO> getServices(
+      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort);
+
   PageResponse<EnvironmentResponseDTO> listEnvironmentsForProject(
       int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort);
 

@@ -211,18 +211,23 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public Set<CVMonitoringCategory> getAvailableCategories(
       String accountId, String orgIdentifier, String projectIdentifier) {
+    BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(accountId, orgIdentifier, projectIdentifier);
+    Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
+    hPersistence.getCollection(CVConfig.class)
+        .distinct(CVConfigKeys.category, cvConfigQuery)
+        .forEach(categoryName -> cvMonitoringCategories.add(CVMonitoringCategory.valueOf((String) categoryName)));
+    return cvMonitoringCategories;
+  }
+
+  private BasicDBObject getQueryWithAccountOrgProjectFiltersSet(
+      String accountId, String orgIdentifier, String projectIdentifier) {
     BasicDBObject cvConfigQuery = new BasicDBObject();
     List<BasicDBObject> conditions = new ArrayList<>();
     conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
     conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
     conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
     cvConfigQuery.put("$and", conditions);
-
-    Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
-    hPersistence.getCollection(CVConfig.class)
-        .distinct(CVConfigKeys.category, cvConfigQuery)
-        .forEach(categoryName -> cvMonitoringCategories.add(CVMonitoringCategory.valueOf((String) categoryName)));
-    return cvMonitoringCategories;
+    return cvConfigQuery;
   }
 
   @Override
@@ -319,5 +324,13 @@ public class CVConfigServiceImpl implements CVConfigService {
                                  .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
                                  .count();
     return numberOfCVConfigs > 0;
+  }
+
+  @Override
+  public int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier) {
+    BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(accountId, orgIdentifier, projectIdentifier);
+    List<String> serviceIdentifiers =
+        hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.serviceIdentifier, cvConfigQuery);
+    return serviceIdentifiers.size();
   }
 }

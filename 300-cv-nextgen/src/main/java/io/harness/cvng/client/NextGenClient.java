@@ -38,6 +38,11 @@ public interface NextGenClient {
       @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
+  @GET("services")
+  Call<ResponseDTO<PageResponse<ServiceResponseDTO>>> listServicesForProject(@Query("page") int page,
+      @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Query("sort") List<String> sort);
+
   @GET("environments")
   Call<ResponseDTO<PageResponse<EnvironmentResponseDTO>>> listEnvironmentsForProject(@Query("page") int page,
       @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,

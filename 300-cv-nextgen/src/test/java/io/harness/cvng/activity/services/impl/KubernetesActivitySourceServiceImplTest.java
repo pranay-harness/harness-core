@@ -172,4 +172,33 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
             accountId, orgIdentifier, projectIdentifier);
     assertThat(doesAActivitySourceExistsForThisProject).isTrue();
   }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category({UnitTests.class})
+  public void testGetNumberOfServicesSetup() {
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO1 = KubernetesActivitySourceDTO.builder()
+                                                                   .connectorIdentifier(generateUuid())
+                                                                   .serviceIdentifier(generateUuid())
+                                                                   .envIdentifier(generateUuid())
+                                                                   .namespace(generateUuid())
+                                                                   .clusterName(generateUuid())
+                                                                   .workloadName(generateUuid())
+                                                                   .build();
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO2 = KubernetesActivitySourceDTO.builder()
+                                                                   .connectorIdentifier(generateUuid())
+                                                                   .serviceIdentifier(generateUuid())
+                                                                   .envIdentifier(generateUuid())
+                                                                   .namespace(generateUuid())
+                                                                   .clusterName(generateUuid())
+                                                                   .workloadName(generateUuid())
+                                                                   .build();
+    kubernetesActivitySourceService.saveKubernetesSource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO1);
+    kubernetesActivitySourceService.saveKubernetesSource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO2);
+    int numberOfServicesInActivity =
+        kubernetesActivitySourceService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
+    assertThat(numberOfServicesInActivity).isEqualTo(2);
+  }
 }

@@ -532,4 +532,18 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
         cvConfigService.doesAnyCVConfigExistsInProject(accountId, orgIdentifier, projectIdentifier);
     assertThat(doesAnyCVConfigExists).isTrue();
   }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testGetNumberOfServicesSetup() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    for (int i = 0; i < 3; i++) {
+      cvConfigs.get(i).setServiceIdentifier("serviceIdentifier " + i);
+    }
+    cvConfigs.get(4).setServiceIdentifier("serviceIdentifier " + 0);
+    save(cvConfigs);
+    int numberOfServices = cvConfigService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
+    assertThat(numberOfServices).isEqualTo(4);
+  }
 }

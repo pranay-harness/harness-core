@@ -11,4 +11,9 @@ import java.util.List;
 @ApiModel("CVSetupStatus")
 public class CVSetupStatusDTO {
   List<OnboardingStep> stepsWhichAreCompleted;
+  int totalNumberOfServices;
+  int totalNumberOfEnvironments;
+  int numberOfServicesUsedInMonitoringSources;
+  int numberOfServicesUsedInActivitySources;
+  int servicesUndergoingHealthVerification;
 }

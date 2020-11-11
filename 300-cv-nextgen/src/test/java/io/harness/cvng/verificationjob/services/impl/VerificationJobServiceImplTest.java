@@ -1,7 +1,7 @@
 package io.harness.cvng.verificationjob.services.impl;
 
-import static io.harness.cvng.verificationjob.beans.Sensitivity.LOW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +16,8 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rule.Owner;
@@ -175,21 +176,37 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   public void testdoesAVerificationJobExistsForThisProjectWhenAJobExists() {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
-    verificationJobService.save(createVerificationJob(orgIdentifier, projectIdentifier));
+    verificationJobService.save(
+        createVerificationJob(orgIdentifier, projectIdentifier, "serviceIdentifier", VerificationJobType.HEALTH));
     boolean doesAVerificationJobExists =
         verificationJobService.doesAVerificationJobExistsForThisProject(accountId, orgIdentifier, projectIdentifier);
     assertThat(doesAVerificationJobExists).isTrue();
   }
 
-  private VerificationJob createVerificationJob(String orgIdentifier, String projectIdentifier) {
-    CanaryVerificationJob verificationJob = new CanaryVerificationJob();
+  private VerificationJob createVerificationJob(
+      String orgIdentifier, String projectIdentifier, String serviceIdentifier, VerificationJobType type) {
+    HealthVerificationJob verificationJob = new HealthVerificationJob();
     verificationJob.setAccountId(accountId);
     verificationJob.setOrgIdentifier(orgIdentifier);
     verificationJob.setProjectIdentifier(projectIdentifier);
-    verificationJob.setServiceIdentifier(generateUuid(), false);
+    verificationJob.setServiceIdentifier(serviceIdentifier, false);
     verificationJob.setEnvIdentifier(generateUuid(), false);
     verificationJob.setDuration(Duration.ZERO);
-    verificationJob.setSensitivity(LOW);
     return verificationJob;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testGetNumberOfServicesUndergoingHealthVerification() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    verificationJobService.save(
+        createVerificationJob(orgIdentifier, projectIdentifier, "serviceIdentifier 1", VerificationJobType.HEALTH));
+    verificationJobService.save(
+        createVerificationJob(orgIdentifier, projectIdentifier, "serviceIdentifier 2", VerificationJobType.HEALTH));
+    int numberOfServices = verificationJobService.getNumberOfServicesUndergoingHealthVerification(
+        accountId, orgIdentifier, projectIdentifier);
+    assertThat(numberOfServices).isEqualTo(2);
   }
 }

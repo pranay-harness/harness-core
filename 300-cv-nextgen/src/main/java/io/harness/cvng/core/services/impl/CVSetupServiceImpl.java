@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import com.google.inject.Inject;
 
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.CVSetupStatusDTO;
 import io.harness.cvng.core.beans.OnboardingStep;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -18,17 +19,36 @@ public class CVSetupServiceImpl implements CVSetupService {
   private CVConfigService cvConfigService;
   private KubernetesActivitySourceService kubernetesActivitySourceService;
   private VerificationJobService verificationJobService;
+  private NextGenService nextGenService;
 
   @Override
   public CVSetupStatusDTO getSetupStatus(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<OnboardingStep> allStepsWhichAreDone = new ArrayList<>();
-    boolean doesACVConfigExistsForThisProject =
-        cvConfigService.doesAnyCVConfigExistsInProject(accountId, orgIdentifier, projectIdentifier);
-    boolean doesAActivitySourceExistsForThisProject =
-        kubernetesActivitySourceService.doesAActivitySourceExistsForThisProject(
-            accountId, orgIdentifier, projectIdentifier);
     boolean doesAVerificationJobExistsForThisProject =
         verificationJobService.doesAVerificationJobExistsForThisProject(accountId, orgIdentifier, projectIdentifier);
+    int totalNumberOfServices = nextGenService.getServicesCount(accountId, orgIdentifier, projectIdentifier);
+    int totalNumberOfEnvironments = nextGenService.getEnvironmentCount(accountId, orgIdentifier, projectIdentifier);
+    int numberOfServicesUsedInActivitySources =
+        kubernetesActivitySourceService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
+    int numberOfServicesUsedInMonitoringSources =
+        cvConfigService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
+    int servicesUndergoingHealthVerification = verificationJobService.getNumberOfServicesUndergoingHealthVerification(
+        accountId, orgIdentifier, projectIdentifier);
+    List<OnboardingStep> onBoardingSteps =
+        getOnboardingStepsWhichAreCompleted(numberOfServicesUsedInActivitySources > 0,
+            numberOfServicesUsedInMonitoringSources > 0, doesAVerificationJobExistsForThisProject);
+    return CVSetupStatusDTO.builder()
+        .stepsWhichAreCompleted(onBoardingSteps)
+        .totalNumberOfEnvironments(totalNumberOfEnvironments)
+        .totalNumberOfServices(totalNumberOfServices)
+        .numberOfServicesUsedInActivitySources(numberOfServicesUsedInActivitySources)
+        .numberOfServicesUsedInMonitoringSources(numberOfServicesUsedInMonitoringSources)
+        .servicesUndergoingHealthVerification(servicesUndergoingHealthVerification)
+        .build();
+  }
+
+  private List<OnboardingStep> getOnboardingStepsWhichAreCompleted(boolean doesAActivitySourceExistsForThisProject,
+      boolean doesACVConfigExistsForThisProject, boolean doesAVerificationJobExistsForThisProject) {
+    List<OnboardingStep> allStepsWhichAreDone = new ArrayList<>();
     if (doesAActivitySourceExistsForThisProject) {
       allStepsWhichAreDone.add(OnboardingStep.ACTIVITY_SOURCE);
     }
@@ -39,6 +59,6 @@ public class CVSetupServiceImpl implements CVSetupService {
     if (doesAVerificationJobExistsForThisProject) {
       allStepsWhichAreDone.add(OnboardingStep.VERIFICATION_JOBS);
     }
-    return CVSetupStatusDTO.builder().stepsWhichAreCompleted(allStepsWhichAreDone).build();
+    return allStepsWhichAreDone;
   }
 }
