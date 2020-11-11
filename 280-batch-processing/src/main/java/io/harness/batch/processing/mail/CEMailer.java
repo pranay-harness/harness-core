@@ -1,9 +1,9 @@
 package io.harness.batch.processing.mail;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableList;
 

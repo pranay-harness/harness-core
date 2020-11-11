@@ -2,13 +2,13 @@ package io.harness.batch.processing.budgets.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.harness.ccm.budget.entities.AlertThresholdBase.ACTUAL_COST;
+import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 import static org.apache.commons.text.StrSubstitutor.replace;
-import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
