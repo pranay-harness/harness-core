@@ -33,6 +33,7 @@ public class GithubPayloadSourceYamlHandler extends PayloadSourceYamlHandler<Git
       return GithubPayloadSourceYaml.builder()
           .customPayloadExpressions(gitHubPayloadSource.getCustomPayloadExpressions())
           .events(eventsYaml)
+          .repoName(webhookGitParam.getRepoName())
           .branchName(webhookGitParam.getBranchName())
           .filePaths(webhookGitParam.getFilePaths())
           .gitConnectorName(webhookGitParam.getGitConnectorId())
@@ -56,6 +57,7 @@ public class GithubPayloadSourceYamlHandler extends PayloadSourceYamlHandler<Git
 
     WebhookGitParam webhookGitParam = WebhookGitParam.builder()
                                           .gitConnectorId(yaml.getGitConnectorName())
+                                          .repoName(yaml.getRepoName())
                                           .branchName(yaml.getBranchName())
                                           .filePaths(yaml.getFilePaths())
                                           .build();

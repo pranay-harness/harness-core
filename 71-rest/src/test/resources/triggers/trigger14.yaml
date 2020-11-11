@@ -4,8 +4,15 @@ executionName: w1
 executionType: Workflow
 triggerCondition:
 - type: WEBHOOK
+  branchName: master
+  branchRegex: master
+  checkFileContentChanged: true
   eventType:
   - push
+  filePaths:
+  - index.yaml
+  gitConnectorId: connectorId
+  repoName: testRepo
   repositoryType: GITLAB
 workflowVariables:
 - entityType: NEWRELIC_CONFIGID

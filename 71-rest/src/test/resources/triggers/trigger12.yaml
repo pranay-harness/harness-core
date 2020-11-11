@@ -6,7 +6,7 @@ triggerCondition:
 - type: WEBHOOK
   action:
   - edited
-  branchName: test
+  branchRegex: test
   eventType:
   - pull_request
   repositoryType: GITHUB

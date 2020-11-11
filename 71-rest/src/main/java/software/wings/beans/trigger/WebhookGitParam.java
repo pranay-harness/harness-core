@@ -15,4 +15,5 @@ public class WebhookGitParam {
   private List<String> filePaths;
   private String gitConnectorId;
   private String branchName;
+  private String repoName;
 }

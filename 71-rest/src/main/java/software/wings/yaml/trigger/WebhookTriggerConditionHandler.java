@@ -21,6 +21,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
+import software.wings.yaml.trigger.WebhookEventTriggerConditionYaml.WebhookEventTriggerConditionYamlBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,17 +35,29 @@ import java.util.stream.Collectors;
 public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<WebhookEventTriggerConditionYaml> {
   private static final String PACKAGE_STRING = "package:";
   private static final String SPLITTER = ":";
+
   @Override
   public WebhookEventTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) bean;
 
-    return WebhookEventTriggerConditionYaml.builder()
-        .action(getYAMLActions(webHookTriggerCondition))
-        .releaseActions(getYAMLReleaseActions(webHookTriggerCondition))
-        .repositoryType(getBeanWebhookSourceForYAML(webHookTriggerCondition.getWebhookSource()))
-        .eventType(getYAMLEventTypes(webHookTriggerCondition.getEventTypes()))
-        .branchName(webHookTriggerCondition.getBranchRegex())
-        .build();
+    WebhookEventTriggerConditionYamlBuilder webhookEventTriggerConditionYamlBuilder =
+        WebhookEventTriggerConditionYaml.builder()
+            .action(getYAMLActions(webHookTriggerCondition))
+            .releaseActions(getYAMLReleaseActions(webHookTriggerCondition))
+            .repositoryType(getBeanWebhookSourceForYAML(webHookTriggerCondition.getWebhookSource()))
+            .eventType(getYAMLEventTypes(webHookTriggerCondition.getEventTypes()))
+            .branchRegex(webHookTriggerCondition.getBranchRegex());
+
+    if (webHookTriggerCondition.isCheckFileContentChanged()) {
+      webhookEventTriggerConditionYamlBuilder.checkFileContentChanged(
+          webHookTriggerCondition.isCheckFileContentChanged());
+      webhookEventTriggerConditionYamlBuilder.gitConnectorId(webHookTriggerCondition.getGitConnectorId());
+      webhookEventTriggerConditionYamlBuilder.repoName(webHookTriggerCondition.getRepoName());
+      webhookEventTriggerConditionYamlBuilder.branchName(webHookTriggerCondition.getBranchName());
+      webhookEventTriggerConditionYamlBuilder.filePaths(webHookTriggerCondition.getFilePaths());
+    }
+
+    return webhookEventTriggerConditionYamlBuilder.build();
   }
 
   @Override
@@ -60,9 +73,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookConditionYaml) {
     WebHookTriggerCondition webHookTriggerCondition =
         WebHookTriggerCondition.builder()
-            .branchRegex(webhookConditionYaml.getBranchName())
+            .branchRegex(webhookConditionYaml.getBranchRegex())
             .eventTypes(getBeansEventTypes(webhookConditionYaml.getEventType()))
             .webhookSource(getBeanWebhookSource(webhookConditionYaml.getRepositoryType()))
+            .checkFileContentChanged(getCheckFileContentChanged(webhookConditionYaml))
+            .gitConnectorId(webhookConditionYaml.getGitConnectorId())
+            .repoName(webhookConditionYaml.getRepoName())
+            .branchName(webhookConditionYaml.getBranchName())
+            .filePaths(webhookConditionYaml.getFilePaths())
             .build();
 
     if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
@@ -78,6 +96,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     }
 
     return webHookTriggerCondition;
+  }
+
+  private boolean getCheckFileContentChanged(WebhookEventTriggerConditionYaml webhookConditionYaml) {
+    if (webhookConditionYaml.getCheckFileContentChanged() != null) {
+      return webhookConditionYaml.getCheckFileContentChanged().booleanValue();
+    } else {
+      return false;
+    }
   }
 
   private WebhookSource getBeanWebhookSource(String webhookSource) {

@@ -24,6 +24,7 @@ public class GithubPayloadSourceYaml extends PayloadSourceYaml {
   private List<String> filePaths;
   private String gitConnectorName;
   private String branchName;
+  private String repoName;
 
   GithubPayloadSourceYaml() {
     super.setType(Type.GITHUB.name());
@@ -31,12 +32,13 @@ public class GithubPayloadSourceYaml extends PayloadSourceYaml {
 
   @Builder
   GithubPayloadSourceYaml(List<WebhookEventYaml> events, List<CustomPayloadExpression> customPayloadExpressions,
-      List<String> filePaths, String gitConnectorName, String branchName) {
+      List<String> filePaths, String gitConnectorName, String branchName, String repoName) {
     super.setType(Type.GITHUB.name());
     this.events = events;
     this.customPayloadExpressions = customPayloadExpressions;
     this.filePaths = filePaths;
     this.gitConnectorName = gitConnectorName;
     this.branchName = branchName;
+    this.repoName = repoName;
   }
 }
