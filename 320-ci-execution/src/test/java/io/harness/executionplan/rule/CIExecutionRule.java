@@ -63,7 +63,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(mongoTypeModule(annotations));
     modules.add(new CIExecutionTestModule());
     modules.add(new EntitySetupUsageClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

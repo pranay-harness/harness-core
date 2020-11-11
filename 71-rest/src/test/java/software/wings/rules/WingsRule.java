@@ -49,11 +49,11 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -307,9 +307,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
     configuration.setSegmentConfig(segmentConfig);
 
-    OrganizationManagerClientConfig organizationManagerClientConfig =
-        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build();
-    configuration.setOrganizationManagerClientConfig(organizationManagerClientConfig);
+    ServiceHttpClientConfig ngManagerServiceHttpClientConfig =
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build();
+    configuration.setNgManagerServiceHttpClientConfig(ngManagerServiceHttpClientConfig);
 
     configuration.setDistributedLockImplementation(DistributedLockImplementation.NOOP);
     return configuration;

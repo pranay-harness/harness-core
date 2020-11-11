@@ -50,8 +50,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
@@ -323,8 +323,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setSearchEnabled(isSearchEnabled);
     configuration.setSegmentConfig(
         SegmentConfig.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
-    configuration.setOrganizationManagerClientConfig(
-        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build());
+    configuration.setNgManagerServiceHttpClientConfig(
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }

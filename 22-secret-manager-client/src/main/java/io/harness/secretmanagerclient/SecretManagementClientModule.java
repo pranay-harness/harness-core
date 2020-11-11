@@ -15,16 +15,19 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class SecretManagementClientModule extends AbstractModule {
   private final ServiceHttpClientConfig secretManagerConfig;
   private final String serviceSecret;
+  private final String clientId;
 
-  public SecretManagementClientModule(ServiceHttpClientConfig secretManagerConfig, String serviceSecret) {
+  public SecretManagementClientModule(
+      ServiceHttpClientConfig secretManagerConfig, String serviceSecret, String clientId) {
     this.secretManagerConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private SecretManagerHttpClientFactory secretManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new SecretManagerHttpClientFactory(
-        secretManagerConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        secretManagerConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

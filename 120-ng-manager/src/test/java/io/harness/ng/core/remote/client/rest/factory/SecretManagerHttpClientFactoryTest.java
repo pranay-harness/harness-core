@@ -18,6 +18,7 @@ import org.mockito.Mock;
 
 public class SecretManagerHttpClientFactoryTest extends CategoryTest {
   private static final String SERVICE_SECRET = "TEST_SECRET";
+  private static final String SERVICE_ID = "Service";
   private static final String BASE_URL = "http://localhost:8080/";
   private static final long CONNECTION_TIME_OUT_IN_SECONDS = 15;
   private static final long READ_TIME_OUT_IN_SECONDS = 15;
@@ -36,8 +37,8 @@ public class SecretManagerHttpClientFactoryTest extends CategoryTest {
                                                       .readTimeOutSeconds(READ_TIME_OUT_IN_SECONDS)
                                                       .build();
 
-    SecretManagerHttpClientFactory secretManagerHttpClientFactory =
-        new SecretManagerHttpClientFactory(secretManagerConfig, SERVICE_SECRET, tokenGenerator, kryoConverterFactory);
+    SecretManagerHttpClientFactory secretManagerHttpClientFactory = new SecretManagerHttpClientFactory(
+        secretManagerConfig, SERVICE_SECRET, tokenGenerator, kryoConverterFactory, SERVICE_ID);
     SecretManagerClient secretManagerClient = secretManagerHttpClientFactory.get();
     assertThat(secretManagerClient).isNotNull();
   }

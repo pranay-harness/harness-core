@@ -56,7 +56,7 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

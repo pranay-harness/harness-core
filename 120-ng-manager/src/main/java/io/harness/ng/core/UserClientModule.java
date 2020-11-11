@@ -15,16 +15,18 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class UserClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
+  private final String clientId;
 
-  public UserClientModule(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret) {
+  public UserClientModule(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private UserHttpClientFactory userClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new UserHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

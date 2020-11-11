@@ -511,7 +511,7 @@ commandLibraryServiceConfig:
   publishingAllowed: false
   publishingSecret: publishing-secret@harness-command-library
 
-organizationManagerClient:
+ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15

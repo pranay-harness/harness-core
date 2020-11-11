@@ -58,8 +58,10 @@ public class SecretManagementModuleTest extends CategoryTest {
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
-    secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
-    entityReferenceClientModule = new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret);
+    secretManagementClientModule =
+        new SecretManagementClientModule(secretManagerClientConfig, serviceSecret, "NextGenManager");
+    entityReferenceClientModule =
+        new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "NextGenManager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {

@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorResourceHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<ConnectorResourceClient> {
   public ConnectorResourceHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
     log.info("secretManagerConfig {}", secretManagerConfig);
   }
 

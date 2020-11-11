@@ -19,16 +19,19 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class EntityActivityClientModule extends AbstractModule {
   private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
+  private final String clientId;
 
-  public EntityActivityClientModule(ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret) {
+  public EntityActivityClientModule(
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
     this.ngManagerClientConfig = ngManagerClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private EntityActivityHttpClientFactory entityActivityHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new EntityActivityHttpClientFactory(
-        ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override
