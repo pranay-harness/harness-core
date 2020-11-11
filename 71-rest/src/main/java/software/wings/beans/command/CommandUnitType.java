@@ -55,6 +55,8 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   PCF_DUMMY(PcfDummyCommandUnit.class, "PCF Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   AZURE_VMSS_DUMMY(
       AzureVMSSDummyCommandUnit.class, "Azure VMSS Command Unit", StencilCategory.AZURE_VMSS, DEFAULT_DISPLAY_ORDER),
+  AZURE_WEBAPP(
+      AzureWebAppCommandUnit.class, "Azure WebApp Command Unit", StencilCategory.AZURE_WEBAPP, DEFAULT_DISPLAY_ORDER),
   FETCH_INSTANCES_DUMMY(
       FetchInstancesCommandUnit.class, "Fetch Instances", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER);
   private static final String stencilsPath = "/templates/commandstencils/";

@@ -49,7 +49,7 @@ public enum DeploymentType {
           .put(AMI, Collections.singletonList(ArtifactType.AMI))
           .put(WINRM, Arrays.asList(ArtifactType.IIS, ArtifactType.IIS_APP, ArtifactType.IIS_VirtualDirectory))
           .put(AZURE_VMSS, Collections.singletonList(ArtifactType.AZURE_MACHINE_IMAGE))
-          .put(AZURE_WEBAPP, Collections.singletonList(ArtifactType.DOCKER))
+          .put(AZURE_WEBAPP, Collections.singletonList(ArtifactType.AZURE_WEBAPP))
           .put(PCF, Collections.singletonList(ArtifactType.PCF))
           .put(CUSTOM,
               Arrays.asList(ArtifactType.DOCKER, ArtifactType.JAR, ArtifactType.WAR, ArtifactType.RPM,
