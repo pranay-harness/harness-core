@@ -157,6 +157,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testHelmUsingAccountLevelGitConnector() {
+    String releaseName = helmHelper.getReleaseName("helm-account-level-git");
     Service service = createHelmService("helm-account-level-git");
     updateApplicationManifest(createServiceManifest(service, "charts/basic", StoreType.HelmSourceRepo));
     setRepoNameServiceVariable(service, K8S_FUNCTIONAL_TEST_REPO_NAME);
@@ -165,11 +166,18 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     InfrastructureDefinition infraDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, GCP_HELM);
 
-    Workflow workflow = helmHelper.createHelmWorkflow(seed, owners, getName("helm", "wf"), service, infraDefinition);
+    Workflow workflow =
+        helmHelper.createHelmWorkflow(seed, owners, getName("helm", "wf"), releaseName, service, infraDefinition);
+    Workflow cleanupWorkflow =
+        helmHelper.createCleanupWorkflow(seed, owners, getName("helm", "wf"), releaseName, service, infraDefinition);
 
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
     logStateExecutionInstanceErrors(workflowExecution);
+
+    // Cleanup
+    logStateExecutionInstanceErrors(runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),
+        getExecutionArgs(cleanupWorkflow, environment, service)));
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 

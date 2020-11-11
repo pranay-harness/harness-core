@@ -2,6 +2,7 @@ package io.harness.functional.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -31,6 +32,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ArtifactType;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -41,16 +43,21 @@ public class HelmHelper {
   private static final String RELEASE_NAME_FORMAT = "%s-${infra.helm.shortId}";
   private static final String HELM_RELEASE_NAME_PREFIX = "helmReleaseNamePrefix";
   private static final String CREATE_NAMESPACE_STEP_NAME = "Create Namespace";
-  private static final String CREATE_NAMESPACE_SCRIPT =
-      "export KUBECONFIG=${HARNESS_KUBE_CONFIG_PATH}\nkubectl get namespace ${infra.kubernetes.namespace} || kubectl create namespace ${infra.kubernetes.namespace}";
+  private static final String CREATE_NAMESPACE_SCRIPT = "export KUBECONFIG=${HARNESS_KUBE_CONFIG_PATH}\n"
+      + "kubectl get namespace ${infra.kubernetes.namespace} || kubectl create namespace ${infra.kubernetes.namespace}";
+  private static final String CLEANUP_STEP_NAME = "Cleanup release";
+  private static final String CLEANUP_SCRIPT = "export KUBECONFIG=${HARNESS_KUBE_CONFIG_PATH}\n"
+      + "${HELM_CLI} ${PURGE_ACTION} ${RELEASE_NAME} ${OPTS}";
+  private static final String HELM3_CLIENT_TOOLS_PATH = "client-tools/helm/v3.1.2/helm";
+  private static final String CLEANUP_WORKFLOW_PREFIX = "Cleanup ";
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ApplicationManifestService applicationManifestService;
 
-  public Workflow createHelmWorkflow(
-      Seed seed, Owners owners, String name, Service service, InfrastructureDefinition infraDefinition) {
+  public Workflow createHelmWorkflow(Seed seed, Owners owners, String name, String releaseName, Service service,
+      InfrastructureDefinition infraDefinition) {
     Workflow workflow = workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .name(name)
@@ -67,7 +74,7 @@ public class HelmHelper {
                     .build())
             .build());
 
-    return setupWorkflow(workflow, name, service.getHelmVersion());
+    return setupWorkflow(workflow, releaseName, service.getHelmVersion());
   }
 
   public Workflow setupWorkflow(Workflow workflow, String releaseName, HelmVersion helmVersion) {
@@ -75,19 +82,13 @@ public class HelmHelper {
     WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
     GraphNode helmDeployStep = workflowPhase.getPhaseSteps().get(0).getSteps().get(0);
     Map<String, Object> properties = helmDeployStep.getProperties();
-    properties.put(HELM_RELEASE_NAME_PREFIX, getReleaseName(releaseName));
+    properties.put(HELM_RELEASE_NAME_PREFIX, releaseName);
     helmDeployStep.setProperties(properties);
 
     if (HelmVersion.V3 == helmVersion) {
       // Starting with v3, helm doesn't manage anymore namespace. This script will create namespace if it's missing
       // (create-namespace alternative is available starting with 3.2)
-      GraphNode createNamespaceStep =
-          GraphNode.builder()
-              .name(CREATE_NAMESPACE_STEP_NAME)
-              .type("SHELL_SCRIPT")
-              .properties(ImmutableMap.of("scriptType", "BASH", "scriptString", CREATE_NAMESPACE_SCRIPT,
-                  "executeOnDelegate", true, "timeoutMillis", 12000))
-              .build();
+      GraphNode createNamespaceStep = createShellScriptNode(CREATE_NAMESPACE_STEP_NAME, CREATE_NAMESPACE_SCRIPT);
       if (workflowPhase.getPhaseSteps().get(0).getSteps().size() > 1) {
         workflowPhase.getPhaseSteps().get(0).getSteps().set(0, createNamespaceStep);
       } else {
@@ -146,7 +147,30 @@ public class HelmHelper {
     }
   }
 
-  private String getReleaseName(String baseName) {
+  public Workflow createCleanupWorkflow(Seed seed, Owners owners, String name, String releaseName, Service service,
+      InfrastructureDefinition infraDefinition) {
+    Workflow workflow = workflowGenerator.ensureWorkflow(seed, owners,
+        aWorkflow()
+            .name(CLEANUP_WORKFLOW_PREFIX + name)
+            .appId(service.getAppId())
+            .envId(infraDefinition.getEnvId())
+            .infraDefinitionId(infraDefinition.getUuid())
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
+            .build());
+
+    String cleanupScript = getCleanupScript(service.getHelmVersion(), releaseName);
+    GraphNode cleanupStep = createShellScriptNode(CLEANUP_STEP_NAME, cleanupScript);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow = (BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    workflowPhase.getPhaseSteps().get(0).setSteps(singletonList(cleanupStep));
+
+    return workflowService.updateWorkflow(workflow, false);
+  }
+
+  public String getReleaseName(String baseName) {
     if (baseName.length() > RELEASE_NAME_LENGTH_WITHOUT_SHORT_ID) {
       baseName = baseName.substring(0, RELEASE_NAME_LENGTH_WITHOUT_SHORT_ID);
     }
@@ -154,5 +178,46 @@ public class HelmHelper {
     baseName = baseName.toLowerCase().replace(" ", "-").replaceFirst("-$", "");
 
     return format(RELEASE_NAME_FORMAT, baseName);
+  }
+
+  private GraphNode createShellScriptNode(String name, String script) {
+    return GraphNode.builder()
+        .name(name)
+        .type("SHELL_SCRIPT")
+        .properties(ImmutableMap.of(
+            "scriptType", "BASH", "scriptString", script, "executeOnDelegate", true, "timeoutMillis", 60000))
+        .build();
+  }
+
+  private String getCleanupScript(HelmVersion helmVersion, String releaseName) {
+    String helmCliPath = "helm";
+    String helmPurgeAction = "delete";
+    String opts = "--purge";
+    if (HelmVersion.V3 == helmVersion) {
+      helmCliPath = getHelm3ClientToolsPath();
+      helmPurgeAction = "uninstall";
+      opts = "--namespace ${infra.kubernetes.namespace}";
+    }
+
+    return CLEANUP_SCRIPT.replace("${HELM_CLI}", helmCliPath)
+        .replace("${PURGE_ACTION}", helmPurgeAction)
+        .replace("${RELEASE_NAME}", releaseName)
+        .replace("${OPTS}", opts);
+  }
+
+  private String getHelm3ClientToolsPath() {
+    File relativeToCurrentLocation = new File("../" + HELM3_CLIENT_TOOLS_PATH);
+    // Checks for path on jenkins
+    if (relativeToCurrentLocation.exists()) {
+      return relativeToCurrentLocation.getAbsolutePath();
+    }
+
+    // Checks for path locally
+    File localDelegateModuleLocation = new File("../260-delegate/" + HELM3_CLIENT_TOOLS_PATH);
+    if (localDelegateModuleLocation.exists()) {
+      return localDelegateModuleLocation.getAbsolutePath();
+    }
+
+    throw new IllegalStateException("Unable to get Helm v3 client tools path");
   }
 }
