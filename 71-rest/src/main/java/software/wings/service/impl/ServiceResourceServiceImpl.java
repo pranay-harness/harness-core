@@ -52,6 +52,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -1723,8 +1724,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("Command Name can only have characters -, _, a-z, A-Z, 0-9 and space");
     }
   }
-
-  private void addServiceCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
+  @VisibleForTesting
+  void addServiceCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
     serviceCommand.setDefaultVersion(1);
     serviceCommand.setServiceId(serviceId);
     serviceCommand.setAppId(appId);
@@ -1775,6 +1776,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
     command.setAccountId(accountId);
+    command.setName(serviceCommand.getName());
     if (isNotEmpty(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
