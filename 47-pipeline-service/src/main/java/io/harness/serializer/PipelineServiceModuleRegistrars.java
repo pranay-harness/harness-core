@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -19,6 +20,7 @@ public class PipelineServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .add(PMSPipelineMorphiaRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
