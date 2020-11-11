@@ -222,7 +222,11 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
       String evaluatedUrl =
           context != null ? context.renderExpression(logInfo.getCollectionUrl()) : logInfo.getCollectionUrl();
       if (logInfo.getMethod() != null && logInfo.getMethod() == Method.POST) {
-        evaluatedUrl += URL_BODY_APPENDER + logInfo.getCollectionBody();
+        String body = logInfo.getCollectionBody();
+        if (context != null) {
+          body = context.renderExpression(body);
+        }
+        evaluatedUrl += URL_BODY_APPENDER + body;
       }
       logDefinition.put(evaluatedUrl, getResponseMappers(logInfo));
     }

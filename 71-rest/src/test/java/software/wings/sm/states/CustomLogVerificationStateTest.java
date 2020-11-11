@@ -6,7 +6,9 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -175,8 +177,11 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
         CustomLogVerificationStateTest.class.getResource("/apm/log_config_post.yml"), Charsets.UTF_8);
     List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
     state.setLogCollectionInfos(collectionInfos);
-
-    Map<String, Map<String, ResponseMapper>> logDefinitions = constructLogDefinitions(context, collectionInfos);
+    ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    when(executionContext.renderExpression(anyString()))
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    Map<String, Map<String, ResponseMapper>> logDefinitions =
+        constructLogDefinitions(executionContext, collectionInfos);
     assertThat(logDefinitions).isNotNull();
     assertThat(logDefinitions.size()).isEqualTo(1);
     logDefinitions.forEach((url, mapping) -> {
@@ -185,6 +190,38 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
       String body = url.split(URL_BODY_APPENDER)[1];
       assertThat(actualUrl).isEqualTo("customLogVerificationQuery");
       assertThat(body).isEqualTo("body${host}");
+      assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
+      assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
+      assertThat(mapping.get("timestamp").getTimestampFormat()).isEqualTo("hh:mm a");
+      assertThat("hits.hits[*]._source.log").isEqualTo(mapping.get("logMessage").getJsonPath().get(0));
+      assertThat(state.shouldInspectHostsForLogAnalysis()).isTrue();
+    });
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testConstructLogDefinitions_postWithBodyContainingExpressions() throws IOException {
+    CustomLogVerificationState state = new CustomLogVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr = Resources.toString(
+        CustomLogVerificationStateTest.class.getResource("/apm/log_config_post_expressions.yml"), Charsets.UTF_8);
+    List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
+    state.setLogCollectionInfos(collectionInfos);
+    ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    when(executionContext.renderExpression(anyString()))
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    when(executionContext.renderExpression("body${workflow.variable.bodyDetails}")).thenReturn("renderedBodyDetails");
+    Map<String, Map<String, ResponseMapper>> logDefinitions =
+        constructLogDefinitions(executionContext, collectionInfos);
+    assertThat(logDefinitions).isNotNull();
+    assertThat(logDefinitions.size()).isEqualTo(1);
+    logDefinitions.forEach((url, mapping) -> {
+      assertThat(url.contains(URL_BODY_APPENDER)).isTrue();
+      String actualUrl = url.split(URL_BODY_APPENDER)[0];
+      String body = url.split(URL_BODY_APPENDER)[1];
+      assertThat(actualUrl).isEqualTo("customLogVerificationQuery${host}");
+      assertThat(body).isEqualTo("renderedBodyDetails");
       assertThat("hits.hits[*]._source.kubernetes.pod.name").isEqualTo(mapping.get("host").getJsonPath().get(0));
       assertThat("hits.hits[*]._source.@timestamp").isEqualTo(mapping.get("timestamp").getJsonPath().get(0));
       assertThat(mapping.get("timestamp").getTimestampFormat()).isEqualTo("hh:mm a");
