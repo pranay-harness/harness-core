@@ -297,6 +297,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case AZURE_MACHINE_IMAGE:
         artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType).equal(AZURE_MACHINE_IMAGE.name());
         break;
+      case AZURE_WEBAPP:
+        artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
+            .in(asList(DOCKER.name(), ARTIFACTORY.name(), AZURE_ARTIFACTS.name()));
+        break;
       case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
       case PCF: // Deployment Type: PCF,
       case WAR: // Deployment type: ssh
@@ -349,6 +353,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case AZURE_MACHINE_IMAGE:
         artifactStreamPageRequest.addFilter(
             ArtifactStreamKeys.artifactStreamType, Operator.EQ, AZURE_MACHINE_IMAGE.name());
+        break;
+      case AZURE_WEBAPP:
+        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN, DOCKER.name(),
+            ARTIFACTORY.name(), AZURE_ARTIFACTS.name());
         break;
       case AWS_CODEDEPLOY: // Deployment Type: AWS_CODEDEPLOY,
       case PCF: // Deployment Type: PCF,
@@ -1173,6 +1181,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case AZURE_MACHINE_IMAGE:
         builder =
             new ImmutableMap.Builder<String, String>().put(AZURE_MACHINE_IMAGE.name(), AZURE_MACHINE_IMAGE.name());
+        break;
+      case AZURE_WEBAPP:
+        builder = new ImmutableMap.Builder<String, String>()
+                      .put(DOCKER.name(), DOCKER.name())
+                      .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                      .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
         break;
       case OTHER:
         builder = new ImmutableMap.Builder<String, String>()

@@ -340,6 +340,7 @@ import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
+import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CodeDeployCommandExecutionData;
@@ -1281,6 +1282,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.ShellExecutionData", ShellExecutionData.class);
     w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.AzureVMSSDummyCommandUnit", AzureVMSSDummyCommandUnit.class);
+    w.put("beans.command.AzureWebAppCommandUnit", AzureWebAppCommandUnit.class);
     w.put("beans.config.ArtifactoryConfig", ArtifactoryConfig.class);
     w.put("beans.config.LogzConfig", LogzConfig.class);
     w.put("beans.config.NexusConfig", NexusConfig.class);

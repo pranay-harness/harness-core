@@ -25,6 +25,8 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
 import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME;
@@ -37,6 +39,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.utils.PowerShellScriptsLoader.PsScript;
@@ -706,6 +709,57 @@ public enum ArtifactType {
                                        .id(graphIdGenerator("node"))
                                        .name(AZURE_VMSS_DEPLOY)
                                        .type(AZURE_VMSS_DUMMY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AZURE_WEBAPP.
+   */
+  AZURE_WEBAPP {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return true;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getAzureWebAppSlotSetupCommand(), getAzureWebAppSlotResizeCommand());
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getAzureWebAppSlotSetupCommand() {
+      return aCommand()
+          .withCommandType(CommandType.SETUP)
+          .withGraph(aGraph()
+                         .withGraphName(AZURE_WEBAPP_SLOT_SETUP)
+                         .addNodes(GraphNode.builder()
+                                       .origin(true)
+                                       .id(graphIdGenerator("node"))
+                                       .name(AZURE_WEBAPP_SLOT_SETUP)
+                                       .type(CommandUnitType.AZURE_WEBAPP.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    private Command getAzureWebAppSlotResizeCommand() {
+      return aCommand()
+          .withCommandType(CommandType.RESIZE)
+          .withGraph(aGraph()
+                         .withGraphName(AZURE_WEBAPP_SLOT_RESIZE)
+                         .addNodes(GraphNode.builder()
+                                       .origin(true)
+                                       .id(graphIdGenerator("node"))
+                                       .name(AZURE_WEBAPP_SLOT_RESIZE)
+                                       .type(CommandUnitType.AZURE_WEBAPP.name())
                                        .build())
                          .buildPipeline())
           .build();
