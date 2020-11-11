@@ -8,6 +8,7 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
+import io.harness.logging.LogLevel;
 import io.harness.serializer.KryoRegistrar;
 
 public class CommonsKryoRegistrar implements KryoRegistrar {
@@ -20,5 +21,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);
+    kryo.register(LogLevel.class, 71103);
   }
 }

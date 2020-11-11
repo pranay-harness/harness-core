@@ -13,7 +13,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
-import software.wings.beans.Log;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -32,7 +31,7 @@ public interface ManagerClient {
 
   @POST("logs/activity/{activityId}/unit/{unitName}/batched")
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
-      @Query("accountId") String accountId, @Body Log logObject);
+      @Query("accountId") String accountId, @Body RequestBody logObject);
 
   @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(

@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.serializer.KryoSerializer;
 import io.swagger.annotations.Api;
 import software.wings.beans.Log;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -37,6 +38,7 @@ public class LogResource {
   @Inject private LogService logService;
   @Inject private LogVerificationService logVerificationService;
   @Inject private ContinuousVerificationService cvManagerService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @DelegateAuth
   @POST
@@ -44,7 +46,9 @@ public class LogResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> batchSave(
-      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log logObject) {
+      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, byte[] logSerialized) {
+    Log logObject = (Log) kryoSerializer.asObject(logSerialized);
+
     return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, logObject));
   }
 
