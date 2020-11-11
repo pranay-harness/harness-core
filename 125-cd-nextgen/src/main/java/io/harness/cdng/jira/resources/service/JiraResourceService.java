@@ -5,6 +5,7 @@ import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraGetCreateMetadataDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -27,4 +28,6 @@ public interface JiraResourceService {
   JiraApprovalDTO checkApproval(IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier,
       String issueId, String approvalField, String approvalFieldValue, String rejectionField,
       String rejectionFieldValue);
+  JiraGetCreateMetadataDTO getCreateMetadata(IdentifierRef jiraConnectorRef, String orgIdentifier,
+      String projectIdentifier, String projectKey, String createExpandParam);
 }

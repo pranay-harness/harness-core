@@ -15,6 +15,7 @@ import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraGetCreateMetadataDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -28,11 +29,13 @@ import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.HarnessJiraException;
+import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -380,6 +383,32 @@ public class JiraResourceServiceTest extends CategoryTest {
     assertThat(jiraApprovalDTO).isNotNull();
     assertThat(jiraApprovalDTO.isApproved()).isTrue();
     assertThat(jiraApprovalDTO.getStatus()).isEqualTo(approvalFieldValue);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetCreateMetadata() {
+    final String projectKey = "CDNG";
+    final String expand = "expand";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.SUCCESS)
+                        .createMetadata(new JiraCreateMetaResponse(
+                            new JSONObject().element(expand, expand).element("projects", "[]")))
+                        .build());
+
+    JiraGetCreateMetadataDTO jiraGetCreateMetadataDTO =
+        jiraResourceService.getCreateMetadata(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey, expand);
+
+    assertThat(jiraGetCreateMetadataDTO).isNotNull();
+    assertThat(jiraGetCreateMetadataDTO.getExpand()).isEqualTo(expand);
+    assertThat(jiraGetCreateMetadataDTO.getProjects()).isEmpty();
   }
 
   private ConnectorResponseDTO getConnector() {

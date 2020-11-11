@@ -10,6 +10,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
+import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.jira.JiraField;
 import io.harness.jira.JiraIssueType;
@@ -31,8 +32,6 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.rcarz.jiraclient.Project;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,6 +43,7 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -373,14 +373,68 @@ public class JiraTaskNGHandler {
     return JiraTaskNGResponse.builder().currentStatus(approvalFieldValue).executionStatus(RUNNING).build();
   }
 
-  private JiraClient getJiraClient(JiraTaskNGParameters parameters) throws JiraException {
-    JiraConnectorDTO jiraConnectorDTO = parameters.getJiraConnectorDTO();
-    BasicCredentials creds = new BasicCredentials(
-        jiraConnectorDTO.getUsername(), String.valueOf(jiraConnectorDTO.getPasswordRef().getDecryptedValue()));
-    String jiraUrl = jiraConnectorDTO.getJiraUrl();
+  public JiraTaskNGResponse getCreateMetadata(JiraTaskNGParameters jiraTaskNGParameters) {
+    URI uri;
+    try {
+      log.info("Getting decrypted jira client configs for GET_CREATE_METADATA");
+      JiraClient jiraClient = getJiraClient(jiraTaskNGParameters);
 
-    String baseUrl = jiraUrl.endsWith("/") ? jiraUrl : jiraUrl.concat("/");
-    return new JiraClient(baseUrl, creds);
+      log.info("Building URI for GET_CREATE_METADATA");
+      Map<String, String> queryParams = new HashMap<>();
+      if (EmptyPredicate.isNotEmpty(jiraTaskNGParameters.getCreatemetaExpandParam())) {
+        queryParams.put("expand", jiraTaskNGParameters.getCreatemetaExpandParam());
+      } else {
+        queryParams.put("expand", "projects.issuetypes.fields");
+      }
+
+      if (EmptyPredicate.isNotEmpty(jiraTaskNGParameters.getProject())) {
+        queryParams.put("projectKeys", jiraTaskNGParameters.getProject());
+      }
+
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "issue/createmeta", queryParams);
+
+      log.info(" Fetching metadata from jira for GET_CREATE_METADATA");
+      JSON response = jiraClient.getRestClient().get(uri);
+
+      log.info(" Response received from jira for GET_CREATE_METADATA");
+      JiraCreateMetaResponse jiraCreateMetaResponse = new JiraCreateMetaResponse((JSONObject) response);
+
+      log.info(" Fetching resolutions from jira for GET_CREATE_METADATA");
+      URI resolutionUri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + RESOLUTION);
+      JSONArray resolutions = (JSONArray) jiraClient.getRestClient().get(resolutionUri);
+      insertResolutionsInCreateMeta(resolutions, jiraCreateMetaResponse);
+
+      log.info(" Returning response to manager for GET_CREATE_METADATA");
+      return JiraTaskNGResponse.builder().executionStatus(SUCCESS).createMetadata(jiraCreateMetaResponse).build();
+    } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
+      String errorMessage = "Failed to fetch issue metadata from Jira server.";
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
+    }
+  }
+
+  public void updateStatus(Issue issue, String status) throws JiraException {
+    List<Transition> allTransitions = null;
+    try {
+      allTransitions = issue.getTransitions(); // gives all transitions available for that issue
+    } catch (JiraException e) {
+      log.error("Failed to get all transitions from the Jira");
+      throw e;
+    }
+
+    Transition transition =
+        allTransitions.stream().filter(t -> t.getToStatus().getName().equalsIgnoreCase(status)).findAny().orElse(null);
+    if (transition != null) {
+      try {
+        issue.transition().execute(transition);
+      } catch (JiraException e) {
+        log.error("Exception while trying to update status to {}", status);
+        throw e;
+      }
+    } else {
+      log.error("No transition found from {} to {}", issue.getStatus(), status);
+      throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
+    }
   }
 
   void setCustomFieldsOnCreate(JiraTaskNGParameters parameters, FluentCreate fluentCreate) {
@@ -413,6 +467,16 @@ public class JiraTaskNGHandler {
     if (timeTracking.getOriginalEstimate() != null || timeTracking.getRemainingEstimate() != null) {
       update.field(Field.TIME_TRACKING, timeTracking);
     }
+  }
+
+  private JiraClient getJiraClient(JiraTaskNGParameters parameters) throws JiraException {
+    JiraConnectorDTO jiraConnectorDTO = parameters.getJiraConnectorDTO();
+    BasicCredentials creds = new BasicCredentials(
+        jiraConnectorDTO.getUsername(), String.valueOf(jiraConnectorDTO.getPasswordRef().getDecryptedValue()));
+    String jiraUrl = jiraConnectorDTO.getJiraUrl();
+
+    String baseUrl = jiraUrl.endsWith("/") ? jiraUrl : jiraUrl.concat("/");
+    return new JiraClient(baseUrl, creds);
   }
 
   private Object getCustomFieldValue(Map.Entry<String, JiraCustomFieldValue> customFieldValueEntry) {
@@ -490,27 +554,23 @@ public class JiraTaskNGHandler {
     return e.getMessage();
   }
 
-  public void updateStatus(Issue issue, String status) throws JiraException {
-    List<Transition> allTransitions = null;
-    try {
-      allTransitions = issue.getTransitions(); // gives all transitions available for that issue
-    } catch (JiraException e) {
-      log.error("Failed to get all transitions from the Jira");
-      throw e;
-    }
+  private void insertResolutionsInCreateMeta(JSONArray resolutions, JiraCreateMetaResponse jiraCreateMetaResponse) {
+    Map<String, Object> resolutionProperties = new HashMap<>();
+    Map<String, String> schema = new HashMap<>();
+    schema.put("type", RESOLUTION);
+    schema.put("system", RESOLUTION);
+    resolutionProperties.put("schema", schema);
+    resolutionProperties.put("required", "false");
+    resolutionProperties.put("key", RESOLUTION);
+    resolutionProperties.put("name", "Resolution");
+    resolutionProperties.put("allowedValues", resolutions);
 
-    Transition transition =
-        allTransitions.stream().filter(t -> t.getToStatus().getName().equalsIgnoreCase(status)).findAny().orElse(null);
-    if (transition != null) {
-      try {
-        issue.transition().execute(transition);
-      } catch (JiraException e) {
-        log.error("Exception while trying to update status to {}", status);
-        throw e;
-      }
-    } else {
-      log.error("No transition found from {} to {}", issue.getStatus(), status);
-      throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
-    }
+    JSONObject resolutionObject = JSONObject.fromObject(resolutionProperties);
+
+    JiraField resolution = JiraField.getNewField(resolutionObject, RESOLUTION);
+
+    jiraCreateMetaResponse.getProjects().forEach(jiraProjectData
+        -> jiraProjectData.getIssueTypes().forEach(
+            jiraIssueType -> jiraIssueType.getJiraFields().put(RESOLUTION, resolution)));
   }
 }

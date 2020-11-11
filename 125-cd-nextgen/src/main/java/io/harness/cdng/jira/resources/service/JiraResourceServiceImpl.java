@@ -15,11 +15,13 @@ import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.converter.JiraFieldDTOConverter;
 import io.harness.cdng.jira.resources.converter.JiraIssueDTOConverter;
 import io.harness.cdng.jira.resources.converter.JiraIssueTypeDTOConverter;
+import io.harness.cdng.jira.resources.converter.JiraProjectDTOConverter;
 import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConverter;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraGetCreateMetadataDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -38,6 +40,7 @@ import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
+import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -145,16 +148,7 @@ public class JiraResourceServiceImpl implements JiraResourceService {
 
     return jiraTaskResponse.getProjects()
         .stream()
-        .map(project
-            -> JiraProjectDTO.builder()
-                   .id(project.getId())
-                   .key(project.getKey())
-                   .name(project.getName())
-                   .issueTypes(project.getIssueTypes()
-                                   .stream()
-                                   .map(JiraIssueTypeDTOConverter.toJiraIssueTypeDTO)
-                                   .collect(Collectors.toList()))
-                   .build())
+        .map(JiraProjectDTOConverter.toJiraProjectDTO)
         .collect(Collectors.toList());
   }
 
@@ -211,6 +205,32 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     return JiraApprovalDTO.builder()
         .isApproved(jiraTaskResponse.getExecutionStatus() == SUCCESS)
         .status(jiraTaskResponse.getCurrentStatus())
+        .build();
+  }
+
+  @Override
+  public JiraGetCreateMetadataDTO getCreateMetadata(IdentifierRef jiraConnectorRef, String orgIdentifier,
+      String projectIdentifier, String projectKey, String createExpandParam) {
+    JiraTaskNGParametersBuilder taskParametersBuilder = JiraTaskNGParameters.builder()
+                                                            .project(projectKey)
+                                                            .createmetaExpandParam(createExpandParam)
+                                                            .jiraAction(JiraAction.GET_CREATE_METADATA);
+
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
+
+    if (jiraTaskResponse.getExecutionStatus() != SUCCESS) {
+      throw new HarnessJiraException(jiraTaskResponse.getErrorMessage(), EnumSet.of(REST_API));
+    }
+
+    JiraCreateMetaResponse createMetadata = jiraTaskResponse.getCreateMetadata();
+
+    return JiraGetCreateMetadataDTO.builder()
+        .expand(createMetadata.getExpand())
+        .projects(createMetadata.getProjects()
+                      .stream()
+                      .map(JiraProjectDTOConverter.toJiraProjectDTO)
+                      .collect(Collectors.toList()))
         .build();
   }
 

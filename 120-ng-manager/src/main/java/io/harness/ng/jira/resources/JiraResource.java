@@ -7,10 +7,12 @@ import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
 import io.harness.cdng.jira.resources.response.JiraApprovalResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraFieldResponseDTO;
+import io.harness.cdng.jira.resources.response.JiraGetCreateMetadataResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectStatusesResponseDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraGetCreateMetadataDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -151,5 +153,20 @@ public class JiraResource {
     JiraApprovalDTO jiraApprovalDTO = jiraResourceService.checkApproval(connectorRef, orgIdentifier, projectIdentifier,
         issueId, approvalField, approvalFieldValue, rejectionField, rejectionFieldValue);
     return ResponseDTO.newResponse(JiraApprovalResponseDTO.builder().jiraApproval(jiraApprovalDTO).build());
+  }
+
+  @GET
+  @Path("getCreateMetadata")
+  @ApiOperation(value = "Get jira create metadata options", nickname = "getJiraCreateMetadata")
+  public ResponseDTO<JiraGetCreateMetadataResponseDTO> getJiraCreateMetadata(
+      @QueryParam("connectorRef") String jiraConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("projectKey") String projectKey, @QueryParam("createExpandParam") String createExpandParam) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    JiraGetCreateMetadataDTO jiraGetCreateMetadataDTO = jiraResourceService.getCreateMetadata(
+        connectorRef, orgIdentifier, projectIdentifier, projectKey, createExpandParam);
+    return ResponseDTO.newResponse(
+        JiraGetCreateMetadataResponseDTO.builder().jiraGetCreateMetadata(jiraGetCreateMetadataDTO).build());
   }
 }
