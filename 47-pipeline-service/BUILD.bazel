@@ -11,6 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//20-ng-core-beans:module",
         "//21-persistence:module",
         "//22-timeout-engine:module",
         "//26-pms-contracts:module",
@@ -41,6 +42,7 @@ java_library(
         "@maven//:javax_servlet_javax_servlet_api",
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_jsr311_api",
+        "@maven//:net_jodah_failsafe",
         "@maven//:org_eclipse_jetty_jetty_servlets",
         "@maven//:org_glassfish_jersey_core_jersey_server",
         "@maven//:org_glassfish_jersey_media_jersey_media_multipart",

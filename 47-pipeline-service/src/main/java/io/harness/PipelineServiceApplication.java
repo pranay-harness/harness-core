@@ -18,6 +18,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.queue.QueueListenerController;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -99,7 +100,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
-    //    environment.jersey().register(GenericExceptionMapper.class);
+    environment.jersey().register(WingsExceptionMapper.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));

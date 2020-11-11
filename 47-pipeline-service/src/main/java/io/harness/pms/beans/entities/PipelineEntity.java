@@ -1,4 +1,4 @@
-package io.harness.pms.entities;
+package io.harness.pms.beans.entities;
 
 import com.google.common.collect.ImmutableList;
 

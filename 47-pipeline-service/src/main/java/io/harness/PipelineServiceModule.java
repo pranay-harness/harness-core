@@ -12,6 +12,8 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.service.PMSPipelineService;
+import io.harness.pms.service.PMSPipelineServiceImpl;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -32,7 +34,10 @@ public class PipelineServiceModule extends AbstractModule {
   protected void configure() {
     install(MongoModule.getInstance());
     install(new PipelineServiceGrpcModule(appConfig));
+    install(new PipelineServicePersistenceModule());
+
     bind(HPersistence.class).to(MongoPersistence.class);
+    bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
   }
 
   @Provides
