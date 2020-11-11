@@ -2,8 +2,10 @@ package io.harness.serializer.spring;
 
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
+import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
@@ -89,5 +91,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("s3Connector", S3Connector.class);
     orchestrationElements.put("customSecretVariable", CustomSecretVariable.class);
     orchestrationElements.put("customTextVariable", CustomTextVariable.class);
+    orchestrationElements.put("manualExecutionSource", ManualExecutionSource.class);
+    orchestrationElements.put("ciStepOutcome", CiStepOutcome.class);
   }
 }

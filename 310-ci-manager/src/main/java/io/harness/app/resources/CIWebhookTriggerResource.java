@@ -18,17 +18,14 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.WebHookRequest;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 
 @Api("ci")
 @Path("/ci")
@@ -42,14 +39,6 @@ public class CIWebhookTriggerResource {
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
   private WebhookTriggerProcessor webhookTriggerProcessor;
   private BuildNumberService buildNumberService;
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @Path("{id}")
-  public Response ping(@PathParam("id") String webHookToken, WebHookRequest webHookRequest) {
-    return Response.status(Response.Status.OK).build();
-  }
 
   @POST
   @Consumes(APPLICATION_JSON)

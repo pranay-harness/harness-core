@@ -8,6 +8,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -23,8 +25,6 @@ import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ci.pod.SecretVariableDTO;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.io.IOException;
 import java.util.List;

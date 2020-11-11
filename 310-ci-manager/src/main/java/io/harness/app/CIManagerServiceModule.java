@@ -28,6 +28,7 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.mongo.MongoPersistence;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.persistence.HPersistence;
@@ -39,12 +40,6 @@ import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.ci.CIServiceAuthSecretKey;
-import software.wings.service.impl.ci.CIServiceAuthSecretKeyImpl;
-import software.wings.service.impl.security.NoOpSecretManagerImpl;
-import software.wings.service.intfc.security.SecretManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,12 +86,9 @@ public class CIManagerServiceModule extends AbstractModule {
   protected void configure() {
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
-    bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-    bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-    bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
     bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
-    bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
 
     // Keeping it to 1 thread to start with. Assuming executor service is used only to

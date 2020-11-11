@@ -1,5 +1,8 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
@@ -22,9 +25,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Inject;
 
@@ -34,6 +34,11 @@ import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
+import io.harness.delegate.beans.ci.pod.CIK8PodParams;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
@@ -57,11 +62,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.CIK8PodParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.beans.ci.pod.SecretVariableDTO;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.util.ArrayList;
 import java.util.Collections;

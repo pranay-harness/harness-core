@@ -13,6 +13,8 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -24,8 +26,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 

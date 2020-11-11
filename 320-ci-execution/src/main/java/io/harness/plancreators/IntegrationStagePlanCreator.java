@@ -1,11 +1,11 @@
 package io.harness.plancreators;
 
+import static io.harness.common.CICommonPodConstants.POD_NAME;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.CIPlanCreatorType.EXECUTION_PLAN_CREATOR;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE;
-import static software.wings.common.CICommonPodConstants.POD_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

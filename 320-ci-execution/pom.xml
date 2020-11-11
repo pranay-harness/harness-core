@@ -17,6 +17,11 @@
             <artifactId>dropwizard-swagger</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>converter-gson</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server-core</artifactId>
         </dependency>
@@ -42,7 +47,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>23-delegate-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>23-ng-core-clients</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>23-sm-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -63,12 +78,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>39-ng-pipeline-commons</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
+            <artifactId>440-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

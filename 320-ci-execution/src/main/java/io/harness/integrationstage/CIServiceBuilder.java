@@ -1,11 +1,11 @@
 package io.harness.integrationstage;
 
+import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
@@ -13,12 +13,12 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
+import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
 import io.harness.util.PortFinder;
-import software.wings.beans.ci.pod.CIContainerType;
-import software.wings.beans.ci.pod.ContainerResourceParams;
 
 import java.util.ArrayList;
 import java.util.Collections;

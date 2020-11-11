@@ -8,7 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 
 import com.google.inject.Inject;
 
@@ -44,6 +43,8 @@ public class WebhookExecutionTest extends CIManagerTest {
 
   @InjectMocks CIBuildInfoServiceImpl ciBuildInfoService;
   @Inject private CIWebhookTriggerResource webhookTriggerResource;
+
+  public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
 
   @Before
   public void setup() {

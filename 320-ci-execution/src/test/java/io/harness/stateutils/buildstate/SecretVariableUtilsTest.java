@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
@@ -32,8 +34,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.ci.pod.SecretVariableDTO;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.io.IOException;
 import java.util.Collections;

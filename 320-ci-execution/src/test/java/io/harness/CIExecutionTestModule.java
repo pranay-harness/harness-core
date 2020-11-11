@@ -19,7 +19,8 @@ import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.PersistenceRegistrars;
 import org.mongodb.morphia.converters.TypeConverter;
 
 import java.util.Set;
@@ -42,7 +43,10 @@ public class CIExecutionTestModule extends AbstractModule {
   @Provides
   @Singleton
   Set<Class<? extends TypeConverter>> morphiaConverters() {
-    return ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(ManagerRegistrars.morphiaConverters).build();
+    return ImmutableSet.<Class<? extends TypeConverter>>builder()
+        .addAll(PersistenceRegistrars.morphiaConverters)
+        .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+        .build();
   }
 
   @Provides

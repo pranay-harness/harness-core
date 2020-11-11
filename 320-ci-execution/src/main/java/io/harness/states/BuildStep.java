@@ -1,10 +1,10 @@
 package io.harness.states;
 
+import static io.harness.common.CICommonPodConstants.CONTAINER_NAME;
+import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
+import static io.harness.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
+import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.CICommonPodConstants.CONTAINER_NAME;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
-import static software.wings.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 
 import com.google.inject.Inject;
 
@@ -14,6 +14,11 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.delegate.beans.ci.K8ExecCommandParams;
+import io.harness.delegate.beans.ci.K8ExecuteCommandTaskParams;
+import io.harness.delegate.beans.ci.ShellScriptType;
+import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -29,12 +34,6 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.TaskType;
-import software.wings.beans.ci.K8ExecCommandParams;
-import software.wings.beans.ci.K8ExecuteCommandTaskParams;
-import software.wings.beans.ci.ShellScriptType;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.time.Duration;
 import java.util.List;
@@ -47,6 +46,7 @@ import java.util.List;
 @Slf4j
 public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
   public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
+  public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -89,7 +89,7 @@ public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
                                                     .accountId(ngAccess.getAccountIdentifier())
                                                     .taskSetupAbstractions(ambiance.getSetupAbstractions())
                                                     .executionTimeout(Duration.ofSeconds(buildStepInfo.getTimeout()))
-                                                    .taskType(TaskType.EXECUTE_COMMAND.name())
+                                                    .taskType(TASK_TYPE)
                                                     .taskParameters(k8ExecuteCommandTaskParams)
                                                     .taskDescription("Execute command task")
                                                     .build();
