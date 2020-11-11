@@ -46,6 +46,7 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
@@ -344,6 +345,43 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
 
     JiraTaskNGResponse jiraTaskNGResponse =
         jiraTaskNGHandler.getFieldsOptions(createJiraTaskParametersBuilder().build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetCreateMetadata() throws Exception {
+    final URI meta = URI.create("issue/createmeta");
+    final URI resolution = URI.create(Field.RESOLUTION);
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    RestClient restClient = Mockito.mock(RestClient.class);
+
+    when(jiraClient.getRestClient()).thenReturn(restClient);
+    when(restClient.buildURI(any(), any())).thenReturn(meta);
+    when(restClient.buildURI(any())).thenReturn(resolution);
+    when(restClient.get(eq(meta))).thenReturn(new JSONObject().element("expand", "expand").element("projects", "[]"));
+    when(restClient.get(eq(resolution))).thenReturn(new JSONArray());
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getCreateMetadata(createJiraTaskParametersBuilder().project("CDNG").build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testGetCreateMetadataFailure() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    RestClient restClient = Mockito.mock(RestClient.class);
+
+    when(jiraClient.getRestClient()).thenReturn(restClient);
+    when(restClient.get(any(URI.class))).thenThrow(new IOException());
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    JiraTaskNGResponse jiraTaskNGResponse =
+        jiraTaskNGHandler.getCreateMetadata(createJiraTaskParametersBuilder().build());
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 

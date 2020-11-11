@@ -45,8 +45,11 @@ public class JiraTaskNGHelper {
       case CHECK_APPROVAL:
         responseData = jiraTaskNGHandler.checkJiraApproval(taskParameters);
         break;
+      case GET_CREATE_METADATA:
+        responseData = jiraTaskNGHandler.getCreateMetadata(taskParameters);
+        break;
       default:
-        log.error("No corresponding Docker artifact task type [{}]", taskParameters.toString());
+        log.error("No corresponding Jira action task type [{}]", taskParameters.toString());
         return JiraTaskNGResponse.builder()
             .executionStatus(FAILURE)
             .jiraAction(taskParameters.getJiraAction())

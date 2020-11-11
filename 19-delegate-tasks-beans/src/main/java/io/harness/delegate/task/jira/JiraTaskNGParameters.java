@@ -9,40 +9,40 @@ import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
 
-@Data
+@Value
 @Builder
 public class JiraTaskNGParameters implements TaskParameters, ExecutionCapabilityDemander {
-  private JiraConnectorDTO jiraConnectorDTO;
-  private JiraAction jiraAction;
-  private String project;
-  private String summary;
-  private String description;
-  private String issueType;
-  private String priority;
-  private List<String> labels;
-  private Map<String, JiraCustomFieldValue> customFields;
+  JiraConnectorDTO jiraConnectorDTO;
+  JiraAction jiraAction;
+  String project;
+  String summary;
+  String description;
+  String issueType;
+  String priority;
+  List<String> labels;
+  Map<String, JiraCustomFieldValue> customFields;
 
-  private String issueId;
-  private List<String> updateIssueIds;
-  private String status;
-  private String comment;
-  private String createmetaExpandParam;
+  String issueId;
+  List<String> updateIssueIds;
+  String status;
+  String comment;
+  String createmetaExpandParam;
   List<EncryptedDataDetail> encryptionDetails;
 
-  private String accountId;
-  private String appId;
-  private String activityId;
-  private String approvalId;
+  String accountId;
+  String appId;
+  String activityId;
+  String approvalId;
 
-  private String approvalField;
-  private String approvalValue;
-  private String rejectionField;
-  private String rejectionValue;
+  String approvalField;
+  String approvalValue;
+  String rejectionField;
+  String rejectionValue;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
