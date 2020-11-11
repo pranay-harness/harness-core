@@ -157,6 +157,12 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   VirtualMachineScaleSetData getVirtualMachineScaleSet(String appId, String deploymentType, String computeProviderId,
       String subscriptionId, String resourceGroupName, String vmssName);
 
+  List<String> getAppServiceNamesByResourceGroup(
+      String appId, String computeProviderId, String subscriptionId, String resourceGroupName, String appType);
+
+  List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
+      String resourceGroupName, String appType, String appName);
+
   List<String> listAzureLoadBalancers(String appId, String infraDefinitionId);
 
   List<String> listAzureLoadBalancerBackendPools(String appId, String infraDefinitionId, String loadBalancerName);

@@ -118,7 +118,19 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
+import io.harness.delegate.task.azure.AzureTaskExecutionRequest;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.AzureTaskParameters;
+import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
@@ -401,5 +413,17 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIBuildPushParameters.class, 19379);
     kryo.register(CIBuildPushTaskType.class, 19380);
     kryo.register(CIBuildStatusPushParameters.class, 19381);
+    kryo.register(AzureWebAppListWebAppDeploymentSlotNamesParameters.class, 19382);
+    kryo.register(AzureWebAppListWebAppNamesParameters.class, 19383);
+    kryo.register(AzureWebAppListWebAppDeploymentSlotNamesResponse.class, 19384);
+    kryo.register(AzureWebAppListWebAppNamesResponse.class, 19385);
+    kryo.register(AzureAppServiceTaskParameters.class, 19386);
+    kryo.register(AzureAppServiceTaskResponse.class, 19387);
+    kryo.register(AzureTaskParameters.class, 19388);
+    kryo.register(AzureTaskResponse.class, 19389);
+    kryo.register(AzureAppServiceTaskType.class, 19390);
+    kryo.register(AzureAppServiceType.class, 19391);
+    kryo.register(AzureTaskExecutionRequest.class, 19392);
+    kryo.register(AzureTaskExecutionResponse.class, 19393);
   }
 }

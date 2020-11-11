@@ -444,4 +444,29 @@ public class InfrastructureDefinitionResource {
     return new RestResponse<>(infrastructureDefinitionService.getVirtualMachineScaleSet(
         appId, deploymentType, computeProviderId, subscriptionId, resourceGroupName, vmssName));
   }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/azure-app-services")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAppServiceNamesByResourceGroup(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
+      @QueryParam("appType") String appType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.getAppServiceNamesByResourceGroup(
+        appId, computeProviderId, subscriptionId, resourceGroupName, appType));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/azure-app-services/{appName}/slots")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAppServiceDeploymentSlotNames(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
+      @QueryParam("appType") String appType, @PathParam("computeProviderId") String computeProviderId,
+      @PathParam("appName") String appName) {
+    return new RestResponse<>(infrastructureDefinitionService.getAppServiceDeploymentSlotNames(
+        appId, computeProviderId, subscriptionId, resourceGroupName, appType, appName));
+  }
 }

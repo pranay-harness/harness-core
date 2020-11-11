@@ -3,6 +3,7 @@ package io.harness.azure.utility;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.microsoft.azure.CloudException;
 import lombok.experimental.UtilityClass;
 
 import java.text.DateFormat;
@@ -59,5 +60,15 @@ public class AzureResourceUtility {
 
   public boolean isDefaultAutoScaleProfile(String profileName) {
     return isNotBlank(profileName) && AUTO_SCALE_DEFAULT_PROFILE_NAMES.contains(profileName);
+  }
+
+  public String getAzureCloudExceptionMessage(Exception ex) {
+    String message = ex.getMessage();
+    if (ex.getCause() instanceof CloudException) {
+      CloudException cloudException = (CloudException) ex.getCause();
+      String cloudExMsg = cloudException.getMessage();
+      message = format("%s, %nAzure Cloud Exception Message: %s", message, cloudExMsg);
+    }
+    return message;
   }
 }
