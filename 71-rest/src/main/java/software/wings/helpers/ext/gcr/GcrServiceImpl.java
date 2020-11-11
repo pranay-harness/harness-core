@@ -26,6 +26,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.BuildDetailsComparatorAscending;
@@ -163,6 +164,9 @@ public class GcrServiceImpl implements GcrService {
 
   private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
+    if (gcpConfig.isUseDelegate()) {
+      return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCP_TASK);
+    }
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
     if (gc.refreshToken()) {
