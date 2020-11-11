@@ -707,6 +707,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
         .isInstanceOf(InvalidRequestException.class);
   }
 
+  @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testCrudTrigger20() throws IOException {

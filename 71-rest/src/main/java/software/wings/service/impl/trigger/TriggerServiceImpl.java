@@ -81,6 +81,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -103,6 +104,7 @@ import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebHookTriggerCondition;
@@ -1745,6 +1747,13 @@ public class TriggerServiceImpl implements TriggerService {
       Pipeline executePipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
       trigger.setWorkflowName(executePipeline.getName());
       services = executePipeline.getServices();
+
+      if (!TriggerConditionType.WEBHOOK.equals(trigger.getCondition().getConditionType())
+          && trigger.getWorkflowVariables() != null) {
+        validateVariablesOfEntityTypeForNonWebhookTriggers(
+            executePipeline.getPipelineVariables(), trigger.getWorkflowVariables());
+      }
+
       validateAndSetArtifactSelections(trigger, services);
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId())) {
         validateAndSetManifestSelections(trigger, services);
@@ -1758,6 +1767,13 @@ public class TriggerServiceImpl implements TriggerService {
         trigger.setWorkflowName(workflow.getName());
       }
       services = workflow.getServices();
+
+      if (!TriggerConditionType.WEBHOOK.equals(trigger.getCondition().getConditionType())
+          && workflow.getOrchestrationWorkflow() != null && trigger.getWorkflowVariables() != null) {
+        validateVariablesOfEntityTypeForNonWebhookTriggers(
+            workflow.getOrchestrationWorkflow().getUserVariables(), trigger.getWorkflowVariables());
+      }
+
       validateAndSetArtifactSelections(trigger, services);
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId())) {
         validateAndSetManifestSelections(trigger, services);
@@ -1765,6 +1781,21 @@ public class TriggerServiceImpl implements TriggerService {
     }
     validateAndSetTriggerCondition(trigger, existingTrigger);
     validateAndSetCronExpression(trigger);
+  }
+
+  // Values of individual variables is stored in triggerVariables and Entity types are stored in
+  // pipelineWorkflowVariables. We need both.
+  private void validateVariablesOfEntityTypeForNonWebhookTriggers(
+      List<Variable> pipelineWorkflowVariables, Map<String, String> triggerVariables) {
+    if (isNotEmpty(pipelineWorkflowVariables)) {
+      for (Variable v : pipelineWorkflowVariables) {
+        if (VariableType.ENTITY.equals(v.getType()) && containsVariablePattern(triggerVariables.get(v.getName()))) {
+          throw new InvalidRequestException(
+              "Expressions are not allowed for Entity Variables for Workflow Variables. Offending value: "
+              + triggerVariables.get(v.getName()));
+        }
+      }
+    }
   }
 
   @VisibleForTesting
