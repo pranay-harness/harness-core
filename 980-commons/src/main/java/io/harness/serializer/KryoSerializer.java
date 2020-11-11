@@ -26,7 +26,7 @@ import java.util.zip.InflaterInputStream;
 @Singleton
 @Slf4j
 public class KryoSerializer {
-  static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
+  public static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
     for (IntMap.Entry entry : newState.entries()) {
       final Registration newRegistration = (Registration) entry.value;
       final Registration previousRegistration = previousState.get(newRegistration.getId());

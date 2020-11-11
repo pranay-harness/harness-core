@@ -42,9 +42,6 @@ public class KryoModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Dummy kryo initialization trigger to make sure it is in good condition
-    KryoUtils.asBytes(1);
-
     if (!binder().currentStage().name().equals("TOOL")) {
       Provider<Set<Class<? extends KryoRegistrar>>> provider =
           getProvider(Key.get(new TypeLiteral<Set<Class<? extends KryoRegistrar>>>() {}));
