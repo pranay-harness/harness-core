@@ -1,0 +1,29 @@
+package io.harness.ngtriggers.service;
+
+import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
+import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
+import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
+import lombok.experimental.UtilityClass;
+
+import java.util.*;
+
+@UtilityClass
+public class WebhookConfigService {
+  public Map<WebhookSourceRepo, List<WebhookEvent>> getSourceRepoToEvent() {
+    Map<WebhookSourceRepo, List<WebhookEvent>> map = new HashMap<>();
+    map.put(WebhookSourceRepo.GITHUB, new ArrayList<>(WebhookEvent.githubEvents));
+    map.put(WebhookSourceRepo.GITLAB, new ArrayList<>(WebhookEvent.gitlabEvents));
+    map.put(WebhookSourceRepo.BITBUCKET, new ArrayList<>(WebhookEvent.bitbucketEvents));
+    return map;
+  }
+
+  public List<WebhookAction> getActionsList(WebhookSourceRepo sourceRepo, WebhookEvent event) {
+    if (sourceRepo == WebhookSourceRepo.GITHUB) {
+      return new ArrayList<>(WebhookAction.getGithubActionForEvent(event));
+    } else if (sourceRepo == WebhookSourceRepo.BITBUCKET) {
+      return new ArrayList<>(WebhookAction.getBitbucketActionForEvent(event));
+    } else {
+      return Collections.emptyList();
+    }
+  }
+}

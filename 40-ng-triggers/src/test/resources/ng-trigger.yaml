@@ -13,7 +13,7 @@ trigger:
       spec:
         event: Pull Request
         actions:
-          - open
+          - opened
           - closed
         payloadConditions:
           - key: sourceBranch

@@ -60,8 +60,10 @@ public class NGTriggerElementMapper {
     NGTriggerType type = triggerSource.getType();
     if (type == NGTriggerType.WEBHOOK) {
       WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
-      WebhookMetadata metadata = WebhookMetadata.builder().type(webhookTriggerConfig.getType()).build();
-      // where do I get the URL from?
+      WebhookMetadata metadata = WebhookMetadata.builder()
+                                     .type(webhookTriggerConfig.getType())
+                                     .repoURL(webhookTriggerConfig.getSpec().getRepoUrl())
+                                     .build();
       return NGTriggerMetadata.builder().webhook(metadata).build();
     }
     throw new InvalidRequestException("Type " + type.toString() + " is invalid");
