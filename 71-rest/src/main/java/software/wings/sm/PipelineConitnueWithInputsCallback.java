@@ -6,6 +6,7 @@ import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STA
 import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -20,6 +21,7 @@ import software.wings.api.ContinuePipelineResponseData;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.WorkflowState;
 
 import java.util.Map;
@@ -84,6 +86,12 @@ public class PipelineConitnueWithInputsCallback implements NotifyCallback {
       Map<String, String> currentVariableValues = workflowState.getWorkflowVariables();
       for (Map.Entry<String, String> variableValue : responseData.getWorkflowVariables().entrySet()) {
         currentVariableValues.put(variableValue.getKey(), variableValue.getValue());
+        if (workflowState instanceof EnvLoopState) {
+          EnvLoopState envState = (EnvLoopState) workflowState;
+          if (variableValue.getKey().equals(envState.getLoopedVarName())) {
+            envState.setLoopedValues(Lists.newArrayList(variableValue.getValue().trim().split("\\s*,\\s*")));
+          }
+        }
       }
     }
 

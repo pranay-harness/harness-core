@@ -24,6 +24,8 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,6 +42,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
@@ -365,6 +368,131 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     List<Variable> expected =
         JsonUtils.readResourceFile("./expected_workflow_vars_metada.json", new TypeReference<List<Variable>>() {});
     Assertions.assertThat(actual.getWorkflowVariables()).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testVariablesWithEnvVariableNonRuntime() {
+    // Single stage pipeline.
+    // Env is variable but non runtime
+    // Infra and Service are runtime. But left blank at the time of deployment
+    ExecutionArgs executionArgs =
+        ExecutionArgs.builder()
+            .workflowVariables(ImmutableMap.<String, String>builder().put("env", "ENV1").build())
+            .build();
+    RuntimeInputsConfig config =
+        RuntimeInputsConfig.builder()
+            .runtimeInputVariables(Lists.newArrayList("ServiceId", "InfraDefinition_KUBERNETES"))
+            .build();
+    List<Variable> workflowVariables =
+        Lists.newArrayList(varBuilder("Environment", false, "InfraDefinition_KUBERNETES", ENVIRONMENT),
+            varBuilder("InfraDefinition_KUBERNETES", true, "ServiceId", INFRASTRUCTURE_DEFINITION),
+            varBuilder("ServiceId", true, "InfraDefinition_KUBERNETES", SERVICE));
+    List<Variable> pipelineVariables = Lists.newArrayList(varBuilder("env", false, "pipelineInfra", ENVIRONMENT),
+        varBuilder("pipelineInfra", true, "pipelineService", INFRASTRUCTURE_DEFINITION),
+        varBuilder("pipelineService", true, "pipelineInfra", SERVICE));
+
+    Map<String, String> resolveVarValues = ImmutableMap.<String, String>builder()
+                                               .put("Environment", "${env}")
+                                               .put("InfraDefinition_KUBERNETES", "${pipelineInfra}")
+                                               .put("ServiceId", "${pipelineService}")
+                                               .build();
+
+    List<Variable> actual = WorkflowExecutionServiceHelper.getRuntimeVariablesForStage(
+        executionArgs, config, workflowVariables, pipelineVariables, resolveVarValues);
+
+    Variable infraVariableExpected = varBuilder("pipelineInfra", true, "pipelineService", INFRASTRUCTURE_DEFINITION);
+    infraVariableExpected.getMetadata().put("env", "ENV1");
+
+    List<Variable> expected =
+        Lists.newArrayList(infraVariableExpected, varBuilder("pipelineService", true, "pipelineInfra", SERVICE));
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  private Variable varBuilder(String name, boolean isRuntime, String relatedField, EntityType entityType) {
+    Variable var = new Variable();
+    var.setName(name);
+    var.setMandatory(true);
+    var.setRuntimeInput(isRuntime);
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("relatedField", relatedField);
+    metadata.put("entityType", entityType.name());
+    var.setMetadata(metadata);
+    return var;
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testVariablesWithInfraAsRuntime() {
+    // Single stage pipeline.
+    // Env is fixed. Service is variable but non runtime
+    // Infra is runtime & left blank at the time of deployment.
+    ExecutionArgs executionArgs =
+        ExecutionArgs.builder()
+            .workflowVariables(ImmutableMap.<String, String>builder().put("pipelineService", "SERVICE1").build())
+            .build();
+    RuntimeInputsConfig config =
+        RuntimeInputsConfig.builder().runtimeInputVariables(Lists.newArrayList("InfraDefinition_KUBERNETES")).build();
+    List<Variable> workflowVariables =
+        Lists.newArrayList(varBuilder("Environment", false, "InfraDefinition_KUBERNETES", ENVIRONMENT),
+            varBuilder("InfraDefinition_KUBERNETES", true, "ServiceId", INFRASTRUCTURE_DEFINITION),
+            varBuilder("ServiceId", false, "InfraDefinition_KUBERNETES", SERVICE));
+    Variable infraPipelineVariable = varBuilder("pipelineInfra", true, "pipelineService", INFRASTRUCTURE_DEFINITION);
+    infraPipelineVariable.getMetadata().put("envId", "ENV1");
+    List<Variable> pipelineVariables =
+        Lists.newArrayList(infraPipelineVariable, varBuilder("pipelineService", false, "pipelineInfra", SERVICE));
+
+    Map<String, String> resolveVarValues = ImmutableMap.<String, String>builder()
+                                               .put("Environment", "ENV1")
+                                               .put("InfraDefinition_KUBERNETES", "${pipelineInfra}")
+                                               .put("ServiceId", "${pipelineService}")
+                                               .build();
+
+    List<Variable> actual = WorkflowExecutionServiceHelper.getRuntimeVariablesForStage(
+        executionArgs, config, workflowVariables, pipelineVariables, resolveVarValues);
+
+    Variable infraExpected = varBuilder("pipelineInfra", true, "pipelineService", INFRASTRUCTURE_DEFINITION);
+    infraExpected.getMetadata().put("pipelineServiceId", "SERVICE1");
+    List<Variable> expected = Lists.newArrayList(infraExpected);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testVariablesWithServiceRuntime() {
+    // Single stage pipeline.
+    // Env is fixed. Infra is variable but non runtime
+    // Service is runtime & left blank at the time of deployment.
+    ExecutionArgs executionArgs =
+        ExecutionArgs.builder()
+            .workflowVariables(ImmutableMap.<String, String>builder().put("pipelineInfra", "INFRA1").build())
+            .build();
+    RuntimeInputsConfig config =
+        RuntimeInputsConfig.builder().runtimeInputVariables(Lists.newArrayList("ServiceId")).build();
+    List<Variable> workflowVariables =
+        Lists.newArrayList(varBuilder("Environment", false, "InfraDefinition_KUBERNETES", ENVIRONMENT),
+            varBuilder("InfraDefinition_KUBERNETES", true, "ServiceId", INFRASTRUCTURE_DEFINITION),
+            varBuilder("ServiceId", false, "InfraDefinition_KUBERNETES", SERVICE));
+    Variable servicePipelineVar = varBuilder("pipelineService", true, "pipelineInfra", SERVICE);
+    List<Variable> pipelineVariables = Lists.newArrayList(
+        servicePipelineVar, varBuilder("pipelineInfra", false, "pipelineService", INFRASTRUCTURE_DEFINITION));
+
+    Map<String, String> resolveVarValues = ImmutableMap.<String, String>builder()
+                                               .put("Environment", "ENV1")
+                                               .put("InfraDefinition_KUBERNETES", "${pipelineInfra}")
+                                               .put("ServiceId", "${pipelineService}")
+                                               .build();
+
+    List<Variable> actual = WorkflowExecutionServiceHelper.getRuntimeVariablesForStage(
+        executionArgs, config, workflowVariables, pipelineVariables, resolveVarValues);
+
+    Variable serviceExpected = varBuilder("pipelineService", true, "pipelineInfra", SERVICE);
+    serviceExpected.getMetadata().put("pipelineInfra", "INFRA1");
+    List<Variable> expected = Lists.newArrayList(serviceExpected);
+    assertThat(actual).isEqualTo(expected);
   }
 
   private void validateUnsetWorkflowVariables(List<Variable> workflowVariables) {
