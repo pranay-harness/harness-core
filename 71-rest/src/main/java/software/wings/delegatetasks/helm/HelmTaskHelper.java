@@ -748,6 +748,8 @@ public class HelmTaskHelper {
       throw new InvalidRequestException(errorMessage);
     }
 
+    log.info("Result of the helm repo search command: {}, chart name: {}", commandOutput,
+        manifestCollectionParams.getHelmChartConfigParams().getChartName());
     CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
     List<CSVRecord> records = CSVParser.parse(commandOutput, csvFormat).getRecords();
     if (isEmpty(records)) {
