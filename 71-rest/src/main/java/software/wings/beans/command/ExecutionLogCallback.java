@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static software.wings.beans.Log.Builder.aLog;
 
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -19,10 +20,18 @@ public class ExecutionLogCallback implements LogCallback {
   private String activityId;
   private String commandName;
 
+  /**
+   * @deprecated Use the {@link ILogStreamingTaskClient#obtainLogCallback(String commandName)} instead.
+   */
+  @Deprecated
   public ExecutionLogCallback() {
     // do nothing callback
   }
 
+  /**
+   * @deprecated Use the {@link ILogStreamingTaskClient#obtainLogCallback(String commandName)} instead.
+   */
+  @Deprecated
   public ExecutionLogCallback(
       DelegateLogService logService, String accountId, String appId, String activityId, String commandName) {
     this.logService = logService;

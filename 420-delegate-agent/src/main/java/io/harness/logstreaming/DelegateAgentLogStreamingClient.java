@@ -1,5 +1,6 @@
-package io.harness.delegate.beans.logstreaming;
+package io.harness.logstreaming;
 
+import io.harness.delegate.beans.logstreaming.LogLine;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;

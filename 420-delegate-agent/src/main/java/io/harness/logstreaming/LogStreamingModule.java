@@ -2,8 +2,6 @@ package io.harness.logstreaming;
 
 import com.google.inject.AbstractModule;
 
-import io.harness.delegate.beans.logstreaming.DelegateAgentLogStreamingClient;
-
 public class LogStreamingModule extends AbstractModule {
   private String logStreamingServiceBaseUrl;
 
