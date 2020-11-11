@@ -119,4 +119,8 @@ public interface AzureConstants {
 
   // VM power statuses
   String VM_POWER_STATE_PREFIX = "PowerState/";
+
+  // Azure App Service
+  String COMMAND_TYPE_NULL_VALIDATION_MSG = "Parameter commandType is required and cannot be null";
+  String WEB_APP_NAME_NULL_VALIDATION_MSG = "Parameter webAppName is required and cannot be null";
 }

@@ -74,6 +74,7 @@ import software.wings.delegatetasks.aws.AwsRoute53Task;
 import software.wings.delegatetasks.aws.AwsS3Task;
 import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
 import software.wings.delegatetasks.azure.AzureVMSSTask;
+import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
 import software.wings.delegatetasks.citasks.CIBuildCommandTask;
 import software.wings.delegatetasks.citasks.CICleanupTask;
 import software.wings.delegatetasks.citasks.ExecuteCommandTask;
@@ -179,6 +180,7 @@ public enum TaskType {
   AZURE_MACHINE_IMAGE_VALIDATE_ARTIFACT_SERVER(TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class),
   AZURE_MACHINE_IMAGE_GET_BUILDS(TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class),
   AZURE_VMSS_COMMAND_TASK(TaskGroup.AZURE_VMSS, AzureVMSSTask.class),
+  AZURE_APP_SERVICE_TASK(TaskGroup.AZURE_APP_SERVICE, AzureAppServiceTask.class),
   LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class),
   LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class),
   LDAP_TEST_GROUP_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class),

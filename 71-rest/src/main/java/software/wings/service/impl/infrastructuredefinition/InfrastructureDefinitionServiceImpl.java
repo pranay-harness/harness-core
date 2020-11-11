@@ -193,6 +193,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.SecretManager;
@@ -258,6 +259,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
+  @Inject private AzureAppServiceManager azureAppServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
@@ -1953,6 +1955,34 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> getAppServiceNamesByResourceGroup(
+      String appId, String computeProviderId, String subscriptionId, String resourceGroupName, String appType) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureAppServiceManager.getAppServiceNamesByResourceGroup(
+          azureConfig, encryptionDetails, appId, subscriptionId, resourceGroupName, appType);
+    } catch (Exception exception) {
+      log.warn(ExceptionUtils.getMessage(exception), exception);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(exception), USER);
+    }
+  }
+
+  @Override
+  public List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
+      String resourceGroupName, String appType, String appName) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureAppServiceManager.getAppServiceDeploymentSlotNames(
+          azureConfig, encryptionDetails, appId, subscriptionId, resourceGroupName, appType, appName);
+    } catch (Exception exception) {
+      log.warn(ExceptionUtils.getMessage(exception), exception);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(exception), USER);
     }
   }
 

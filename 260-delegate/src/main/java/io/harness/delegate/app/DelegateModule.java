@@ -22,10 +22,12 @@ import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.impl.AzureAutoScaleSettingsClientImpl;
 import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
+import io.harness.azure.impl.AzureWebClientImpl;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -53,6 +55,7 @@ import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
@@ -126,6 +129,9 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTa
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDeployCommandHandler;
+import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sApplyTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
@@ -718,6 +724,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureAutoScaleSettingsClient.class).to(AzureAutoScaleSettingsClientImpl.class);
     bind(AzureNetworkClient.class).to(AzureNetworkClientImpl.class);
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
+    bind(AzureWebClient.class).to(AzureWebClientImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GcpClient.class).to(GcpClientImpl.class);
     bind(ManifestRepositoryService.class).to(HelmRepositoryService.class);
@@ -743,6 +750,15 @@ public class DelegateModule extends AbstractModule {
     MapBinder<GcpRequest.RequestType, TaskHandler> gcpTaskTypeToTaskHandlerMap =
         MapBinder.newMapBinder(binder(), GcpRequest.RequestType.class, TaskHandler.class);
     gcpTaskTypeToTaskHandlerMap.addBinding(GcpRequest.RequestType.VALIDATE).to(GcpValidationTaskHandler.class);
+
+    // Azure App Service tasks
+    MapBinder<String, AbstractAzureAppServiceTaskHandler> azureAppServiceTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, AbstractAzureAppServiceTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_NAMES.name())
+        .to(AzureWebAppListWebAppNamesTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap
+        .addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES.name())
+        .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
 
     registerSecretManagementBindings();
   }
