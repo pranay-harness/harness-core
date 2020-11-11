@@ -271,12 +271,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       ((AwsInfrastructureMapping) infrastructureMapping)
           .setLoadBalancerName(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
-    } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
-      SettingAttribute settingAttribute =
-          settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
-      if (settingAttribute != null) {
-        ((PhysicalInfrastructureMappingBase) infrastructureMapping).setLoadBalancerName(settingAttribute.getName());
-      }
     }
   }
 
@@ -859,7 +853,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping update(InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
-    return update(infrastructureMapping, false, null);
+    return update(infrastructureMapping, false, workflowExecutionId);
   }
 
   private List<String> getUniqueHostNames(PhysicalInfrastructureMappingBase physicalInfrastructureMapping) {
