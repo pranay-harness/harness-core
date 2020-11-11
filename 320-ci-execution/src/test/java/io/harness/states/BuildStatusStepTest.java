@@ -11,8 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
@@ -25,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,12 +56,7 @@ public class BuildStatusStepTest extends CIExecutionTest {
                                     .build();
 
     when(connectorUtils.getConnectorDetails(any(), any()))
-        .thenReturn(
-            ConnectorDetails.builder()
-                .connectorDTO(ConnectorDTO.builder()
-                                  .connectorInfo(ConnectorInfoDTO.builder().connectorConfig(gitConfigDTO).build())
-                                  .build())
-                .build());
+        .thenReturn(ConnectorDetails.builder().connectorConfig(gitConfigDTO).build());
 
     assertThat(buildStatusStep.obtainTask(ambiance, BuildStatusUpdateParameter.builder().desc("desc").build(), null))
         .isNotNull();

@@ -3,6 +3,8 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DEFAULT_INTERNAL_IMAGE_CONNECTOR;
 import static io.harness.common.CIExecutionConstants.GIT_SSH_URL_PREFIX;
@@ -19,24 +21,29 @@ import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.serializer.ExecutionProtobufSerializer;
-import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
+import io.harness.delegate.beans.ci.pod.CIK8PodParams;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ContainerSecrets;
+import io.harness.delegate.beans.ci.pod.HostAliasParams;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector.ImageDetailsWithConnectorBuilder;
+import io.harness.delegate.beans.ci.pod.PVCParams;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -44,16 +51,15 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.references.SweepingOutputRefObject;
-import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.CodeBaseSpec;
@@ -62,22 +68,9 @@ import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.TaskType;
-import software.wings.beans.ci.CIK8BuildTaskParams;
-import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.CIK8PodParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.beans.ci.pod.ContainerSecrets;
-import software.wings.beans.ci.pod.HostAliasParams;
-import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.ci.pod.ImageDetailsWithConnector.ImageDetailsWithConnectorBuilder;
-import software.wings.beans.ci.pod.PVCParams;
-import software.wings.beans.ci.pod.SecretVariableDetails;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -94,108 +87,34 @@ public class K8BuildSetupUtils {
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private ExecutionProtobufSerializer protobufSerializer;
-  @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject CILogServiceUtils logServiceUtils;
 
-  public K8sTaskExecutionResponse executeCISetupTask(BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
-    try {
-      K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-          ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
-
-      final String clusterName = k8PodDetails.getClusterName();
-      PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo());
-
-      Set<String> publishStepConnectorIdentifier =
-          ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
-
-      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
-
-      CIK8BuildTaskParams cik8BuildTaskParams =
-          CIK8BuildTaskParams.builder()
-              .k8sConnector(connectorUtils.getConnectorDetails(ngAccess, clusterName))
-              .cik8PodParams(getPodParams(
-                  ngAccess, podSetupInfo, k8PodDetails, null, publishStepConnectorIdentifier, false, null, true))
-              .build();
-
-      DelegateTaskRequest delegateTaskRequest =
-          DelegateTaskRequest.builder()
-              .accountId(ngAccess.getAccountIdentifier())
-              .taskSetupAbstractions(ambiance.getSetupAbstractions())
-              .executionTimeout(Duration.ofSeconds(buildEnvSetupStepInfo.getTimeout()))
-              .taskType(TaskType.CI_BUILD.name())
-              .taskParameters(cik8BuildTaskParams)
-              .taskDescription("CI build task BuildEnvSetupStepInfo")
-              .build();
-
-      log.info("Sending pod creation task for {}", podSetupInfo.getName());
-      K8sTaskExecutionResponse k8sTaskExecutionResponse =
-          (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        log.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
-        return k8sTaskExecutionResponse;
-      } else {
-        log.error("build env setup task state execution finished with status {}",
-            k8sTaskExecutionResponse.getCommandExecutionStatus());
-      }
-    } catch (Exception e) {
-      log.error("build env setup state execution failed", e);
-    }
-    return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-  }
-
-  public K8sTaskExecutionResponse executeK8sCILiteEngineTask(
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
+  public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
 
+    Set<String> publishStepConnectorIdentifier =
+        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
+
+    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+
     final String clusterName = k8PodDetails.getClusterName();
 
-    try {
-      PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
+    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
-      Set<String> publishStepConnectorIdentifier =
-          ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
+    ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
 
-      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, podSetupInfo, k8PodDetails,
+        liteEngineTaskStepInfo, publishStepConnectorIdentifier, liteEngineTaskStepInfo.isUsePVC(),
+        liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone());
 
-      CIK8BuildTaskParams cik8BuildTaskParams =
-          CIK8BuildTaskParams.builder()
-              .k8sConnector(connectorUtils.getConnectorDetails(ngAccess, clusterName))
-              .cik8PodParams(getPodParams(ngAccess, podSetupInfo, k8PodDetails, liteEngineTaskStepInfo,
-                  publishStepConnectorIdentifier, liteEngineTaskStepInfo.isUsePVC(),
-                  liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone()))
-              .build();
-
-      DelegateTaskRequest delegateTaskRequest =
-          DelegateTaskRequest.builder()
-              .accountId(ngAccess.getAccountIdentifier())
-              .taskSetupAbstractions(ambiance.getSetupAbstractions())
-              .executionTimeout(Duration.ofSeconds(liteEngineTaskStepInfo.getTimeout()))
-              .taskType(TaskType.CI_BUILD.name())
-              .taskParameters(cik8BuildTaskParams)
-              .taskDescription("CI build task LiteEngineTaskStepInfo")
-              .build();
-
-      log.info("Sending pod creation task for {}", podSetupInfo.getName());
-      K8sTaskExecutionResponse k8sTaskExecutionResponse =
-          (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        log.info("Pod creation task for {} executed successfully", podSetupInfo.getName());
-      } else {
-        log.error("lite engine task state execution finished with status {}",
-            k8sTaskExecutionResponse.getCommandExecutionStatus());
-      }
-      return k8sTaskExecutionResponse;
-    } catch (Exception e) {
-      log.error("lite engine task state execution failed", e);
-    }
-    return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
+    return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
   }
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, PodSetupInfo podSetupInfo,
       K8PodDetails k8PodDetails, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      Set<String> publishStepConnectorIdentifier, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone)
-      throws Exception {
+      Set<String> publishStepConnectorIdentifier, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
     ConnectorDetails harnessInternalImageRegistryConnectorDetails =
         connectorUtils.getConnectorDetails(ngAccess, DEFAULT_INTERNAL_IMAGE_CONNECTOR);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
@@ -233,7 +152,7 @@ public class K8BuildSetupUtils {
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
       NGAccess ngAccess, Set<String> publishStepConnectorIdentifier,
       ConnectorDetails harnessInternalImageRegistryConnectorDetails, ConnectorDetails gitConnector,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo) throws Exception {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails);
     Map<String, String> commonEnvVars = getCommonStepEnvVariables(k8PodDetails, logEnvVars, gitConnector);
 
@@ -341,7 +260,7 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getLogServiceEnvVariables(K8PodDetails k8PodDetails) throws Exception {
+  private Map<String, String> getLogServiceEnvVariables(K8PodDetails k8PodDetails) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
@@ -355,8 +274,8 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
-      ConnectorDetails gitConnector) throws URISyntaxException {
+  private Map<String, String> getCommonStepEnvVariables(
+      K8PodDetails k8PodDetails, Map<String, String> logEnvVars, ConnectorDetails gitConnector) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
@@ -376,15 +295,14 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private Map<String, String> getGitEnvVariables(ConnectorDetails gitConnector) throws URISyntaxException {
+  private Map<String, String> getGitEnvVariables(ConnectorDetails gitConnector) {
     Map<String, String> envVars = new HashMap<>();
     if (gitConnector == null) {
       return envVars;
     }
 
     validateGitConnector(gitConnector);
-    ConnectorInfoDTO connectorInfoDTO = gitConnector.getConnectorDTO().getConnectorInfo();
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfoDTO.getConnectorConfig();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
 
     String url = gitConfigDTO.getUrl();
     if (!url.endsWith(GIT_URL_SUFFIX)) {
@@ -401,25 +319,35 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private Map<String, String> getGitHTTPEnvVars(GitConfigDTO gitConfigDTO, String gitURL) throws URISyntaxException {
+  private Map<String, String> getGitHTTPEnvVars(GitConfigDTO gitConfigDTO, String gitURL) {
     Map<String, String> envVars = new HashMap<>();
     GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
     envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
 
-    URI uri = new URI(gitURL);
+    URI uri = null;
+    try {
+      uri = new URI(gitURL);
+    } catch (URISyntaxException e) {
+      throw new GeneralException("Url syntax problems found while getting git http env vars", e);
+    }
     String domain = uri.getHost();
     envVars.put(DRONE_NETRC_MACHINE, domain);
     return envVars;
   }
 
-  private Map<String, String> getGitSSHEnvVars(String gitURL) throws URISyntaxException {
+  private Map<String, String> getGitSSHEnvVars(String gitURL) {
     // ssh URL starts with `git@`. Remove `git@` to find the domain.
     String sshUrl = gitURL;
     if (sshUrl.startsWith(GIT_SSH_URL_PREFIX)) {
       sshUrl = sshUrl.substring(4);
     }
 
-    URI uri = new URI(sshUrl);
+    URI uri = null;
+    try {
+      uri = new URI(sshUrl);
+    } catch (URISyntaxException e) {
+      throw new GeneralException("Url syntax problems found while getting git ssh env vars", e);
+    }
     String domain = uri.getHost();
 
     Map<String, String> envVars = new HashMap<>();
@@ -428,19 +356,16 @@ public class K8BuildSetupUtils {
   }
 
   private void validateGitConnector(ConnectorDetails gitConnector) {
-    if (gitConnector == null || gitConnector.getConnectorDTO() == null
-        || gitConnector.getConnectorDTO().getConnectorInfo() == null) {
+    if (gitConnector == null) {
       log.error("Git connector is not valid {}", gitConnector);
       throw new InvalidArgumentsException("Git connector is not valid", WingsException.USER);
     }
-
-    ConnectorInfoDTO connectorInfoDTO = gitConnector.getConnectorDTO().getConnectorInfo();
-    if (connectorInfoDTO.getConnectorType() != ConnectorType.GIT) {
+    if (gitConnector.getConnectorType() != ConnectorType.GIT) {
       log.error("Git connector ref is not of type git {}", gitConnector);
       throw new InvalidArgumentsException("Connector type for git connector is not GIT", WingsException.USER);
     }
 
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfoDTO.getConnectorConfig();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
     if (gitConfigDTO.getGitAuthType() != GitAuthType.HTTP && gitConfigDTO.getGitAuthType() != GitAuthType.SSH) {
       log.error("Git connector ref is of invalid auth type {}", gitConnector);
       throw new InvalidArgumentsException("Invalid auth provided for git connector", WingsException.USER);

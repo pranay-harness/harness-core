@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import java.io.IOException;
+
 @Getter
 @Setter
 @Slf4j
@@ -27,16 +29,28 @@ public class CILogServiceUtils {
   }
 
   @NotNull
-  public String getLogServiceToken(String accountID) throws Exception {
-    log.info("Initiating token request to log service: " + this.logServiceConfig.getBaseUrl());
+  public String getLogServiceToken(String accountID) {
+    log.info("Initiating token request to log service: {}", this.logServiceConfig.getBaseUrl());
     Call<String> tokenCall = ciLogServiceClient.generateToken(accountID, this.logServiceConfig.getGlobalToken());
-    Response<String> response = tokenCall.execute();
+    Response<String> response = null;
+    try {
+      response = tokenCall.execute();
+    } catch (IOException e) {
+      throw new GeneralException("Token request to log service call failed", e);
+    }
+
     // Received error from the server
     if (!response.isSuccessful()) {
-      throw new GeneralException(
-          String.format("Could not fetch token from log service. status code = %s, message = %s, response = %s",
-              response.code(), response.message() == null ? "null" : response.message(),
-              response.errorBody() == null ? "null" : response.errorBody().string()));
+      String errorBody = null;
+      try {
+        errorBody = response.errorBody().string();
+      } catch (IOException e) {
+        log.error("Could not read error body {}", response.errorBody());
+      }
+
+      throw new GeneralException(String.format(
+          "Could not fetch token from log service. status code = %s, message = %s, response = %s", response.code(),
+          response.message() == null ? "null" : response.message(), response.errorBody() == null ? "null" : errorBody));
     }
     return response.body();
   }

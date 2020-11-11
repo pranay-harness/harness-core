@@ -1,7 +1,6 @@
 package io.harness.app.resources.sample;
 
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static software.wings.beans.TaskType.CI_LE_STATUS;
 
 import com.google.inject.Inject;
 
@@ -36,6 +35,7 @@ import javax.ws.rs.QueryParam;
 @Slf4j
 public class CIDelegateTaskSampleResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
+  public static final String TASK_TYPE = "CI_LE_STATUS";
 
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
   private final WaitNotifyEngine waitNotifyEngine;
@@ -78,7 +78,7 @@ public class CIDelegateTaskSampleResource {
     final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                         .parked(true)
                                                         .accountId(accountId)
-                                                        .taskType(CI_LE_STATUS.name())
+                                                        .taskType(TASK_TYPE)
                                                         .taskParameters(taskParameters)
                                                         .executionTimeout(java.time.Duration.ofSeconds(20))
                                                         .taskSetupAbstraction("orgIdentifier", orgIdentifier)

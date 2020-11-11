@@ -1,6 +1,7 @@
 package io.harness.serializer.spring;
 
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
@@ -13,5 +14,6 @@ public class DelegateTaskBeansAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("pcfManifestsPackage", PcfManifestsPackage.class);
+    orchestrationElements.put("stepMapOutput", StepMapOutput.class);
   }
 }

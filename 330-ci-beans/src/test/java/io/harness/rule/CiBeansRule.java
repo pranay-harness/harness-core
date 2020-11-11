@@ -15,7 +15,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -86,9 +85,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
       @Provides
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
-        return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
-            .build();
+        return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
       }
     });
 

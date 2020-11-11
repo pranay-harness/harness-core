@@ -1,7 +1,6 @@
 package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
-import static software.wings.beans.TaskType.CI_LE_STATUS;
 
 import com.google.inject.Inject;
 
@@ -14,13 +13,14 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.status.Status;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.plancreators.IntegrationStagePlanCreator;
@@ -29,13 +29,14 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
+import io.harness.tasks.ResponseData;
+import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,33 +46,48 @@ import java.util.Map;
  */
 
 @Slf4j
-public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskStepInfo> {
+public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskStepInfo> {
+  public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
+  public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private Map<String, TaskExecutor<HDelegateTask>> taskExecutorMap;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
+
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
 
-  // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
-  //     Async will be supported once we will have delegate microservice ready.
+  @Override
+  public Task obtainTask(Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {
+    addCallBackIds(stepParameters, ambiance);
+
+    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance);
+    log.info("Created params for build task: {}", buildSetupTaskParams);
+
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(stepParameters.getTimeout())
+                                  .taskType(TASK_TYPE_CI_BUILD)
+                                  .parameters(new Object[] {buildSetupTaskParams})
+                                  .build();
+
+    return StepUtils.prepareDelegateTaskInput(
+        ambiance.getSetupAbstractions().get("accountId"), taskData, ambiance.getSetupAbstractions());
+  }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      StepInputPackage inputPackage, PassThroughData passThroughData) {
-    try {
-      addCallBackIds(liteEngineTaskStepInfo, ambiance);
-      K8sTaskExecutionResponse k8sTaskExecutionResponse =
-          buildSetupUtils.executeCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        log.error("LiteEngineTaskStep execution succeeded");
-        return StepResponse.builder().status(Status.SUCCEEDED).build();
-      } else {
-        log.error("LiteEngineTaskStep execution failed with status {} and message {}",
-            k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse.getErrorMessage());
-        return StepResponse.builder().status(Status.FAILED).build();
-      }
-    } catch (Exception e) {
-      log.error("LiteEngineTaskStep execution failed", e);
-      return StepResponse.builder().status(Status.ERRORED).build();
+  public StepResponse handleTaskResult(
+      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, Map<String, ResponseData> responseDataMap) {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse =
+        (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+      log.info(
+          "LiteEngineTaskStep pod creation task executed successfully with response [{}]", k8sTaskExecutionResponse);
+      return StepResponse.builder().status(Status.SUCCEEDED).build();
+
+    } else {
+      log.error("LiteEngineTaskStep execution finished with status [{}] and response [{}]",
+          k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse);
+      return StepResponse.builder().status(Status.FAILED).build();
     }
   }
 
@@ -145,7 +161,7 @@ public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskSt
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .parked(true)
-                                  .taskType(CI_LE_STATUS.name())
+                                  .taskType(LE_STATUS_TASK_TYPE)
                                   .parameters(new Object[] {StepStatusTaskParameters.builder().build()})
                                   .timeout(timeout)
                                   .build();

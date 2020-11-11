@@ -1,5 +1,9 @@
 package io.harness.integrationstage;
 
+import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
+import static io.harness.common.CICommonPodConstants.POD_NAME;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -13,10 +17,6 @@ import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.POD_NAME;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Singleton;
 
@@ -37,6 +37,9 @@ import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
+import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
@@ -45,9 +48,6 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ci.pod.CIContainerType;
-import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.PVCParams;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;

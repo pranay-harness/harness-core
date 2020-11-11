@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.apis.client.ConnectorResourceClient;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails.ConnectorDetailsBuilder;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -28,7 +30,6 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,8 +56,7 @@ public class ConnectorUtils {
     if (isNotEmpty(connectorNameSet)) {
       for (String connectorIdentifier : connectorNameSet) {
         ConnectorDetails connectorDetails = getConnectorDetails(ngAccess, connectorIdentifier);
-        connectorDetailsMap.put(
-            connectorDetails.getConnectorDTO().getConnectorInfo().getIdentifier(), connectorDetails);
+        connectorDetailsMap.put(connectorDetails.getIdentifier(), connectorDetails);
       }
     }
 
@@ -71,7 +71,17 @@ public class ConnectorUtils {
     ConnectorDTO connectorDTO = getConnector(connectorRef);
     List<EncryptedDataDetail> encryptedDataDetails;
     ConnectorType connectorType = connectorDTO.getConnectorInfo().getConnectorType();
-    log.info("Decrypting connector details for connector id:[{}] type:[{}]", connectorIdentifier, connectorType);
+
+    ConnectorDetailsBuilder connectorDetailsBuilder =
+        ConnectorDetails.builder()
+            .connectorType(connectorType)
+            .connectorConfig(connectorDTO.getConnectorInfo().getConnectorConfig())
+            .identifier(connectorDTO.getConnectorInfo().getIdentifier())
+            .orgIdentifier(connectorDTO.getConnectorInfo().getOrgIdentifier())
+            .projectIdentifier(connectorDTO.getConnectorInfo().getProjectIdentifier());
+
+    log.info("Getting encryption details for connector details for connector id:[{}] type:[{}]", connectorIdentifier,
+        connectorType);
     switch (connectorType) {
       case DOCKER:
         DockerConnectorDTO dockerConnectorDTO =
@@ -81,7 +91,7 @@ public class ConnectorUtils {
         if (isEmpty(encryptedDataDetails)) {
           throw new InvalidArgumentsException(CREDENTIALS_CAN_T_BE_EMPTY, WingsException.USER);
         }
-        return ConnectorDetails.builder().connectorDTO(connectorDTO).encryptedDataDetails(encryptedDataDetails).build();
+        return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
 
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
@@ -95,12 +105,9 @@ public class ConnectorUtils {
           if (isEmpty(encryptedDataDetails)) {
             throw new InvalidArgumentsException(CREDENTIALS_CAN_T_BE_EMPTY, WingsException.USER);
           }
-          return ConnectorDetails.builder()
-              .connectorDTO(connectorDTO)
-              .encryptedDataDetails(encryptedDataDetails)
-              .build();
+          return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
         } else {
-          return ConnectorDetails.builder().connectorDTO(connectorDTO).build();
+          return connectorDetailsBuilder.build();
         }
 
       case GIT:
@@ -111,7 +118,7 @@ public class ConnectorUtils {
         if (isEmpty(encryptedDataDetails)) {
           throw new InvalidArgumentsException(CREDENTIALS_CAN_T_BE_EMPTY, WingsException.USER);
         }
-        return ConnectorDetails.builder().connectorDTO(connectorDTO).encryptedDataDetails(encryptedDataDetails).build();
+        return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
 
       default:
         throw new InvalidArgumentsException("Unexpected connector type=[]: " + connectorType);
@@ -122,7 +129,7 @@ public class ConnectorUtils {
     Optional<ConnectorDTO> connectorDTO;
 
     try {
-      log.info("Decrypting connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
+      log.info("Fetching connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
           connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
           connectorRef.getOrgIdentifier());
 

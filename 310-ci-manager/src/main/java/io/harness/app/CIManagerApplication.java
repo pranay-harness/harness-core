@@ -2,7 +2,6 @@ package io.harness.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Collections.singletonList;
 
@@ -45,13 +44,14 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
-import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -69,8 +69,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.ci.CIServiceAuthSecretKey;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -133,9 +131,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(ManagerRegistrars.kryoRegistrars)
             .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
-            .add(CIBeansKryoRegistrar.class)
+            .addAll(CiBeansRegistrars.kryoRegistrars)
             .addAll(CiExecutionRegistrars.kryoRegistrars)
             .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
             .build();
@@ -172,7 +169,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(PersistenceRegistrars.morphiaConverters)
+            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
     });
@@ -219,7 +217,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerQueueListeners(injector);
     registerStores(configuration, injector);
     scheduleJobs(injector);
-    initializeServiceSecretKeys(injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
     LogManager.shutdown();
@@ -291,15 +288,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     final String ciMongo = config.getHarnessCIMongo().getUri();
     if (isNotEmpty(ciMongo) && !ciMongo.equals(config.getHarnessMongo().getUri())) {
       final HPersistence hPersistence = injector.getInstance(HPersistence.class);
-      final WingsPersistence wingsPersistence = injector.getInstance(WingsPersistence.class);
       hPersistence.register(HARNESS_STORE, config.getHarnessMongo().getUri());
-      wingsPersistence.register(HARNESS_STORE, config.getHarnessMongo().getUri());
     }
-  }
-
-  private void initializeServiceSecretKeys(Injector injector) {
-    // TODO change it to CI token, we have to write authentication
-    VERIFICATION_SERVICE_SECRET.set(injector.getInstance(CIServiceAuthSecretKey.class).getCIAuthServiceSecretKey());
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

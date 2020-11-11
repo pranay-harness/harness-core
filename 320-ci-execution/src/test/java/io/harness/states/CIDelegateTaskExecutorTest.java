@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.TaskType.CI_LE_STATUS;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
@@ -31,6 +30,7 @@ import java.util.function.Supplier;
 public class CIDelegateTaskExecutorTest extends CIExecutionTest {
   private static final String TASK_ID = "123456";
   private static final String ACCOUNT_ID = "accountId";
+  public static final String TASK_TYPE = "CI_LE_STATUS";
   @Mock private DelegateServiceGrpcClient delegateServiceGrpcClient;
   @Mock private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   @InjectMocks private CIDelegateTaskExecutor ciDelegateTaskExecutor;
@@ -39,7 +39,7 @@ public class CIDelegateTaskExecutorTest extends CIExecutionTest {
   private final DelegateTaskRequest expectedDelegateTaskRequest = DelegateTaskRequest.builder()
                                                                       .parked(true)
                                                                       .accountId(ACCOUNT_ID)
-                                                                      .taskType(CI_LE_STATUS.name())
+                                                                      .taskType(TASK_TYPE)
                                                                       .taskParameters(parameters)
                                                                       .executionTimeout(Duration.ofHours(12))
                                                                       .taskSetupAbstractions(new HashMap<>())
@@ -49,7 +49,7 @@ public class CIDelegateTaskExecutorTest extends CIExecutionTest {
       DelegateTaskRequest.builder()
           .parked(true)
           .accountId(ACCOUNT_ID)
-          .taskType(CI_LE_STATUS.name())
+          .taskType(TASK_TYPE)
           .taskParameters(null)
           .executionTimeout(Duration.ofHours(12))
           .taskSetupAbstractions(new HashMap<>())
@@ -64,7 +64,7 @@ public class CIDelegateTaskExecutorTest extends CIExecutionTest {
                              .data(TaskData.builder()
                                        .async(true)
                                        .parked(true)
-                                       .taskType(CI_LE_STATUS.name())
+                                       .taskType(TASK_TYPE)
                                        .parameters(new Object[] {parameters})
                                        .timeout(10 * 60L)
                                        .build())
@@ -87,7 +87,7 @@ public class CIDelegateTaskExecutorTest extends CIExecutionTest {
                              .data(TaskData.builder()
                                        .async(true)
                                        .parked(true)
-                                       .taskType(CI_LE_STATUS.name())
+                                       .taskType(TASK_TYPE)
                                        .parameters(null)
                                        .timeout(10 * 60L)
                                        .build())
@@ -111,7 +111,7 @@ public class CIDelegateTaskExecutorTest extends CIExecutionTest {
                              .data(TaskData.builder()
                                        .async(true)
                                        .parked(true)
-                                       .taskType(CI_LE_STATUS.name())
+                                       .taskType(TASK_TYPE)
                                        .parameters(new Object[] {"Wrong type"})
                                        .timeout(10 * 60L)
                                        .build())

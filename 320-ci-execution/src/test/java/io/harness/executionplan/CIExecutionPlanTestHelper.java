@@ -22,11 +22,11 @@ import static io.harness.common.CIExecutionConstants.SERVICE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.STEP_COMMAND;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
+import static io.harness.delegate.beans.ci.pod.CIContainerType.PLUGIN;
+import static io.harness.delegate.beans.ci.pod.CIContainerType.RUN;
+import static io.harness.delegate.beans.ci.pod.CIContainerType.SERVICE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.ci.pod.CIContainerType.PLUGIN;
-import static software.wings.beans.ci.pod.CIContainerType.RUN;
-import static software.wings.beans.ci.pod.CIContainerType.SERVICE;
 
 import com.google.inject.Singleton;
 
@@ -73,6 +73,14 @@ import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.common.CIExecutionConstants;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
+import io.harness.delegate.beans.ci.pod.PVCParams;
+import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -106,14 +114,6 @@ import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.CodeBaseType;
 import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
-import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.ci.pod.PVCParams;
-import software.wings.beans.ci.pod.SecretVariableDTO;
-import software.wings.beans.ci.pod.SecretVariableDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,7 +199,14 @@ public class CIExecutionPlanTestHelper {
   }
 
   public ConnectorDetails getGitConnector() {
-    return ConnectorDetails.builder().connectorDTO(getGitConnectorDTO()).build();
+    ConnectorInfoDTO connectorInfo = getGitConnectorDTO().getConnectorInfo();
+    return ConnectorDetails.builder()
+        .connectorConfig(connectorInfo.getConnectorConfig())
+        .connectorType(connectorInfo.getConnectorType())
+        .identifier(connectorInfo.getIdentifier())
+        .projectIdentifier(connectorInfo.getProjectIdentifier())
+        .orgIdentifier(connectorInfo.getOrgIdentifier())
+        .build();
   }
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {

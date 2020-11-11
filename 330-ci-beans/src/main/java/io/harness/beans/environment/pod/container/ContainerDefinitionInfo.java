@@ -1,11 +1,11 @@
 package io.harness.beans.environment.pod.container;
 
 import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
+import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.ci.pod.CIContainerType;
-import software.wings.beans.ci.pod.ContainerResourceParams;
 
 import java.util.List;
 import java.util.Map;

@@ -24,12 +24,13 @@ import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.CiExecutionRegistrars;
+import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CIBeansKryoRegistrar;
-import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
+import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -62,11 +63,12 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
+      Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CIBeansKryoRegistrar.class)
-            .add(CvNextGenCommonsBeansKryoRegistrar.class)
+            .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
+            .addAll(CiBeansRegistrars.kryoRegistrars)
+            .addAll(CiExecutionRegistrars.kryoRegistrars)
+            .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -74,8 +76,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
-            .add(CIBeansMorphiaRegistrar.class)
+            .addAll(CiExecutionRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -91,7 +92,8 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(PersistenceRegistrars.morphiaConverters)
+            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
     });

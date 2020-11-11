@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.client.ConnectorResourceClient;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -39,7 +40,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -98,7 +98,13 @@ public class ConnectorUtilsTest extends CIExecutionTest {
         .thenReturn(null);
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId01);
-    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(gitConnectorDto);
+    assertThat(connectorDetails.getConnectorConfig())
+        .isEqualTo(gitConnectorDto.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType()).isEqualTo(gitConnectorDto.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier()).isEqualTo(gitConnectorDto.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier()).isEqualTo(gitConnectorDto.getConnectorInfo().getOrgIdentifier());
+    assertThat(connectorDetails.getProjectIdentifier())
+        .isEqualTo(gitConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
 
@@ -121,7 +127,13 @@ public class ConnectorUtilsTest extends CIExecutionTest {
         .thenReturn(null);
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId02);
-    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(dockerConnectorDto);
+    assertThat(connectorDetails.getConnectorConfig())
+        .isEqualTo(dockerConnectorDto.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType()).isEqualTo(dockerConnectorDto.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier()).isEqualTo(dockerConnectorDto.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier()).isEqualTo(dockerConnectorDto.getConnectorInfo().getOrgIdentifier());
+    assertThat(connectorDetails.getProjectIdentifier())
+        .isEqualTo(dockerConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1))
         .getEncryptionDetails(eq(ngAccess), any(DockerAuthCredentialsDTO.class));
@@ -147,7 +159,14 @@ public class ConnectorUtilsTest extends CIExecutionTest {
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId03);
 
-    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(k8sConnectorDto);
+    assertThat(connectorDetails.getConnectorConfig())
+        .isEqualTo(k8sConnectorDto.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType()).isEqualTo(k8sConnectorDto.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier()).isEqualTo(k8sConnectorDto.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier()).isEqualTo(k8sConnectorDto.getConnectorInfo().getOrgIdentifier());
+    assertThat(connectorDetails.getProjectIdentifier())
+        .isEqualTo(k8sConnectorDto.getConnectorInfo().getProjectIdentifier());
+
     verify(connectorResourceClient, times(1)).get(eq(connectorId03), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1))
         .getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class));
@@ -170,7 +189,15 @@ public class ConnectorUtilsTest extends CIExecutionTest {
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId04);
 
-    assertThat(connectorDetails.getConnectorDTO()).isEqualTo(k8sConnectorFromDelegate);
+    assertThat(connectorDetails.getConnectorConfig())
+        .isEqualTo(k8sConnectorFromDelegate.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType())
+        .isEqualTo(k8sConnectorFromDelegate.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier()).isEqualTo(k8sConnectorFromDelegate.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier())
+        .isEqualTo(k8sConnectorFromDelegate.getConnectorInfo().getOrgIdentifier());
+    assertThat(connectorDetails.getProjectIdentifier())
+        .isEqualTo(k8sConnectorFromDelegate.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId04), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
   }
 

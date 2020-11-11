@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class CILogServiceUtilsTest extends CIExecutionTest {
     when(logServiceClient.generateToken(eq(accountID), eq(globalToken))).thenReturn(logServiceTokenCall);
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().globalToken(globalToken).baseUrl(baseUrl).build();
     CILogServiceUtils ciLogServiceUtils = new CILogServiceUtils(logServiceClient, logServiceConfig);
-    assertThatThrownBy(() -> ciLogServiceUtils.getLogServiceToken(accountID)).isInstanceOf(IOException.class);
+    assertThatThrownBy(() -> ciLogServiceUtils.getLogServiceToken(accountID)).isInstanceOf(GeneralException.class);
     verify(logServiceTokenCall, times(1)).execute();
     verify(logServiceClient, times(1)).generateToken(eq(accountID), eq(globalToken));
   }

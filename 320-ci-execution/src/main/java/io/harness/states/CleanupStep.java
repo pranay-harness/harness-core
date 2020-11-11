@@ -7,6 +7,9 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -22,10 +25,6 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.TaskType;
-import software.wings.beans.ci.CIK8CleanupTaskParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import java.util.ArrayList;
 // TODO Cleanup Support for other types (Non K8)
 public class CleanupStep implements Step, SyncExecutable<CleanupStepInfo> {
   public static final StepType STEP_TYPE = CleanupStepInfo.typeInfo.getStepType();
+  public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -69,7 +69,7 @@ public class CleanupStep implements Step, SyncExecutable<CleanupStepInfo> {
                                                     .accountId(ngAccess.getAccountIdentifier())
                                                     .taskSetupAbstractions(ambiance.getSetupAbstractions())
                                                     .executionTimeout(Duration.ofSeconds(cleanupStepInfo.getTimeout()))
-                                                    .taskType(TaskType.EXECUTE_COMMAND.name())
+                                                    .taskType(TASK_TYPE)
                                                     .taskParameters(cik8CleanupTaskParams)
                                                     .taskDescription("Execute command task")
                                                     .build();

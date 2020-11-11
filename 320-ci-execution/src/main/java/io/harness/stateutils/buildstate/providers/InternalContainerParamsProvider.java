@@ -1,5 +1,7 @@
 package io.harness.stateutils.buildstate.providers;
 
+import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
+import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_TAG;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
@@ -34,20 +36,18 @@ import static io.harness.common.CIExecutionConstants.SH_COMMAND;
 import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
-import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
 import com.google.inject.Singleton;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.delegate.beans.ci.pod.ContainerSecrets;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.k8s.model.ImageDetails;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.beans.ci.pod.CIContainerType;
-import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
-import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.ContainerSecrets;
-import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 
 import java.util.ArrayList;
 import java.util.Collections;

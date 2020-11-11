@@ -31,6 +31,7 @@ import com.ning.http.client.AsyncHttpClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
+import io.harness.delegate.task.citasks.CITaskFactoryModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
@@ -57,7 +58,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import software.wings.delegatetasks.citasks.CITaskFactoryModule;
 import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 

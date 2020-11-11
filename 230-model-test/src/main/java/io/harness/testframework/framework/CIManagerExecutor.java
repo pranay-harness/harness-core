@@ -128,8 +128,7 @@ public class CIManagerExecutor {
           RestAssured.config().httpClient(httpClientConfig()
                                               .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
                                               .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000));
-      // TODO this is temporary workaround - change to /health endpoint
-      Setup.ci().config(config).when().get("/ci/health").then().statusCode(HttpStatus.SC_OK);
+      Setup.ci().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
       if (exception.getMessage().equals(previous.getMessage())) {
         log.info("not healthy");

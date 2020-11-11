@@ -3,8 +3,8 @@ package io.harness.states;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
@@ -23,7 +23,6 @@ import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.util.Map;
 
@@ -38,8 +37,7 @@ public class BuildStatusStep implements Step, TaskExecutable<BuildStatusUpdatePa
   public Task obtainTask(Ambiance ambiance, BuildStatusUpdateParameter stepParameters, StepInputPackage inputPackage) {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, stepParameters.getConnectorIdentifier());
-    ConnectorInfoDTO connectorInfoDTO = gitConnector.getConnectorDTO().getConnectorInfo();
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfoDTO.getConnectorConfig();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
 
     CIBuildStatusPushParameters ciBuildPushStatusParameters =
         CIBuildStatusPushParameters.builder()

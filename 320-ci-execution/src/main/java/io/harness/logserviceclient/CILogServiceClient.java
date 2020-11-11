@@ -1,10 +1,10 @@
 package io.harness.logserviceclient;
 
+import io.harness.common.CICommonEndpointConstants;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Query;
-import software.wings.common.CICommonEndpointConstants;
 
 public interface CILogServiceClient {
   @GET(CICommonEndpointConstants.LOG_SERVICE_TOKEN_ENDPOINT)

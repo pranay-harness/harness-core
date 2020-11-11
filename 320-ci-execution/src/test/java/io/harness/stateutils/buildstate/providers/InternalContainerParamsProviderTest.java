@@ -13,14 +13,13 @@ import com.google.inject.Inject;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
+import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.ci.pod.CIContainerType;
-import software.wings.beans.ci.pod.CIK8ContainerParams;
-import software.wings.beans.ci.pod.ConnectorDetails;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void getSetupAddonContainerParams() {
-    ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorDTO(ConnectorDTO.builder().build()).build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder().build();
 
     CIK8ContainerParams containerParams =
         internalContainerParamsProvider.getSetupAddonContainerParams(connectorDetails);
@@ -50,7 +49,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder().buildNumber(1L).build();
     K8PodDetails k8PodDetails = K8PodDetails.builder().buildNumberDetails(buildNumberDetails).build();
 
-    ConnectorDetails connectorDetails = ConnectorDetails.builder().connectorDTO(ConnectorDTO.builder().build()).build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder().build();
     Map<String, ConnectorDetails> publishArtifactConnectorDetailsMap = new HashMap<>();
     String logSecret = "secret";
     String logEndpoint = "http://localhost:8079";
