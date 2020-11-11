@@ -56,7 +56,7 @@ import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
-import software.wings.beans.trigger.ManifestSelection.ManifestSelectionKeys;
+import software.wings.beans.trigger.ManifestTriggerCondition.ManifestTriggerConditionKeys;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
@@ -186,6 +186,27 @@ public class TriggerServiceHelper {
             -> tr.getCondition().getConditionType() == NEW_ARTIFACT
                 && ((ArtifactTriggerCondition) tr.getCondition()).getArtifactStreamId().equals(artifactStreamId))
         .collect(toList());
+  }
+
+  public List<Trigger> getNewManifestConditionTriggers(String appManifestId) {
+    return wingsPersistence.createQuery(Trigger.class, excludeAuthority)
+        .disableValidation()
+        .filter(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType, NEW_MANIFEST)
+        .filter(TriggerKeys.condition + "." + ManifestTriggerConditionKeys.appManifestId, appManifestId)
+        .asList();
+  }
+
+  public List<Trigger> getNewManifestConditionTriggers(String appId, String applicationManifestId) {
+    if (GLOBAL_APP_ID.equals(appId)) {
+      return getNewManifestConditionTriggers(applicationManifestId);
+    }
+
+    return wingsPersistence.createQuery(Trigger.class)
+        .disableValidation()
+        .filter(TriggerKeys.appId, appId)
+        .filter(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType, NEW_MANIFEST)
+        .filter(TriggerKeys.condition + "." + ManifestTriggerConditionKeys.appManifestId, applicationManifestId)
+        .asList();
   }
 
   public Trigger getTrigger(String appId, String webHookToken) {
@@ -484,15 +505,6 @@ public class TriggerServiceHelper {
   public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Map<Object, Boolean> seen = new ConcurrentHashMap<>();
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-  }
-
-  public List<Trigger> getNewManifestTriggers(String appId, String appManifestId) {
-    return wingsPersistence.createQuery(Trigger.class, excludeAuthority)
-        .disableValidation()
-        .filter(TriggerKeys.appId, appId)
-        .filter(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType, NEW_MANIFEST)
-        .filter(TriggerKeys.condition + "." + ManifestSelectionKeys.appManifestId, appManifestId)
-        .asList();
   }
 
   public boolean checkManifestMatchesFilter(String triggerId, HelmChart helmChart, String versionRegex) {

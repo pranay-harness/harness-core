@@ -17,6 +17,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,6 +45,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -51,6 +53,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -68,10 +71,12 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
+import software.wings.prune.PruneEvent;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
@@ -91,6 +96,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Mock private HelmChartService helmChartService;
   @Spy private HelmHelper helmHelper;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private TriggerService triggerService;
+  @Mock private QueuePublisher<PruneEvent> pruneQueue;
 
   @Before
   public void setup() {
@@ -679,8 +686,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
     applicationManifestServiceImpl.deleteAppManifest(APP_ID, applicationManifest.getUuid());
+    verify(applicationManifestServiceImpl, times(1)).deletePerpetualTask(applicationManifest);
     verify(applicationManifestServiceImpl, times(1)).deleteAppManifest(applicationManifest);
-    verify(helmChartService, times(1)).deleteByAppManifest(APP_ID, applicationManifest.getUuid());
   }
 
   @Test
@@ -766,5 +773,15 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     ApplicationManifest savedAppManifest = applicationManifestList.get(0);
     assertThat(savedAppManifest.getPollForChanges()).isTrue();
     assertThat(savedAppManifest.getServiceName()).isNotNull().isEqualTo(SERVICE_NAME);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldPruneDescendingObjects() {
+    applicationManifestServiceImpl.pruneDescendingEntities(APP_ID, MANIFEST_ID);
+    InOrder inOrder = inOrder(helmChartService, triggerService);
+    inOrder.verify(helmChartService).pruneByApplicationManifest(APP_ID, MANIFEST_ID);
+    inOrder.verify(triggerService).pruneByApplicationManifest(APP_ID, MANIFEST_ID);
   }
 }
