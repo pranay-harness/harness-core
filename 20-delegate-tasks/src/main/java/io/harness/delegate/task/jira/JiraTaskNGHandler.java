@@ -34,6 +34,7 @@ import net.rcarz.jiraclient.Project;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -318,6 +319,58 @@ public class JiraTaskNGHandler {
       log.error(errorMessage, e);
       return JiraTaskNGResponse.builder().errorMessage(errorMessage).executionStatus(FAILURE).build();
     }
+  }
+
+  public JiraTaskNGResponse checkJiraApproval(JiraTaskNGParameters jiraTaskNGParameters) {
+    Issue issue;
+    log.info("Checking approval for IssueId = {}", jiraTaskNGParameters.getIssueId());
+    try {
+      JiraClient jira = getJiraClient(jiraTaskNGParameters);
+      issue = jira.getIssue(jiraTaskNGParameters.getIssueId());
+    } catch (JiraException e) {
+      String errorMessage = "Encoutered a problem while fetching Jira Issue " + jiraTaskNGParameters.getIssueId();
+      if (e.getCause() != null) {
+        errorMessage += " Reason: " + e.getCause().getMessage();
+        if (e.getCause() instanceof RestException && ((RestException) e.getCause()).getHttpStatusCode() == 404) {
+          // Fail if the jira issue is not returned
+          log.error(errorMessage, e);
+          return JiraTaskNGResponse.builder().executionStatus(FAILURE).errorMessage(errorMessage).build();
+        }
+      }
+      log.error(errorMessage, e);
+      return JiraTaskNGResponse.builder().executionStatus(RUNNING).errorMessage(errorMessage).build();
+    }
+
+    log.info("Issue fetched successfully for {}", jiraTaskNGParameters.getIssueId());
+    String approvalFieldValue = null;
+    if (EmptyPredicate.isNotEmpty(jiraTaskNGParameters.getApprovalField())) {
+      Map<String, String> fieldMap = (Map<String, String>) issue.getField(jiraTaskNGParameters.getApprovalField());
+      approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+    }
+
+    String rejectionFieldValue = null;
+    if (EmptyPredicate.isNotEmpty(jiraTaskNGParameters.getRejectionField())) {
+      Map<String, String> fieldMap = (Map<String, String>) issue.getField(jiraTaskNGParameters.getRejectionField());
+      rejectionFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
+    }
+
+    log.info("IssueId: {}, approvalField: {}, approvalFieldValue: {}, rejectionField: {}, rejectionFieldValue: {}",
+        jiraTaskNGParameters.getIssueId(), jiraTaskNGParameters.getApprovalField(), approvalFieldValue,
+        jiraTaskNGParameters.getRejectionField(), rejectionFieldValue);
+
+    if (EmptyPredicate.isNotEmpty(approvalFieldValue)
+        && StringUtils.equalsIgnoreCase(approvalFieldValue, jiraTaskNGParameters.getApprovalValue())) {
+      log.info("IssueId: {} Approved", jiraTaskNGParameters.getIssueId());
+      return JiraTaskNGResponse.builder().currentStatus(approvalFieldValue).executionStatus(SUCCESS).build();
+    }
+
+    if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
+        && StringUtils.equalsIgnoreCase(rejectionFieldValue, jiraTaskNGParameters.getRejectionValue())) {
+      log.info("IssueId: {} Rejected", jiraTaskNGParameters.getIssueId());
+      return JiraTaskNGResponse.builder().currentStatus(rejectionFieldValue).executionStatus(FAILURE).build();
+    }
+
+    return JiraTaskNGResponse.builder().currentStatus(approvalFieldValue).executionStatus(RUNNING).build();
   }
 
   private JiraClient getJiraClient(JiraTaskNGParameters parameters) throws JiraException {

@@ -5,9 +5,11 @@ import com.google.inject.Inject;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.JiraApprovalResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraFieldResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectResponseDTO;
 import io.harness.cdng.jira.resources.response.JiraProjectStatusesResponseDTO;
+import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
@@ -133,5 +135,21 @@ public class JiraResource {
     List<JiraFieldDTO> fieldsOptions =
         jiraResourceService.getFieldsOptions(connectorRef, orgIdentifier, projectIdentifier, projectKey);
     return ResponseDTO.newResponse(JiraFieldResponseDTO.builder().jiraFields(fieldsOptions).build());
+  }
+
+  @GET
+  @Path("checkApproval")
+  @ApiOperation(value = "Check jira approval", nickname = "checkJiraApproval")
+  public ResponseDTO<JiraApprovalResponseDTO> checkJiraApproval(
+      @QueryParam("connectorRef") String jiraConnectorIdentifier, @QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("issueId") String issueId, @QueryParam("approvalField") String approvalField,
+      @QueryParam("approvalFieldValue") String approvalFieldValue, @QueryParam("rejectionField") String rejectionField,
+      @QueryParam("rejectionFieldValue") String rejectionFieldValue) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(jiraConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    JiraApprovalDTO jiraApprovalDTO = jiraResourceService.checkApproval(connectorRef, orgIdentifier, projectIdentifier,
+        issueId, approvalField, approvalFieldValue, rejectionField, rejectionFieldValue);
+    return ResponseDTO.newResponse(JiraApprovalResponseDTO.builder().jiraApproval(jiraApprovalDTO).build());
   }
 }

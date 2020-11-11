@@ -13,6 +13,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
@@ -353,6 +354,32 @@ public class JiraResourceServiceTest extends CategoryTest {
     assertThatThrownBy(
         () -> jiraResourceService.getFieldsOptions(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey))
         .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestCheckApproval() {
+    final String issueId = "CDNG-1345";
+    final String approvalField = "status";
+    final String approvalFieldValue = "Success";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.SUCCESS)
+                        .currentStatus(approvalFieldValue)
+                        .build());
+
+    JiraApprovalDTO jiraApprovalDTO = jiraResourceService.checkApproval(
+        identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, issueId, approvalField, approvalFieldValue, null, null);
+
+    assertThat(jiraApprovalDTO).isNotNull();
+    assertThat(jiraApprovalDTO.isApproved()).isTrue();
+    assertThat(jiraApprovalDTO.getStatus()).isEqualTo(approvalFieldValue);
   }
 
   private ConnectorResponseDTO getConnector() {
