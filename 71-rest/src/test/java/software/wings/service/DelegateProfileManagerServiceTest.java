@@ -9,6 +9,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -35,7 +39,9 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.service.impl.DelegateProfileManagerServiceImpl;
+import software.wings.service.intfc.AppService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,9 +52,11 @@ import java.util.Map;
 public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = generateUuid();
   private static String DELEGATE_PROFILE_ID = generateUuid();
+  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
 
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @InjectMocks private DelegateProfileManagerServiceImpl delegateProfileManagerService;
+  @Mock private AppService appService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -165,7 +173,23 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
     assertThatThrownBy(() -> delegateProfileManagerService.update(profileDetail))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Scoping rule needs to have application id set!");
+        .hasMessage("The Scoping rule requires application!");
+
+    DelegateProfileDetails profileDetail2 = DelegateProfileDetails.builder()
+                                                .accountId(ACCOUNT_ID)
+                                                .name("test2")
+                                                .description("description")
+                                                .startupScript("startupScript")
+                                                .build();
+    ScopingRuleDetails scopingRuleDetail2 = ScopingRuleDetails.builder().applicationId(APP_ID).build();
+    ScopingRuleDetails scopingRuleDetail3 = ScopingRuleDetails.builder().applicationId(APP_ID).build();
+
+    when(appService.get(APP_ID, false)).thenReturn(app);
+
+    profileDetail2.setScopingRules(Arrays.asList(scopingRuleDetail2, scopingRuleDetail3));
+    assertThatThrownBy(() -> delegateProfileManagerService.update(profileDetail2))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage(APP_NAME + " is already used for a scoping rule!");
   }
 
   @Test
@@ -222,7 +246,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
     assertThatThrownBy(() -> delegateProfileManagerService.add(profileDetail))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Scoping rule needs to have application id set!");
+        .hasMessage("The Scoping rule requires application!");
   }
 
   @Test
@@ -273,7 +297,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> delegateProfileManagerService.updateScopingRules(ACCOUNT_ID, generateUuid(), asList(scopingRuleDetail)))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessage("Scoping rule needs to have application id set!");
+        .hasMessage("The Scoping rule requires application!");
   }
 
   @Test

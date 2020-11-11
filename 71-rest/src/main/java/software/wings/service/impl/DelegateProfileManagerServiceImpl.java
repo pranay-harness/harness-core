@@ -28,6 +28,7 @@ import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateProfileManagerService;
 
 import java.util.Collections;
@@ -45,6 +46,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateProfileManagerServiceImpl implements DelegateProfileManagerService {
   @Inject private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
+  @Inject private AppService appService;
 
   @Override
   public PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest) {
@@ -347,9 +349,19 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     if (isEmpty(scopingRules)) {
       return;
     }
+
+    Set<String> appIds = new HashSet<>();
+
     for (ScopingRuleDetails scopingRule : scopingRules) {
       if (isEmpty(scopingRule.getApplicationId())) {
-        throw new InvalidArgumentsException("Scoping rule needs to have application id set!");
+        throw new InvalidArgumentsException("The Scoping rule requires application!");
+      }
+
+      if (!appIds.contains(scopingRule.getApplicationId())) {
+        appIds.add(scopingRule.getApplicationId());
+      } else {
+        String appName = appService.get(scopingRule.getApplicationId(), false).getName();
+        throw new InvalidArgumentsException(appName + " is already used for a scoping rule!");
       }
     }
   }
