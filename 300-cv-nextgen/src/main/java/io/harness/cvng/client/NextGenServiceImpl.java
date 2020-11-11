@@ -48,12 +48,26 @@ public class NextGenServiceImpl implements NextGenService {
   }
 
   @Override
+  public PageResponse<ServiceResponseDTO> getServices(
+      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
+    return requestExecutor
+        .execute(nextGenClient.listServicesForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
+        .getData();
+  }
+
+  @Override
   public PageResponse<EnvironmentResponseDTO> listEnvironmentsForProject(
       int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
     return requestExecutor
         .execute(
             nextGenClient.listEnvironmentsForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
         .getData();
+  }
+
+  @Override
+  public int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier) {
+    PageResponse<ServiceResponseDTO> services = getServices(0, 1000, accountId, orgIdentifier, projectIdentifier, null);
+    return (int) services.getTotalItems();
   }
 
   @Override

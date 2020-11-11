@@ -1,14 +1,18 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -89,5 +93,20 @@ public class VerificationJobServiceImpl implements VerificationJobService {
                                         .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
                                         .count();
     return numberOfVerificationJobs > 0;
+  }
+
+  @Override
+  public int getNumberOfServicesUndergoingHealthVerification(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    BasicDBObject verificationJobQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(VerificationJobKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(VerificationJobKeys.projectIdentifier, projectIdentifier));
+    conditions.add(new BasicDBObject(VerificationJobKeys.orgIdentifier, orgIdentifier));
+    conditions.add(new BasicDBObject(VerificationJobKeys.type, HEALTH.toString()));
+    verificationJobQuery.put("$and", conditions);
+    List<String> serviceIdentifiers = hPersistence.getCollection(VerificationJob.class)
+                                          .distinct(VerificationJobKeys.serviceIdentifier, verificationJobQuery);
+    return serviceIdentifiers.size();
   }
 }
