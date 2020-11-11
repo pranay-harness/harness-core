@@ -1,6 +1,9 @@
 package io.harness.ng;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -215,8 +218,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put("IdentityService", configuration.getNextGenConfig().getManagerServiceSecret());
-      serviceToSecretMapping.put("Manager", configuration.getNextGenConfig().getManagerServiceSecret());
+      serviceToSecretMapping.put(
+          IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getIdentityServiceSecret());
+      serviceToSecretMapping.put(MANAGER.getServiceId(), configuration.getNextGenConfig().getManagerServiceSecret());
+      serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }

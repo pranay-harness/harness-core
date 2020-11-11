@@ -61,11 +61,11 @@ public class CIExecutionTestModule extends AbstractModule {
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
     install(new ConnectorResourceClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
     install(new SecretNGManagerClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "CI"));
     install(new SecretManagementClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
     install(new CILogServiceClientModule(
         LogServiceConfig.builder().baseUrl("http://localhost:8079").globalToken("token").build()));
   }

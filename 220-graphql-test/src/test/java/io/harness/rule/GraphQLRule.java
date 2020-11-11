@@ -30,8 +30,8 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
@@ -109,8 +109,8 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.getPortal().setJwtExternalServiceSecret("JWT_EXTERNAL_SERVICE_SECRET");
     configuration.getPortal().setJwtNextGenManagerSecret("dummy_key");
-    configuration.setOrganizationManagerClientConfig(
-        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build());
+    configuration.setNgManagerServiceHttpClientConfig(
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));

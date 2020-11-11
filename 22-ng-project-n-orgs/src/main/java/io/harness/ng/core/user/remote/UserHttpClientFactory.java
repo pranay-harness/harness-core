@@ -18,8 +18,8 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(PL)
 public class UserHttpClientFactory extends AbstractHttpClientFactory implements Provider<UserClient> {
   public UserHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override

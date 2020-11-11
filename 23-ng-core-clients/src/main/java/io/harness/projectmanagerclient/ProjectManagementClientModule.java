@@ -6,16 +6,17 @@ import com.google.inject.Scopes;
 
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.projectmanagerclient.remote.ProjectManagerHttpClientFactory;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 public class ProjectManagementClientModule extends AbstractModule {
-  private final ProjectManagerClientConfig projectManagerClientConfig;
+  private final ServiceHttpClientConfig projectManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
 
   public ProjectManagementClientModule(
-      ProjectManagerClientConfig projectManagerClientConfig, String serviceSecret, String clientId) {
+      ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret, String clientId) {
     this.projectManagerClientConfig = projectManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
@@ -24,7 +25,7 @@ public class ProjectManagementClientModule extends AbstractModule {
   @Provides
   private ProjectManagerHttpClientFactory projectManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new ProjectManagerHttpClientFactory(
-        projectManagerClientConfig, serviceSecret, clientId, new ServiceTokenGenerator(), kryoConverterFactory);
+        projectManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

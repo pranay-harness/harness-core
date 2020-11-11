@@ -6,16 +6,17 @@ import com.google.inject.Scopes;
 
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerHttpClientFactory;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 public class OrganizationManagementClientModule extends AbstractModule {
-  private final OrganizationManagerClientConfig organizationManagerClientConfig;
+  private final ServiceHttpClientConfig organizationManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
 
   public OrganizationManagementClientModule(
-      OrganizationManagerClientConfig organizationManagerClientConfig, String serviceSecret, String clientId) {
+      ServiceHttpClientConfig organizationManagerClientConfig, String serviceSecret, String clientId) {
     this.organizationManagerClientConfig = organizationManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
@@ -25,7 +26,7 @@ public class OrganizationManagementClientModule extends AbstractModule {
   private OrganizationManagerHttpClientFactory organizationManagerHttpClientFactory(
       KryoConverterFactory kryoConverterFactory) {
     return new OrganizationManagerHttpClientFactory(
-        organizationManagerClientConfig, serviceSecret, clientId, new ServiceTokenGenerator(), kryoConverterFactory);
+        organizationManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

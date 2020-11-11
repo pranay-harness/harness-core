@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -1186,8 +1187,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
-    install(new OrganizationManagementClientModule(configuration.getOrganizationManagerClientConfig(),
-        configuration.getPortal().getJwtNextGenManagerSecret(), "Manager"));
+    install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());

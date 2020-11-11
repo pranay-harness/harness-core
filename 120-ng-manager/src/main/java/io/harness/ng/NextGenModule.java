@@ -1,5 +1,7 @@
 package io.harness.ng;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -156,18 +158,18 @@ public class NextGenModule extends AbstractModule {
     install(MongoModule.getInstance());
     install(new NextGenPersistenceModule());
     install(new CoreModule());
-    install(new InviteModule(
-        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule());
     install(new GitSyncModule());
     install(NGModule.getInstance());
     install(new SecretManagementModule());
-    install(new SecretManagementClientModule(
-        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
-    install(new EntitySetupUsageClientModule(
-        this.appConfig.getNgManagerClientConfig(), this.appConfig.getNextGenConfig().getNgManagerServiceSecret()));
+    install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ProviderModule() {
       @Provides
       @Singleton

@@ -14,8 +14,8 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class EntityActivityHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<EntityActivityClient> {
   public EntityActivityHttpClientFactory(ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    super(ngManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    super(ngManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override

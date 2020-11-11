@@ -29,22 +29,23 @@ import javax.validation.constraints.NotNull;
 
 public abstract class AbstractHttpClientFactory {
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
-  private final ServiceHttpClientConfig secretManagerConfig;
+  private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private static final String CLIENT_ID = "NextGenManager";
+  private final String clientId;
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    this.secretManagerConfig = secretManagerConfig;
+  public AbstractHttpClientFactory(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret,
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
+    this.clientId = clientId;
   }
 
   protected Retrofit getRetrofit() {
-    String baseUrl = secretManagerConfig.getBaseUrl();
+    String baseUrl = serviceHttpClientConfig.getBaseUrl();
     ObjectMapper objectMapper = getObjectMapper();
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
@@ -73,8 +74,8 @@ public abstract class AbstractHttpClientFactory {
   protected OkHttpClient getUnsafeOkHttpClient(String baseUrl) {
     try {
       return Http
-          .getUnsafeOkHttpClientBuilder(
-              baseUrl, secretManagerConfig.getConnectTimeOutSeconds(), secretManagerConfig.getReadTimeOutSeconds())
+          .getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
+              serviceHttpClientConfig.getReadTimeOutSeconds())
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
@@ -100,7 +101,7 @@ public abstract class AbstractHttpClientFactory {
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
       Request request = chain.request();
-      return chain.proceed(request.newBuilder().header("Authorization", CLIENT_ID + StringUtils.SPACE + token).build());
+      return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };
   }
 
@@ -109,6 +110,6 @@ public abstract class AbstractHttpClientFactory {
     if (StringUtils.isNotBlank(managerServiceSecret)) {
       return managerServiceSecret.trim();
     }
-    throw new InvalidRequestException("No secret key for client for " + CLIENT_ID);
+    throw new InvalidRequestException("No secret key for client for " + clientId);
   }
 }

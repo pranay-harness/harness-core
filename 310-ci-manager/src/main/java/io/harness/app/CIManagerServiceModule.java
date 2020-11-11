@@ -125,14 +125,14 @@ public class CIManagerServiceModule extends AbstractModule {
                                             .authority(ciManagerConfiguration.getManagerAuthority())
                                             .build()));
 
-    install(new SecretManagementClientModule(
-        ciManagerConfiguration.getManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new EntitySetupUsageClientModule(
-        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new ConnectorResourceClientModule(
-        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
-    install(new SecretNGManagerClientModule(
-        ciManagerConfiguration.getNgManagerClientConfig(), ciManagerConfiguration.getNgManagerServiceSecret()));
+    install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+    install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+    install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+    install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));
   }
 }

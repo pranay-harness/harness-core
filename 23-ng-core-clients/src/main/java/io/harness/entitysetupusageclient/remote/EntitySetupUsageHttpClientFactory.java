@@ -19,8 +19,8 @@ import lombok.experimental.FieldDefaults;
 public class EntitySetupUsageHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<EntitySetupUsageClient> {
   public EntitySetupUsageHttpClientFactory(ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    super(ngManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    super(ngManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override

@@ -14,8 +14,8 @@ import lombok.experimental.FieldDefaults;
 @Singleton
 public class SecretManagerHttpClientFactory extends AbstractHttpClientFactory implements Provider<SecretManagerClient> {
   public SecretManagerHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
+    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override

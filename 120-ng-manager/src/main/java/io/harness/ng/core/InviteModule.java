@@ -28,10 +28,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class InviteModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String managerServiceSecret;
+  private final String clientId;
 
-  public InviteModule(ServiceHttpClientConfig serviceHttpClientConfig, String managerServiceSecret) {
+  public InviteModule(ServiceHttpClientConfig serviceHttpClientConfig, String managerServiceSecret, String clientId) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.managerServiceSecret = managerServiceSecret;
+    this.clientId = clientId;
   }
 
   @Override
@@ -39,7 +41,7 @@ public class InviteModule extends AbstractModule {
     bind(InvitesService.class).to(InvitesServiceImpl.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     registerRequiredBindings();
-    install(new UserClientModule(this.serviceHttpClientConfig, this.managerServiceSecret));
+    install(new UserClientModule(this.serviceHttpClientConfig, this.managerServiceSecret, this.clientId));
   }
 
   @Provides
