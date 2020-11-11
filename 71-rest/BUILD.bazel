@@ -29,7 +29,6 @@ java_library(
         "//22-delegate-service-beans:module",
         "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
         "//22-ng-core:module",
-        "//22-ng-delegate-service-beans:module",
         "//22-ng-project-n-orgs:module",
         "//22-secret-manager-client:module",
         "//22-timeout-engine:module",

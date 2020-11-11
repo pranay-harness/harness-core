@@ -105,7 +105,6 @@ build_bazel_module 21-persistence
 build_bazel_tests 21-persistence
 build_bazel_module 22-delegate-service-beans
 build_bazel_module 22-ng-core
-build_bazel_module 22-ng-delegate-service-beans
 build_bazel_module 22-ng-project-n-orgs
 build_bazel_module 22-rbac-core
 build_bazel_module 22-secret-manager-client

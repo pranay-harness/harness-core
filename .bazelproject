@@ -12,7 +12,6 @@ directories:
   21-persistence
   22-delegate-service-beans
   22-ng-core
-  22-ng-delegate-service-beans
   22-ng-project-n-orgs
   22-rbac-core
   22-secret-manager-client
