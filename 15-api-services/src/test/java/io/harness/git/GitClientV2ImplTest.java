@@ -47,7 +47,6 @@ import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -94,12 +93,6 @@ public class GitClientV2ImplTest extends CategoryTest {
     createRepo(repoPath, false);
     git = Git.open(new File(repoPath));
     doReturn("").when(gitClientHelper).getGitLogMessagePrefix(any());
-  }
-
-  @After
-  public void cleanup() throws Exception {
-    FileUtils.deleteDirectory(new File(repoPath));
-    git.rm();
   }
 
   @Test
