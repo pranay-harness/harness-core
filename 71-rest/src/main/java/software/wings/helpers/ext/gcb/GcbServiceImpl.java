@@ -4,8 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.services.container.ContainerScopes;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,13 +15,13 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.TaskType;
 import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -119,16 +117,19 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName) {
     try {
       final String bucket = bucketName.replace("gs://", "");
+      log.info("GCB_TASK - fetching logs");
       Response<ResponseBody> response =
           getRestClient(GcsRestClient.class, GCS_BASE_URL)
               .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucket, fileName)
               .execute();
       if (!response.isSuccessful()) {
-        throw new GcbClientException(extractErrorMessage(response));
+        log.error("GCB_TASK - failed to fetch logs due to: " + response.errorBody().string());
+        throw new GcbClientException(response.errorBody().string());
       }
+      log.info("GCB_TASK - logs are fetched");
       return response.body().string();
     } catch (InterruptedIOException e) {
-      log.error("Failed to fetch GCB build logs due to: ", e);
+      log.error("GCB_TASK - Failed to fetch GCB build logs due to: ", e);
       throw new RuntimeInterruptedException();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -143,8 +144,10 @@ public class GcbServiceImpl implements GcbService {
               .getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig))
               .execute();
       if (!response.isSuccessful()) {
+        log.error("GCB_TASK - failed to fetch GCB triggers");
         throw new GcbClientException(extractErrorMessage(response));
       }
+      log.info("GCB_TASK - triggers have been fetched");
       return response.body().getTriggers();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -184,7 +187,7 @@ public class GcbServiceImpl implements GcbService {
   @VisibleForTesting
   String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     if (gcpConfig.isUseDelegate()) {
-      return getAccessTokenUsingK8sWorkloadIdentity();
+      return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCB);
     }
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
@@ -197,40 +200,12 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
-  private String getAccessTokenUsingK8sWorkloadIdentity() {
-    try {
-      GoogleCredentials gc = GoogleCredentials.getApplicationDefault();
-      if (gc.createScopedRequired()) {
-        gc = gc.createScoped(ContainerScopes.CLOUD_PLATFORM);
-      }
-      return String.join(" ", "Bearer", gc.refreshAccessToken().getTokenValue());
-    } catch (IOException e) {
-      log.error("Failed to get default credentials", e);
-      throw new GcbClientException("Failed to retrieve GCP access token");
-    }
-  }
-
   private String getProjectId(GcpConfig gcpConfig) {
     if (gcpConfig.isUseDelegate()) {
-      return getClusterProjectId();
+      return gcpHelperService.getClusterProjectId(TaskType.GCB);
     } else {
       return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
           .get("project_id");
-    }
-  }
-
-  private String getClusterProjectId() {
-    OkHttpClient client = new OkHttpClient();
-    Request request = new Request.Builder()
-                          .header("Metadata-Flavor", "Google")
-                          .url("http://metadata.google.internal/computeMetadata/v1/project/project-id")
-                          .build();
-    try {
-      okhttp3.Response response = client.newCall(request).execute();
-      return response.body().string();
-    } catch (IOException | NullPointerException e) {
-      log.error("Failed to get projectId due to: ", e);
-      throw new GcbClientException("Can not retrieve project-id from from cluster meta");
     }
   }
 

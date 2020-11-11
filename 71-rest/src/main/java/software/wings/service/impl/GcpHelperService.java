@@ -21,15 +21,21 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.TaskType;
+import software.wings.exception.GcbClientException;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -163,6 +169,46 @@ public class GcpHelperService {
   private void validateServiceAccountKey(GcpConfig gcpConfig) {
     if (isEmpty(gcpConfig.getServiceAccountKeyFileContent())) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
+    }
+  }
+
+  public String getDefaultCredentialsAccessToken(TaskType taskType) {
+    OkHttpClient client = new OkHttpClient();
+    Request request =
+        new Request.Builder()
+            .header("Metadata-Flavor", "Google")
+            .url("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes="
+                + ContainerScopes.CLOUD_PLATFORM)
+            .build();
+    try {
+      okhttp3.Response response = client.newCall(request).execute();
+      if (response.isSuccessful()) {
+        log.info(taskType.name() + " - Fetched OAuth2 access token from metadata server");
+        return String.join(
+            " ", "Bearer", (String) JsonUtils.asObject(response.body().string(), HashMap.class).get("access_token"));
+      }
+      log.error(taskType.name() + " - Failed to fetch access token from metadata xxxxxxxx " + response);
+      throw new GcbClientException("Failed to fetch access token from metadata server");
+    } catch (IOException | NullPointerException e) {
+      log.error(taskType.name() + " - Failed to get accessToken due to: ", e);
+      throw new InvalidRequestException("Can not retrieve accessToken from from cluster meta");
+    }
+  }
+
+  public String getClusterProjectId(TaskType taskType) {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+                          .header("Metadata-Flavor", "Google")
+                          .url("http://metadata.google.internal/computeMetadata/v1/project/project-id")
+                          .build();
+    try {
+      okhttp3.Response response = client.newCall(request).execute();
+      String projectId = response.body().string();
+      log.info(taskType.name() + " - Fetched projectId from metadata xxxxxxxx " + projectId);
+      return projectId;
+    } catch (IOException | NullPointerException e) {
+      log.error(taskType.name() + " - Failed to get projectId due to: ", e);
+      throw new InvalidRequestException("Can not retrieve project-id from from cluster meta");
     }
   }
 
