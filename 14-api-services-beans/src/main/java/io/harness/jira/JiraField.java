@@ -19,12 +19,12 @@ public class JiraField {
   @NotNull private JSONObject schema;
   private JSONArray allowedValues;
 
-  JiraField(JSONObject obj, String keyStr) {
+  public JiraField(JSONObject obj, String keyStr) {
     this.required = obj.getBoolean("required");
     this.name = obj.getString("name");
     this.key = obj.get("key") == null ? keyStr : obj.getString("key");
     this.schema = obj.getJSONObject("schema");
-    if (obj.keySet().contains("allowedValues")) {
+    if (obj.containsKey("allowedValues")) {
       this.allowedValues = obj.getJSONArray("allowedValues");
     }
     if (this.key.startsWith("customfield_")) {

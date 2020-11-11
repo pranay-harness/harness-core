@@ -4,6 +4,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
+import io.harness.jira.JiraField;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraProjectData;
 import io.harness.logging.CommandExecutionStatus;
@@ -12,8 +13,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import java.util.List;
 
@@ -33,7 +32,7 @@ public class JiraTaskNGResponse implements DelegateTaskNotifyResponseData {
   private String jiraServerResponse;
 
   private List<JiraProjectData> projects;
-  private JSONObject fields;
+  private List<JiraField> fields;
   private List<JiraIssueType> statuses;
   private JiraCreateMetaResponse createMetadata;
 

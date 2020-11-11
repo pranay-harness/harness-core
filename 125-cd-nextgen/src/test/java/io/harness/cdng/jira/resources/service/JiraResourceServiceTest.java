@@ -13,6 +13,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
@@ -270,7 +271,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestGetProjectStatuses() {
-    final String projectId = "CDNG";
+    final String projectKey = "CDNG";
     IdentifierRef identifierRef = createIdentifier();
 
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
@@ -283,7 +284,7 @@ public class JiraResourceServiceTest extends CategoryTest {
                         .build());
 
     List<JiraIssueTypeDTO> projectStatuses =
-        jiraResourceService.getProjectStatuses(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectId);
+        jiraResourceService.getProjectStatuses(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey);
 
     assertThat(projectStatuses).isNotNull();
     assertThat(projectStatuses).isEmpty();
@@ -293,7 +294,7 @@ public class JiraResourceServiceTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestGetProjectStatusesFailure() {
-    final String projectId = "CDNG";
+    final String projectKey = "CDNG";
     IdentifierRef identifierRef = createIdentifier();
 
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
@@ -306,7 +307,51 @@ public class JiraResourceServiceTest extends CategoryTest {
                         .build());
 
     assertThatThrownBy(
-        () -> jiraResourceService.fetchIssue(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectId))
+        () -> jiraResourceService.getProjectStatuses(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetFieldsOptions() {
+    final String projectKey = "CDNG";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.SUCCESS)
+                        .fields(new ArrayList<>())
+                        .build());
+
+    List<JiraFieldDTO> fieldsOptions =
+        jiraResourceService.getFieldsOptions(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey);
+
+    assertThat(fieldsOptions).isNotNull();
+    assertThat(fieldsOptions).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetFieldsOptionsFailure() {
+    final String projectKey = "CDNG";
+    IdentifierRef identifierRef = createIdentifier();
+
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder()
+                        .executionStatus(CommandExecutionStatus.FAILURE)
+                        .errorMessage("Error Message")
+                        .build());
+
+    assertThatThrownBy(
+        () -> jiraResourceService.getFieldsOptions(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, projectKey))
         .isInstanceOf(HarnessJiraException.class);
   }
 
