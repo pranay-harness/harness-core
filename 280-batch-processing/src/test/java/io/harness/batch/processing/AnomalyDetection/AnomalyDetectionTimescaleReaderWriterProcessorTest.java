@@ -156,7 +156,7 @@ public class AnomalyDetectionTimescaleReaderWriterProcessorTest extends BatchPro
   private void mockAnomaliesList() {
     mockedAnomaliesList = new ArrayList<>();
     mockedAnomaliesList.add(Anomaly.builder()
-                                .instant(NOW.minus(2, ChronoUnit.HOURS))
+                                .time(NOW.minus(2, ChronoUnit.HOURS))
                                 .accountId(ACCOUNT_ID)
                                 .entityId(CLUSTER_ID)
                                 .entityType(EntityType.CLUSTER)

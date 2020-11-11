@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Builder
@@ -36,7 +37,10 @@ public class StatsModel {
       }
 
       Anomaly currentAnomaly = Anomaly.builder()
+                                   .id(UUID.randomUUID().toString())
                                    .accountId(data.getAccountId())
+                                   .actualCost(currentValue)
+                                   .expectedCost(mean)
                                    .timeGranularity(data.getTimeGranularity())
                                    .entityId(data.getEntityId())
                                    .entityType(data.getEntityType())
@@ -45,7 +49,17 @@ public class StatsModel {
                                    .workloadType(data.getWorkloadType())
                                    .workloadName(data.getWorkloadName())
                                    .namespace(data.getNamespace())
-                                   .instant(current)
+                                   .region(data.getRegion())
+                                   .cloudProvider(data.getCloudProvider())
+                                   .gcpProduct(data.getGcpProduct())
+                                   .gcpProject(data.getGcpProject())
+                                   .gcpSKUId(data.getGcpSKUId())
+                                   .gcpSKUDescription(data.getGcpSKUDescription())
+                                   .awsAccount(data.getAwsAccount())
+                                   .awsInstanceType(data.getAwsInstanceType())
+                                   .awsService(data.getAwsService())
+                                   .awsUsageType(data.getAwsUsageType())
+                                   .time(current)
                                    .relativeThreshold(relativityThreshold(currentValue, mean))
                                    .absoluteThreshold(absoluteThreshold(currentValue, mean))
                                    .probabilisticThreshold(probabilityThreshold)

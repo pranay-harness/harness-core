@@ -2,6 +2,7 @@ package io.harness.batch.processing.anomalydetection.service.impl;
 
 import com.google.inject.Singleton;
 
+import com.healthmarketscience.sqlbuilder.InsertQuery;
 import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
@@ -13,11 +14,13 @@ import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -33,8 +36,6 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
   static final String CLUSTER_STATEMENT =
       "SELECT STARTTIME AS STARTTIME ,  sum(BILLINGAMOUNT) AS COST ,CLUSTERID ,CLUSTERNAME from billing_data where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME <= ? and instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') group by CLUSTERID , STARTTIME , CLUSTERNAME  order by  CLUSTERID ,STARTTIME , CLUSTERNAME";
 
-  static final String ANOMALY_INSERT_STATEMENT =
-      "INSERT INTO ANOMALIES (ANOMALYTIME,ACCOUNTID,TIMEGRANULARITY,ENTITYID,ENTITYTYPE,CLUSTERID,CLUSTERNAME,WORKLOADNAME,WORKLOADTYPE,NAMESPACE,ANOMALYSCORE,ANOMALYTYPE,REPORTEDBY,ABSOLUTETHRESHOLD,RELATIVETHRESHOLD,PROBABILISTICTHRESHOLD) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   static final String NAMESPACE_STATEMENT =
       "SELECT STARTTIME ,  sum(BILLINGAMOUNT) AS COST , NAMESPACE , CLUSTERID from billing_data where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME <= ? and instancetype IN ('K8S_POD')  group by namespace , CLUSTERID , STARTTIME  order by  NAMESPACE, CLUSTERID ,STARTTIME ";
 
@@ -158,15 +159,16 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
   public boolean writeAnomaliesToTimescale(List<Anomaly> anomaliesList) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid() && !anomaliesList.isEmpty()) {
-      String insertStatement = ANOMALY_INSERT_STATEMENT;
+      String insertStatement;
       int retryCount = 0;
+      int index = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             PreparedStatement statement = dbConnection.prepareStatement(insertStatement)) {
-          int index = 0;
+             Statement statement = dbConnection.createStatement()) {
+          index = 0;
           for (Anomaly anomaly : anomaliesList) {
-            updateInsertStatement(statement, anomaly);
-            statement.addBatch();
+            insertStatement = getInsertQuery(anomaly);
+            statement.addBatch(insertStatement);
             index++;
             if (index % AnomalyDetectionConstants.BATCH_SIZE == 0 || index == anomaliesList.size()) {
               log.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
@@ -188,22 +190,31 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
     return successfulInsert;
   }
 
-  private void updateInsertStatement(PreparedStatement statement, Anomaly anomaly) throws SQLException {
-    statement.setTimestamp(1, Timestamp.from(anomaly.getInstant()));
-    statement.setString(2, anomaly.getAccountId());
-    statement.setString(3, anomaly.getTimeGranularity().toString());
-    statement.setString(4, anomaly.getEntityId());
-    statement.setString(5, anomaly.getEntityType().toString());
-    statement.setString(6, anomaly.getClusterId());
-    statement.setString(7, anomaly.getClusterName());
-    statement.setString(8, anomaly.getWorkloadName());
-    statement.setString(9, anomaly.getWorkloadType());
-    statement.setString(10, anomaly.getNamespace());
-    statement.setDouble(11, anomaly.getAnomalyScore());
-    statement.setString(12, anomaly.getAnomalyType().toString());
-    statement.setString(13, anomaly.getReportedBy().toString());
-    statement.setBoolean(14, anomaly.isAbsoluteThreshold());
-    statement.setBoolean(15, anomaly.isRelativeThreshold());
-    statement.setBoolean(16, anomaly.isProbabilisticThreshold());
+  private String getInsertQuery(Anomaly anomaly) throws SQLException {
+    return new InsertQuery(AnomaliesDataTableSchema.table)
+        .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
+        .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
+        .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
+        .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
+        .addColumn(AnomaliesDataTableSchema.anomalyTime, Timestamp.from(anomaly.getTime()))
+        .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
+        .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
+        .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
+        .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
+        .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
+        .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
+        .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
+        .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
+        .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
+        .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
+        .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
+        .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
+        .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
+        .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
+        .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
+        .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
+        .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+        .validate()
+        .toString();
   }
 }
