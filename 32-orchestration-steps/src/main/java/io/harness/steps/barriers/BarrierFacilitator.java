@@ -10,7 +10,7 @@ import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;

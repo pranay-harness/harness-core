@@ -1,6 +1,6 @@
 package io.harness.facilitator.children;
 
-import static io.harness.facilitator.modes.ExecutionMode.CHILDREN;
+import static io.harness.pms.execution.ExecutionMode.CHILDREN;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 

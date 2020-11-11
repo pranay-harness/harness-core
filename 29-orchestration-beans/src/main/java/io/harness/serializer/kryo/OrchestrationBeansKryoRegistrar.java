@@ -16,7 +16,6 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
@@ -57,7 +56,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(NodeExecution.class, 2506);
     kryo.register(PlanNode.class, 2508);
     kryo.register(StepType.class, 2509);
-    kryo.register(ExecutionMode.class, 2510);
     kryo.register(AdviserObtainment.class, 2511);
     kryo.register(FacilitatorObtainment.class, 2512);
     kryo.register(AdviserType.class, 2513);

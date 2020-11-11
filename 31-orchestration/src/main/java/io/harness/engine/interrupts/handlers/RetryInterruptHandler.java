@@ -1,12 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.RUNNING;
-import static io.harness.execution.status.Status.retryableStatuses;
-
 import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -14,10 +8,15 @@ import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.helpers.RetryHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
-import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.execution.status.Status.retryableStatuses;
 
 @OwnedBy(CDC)
 public class RetryInterruptHandler implements InterruptHandler {
@@ -42,7 +41,7 @@ public class RetryInterruptHandler implements InterruptHandler {
           "NodeExecution is not in a retryable status. Current Status: " + nodeExecution.getStatus());
     }
 
-    if (ExecutionMode.isParentMode(nodeExecution.getMode())) {
+    if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
       throw new InvalidRequestException("Node Retry is supported only for Leaf Nodes");
     }
     interrupt.setState(State.PROCESSING);

@@ -7,7 +7,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
-import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.skip.SkipType;
 import io.harness.state.io.FailureInfo;
