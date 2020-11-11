@@ -355,7 +355,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerWorkflowIterators(Injector injector) {
     ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
-        5, new ThreadFactoryBuilder().setNameFormat("Iterator-workflow-verification").build());
+        10, new ThreadFactoryBuilder().setNameFormat("Iterator-workflow-verification").build());
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowTimeSeriesAnalysisJob(),
         AnalysisContextKeys.timeSeriesAnalysisIteration, MLAnalysisType.TIME_SERIES, ofMinutes(1), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowLogAnalysisJob(),
