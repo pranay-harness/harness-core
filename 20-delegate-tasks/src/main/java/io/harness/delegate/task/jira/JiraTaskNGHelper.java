@@ -42,6 +42,9 @@ public class JiraTaskNGHelper {
       case GET_FIELDS_OPTIONS:
         responseData = jiraTaskNGHandler.getFieldsOptions(taskParameters);
         break;
+      case CHECK_APPROVAL:
+        responseData = jiraTaskNGHandler.checkJiraApproval(taskParameters);
+        break;
       default:
         log.error("No corresponding Docker artifact task type [{}]", taskParameters.toString());
         return JiraTaskNGResponse.builder()

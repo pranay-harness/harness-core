@@ -177,10 +177,36 @@ public class JiraTaskNGHelperTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestGetJiraTaskResponseCheckApproval() {
+    final String issueId = "issueID";
+    JiraTaskNGResponse mockedResponse = JiraTaskNGResponse.builder()
+                                            .executionStatus(CommandExecutionStatus.SUCCESS)
+                                            .projects(new ArrayList<>())
+                                            .build();
+    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
+                                                    .jiraAction(JiraAction.CHECK_APPROVAL)
+                                                    .approvalField("status")
+                                                    .approvalValue("Success")
+                                                    .issueId(issueId)
+                                                    .build();
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    when(jiraTaskNGHandler.checkJiraApproval(jiraTaskNGParameters)).thenReturn(mockedResponse);
+
+    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
+
+    assertThat(jiraTaskResponse).isNotNull();
+    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(jiraTaskResponse.getProjects()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestGetJiraTaskResponseUnknownJiraAction() {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     JiraTaskNGParameters jiraTaskNGParameters =
-        JiraTaskNGParameters.builder().jiraAction(JiraAction.CHECK_APPROVAL).build();
+        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_CREATE_METADATA).build();
 
     JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
 

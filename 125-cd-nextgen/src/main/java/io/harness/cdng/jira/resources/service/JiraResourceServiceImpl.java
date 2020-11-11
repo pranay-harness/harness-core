@@ -18,6 +18,7 @@ import io.harness.cdng.jira.resources.converter.JiraIssueTypeDTOConverter;
 import io.harness.cdng.jira.resources.converter.JiraTaskNgParametersBuilderConverter;
 import io.harness.cdng.jira.resources.request.CreateJiraTicketRequest;
 import io.harness.cdng.jira.resources.request.UpdateJiraTicketRequest;
+import io.harness.cdng.jira.resources.response.dto.JiraApprovalDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraFieldDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueDTO;
 import io.harness.cdng.jira.resources.response.dto.JiraIssueTypeDTO;
@@ -190,6 +191,27 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     }
 
     return jiraTaskResponse.getFields().stream().map(JiraFieldDTOConverter.toJiraFieldDTO).collect(Collectors.toList());
+  }
+
+  @Override
+  public JiraApprovalDTO checkApproval(IdentifierRef jiraConnectorRef, String orgIdentifier, String projectIdentifier,
+      String issueId, String approvalField, String approvalFieldValue, String rejectionField,
+      String rejectionFieldValue) {
+    JiraTaskNGParametersBuilder taskParametersBuilder = JiraTaskNGParameters.builder()
+                                                            .jiraAction(JiraAction.CHECK_APPROVAL)
+                                                            .issueId(issueId)
+                                                            .approvalField(approvalField)
+                                                            .approvalValue(approvalFieldValue)
+                                                            .rejectionField(rejectionField)
+                                                            .rejectionValue(rejectionFieldValue);
+
+    JiraTaskNGResponse jiraTaskResponse =
+        obtainJiraTaskNGResponse(jiraConnectorRef, orgIdentifier, projectIdentifier, taskParametersBuilder);
+
+    return JiraApprovalDTO.builder()
+        .isApproved(jiraTaskResponse.getExecutionStatus() == SUCCESS)
+        .status(jiraTaskResponse.getCurrentStatus())
+        .build();
   }
 
   private JiraTaskNGResponse obtainJiraTaskNGResponse(IdentifierRef jiraConnectionRef, String orgIdentifier,

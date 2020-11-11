@@ -347,6 +347,27 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
     assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testCheckApproval() throws Exception {
+    final String approvalValue = "success";
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    Issue issue = Mockito.mock(Issue.class);
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    when(jiraClient.getIssue(any())).thenReturn(issue);
+    when(issue.getField(any())).thenReturn(Collections.singletonMap(JIRA_APPROVAL_FIELD_KEY, approvalValue));
+
+    JiraTaskNGResponse jiraTaskNGResponse = jiraTaskNGHandler.checkJiraApproval(createJiraTaskParametersBuilder()
+                                                                                    .issueId("issueId")
+                                                                                    .approvalField("approvalField")
+                                                                                    .approvalValue(approvalValue)
+                                                                                    .build());
+    assertThat(jiraTaskNGResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(jiraTaskNGResponse.getCurrentStatus()).isEqualTo(approvalValue);
+  }
+
   private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {
     JiraConnectorDTO jiraConnectorDTO =
         JiraConnectorDTO.builder()
