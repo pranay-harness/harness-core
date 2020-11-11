@@ -58,7 +58,6 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
 
   private Owners owners;
   private InfrastructureDefinition infrastructureDefinition;
-  private Workflow workflow;
 
   private final Seed seed = new Seed(0);
 
@@ -114,16 +113,24 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
   }
 
   private void testHelmWorkflowExecution(Service service, String workflowName) {
+    String releaseName = helmHelper.getReleaseName(service.getName());
     addValuesYamlToService(service);
     log.info("Added values.yaml to service");
-    workflow = helmHelper.createHelmWorkflow(seed, owners, workflowName, service, infrastructureDefinition);
+    Workflow workflow =
+        helmHelper.createHelmWorkflow(seed, owners, workflowName, releaseName, service, infrastructureDefinition);
     log.info("Workflow created");
+    Workflow cleanupWorkflow =
+        helmHelper.createCleanupWorkflow(seed, owners, workflowName, releaseName, service, infrastructureDefinition);
 
     resetCache(owners.obtainAccount().getUuid());
-    ExecutionArgs executionArgs = getExecutionArgs("functional-tests");
+    ExecutionArgs executionArgs = getExecutionArgs(workflow, "functional-tests");
 
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, service.getAppId(), infrastructureDefinition.getEnvId(), executionArgs);
+
+    // Cleanup
+    logStateExecutionInstanceErrors(runWorkflow(
+        bearerToken, service.getAppId(), infrastructureDefinition.getEnvId(), getExecutionArgs(cleanupWorkflow, "")));
 
     logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -168,7 +175,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
   }
 
   @NotNull
-  private ExecutionArgs getExecutionArgs(String serviceName) {
+  private ExecutionArgs getExecutionArgs(Workflow workflow, String serviceName) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setOrchestrationId(workflow.getUuid());
     executionArgs.setWorkflowType(workflow.getWorkflowType());

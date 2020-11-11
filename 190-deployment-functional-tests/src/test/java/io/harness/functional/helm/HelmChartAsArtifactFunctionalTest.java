@@ -92,20 +92,30 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void helmWithHelmChart() {
+    String releaseName = helmHelper.getReleaseName(HELM_SERVICE_NAME);
     Service service = createHelmService();
     // Will simulate background job to not be dependent external environment
     HelmChart helmChartToDeploy = createHelmChartsAndGetWithVersion(service, DEPLOY_HELM_CHART_VERSION);
     InfrastructureDefinition infraDefinition = infrastructureDefinitionGenerator.ensurePredefined(
         seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.GCP_HELM);
-    Workflow workflow = helmHelper.createHelmWorkflow(seed, owners, HELM_WORKFLOW_NAME, service, infraDefinition);
+    Workflow workflow =
+        helmHelper.createHelmWorkflow(seed, owners, HELM_WORKFLOW_NAME, releaseName, service, infraDefinition);
+    Workflow cleanupWorkflow =
+        helmHelper.createCleanupWorkflow(seed, owners, HELM_WORKFLOW_NAME, releaseName, service, infraDefinition);
 
     ExecutionArgs executionArgs = getExecutionArgs(workflow, helmChartToDeploy);
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(), executionArgs);
 
-    logStateExecutionInstanceErrors(workflowExecution);
-    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertHelmChartVersion(workflowExecution, service);
+    try {
+      logStateExecutionInstanceErrors(workflowExecution);
+      assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+      assertHelmChartVersion(workflowExecution, service);
+    } finally {
+      // Cleanup
+      logStateExecutionInstanceErrors(runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(),
+          getExecutionArgs(cleanupWorkflow, helmChartToDeploy)));
+    }
   }
 
   @Test
@@ -120,10 +130,16 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
     Workflow workflow = K8SUtils.createWorkflow(application.getUuid(), infraDefinition.getEnvId(), service.getUuid(),
         infraDefinition.getUuid(), K8S_HELM_WORKFLOW_NAME, OrchestrationWorkflowType.ROLLING, bearerToken,
         getAccount().getUuid());
+    Workflow cleanupWorkflow = K8SUtils.createK8sCleanupWorkflow(application.getUuid(), infraDefinition.getEnvId(),
+        service.getUuid(), infraDefinition.getUuid(), K8S_HELM_WORKFLOW_NAME, bearerToken, getAccount().getUuid());
 
     ExecutionArgs executionArgs = getExecutionArgs(workflow, helmChartToDeploy);
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(), executionArgs);
+
+    // Cleanup
+    logStateExecutionInstanceErrors(runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(),
+        getExecutionArgs(cleanupWorkflow, helmChartToDeploy)));
 
     logStateExecutionInstanceErrors(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
