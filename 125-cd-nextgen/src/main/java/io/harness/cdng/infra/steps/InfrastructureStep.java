@@ -1,6 +1,7 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -90,7 +91,8 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
     }
 
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    if (!environment.getName().isExpression() && EmptyPredicate.isEmpty(environment.getName().getValue())) {
+    if (!environment.getName().isExpression()
+        && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName()))) {
       environment.setName(environment.getIdentifier());
     }
 
@@ -112,10 +114,10 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
-        .name(environmentYaml.getName().getValue())
+        .name(getParameterFieldValue(environmentYaml.getName()))
         .accountId(accountId)
         .type(environmentYaml.getType())
-        .identifier(environmentYaml.getIdentifier().getValue())
+        .identifier(getParameterFieldValue(environmentYaml.getIdentifier()))
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .tags(convertToList(environmentYaml.getTags()))

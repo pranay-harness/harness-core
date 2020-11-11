@@ -18,6 +18,7 @@ public class PipelineExecutionSummaryDTO {
   String deploymentId;
   String planExecutionId;
   ExecutionStatus executionStatus;
+  String inputSetYaml;
   Long startedAt;
   Long endedAt;
   Map<String, String> tags;
@@ -33,4 +34,5 @@ public class PipelineExecutionSummaryDTO {
   long successfulStagesCount;
   long runningStagesCount;
   long failedStagesCount;
+  long totalStagesCount;
 }

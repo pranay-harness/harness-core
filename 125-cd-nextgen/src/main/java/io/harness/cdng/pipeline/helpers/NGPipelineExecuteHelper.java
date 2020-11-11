@@ -9,8 +9,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
+import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
@@ -21,9 +23,11 @@ import io.harness.plan.Plan;
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +52,8 @@ public class NGPipelineExecuteHelper {
       mergeInputSetResponse = inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier,
           projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, false, useFQNIfErrorResponse);
     }
-    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
+    return getPipelineResponseDTO(
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, inputSetPipelineYaml);
   }
 
   public NGPipelineExecutionResponseDTO runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
@@ -56,9 +61,21 @@ public class NGPipelineExecuteHelper {
       boolean useFQNIfErrorResponse, EmbeddedUser user) {
     MergeInputSetResponse mergeInputSetResponse =
         inputSetMergeHelper.getMergePipelineYamlFromInputIdentifierList(accountId, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, inputSetReferences, false, useFQNIfErrorResponse);
+            pipelineIdentifier, inputSetReferences, true, useFQNIfErrorResponse);
+    String inputSetPipeline = "";
+    try {
+      inputSetPipeline =
+          JsonPipelineUtils.writeYamlString(mergeInputSetResponse.getMergedPipeline()).replaceAll("---\n", "");
 
-    return getPipelineResponseDTO(accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Pipeline could not be converted to template");
+    }
+    mergeInputSetResponse =
+        inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, "inputSet", mergeInputSetResponse.getMergedPipeline(), false, useFQNIfErrorResponse);
+
+    return getPipelineResponseDTO(
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, inputSetPipeline);
   }
 
   /**
@@ -93,18 +110,19 @@ public class NGPipelineExecuteHelper {
   }
 
   private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,
-      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user) {
+      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user, String inputSetYaml) {
     if (mergeInputSetResponse.isErrorResponse()) {
       return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(null, mergeInputSetResponse);
     }
     PlanExecution planExecution = startPipelinePlanExecution(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse.getMergedPipeline(), user);
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse.getMergedPipeline(), user, inputSetYaml);
     return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
   }
 
-  private PlanExecution startPipelinePlanExecution(
-      String accountId, String orgIdentifier, String projectIdentifier, NgPipeline finalPipeline, EmbeddedUser user) {
+  private PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
+      NgPipeline finalPipeline, EmbeddedUser user, String inputSetYaml) {
     Map<String, Object> contextAttributes = new HashMap<>();
+    contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetYaml);
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(finalPipeline, accountId, contextAttributes);
 

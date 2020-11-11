@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -148,7 +149,7 @@ public class K8sStepHelper {
   public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       GitStore gitStore = (GitStore) storeConfig;
-      ConnectorInfoDTO connectorDTO = getConnector(gitStore.getConnectorRef().getValue(), ambiance);
+      ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStore.getConnectorRef()), ambiance);
       GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
 
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
@@ -169,9 +170,9 @@ public class K8sStepHelper {
         .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitStore.getGitFetchType())
-        .branch(gitStore.getBranch().getValue())
-        .commitId(gitStore.getCommitId().getValue())
-        .paths(gitStore.getPaths().getValue())
+        .branch(getParameterFieldValue(gitStore.getBranch()))
+        .commitId(getParameterFieldValue(gitStore.getCommitId()))
+        .paths(getParameterFieldValue(gitStore.getPaths()))
         .connectorName(connectorDTO.getName())
         .build();
   }

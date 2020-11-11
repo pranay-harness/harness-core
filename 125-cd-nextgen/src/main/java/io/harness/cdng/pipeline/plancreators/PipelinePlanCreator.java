@@ -31,11 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Singleton
 @Slf4j
 public class PipelinePlanCreator
     extends AbstractPlanCreatorWithChildren<NgPipeline> implements SupportDefinedExecutorPlanCreator<NgPipeline> {
+  public static String INPUT_SET_YAML_KEY = "InputSetYaml";
+
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
@@ -51,7 +54,9 @@ public class PipelinePlanCreator
   public ExecutionPlanCreatorResponse createPlanForSelf(NgPipeline ngPipeline,
       Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
     ExecutionPlanCreatorResponse planForStages = planForChildrenMap.get("STAGES").get(0);
-    final PlanNode pipelineExecutionNode = preparePipelineNode(ngPipeline, planForStages);
+    Optional<String> inputSetPipelineYaml = context.getAttribute(INPUT_SET_YAML_KEY);
+    final PlanNode pipelineExecutionNode =
+        preparePipelineNode(ngPipeline, planForStages, inputSetPipelineYaml.orElse(null));
     return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
         .planNodes(planForStages.getPlanNodes())
@@ -68,7 +73,8 @@ public class PipelinePlanCreator
     return stagesPlanCreator.createPlan(stages, context);
   }
 
-  private PlanNode preparePipelineNode(NgPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
+  private PlanNode preparePipelineNode(
+      NgPipeline pipeline, ExecutionPlanCreatorResponse planForStages, String inputSetPipelineYaml) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -80,6 +86,7 @@ public class PipelinePlanCreator
         .skipExpressionChain(true)
         .stepParameters(CDPipelineSetupParameters.builder()
                             .ngPipeline(pipeline)
+                            .inputSetPipelineYaml(inputSetPipelineYaml)
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
 

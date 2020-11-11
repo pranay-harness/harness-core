@@ -69,7 +69,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
     verify(planExecutionService).get("executionId");
     verify(ngPipelineExecutionService)
         .createPipelineExecutionSummary(
-            anyString(), anyString(), anyString(), any(PlanExecution.class), any(NgPipeline.class));
+            anyString(), anyString(), anyString(), any(PlanExecution.class), any(CDPipelineSetupParameters.class));
   }
 
   @Test

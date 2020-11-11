@@ -48,6 +48,7 @@ public class PipelineExecutionSummary implements PersistentEntity {
   private ExecutionTriggerInfo triggerInfo;
   private List<NGTag> tags;
   private ExecutionErrorInfo errorInfo;
+  private String inputSetYaml;
   @Builder.Default private List<StageExecutionSummary> stageExecutionSummarySummaryElements = new ArrayList<>();
   @Builder.Default private List<String> stageIdentifiers = new ArrayList<>();
   @Builder.Default private List<String> serviceIdentifiers = new ArrayList<>();

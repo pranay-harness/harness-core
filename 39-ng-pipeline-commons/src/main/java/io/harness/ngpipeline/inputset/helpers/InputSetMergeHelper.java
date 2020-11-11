@@ -48,6 +48,9 @@ public class InputSetMergeHelper {
   public String getTemplateFromPipeline(String pipelineYaml) {
     try {
       NgPipeline result = getTemplateObjectFromPipelineYaml(pipelineYaml, true);
+      if (result == null) {
+        return "";
+      }
       return JsonPipelineUtils.writeYamlString(result).replaceAll("---\n", "");
     } catch (IOException e) {
       throw new InvalidRequestException("Pipeline could not be converted to template");

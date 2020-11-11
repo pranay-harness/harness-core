@@ -12,4 +12,5 @@ import java.util.Map;
 public class CDPipelineSetupParameters implements StepParameters {
   private NgPipeline ngPipeline;
   private Map<String, String> fieldToExecutionNodeIdMap;
+  private String inputSetPipelineYaml;
 }
