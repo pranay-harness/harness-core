@@ -204,10 +204,14 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         logObject.setLinesCount(StringUtils.countMatches(logText, "\n"));
         logObject.setCommandExecutionStatus(commandUnitStatus);
         logObject.setCreatedAt(System.currentTimeMillis());
+
+        byte[] logSerialized = kryoSerializer.asBytes(logObject);
+
         log.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
             logObject.getCommandExecutionStatus());
-        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(
-            activityId, URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId, logObject));
+        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(activityId,
+            URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId,
+            RequestBody.create(MediaType.parse("application/octet-stream"), logSerialized)));
         log.info("{} logObject lines dispatched for accountId: {}",
             restResponse.getResource() != null ? logBatch.size() : 0, accountId);
       } catch (Exception e) {

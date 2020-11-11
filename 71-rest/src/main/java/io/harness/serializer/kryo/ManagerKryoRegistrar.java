@@ -211,6 +211,7 @@ import software.wings.beans.KerberosConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NotificationChannelType;
@@ -1454,6 +1455,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAmiAllPhaseRollbackData.class, 7197);
     kryo.register(ThirdPartyApiCallLog.ThirdPartyApiCallField.class, 71100);
     kryo.register(ThirdPartyApiCallLog.FieldType.class, 71101);
+    kryo.register(Log.class, 71102);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);
