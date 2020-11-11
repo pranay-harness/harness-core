@@ -875,11 +875,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String name = EntityNameValidator.getMappedString(infraMapping.getDefaultName());
 
     // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
-    PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
-                                                         .addFilter("appId", Operator.EQ, infraMapping.getAppId())
-                                                         .addFilter("envId", Operator.EQ, infraMapping.getEnvId())
-                                                         .addFilter("name", Operator.STARTS_WITH, name)
-                                                         .build();
+    PageRequest<InfrastructureMapping> pageRequest =
+        aPageRequest()
+            .addFilter(InfrastructureMappingKeys.appId, Operator.EQ, infraMapping.getAppId())
+            .addFilter(InfrastructureMappingKeys.envId, Operator.EQ, infraMapping.getEnvId())
+            .addFilter(InfrastructureMappingKeys.name, Operator.STARTS_WITH, name)
+            .build();
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
     // If an entry exists with the given default name get the next revision number
@@ -1100,7 +1101,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<InfrastructureMapping> get(String appId) {
     PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, appId);
+    pageRequest.addFilter(InfrastructureMappingKeys.appId, SearchFilter.Operator.EQ, appId);
     PageResponse<InfrastructureMapping> result = list(pageRequest);
     return result.getResponse();
   }
@@ -1288,11 +1289,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                             .filter(InfrastructureMapping.APP_ID_KEY, appId)
-                                                             .filter("envId", envId)
-                                                             .project(InfrastructureMapping.APP_ID_KEY, true)
-                                                             .project(InfrastructureMapping.ENV_ID_KEY, true)
-                                                             .project(InfrastructureMapping.NAME_KEY, true)
+                                                             .filter(InfrastructureMappingKeys.appId, appId)
+                                                             .filter(InfrastructureMappingKeys.envId, envId)
+                                                             .project(InfrastructureMappingKeys.appId, true)
+                                                             .project(InfrastructureMappingKeys.envId, true)
+                                                             .project(InfrastructureMappingKeys.name, true)
                                                              .project(InfrastructureMapping.ID_KEY, true)
                                                              .asList();
     for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
@@ -1354,8 +1355,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public void deleteByServiceTemplate(String appId, String serviceTemplateId) {
     List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                .filter("appId", appId)
-                                                .filter("serviceTemplateId", serviceTemplateId)
+                                                .filter(InfrastructureMappingKeys.appId, appId)
+                                                .filter(InfrastructureMappingKeys.serviceTemplateId, serviceTemplateId)
                                                 .asKeyList();
     keys.forEach(key -> delete(appId, (String) key.getId(), true, false));
   }
@@ -2074,12 +2075,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       String appId, String envId, String serviceId, String computeProviderId) {
     Object serviceTemplateId =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .filter("appId", appId)
-                                                      .filter("envId", envId)
-                                                      .filter("serviceTemplateId", serviceTemplateId)
-                                                      .filter("computeProviderSettingId", computeProviderId)
-                                                      .get();
+    InfrastructureMapping infrastructureMapping =
+        wingsPersistence.createQuery(InfrastructureMapping.class)
+            .filter(InfrastructureMappingKeys.appId, appId)
+            .filter(InfrastructureMappingKeys.envId, envId)
+            .filter(InfrastructureMappingKeys.serviceTemplateId, serviceTemplateId)
+            .filter(InfrastructureMappingKeys.computeProviderSettingId, computeProviderId)
+            .get();
     notNullCheck("Infra Mapping", infrastructureMapping);
 
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, null);
@@ -2317,9 +2319,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping getInfraMappingByName(String appId, String envId, String name) {
     return wingsPersistence.createQuery(InfrastructureMapping.class)
-        .filter("appId", appId)
-        .filter("envId", envId)
-        .filter("name", name)
+        .filter(InfrastructureMappingKeys.appId, appId)
+        .filter(InfrastructureMappingKeys.envId, envId)
+        .filter(InfrastructureMappingKeys.name, name)
         .get();
   }
 
@@ -2449,7 +2451,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds) {
     if (isNotEmpty(infraMappingIds)) {
       return wingsPersistence.createQuery(InfrastructureMapping.class)
-          .filter("appId", appId)
+          .filter(InfrastructureMappingKeys.appId, appId)
           .field("uuid")
           .in(infraMappingIds)
           .asList();
