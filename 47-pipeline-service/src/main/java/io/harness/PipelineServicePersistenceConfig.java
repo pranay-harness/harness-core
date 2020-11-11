@@ -12,8 +12,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import java.util.Collections;
 
 @Configuration
-@EnableMongoRepositories(
-    basePackages = {"io.harness.pipeline.service"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+@EnableMongoRepositories(basePackages = {"io.harness.pms"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class PipelineServicePersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public PipelineServicePersistenceConfig(Injector injector) {

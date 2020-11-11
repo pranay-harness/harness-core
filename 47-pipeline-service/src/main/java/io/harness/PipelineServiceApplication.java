@@ -71,6 +71,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
     registerManagedBeans(environment, injector);
+
     MaintenanceController.forceMaintenance(false);
   }
 

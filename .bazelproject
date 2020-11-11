@@ -34,6 +34,8 @@ directories:
   38-execution-plan
   39-ng-pipeline-commons
   40-ng-triggers
+  40-pms-commons
+  41-pms-sdk
   47-pipeline-service
   50-delegate-task-grpc-service
   57-command-library-common
