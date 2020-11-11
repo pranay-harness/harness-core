@@ -40,6 +40,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
+import io.harness.queue.QueuePublisher;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -77,14 +78,18 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
+import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
@@ -128,6 +133,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private HelmChartService helmChartService;
   @Inject private SettingsService settingsService;
   @Inject private HelmHelper helmHelper;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
+  @Inject private TriggerService triggerService; // do not remove, needed for pruning logic.
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -189,7 +196,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
     if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)
         && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
-      helmChartService.deleteByAppManifest(applicationManifest.getAppId(), applicationManifest.getUuid());
+      pruneQueue.send(
+          new PruneEvent(ApplicationManifest.class, applicationManifest.getAppId(), applicationManifest.getUuid()));
       deletePerpetualTask(applicationManifest);
     }
 
@@ -199,6 +207,14 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     yamlPushService.pushYamlChangeSet(
         accountId, applicationManifest, null, Type.DELETE, applicationManifest.isSyncFromGit(), false);
+  }
+
+  @Override
+  public void pruneDescendingEntities(String appId, String applicationManifestId) {
+    List<OwnedByApplicationManifest> services = ServiceClassLocator.descendingServices(
+        this, ApplicationManifestServiceImpl.class, OwnedByApplicationManifest.class);
+    PruneEntityListener.pruneDescendingEntities(
+        services, descending -> descending.pruneByApplicationManifest(appId, applicationManifestId));
   }
 
   @Override

@@ -23,12 +23,14 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
@@ -64,6 +66,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private HarnessTagService harnessTagService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private SettingsService settingsService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject
   public PruneEntityListener(QueueConsumer<PruneEvent> queueConsumer) {
@@ -134,6 +137,8 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
       } else if (clz.equals(SettingAttribute.class)) {
         pruneTagLinks = true;
         settingsService.pruneBySettingAttribute(appId, entityId);
+      } else if (clz.equals(ApplicationManifest.class)) {
+        applicationManifestService.pruneDescendingEntities(appId, entityId);
       } else {
         log.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
       }

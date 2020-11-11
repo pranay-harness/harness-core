@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
@@ -95,4 +96,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   Map<String, String> fetchAppManifestProperties(String appId, String applicationManifestId);
 
   boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts);
+
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String applicationManifestId);
 }

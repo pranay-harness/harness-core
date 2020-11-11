@@ -876,6 +876,19 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldDeleteTriggersForAppManifests() {
+    setUpForNewManifestCondition();
+    Trigger trigger = triggerService.save(newManifestConditionTrigger);
+    assertThat(trigger).isNotNull();
+    assertThat(trigger.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(trigger.getAppId()).isEqualTo(APP_ID);
+
+    triggerService.pruneByApplicationManifest(APP_ID, MANIFEST_ID);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteTriggersByApp() {

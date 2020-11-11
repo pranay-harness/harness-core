@@ -373,6 +373,13 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
+  public void pruneByApplicationManifest(String appId, String applicationManifestId) {
+    for (Trigger trigger : triggerServiceHelper.getNewManifestConditionTriggers(appId, applicationManifestId)) {
+      triggerServiceHelper.delete(trigger.getUuid());
+    }
+  }
+
+  @Override
   public List<String> obtainTriggerNamesReferencedByTemplatedEntityId(String appId, String entityId) {
     return triggerServiceHelper.checkTemplatedEntityReferenced(appId, entityId);
   }
@@ -395,7 +402,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerExecutionPostManifestCollection(String appId, String appManifestId, List<HelmChart> helmCharts) {
     try (AutoLogContext ignore1 = new AppLogContext(appId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new ApplicationManifestLogContext(appManifestId, OVERRIDE_ERROR)) {
-      List<Trigger> triggers = triggerServiceHelper.getNewManifestTriggers(appId, appManifestId);
+      List<Trigger> triggers = triggerServiceHelper.getNewManifestConditionTriggers(appId, appManifestId);
       if (isNotEmpty(triggers)) {
         for (Trigger trigger : triggers) {
           executeNewManifestTrigger(appManifestId, helmCharts, trigger);

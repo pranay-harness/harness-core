@@ -22,6 +22,7 @@ import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
@@ -35,7 +36,8 @@ import javax.validation.Valid;
  * Created by sgurubelli on 10/26/17.
  */
 @OwnedBy(CDC)
-public interface TriggerService extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow {
+public interface TriggerService
+    extends OwnedByApplication, OwnedByPipeline, OwnedByArtifactStream, OwnedByWorkflow, OwnedByApplicationManifest {
   /**
    * List.
    *
