@@ -36,6 +36,7 @@ import migrations.timescaledb.InitVerificationSchemaMigration;
 import migrations.timescaledb.RenameInstanceMigration;
 import migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
 import migrations.timescaledb.UpdateServiceGuardSchema;
+import migrations.timescaledb.data.CreateAnomaliesDataV2;
 import migrations.timescaledb.data.CreatePodCountTable;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -79,6 +80,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(32, CreateAnomaliesData.class))
         .add(Pair.of(33, AddExplorerV2Indices.class))
         .add(Pair.of(34, CreateAggregatedBillingTable.class))
+        .add(Pair.of(35, CreateAnomaliesDataV2.class))
         .build();
   }
 }

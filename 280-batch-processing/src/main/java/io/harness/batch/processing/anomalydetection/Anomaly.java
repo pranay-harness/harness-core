@@ -12,7 +12,10 @@ import java.time.Instant;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class Anomaly extends AnomalyDetectionInfo {
-  private Instant instant;
+  private String id;
+  private Double actualCost;
+  private Double expectedCost;
+  private Instant time;
   private boolean isAnomaly;
   private double anomalyScore;
   private AnomalyType anomalyType;
