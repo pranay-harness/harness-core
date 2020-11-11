@@ -7,6 +7,7 @@ import com.google.inject.name.Named;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -137,5 +138,13 @@ public class ConnectorResource {
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
     return ResponseDTO.newResponse(
         connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+  }
+
+  @GET
+  @Path("catalogue")
+  @ApiOperation(value = "Get Connector Catalogue", nickname = "getConnectorCatalogue")
+  public ResponseDTO<ConnectorCatalogueResponseDTO> getConnectorCatalogue(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return ResponseDTO.newResponse(connectorService.getConnectorCatalogue());
   }
 }

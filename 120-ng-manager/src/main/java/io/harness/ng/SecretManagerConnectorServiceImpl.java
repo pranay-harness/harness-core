@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
@@ -151,5 +152,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
           .testedAt(currentTime)
           .build();
     }
+  }
+
+  @Override
+  public ConnectorCatalogueResponseDTO getConnectorCatalogue() {
+    return defaultConnectorService.getConnectorCatalogue();
   }
 }

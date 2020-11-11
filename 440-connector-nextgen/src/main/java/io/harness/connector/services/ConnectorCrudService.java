@@ -1,5 +1,6 @@
 package io.harness.connector.services;
 
+import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorCategory;
@@ -20,4 +21,6 @@ public interface ConnectorCrudService {
   ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+
+  ConnectorCatalogueResponseDTO getConnectorCatalogue();
 }

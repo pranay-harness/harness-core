@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
@@ -164,5 +165,10 @@ public class ConnectorServiceImpl implements ConnectorService {
           .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
     throw new InvalidRequestException("No such connector found", USER);
+  }
+
+  @Override
+  public ConnectorCatalogueResponseDTO getConnectorCatalogue() {
+    return defaultConnectorService.getConnectorCatalogue();
   }
 }

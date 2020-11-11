@@ -1,3 +1,25 @@
 package io.harness.delegate.beans.connector;
 
-public enum ConnectorCategory { CLOUD_PROVIDER, SECRET_MANAGER, CONNECTOR, ARTIFACTORY }
+import lombok.Getter;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public enum ConnectorCategory {
+  CLOUD_PROVIDER(new HashSet(Arrays.asList(ConnectorType.KUBERNETES_CLUSTER, ConnectorType.GCP, ConnectorType.AWS))),
+  SECRET_MANAGER(new HashSet(
+      Arrays.asList(ConnectorType.VAULT, ConnectorType.KMS, ConnectorType.GCP_KMS, ConnectorType.AWS_SECRETS_MANAGER,
+          ConnectorType.AZURE_VAULT, ConnectorType.CYBERARK, ConnectorType.CUSTOM, ConnectorType.LOCAL))),
+  CONNECTOR(new HashSet(Arrays.asList())),
+  ARTIFACTORY(new HashSet(Arrays.asList(ConnectorType.DOCKER, ConnectorType.ARTIFACTORY, ConnectorType.NEXUS))),
+  CODE_REPO(new HashSet(Arrays.asList(ConnectorType.GIT))),
+  MONITORING(new HashSet(Arrays.asList(ConnectorType.SPLUNK, ConnectorType.APP_DYNAMICS))),
+  TICKETING(new HashSet(Arrays.asList(ConnectorType.JIRA)));
+
+  @Getter private Set<ConnectorType> connectors;
+
+  ConnectorCategory(Set<ConnectorType> connectors) {
+    this.connectors = connectors;
+  }
+}
