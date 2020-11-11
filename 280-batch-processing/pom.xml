@@ -33,6 +33,10 @@
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-retry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>1.9.0</version>

@@ -7,10 +7,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
 import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.AwsS3SyncService;
+import io.vavr.CheckedFunction0;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -39,6 +44,19 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
   @Override
   public void syncBuckets(S3SyncRecord s3SyncRecord) {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
+
+    // Retry class config to retry aws commands
+    RetryConfig config = RetryConfig.custom()
+                             .maxAttempts(5)
+                             .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2))
+                             .retryExceptions(TimeoutException.class, InterruptedException.class, IOException.class)
+                             .build();
+    RetryRegistry registry = RetryRegistry.of(config);
+    Retry retry = registry.retry("awsS3", config);
+    Retry.EventPublisher publisher = retry.getEventPublisher();
+    publisher.onRetry(event -> log.info(event.toString()));
+    publisher.onSuccess(event -> log.info(event.toString()));
+
     ImmutableMap<String, String> envVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID, awsCredentials.getAwsAccessKey(),
         AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION, awsCredentials.getRegion());
     String destinationBucketPath = null;
@@ -67,21 +85,39 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       final ArrayList<String> cmd =
           Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(), destinationBucketPath,
               "--source-region", s3SyncRecord.getBillingBucketRegion(), "--acl", "bucket-owner-full-control");
-      getProcessExecutor()
-          .command(cmd)
-          .environment(roleEnvVariables)
-          .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-          .redirectError(Slf4jStream.of(log).asError())
-          .exitValue(0)
-          .execute();
+      log.info("cmd: {}", cmd);
+
+      // Wrap s3 sync with a retry mechanism.
+      CheckedFunction0<ProcessResult> retryingAwsS3Sync =
+          Retry.decorateCheckedSupplier(retry, () -> trySyncBucket(cmd, roleEnvVariables));
+      try {
+        retryingAwsS3Sync.apply();
+      } catch (Throwable throwable) {
+        log.error("Retries are exhausted");
+        throw new BatchProcessingException("S3 sync failed", throwable);
+      }
+      log.info("sync completed");
+
     } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
-      log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn{}",
+      log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
       throw new BatchProcessingException("S3 sync failed", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
+  }
+
+  public ProcessResult trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)
+      throws InterruptedException, TimeoutException, IOException {
+    log.info("Running the s3 sync command...");
+    return getProcessExecutor()
+        .command(cmd)
+        .environment(roleEnvVariables)
+        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+        .redirectError(Slf4jStream.of(log).asError())
+        .exitValue(0)
+        .execute();
   }
 
   ProcessExecutor getProcessExecutor() {
