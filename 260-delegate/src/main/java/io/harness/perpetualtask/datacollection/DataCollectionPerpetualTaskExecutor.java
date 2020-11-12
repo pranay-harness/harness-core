@@ -2,6 +2,7 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -63,27 +64,30 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     CVDataCollectionInfo dataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     log.info("DataCollectionInfo {} ", dataCollectionInfo);
-    DataCollectionTaskDTO dataCollectionTask;
-    secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
-            ? (DecryptableEntity) dataCollectionInfo.getConnectorConfigDTO()
-            : null,
-        dataCollectionInfo.getEncryptedDataDetails());
-    dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
-    try {
-      // TODO: What happens if this task takes more time then the schedule?
-      while (true) {
-        dataCollectionTask = getNextDataCollectionTask(taskParams);
-        if (dataCollectionTask == null) {
-          log.info("Nothing to process.");
-          break;
-        } else {
-          log.info("Next task to process: ", dataCollectionTask);
-          run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
+    try (DataCollectionLogContext ignored = new DataCollectionLogContext(
+             taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
+      DataCollectionTaskDTO dataCollectionTask;
+      secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
+              ? (DecryptableEntity) dataCollectionInfo.getConnectorConfigDTO()
+              : null,
+          dataCollectionInfo.getEncryptedDataDetails());
+      dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
+      try {
+        // TODO: What happens if this task takes more time then the schedule?
+        while (true) {
+          dataCollectionTask = getNextDataCollectionTask(taskParams);
+          if (dataCollectionTask == null) {
+            log.info("Nothing to process.");
+            break;
+          } else {
+            log.info("Next task to process: ", dataCollectionTask);
+            run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
+          }
         }
+      } catch (IOException e) {
+        log.error("Perpetual task failed with exception", e);
+        throw new IllegalStateException(e);
       }
-    } catch (IOException e) {
-      log.error("Perpetual task failed with exception", e);
-      throw new IllegalStateException(e);
     }
 
     return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
