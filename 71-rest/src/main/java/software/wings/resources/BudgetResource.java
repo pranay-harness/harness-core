@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.ResourceType.USER;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,6 +11,7 @@ import io.harness.ccm.budget.entities.Budget;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.annotations.Scope;
 
 import java.util.List;
 import javax.ws.rs.DELETE;
@@ -23,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Api("budgets")
 @Path("/budgets")
 @Produces("application/json")
+@Scope(USER)
 public class BudgetResource {
   private BudgetService budgetService;
 
