@@ -432,11 +432,23 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void heartbeat() {
-    Map<String, Object> heartbeatData = new HashMap<>();
-    heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
-    heartbeatData.put(WATCHER_PROCESS, getProcessId());
-    heartbeatData.put(WATCHER_VERSION, getVersion());
-    messageService.putAllData(WATCHER_DATA, heartbeatData);
+    if (!isDiskFull()) {
+      try {
+        Map<String, Object> heartbeatData = new HashMap<>();
+        heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+        heartbeatData.put(WATCHER_PROCESS, getProcessId());
+        heartbeatData.put(WATCHER_VERSION, getVersion());
+        messageService.putAllData(WATCHER_DATA, heartbeatData);
+      } catch (Exception e) {
+        if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+          lastAvailableDiskSpace.set(getDiskFreeSpace());
+          log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+        } else {
+          log.error("Error putting all watcher data", e);
+          throw e;
+        }
+      }
+    }
   }
 
   private void syncWatchDelegate() {
