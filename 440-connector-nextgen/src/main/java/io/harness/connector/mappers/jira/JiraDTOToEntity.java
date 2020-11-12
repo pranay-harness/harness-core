@@ -1,6 +1,6 @@
 package io.harness.connector.mappers.jira;
 
-import static io.harness.delegate.beans.connector.ConnectorCategory.CONNECTOR;
+import static io.harness.delegate.beans.connector.ConnectorCategory.TICKETING;
 
 import com.google.inject.Singleton;
 
@@ -26,6 +26,6 @@ public class JiraDTOToEntity implements ConnectorDTOToEntityMapper<JiraConnector
 
   @Override
   public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(CONNECTOR);
+    return Collections.singletonList(TICKETING);
   }
 }
