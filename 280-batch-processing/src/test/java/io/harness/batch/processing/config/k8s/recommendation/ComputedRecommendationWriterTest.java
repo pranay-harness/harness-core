@@ -347,6 +347,14 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("nvidia.com/gpu", "1")
                        .limit("nvidia.com/gpu", "2")
                        .build());
+    assertThat(containerRecommendation.getRecommended())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "25m")
+                       .request("memory", "549M")
+                       .limit("memory", "549M")
+                       .request("nvidia.com/gpu", "1")
+                       .limit("nvidia.com/gpu", "2")
+                       .build());
     assertThat(containerRecommendation.getNumDays()).isEqualTo(7);
     assertThat(containerRecommendation.getTotalSamplesCount()).isEqualTo(674);
 
@@ -506,6 +514,12 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("memory", "20M")
                        .limit("memory", "20M")
                        .build());
+    assertThat(containerRecommendation.getRecommended())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "15m")
+                       .request("memory", "20M")
+                       .limit("memory", "20M")
+                       .build());
   }
 
   @Test
@@ -579,6 +593,13 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
         .isEqualTo(ResourceRequirement.builder()
                        .request("cpu", "25m")
                        .limit("cpu", "25m")
+                       .request("memory", "250M")
+                       .limit("memory", "250M")
+                       .build());
+
+    assertThat(containerRecommendation.getRecommended())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "25m")
                        .request("memory", "250M")
                        .limit("memory", "250M")
                        .build());

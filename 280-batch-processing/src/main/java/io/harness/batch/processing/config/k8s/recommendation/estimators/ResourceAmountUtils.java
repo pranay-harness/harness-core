@@ -61,10 +61,14 @@ public class ResourceAmountUtils {
   }
 
   static Map<String, String> convertToReadableForm(Map<String, Long> resourceMap) {
-    return ImmutableMap.<String, String>builder()
-        .put(CPU, readableCpuAmount(cpu(resourceMap)))
-        .put(MEMORY, readableMemoryAmount(memory(resourceMap)))
-        .build();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
+    if (resourceMap.containsKey(CPU)) {
+      builder.put(CPU, readableCpuAmount(cpu(resourceMap)));
+    }
+    if (resourceMap.containsKey(MEMORY)) {
+      builder.put(MEMORY, readableMemoryAmount(memory(resourceMap)));
+    }
+    return builder.build();
   }
 
   static String readableCpuAmount(long cpuAmount) {

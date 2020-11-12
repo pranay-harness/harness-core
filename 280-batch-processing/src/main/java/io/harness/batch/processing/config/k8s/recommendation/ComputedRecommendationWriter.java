@@ -3,6 +3,7 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.burstableRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.guaranteedRecommender;
+import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.recommendedRecommender;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
@@ -121,12 +122,16 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
                 burstableRecommender(minContainerResources).getEstimatedResourceRequirements(containerState);
             ResourceRequirement guaranteed =
                 guaranteedRecommender(minContainerResources).getEstimatedResourceRequirements(containerState);
+            ResourceRequirement recommended =
+                recommendedRecommender(minContainerResources).getEstimatedResourceRequirements(containerState);
             if (current != null) {
               burstable = copyExtendedResources(current, burstable);
               guaranteed = copyExtendedResources(current, guaranteed);
+              recommended = copyExtendedResources(current, recommended);
             }
             containerRecommendation.setBurstable(burstable);
             containerRecommendation.setGuaranteed(guaranteed);
+            containerRecommendation.setRecommended(recommended);
             int days =
                 (int) between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
             // upper bound by 8 days
