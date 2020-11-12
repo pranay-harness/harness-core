@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
+import static io.harness.k8s.K8sConstants.KUBERNETES_CHANGE_CAUSE_ANNOTATION;
 import static io.harness.k8s.K8sConstants.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.kubectl.AbstractExecutable.getPrintableCommand;
@@ -141,6 +142,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -794,7 +796,13 @@ public class K8sTaskHelperBase {
 
     Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
 
-    final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(true);
+    // We want to set `kubernetes.io/change-cause` annotation only if no any custom value already defined
+    boolean recordCommand =
+        resources.stream()
+            .map(resource -> resource.getMetadataAnnotationValue(KUBERNETES_CHANGE_CAUSE_ANNOTATION))
+            .noneMatch(Objects::nonNull);
+
+    final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(recordCommand);
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
