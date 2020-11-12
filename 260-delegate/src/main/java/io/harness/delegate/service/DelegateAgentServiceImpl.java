@@ -202,6 +202,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -231,8 +232,6 @@ import javax.validation.constraints.NotNull;
 @Singleton
 @Slf4j
 public class DelegateAgentServiceImpl implements DelegateAgentService {
-  private static final int MAX_CONNECT_ATTEMPTS = 3;
-  private static final int RECONNECT_INTERVAL_SECONDS = 3;
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
@@ -313,6 +312,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
   private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
+  private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
+  private final AtomicBoolean closingSocket = new AtomicBoolean(false);
 
   private Client client;
   private Socket socket;
@@ -441,13 +442,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
         RequestBuilder requestBuilder = prepareRequestBuilder();
 
-        Options clientOptions =
-            client.newOptionsBuilder()
-                .runtime(asyncHttpClient, true)
-                .reconnect(true)
-                .reconnectAttempts(new File(START_SH).exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-                .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
-                .build();
+        Options clientOptions = client.newOptionsBuilder().runtime(asyncHttpClient, true).reconnect(false).build();
         socket = client.create(clientOptions);
         socket
             .on(Event.MESSAGE,
@@ -464,11 +459,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                     handleError(e);
                   }
                 })
-            .on(Event.REOPENED,
+            .on(Event.OPEN,
                 new Function<Object>() { // Do not change this, wasync doesn't like lambdas
                   @Override
                   public void on(Object o) {
-                    handleReopened(o, builder);
+                    handleOpen(o);
                   }
                 })
             .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
@@ -665,53 +660,71 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
   }
 
+  private void handleOpen(Object o) {
+    log.info("Event:{}, message:[{}]", Event.OPEN.name(), o.toString());
+  }
+
   private void handleClose(Object o) {
     log.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(true);
-  }
-
-  private void handleReopened(Object o, DelegateParamsBuilder builder) {
-    log.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
-    // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
-    // pollingForTasks.set(false);
-    try {
-      DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
-      socket.fire(JsonUtils.asJson(delegateParams));
-    } catch (IOException e) {
-      log.error("Error connecting", e);
+    if (!closingSocket.get()) {
+      if (reconnectingSocket.compareAndSet(false, true)) {
+        try {
+          trySocketReconnect();
+        } finally {
+          reconnectingSocket.set(false);
+        }
+      }
     }
   }
 
   private void handleError(Exception e) {
     log.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
-    if (e instanceof SSLException || e instanceof TransportNotSupported) {
-      log.info("Reopening connection to manager");
+    if (reconnectingSocket.compareAndSet(false, true)) {
       try {
-        socket.close();
-      } catch (Exception ex) {
-        // Ignore
+        if (e instanceof SSLException || e instanceof TransportNotSupported) {
+          log.info("Reopening connection to manager");
+          try {
+            socket.close();
+          } catch (Exception ex) {
+            // Ignore
+          }
+          trySocketReconnect();
+        } else if (e instanceof ConnectException) {
+          log.warn("Failed to connect.");
+          restartNeeded.set(true);
+        } else if (e instanceof ConcurrentModificationException) {
+          log.error("Concurrent modification exception. Ignoring.");
+        } else {
+          log.error("Exception: " + e.getMessage(), e);
+          try {
+            finalizeSocket();
+          } catch (Exception ex) {
+            // Ignore
+          }
+          restartNeeded.set(true);
+        }
+      } finally {
+        reconnectingSocket.set(false);
       }
-      try {
-        FibonacciBackOff.executeForEver(() -> {
-          RequestBuilder requestBuilder = prepareRequestBuilder();
-          return socket.open(requestBuilder.build());
-        });
-      } catch (IOException ex) {
-        log.error("Unable to open socket", ex);
-      }
-    } else if (e instanceof ConnectException) {
-      log.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
-      restartNeeded.set(true);
-    } else {
-      log.error("Exception: " + e.getMessage(), e);
-      try {
-        socket.close();
-      } catch (Exception ex) {
-        // Ignore
-      }
-      restartNeeded.set(true);
     }
+  }
+
+  private void trySocketReconnect() {
+    try {
+      FibonacciBackOff.executeForEver(() -> {
+        RequestBuilder requestBuilder = prepareRequestBuilder();
+        return socket.open(requestBuilder.build());
+      });
+    } catch (IOException ex) {
+      log.error("Unable to open socket", ex);
+    }
+  }
+
+  private void finalizeSocket() {
+    closingSocket.set(true);
+    socket.close();
   }
 
   private void handleMessageSubmit(String message) {
@@ -807,7 +820,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Override
   public void pause() {
     if (!delegateConfiguration.isPollForTasks()) {
-      socket.close();
+      finalizeSocket();
     }
   }
 
@@ -2120,7 +2133,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     selfDestruct.set(true);
 
     if (socket != null) {
-      socket.close();
+      finalizeSocket();
     }
 
     DelegateStackdriverLogAppender.setManagerClient(null);
