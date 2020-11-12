@@ -8,6 +8,7 @@ import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -31,6 +32,8 @@ import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -50,6 +53,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -83,9 +87,11 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,6 +117,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private EntityVersionService entityVersionService;
   @Mock private ResourceLookupService resourceLookupService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
+  @Mock private YamlPushService yamlPushService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
 
   @Captor ArgumentCaptor<Command> commandCaptor;
@@ -711,6 +718,44 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     serviceResourceService.update(service);
 
     verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(service);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testDeleteServiceWithServiceCommand() {
+    final String UUID = RandomStringUtils.randomAlphanumeric(32);
+
+    Command command = aCommand().withName("Install").withAccountId(ACCOUNT_ID).withOriginEntityId(UUID).build();
+    command.setAppId(APP_ID);
+
+    ServiceCommand serviceCommand = aServiceCommand()
+                                        .withName("Install")
+                                        .withServiceId(SERVICE_ID)
+                                        .withAppId(APP_ID)
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withUuid(UUID)
+                                        .build();
+
+    List<ServiceCommand> serviceCommands = new ArrayList<>();
+    serviceCommands.add(serviceCommand);
+
+    Service service = Service.builder()
+                          .name("custom-service")
+                          .appId(APP_ID)
+                          .uuid(SERVICE_ID)
+                          .deploymentType(CUSTOM)
+                          .accountId(ACCOUNT_ID)
+                          .deploymentTypeTemplateId(TEMPLATE_ID)
+                          .serviceCommands(serviceCommands)
+                          .build();
+
+    wingsPersistence.save(command);
+    wingsPersistence.save(serviceCommand);
+    wingsPersistence.save(service);
+
+    serviceResourceService.delete(APP_ID, SERVICE_ID);
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
   }
 
   @Test

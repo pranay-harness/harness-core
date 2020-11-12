@@ -1367,12 +1367,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<Service> services = findServicesByAppInternal(appId);
 
     for (Service service : services) {
-      wingsPersistence.delete(Service.class, service.getUuid());
+      String serviceUuid = service.getUuid();
+      wingsPersistence.delete(Service.class, serviceUuid);
       accountId = service.getAccountId();
       auditServiceHelper.reportDeleteForAuditing(service.getAppId(), service);
+
+      getServiceCommands(appId, serviceUuid, false)
+          .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, false));
+
       pruneDeploymentSpecifications(service);
-      pruneDescendingEntities(appId, service.getUuid());
-      harnessTagService.pruneTagLinks(service.getAccountId(), service.getUuid());
+      pruneDescendingEntities(appId, serviceUuid);
+      harnessTagService.pruneTagLinks(service.getAccountId(), serviceUuid);
     }
 
     if (!StringUtils.isEmpty(accountId)) {

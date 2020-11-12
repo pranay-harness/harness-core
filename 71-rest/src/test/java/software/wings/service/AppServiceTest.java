@@ -22,14 +22,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
@@ -42,6 +47,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -62,6 +68,8 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
@@ -86,6 +94,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -336,15 +345,45 @@ public class AppServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldDeleteApplication() {
-    when(wingsPersistence.delete(any(), any())).thenReturn(true);
-    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    final String UUID = RandomStringUtils.randomAlphanumeric(32);
+
+    Command command = aCommand().withName("Install").withAccountId(ACCOUNT_ID).withOriginEntityId(UUID).build();
+    command.setAppId(APP_ID);
+
+    ServiceCommand serviceCommand = aServiceCommand()
+                                        .withName("Install")
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withServiceId(SERVICE_ID)
+                                        .withAppId(APP_ID)
+                                        .withUuid(UUID)
+                                        .build();
+
+    List<ServiceCommand> serviceCommands = new ArrayList<>();
+    serviceCommands.add(serviceCommand);
+
+    Service service = Service.builder()
+                          .name("custom-service")
+                          .appId(APP_ID)
+                          .uuid(SERVICE_ID)
+                          .deploymentType(CUSTOM)
+                          .deploymentTypeTemplateId(TEMPLATE_ID)
+                          .serviceCommands(serviceCommands)
+                          .build();
+
+    List<Service> services = new ArrayList<>();
+    services.add(service);
 
     Application application = anApplication()
                                   .uuid(APP_ID)
                                   .name("APP_NAME")
                                   .accountId("some-account-id-" + AppServiceTest.class.getSimpleName())
+                                  .services(services)
                                   .build();
+
+    when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
