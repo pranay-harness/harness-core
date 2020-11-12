@@ -1,11 +1,16 @@
 package io.harness.batch.processing.config.k8s.recommendation.estimators;
 
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils.convertToReadableForm;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
 import lombok.experimental.UtilityClass;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendationPreset;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @UtilityClass
 public class ContainerResourceRequirementEstimators {
@@ -49,6 +54,41 @@ public class ContainerResourceRequirementEstimators {
       Map<String, String> resources =
           convertToReadableForm(TARGET_ESTIMATOR.withMinResources(minResources).getResourceEstimation(cs));
       return ResourceRequirement.builder().requests(resources).limits(resources).build();
+    };
+  }
+
+  public static ContainerResourceRequirementEstimator recommendedRecommender(Map<String, Long> minResources) {
+    K8sWorkloadRecommendationPreset defaultPreset = K8sWorkloadRecommendationPreset.builder()
+                                                        .cpuRequest(0.8)
+                                                        .cpuLimit(-1)
+                                                        .memoryRequest(0.8)
+                                                        .memoryLimit(0.95)
+                                                        .safetyMargin(SAFETY_MARGIN_FRACTION)
+                                                        .build();
+    return recommender(minResources, defaultPreset);
+  }
+
+  public static ContainerResourceRequirementEstimator recommender(
+      Map<String, Long> minResources, K8sWorkloadRecommendationPreset preset) {
+    return cs -> {
+      Set<String> noLimitResources = new HashSet<>();
+      if (preset.getCpuLimit() <= 0) {
+        noLimitResources.add(CPU);
+      }
+      if (preset.getMemoryLimit() <= 0) {
+        noLimitResources.add(MEMORY);
+      }
+      ResourceEstimator requestEstimator = PercentileEstimator.of(preset.getCpuRequest(), preset.getMemoryRequest())
+                                               .withMargin(preset.getSafetyMargin())
+                                               .withMinResources(minResources);
+      ResourceEstimator limitEstimator = PercentileEstimator.of(preset.getCpuLimit(), preset.getMemoryLimit())
+                                             .withMargin(preset.getSafetyMargin())
+                                             .withMinResources(minResources)
+                                             .omitResources(noLimitResources);
+      return ResourceRequirement.builder()
+          .requests(convertToReadableForm(requestEstimator.getResourceEstimation(cs)))
+          .limits(convertToReadableForm(limitEstimator.getResourceEstimation(cs)))
+          .build();
     };
   }
 }

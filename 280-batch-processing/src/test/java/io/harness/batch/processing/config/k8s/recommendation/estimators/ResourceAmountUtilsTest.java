@@ -50,5 +50,8 @@ public class ResourceAmountUtilsTest extends CategoryTest {
   public void testConvertResources() throws Exception {
     assertThat(convertToReadableForm(ImmutableMap.of(CPU, 40L, MEMORY, 25L * 1000 * 1000)))
         .isEqualTo(ImmutableMap.of(CPU, "40m", MEMORY, "25M"));
+    assertThat(convertToReadableForm(ImmutableMap.of(MEMORY, 25L * 1000 * 1000)))
+        .isEqualTo(ImmutableMap.of(MEMORY, "25M"));
+    assertThat(convertToReadableForm(ImmutableMap.of(CPU, 40L))).isEqualTo(ImmutableMap.of(CPU, "40m"));
   }
 }

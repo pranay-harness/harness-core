@@ -147,6 +147,16 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                         + "  memory: 40Mi\n"
                                                                         + "  cpu: 200m\n")
                                                                     .build())
+                                                    .recommended(QLResourceRequirement.builder()
+                                                                     .request(QLResourceEntry.of("cpu", "50m"))
+                                                                     .request(QLResourceEntry.of("memory", "10Mi"))
+                                                                     .limit(QLResourceEntry.of("memory", "40Mi"))
+                                                                     .yaml("limits:\n"
+                                                                         + "  memory: 40Mi\n"
+                                                                         + "requests:\n"
+                                                                         + "  memory: 10Mi\n"
+                                                                         + "  cpu: 50m\n")
+                                                                     .build())
                                                     .numDays(7)
                                                     .build())
                        .estimatedSavings(BigDecimal.valueOf(100.0))
@@ -249,6 +259,11 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                 .limit("cpu", "200m")
                                 .limit("memory", "40Mi")
                                 .build())
+                .recommended(ResourceRequirement.builder()
+                                 .request("cpu", "50m")
+                                 .request("memory", "10Mi")
+                                 .limit("memory", "40Mi")
+                                 .build())
                 .numDays(7)
                 .build())
         .numDays(7)

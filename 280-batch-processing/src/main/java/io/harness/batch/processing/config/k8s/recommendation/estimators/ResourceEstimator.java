@@ -3,6 +3,7 @@ package io.harness.batch.processing.config.k8s.recommendation.estimators;
 import io.harness.batch.processing.config.k8s.recommendation.ContainerState;
 
 import java.util.Map;
+import java.util.Set;
 
 interface ResourceEstimator {
   // cpu in millicores, memory in bytes
@@ -18,5 +19,13 @@ interface ResourceEstimator {
 
   default ResourceEstimator withConfidenceMultiplier(double multiplier, double exponent) {
     return ConfidenceMultiplierEstimator.of(multiplier, exponent, this);
+  }
+
+  default ResourceEstimator omitResources(String... omittedResources) {
+    return new OmitResourceEstimator(omittedResources, this);
+  }
+
+  default ResourceEstimator omitResources(Set<String> noLimitResources) {
+    return new OmitResourceEstimator(noLimitResources, this);
   }
 }

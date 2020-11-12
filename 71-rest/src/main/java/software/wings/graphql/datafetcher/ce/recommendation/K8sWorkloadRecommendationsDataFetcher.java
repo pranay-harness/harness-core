@@ -113,6 +113,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
               .current(entityToDto(containerRecommendation.getCurrent()))
               .burstable(entityToDto(containerRecommendation.getBurstable()))
               .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
+              .recommended(entityToDto(containerRecommendation.getRecommended()))
               .numDays(containerRecommendation.getNumDays())
               .totalSamplesCount(containerRecommendation.getTotalSamplesCount())
               .build();
