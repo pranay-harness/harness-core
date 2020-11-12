@@ -20,7 +20,6 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.Status;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
@@ -33,6 +32,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.plan.PlanNode;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.FailureInfo;
 import io.harness.yaml.core.ParallelStageElement;

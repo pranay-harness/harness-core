@@ -13,7 +13,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.beans.ExecutionNode;
 import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;

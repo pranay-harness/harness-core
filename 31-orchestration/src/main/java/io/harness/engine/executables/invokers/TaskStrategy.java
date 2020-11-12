@@ -1,6 +1,7 @@
 package io.harness.engine.executables.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.pms.execution.Status.TASK_WAITING;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -17,7 +18,6 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.plan.PlanNode;
@@ -84,7 +84,7 @@ public class TaskStrategy implements TaskExecuteStrategy {
     waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
 
     // Update Execution Node Instance state to TASK_WAITING
-    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), TASK_WAITING,
         ops
         -> ops.addToSet(NodeExecutionKeys.executableResponses,
             TaskExecutableResponse.builder().taskId(taskId).taskMode(mode).build()));

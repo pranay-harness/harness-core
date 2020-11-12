@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;

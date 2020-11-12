@@ -1,10 +1,10 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.INTERVENTION_WAITING;
-import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
+import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.execution.Status.RUNNING;
 
 import com.google.inject.Inject;
 
@@ -16,9 +16,9 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.execution.Status;
 import lombok.NonNull;
 
 import javax.validation.Valid;
@@ -65,6 +65,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptId(interrupt.getUuid())
                   .build()));
+
       planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
       orchestrationEngine.concludeNodeExecution(nodeExecution, status);
     } catch (Exception ex) {

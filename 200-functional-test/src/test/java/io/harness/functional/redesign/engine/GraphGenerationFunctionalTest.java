@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import io.harness.StatusUtils;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EdgeList;
 import io.harness.beans.ExecutionStatus;
@@ -21,11 +22,11 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
+import io.harness.pms.execution.Status;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepParameters;
@@ -272,7 +273,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     Awaitility.await().atMost(Duration.FIVE_MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       RestResponse<OrchestrationGraphDTO> response = internalRequest(returnType, queryParams, requestUri);
       return response.getResource().getEndTs() != null
-          && Status.finalStatuses().contains(response.getResource().getStatus());
+          && StatusUtils.finalStatuses().contains(response.getResource().getStatus());
     });
 
     RestResponse<OrchestrationGraphDTO> response = internalRequest(returnType, queryParams, requestUri);

@@ -1,6 +1,6 @@
 package io.harness.impl;
 
-import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;

@@ -2,8 +2,9 @@ package io.harness.timeout.trackers.active;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutEvent;
 import io.harness.timeout.trackers.PausableTimeoutTracker;
@@ -28,7 +29,7 @@ public class ActiveTimeoutTracker extends PausableTimeoutTracker {
 
     StatusUpdateTimeoutEvent statusUpdateTimeoutEvent = (StatusUpdateTimeoutEvent) event;
     Status status = statusUpdateTimeoutEvent.getStatus();
-    if (Status.flowingStatuses().contains(status)) {
+    if (StatusUtils.flowingStatuses().contains(status)) {
       // Execution is running and is not in a paused state
       if (isTicking()) {
         return false;

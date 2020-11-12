@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
-import static io.harness.execution.status.Status.DISCONTINUING;
+import static io.harness.pms.execution.Status.DISCONTINUING;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -29,7 +30,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.persistence.HPersistence;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
@@ -97,7 +98,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
     if (PLAN.equals(instance.getReleaseEntityType())) {
       try {
         PlanExecution planExecution = planExecutionService.get(releaseEntityId);
-        finished = planExecution != null && Status.finalStatuses().contains(planExecution.getStatus());
+        finished = planExecution != null && StatusUtils.finalStatuses().contains(planExecution.getStatus());
       } catch (InvalidRequestException e) {
         log.error("", e);
         return false;
@@ -108,7 +109,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
             ResourceRestraintService.getSetupNodeIdFromReleaseEntityId(releaseEntityId),
             ResourceRestraintService.getPlanExecutionIdFromReleaseEntityId(releaseEntityId));
         finished = nodeExecution != null
-            && (Status.finalStatuses().contains(nodeExecution.getStatus())
+            && (StatusUtils.finalStatuses().contains(nodeExecution.getStatus())
                    || DISCONTINUING == nodeExecution.getStatus());
       } catch (InvalidRequestException e) {
         log.error("", e);

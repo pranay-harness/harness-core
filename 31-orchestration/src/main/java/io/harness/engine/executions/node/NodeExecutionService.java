@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.Status;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.pms.execution.Status;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
 

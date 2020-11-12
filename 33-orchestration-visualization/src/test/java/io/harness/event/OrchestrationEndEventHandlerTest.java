@@ -18,7 +18,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;

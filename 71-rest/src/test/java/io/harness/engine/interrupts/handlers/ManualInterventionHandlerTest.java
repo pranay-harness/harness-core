@@ -1,10 +1,10 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.Status.FAILED;
-import static io.harness.execution.status.Status.INTERVENTION_WAITING;
-import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.pms.execution.Status.FAILED;
+import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 

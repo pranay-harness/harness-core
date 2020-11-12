@@ -7,8 +7,8 @@ import static io.harness.distribution.barrier.Barrier.builder;
 import static io.harness.distribution.barrier.Forcer.State.ABANDONED;
 import static io.harness.distribution.barrier.Forcer.State.APPROACHING;
 import static io.harness.distribution.barrier.Forcer.State.ARRIVED;
-import static io.harness.execution.status.Status.ABORTED;
-import static io.harness.execution.status.Status.EXPIRED;
+import static io.harness.pms.execution.Status.ABORTED;
+import static io.harness.pms.execution.Status.EXPIRED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
@@ -30,7 +31,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -182,9 +183,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         return APPROACHING;
       }
 
-      if (Status.positiveStatuses().contains(planExecution.getStatus())) {
+      if (StatusUtils.positiveStatuses().contains(planExecution.getStatus())) {
         return ARRIVED;
-      } else if (Status.brokeStatuses().contains(planExecution.getStatus()) || planExecution.getStatus() == ABORTED) {
+      } else if (StatusUtils.brokeStatuses().contains(planExecution.getStatus())
+          || planExecution.getStatus() == ABORTED) {
         return ABANDONED;
       }
     } else {

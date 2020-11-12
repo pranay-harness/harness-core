@@ -1,11 +1,11 @@
 package io.harness.redesign.advisers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.positiveStatuses;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
@@ -54,6 +54,6 @@ public class HttpResponseCodeSwitchAdviser implements Adviser<HttpResponseCodeSw
 
   @Override
   public boolean canAdvise(AdvisingEvent<HttpResponseCodeSwitchAdviserParameters> advisingEvent) {
-    return positiveStatuses().contains(advisingEvent.getToStatus());
+    return StatusUtils.positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 
 import java.util.Arrays;
 import java.util.Set;

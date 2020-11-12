@@ -16,7 +16,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.skip.service.VertexSkipperService;
 import org.junit.Test;

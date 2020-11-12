@@ -1,8 +1,8 @@
 package io.harness.functional.redesign.engine;
 
-import static io.harness.execution.status.Status.EXPIRED;
-import static io.harness.execution.status.Status.FAILED;
-import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.EXPIRED;
+import static io.harness.pms.execution.Status.FAILED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;

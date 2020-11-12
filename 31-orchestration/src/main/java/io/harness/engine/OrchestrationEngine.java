@@ -4,14 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.Status.ABORTED;
-import static io.harness.execution.status.Status.ERRORED;
-import static io.harness.execution.status.Status.EXPIRED;
-import static io.harness.execution.status.Status.FAILED;
-import static io.harness.execution.status.Status.RUNNING;
-import static io.harness.execution.status.Status.SUCCEEDED;
-import static io.harness.execution.status.Status.positiveStatuses;
-import static io.harness.execution.status.Status.resumableStatuses;
+import static io.harness.pms.execution.Status.ABORTED;
+import static io.harness.pms.execution.Status.ERRORED;
+import static io.harness.pms.execution.Status.EXPIRED;
+import static io.harness.pms.execution.Status.FAILED;
+import static io.harness.pms.execution.Status.RUNNING;
+import static io.harness.pms.execution.Status.SUCCEEDED;
+
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 import static java.lang.String.format;
 
@@ -21,6 +20,7 @@ import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
 import io.harness.OrchestrationPublisherName;
+import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdviseType;
 import io.harness.adviser.Adviser;
@@ -55,7 +55,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
@@ -371,7 +371,7 @@ public class OrchestrationEngine {
   private Status calculateEndStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
     List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
-    if (positiveStatuses().containsAll(statuses)) {
+    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
       return SUCCEEDED;
     } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
       return ABORTED;
@@ -397,7 +397,7 @@ public class OrchestrationEngine {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      if (!resumableStatuses().contains(nodeExecution.getStatus())) {
+      if (!StatusUtils.resumableStatuses().contains(nodeExecution.getStatus())) {
         log.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
             nodeExecution.getStatus());
         return;

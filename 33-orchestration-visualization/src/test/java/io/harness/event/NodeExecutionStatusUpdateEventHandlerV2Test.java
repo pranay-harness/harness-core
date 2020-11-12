@@ -2,7 +2,7 @@ package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
-import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
@@ -27,7 +27,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;

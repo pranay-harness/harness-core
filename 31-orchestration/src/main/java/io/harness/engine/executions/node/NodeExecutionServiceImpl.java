@@ -1,7 +1,7 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.DISCONTINUING;
+import static io.harness.pms.execution.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.mongodb.client.result.UpdateResult;
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.exception.InvalidRequestException;
@@ -17,9 +18,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
-import io.harness.execution.status.Status;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.execution.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -157,7 +158,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution updateStatusWithOps(
       @NonNull String nodeExecutionId, @NonNull Status status, Consumer<Update> ops) {
-    EnumSet<Status> allowedStartStatuses = Status.nodeAllowedStartSet(status);
+    EnumSet<Status> allowedStartStatuses = StatusUtils.nodeAllowedStartSet(status);
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
     Update updateOps = new Update()
