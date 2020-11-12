@@ -7,12 +7,13 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -44,7 +45,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
    */
   @Override
   public PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops) {
-    EnumSet<Status> allowedStartStatuses = Status.planAllowedStartSet(status);
+    EnumSet<Status> allowedStartStatuses = StatusUtils.planAllowedStartSet(status);
     Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId))
                       .addCriteria(where(PlanExecutionKeys.status).in(allowedStartStatuses));
     Update updateOps = new Update()

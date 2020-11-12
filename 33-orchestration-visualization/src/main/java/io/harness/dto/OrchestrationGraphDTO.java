@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import lombok.Builder;
 import lombok.Value;
 

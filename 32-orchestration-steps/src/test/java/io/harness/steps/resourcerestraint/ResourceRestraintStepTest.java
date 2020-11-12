@@ -1,7 +1,7 @@
 package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

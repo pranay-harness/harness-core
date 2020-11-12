@@ -2,13 +2,13 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.EXPIRED;
-import static io.harness.execution.status.Status.finalizableStatuses;
+import static io.harness.pms.execution.Status.EXPIRED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -41,7 +41,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
     }
 
     NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
-    if (!finalizableStatuses().contains(nodeExecution.getStatus())) {
+    if (!StatusUtils.finalizableStatuses().contains(nodeExecution.getStatus())) {
       throw new InvalidRequestException(
           "NodeExecution is not in a finalizable status. Current Status: " + nodeExecution.getStatus());
     }

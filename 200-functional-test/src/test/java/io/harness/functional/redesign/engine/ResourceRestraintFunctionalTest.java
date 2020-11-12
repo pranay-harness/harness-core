@@ -1,19 +1,19 @@
 package io.harness.functional.redesign.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.FunctionalTests;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.functional.AbstractFunctionalTest;
@@ -74,7 +74,7 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = getPlanExecution(original.getUuid());
-      return planExecution != null && Status.finalStatuses().contains(planExecution.getStatus());
+      return planExecution != null && StatusUtils.finalStatuses().contains(planExecution.getStatus());
     });
 
     assertThat(getPlanExecution(original.getUuid()).getStatus()).isEqualTo(SUCCEEDED);

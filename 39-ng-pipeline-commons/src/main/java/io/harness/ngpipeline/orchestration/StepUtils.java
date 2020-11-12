@@ -2,7 +2,7 @@ package io.harness.ngpipeline.orchestration;
 
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;

@@ -10,7 +10,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 
 public class InterventionWaitAdviseHandler implements AdviseHandler<InterventionWaitAdvise> {
   @Inject private OrchestrationEventEmitter eventEmitter;

@@ -1,10 +1,10 @@
 package io.harness.advisers.success;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.positiveStatuses;
 
 import com.google.common.base.Preconditions;
 
+import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
@@ -26,6 +26,6 @@ public class OnSuccessAdviser implements Adviser<OnSuccessAdviserParameters> {
 
   @Override
   public boolean canAdvise(AdvisingEvent<OnSuccessAdviserParameters> advisingEvent) {
-    return positiveStatuses().contains(advisingEvent.getToStatus());
+    return StatusUtils.positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

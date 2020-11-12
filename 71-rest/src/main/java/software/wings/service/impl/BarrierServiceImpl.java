@@ -139,6 +139,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     Instant startTime = Instant.now();
     Map<String, List<BarrierInstanceWorkflow>> barrierWorkflows = pipeline.getWorkflows().stream().collect(
         Collectors.groupingBy(BarrierInstanceWorkflow::getUniqueWorkflowKeyInPipeline));
+
     for (Map.Entry<String, List<BarrierInstanceWorkflow>> entry : barrierWorkflows.entrySet()) {
       List<BarrierInstanceWorkflow> workflows = entry.getValue();
       String pipelineStageId = workflows.get(0).getPipelineStageId();

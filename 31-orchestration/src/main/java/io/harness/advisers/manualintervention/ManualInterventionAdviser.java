@@ -1,9 +1,9 @@
 package io.harness.advisers.manualintervention;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.INTERVENTION_WAITING;
-import static io.harness.execution.status.Status.brokeStatuses;
+import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
 
+import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
@@ -23,8 +23,8 @@ public class ManualInterventionAdviser implements Adviser<ManualInterventionAdvi
 
   @Override
   public boolean canAdvise(AdvisingEvent<ManualInterventionAdviserParameters> advisingEvent) {
-    boolean canAdvise =
-        brokeStatuses().contains(advisingEvent.getToStatus()) && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
+    boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
+        && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserParameters parameters = advisingEvent.getAdviserParameters();
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {

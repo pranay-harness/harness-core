@@ -1,10 +1,10 @@
 package io.harness.event;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.isFinalStatus;
 
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
@@ -50,7 +50,7 @@ public class NodeExecutionStatusUpdateEventHandler implements OrchestrationEvent
       log.info("Updating graph vertex for [{}] with status [{}]", nodeExecutionId, nodeExecution.getStatus());
       graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
         GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
-        if (isFinalStatus(newValue.getStatus())) {
+        if (StatusUtils.isFinalStatus(newValue.getStatus())) {
           newValue.setOutcomes(outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), nodeExecutionId));
         }
         return newValue;

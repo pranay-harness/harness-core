@@ -2,11 +2,11 @@ package io.harness.engine.status;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.PAUSED;
-import static io.harness.execution.status.Status.flowingStatuses;
+import static io.harness.pms.execution.Status.PAUSED;
 
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -36,7 +36,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
       return true;
     }
     List<NodeExecution> flowingChildren =
-        nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), flowingStatuses());
+        nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), StatusUtils.flowingStatuses());
     if (isEmpty(flowingChildren)) {
       // Update Status
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,

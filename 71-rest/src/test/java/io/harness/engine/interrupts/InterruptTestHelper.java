@@ -8,7 +8,7 @@ import com.google.inject.name.Named;
 
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import org.awaitility.Awaitility;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;

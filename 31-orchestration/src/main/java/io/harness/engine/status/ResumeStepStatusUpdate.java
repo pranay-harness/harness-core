@@ -1,8 +1,8 @@
 package io.harness.engine.status;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.PAUSED;
-import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.pms.execution.Status.PAUSED;
+import static io.harness.pms.execution.Status.RUNNING;
 
 import com.google.inject.Inject;
 

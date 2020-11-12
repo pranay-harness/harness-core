@@ -6,7 +6,7 @@ import static java.time.Duration.ofDays;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;

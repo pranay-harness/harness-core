@@ -1,7 +1,7 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;

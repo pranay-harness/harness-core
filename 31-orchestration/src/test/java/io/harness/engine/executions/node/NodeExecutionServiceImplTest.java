@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;

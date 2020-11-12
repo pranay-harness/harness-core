@@ -12,7 +12,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.Status;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -48,7 +47,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     // Add new Classes Here
-    kryo.register(Status.class, 2501);
     kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(Ambiance.class, 2503);
     kryo.register(Level.class, 2504);

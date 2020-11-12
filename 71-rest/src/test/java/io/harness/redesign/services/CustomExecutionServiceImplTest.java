@@ -1,6 +1,6 @@
 package io.harness.redesign.services;
 
-import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,8 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.config.MockServerConfig;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import org.junit.Before;

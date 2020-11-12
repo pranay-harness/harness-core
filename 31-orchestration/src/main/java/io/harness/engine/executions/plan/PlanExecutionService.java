@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.status.StepStatusUpdate;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
 

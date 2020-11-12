@@ -22,9 +22,9 @@ import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.execution.Status;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 

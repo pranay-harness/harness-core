@@ -1,8 +1,8 @@
 package io.harness.advisers.retry;
 
+import static io.harness.StatusUtils.retryableStatuses;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.retryableStatuses;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.google.inject.Inject;
 
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.Status;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
@@ -32,7 +32,7 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
   @Override
   public void onTimeout(TimeoutInstance timeoutInstance) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    if (nodeExecution == null || !Status.finalizableStatuses().contains(nodeExecution.getStatus())) {
+    if (nodeExecution == null || !StatusUtils.finalizableStatuses().contains(nodeExecution.getStatus())) {
       return;
     }
 

@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
-import io.harness.execution.status.Status;
+import io.harness.pms.execution.Status;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;

@@ -1,6 +1,12 @@
 package io.harness.engine.interrupts.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.execution.Status.RUNNING;
+
 import com.google.inject.Inject;
+
+import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -12,11 +18,6 @@ import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.RUNNING;
-import static io.harness.execution.status.Status.retryableStatuses;
 
 @OwnedBy(CDC)
 public class RetryInterruptHandler implements InterruptHandler {
@@ -36,7 +37,7 @@ public class RetryInterruptHandler implements InterruptHandler {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for RETRY interrupt");
     }
     NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
-    if (!retryableStatuses().contains(nodeExecution.getStatus())) {
+    if (!StatusUtils.retryableStatuses().contains(nodeExecution.getStatus())) {
       throw new InvalidRequestException(
           "NodeExecution is not in a retryable status. Current Status: " + nodeExecution.getStatus());
     }

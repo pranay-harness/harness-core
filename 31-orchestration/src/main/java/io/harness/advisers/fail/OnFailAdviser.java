@@ -2,10 +2,10 @@ package io.harness.advisers.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.brokeStatuses;
 
 import com.google.common.base.Preconditions;
 
+import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
@@ -34,7 +34,7 @@ public class OnFailAdviser implements Adviser<OnFailAdviserParameters> {
     if (parameters.getNextNodeId() == null) {
       return false;
     }
-    boolean canAdvise = brokeStatuses().contains(advisingEvent.getToStatus());
+    boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
       return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
