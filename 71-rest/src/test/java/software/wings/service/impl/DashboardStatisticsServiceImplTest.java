@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_1_ID;
@@ -79,8 +81,10 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -110,16 +114,20 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
@@ -127,9 +135,11 @@ import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
+import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
@@ -138,7 +148,9 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -157,12 +169,16 @@ import java.util.Set;
  * @author rktummala on 9/4/18
  */
 public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
+  public static final String CHART_NAME = "CHART_NAME";
+  public static final String REPO_URL = "REPO_URL";
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureMappingService infraMappingService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private AppService appService;
   @Mock private AccountService accountService;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -184,6 +200,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   private Instance deletedInstance14;
   private Instance deletedInstance15;
   private Instance deletedInstance16;
+  private Instance instance17;
   private User user;
   private long currentTime;
 
@@ -215,6 +232,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                    .appIds(Sets.newHashSet(APP_1_ID, APP_2_ID, APP_3_ID, APP_4_ID, APP_5_ID))
                                    .build());
     UserThreadLocal.set(user);
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), anyString())).thenReturn(true);
   }
 
   @After
@@ -283,6 +301,13 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     deletedInstance16 = buildInstance(INSTANCE_12_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
     wingsPersistence.save(deletedInstance12);
+    instance17 = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
+        INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
+    instance17.setInstanceInfo(
+        K8sPodInfo.builder()
+            .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
+            .build());
+    wingsPersistence.save(instance17);
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
@@ -519,6 +544,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       when(serviceResourceService.list(any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), anyString()))
           .thenReturn(servicesPageResponse);
       when(serviceResourceService.getWithDetails(anyString(), anyString())).thenReturn(service1);
+      when(artifactStreamServiceBindingService.listArtifactStreamIds(any(Service.class)))
+          .thenReturn(asList(ARTIFACT_STREAM_ID));
 
       List<Environment> envList = Lists.newArrayList();
       envList.add(Environment.Builder.anEnvironment().uuid(ENV_1_ID).name(ENV_NAME).appId(APP_1_ID).build());
@@ -599,5 +626,113 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     } finally {
       UserThreadLocal.unset();
     }
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void shouldGetActiveInstancesWithManifest() {
+    DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
+    List<CurrentActiveInstances> activeInstances =
+        dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
+    assertThat(activeInstances).hasSize(1);
+    ManifestSummary manifestSummary = activeInstances.get(0).getManifest();
+    assertThat(manifestSummary.getVersionNo()).isEqualTo("1");
+    assertThat(manifestSummary.getName()).isEqualTo(CHART_NAME);
+    assertThat(manifestSummary.getSource()).isEqualTo(REPO_URL);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void shouldUpdateLastWorkflowExecutionAndManifestInActiveInstance() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(APP_1_ID)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .envIds(asList(ENV_1_ID))
+                                              .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                              .infraMappingIds(asList(INFRA_MAPPING_1_ID, INFRA_MAPPING_2_ID))
+                                              .workflowId(WORKFLOW_ID)
+                                              .uuid(WORKFLOW_EXECUTION_ID)
+                                              .name(WORKFLOW_NAME)
+                                              .build();
+    wingsPersistence.save(workflowExecution);
+    Instance instance = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
+        INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
+    instance.setInstanceInfo(
+        K8sPodInfo.builder()
+            .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
+            .build());
+    instance.setLastWorkflowExecutionId(WORKFLOW_EXECUTION_ID);
+    wingsPersistence.save(instance);
+    DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
+    List<CurrentActiveInstances> activeInstances =
+        dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
+    assertThat(activeInstances).hasSize(1);
+    EntitySummary executionSummary = activeInstances.get(0).getLastWorkflowExecution();
+    assertThat(executionSummary.getId()).isEqualTo(WORKFLOW_EXECUTION_ID);
+    assertThat(executionSummary.getName()).isEqualTo(WORKFLOW_NAME);
+    ManifestSummary manifestSummary = activeInstances.get(0).getManifest();
+    assertThat(manifestSummary.getVersionNo()).isEqualTo("1");
+    assertThat(manifestSummary.getName()).isEqualTo(CHART_NAME);
+    assertThat(manifestSummary.getSource()).isEqualTo(REPO_URL);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void shallGetDeploymentHistoryWithManifest() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact()
+                                          .withAppId(APP_1_ID)
+                                          .withDisplayName(ARTIFACT_NAME)
+                                          .withUuid(ARTIFACT_ID)
+                                          .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                          .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                                          .build()));
+    executionArgs.setHelmCharts(
+        asList(HelmChart.builder().uuid(HELM_CHART_ID).serviceId(SERVICE_ID).name(CHART_NAME).version("1").build()));
+    WorkflowExecution workflowExecution1 = WorkflowExecution.builder()
+                                               .appId(APP_1_ID)
+                                               .executionArgs(executionArgs)
+                                               .status(ExecutionStatus.SUCCESS)
+                                               .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                               .workflowId(WORKFLOW_ID)
+                                               .uuid(WORKFLOW_EXECUTION_ID)
+                                               .name(WORKFLOW_NAME)
+                                               .build();
+    ExecutionArgs executionArgs2 = new ExecutionArgs();
+    executionArgs2.setHelmCharts(
+        asList(HelmChart.builder().uuid(HELM_CHART_ID).name(CHART_NAME).serviceId(SERVICE_ID).version("2").build()));
+    WorkflowExecution workflowExecution2 = WorkflowExecution.builder()
+                                               .appId(APP_1_ID)
+                                               .status(ExecutionStatus.SUCCESS)
+                                               .executionArgs(executionArgs2)
+                                               .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                               .workflowId(WORKFLOW_ID)
+                                               .uuid(WORKFLOW_EXECUTION_ID)
+                                               .name(WORKFLOW_NAME)
+                                               .build();
+    PageResponse<WorkflowExecution> pageResponse =
+        aPageResponse().withResponse(asList(workflowExecution1, workflowExecution2)).build();
+    when(workflowExecutionService.listExecutions(any(), eq(false))).thenReturn(pageResponse);
+    when(serviceResourceService.getWithDetails(APP_1_ID, SERVICE_ID)).thenReturn(Service.builder().build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(any(Service.class)))
+        .thenReturn(asList(ARTIFACT_STREAM_ID));
+    DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
+    List<DeploymentHistory> deploymentHistories =
+        dashboardStatisticsService.getDeploymentHistory(ACCOUNT_ID, APP_1_ID, SERVICE_ID);
+    assertThat(deploymentHistories).hasSize(2);
+    DeploymentHistory deploymentHistory1 = deploymentHistories.get(0);
+    assertThat(deploymentHistory1.getManifest().getName()).isEqualTo(CHART_NAME);
+    assertThat(deploymentHistory1.getManifest().getVersionNo()).isEqualTo("1");
+    assertThat(deploymentHistory1.getArtifact().getId()).isEqualTo(ARTIFACT_ID);
+    DeploymentHistory deploymentHistory2 = deploymentHistories.get(1);
+    assertThat(deploymentHistory2.getManifest().getName()).isEqualTo(CHART_NAME);
+    assertThat(deploymentHistory2.getManifest().getVersionNo()).isEqualTo("2");
+    assertThat(deploymentHistory2.getArtifact()).isNull();
   }
 }

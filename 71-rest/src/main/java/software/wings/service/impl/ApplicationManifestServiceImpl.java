@@ -115,7 +115,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class ApplicationManifestServiceImpl implements ApplicationManifestService {
   private static final int ALLOWED_SIZE_IN_BYTES = 1024 * 1024; // 1 MiB
-  private static final String CHART_URL = "url";
+  public static final String CHART_URL = "url";
+  public static final String CHART_NAME = "chartName";
   private static final String BASE_PATH = "basePath";
   private static final String REPOSITORY_NAME = "repositoryName";
   private static final String BUCKET_NAME = "bucketName";
@@ -410,7 +411,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     properties.put(BASE_PATH, helmChartConfig.getBasePath());
     properties.put(REPOSITORY_NAME, settingAttribute.getName());
     properties.put(BUCKET_NAME, getBucketName(helmRepoConfig));
-
+    properties.put(CHART_NAME, helmChartConfig.getChartName());
     return properties;
   }
 

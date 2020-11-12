@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.beans.instance.dashboard.EntitySummary;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ public final class AggregationInfo {
   private EntitySummary infraMappingInfo;
   private EnvInfo envInfo;
   private ArtifactInfo artifactInfo;
+  private HelmChartInfo helmChartInfo;
   private List<EntitySummary> instanceInfoList;
 
   @Data

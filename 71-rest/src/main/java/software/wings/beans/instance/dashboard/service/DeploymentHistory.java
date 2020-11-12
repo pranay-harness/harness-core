@@ -2,6 +2,7 @@ package software.wings.beans.instance.dashboard.service;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 
@@ -15,6 +16,7 @@ import java.util.List;
 @Builder
 public class DeploymentHistory {
   private ArtifactSummary artifact;
+  private ManifestSummary manifest;
   private Date deployedAt;
   private String status;
   private EntitySummary triggeredBy;
