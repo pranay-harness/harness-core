@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
@@ -472,7 +473,7 @@ public class TriggerServiceImpl implements TriggerService {
     });
   }
 
-  private void triggerExecutionPostArtifactCollectionForAllArtifacts(
+  void triggerExecutionPostArtifactCollectionForAllArtifacts(
       String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
     if (isEmpty(collectedArtifacts)) {
       return;
@@ -516,11 +517,26 @@ public class TriggerServiceImpl implements TriggerService {
       if (isNotEmpty(artifacts)) {
         log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
             artifacts.stream().map(Artifact::getUuid).collect(toList()));
-        for (Artifact artifact : artifacts) {
-          log.info("Triggering deployment with artifact {}", artifact.getUuid());
+        // Triggering the execution only when FROM_TRIGGERING_ARTIFACT is selected.
+        // We don't need to trigger for all artifacts when some other artifact selection is chosen
+        if (triggeringArtifactSelected(trigger)) {
+          for (Artifact artifact : artifacts) {
+            log.info("Triggering deployment with artifact {}", artifact.getUuid());
+            try {
+              List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
+              selectedArtifacts.add(artifact);
+              triggerDeployment(selectedArtifacts, helmCharts, null, trigger);
+            } catch (WingsException exception) {
+              exception.addContext(Application.class, trigger.getAppId());
+              exception.addContext(ArtifactStream.class, artifactStreamId);
+              exception.addContext(Trigger.class, trigger.getUuid());
+              ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
+            }
+          }
+        } else {
+          log.info("Triggering deployment with the given selections");
           try {
             List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
-            selectedArtifacts.add(artifact);
             triggerDeployment(selectedArtifacts, helmCharts, null, trigger);
           } catch (WingsException exception) {
             exception.addContext(Application.class, trigger.getAppId());
@@ -534,6 +550,25 @@ public class TriggerServiceImpl implements TriggerService {
         return;
       }
     });
+  }
+
+  /**
+   * Checks if from triggering artifact source is selected for the service associated with triggering artifact.
+   *
+   * @param trigger The trigger which needs to be executed. It should be an on new Artifact Trigger
+   * @return True if the workflow/pipeline needs triggering artifact, false otherwise
+   */
+  private boolean triggeringArtifactSelected(Trigger trigger) {
+    ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+    String artifactStreamId = artifactTriggerCondition.getArtifactStreamId();
+    if (isEmpty(trigger.getArtifactSelections())) {
+      return false;
+    }
+    String serviceIdInCondition =
+        artifactStreamServiceBindingService.getServiceId(trigger.getAppId(), artifactStreamId, true);
+    return trigger.getArtifactSelections().stream().anyMatch(artifactSelection
+        -> artifactSelection.getType() == ARTIFACT_SOURCE
+            && artifactSelection.getServiceId().equals(serviceIdInCondition));
   }
 
   @Override

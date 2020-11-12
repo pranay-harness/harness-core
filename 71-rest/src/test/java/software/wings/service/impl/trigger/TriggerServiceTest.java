@@ -116,6 +116,7 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
@@ -190,6 +191,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
@@ -1194,12 +1196,15 @@ public class TriggerServiceTest extends WingsBaseTest {
         (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
     artifactTriggerCondition.setRegex(true);
     artifactTriggerCondition.setArtifactFilter("^release");
+    artifactConditionTrigger.setArtifactSelections(
+        asList(ArtifactSelection.builder().type(ARTIFACT_SOURCE).serviceId(SERVICE_ID).build()));
 
     triggerService.save(artifactConditionTrigger);
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, ACCOUNT_ID)).thenReturn(true);
     when(workflowExecutionService.triggerEnvExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
+    when(artifactStreamServiceBindingService.getServiceId(APP_ID, ARTIFACT_STREAM_ID, true)).thenReturn(SERVICE_ID);
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
@@ -3446,6 +3451,77 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
     assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getVersion))
         .containsExactlyInAnyOrder("1", "5");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerForAllArtifactsWhenLastCollectedIsSelected() {
+    Artifact artifact =
+        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 =
+        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Trigger trigger = buildArtifactTrigger();
+    ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+    artifactTriggerCondition.setArtifactFilter(null);
+    trigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                             .type(LAST_COLLECTED)
+                                             .artifactStreamId(ARTIFACT_STREAM_ID)
+                                             .serviceId(SERVICE_ID)
+                                             .build()));
+    triggerService.save(trigger);
+    when(featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, ACCOUNT_ID)).thenReturn(true);
+    when(serviceResourceService.get(trigger.getAppId(), SERVICE_ID, false))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(artifactService.fetchLastCollectedArtifact(any())).thenReturn(artifact);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
+        .thenReturn(asList(ARTIFACT_STREAM_ID));
+    triggerService.triggerExecutionPostArtifactCollectionAsync(
+        ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
+
+    ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
+    verify(workflowExecutionService, times(1))
+        .triggerEnvExecution(eq(APP_ID), eq(null), argsArgumentCaptor.capture(), any());
+    assertThat(argsArgumentCaptor.getValue().getArtifacts()).hasSize(1);
+    assertThat(argsArgumentCaptor.getValue().getArtifacts().get(0).getUuid()).isEqualTo(ARTIFACT_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldTriggerForAllArtifactsWhenTriggeringArtifactIsSelected() {
+    Artifact artifact =
+        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 =
+        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Trigger trigger = buildArtifactTrigger();
+    ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+    artifactTriggerCondition.setArtifactFilter(null);
+    trigger.setArtifactSelections(
+        asList(ArtifactSelection.builder().type(ARTIFACT_SOURCE).serviceId(SERVICE_ID).build()));
+    triggerService.save(trigger);
+
+    when(featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, ACCOUNT_ID)).thenReturn(true);
+    when(serviceResourceService.get(trigger.getAppId(), SERVICE_ID, false))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(artifactService.fetchLastCollectedArtifact(any())).thenReturn(artifact);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
+        .thenReturn(asList(ARTIFACT_STREAM_ID));
+    when(artifactStreamServiceBindingService.getServiceId(trigger.getAppId(), ARTIFACT_STREAM_ID, true))
+        .thenReturn(SERVICE_ID);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(
+        ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
+
+    ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
+    verify(workflowExecutionService, times(2))
+        .triggerEnvExecution(eq(APP_ID), eq(null), argsArgumentCaptor.capture(), any());
+    assertThat(argsArgumentCaptor.getAllValues()).hasSize(2);
+    List<Artifact> artifacts = argsArgumentCaptor.getAllValues()
+                                   .stream()
+                                   .flatMap(executionArgs -> executionArgs.getArtifacts().stream())
+                                   .collect(Collectors.toList());
+    assertThat(artifacts.stream().map(Base::getUuid).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(ARTIFACT_ID, ARTIFACT_ID + 2);
   }
 
   @Test
