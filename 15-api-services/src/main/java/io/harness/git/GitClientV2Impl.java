@@ -55,7 +55,6 @@ import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.JgitSshAuthRequest;
 import io.harness.git.model.PushResultGit;
-import io.vavr.CheckedPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -176,7 +175,8 @@ public class GitClientV2Impl implements GitClientV2 {
     clone(request, gitClientHelper.getRepoDirectory(request), false);
   }
 
-  private synchronized void clone(GitBaseRequest request, String gitRepoDirectory, boolean noCheckout) {
+  @VisibleForTesting
+  synchronized void clone(GitBaseRequest request, String gitRepoDirectory, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
         FileUtils.deleteDirectory(new File(gitRepoDirectory));

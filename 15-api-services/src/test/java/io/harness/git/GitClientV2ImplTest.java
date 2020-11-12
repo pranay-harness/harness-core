@@ -13,9 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -167,6 +171,55 @@ public class GitClientV2ImplTest extends CategoryTest {
     assertThat(git.getRepository().getConfig().getString("remote", "origin", "url")).isNotNull();
     addRemote(repoPath);
     gitClient.ensureRepoLocallyClonedAndUpdated(request);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testEnsureRepoLocallyClonedAndUpdatedWithGitTag() throws IOException {
+    String remoteRepo = addRemote(repoPath);
+    GitBaseRequest request = GitBaseRequest.builder()
+                                 .repoUrl(remoteRepo)
+                                 .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                 .branch("master")
+                                 .build();
+    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(request);
+    gitClient.ensureRepoLocallyClonedAndUpdated(request);
+
+    String workRepo = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+    String tag = "hello-tag";
+    String command = new StringBuilder(128)
+                         .append("git clone " + remoteRepo + " ")
+                         .append(workRepo)
+                         .append(";")
+                         .append("cd " + workRepo + ";")
+                         .append("touch ")
+                         .append(tag)
+                         .append(";")
+                         .append("git add ")
+                         .append(tag)
+                         .append(";")
+                         .append("git commit -m 'commit base 2';")
+                         .append("git tag ")
+                         .append(tag)
+                         .append(";")
+                         .append("git push origin ")
+                         .append(tag)
+                         .append(";")
+                         .append("git remote update;")
+                         .append("git fetch;")
+                         .toString();
+    executeCommand(command);
+
+    request.setBranch(null);
+    request.setCommitId(tag);
+
+    try {
+      gitClient.ensureRepoLocallyClonedAndUpdated(request);
+      verify(gitClient, times(0)).clone(eq(request), anyString(), eq(false));
+    } catch (Exception e) {
+      fail("Should not have thrown any exception");
+    }
   }
 
   @Test
@@ -378,7 +431,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     return Arrays.toString(returnString);
   }
 
-  private void addRemote(String repoPath) {
+  private String addRemote(String repoPath) {
     try {
       String remoteRepo = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
       createRepo(remoteRepo, true);
@@ -396,8 +449,10 @@ public class GitClientV2ImplTest extends CategoryTest {
                            .toString();
 
       executeCommand(command);
+      return remoteRepo;
     } catch (Exception e) {
       fail("Should not reach here.");
+      return null;
     }
   }
 
