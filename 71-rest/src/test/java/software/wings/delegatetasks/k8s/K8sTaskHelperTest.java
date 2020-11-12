@@ -114,6 +114,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
@@ -164,6 +165,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private KustomizeTaskHelper kustomizeTaskHelper;
   @Mock private OpenShiftDelegateService openShiftDelegateService;
   @Mock private K8sTaskHelperBase mockK8sTaskHelperBase;
+  @Mock private HelmHelper helmHelper;
 
   private String resourcePath = "./k8s";
   private String deploymentYaml = "deployment.yaml";
@@ -1555,6 +1557,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     // When Store Type is HelmChartRepo
     reset(mockHelmTaskHelper);
+    doReturn("url").when(helmHelper).getRepoUrlForHelmRepoConfig(any());
     doReturn(existingHelmChartInfo).when(mockHelmTaskHelper).getHelmChartInfoFromChartDirectory(anyString());
     delegateManifestConfig.setManifestStoreTypes(HelmChartRepo);
     delegateManifestConfig.setHelmChartConfigParams(HelmChartConfigParams.builder().chartName("chart").build());

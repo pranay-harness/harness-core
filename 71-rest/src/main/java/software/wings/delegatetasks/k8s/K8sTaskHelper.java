@@ -53,6 +53,7 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -84,6 +85,7 @@ public class K8sTaskHelper {
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject private HelmHelper helmHelper;
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
       String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
@@ -321,6 +323,10 @@ public class K8sTaskHelper {
                                  .orElse("");
           helmChartInfo =
               helmTaskHelper.getHelmChartInfoFromChartDirectory(Paths.get(workingDirectory, chartName).toString());
+          if (delegateManifestConfig.getHelmChartConfigParams() != null) {
+            helmChartInfo.setRepoUrl(
+                helmHelper.getRepoUrlForHelmRepoConfig(delegateManifestConfig.getHelmChartConfigParams()));
+          }
         }
       }
     } catch (IOException ex) {

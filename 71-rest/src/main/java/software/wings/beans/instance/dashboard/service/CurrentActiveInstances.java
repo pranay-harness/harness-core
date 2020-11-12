@@ -2,6 +2,7 @@ package software.wings.beans.instance.dashboard.service;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 
@@ -16,6 +17,7 @@ public class CurrentActiveInstances {
   private EntitySummary environment;
   private long instanceCount;
   private ArtifactSummary artifact;
+  private ManifestSummary manifest;
   private EntitySummary serviceInfra;
   private EntitySummary workflow;
   private Date deployedAt;

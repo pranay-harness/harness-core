@@ -2143,15 +2143,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return ApplicationManifestSummary.builder()
         .appManifestId(applicationManifest.getUuid())
         .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
-        .defaultManifest(
-            helmChartOptional
-                .map(chart -> ManifestSummary.builder().uuid(chart.getUuid()).versionNo(chart.getVersion()).build())
-                .orElse(null))
-        .lastCollectedManifest(lastCollectedHelmChart == null ? null
-                                                              : ManifestSummary.builder()
-                                                                    .uuid(lastCollectedHelmChart.getUuid())
-                                                                    .versionNo(lastCollectedHelmChart.getVersion())
-                                                                    .build())
+        .defaultManifest(helmChartOptional.map(ManifestSummary::prepareSummaryFromHelmChart).orElse(null))
+        .lastCollectedManifest(ManifestSummary.prepareSummaryFromHelmChart(lastCollectedHelmChart))
         .build();
   }
 

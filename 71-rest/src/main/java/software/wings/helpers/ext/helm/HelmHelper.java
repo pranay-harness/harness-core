@@ -153,6 +153,9 @@ public class HelmHelper {
         return helmChartConfigParams.getChartUrl();
       } else {
         String chartName = helmChartConfigParams.getChartName();
+        if (chartName == null) {
+          return "";
+        }
         return chartName.substring(0, chartName.indexOf('/'));
       }
     } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
