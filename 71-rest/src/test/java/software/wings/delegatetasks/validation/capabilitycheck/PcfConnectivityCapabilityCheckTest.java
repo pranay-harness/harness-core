@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -45,5 +46,22 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
         pcfConnectivityCapabilityCheck.performCapabilityCheck(pcfConnectivityCapability);
     assertThat(capabilityResponse).isNotNull();
     assertThat(capabilityResponse.isValidated()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void validatePcfEndPointURL() {
+    String pcfUrl = "api.pivotal.io";
+    String expectedCapabilityUrl = "Pcf:" + pcfUrl;
+    PcfConfig config = PcfConfig.builder().endpointUrl(pcfUrl).build();
+    PcfConnectivityCapability capabilityCheck = PcfConnectivityCapability.builder().pcfConfig(config).build();
+    String actualCapabilityUrl = capabilityCheck.fetchCapabilityBasis();
+
+    // CDP-14589
+    assertThat(actualCapabilityUrl).isEqualTo(expectedCapabilityUrl);
+
+    // CDP-14738
+    assertThat(pcfConfig.fetchRequiredExecutionCapabilities().size()).isEqualTo(0);
   }
 }
