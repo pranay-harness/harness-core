@@ -52,6 +52,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
   }
 
+  @Deprecated
   @Override
   public OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
@@ -103,8 +104,12 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   @Override
   public OrchestrationGraphDTO generateOrchestrationGraphV2(String planExecutionId) {
+    OrchestrationGraph cachedOrchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    if (cachedOrchestrationGraph == null) {
+      cachedOrchestrationGraph = buildOrchestrationGraph(planExecutionId);
+    }
     EphemeralOrchestrationGraph ephemeralOrchestrationGraph =
-        EphemeralOrchestrationGraphConverter.convertFrom(getCachedOrchestrationGraph(planExecutionId));
+        EphemeralOrchestrationGraphConverter.convertFrom(cachedOrchestrationGraph);
     vertexSkipperService.removeSkippedVertices(ephemeralOrchestrationGraph);
     return OrchestrationGraphDTOConverter.convertFrom(ephemeralOrchestrationGraph);
   }
@@ -113,6 +118,9 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraphDTO generatePartialOrchestrationGraphFromSetupNodeId(
       String startingSetupNodeId, String planExecutionId) {
     OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    if (orchestrationGraph == null) {
+      orchestrationGraph = buildOrchestrationGraph(planExecutionId);
+    }
     return generatePartialGraph(
         obtainStartingIdFromSetupNodeId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId),
         orchestrationGraph);
@@ -122,9 +130,38 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraphDTO generatePartialOrchestrationGraphFromIdentifier(
       String identifier, String planExecutionId) {
     OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    if (orchestrationGraph == null) {
+      orchestrationGraph = buildOrchestrationGraph(planExecutionId);
+    }
     return generatePartialGraph(
         obtainStartingIdFromIdentifier(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), identifier),
         orchestrationGraph);
+  }
+
+  private OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
+    if (isEmpty(nodeExecutions)) {
+      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
+    }
+
+    String rootNodeId = obtainStartingNodeExId(nodeExecutions);
+
+    OrchestrationGraph graph =
+        OrchestrationGraph.builder()
+            .cacheKey(planExecutionId)
+            .cacheContextOrder(System.currentTimeMillis())
+            .cacheParams(null)
+            .planExecutionId(planExecution.getUuid())
+            .startTs(planExecution.getStartTs())
+            .endTs(planExecution.getEndTs())
+            .status(planExecution.getStatus())
+            .rootNodeIds(Lists.newArrayList(rootNodeId))
+            .adjacencyList(orchestrationAdjacencyListGenerator.generateAdjacencyList(rootNodeId, nodeExecutions, true))
+            .build();
+
+    cacheOrchestrationGraph(graph);
+    return graph;
   }
 
   private OrchestrationGraphDTO generatePartialGraph(String startId, OrchestrationGraph orchestrationGraph) {
