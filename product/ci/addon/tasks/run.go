@@ -124,7 +124,7 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 		inputCommands = append(inputCommands, fmt.Sprintf("echo %s $%s >> %s", o, o, outputFile))
 	}
 
-	commands := fmt.Sprintf("set -e; %s", strings.Join(inputCommands[:], ";"))
+	commands := fmt.Sprintf("set -e\n %s", strings.Join(inputCommands[:], "\n"))
 	cmdArgs := []string{"-c", commands}
 
 	e.log.Infow(fmt.Sprintf("Executing %s", commands))
