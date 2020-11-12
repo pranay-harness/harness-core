@@ -27,6 +27,7 @@ import org.reflections.Reflections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -40,8 +41,7 @@ public class PipelineServiceConfiguration extends Configuration {
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
-  @JsonProperty("cdGrpcClientConfig") private GrpcClientConfig cdGrpcClientConfig;
-  @JsonProperty("cvGrpcClientConfig") private GrpcClientConfig cvGrpcClientConfig;
+  @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
 
   public PipelineServiceConfiguration() {
@@ -84,13 +84,13 @@ public class PipelineServiceConfiguration extends Configuration {
 
   private ConnectorFactory getDefaultApplicationConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
-    factory.setPort(12101);
+    factory.setPort(12001);
     return factory;
   }
 
   private ConnectorFactory getDefaultAdminConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
-    factory.setPort(12102);
+    factory.setPort(12002);
     return factory;
   }
 

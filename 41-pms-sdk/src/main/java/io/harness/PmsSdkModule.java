@@ -1,35 +1,26 @@
 package io.harness;
 
-import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
-import io.grpc.BindableService;
-import io.grpc.services.HealthStatusManager;
-import io.harness.grpc.server.GrpcServer;
+import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.grpc.server.PmsSdkGrpcModule;
 import io.harness.pms.sdk.creator.PlanCreatorProvider;
 import io.harness.pms.sdk.creator.PlanCreatorService;
 import io.harness.serializer.KryoSerializer;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
-
 public class PmsSdkModule extends AbstractModule {
-  private static PmsSdkModule instance;
+  private final GrpcServerConfig grpcServerConfig;
 
-  public static PmsSdkModule getInstance() {
-    if (instance == null) {
-      instance = new PmsSdkModule();
-    }
-    return instance;
+  public PmsSdkModule(GrpcServerConfig grpcServerConfig) {
+    this.grpcServerConfig = grpcServerConfig;
   }
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+    install(new PmsSdkGrpcModule(grpcServerConfig));
+  }
 
   @Provides
   @Singleton

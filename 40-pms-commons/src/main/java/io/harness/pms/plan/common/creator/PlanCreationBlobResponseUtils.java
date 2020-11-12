@@ -12,6 +12,9 @@ import java.util.Map;
 @UtilityClass
 public class PlanCreationBlobResponseUtils {
   public void merge(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse other) {
+    if (other == null) {
+      return;
+    }
     addNodes(builder, other.getNodesMap());
     addDependencies(builder, other.getDependenciesMap());
     mergeStartingNodeId(builder, other.getStartingNodeId());

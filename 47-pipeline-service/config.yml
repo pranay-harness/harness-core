@@ -18,13 +18,13 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-cdGrpcClientConfig:
-  target: localhost:12201
-  authority: localhost
-
-cvGrpcClientConfig:
-  target: localhost:12202
-  authority: localhost
+grpcClientConfigs:
+  cd:
+    target: localhost:12101
+    authority: localhost
+  cv:
+    target: localhost:12201
+    authority: localhost
 
 allowedOrigins:
   - "*"
