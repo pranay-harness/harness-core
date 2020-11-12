@@ -99,3 +99,11 @@ fi
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
 fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.identityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
