@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -17,6 +18,7 @@ import io.harness.pms.plan.common.utils.CompletableFutures;
 import io.harness.pms.plan.common.yaml.YamlField;
 import io.harness.pms.plan.common.yaml.YamlNode;
 import io.harness.pms.plan.common.yaml.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,14 +29,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
+@Slf4j
+@Singleton
 public class PlanCreatorMergeService {
   private static final int MAX_DEPTH = 10;
 
-  private final Executor executor = Executors.newFixedThreadPool(2);
-  private final List<PlanCreationServiceBlockingStub> planCreatorServices;
+  private final Executor executor = Executors.newFixedThreadPool(5);
+  private final Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
 
   @Inject
-  public PlanCreatorMergeService(List<PlanCreationServiceBlockingStub> planCreatorServices) {
+  public PlanCreatorMergeService(Map<String, PlanCreationServiceBlockingStub> planCreatorServices) {
     this.planCreatorServices = planCreatorServices;
   }
 
@@ -75,11 +79,16 @@ public class PlanCreatorMergeService {
   private PlanCreationBlobResponse createPlanForDependencies(Map<String, YamlFieldBlob> dependencies) {
     PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
     CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
-    for (PlanCreationServiceBlockingStub planCreatorService : planCreatorServices) {
-      completableFutures.supplyAsync(
-          ()
-              -> planCreatorService.createPlan(
-                  PlanCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build()));
+    for (Map.Entry<String, PlanCreationServiceBlockingStub> entry : planCreatorServices.entrySet()) {
+      completableFutures.supplyAsync(() -> {
+        try {
+          return entry.getValue().createPlan(
+              PlanCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
+        } catch (Exception ex) {
+          log.error("Error fetching partial plan from service " + entry.getKey(), ex);
+          return null;
+        }
+      });
     }
 
     try {

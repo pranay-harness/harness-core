@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.creator.example;
+package io.harness.pms.sample.cd.creator;
 
 import com.google.common.base.Preconditions;
 
