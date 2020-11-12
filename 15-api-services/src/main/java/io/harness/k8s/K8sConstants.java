@@ -85,4 +85,6 @@ public interface K8sConstants {
   String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
 
   String MANIFEST_FILES_DIR = "manifest-files";
+
+  String KUBERNETES_CHANGE_CAUSE_ANNOTATION = "kubernetes.io/change-cause";
 }

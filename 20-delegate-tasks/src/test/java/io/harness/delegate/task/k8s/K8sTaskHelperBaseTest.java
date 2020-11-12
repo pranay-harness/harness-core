@@ -47,9 +47,14 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.KubernetesContainerService;
+import io.harness.k8s.kubectl.AbstractExecutable;
+import io.harness.k8s.kubectl.ApplyCommand;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
@@ -81,6 +86,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.zeroturnaround.exec.ProcessOutput;
+import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.util.ArrayList;
@@ -99,6 +106,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
   @Mock private KubernetesContainerService mockKubernetesContainerService;
   @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private LogCallback executionLogCallback;
+
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
   long LONG_TIMEOUT_INTERVAL = 60 * 1000L;
@@ -679,5 +688,49 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testApplyWithCustomChangeCauseAnnotation() throws Exception {
+    String deploymentSpec = "apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    ${annotation}\n"
+        + "spec:\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      name: deployment\n";
+    KubernetesResource resourceWithCustomChangeCause = ManifestHelper.getKubernetesResourceFromSpec(
+        deploymentSpec.replace("${annotation}", "kubernetes.io/change-cause: custom value"));
+    KubernetesResource resourceWithoutCustomChangeCause =
+        ManifestHelper.getKubernetesResourceFromSpec(deploymentSpec.replace("${annotation}", ""));
+
+    testApplyAndCheckRecord(resourceWithCustomChangeCause, false);
+    testApplyAndCheckRecord(resourceWithoutCustomChangeCause, true);
+  }
+
+  private void testApplyAndCheckRecord(KubernetesResource resource, boolean expectedRecord) throws Exception {
+    K8sTaskHelperBase spyK8sTaskHelper = spy(k8sTaskHelperBase);
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(".")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    spyK8sTaskHelper.applyManifests(client, singletonList(resource), k8sDelegateTaskParams, executionLogCallback, true);
+    ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
+    verify(spyK8sTaskHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
+
+    String expectedExecutedCommand = "kubectl --kubeconfig=config-path apply --filename=manifests.yaml";
+    if (expectedRecord) {
+      expectedExecutedCommand += " --record";
+    }
+
+    assertThat(captor.getValue().command()).isEqualTo(expectedExecutedCommand);
   }
 }
