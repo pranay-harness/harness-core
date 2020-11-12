@@ -144,6 +144,42 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldReturnOrchestrationGraphWithoutCache() {
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node1_plan")
+                      .name("name")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier1")
+                      .build())
+            .build();
+    nodeExecutionService.save(dummyStart);
+
+    OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraphV2(planExecution.getUuid());
+    assertThat(graphResponse).isNotNull();
+    assertThat(graphResponse.getAdjacencyList()).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)))
+        .isNotNull();
+    assertThat(
+        graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getNextIds())
+        .isEmpty();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyMap().get(graphResponse.getRootNodeIds().get(0)).getEdges())
+        .isEmpty();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldReturnOrchestrationGraphWithCachedAdjListWithNewAddedNodes() {
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
