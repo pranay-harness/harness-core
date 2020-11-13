@@ -380,7 +380,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
                                                                        .subscriptionId("SubsId")
                                                                        .resourceGroup("ResName")
                                                                        .deploymentSlot("Stage")
-                                                                       .webApp("Web App")
+                                                                       .webApp("Web App1")
                                                                        .build();
 
     infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping);

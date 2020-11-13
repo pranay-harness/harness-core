@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.validation.Validator.ensureType;
+import static io.harness.validation.Validator.notNullCheck;
+
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
@@ -17,6 +20,15 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "AzureWebAppsInfrastructureMappingKeys")
 public class AzureWebAppInfrastructureMapping extends AzureAppServiceInfrastructureMapping {
   @Trimmed @Attributes(title = "Webb App") protected String webApp;
+
+  @Override
+  protected void setDeploymentSpecificVariables(Map<String, Object> map) {
+    Object webAppName = map.get("webApp");
+    String errorMsg = "Web App name should be of String type";
+    notNullCheck(errorMsg, webAppName);
+    ensureType(String.class, webAppName, errorMsg);
+    setWebApp((String) webAppName);
+  }
 
   @Override
   protected String getAppServiceType() {

@@ -1,17 +1,21 @@
 package software.wings.beans;
 
+import static io.harness.validation.Validator.ensureType;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.utils.Utils;
 
 import java.util.Map;
@@ -42,8 +46,51 @@ public abstract class AzureAppServiceInfrastructureMapping extends Infrastructur
   @Override
   public void applyProvisionerVariables(Map<String, Object> map,
       InfrastructureMappingBlueprint.NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
-    throw new UnsupportedOperationException();
+    setAppServiceGenericVariables(map);
+    setDeploymentSpecificVariables(map);
   }
+
+  private void setAppServiceGenericVariables(Map<String, Object> map) {
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      switch (entry.getKey()) {
+        case "subscriptionId":
+          String errorMsg = "Subscription Id should be of String type";
+          notNullCheck(errorMsg, entry.getValue());
+          ensureType(String.class, entry.getValue(), errorMsg);
+          setSubscriptionId((String) entry.getValue());
+          break;
+
+        case "resourceGroup":
+          errorMsg = "Resource Group should be of String type";
+          notNullCheck(errorMsg, entry.getValue());
+          ensureType(String.class, entry.getValue(), errorMsg);
+          setResourceGroup((String) entry.getValue());
+          break;
+
+        case "deploymentSlot":
+          errorMsg = "Deployment Slot should be of String type";
+          notNullCheck(errorMsg, entry.getValue());
+          ensureType(String.class, entry.getValue(), errorMsg);
+          setDeploymentSlot((String) entry.getValue());
+          break;
+
+        default:
+          break;
+      }
+    }
+    validateFieldDefined(subscriptionId, "Subscription Id");
+    validateFieldDefined(resourceGroup, "Resource Group");
+    validateFieldDefined(deploymentSlot, "Deployment Slot");
+  }
+
+  protected void validateFieldDefined(String field, String fieldName) {
+    if (StringUtils.isEmpty(field)) {
+      String message = fieldName + " is required";
+      throw new InvalidRequestException(message);
+    }
+  }
+
+  protected abstract void setDeploymentSpecificVariables(Map<String, Object> map);
 
   @SchemaIgnore
   @Override
