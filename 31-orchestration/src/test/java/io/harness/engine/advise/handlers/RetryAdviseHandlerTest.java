@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -17,6 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
@@ -48,7 +48,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTestBase {
     ambiance = Ambiance.builder()
                    .planExecutionId(PLAN_EXECUTION_ID)
                    .levels(Collections.singletonList(
-                       Level.builder().runtimeId(NODE_EXECUTION_ID).setupId(NODE_SETUP_ID).build()))
+                       Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
                    .build();
 
     planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());

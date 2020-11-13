@@ -7,6 +7,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.ambiance.Level;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,7 +62,7 @@ public class Ambiance {
 
   public String obtainCurrentRuntimeId() {
     Level level = obtainCurrentLevel();
-    return level == null ? null : level.getRuntimeId();
+    return level == null || isEmpty(level.getRuntimeId()) ? null : level.getRuntimeId();
   }
 
   public Level obtainCurrentLevel() {

@@ -13,15 +13,15 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
@@ -37,7 +37,7 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_NAME = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
-  public static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
+  public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
 
   @InjectMocks @Inject ManualInterventionAdviser manualInterventionAdviser;
 
@@ -48,11 +48,11 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
   @Before
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
-    ambiance.addLevel(Level.builder()
-                          .setupId(NODE_SETUP_ID)
-                          .runtimeId(NODE_EXECUTION_ID)
-                          .identifier(NODE_IDENTIFIER)
-                          .stepType(DUMMY_STEP_TYPE)
+    ambiance.addLevel(Level.newBuilder()
+                          .setSetupId(NODE_SETUP_ID)
+                          .setRuntimeId(NODE_EXECUTION_ID)
+                          .setIdentifier(NODE_IDENTIFIER)
+                          .setStepType(DUMMY_STEP_TYPE)
                           .build());
   }
 
@@ -67,7 +67,7 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
                                                 .uuid(NODE_SETUP_ID)
                                                 .name(NODE_NAME)
                                                 .identifier("dummy")
-                                                .stepType(DUMMY_STEP_TYPE)
+                                                .stepType(io.harness.state.StepType.builder().type("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)

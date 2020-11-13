@@ -6,10 +6,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
-import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -86,7 +86,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
       callbackIds.add(uuid);
       PlanNode node = plan.fetchNode(child.getChildNodeId());
       Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
-      clonedAmbiance.addLevel(Level.fromPlanNode(uuid, node));
+      clonedAmbiance.addLevel(LevelUtils.buildLevelFromPlanNode(uuid, node));
       NodeExecution childNodeExecution = NodeExecution.builder()
                                              .uuid(uuid)
                                              .node(node)

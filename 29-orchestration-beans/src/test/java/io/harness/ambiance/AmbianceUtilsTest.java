@@ -9,8 +9,9 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -96,15 +97,15 @@ public class AmbianceUtilsTest extends OrchestrationBeansTestBase {
   }
 
   private Ambiance buildAmbiance() {
-    Level phaseLevel = Level.builder()
-                           .runtimeId(PHASE_RUNTIME_ID)
-                           .setupId(PHASE_SETUP_ID)
-                           .stepType(StepType.builder().type("PHASE").build())
+    Level phaseLevel = Level.newBuilder()
+                           .setRuntimeId(PHASE_RUNTIME_ID)
+                           .setSetupId(PHASE_SETUP_ID)
+                           .setStepType(StepType.newBuilder().setType("PHASE").build())
                            .build();
-    Level sectionLevel = Level.builder()
-                             .runtimeId(SECTION_RUNTIME_ID)
-                             .setupId(SECTION_SETUP_ID)
-                             .stepType(StepType.builder().type("SECTION").build())
+    Level sectionLevel = Level.newBuilder()
+                             .setRuntimeId(SECTION_RUNTIME_ID)
+                             .setSetupId(SECTION_SETUP_ID)
+                             .setStepType(StepType.newBuilder().setType("SECTION").build())
                              .build();
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);

@@ -8,9 +8,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.LevelUtils;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
-import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
@@ -39,37 +39,48 @@ public class RetryHelper {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
     String newUuid = generateUuid();
-    NodeExecution newNodeExecution = cloneForRetry(nodeExecution, parameters);
     Ambiance ambiance = ambianceUtils.cloneForFinish(nodeExecution.getAmbiance());
-    ambiance.addLevel(Level.builder()
-                          .setupId(node.getUuid())
-                          .runtimeId(newUuid)
-                          .stepType(node.getStepType())
-                          .identifier(node.getIdentifier())
-                          .group(node.getGroup())
-                          .build());
-    newNodeExecution.setUuid(newUuid);
-    newNodeExecution.setAmbiance(ambiance);
+    ambiance.addLevel(LevelUtils.buildLevelFromPlanNode(newUuid, node));
+    NodeExecution newNodeExecution = cloneForRetry(nodeExecution, parameters, newUuid, ambiance);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());
     nodeExecutionService.markRetried(nodeExecution.getUuid());
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
   }
 
-  private NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters) {
-    NodeExecution newNodeExecution = kryoSerializer.clone(nodeExecution);
-    newNodeExecution.setStartTs(null);
-    newNodeExecution.setEndTs(null);
-    newNodeExecution.setStatus(Status.QUEUED);
+  private NodeExecution cloneForRetry(
+      NodeExecution nodeExecution, StepParameters parameters, String newUuid, Ambiance ambiance) {
+    PlanNode newPlanNode = nodeExecution.getNode();
+    if (parameters != null) {
+      newPlanNode = nodeExecution.getNode().cloneForRetry(parameters);
+    }
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
-    newNodeExecution.setRetryIds(retryIds);
-    newNodeExecution.setExecutableResponses(new ArrayList<>());
-    newNodeExecution.setVersion(null);
-    if (parameters != null) {
-      PlanNode newPlanNode = nodeExecution.getNode().cloneForRetry(parameters);
-      newNodeExecution.setNode(newPlanNode);
-    }
-    return newNodeExecution;
+    return NodeExecution.builder()
+        .uuid(newUuid)
+        .ambiance(ambiance)
+        .node(newPlanNode)
+        .mode(null)
+        .startTs(null)
+        .endTs(null)
+        .initialWaitDuration(null)
+        .resolvedStepParameters(null)
+        .notifyId(nodeExecution.getNotifyId())
+        .parentId(nodeExecution.getParentId())
+        .nextId(nodeExecution.getNextId())
+        .previousId(nodeExecution.getPreviousId())
+        .lastUpdatedAt(null)
+        .version(null)
+        .executableResponses(new ArrayList<>())
+        .interruptHistories(nodeExecution.getInterruptHistories())
+        .additionalInputs(new ArrayList<>())
+        .failureInfo(null)
+        .status(Status.QUEUED)
+        .timeoutInstanceIds(new ArrayList<>())
+        .timeoutDetails(null)
+        .outcomeRefs(new ArrayList<>())
+        .retryIds(retryIds)
+        .oldRetry(false)
+        .build();
   }
 }

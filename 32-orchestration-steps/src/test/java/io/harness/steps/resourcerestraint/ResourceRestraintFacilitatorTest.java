@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -22,6 +21,7 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
@@ -79,7 +79,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
@@ -115,7 +115,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()

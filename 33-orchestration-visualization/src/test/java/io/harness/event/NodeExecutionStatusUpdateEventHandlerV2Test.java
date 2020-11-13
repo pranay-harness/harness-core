@@ -12,9 +12,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.LevelUtils;
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.EdgeListInternal;
@@ -27,9 +27,10 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.state.StepType;
@@ -67,14 +68,13 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
   @RealMongo
   public void shouldDoNothingIfRuntimeIdIsNull() {
     String planExecutionId = generateUuid();
-    OrchestrationEvent event =
-        OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecutionId)
-                          .levels(Collections.singletonList(Level.builder().runtimeId(null).build()))
-                          .build())
-            .eventType(NODE_EXECUTION_STATUS_UPDATE)
-            .build();
+    OrchestrationEvent event = OrchestrationEvent.builder()
+                                   .ambiance(Ambiance.builder()
+                                                 .planExecutionId(planExecutionId)
+                                                 .levels(Collections.singletonList(Level.newBuilder().build()))
+                                                 .build())
+                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
+                                   .build();
     eventHandlerV2.handleEvent(event);
 
     verify(graphGenerationService, never()).getCachedOrchestrationGraph(planExecutionId);
@@ -124,10 +124,11 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     // creating event
     OrchestrationEvent event =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().runtimeId(dummyStart.getUuid()).build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(planExecution.getUuid())
+                    .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
+                    .build())
             .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     eventHandlerV2.handleEvent(event);
@@ -197,21 +198,23 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
 
     // creating outcome
     DummyOutcome dummyOutcome = new DummyOutcome("outcome");
-    OutcomeInstance outcome = OutcomeInstance.builder()
-                                  .planExecutionId(planExecution.getUuid())
-                                  .producedBy(Level.fromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
-                                  .createdAt(System.currentTimeMillis())
-                                  .outcome(dummyOutcome)
-                                  .build();
+    OutcomeInstance outcome =
+        OutcomeInstance.builder()
+            .planExecutionId(planExecution.getUuid())
+            .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
+            .createdAt(System.currentTimeMillis())
+            .outcome(dummyOutcome)
+            .build();
     mongoTemplate.insert(outcome);
 
     // creating event
     OrchestrationEvent event =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().runtimeId(dummyStart.getUuid()).build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(planExecution.getUuid())
+                    .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
+                    .build())
             .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     eventHandlerV2.handleEvent(event);

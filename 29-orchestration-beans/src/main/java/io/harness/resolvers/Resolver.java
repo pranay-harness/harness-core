@@ -3,10 +3,10 @@ package io.harness.resolvers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.ambiance.Level;
 import io.harness.references.RefObject;
 import io.harness.registries.RegistrableEntity;
 import io.harness.state.io.StepTransput;
