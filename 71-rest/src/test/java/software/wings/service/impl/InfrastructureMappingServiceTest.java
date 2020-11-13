@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DINESH;
@@ -77,6 +78,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
@@ -105,6 +107,7 @@ import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -1121,6 +1124,63 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(wingsPersistence)
         .saveAndGet(InfrastructureMapping.class, azureWinRMInfrastructureMapping);
     assertThat(azureWinRMInfrastructureMapping.getWinRmConnectionAttributes()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAzureWebAppInfrastructureMapping() {
+    String subscriptionId = "subscriptionId";
+    String resourceGroup = "resourceGroup";
+    String deploymentSlot = "deploymentSlot";
+    String webApp = "webApp";
+
+    AzureWebAppInfrastructureMapping infraStructureMapping = AzureWebAppInfrastructureMapping.builder().build();
+    doReturn(aSettingAttribute().build()).when(settingsService).get(anyString());
+    infraStructureMapping.setProvisionerId("terraform");
+    infraStructureMapping.setSubscriptionId("Id");
+    infraStructureMapping.setResourceGroup("Resource Group");
+    infraStructureMapping.setDeploymentSlot("deploymentSlot");
+    infraStructureMapping.setWebApp("WebApp");
+    infrastructureMappingServiceImpl.validateAzureWebAppInfraMapping(infraStructureMapping);
+
+    AzureWebAppInfrastructureMapping infraStructureMapping1 = AzureWebAppInfrastructureMapping.builder().build();
+    Map<String, Object> variables = new HashMap<>();
+    variables.put(subscriptionId, "Id");
+    variables.put(resourceGroup, "TestGroup");
+    variables.put(deploymentSlot, "devSlot");
+    variables.put(webApp, "dockerApp");
+    infraStructureMapping1.applyProvisionerVariables(variables, null, true);
+
+    resetAllFields(infraStructureMapping1);
+    variables.remove(subscriptionId);
+    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
+        .isInstanceOf(InvalidRequestException.class);
+    variables.put(subscriptionId, "Id");
+
+    resetAllFields(infraStructureMapping1);
+    variables.remove(resourceGroup);
+    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
+        .isInstanceOf(InvalidRequestException.class);
+    variables.put(resourceGroup, "TestGroup");
+
+    resetAllFields(infraStructureMapping1);
+    variables.remove(deploymentSlot);
+    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
+        .isInstanceOf(InvalidRequestException.class);
+    variables.put(deploymentSlot, "devSlot");
+
+    resetAllFields(infraStructureMapping1);
+    variables.remove(webApp);
+    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
+        .isInstanceOf(GeneralException.class);
+  }
+
+  private void resetAllFields(AzureWebAppInfrastructureMapping infraStructureMapping) {
+    infraStructureMapping.setSubscriptionId(null);
+    infraStructureMapping.setResourceGroup(null);
+    infraStructureMapping.setDeploymentSlot(null);
+    infraStructureMapping.setWebApp(null);
   }
 
   @Test

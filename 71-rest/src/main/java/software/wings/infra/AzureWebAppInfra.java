@@ -1,5 +1,7 @@
 package software.wings.infra;
 
+import static io.harness.validation.Validator.ensureType;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.InfrastructureType.AZURE_WEBAPP;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -9,6 +11,10 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @JsonTypeName(AZURE_WEBAPP)
 @Data
@@ -38,6 +44,22 @@ public class AzureWebAppInfra extends AzureAppServiceInfra {
   @Override
   public String getInfrastructureType() {
     return AZURE_WEBAPP;
+  }
+
+  @Override
+  protected void setDeploymentSpecificExpression(Map<String, Object> resolvedExpressions) {
+    Object webAppName = resolvedExpressions.get("webApp");
+    String errorMsg = "Deployment Slot should be of String type";
+    notNullCheck(errorMsg, webAppName);
+    ensureType(String.class, webAppName, errorMsg);
+    setWebApp((String) webAppName);
+  }
+
+  @Override
+  protected Set<String> getDeploymentSpecificExpression() {
+    Set<String> expressions = new HashSet<>();
+    expressions.add("webApp");
+    return expressions;
   }
 
   @Data
