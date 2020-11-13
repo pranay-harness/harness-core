@@ -118,7 +118,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
-  @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+  // Please use delegateselectors instead, tags is not longer used but cannot be removed to support older workflows
+  @Deprecated @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+
+  @NotEmpty @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   @Override
   public KryoSerializer getKryoSerializer() {
@@ -369,6 +372,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     if (isNotEmpty(cloudProviderTag)) {
       allTags.add(cloudProviderTag);
     }
+
+    if (isNotEmpty(delegateSelectors)) {
+      allTags.addAll(delegateSelectors);
+    }
+
     if (isNotEmpty(tags)) {
       allTags.addAll(tags);
     }
