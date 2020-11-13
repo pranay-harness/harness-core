@@ -6,7 +6,6 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
@@ -49,7 +48,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Add new Classes Here
     kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(Ambiance.class, 2503);
-    kryo.register(Level.class, 2504);
     kryo.register(LevelType.class, 2505);
     kryo.register(NodeExecution.class, 2506);
     kryo.register(PlanNode.class, 2508);

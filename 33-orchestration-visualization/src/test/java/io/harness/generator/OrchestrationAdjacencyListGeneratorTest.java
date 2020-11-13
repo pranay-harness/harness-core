@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
@@ -18,8 +17,9 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.ExecutionMode;
 import io.harness.rule.Owner;
 import io.harness.skip.SkipType;
 import io.harness.state.StepType;
@@ -64,30 +64,29 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldGenerateOrchestrationAdjacencyListInternalWithSection() {
-    NodeExecution dummyStart =
-        NodeExecution.builder()
-            .uuid("node1")
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(PLAN_EXECUTION_ID)
-                    .levels(Collections.singletonList(Level.builder().setupId(STARTING_EXECUTION_NODE_ID).build()))
-                    .build())
-            .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid(STARTING_EXECUTION_NODE_ID)
-                      .name("name")
-                      .stepType(DUMMY_STEP_TYPE)
-                      .identifier("identifier1")
-                      .build())
-            .nextId("node2")
-            .build();
+    NodeExecution dummyStart = NodeExecution.builder()
+                                   .uuid("node1")
+                                   .ambiance(Ambiance.builder()
+                                                 .planExecutionId(PLAN_EXECUTION_ID)
+                                                 .levels(Collections.singletonList(
+                                                     Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                                                 .build())
+                                   .mode(ExecutionMode.SYNC)
+                                   .node(PlanNode.builder()
+                                             .uuid(STARTING_EXECUTION_NODE_ID)
+                                             .name("name")
+                                             .stepType(DUMMY_STEP_TYPE)
+                                             .identifier("identifier1")
+                                             .build())
+                                   .nextId("node2")
+                                   .build();
     StepParameters sectionStepParams = DummySectionStepParameters.builder().childNodeId("child_section_2").build();
     NodeExecution section =
         NodeExecution.builder()
             .uuid("node2")
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("section_2").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("section_2").build()))
                           .build())
             .mode(ExecutionMode.CHILD)
             .node(PlanNode.builder()
@@ -105,7 +104,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid("node_child_2")
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("child_section_2").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("child_section_2").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -146,10 +145,11 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
     NodeExecution sectionChainParentNode =
         NodeExecution.builder()
             .uuid("section_chain_start")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("section_chain_plan_node").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("section_chain_plan_node").build()))
+                    .build())
             .mode(ExecutionMode.CHILD_CHAIN)
             .node(PlanNode.builder()
                       .uuid("section_chain_plan_node")
@@ -167,7 +167,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
                           .levels(Collections.singletonList(
-                              Level.builder().setupId("section_chain_child1_plan_node").build()))
+                              Level.newBuilder().setSetupId("section_chain_child1_plan_node").build()))
                           .build())
             .mode(ExecutionMode.TASK)
             .node(PlanNode.builder()
@@ -188,7 +188,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
                           .levels(Collections.singletonList(
-                              Level.builder().setupId("section_chain_child2_plan_node").build()))
+                              Level.newBuilder().setSetupId("section_chain_child2_plan_node").build()))
                           .build())
             .mode(ExecutionMode.TASK)
             .node(PlanNode.builder()
@@ -208,7 +208,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid(dummyNode1Uuid)
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_1").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("dummy_plan_node_1").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -228,7 +228,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid(dummyNode2Uuid)
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_2").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("dummy_plan_node_2").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -272,33 +272,33 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
   public void shouldGenerateOrchestrationGraphWithFork() {
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
-    NodeExecution fork =
-        NodeExecution.builder()
-            .uuid("node1")
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(PLAN_EXECUTION_ID)
-                    .levels(Collections.singletonList(Level.builder().setupId(STARTING_EXECUTION_NODE_ID).build()))
-                    .build())
-            .mode(ExecutionMode.CHILDREN)
-            .node(PlanNode.builder()
-                      .uuid(STARTING_EXECUTION_NODE_ID)
-                      .name("name1")
-                      .stepType(StepType.builder().type("DUMMY_FORK").build())
-                      .identifier("identifier1")
-                      .stepParameters(forkStepParams)
-                      .build())
-            .resolvedStepParameters(forkStepParams)
-            .createdAt(System.currentTimeMillis())
-            .lastUpdatedAt(System.currentTimeMillis())
-            .build();
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid("node1")
+                             .ambiance(Ambiance.builder()
+                                           .planExecutionId(PLAN_EXECUTION_ID)
+                                           .levels(Collections.singletonList(
+                                               Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                                           .build())
+                             .mode(ExecutionMode.CHILDREN)
+                             .node(PlanNode.builder()
+                                       .uuid(STARTING_EXECUTION_NODE_ID)
+                                       .name("name1")
+                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .identifier("identifier1")
+                                       .stepParameters(forkStepParams)
+                                       .build())
+                             .resolvedStepParameters(forkStepParams)
+                             .createdAt(System.currentTimeMillis())
+                             .lastUpdatedAt(System.currentTimeMillis())
+                             .build();
     NodeExecution parallelNode1 =
         NodeExecution.builder()
             .uuid("parallel_node_1")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_1").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_1").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_1")
@@ -313,10 +313,11 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
     NodeExecution parallelNode2 =
         NodeExecution.builder()
             .uuid("parallel_node_2")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_2").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_2").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_2")
@@ -353,7 +354,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid("dummy_node_1")
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_1").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("dummy_plan_node_1").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -367,33 +368,33 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .build();
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
-    NodeExecution fork =
-        NodeExecution.builder()
-            .uuid("node1")
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(PLAN_EXECUTION_ID)
-                    .levels(Collections.singletonList(Level.builder().setupId(STARTING_EXECUTION_NODE_ID).build()))
-                    .build())
-            .mode(ExecutionMode.CHILDREN)
-            .node(PlanNode.builder()
-                      .uuid(STARTING_EXECUTION_NODE_ID)
-                      .name("name1")
-                      .stepType(StepType.builder().type("DUMMY_FORK").build())
-                      .identifier("identifier1")
-                      .stepParameters(forkStepParams)
-                      .build())
-            .resolvedStepParameters(forkStepParams)
-            .createdAt(System.currentTimeMillis())
-            .lastUpdatedAt(System.currentTimeMillis())
-            .build();
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid("node1")
+                             .ambiance(Ambiance.builder()
+                                           .planExecutionId(PLAN_EXECUTION_ID)
+                                           .levels(Collections.singletonList(
+                                               Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                                           .build())
+                             .mode(ExecutionMode.CHILDREN)
+                             .node(PlanNode.builder()
+                                       .uuid(STARTING_EXECUTION_NODE_ID)
+                                       .name("name1")
+                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .identifier("identifier1")
+                                       .stepParameters(forkStepParams)
+                                       .build())
+                             .resolvedStepParameters(forkStepParams)
+                             .createdAt(System.currentTimeMillis())
+                             .lastUpdatedAt(System.currentTimeMillis())
+                             .build();
     NodeExecution parallelNode1 =
         NodeExecution.builder()
             .uuid("parallel_node_1")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_1").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_1").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_1")
@@ -408,10 +409,11 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
     NodeExecution parallelNode2 =
         NodeExecution.builder()
             .uuid("parallel_node_2")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_2").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_2").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_2")
@@ -451,7 +453,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid("dummy_node_1")
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_1").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("dummy_plan_node_1").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -468,7 +470,7 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
             .uuid("dummy_node_2")
             .ambiance(Ambiance.builder()
                           .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("dummy_plan_node_2").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("dummy_plan_node_2").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -652,33 +654,33 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
   public void shouldTestPopulateAdjacencyListForFork() {
     StepParameters forkStepParams =
         DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
-    NodeExecution fork =
-        NodeExecution.builder()
-            .uuid("node1")
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(PLAN_EXECUTION_ID)
-                    .levels(Collections.singletonList(Level.builder().setupId(STARTING_EXECUTION_NODE_ID).build()))
-                    .build())
-            .mode(ExecutionMode.CHILDREN)
-            .node(PlanNode.builder()
-                      .uuid(STARTING_EXECUTION_NODE_ID)
-                      .name("name1")
-                      .stepType(StepType.builder().type("DUMMY_FORK").build())
-                      .identifier("identifier1")
-                      .stepParameters(forkStepParams)
-                      .build())
-            .resolvedStepParameters(forkStepParams)
-            .createdAt(System.currentTimeMillis())
-            .lastUpdatedAt(System.currentTimeMillis())
-            .build();
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid("node1")
+                             .ambiance(Ambiance.builder()
+                                           .planExecutionId(PLAN_EXECUTION_ID)
+                                           .levels(Collections.singletonList(
+                                               Level.newBuilder().setSetupId(STARTING_EXECUTION_NODE_ID).build()))
+                                           .build())
+                             .mode(ExecutionMode.CHILDREN)
+                             .node(PlanNode.builder()
+                                       .uuid(STARTING_EXECUTION_NODE_ID)
+                                       .name("name1")
+                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .identifier("identifier1")
+                                       .stepParameters(forkStepParams)
+                                       .build())
+                             .resolvedStepParameters(forkStepParams)
+                             .createdAt(System.currentTimeMillis())
+                             .lastUpdatedAt(System.currentTimeMillis())
+                             .build();
     NodeExecution parallelNode1 =
         NodeExecution.builder()
             .uuid("parallel_node_1")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_1").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_1").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_1")
@@ -693,10 +695,11 @@ public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisual
     NodeExecution parallelNode2 =
         NodeExecution.builder()
             .uuid("parallel_node_2")
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(PLAN_EXECUTION_ID)
-                          .levels(Collections.singletonList(Level.builder().setupId("parallel_plan_node_2").build()))
-                          .build())
+            .ambiance(
+                Ambiance.builder()
+                    .planExecutionId(PLAN_EXECUTION_ID)
+                    .levels(Collections.singletonList(Level.newBuilder().setSetupId("parallel_plan_node_2").build()))
+                    .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
                       .uuid("parallel_plan_node_2")

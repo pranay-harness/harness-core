@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
@@ -25,9 +24,10 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.SkipType;
@@ -65,7 +65,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
                           .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -101,7 +101,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
                           .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -150,7 +150,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
                           .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -186,7 +186,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
                           .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -202,7 +202,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
         NodeExecution.builder()
             .ambiance(Ambiance.builder()
                           .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.builder().setupId("node2_plan").build()))
+                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node2_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()

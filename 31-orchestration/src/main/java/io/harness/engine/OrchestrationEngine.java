@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
+import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
@@ -28,7 +29,6 @@ import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
-import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
@@ -158,7 +158,7 @@ public class OrchestrationEngine {
 
   private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
     Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambianceUtils.cloneForFinish(ambiance);
-    cloned.addLevel(Level.fromPlanNode(uuid, node));
+    cloned.addLevel(LevelUtils.buildLevelFromPlanNode(uuid, node));
     return cloned;
   }
 

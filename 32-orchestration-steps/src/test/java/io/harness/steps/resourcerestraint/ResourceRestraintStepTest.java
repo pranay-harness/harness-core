@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -24,6 +23,7 @@ import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -85,7 +85,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
@@ -120,7 +120,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
@@ -150,7 +150,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
@@ -181,7 +181,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
@@ -216,7 +216,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -247,7 +247,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -275,7 +275,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)

@@ -10,14 +10,14 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.steps.StepType;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.resolvers.GroupNotFoundException;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
@@ -124,10 +124,10 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
 
   private Ambiance prepareStepAmbiance(Ambiance ambianceSection) {
     Ambiance ambianceStep = ambianceUtils.cloneForChild(ambianceSection);
-    ambianceStep.addLevel(Level.builder()
-                              .runtimeId(STEP_RUNTIME_ID)
-                              .setupId(STEP_SETUP_ID)
-                              .stepType(StepType.builder().type("SHELL_SCRIPT").build())
+    ambianceStep.addLevel(Level.newBuilder()
+                              .setRuntimeId(STEP_RUNTIME_ID)
+                              .setSetupId(STEP_SETUP_ID)
+                              .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").build())
                               .build());
     return ambianceStep;
   }

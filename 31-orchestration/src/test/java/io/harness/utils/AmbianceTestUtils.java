@@ -5,8 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
-import io.harness.state.StepType;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.steps.StepType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,17 +21,17 @@ public class AmbianceTestUtils {
   public static final String SECTION_SETUP_ID = generateUuid();
 
   public static Ambiance buildAmbiance() {
-    Level phaseLevel = Level.builder()
-                           .runtimeId(PHASE_RUNTIME_ID)
-                           .setupId(PHASE_SETUP_ID)
-                           .stepType(StepType.builder().type("DEPLOY_PHASE").build())
-                           .group("PHASE")
+    Level phaseLevel = Level.newBuilder()
+                           .setRuntimeId(PHASE_RUNTIME_ID)
+                           .setSetupId(PHASE_SETUP_ID)
+                           .setStepType(StepType.newBuilder().setType("DEPLOY_PHASE").build())
+                           .setGroup("PHASE")
                            .build();
-    Level sectionLevel = Level.builder()
-                             .runtimeId(SECTION_RUNTIME_ID)
-                             .setupId(SECTION_SETUP_ID)
-                             .stepType(StepType.builder().type("DEPLOY_SECTION").build())
-                             .group("SECTION")
+    Level sectionLevel = Level.newBuilder()
+                             .setRuntimeId(SECTION_RUNTIME_ID)
+                             .setSetupId(SECTION_SETUP_ID)
+                             .setStepType(StepType.newBuilder().setType("DEPLOY_SECTION").build())
+                             .setGroup("SECTION")
                              .build();
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);

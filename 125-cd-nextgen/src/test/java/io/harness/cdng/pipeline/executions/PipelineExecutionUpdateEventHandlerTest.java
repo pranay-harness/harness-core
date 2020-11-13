@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -23,6 +22,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import org.apache.groovy.util.Maps;
@@ -54,7 +54,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
             .ambiance(Ambiance.builder()
                           .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
                               "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.builder().runtimeId("node1").build()))
+                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution =
@@ -76,7 +76,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
             .ambiance(Ambiance.builder()
                           .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
                               "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.builder().runtimeId("node1").build()))
+                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder().node(PlanNode.builder().group(null).build()).build();
@@ -95,7 +95,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
             .ambiance(Ambiance.builder()
                           .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
                               "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.builder().runtimeId("node1").build()))
+                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()
@@ -122,7 +122,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
             .ambiance(Ambiance.builder()
                           .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
                               "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.builder().runtimeId("node1").build()))
+                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()

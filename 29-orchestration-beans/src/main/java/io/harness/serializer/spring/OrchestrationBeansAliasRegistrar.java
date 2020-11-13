@@ -2,7 +2,6 @@ package io.harness.serializer.spring;
 
 import io.harness.adviser.AdviserType;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
@@ -35,7 +34,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("ambiance", Ambiance.class);
-    orchestrationElements.put("level", Level.class);
     orchestrationElements.put("planNode", PlanNode.class);
     orchestrationElements.put("plan", Plan.class);
     orchestrationElements.put("stepType", StepType.class);

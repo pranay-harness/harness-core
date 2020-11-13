@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 import io.fabric8.utils.Lists;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -23,9 +22,10 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.ExecutionMode;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
@@ -195,7 +195,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
     Ambiance ambiance = Ambiance.builder()
                             .planExecutionId(generateUuid())
                             .levels(Collections.singletonList(
-                                Level.builder().runtimeId(generateUuid()).setupId(generateUuid()).build()))
+                                Level.newBuilder().setRuntimeId(generateUuid()).setSetupId(generateUuid()).build()))
                             .build();
     ResourceRestraintInstance instance = saveInstance(BLOCKED, OTHER);
 

@@ -12,13 +12,13 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
-import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.utils.AmbianceTestUtils;
@@ -118,7 +118,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void testNodeExecutionChildFunctor() {
     Ambiance newAmbiance = ambianceUtils.cloneForChild(ambiance);
-    newAmbiance.addLevel(Level.builder().runtimeId(nodeExecution1.getUuid()).build());
+    newAmbiance.addLevel(Level.newBuilder().setRuntimeId(nodeExecution1.getUuid()).build());
     NodeExecutionChildFunctor functor =
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
@@ -138,7 +138,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void testNodeExecutionAncestorFunctor() {
     Ambiance newAmbiance = ambianceUtils.cloneForChild(ambiance);
-    newAmbiance.addLevel(Level.builder().runtimeId(nodeExecution6.getUuid()).build());
+    newAmbiance.addLevel(Level.newBuilder().setRuntimeId(nodeExecution6.getUuid()).build());
     NodeExecutionAncestorFunctor functor =
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))

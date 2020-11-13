@@ -30,4 +30,11 @@ public class ProtobufKryoSerializer<P extends Message> extends Serializer<P> {
     method.setAccessible(true);
     return (P) method.invoke(null, input);
   }
+
+  public P copy(Kryo kryo, P original) {
+    if (original == null) {
+      return null;
+    }
+    return (P) original.toBuilder().clone().build();
+  }
 }
