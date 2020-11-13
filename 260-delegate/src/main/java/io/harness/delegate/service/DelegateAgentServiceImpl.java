@@ -111,6 +111,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ActivityAccess;
+import io.harness.delegate.task.Cd1ApplicationAccess;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
@@ -120,7 +121,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.AutoLogContext;
 import io.harness.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
-import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
@@ -1839,16 +1839,33 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private ILogStreamingTaskClient getLogStreamingTaskClient(
       Pair<String, Set<String>> activitySecrets, DelegateTaskPackage delegateTaskPackage) {
-    if (delegateAgentLogStreamingClient == null) {
-      return null;
+    boolean logStreamingConfigPresent = false;
+    boolean logCallbackConfigPresent = false;
+    String appId = null;
+    String activityId = null;
+
+    if (delegateAgentLogStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
+        && !isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
+      logStreamingConfigPresent = true;
     }
 
-    if (isBlank(delegateTaskPackage.getLogStreamingToken())) {
-      return null;
+    // Extract appId and activityId from task params, in case LogCallback logging has to be used for backward
+    // compatibility reasons
+    Object[] taskParameters = delegateTaskPackage.getData().getParameters();
+    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof ApplicationAccess
+        && taskParameters[0] instanceof ActivityAccess) {
+      Cd1ApplicationAccess applicationAccess = (Cd1ApplicationAccess) taskParameters[0];
+      appId = applicationAccess.getAppId();
+
+      ActivityAccess activityAccess = (ActivityAccess) taskParameters[0];
+      activityId = activityAccess.getActivityId();
     }
 
-    if (delegateTaskPackage.getLogStreamingAbstractions() == null
-        || isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
+    if (!isBlank(appId) && !isBlank(activityId)) {
+      logCallbackConfigPresent = true;
+    }
+
+    if (!logStreamingConfigPresent && !logCallbackConfigPresent) {
       return null;
     }
 
@@ -1861,28 +1878,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logBaseKey.append(entry.getKey() + ":" + entry.getValue());
     }
 
-    LogStreamingTaskClientBuilder logStreamingTaskClientBuilder =
-        LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
-            .accountId(delegateTaskPackage.getAccountId())
-            .token(delegateTaskPackage.getLogStreamingToken())
-            .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
-            .baseLogKey(logBaseKey.toString())
-            .logService(delegateLogService);
-
-    // Extract appId and activityId from task params, in case LogCallback logging has to be used for backward
-    // compatibility reasons
-    Object[] taskParameters = delegateTaskPackage.getData().getParameters();
-    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof ApplicationAccess
-        && taskParameters[0] instanceof ActivityAccess) {
-      ApplicationAccess applicationAccess = (ApplicationAccess) taskParameters[0];
-      logStreamingTaskClientBuilder.appId(applicationAccess.getAppId());
-
-      ActivityAccess activityAccess = (ActivityAccess) taskParameters[0];
-      logStreamingTaskClientBuilder.activityId(activityAccess.getActivityId());
-    }
-
-    return logStreamingTaskClientBuilder.build();
+    return LogStreamingTaskClient.builder()
+        .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+        .accountId(delegateTaskPackage.getAccountId())
+        .token(delegateTaskPackage.getLogStreamingToken())
+        .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
+        .baseLogKey(logBaseKey.toString())
+        .logService(delegateLogService)
+        .appId(appId)
+        .activityId(activityId)
+        .build();
   }
 
   private Optional<LogSanitizer> getLogSanitizer(Pair<String, Set<String>> activitySecrets) {

@@ -30,7 +30,7 @@ public interface ILogStreamingTaskClient {
    * Provides an instance of LogCallback interface implementation for backward compatibility reasons, to be used in
    * delegate task implementations, instead of direct constructor invocation. LogService and accountId are provided by
    * the delegate, while appId and activityId should be available as part of task parameters. Please make sure that your
-   * task parameters class implements {@link software.wings.beans.entityinterface.ApplicationAccess} and {@link
+   * task parameters class implements {@link io.harness.delegate.task.Cd1ApplicationAccess} and {@link
    * io.harness.delegate.task.ActivityAccess} interfaces.
    */
   LogCallback obtainLogCallback(String commandName);

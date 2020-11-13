@@ -186,7 +186,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     assertThatThrownBy(() -> logStreamingTaskClientWithoutAppId.obtainLogCallback("commandName"))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage(
-            "Application id and activity id were not available as part of task params. Please make sure that task params class implements ApplicationAccess and ActivityAccess interfaces.");
+            "Application id and activity id were not available as part of task params. Please make sure that task params class implements Cd1ApplicationAccess and ActivityAccess interfaces.");
 
     // Test no activityId scenario
     LogStreamingTaskClient logStreamingTaskClientWithoutActivityId =
@@ -203,6 +203,6 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     assertThatThrownBy(() -> logStreamingTaskClientWithoutActivityId.obtainLogCallback("commandName"))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage(
-            "Application id and activity id were not available as part of task params. Please make sure that task params class implements ApplicationAccess and ActivityAccess interfaces.");
+            "Application id and activity id were not available as part of task params. Please make sure that task params class implements Cd1ApplicationAccess and ActivityAccess interfaces.");
   }
 }
