@@ -12,6 +12,7 @@ import io.harness.network.Http;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -40,6 +41,10 @@ public class DelegateAgentLogStreamingClientFactory implements Provider<Delegate
 
   @Override
   public DelegateAgentLogStreamingClient get() {
+    if (StringUtils.isBlank(logStreamingServiceBaseUrl)) {
+      return null;
+    }
+
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk8Module());
     objectMapper.registerModule(new GuavaModule());

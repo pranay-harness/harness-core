@@ -286,7 +286,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
-  @Inject private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -1839,6 +1839,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private ILogStreamingTaskClient getLogStreamingTaskClient(
       Pair<String, Set<String>> activitySecrets, DelegateTaskPackage delegateTaskPackage) {
+    if (delegateAgentLogStreamingClient == null) {
+      return null;
+    }
+
     if (isBlank(delegateTaskPackage.getLogStreamingToken())) {
       return null;
     }
