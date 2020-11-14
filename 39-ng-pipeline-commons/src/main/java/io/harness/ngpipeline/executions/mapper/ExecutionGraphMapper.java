@@ -1,14 +1,14 @@
 package io.harness.ngpipeline.executions.mapper;
 
 import io.harness.beans.EdgeList;
-import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
-import io.harness.ngpipeline.executions.beans.ExecutionNode;
-import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.dto.GraphVertexDTO;
+import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph.ExecutionGraphBuilder;
+import io.harness.ngpipeline.executions.beans.ExecutionNode;
+import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
+import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import lombok.NonNull;
 
 import java.util.HashMap;
@@ -22,7 +22,7 @@ public class ExecutionGraphMapper {
     ExecutionGraphBuilder executionGraphBuilder =
         ExecutionGraph.builder().rootNodeId(orchestrationGraph.getRootNodeIds().get(0));
 
-    OrchestrationAdjacencyList adjacencyList = orchestrationGraph.getAdjacencyList();
+    OrchestrationAdjacencyListDTO adjacencyList = orchestrationGraph.getAdjacencyList();
 
     Map<String, ExecutionNode> nodeMap = new HashMap<>();
     adjacencyList.getGraphVertexMap().forEach((key, value) -> nodeMap.put(key, toExecutionNode(value)));
@@ -35,7 +35,7 @@ public class ExecutionGraphMapper {
   }
 
   @NonNull
-  static ExecutionNode toExecutionNode(@NonNull GraphVertex graphVertex) {
+  static ExecutionNode toExecutionNode(@NonNull GraphVertexDTO graphVertex) {
     return ExecutionNode.builder()
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())

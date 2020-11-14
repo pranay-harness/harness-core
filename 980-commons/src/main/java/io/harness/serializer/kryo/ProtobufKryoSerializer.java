@@ -1,34 +1,66 @@
 package io.harness.serializer.kryo;
 
+import static com.esotericsoftware.kryo.Kryo.NULL;
+
 import com.google.protobuf.Message;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import lombok.SneakyThrows;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @SuppressWarnings("unchecked")
 public class ProtobufKryoSerializer<P extends Message> extends Serializer<P> {
+  private Method parseFromMethod = null;
+
   @Override
-  public void write(Kryo kryo, Output output, P p) {
+  public void write(Kryo kryo, Output output, P protobufMessage) {
+    if (protobufMessage == null) {
+      output.writeByte(NULL);
+      output.flush();
+      return;
+    }
+
+    byte[] bytes = protobufMessage.toByteArray();
+
+    output.writeInt(bytes.length + 1, true);
+    output.writeBytes(bytes);
+    output.flush();
+  }
+
+  @Override
+  public P read(Kryo kryo, Input input, Class<P> aClass) {
+    int length = input.readInt(true);
+    if (length == NULL) {
+      return null;
+    }
+
+    byte[] bytes = input.readBytes(length - 1);
     try {
-      p.writeTo(output);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      return (P) (getParseFromMethod(aClass).invoke(aClass, bytes));
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException("Unable to deserialize protobuf " + e.getMessage(), e);
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException("Unable to deserialize protobuf " + e.getMessage(), e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("Unable to deserialize protobuf " + e.getMessage(), e);
     }
   }
 
-  @SneakyThrows
+  private Method getParseFromMethod(Class<? extends P> type) throws NoSuchMethodException {
+    if (parseFromMethod == null) {
+      parseFromMethod = type.getMethod("parseFrom", byte[].class);
+      parseFromMethod.setAccessible(true);
+    }
+    return parseFromMethod;
+  }
+
   @Override
-  public P read(Kryo kryo, Input input, Class<P> aClass) {
-    Method method = aClass.getDeclaredMethod("parseFrom", InputStream.class);
-    method.setAccessible(true);
-    return (P) method.invoke(null, input);
+  public boolean getAcceptsNull() {
+    return true;
   }
 
   public P copy(Kryo kryo, P original) {

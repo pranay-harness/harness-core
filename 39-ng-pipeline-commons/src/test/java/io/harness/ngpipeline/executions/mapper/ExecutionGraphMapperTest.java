@@ -9,15 +9,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EdgeList;
-import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.category.element.UnitTests;
+import io.harness.dto.GraphVertexDTO;
+import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.pms.execution.Status;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.beans.ExecutionNode;
 import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
-import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
+import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import lombok.NonNull;
 import org.junit.Test;
@@ -67,12 +66,12 @@ public class ExecutionGraphMapperTest extends CategoryTest {
   }
 
   private OrchestrationGraphDTO prepareOrchestrationGraph() {
-    GraphVertex node1 = GraphVertex.builder().name("node1").uuid("id1").status(Status.RUNNING).build();
-    GraphVertex node2 = GraphVertex.builder().name("node2").uuid("id2").status(Status.FAILED).build();
-    GraphVertex node3 = GraphVertex.builder().name("node3").uuid("id3").status(Status.SUCCEEDED).build();
-    GraphVertex node4 = GraphVertex.builder().name("node4").uuid("id4").status(Status.ASYNC_WAITING).build();
+    GraphVertexDTO node1 = GraphVertexDTO.builder().name("node1").uuid("id1").status(Status.RUNNING).build();
+    GraphVertexDTO node2 = GraphVertexDTO.builder().name("node2").uuid("id2").status(Status.FAILED).build();
+    GraphVertexDTO node3 = GraphVertexDTO.builder().name("node3").uuid("id3").status(Status.SUCCEEDED).build();
+    GraphVertexDTO node4 = GraphVertexDTO.builder().name("node4").uuid("id4").status(Status.ASYNC_WAITING).build();
 
-    Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+    Map<String, GraphVertexDTO> graphVertexMap = new HashMap<>();
     graphVertexMap.put("id1", node1);
     graphVertexMap.put("id2", node2);
     graphVertexMap.put("id3", node3);
@@ -83,12 +82,12 @@ public class ExecutionGraphMapperTest extends CategoryTest {
     Map<String, EdgeList> edgeListMap = new HashMap<>();
     edgeListMap.put("id1", edgeList);
 
-    OrchestrationAdjacencyList orchestrationAdjacencyList =
-        OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyMap(edgeListMap).build();
+    OrchestrationAdjacencyListDTO orchestrationAdjacencyListDTO =
+        OrchestrationAdjacencyListDTO.builder().graphVertexMap(graphVertexMap).adjacencyMap(edgeListMap).build();
 
     return OrchestrationGraphDTO.builder()
         .rootNodeIds(Collections.singletonList("id1"))
-        .adjacencyList(orchestrationAdjacencyList)
+        .adjacencyList(orchestrationAdjacencyListDTO)
         .build();
   }
 }

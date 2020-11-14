@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.OrchestrationGraph;
-import io.harness.beans.converter.OrchestrationAdjacencyListConverter;
 import io.harness.dto.OrchestrationGraphDTO;
 import lombok.experimental.UtilityClass;
 
@@ -19,7 +18,7 @@ public class OrchestrationGraphDTOConverter {
         .status(orchestrationGraph.getStatus())
         .rootNodeIds(orchestrationGraph.getRootNodeIds())
         .planExecutionId(orchestrationGraph.getPlanExecutionId())
-        .adjacencyList(OrchestrationAdjacencyListConverter.convertFrom(orchestrationGraph.getAdjacencyList()))
+        .adjacencyList(OrchestrationAdjacencyListDTOConverter.convertFrom(orchestrationGraph.getAdjacencyList()))
         .build();
   }
 
@@ -30,7 +29,8 @@ public class OrchestrationGraphDTOConverter {
         .status(ephemeralOrchestrationGraph.getStatus())
         .rootNodeIds(ephemeralOrchestrationGraph.getRootNodeIds())
         .planExecutionId(ephemeralOrchestrationGraph.getPlanExecutionId())
-        .adjacencyList(OrchestrationAdjacencyListConverter.convertFrom(ephemeralOrchestrationGraph.getAdjacencyList()))
+        .adjacencyList(
+            OrchestrationAdjacencyListDTOConverter.convertFrom(ephemeralOrchestrationGraph.getAdjacencyList()))
         .build();
   }
 }

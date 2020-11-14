@@ -17,8 +17,8 @@ import guru.nidi.graphviz.rough.FillStyle;
 import guru.nidi.graphviz.rough.RoughFilter;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.beans.EdgeList;
-import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
+import io.harness.dto.GraphVertexDTO;
+import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -66,7 +66,7 @@ public class GraphVisualizer {
         .stream()
         .filter(entry -> nodeIds.contains(entry.getKey()))
         .forEach(entry -> {
-          GraphVertex graphVertex = graph.getAdjacencyList().getGraphVertexMap().get(entry.getKey());
+          GraphVertexDTO graphVertex = graph.getAdjacencyList().getGraphVertexMap().get(entry.getKey());
           MutableNode node = mutNode(graphVertex.getName(), true)
                                  .attrs()
                                  .add(new MapAttributes<>().add("ID", entry.getKey()),
@@ -90,7 +90,7 @@ public class GraphVisualizer {
   }
 
   private void addLinksToGraph(MutableGraph mutableGraph, OrchestrationGraphDTO orchestrationGraph) {
-    Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
+    Map<String, GraphVertexDTO> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
     List<MutableNode> nodes = new ArrayList<>(mutableGraph.nodes());
     nodes.forEach(node -> {
       EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyMap().get(node.attrs().get("ID"));
@@ -111,18 +111,18 @@ public class GraphVisualizer {
     breadthFirstTraversalInternal(graph.getRootNodeIds().get(0), graph.getAdjacencyList());
   }
 
-  private void breadthFirstTraversalInternal(String nodeId, OrchestrationAdjacencyList adjacencyList) {
+  private void breadthFirstTraversalInternal(String nodeId, OrchestrationAdjacencyListDTO adjacencyList) {
     if (adjacencyList.getGraphVertexMap().get(nodeId) == null) {
       return;
     }
 
-    LinkedList<GraphVertex> queue = new LinkedList<>();
+    LinkedList<GraphVertexDTO> queue = new LinkedList<>();
     queue.add(adjacencyList.getGraphVertexMap().get(nodeId));
 
-    Set<GraphVertex> visited = new HashSet<>();
+    Set<GraphVertexDTO> visited = new HashSet<>();
 
     while (!queue.isEmpty()) {
-      GraphVertex graphVertex = queue.removeFirst();
+      GraphVertexDTO graphVertex = queue.removeFirst();
 
       if (visited.contains(graphVertex)) {
         continue;
@@ -138,14 +138,14 @@ public class GraphVisualizer {
       }
 
       for (String child : childIds) {
-        GraphVertex nextVertex = adjacencyList.getGraphVertexMap().get(child);
+        GraphVertexDTO nextVertex = adjacencyList.getGraphVertexMap().get(child);
         if (!visited.contains(nextVertex)) {
           queue.add(nextVertex);
         }
       }
 
       if (nextId != null) {
-        GraphVertex nextVertex = adjacencyList.getGraphVertexMap().get(nextId);
+        GraphVertexDTO nextVertex = adjacencyList.getGraphVertexMap().get(nextId);
         if (!visited.contains(nextVertex)) {
           queue.add(nextVertex);
         }
@@ -158,8 +158,8 @@ public class GraphVisualizer {
   }
 
   private void depthFirstTraversalInternal(
-      String nodeId, OrchestrationAdjacencyList adjacencyList, Set<String> visited) {
-    GraphVertex graphVertex = adjacencyList.getGraphVertexMap().get(nodeId);
+      String nodeId, OrchestrationAdjacencyListDTO adjacencyList, Set<String> visited) {
+    GraphVertexDTO graphVertex = adjacencyList.getGraphVertexMap().get(nodeId);
     if (graphVertex == null) {
       return;
     }

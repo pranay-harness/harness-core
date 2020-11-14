@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 /**
  * Test class for {@link OrchestrationAdjacencyListGenerator}
  */
-public class OrchestrationAdjacencyListGeneratorTest extends OrchestrationVisualizationTestBase {
+public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVisualizationTestBase {
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
