@@ -102,6 +102,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
     try (AutoLogContext ignore = context.autoLogContext()) {
+      log.info("Calculating execution advice for workflow");
       List<ExecutionInterrupt> executionInterrupts =
           executionInterruptManager.checkForExecutionInterrupt(context.getAppId(), context.getWorkflowExecutionId());
       if (executionInterrupts != null
@@ -300,6 +301,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     } catch (Exception ex) {
       log.error("Error Occurred while calculating advise. This is really bad");
       return null;
+    } catch (Throwable t) {
+      log.error("Encountered a throwable while calculating execution advice: {} ", t.getStackTrace());
+      return null;
     } finally {
       try {
         if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow) {
@@ -310,6 +314,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       } catch (Exception ex) {
         log.warn("Error while getting workflow execution data for instance sync for execution: {}",
             workflowExecution.getUuid(), ex);
+      } catch (Throwable t) {
+        log.error("Encountered a throwable while extracting instance " + t.getStackTrace());
+        return null;
       }
     }
   }

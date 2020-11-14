@@ -658,6 +658,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       return null;
     }
 
+    log.info("Calculating advice from advisors : {}", advisors);
     ExecutionEventAdvice executionEventAdvice = null;
     for (ExecutionEventAdvisor advisor : advisors) {
       executionEventAdvice = advisor.onExecutionEvent(executionEvent);
@@ -676,84 +677,104 @@ public class StateMachineExecutor implements StateInspectionListener {
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
-    State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    Long expiryTs = stateExecutionInstance.getExpiryTs();
-    ExecutionStatus status = executionResponse.getExecutionStatus();
-    if (executionResponse.isAsync()) {
-      if (isEmpty(executionResponse.getCorrelationIds())) {
-        log.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
-            + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
-        status = ERROR;
-      } else {
-        if (status != PAUSED) {
-          status = RUNNING;
-          expiryTs = stateExecutionInstance.getStatus() == status ? stateExecutionInstance.getExpiryTs()
-                                                                  : evaluateExpiryTs(currentState, context);
-        } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-          expiryTs = evaluateExpiryTs(currentState, context);
-        }
-        NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
-            stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
-        waitNotifyEngine.waitForAllOn(
-            ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
-      }
-
-      boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
-          executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId(), expiryTs);
-      if (!updated) {
-        // Currently, it is by design that handle execute response can be in race with some other ways to update the
-        // state. Say it can be aborted.
-        StateExecutionInstance dbStateExecutionInstance =
-            wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
-        if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
-          throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+    try {
+      State currentState =
+          sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      Long expiryTs = stateExecutionInstance.getExpiryTs();
+      ExecutionStatus status = executionResponse.getExecutionStatus();
+      if (executionResponse.isAsync()) {
+        log.info("Got an async response");
+        if (isEmpty(executionResponse.getCorrelationIds())) {
+          log.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
+              + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
+          status = ERROR;
         } else {
-          throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+          if (status != PAUSED) {
+            status = RUNNING;
+            expiryTs = stateExecutionInstance.getStatus() == status ? stateExecutionInstance.getExpiryTs()
+                                                                    : evaluateExpiryTs(currentState, context);
+          } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
+            expiryTs = evaluateExpiryTs(currentState, context);
+          }
+          NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
+              stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
+          waitNotifyEngine.waitForAllOn(
+              ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
+          log.info("Created a state machine resume callback and updated to wait notify engine");
+        }
+
+        boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
+            status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
+            executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId(), expiryTs);
+        log.info("Updated state execution data successfully? : {}", updated);
+        if (!updated) {
+          // Currently, it is by design that handle execute response can be in race with some other ways to update the
+          // state. Say it can be aborted.
+          StateExecutionInstance dbStateExecutionInstance =
+              wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
+          if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
+            throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+          } else {
+            throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+          }
+        }
+        invokeAdvisors(ExecutionEvent.builder()
+                           .failureTypes(executionResponse.getFailureTypes())
+                           .context(context)
+                           .state(currentState)
+                           .build());
+
+        log.info("Invoked advisors with execution event ");
+        if (status == RUNNING) {
+          handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
+        }
+
+      } else {
+        boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
+            status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
+            executionResponse.getNotifyElements(),
+            RUNNING == status ? evaluateExpiryTs(currentState, context) : expiryTs);
+        if (!updated) {
+          log.info("State Execution Instance {} update failed Retrying", stateExecutionInstance.getUuid());
+          return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
+        }
+
+        log.info("Updated state execution data successfully? : {}", updated);
+
+        ExecutionEventAdvice executionEventAdvice =
+            invokeAdvisors(ExecutionEvent.builder()
+                               .failureTypes(executionResponse.getFailureTypes())
+                               .context(context)
+                               .state(currentState)
+                               .build());
+
+        log.info("Invoked advisors with execution event ");
+
+        if (executionEventAdvice != null && !executionEventAdvice.isSkipState() && SKIPPED != status) {
+          log.info(
+              "Execution Advise is not null. Handling Advise : {}", executionEventAdvice.getExecutionInterruptType());
+          return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
+        } else if (isPositiveStatus(status)) {
+          log.info("Execution Advise is null. Starting Positive Transition : {}", status);
+          return successTransition(context);
+        } else if (isBrokeStatus(status)) {
+          log.info("Execution Advise is null. Starting Failed Transition : {}", status);
+          return failedTransition(context, null);
+        } else if (ExecutionStatus.isDiscontinueStatus(status)) {
+          log.info("Execution Advise is null. Starting Discontinue Transition : {}", status);
+          endTransition(context, stateExecutionInstance, status, null);
+        } else {
+          log.info("Execution Advise is null. Execution status is {}", status);
         }
       }
-      invokeAdvisors(ExecutionEvent.builder()
-                         .failureTypes(executionResponse.getFailureTypes())
-                         .context(context)
-                         .state(currentState)
-                         .build());
-      if (status == RUNNING) {
-        handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
-      }
-
-    } else {
-      boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
-          executionResponse.getNotifyElements(),
-          RUNNING == status ? evaluateExpiryTs(currentState, context) : expiryTs);
-      if (!updated) {
-        log.info("State Execution Instance {} update failed Retrying", stateExecutionInstance.getUuid());
-        return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
-      }
-
-      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
-                                                                     .failureTypes(executionResponse.getFailureTypes())
-                                                                     .context(context)
-                                                                     .state(currentState)
-                                                                     .build());
-
-      if (executionEventAdvice != null && !executionEventAdvice.isSkipState() && SKIPPED != status) {
-        log.info(
-            "Execution Advise is not null. Handling Advise : {}", executionEventAdvice.getExecutionInterruptType());
-        return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
-      } else if (isPositiveStatus(status)) {
-        log.info("Execution Advise is null. Starting Positive Transition : {}", status);
-        return successTransition(context);
-      } else if (isBrokeStatus(status)) {
-        log.info("Execution Advise is null. Starting Failed Transition : {}", status);
-        return failedTransition(context, null);
-      } else if (ExecutionStatus.isDiscontinueStatus(status)) {
-        log.info("Execution Advise is null. Starting Discontinue Transition : {}", status);
-        endTransition(context, stateExecutionInstance, status, null);
-      }
+      return stateExecutionInstance;
+    } catch (Exception ex) {
+      log.error("Error Occurred while handling the execution response: {}", ex.getStackTrace());
+      return null;
+    } catch (Throwable t) {
+      log.error("Encountered a throwable while handling the execution response: {}", t.getStackTrace());
+      return null;
     }
-    return stateExecutionInstance;
   }
 
   private StateExecutionInstance updateStateExecutionInstanceTimeout(
@@ -1618,6 +1639,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
         StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
             isApprovalResumed(stateExecutionInstance.getStateType(), stateExecutionInstance.getStatus())));
+    log.info("State Execution data updated successfully");
     return true;
   }
 
