@@ -22,15 +22,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -47,7 +44,6 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -77,10 +73,6 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@CdIndex(name = "accountId_endTs",
-    fields =
-    { @Field(WorkflowExecutionKeys.accountId)
-      , @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC) })
 public class WorkflowExecution
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -90,10 +82,11 @@ public class WorkflowExecution
                  .field(WorkflowExecutionKeys.workflowId)
                  .field(WorkflowExecutionKeys.status)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("app_pipExecutionId_createdAt")
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("service_guard")
@@ -105,69 +98,83 @@ public class WorkflowExecution
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.endTs)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("lastInfraMappingSearch")
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.workflowType)
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.infraMappingIds)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_createdAt2")
                  .field(WorkflowExecutionKeys.accountId)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("workflowExecutionMonitor")
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.nextIteration)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_pipExecutionId_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("searchByServiceIds")
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.workflowId)
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.serviceIds)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_tags_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field("tags.name")
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_appId_tags_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.appId)
                  .field("tags.name")
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("appid_workflowid_status_createdat")
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.workflowId)
                  .field(WorkflowExecutionKeys.status)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("appid_workflowid_infraMappingIds_status_createdat")
                  .field(WorkflowExecutionKeys.appId)
                  .field(WorkflowExecutionKeys.workflowId)
                  .field(WorkflowExecutionKeys.infraMappingIds)
                  .field(WorkflowExecutionKeys.status)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_pipExecutionId_keywords_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
                  .field(WorkflowExecutionKeys.keywords)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("accountId_cdPageCandidate_appId")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.cdPageCandidate)
                  .field(WorkflowExecutionKeys.appId)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_endTs")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .descSortField(WorkflowExecutionKeys.endTs)
                  .build())
         .build();
   }

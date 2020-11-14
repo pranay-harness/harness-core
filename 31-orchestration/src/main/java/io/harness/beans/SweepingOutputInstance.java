@@ -6,13 +6,12 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.data.SweepingOutput;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -70,17 +69,19 @@ public final class SweepingOutputInstance implements PersistentEntity, UuidAcces
                  .field(SweepingOutputInstanceKeys.name)
                  .field(SweepingOutputInstanceKeys.stateExecutionId)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("workflowExecutionIdsNamePrefix")
                  .field(SweepingOutputInstanceKeys.appId)
                  .field(SweepingOutputInstanceKeys.workflowExecutionIds)
                  .field(SweepingOutputInstanceKeys.name)
+                 .descSortField(SweepingOutputInstanceKeys.createdAt)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("phaseExecutionIdNamePrefix")
                  .field(SweepingOutputInstanceKeys.appId)
                  .field(SweepingOutputInstanceKeys.phaseExecutionId)
                  .field(SweepingOutputInstanceKeys.name)
+                 .descSortField(SweepingOutputInstanceKeys.createdAt)
                  .build())
         .build();
   }

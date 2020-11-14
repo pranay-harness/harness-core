@@ -16,6 +16,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.StringValue;
+import com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -25,10 +26,11 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -44,12 +46,12 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.Log.LogKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -57,13 +59,23 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "LogKeys")
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdIndex(name = "appId_activityId", fields = { @Field(value = LogKeys.appId)
-                                               , @Field(value = LogKeys.activityId) })
-@CdIndex(name = "activityIdCreatedAt",
-    fields = { @Field(value = LogKeys.activityId)
-               , @Field(value = CreatedAtAware.CREATED_AT_KEY) })
 public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                             UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appId_activityId")
+                 .field(LogKeys.appId)
+                 .field(LogKeys.activityId)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("activityIdCreatedAt")
+                 .field(LogKeys.activityId)
+                 .ascSortField(LogKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

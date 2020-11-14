@@ -17,9 +17,9 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
@@ -56,11 +56,12 @@ public abstract class InfrastructureMapping
     extends Base implements EncryptableSetting, PersistentRegularIterable, NameAccess, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("infra_mapping_appId_envId_serviceId")
                  .field(InfrastructureMappingKeys.appId)
                  .field(InfrastructureMappingKeys.envId)
                  .field(InfrastructureMappingKeys.serviceId)
+                 .descSortField(InfrastructureMappingKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("yaml")
@@ -74,11 +75,12 @@ public abstract class InfrastructureMapping
                  .field(InfrastructureMappingKeys.appId)
                  .field(InfrastructureMappingKeys.infraMappingType)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("app_envId_serviceTemplateId")
                  .field(InfrastructureMappingKeys.appId)
                  .field(InfrastructureMappingKeys.envId)
                  .field(InfrastructureMappingKeys.serviceTemplateId)
+                 .descSortField(InfrastructureMappingKeys.createdAt)
                  .build())
         .build();
   }
