@@ -2,8 +2,6 @@ package io.harness.registries.state;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -22,12 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class StepRegistry implements Registry<StepType, Class<? extends Step>> {
-  @Inject private Injector injector;
+public class StepRegistry implements Registry<StepType, Step> {
+  Map<StepType, Step> registry = new ConcurrentHashMap<>();
 
-  Map<StepType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
-
-  public void register(@NonNull StepType stepType, @NonNull Class<? extends Step> step) {
+  public void register(@NonNull StepType stepType, @NonNull Step step) {
     if (registry.containsKey(stepType)) {
       throw new DuplicateRegistryException(getType(), "Step Already Registered with this type: " + stepType);
     }
@@ -36,7 +32,7 @@ public class StepRegistry implements Registry<StepType, Class<? extends Step>> {
 
   public Step obtain(@NonNull StepType stepType) {
     if (registry.containsKey(stepType)) {
-      return injector.getInstance(registry.get(stepType));
+      return registry.get(stepType);
     }
     throw new UnregisteredKeyAccessException(getType(), "No Step registered for type: " + stepType);
   }

@@ -12,5 +12,5 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public interface OrchestrationFieldRegistrar extends Registrar<OrchestrationFieldType, OrchestrationFieldProcessor> {
-  void register(Set<Pair<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>>> fieldClasses);
+  void register(Set<Pair<OrchestrationFieldType, OrchestrationFieldProcessor>> fieldClasses);
 }

@@ -9,6 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 public interface VisitableFieldRegistrar extends Registrar<VisitorFieldType, VisitableFieldProcessor<?>> {
-  void register(Set<Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>>> fieldClasses);
+  void register(Set<Pair<VisitorFieldType, VisitableFieldProcessor<?>>> fieldClasses);
   void registerFieldTypes(Set<Pair<Class<? extends VisitorFieldWrapper>, VisitorFieldType>> fieldTypeClasses);
 }

@@ -35,6 +35,7 @@ import io.harness.state.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -54,42 +55,33 @@ public class OrchestrationRegistryModule extends AbstractModule {
   @Provides
   @Singleton
   StepRegistry providesStateRegistry(Injector injector, Map<String, StepRegistrar> stepRegistrarMap) {
-    Set classes = new HashSet<>();
-    stepRegistrarMap.values().forEach(stepRegistrar -> { stepRegistrar.register(classes); });
+    Set<Pair<StepType, Step>> classes = new HashSet<>();
+    stepRegistrarMap.values().forEach(stepRegistrar -> stepRegistrar.register(classes));
     StepRegistry stepRegistry = new StepRegistry();
     injector.injectMembers(stepRegistry);
-    classes.forEach(pair -> {
-      Pair<StepType, Class<? extends Step>> statePair = (Pair<StepType, Class<? extends Step>>) pair;
-      stepRegistry.register(statePair.getLeft(), statePair.getRight());
-    });
+    classes.forEach(pair -> { stepRegistry.register(pair.getLeft(), pair.getRight()); });
     return stepRegistry;
   }
 
   @Provides
   @Singleton
   AdviserRegistry providesAdviserRegistry(Injector injector, Map<String, AdviserRegistrar> adviserRegistrarMap) {
-    Set classes = new HashSet<>();
-    adviserRegistrarMap.values().forEach(adviserRegistrar -> { adviserRegistrar.register(classes); });
+    Set<Pair<AdviserType, Adviser<?>>> classes = new HashSet<>();
+    adviserRegistrarMap.values().forEach(adviserRegistrar -> adviserRegistrar.register(classes));
     AdviserRegistry adviserRegistry = new AdviserRegistry();
     injector.injectMembers(adviserRegistry);
-    classes.forEach(pair -> {
-      Pair<AdviserType, Class<? extends Adviser>> adviserPair = (Pair<AdviserType, Class<? extends Adviser>>) pair;
-      adviserRegistry.register(adviserPair.getLeft(), adviserPair.getRight());
-    });
+    classes.forEach(pair -> adviserRegistry.register(pair.getLeft(), pair.getRight()));
     return adviserRegistry;
   }
 
   @Provides
   @Singleton
   ResolverRegistry providesResolverRegistry(Injector injector, Map<String, ResolverRegistrar> resolverRegistrarMap) {
-    Set classes = new HashSet<>();
-    resolverRegistrarMap.values().forEach(resolverRegistrar -> { resolverRegistrar.register(classes); });
+    Set<Pair<RefType, Resolver<?>>> classes = new HashSet<>();
+    resolverRegistrarMap.values().forEach(resolverRegistrar -> resolverRegistrar.register(classes));
     ResolverRegistry resolverRegistry = new ResolverRegistry();
     injector.injectMembers(resolverRegistry);
-    classes.forEach(pair -> {
-      Pair<RefType, Class<? extends Resolver<?>>> statePair = (Pair<RefType, Class<? extends Resolver<?>>>) pair;
-      resolverRegistry.register(statePair.getLeft(), statePair.getRight());
-    });
+    classes.forEach(pair -> { resolverRegistry.register(pair.getLeft(), pair.getRight()); });
     return resolverRegistry;
   }
 
@@ -97,15 +89,11 @@ public class OrchestrationRegistryModule extends AbstractModule {
   @Singleton
   FacilitatorRegistry providesFacilitatorRegistry(
       Injector injector, Map<String, FacilitatorRegistrar> facilitatorRegistrarMap) {
-    Set classes = new HashSet<>();
-    facilitatorRegistrarMap.values().forEach(facilitatorRegistrar -> { facilitatorRegistrar.register(classes); });
+    Set<Pair<FacilitatorType, Facilitator>> pairs = new HashSet<>();
+    facilitatorRegistrarMap.values().forEach(facilitatorRegistrar -> facilitatorRegistrar.register(pairs));
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
     injector.injectMembers(facilitatorRegistry);
-    classes.forEach(pair -> {
-      Pair<FacilitatorType, Class<? extends Facilitator>> statePair =
-          (Pair<FacilitatorType, Class<? extends Facilitator>>) pair;
-      facilitatorRegistry.register(statePair.getLeft(), statePair.getRight());
-    });
+    pairs.forEach(pair -> { facilitatorRegistry.register(pair.getLeft(), pair.getRight()); });
     return facilitatorRegistry;
   }
 
@@ -113,16 +101,12 @@ public class OrchestrationRegistryModule extends AbstractModule {
   @Singleton
   OrchestrationEventHandlerRegistry providesEventHandlerRegistry(
       Injector injector, Map<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMap) {
-    Set classes = new HashSet<>();
+    Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> classes = new HashSet<>();
     orchestrationEventHandlerRegistrarMap.values().forEach(
-        orchestrationEventHandlerRegistrar -> { orchestrationEventHandlerRegistrar.register(classes); });
+        orchestrationEventHandlerRegistrar -> orchestrationEventHandlerRegistrar.register(classes));
     OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
     injector.injectMembers(handlerRegistry);
-    classes.forEach(pair -> {
-      Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>> eventHandlerPair =
-          (Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>>) pair;
-      handlerRegistry.register(eventHandlerPair.getLeft(), eventHandlerPair.getRight());
-    });
+    classes.forEach(pair -> handlerRegistry.register(pair.getLeft(), Collections.singleton(pair.getRight())));
     return handlerRegistry;
   }
 
@@ -130,16 +114,12 @@ public class OrchestrationRegistryModule extends AbstractModule {
   @Singleton
   OrchestrationFieldRegistry providesOrchestrationFieldRegistry(
       Injector injector, Map<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMap) {
-    Set classes = new HashSet<>();
+    Set<Pair<OrchestrationFieldType, OrchestrationFieldProcessor>> classes = new HashSet<>();
     orchestrationFieldRegistrarMap.values().forEach(
-        orchestrationFieldRegistrar -> { orchestrationFieldRegistrar.register(classes); });
+        orchestrationFieldRegistrar -> orchestrationFieldRegistrar.register(classes));
     OrchestrationFieldRegistry orchestrationFieldRegistry = new OrchestrationFieldRegistry();
     injector.injectMembers(orchestrationFieldRegistry);
-    classes.forEach(pair -> {
-      Pair<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>> orchestrationFieldPair =
-          (Pair<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>>) pair;
-      orchestrationFieldRegistry.register(orchestrationFieldPair.getLeft(), orchestrationFieldPair.getRight());
-    });
+    classes.forEach(pair -> orchestrationFieldRegistry.register(pair.getLeft(), pair.getRight()));
     return orchestrationFieldRegistry;
   }
 }

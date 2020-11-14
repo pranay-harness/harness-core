@@ -24,13 +24,6 @@ public class OrchestrationFieldRegistrarTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestRegister() {
-    new OrchestrationAdviserRegistrar().testClassesModule();
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
   public void testAllRegistrarsAreRegistered()
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
     Set<String> fieldRegistrarClasses = new HashSet<>();

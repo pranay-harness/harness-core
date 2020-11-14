@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
@@ -39,7 +40,6 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.testlib.RealMongo;
 import io.harness.utils.steps.TestAsyncStep;
 import io.harness.utils.steps.TestStepParameters;
 import org.junit.Before;
@@ -50,6 +50,7 @@ import java.time.Duration;
 import java.util.Map;
 
 public class OrchestrationEngineTest extends OrchestrationTestBase {
+  @Inject private Injector injector;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private StepRegistry stepRegistry;
   @Inject private OrchestrationService orchestrationService;
@@ -61,13 +62,12 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   @Before
   public void setUp() {
-    adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
-    stepRegistry.register(TEST_STEP_TYPE, TestSyncStep.class);
-    stepRegistry.register(ASYNC_STEP_TYPE, TestAsyncStep.class);
+    adviserRegistry.register(TEST_ADVISER_TYPE, injector.getInstance(TestHttpResponseCodeSwitchAdviser.class));
+    stepRegistry.register(TEST_STEP_TYPE, injector.getInstance(TestSyncStep.class));
+    stepRegistry.register(ASYNC_STEP_TYPE, injector.getInstance(TestAsyncStep.class));
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldStartOneNodeExecution() {
@@ -96,7 +96,6 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldStartSyncExecution() {
@@ -125,7 +124,6 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldStartAsyncExecution() {
@@ -175,7 +173,6 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestException() {
@@ -188,7 +185,6 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldRerunExecution() {

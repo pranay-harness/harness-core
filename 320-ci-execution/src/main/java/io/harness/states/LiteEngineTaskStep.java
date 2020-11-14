@@ -50,7 +50,7 @@ public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskSt
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
-  @Inject private Map<String, TaskExecutor<HDelegateTask>> taskExecutorMap;
+  @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();

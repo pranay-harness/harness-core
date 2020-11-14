@@ -1,32 +1,33 @@
 package io.harness.execution.events;
 
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.observer.Subject;
-import io.harness.registries.RegistrableEntity;
 import lombok.NonNull;
 
+import java.util.Set;
+
 @OwnedBy(HarnessTeam.CDC)
-public class OrchestrationSubject implements RegistrableEntity {
-  private final Injector injector;
+public class OrchestrationSubject {
   private final Subject<SyncOrchestrationEventHandlerProxy> syncSubject;
   private final Subject<AsyncOrchestrationEventHandlerProxy> asyncSubject;
 
-  public OrchestrationSubject(Injector injector) {
-    this.injector = injector;
+  public OrchestrationSubject() {
     this.syncSubject = new Subject<>();
     this.asyncSubject = new Subject<>();
   }
 
-  public void register(@NonNull Class<? extends OrchestrationEventHandler> eventHandler) {
-    if (SyncOrchestrationEventHandler.class.isAssignableFrom(eventHandler)) {
-      registerSyncHandler(
-          SyncOrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(eventHandler).build());
+  public void register(@NonNull OrchestrationEventHandler eventHandler) {
+    if (SyncOrchestrationEventHandler.class.isAssignableFrom(eventHandler.getClass())) {
+      registerSyncHandler(SyncOrchestrationEventHandlerProxy.builder().eventHandler(eventHandler).build());
     } else {
-      registerAsyncHandler(
-          AsyncOrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(eventHandler).build());
+      registerAsyncHandler(AsyncOrchestrationEventHandlerProxy.builder().eventHandler(eventHandler).build());
+    }
+  }
+
+  public void registerAll(@NonNull Set<OrchestrationEventHandler> eventHandlers) {
+    for (OrchestrationEventHandler eventHandler : eventHandlers) {
+      register(eventHandler);
     }
   }
 

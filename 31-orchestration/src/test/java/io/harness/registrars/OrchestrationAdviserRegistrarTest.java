@@ -14,26 +14,25 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class OrchestrationAdviserRegistrarTest extends OrchestrationTestBase {
   @Inject Map<String, AdviserRegistrar> adviserRegistrars;
+  @Inject private OrchestrationAdviserRegistrar orchestrationAdviserRegistrar;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
-    new OrchestrationAdviserRegistrar().testClassesModule();
+    orchestrationAdviserRegistrar.testClassesModule();
   }
 
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
-  public void testAllRegistrarsAreRegistered()
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+  public void testAllRegistrarsAreRegistered() {
     Set<String> adviserRegistrarClasses = new HashSet<>();
 
     Reflections reflections = new Reflections("io.harness.registrars");

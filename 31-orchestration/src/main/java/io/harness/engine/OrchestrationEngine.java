@@ -10,13 +10,11 @@ import static io.harness.pms.execution.Status.EXPIRED;
 import static io.harness.pms.execution.Status.FAILED;
 import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.pms.execution.Status.SUCCEEDED;
-
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
 import io.harness.LevelUtils;
@@ -55,12 +53,12 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
-import io.harness.pms.execution.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
+import io.harness.pms.execution.Status;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -103,7 +101,6 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(CDC)
 public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private Injector injector;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private StepRegistry stepRegistry;
   @Inject private AdviserRegistry adviserRegistry;
@@ -194,7 +191,6 @@ public class OrchestrationEngine {
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
-      injector.injectMembers(facilitator);
       facilitatorResponse = facilitator.facilitate(
           ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters(), inputPackage);
       if (facilitatorResponse != null) {
@@ -293,7 +289,6 @@ public class OrchestrationEngine {
     }
     for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
-      injector.injectMembers(adviser);
       AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                         .ambiance(nodeExecution.getAmbiance())
                                         .stepOutcomeRef(nodeExecution.getOutcomeRefs())

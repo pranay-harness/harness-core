@@ -1,5 +1,6 @@
 package io.harness.registrars;
 
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -13,8 +14,9 @@ import java.util.Set;
 @Singleton
 public class NGStageTypeToStageExecutionSummaryMapperRegistrar implements StageTypeToStageExecutionMapperRegistrar {
   @Override
-  public void register(Set<Pair<NGStageType, Class<? extends StageTypeToStageExecutionSummaryMapper>>> fieldClasses) {
-    fieldClasses.add(
-        Pair.of(DeploymentStage.DEPLOYMENT_STAGE_TYPE, DeploymentStageTypeToStageExecutionSummaryMapper.class));
+  public void register(
+      Injector injector, Set<Pair<NGStageType, StageTypeToStageExecutionSummaryMapper<?>>> fieldClasses) {
+    fieldClasses.add(Pair.of(DeploymentStage.DEPLOYMENT_STAGE_TYPE,
+        injector.getInstance(DeploymentStageTypeToStageExecutionSummaryMapper.class)));
   }
 }

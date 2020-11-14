@@ -2,6 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.advisers.fail.OnFailAdviser;
@@ -17,12 +20,15 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class OrchestrationAdviserRegistrar implements AdviserRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<AdviserType, Class<? extends Adviser>>> adviserClasses) {
-    adviserClasses.add(Pair.of(IgnoreAdviser.ADVISER_TYPE, IgnoreAdviser.class));
-    adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, OnSuccessAdviser.class));
-    adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, RetryAdviser.class));
-    adviserClasses.add(Pair.of(OnFailAdviser.ADVISER_TYPE, OnFailAdviser.class));
-    adviserClasses.add(Pair.of(ManualInterventionAdviser.ADVISER_TYPE, ManualInterventionAdviser.class));
+  public void register(Set<Pair<AdviserType, Adviser<?>>> adviserClasses) {
+    adviserClasses.add(Pair.of(IgnoreAdviser.ADVISER_TYPE, injector.getInstance(IgnoreAdviser.class)));
+    adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnSuccessAdviser.class)));
+    adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, injector.getInstance(RetryAdviser.class)));
+    adviserClasses.add(Pair.of(OnFailAdviser.ADVISER_TYPE, injector.getInstance(OnFailAdviser.class)));
+    adviserClasses.add(
+        Pair.of(ManualInterventionAdviser.ADVISER_TYPE, injector.getInstance(ManualInterventionAdviser.class)));
   }
 }

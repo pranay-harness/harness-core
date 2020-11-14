@@ -29,19 +29,13 @@ public class StageTypeToStageExecutionMapperRegistryModule extends AbstractModul
   @Singleton
   StageTypeToStageExecutionMapperHelperRegistry providesStageTypeToStageExecutionSummaryMapperHelper(
       Injector injector, Map<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMap) {
-    Set classes = new HashSet<>();
+    Set<Pair<NGStageType, StageTypeToStageExecutionSummaryMapper<?>>> classes = new HashSet<>();
     stageExecutionHelperRegistrarMap.values().forEach(
-        stageExecutionHelperRegistrar -> { stageExecutionHelperRegistrar.register(classes); });
+        stageExecutionHelperRegistrar -> stageExecutionHelperRegistrar.register(injector, classes));
     StageTypeToStageExecutionMapperHelperRegistry visitorFieldRegistry =
         new StageTypeToStageExecutionMapperHelperRegistry();
     injector.injectMembers(visitorFieldRegistry);
-    classes.forEach(pair -> {
-      Pair<NGStageType, Class<? extends StageTypeToStageExecutionSummaryMapper<?>>>
-          stageTypeToStageExecutionSummaryMapperClasses =
-              (Pair<NGStageType, Class<? extends StageTypeToStageExecutionSummaryMapper<?>>>) pair;
-      visitorFieldRegistry.register(stageTypeToStageExecutionSummaryMapperClasses.getLeft(),
-          stageTypeToStageExecutionSummaryMapperClasses.getRight());
-    });
+    classes.forEach(pair -> { visitorFieldRegistry.register(pair.getLeft(), pair.getRight()); });
     return visitorFieldRegistry;
   }
 }

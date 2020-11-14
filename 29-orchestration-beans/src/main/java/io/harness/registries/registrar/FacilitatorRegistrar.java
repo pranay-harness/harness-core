@@ -12,5 +12,5 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public interface FacilitatorRegistrar extends Registrar<FacilitatorType, Facilitator> {
-  void register(Set<Pair<FacilitatorType, Class<? extends Facilitator>>> facilitatorClasses);
+  void register(Set<Pair<FacilitatorType, Facilitator>> facilitatorClasses);
 }

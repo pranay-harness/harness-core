@@ -30,16 +30,11 @@ public class VisitorRegistryModule extends AbstractModule {
   @Singleton
   VisitorFieldRegistry providesVisitorFieldRegistry(
       Injector injector, Map<String, VisitableFieldRegistrar> visitableFieldRegistrarMap) {
-    Set classes = new HashSet<>();
-    visitableFieldRegistrarMap.values().forEach(
-        visitableFieldRegistrar -> { visitableFieldRegistrar.register(classes); });
+    Set<Pair<VisitorFieldType, VisitableFieldProcessor<?>>> classes = new HashSet<>();
+    visitableFieldRegistrarMap.values().forEach(visitableFieldRegistrar -> visitableFieldRegistrar.register(classes));
     VisitorFieldRegistry visitorFieldRegistry = new VisitorFieldRegistry();
     injector.injectMembers(visitorFieldRegistry);
-    classes.forEach(pair -> {
-      Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>> orchestrationFieldPair =
-          (Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>>) pair;
-      visitorFieldRegistry.register(orchestrationFieldPair.getLeft(), orchestrationFieldPair.getRight());
-    });
+    classes.forEach(pair -> { visitorFieldRegistry.register(pair.getLeft(), pair.getRight()); });
 
     Set fieldTypeClasses = new HashSet<>();
     visitableFieldRegistrarMap.values().forEach(

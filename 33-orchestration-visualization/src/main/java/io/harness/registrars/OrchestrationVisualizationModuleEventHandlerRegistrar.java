@@ -2,6 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.NodeExecutionStatusUpdateEventHandlerV2;
 import io.harness.event.OrchestrationEndEventHandler;
@@ -15,11 +18,15 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationModuleEventHandlerRegistrar implements OrchestrationEventHandlerRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>>> handlerClasses) {
+  public void register(Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> handlerClasses) {
+    handlerClasses.add(Pair.of(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
+        injector.getInstance(NodeExecutionStatusUpdateEventHandlerV2.class)));
+    handlerClasses.add(Pair.of(
+        OrchestrationEventType.ORCHESTRATION_START, injector.getInstance(OrchestrationStartEventHandler.class)));
     handlerClasses.add(
-        Pair.of(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE, NodeExecutionStatusUpdateEventHandlerV2.class));
-    handlerClasses.add(Pair.of(OrchestrationEventType.ORCHESTRATION_START, OrchestrationStartEventHandler.class));
-    handlerClasses.add(Pair.of(OrchestrationEventType.ORCHESTRATION_END, OrchestrationEndEventHandler.class));
+        Pair.of(OrchestrationEventType.ORCHESTRATION_END, injector.getInstance(OrchestrationEndEventHandler.class)));
   }
 }

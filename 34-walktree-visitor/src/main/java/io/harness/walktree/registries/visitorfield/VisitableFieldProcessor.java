@@ -1,8 +1,6 @@
 package io.harness.walktree.registries.visitorfield;
 
-import io.harness.registries.RegistrableEntity;
-
-public interface VisitableFieldProcessor<T extends VisitorFieldWrapper> extends RegistrableEntity {
+public interface VisitableFieldProcessor<T extends VisitorFieldWrapper> {
   /**
    * This function will return string value for walktree impl for handling nodes having properties of custom java
    * classes like ParameterField.

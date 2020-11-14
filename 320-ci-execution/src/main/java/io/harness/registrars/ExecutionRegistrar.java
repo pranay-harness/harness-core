@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -20,19 +23,21 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 public class ExecutionRegistrar implements StepRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
-    stateClasses.add(Pair.of(LiteEngineTaskStep.STEP_TYPE, LiteEngineTaskStep.class));
-    stateClasses.add(Pair.of(CleanupStep.STEP_TYPE, CleanupStep.class));
-    stateClasses.add(Pair.of(BuildStep.STEP_TYPE, BuildStep.class));
-    stateClasses.add(Pair.of(GitCloneStep.STEP_TYPE, GitCloneStep.class));
-    stateClasses.add(Pair.of(RunStep.STEP_TYPE, RunStep.class));
-    stateClasses.add(Pair.of(RestoreCacheStep.STEP_TYPE, RestoreCacheStep.class));
-    stateClasses.add(Pair.of(SaveCacheStep.STEP_TYPE, SaveCacheStep.class));
-    stateClasses.add(Pair.of(PublishStep.STEP_TYPE, PublishStep.class));
-    stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class));
-    stateClasses.add(Pair.of(CIPipelineSetupStep.STEP_TYPE, CIPipelineSetupStep.class));
-    stateClasses.add(Pair.of(BuildStatusStep.STEP_TYPE, BuildStatusStep.class));
-    stateClasses.add(Pair.of(PluginStep.STEP_TYPE, PluginStep.class));
+  public void register(Set<Pair<StepType, Step>> stateClasses) {
+    stateClasses.add(Pair.of(LiteEngineTaskStep.STEP_TYPE, injector.getInstance(LiteEngineTaskStep.class)));
+    stateClasses.add(Pair.of(CleanupStep.STEP_TYPE, injector.getInstance(CleanupStep.class)));
+    stateClasses.add(Pair.of(BuildStep.STEP_TYPE, injector.getInstance(BuildStep.class)));
+    stateClasses.add(Pair.of(GitCloneStep.STEP_TYPE, injector.getInstance(GitCloneStep.class)));
+    stateClasses.add(Pair.of(RunStep.STEP_TYPE, injector.getInstance(RunStep.class)));
+    stateClasses.add(Pair.of(RestoreCacheStep.STEP_TYPE, injector.getInstance(RestoreCacheStep.class)));
+    stateClasses.add(Pair.of(SaveCacheStep.STEP_TYPE, injector.getInstance(SaveCacheStep.class)));
+    stateClasses.add(Pair.of(PublishStep.STEP_TYPE, injector.getInstance(PublishStep.class)));
+    stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, injector.getInstance(IntegrationStageStep.class)));
+    stateClasses.add(Pair.of(CIPipelineSetupStep.STEP_TYPE, injector.getInstance(CIPipelineSetupStep.class)));
+    stateClasses.add(Pair.of(BuildStatusStep.STEP_TYPE, injector.getInstance(BuildStatusStep.class)));
+    stateClasses.add(Pair.of(PluginStep.STEP_TYPE, injector.getInstance(PluginStep.class)));
   }
 }
