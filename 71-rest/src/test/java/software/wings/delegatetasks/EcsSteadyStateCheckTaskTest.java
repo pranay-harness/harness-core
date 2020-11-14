@@ -27,7 +27,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.beans.container.EcsSteadyStateCheckParams;
 import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.cloudprovider.aws.EcsContainerService;
@@ -40,11 +39,10 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private EcsSteadyStateCheckTask task =
-      (EcsSteadyStateCheckTask) TaskType.ECS_STEADY_STATE_CHECK_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder()
-              .delegateId(DELEGATE_ID)
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-              .build(),
+      new EcsSteadyStateCheckTask(DelegateTaskPackage.builder()
+                                      .delegateId(DELEGATE_ID)
+                                      .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                      .build(),
           null, notifyResponseData -> {}, () -> true);
   @Before
   public void setUp() throws Exception {

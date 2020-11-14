@@ -35,16 +35,14 @@ public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private final PerpetualTaskCapabilityCheckTask task =
-      spy((PerpetualTaskCapabilityCheckTask) CAPABILITY_VALIDATION.getDelegateRunnableTask(
-
-          DelegateTaskPackage.builder()
-              .delegateId("delegateId")
-              .data(TaskData.builder()
-                        .async(false)
-                        .taskType(CAPABILITY_VALIDATION.name())
-                        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                        .build())
-              .build(),
+      spy(new PerpetualTaskCapabilityCheckTask(DelegateTaskPackage.builder()
+                                                   .delegateId("delegateId")
+                                                   .data(TaskData.builder()
+                                                             .async(false)
+                                                             .taskType(CAPABILITY_VALIDATION.name())
+                                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                                             .build())
+                                                   .build(),
           null, Functions::doNothing, Functions::staticTruth));
 
   @Test

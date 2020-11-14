@@ -30,7 +30,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
@@ -60,13 +59,12 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   private TerraformProvisionParameters parameters;
 
   @InjectMocks
-  TerraformInputVariablesObtainTask delegateRunnableTask =
-      (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder()
-              .delegateId(WingsTestConstants.DELEGATE_ID)
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-              .build(),
-          null, notifyResponseData -> {}, () -> true);
+  TerraformInputVariablesObtainTask delegateRunnableTask = new TerraformInputVariablesObtainTask(
+      DelegateTaskPackage.builder()
+          .delegateId(WingsTestConstants.DELEGATE_ID)
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+          .build(),
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setup() {

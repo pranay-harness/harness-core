@@ -72,7 +72,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static org.joor.Reflect.on;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -171,6 +170,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -289,6 +289,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
   @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  @Inject DelegateTaskFactory delegateTaskFactory;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -1760,7 +1761,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Consumer<List<DelegateConnectionResult>> postValidationFunction =
         getPostValidationFunction(delegateTaskEvent, delegateTaskPackage.getDelegateTaskId());
 
-    return on(CapabilityCheckController.class).create(delegateId, delegateTaskPackage, postValidationFunction).get();
+    return new CapabilityCheckController(delegateId, delegateTaskPackage, postValidationFunction);
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
@@ -1818,12 +1819,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
 
-    DelegateRunnableTask delegateRunnableTask =
-        TaskType.valueOf(taskData.getTaskType())
-            .getDelegateRunnableTask(delegateTaskPackage, logStreamingTaskClient,
-                getPostExecutionFunction(
-                    delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
-                getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
+    DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
+        TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
+        getPostExecutionFunction(
+            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+        getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }

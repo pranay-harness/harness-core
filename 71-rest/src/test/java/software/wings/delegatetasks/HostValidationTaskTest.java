@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
@@ -37,9 +36,9 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Mock private HostValidationService mockHostValidationService;
 
   @InjectMocks
-  private HostValidationTask hostValidationTask = (HostValidationTask) HOST_VALIDATION.getDelegateRunnableTask(
-      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(), null,
-      notifyResponseData -> {}, () -> true);
+  private HostValidationTask hostValidationTask =
+      new HostValidationTask(DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(), null,
+          notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

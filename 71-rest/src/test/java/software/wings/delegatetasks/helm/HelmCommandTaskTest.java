@@ -25,7 +25,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.delegatetasks.DelegateLogService;
@@ -52,7 +51,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
 
   @InjectMocks
-  private final HelmCommandTask helmCommandTask = (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
+  private final HelmCommandTask helmCommandTask = new HelmCommandTask(
       DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
       null, notifyResponseData -> {}, () -> true);
 
@@ -193,7 +192,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   }
 
   private static HelmCommandTask getTask(boolean async) {
-    return (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
+    return new HelmCommandTask(
         DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(async).build()).build(),
         null, notifyResponseData -> {}, () -> true);
   }

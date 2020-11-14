@@ -69,10 +69,10 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.template.TemplateUtils;
+import software.wings.delegatetasks.HttpTask;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.StateExecutionService;
@@ -709,13 +709,11 @@ public class HttpStateTest extends WingsBaseTest {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
 
       DelegateRunnableTask delegateRunnableTask =
-          TaskType.valueOf(task.getData().getTaskType())
-              .getDelegateRunnableTask(
-                  DelegateTaskPackage.builder().data(task.getData()).delegateId(DELEGATE_ID).build(), null,
-                  o
-                  -> asyncExecutionResponse =
-                         httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o.getResponse())),
-                  () -> true);
+          new HttpTask(DelegateTaskPackage.builder().data(task.getData()).delegateId(DELEGATE_ID).build(), null,
+              o
+              -> asyncExecutionResponse =
+                     httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o.getResponse())),
+              () -> true);
       on(delegateRunnableTask).set("httpService", httpService);
       delegateRunnableTask.run();
 

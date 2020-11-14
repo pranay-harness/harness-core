@@ -77,8 +77,7 @@ public class GcbTaskTest extends CategoryTest {
   private final GcpConfig gcpConfig = GcpConfig.builder().build();
 
   @InjectMocks
-  private final GcbTask task = spy((GcbTask) GCB.getDelegateRunnableTask(
-
+  private final GcbTask task = spy(new GcbTask(
       DelegateTaskPackage.builder()
           .delegateId("delid1")
           .data(TaskData.builder().async(true).taskType(GCB.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())

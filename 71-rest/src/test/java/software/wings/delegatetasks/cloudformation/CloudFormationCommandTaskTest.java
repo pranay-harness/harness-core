@@ -21,7 +21,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationCreateStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationDeleteStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationListStacksHandler;
@@ -37,13 +36,12 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   @Mock private CloudFormationListStacksHandler mockListStacksHandler;
 
   @InjectMocks
-  private CloudFormationCommandTask task =
-      (CloudFormationCommandTask) TaskType.CLOUD_FORMATION_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder()
-              .delegateId("delegateid")
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-              .build(),
-          null, notifyResponseData -> {}, () -> true);
+  private CloudFormationCommandTask task = new CloudFormationCommandTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+          .build(),
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

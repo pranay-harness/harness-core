@@ -46,16 +46,14 @@ public class AzureArtifactsCollectionTaskTest extends CategoryTest {
   private TaskData nugetDelegateTask = prepareTaskData(ProtocolType.nuget);
 
   @InjectMocks
-  private AzureArtifactsCollectionTask mavenCollectionTask =
-      (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID1).data(mavenDelegateTask).build(),
-          null, notifyResponseData -> {}, () -> true);
+  private AzureArtifactsCollectionTask mavenCollectionTask = new AzureArtifactsCollectionTask(
+      DelegateTaskPackage.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID1).data(mavenDelegateTask).build(),
+      null, notifyResponseData -> {}, () -> true);
 
   @InjectMocks
-  private AzureArtifactsCollectionTask nugetCollectionTask =
-      (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID2).data(nugetDelegateTask).build(),
-          null, notifyResponseData -> {}, () -> true);
+  private AzureArtifactsCollectionTask nugetCollectionTask = new AzureArtifactsCollectionTask(
+      DelegateTaskPackage.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID2).data(nugetDelegateTask).build(),
+      null, notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = GARVIT)
