@@ -19,7 +19,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListRegionsRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListSGsRequest;
@@ -34,12 +33,12 @@ public class AwsEc2TaskTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceDelegate mockEc2ServiceDelegate;
 
   @InjectMocks
-  private AwsEc2Task task = (AwsEc2Task) TaskType.AWS_EC2_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateid")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private AwsEc2Task task =
+      new AwsEc2Task(DelegateTaskPackage.builder()
+                         .delegateId("delegateid")
+                         .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                         .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

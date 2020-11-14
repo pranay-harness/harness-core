@@ -18,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsCodeDeployListAppRequest;
 import software.wings.service.impl.aws.model.AwsCodeDeployListAppRevisionRequest;
 import software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentConfigRequest;
@@ -31,12 +30,12 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
   @Mock private AwsCodeDeployHelperServiceDelegate mockAwsCodeDeployHelperServiceDelegate;
 
   @InjectMocks
-  private AwsCodeDeployTask task = (AwsCodeDeployTask) TaskType.AWS_CODE_DEPLOY_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateid")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private AwsCodeDeployTask task =
+      new AwsCodeDeployTask(DelegateTaskPackage.builder()
+                                .delegateId("delegateid")
+                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

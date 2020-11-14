@@ -50,7 +50,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.Log;
-import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
@@ -98,12 +97,12 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private Map<String, String> assertions = new HashMap<>();
 
   @InjectMocks
-  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delid1")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private JenkinsTask jenkinsTask =
+      new JenkinsTask(DelegateTaskPackage.builder()
+                          .delegateId("delid1")
+                          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                          .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

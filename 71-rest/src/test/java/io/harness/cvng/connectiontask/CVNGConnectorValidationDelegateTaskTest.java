@@ -27,7 +27,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -50,7 +49,7 @@ public class CVNGConnectorValidationDelegateTaskTest extends WingsBaseTest {
 
   @InjectMocks
   CVNGConnectorValidationDelegateTask cvngConnectorValidateTaskDelegateRunnableTask =
-      (CVNGConnectorValidationDelegateTask) TaskType.CVNG_CONNECTOR_VALIDATE_TASK.getDelegateRunnableTask(
+      new CVNGConnectorValidationDelegateTask(
           DelegateTaskPackage.builder()
               .delegateId("delegateId")
               .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))

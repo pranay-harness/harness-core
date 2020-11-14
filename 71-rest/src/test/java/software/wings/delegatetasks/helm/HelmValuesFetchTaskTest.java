@@ -20,7 +20,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
@@ -31,7 +30,7 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
   @Mock private DelegateLogService delegateLogService;
 
   @InjectMocks
-  HelmValuesFetchTask task = (HelmValuesFetchTask) TaskType.HELM_VALUES_FETCH.getDelegateRunnableTask(
+  HelmValuesFetchTask task = new HelmValuesFetchTask(
       DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
       null, notifyResponseData -> {}, () -> true);
 

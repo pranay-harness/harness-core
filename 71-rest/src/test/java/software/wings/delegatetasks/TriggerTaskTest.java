@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
-import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
@@ -45,12 +44,12 @@ public class TriggerTaskTest extends WingsBaseTest {
   @Mock private GitClientHelper gitClientHelper;
 
   @InjectMocks
-  private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateId")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private TriggerTask triggerTask =
+      new TriggerTask(DelegateTaskPackage.builder()
+                          .delegateId("delegateId")
+                          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                          .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {}

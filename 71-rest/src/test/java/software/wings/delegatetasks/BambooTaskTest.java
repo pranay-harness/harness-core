@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.TaskType;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
 import software.wings.helpers.ext.bamboo.Status;
@@ -43,12 +42,12 @@ public class BambooTaskTest extends CategoryTest {
   @Mock BambooService bambooService;
 
   @InjectMocks
-  private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delid1")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private BambooTask bambooTask =
+      new BambooTask(DelegateTaskPackage.builder()
+                         .delegateId("delid1")
+                         .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                         .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   private String bambooUrl = "http://localhost:9095/";
   private String userName = "admin";

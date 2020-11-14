@@ -46,7 +46,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
-import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
@@ -96,14 +95,14 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                                  .build();
 
   @InjectMocks
-  private ShellScriptTask shellScriptTask = (ShellScriptTask) TaskType.SCRIPT.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delid1")
+  private ShellScriptTask shellScriptTask =
+      new ShellScriptTask(DelegateTaskPackage.builder()
+                              .delegateId("delid1")
 
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
 
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+                              .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

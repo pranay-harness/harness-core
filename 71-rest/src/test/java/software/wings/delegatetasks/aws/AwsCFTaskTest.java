@@ -19,7 +19,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest;
 import software.wings.service.impl.aws.model.AwsCFRequest;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
@@ -28,12 +27,12 @@ public class AwsCFTaskTest extends WingsBaseTest {
   @Mock private AwsCFHelperServiceDelegate mockAwsCFHelperServiceDelegate;
 
   @InjectMocks
-  private AwsCFTask task = (AwsCFTask) TaskType.AWS_CF_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateid")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private AwsCFTask task =
+      new AwsCFTask(DelegateTaskPackage.builder()
+                        .delegateId("delegateid")
+                        .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                        .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

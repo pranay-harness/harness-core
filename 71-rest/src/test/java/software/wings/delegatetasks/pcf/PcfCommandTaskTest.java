@@ -25,7 +25,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfSetupCommandTaskHandler;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -43,13 +42,13 @@ import java.util.Map;
 public class PcfCommandTaskTest extends WingsBaseTest {
   @Mock PcfDelegateTaskHelper pcfDelegateTaskHelper;
   @InjectMocks
-  private final PcfCommandTask pcfTask = (PcfCommandTask) TaskType.PCF_COMMAND_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateId")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+  private final PcfCommandTask pcfTask =
+      new PcfCommandTask(DelegateTaskPackage.builder()
+                             .delegateId("delegateId")
+                             .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
 
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+                             .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

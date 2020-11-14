@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostValidationResponse.Builder.aHostValidationResponse;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.TaskType.CONNECTIVITY_VALIDATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
@@ -40,13 +39,12 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @Mock private Mailer mockMailer;
 
   @InjectMocks
-  private ConnectivityValidationTask task =
-      (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder()
-              .delegateId("delegateid")
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-              .build(),
-          null, notifyResponseData -> {}, () -> true);
+  private ConnectivityValidationTask task = new ConnectivityValidationTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+          .build(),
+      null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

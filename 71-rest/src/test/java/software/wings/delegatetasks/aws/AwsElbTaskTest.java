@@ -18,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListElbsRequest;
@@ -32,12 +31,12 @@ public class AwsElbTaskTest extends WingsBaseTest {
   @Mock private AwsElbHelperServiceDelegate mockElbHelperServiceDelegate;
 
   @InjectMocks
-  private AwsElbTask task = (AwsElbTask) TaskType.AWS_ELB_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateid")
-          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-          .build(),
-      null, notifyResponseData -> {}, () -> true);
+  private AwsElbTask task =
+      new AwsElbTask(DelegateTaskPackage.builder()
+                         .delegateId("delegateid")
+                         .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                         .build(),
+          null, notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {
