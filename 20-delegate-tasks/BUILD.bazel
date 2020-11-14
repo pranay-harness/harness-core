@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-ng-commons:module",
         "//14-api-services-beans:module",
+        "//970-ng-commons:module",
         "//980-commons:module",
         "@jira_client//jar",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",

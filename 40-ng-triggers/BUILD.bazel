@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-ng-commons:module",
         "//35-yaml-beans:module",
+        "//970-ng-commons:module",
         "@maven//:net_jodah_failsafe",
         "@maven//:org_springframework_data_spring_data_commons",
     ],
