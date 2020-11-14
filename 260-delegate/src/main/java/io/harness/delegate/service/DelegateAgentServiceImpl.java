@@ -72,6 +72,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.joor.Reflect.on;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -180,6 +181,7 @@ import software.wings.delegatetasks.ActivityBasedLogSanitizer;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.GenericLogSanitizer;
 import software.wings.delegatetasks.LogSanitizer;
+import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.service.intfc.security.EncryptionService;
@@ -1758,8 +1760,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Consumer<List<DelegateConnectionResult>> postValidationFunction =
         getPostValidationFunction(delegateTaskEvent, delegateTaskPackage.getDelegateTaskId());
 
-    return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
-        .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTaskPackage, postValidationFunction);
+    return on(CapabilityCheckController.class).create(delegateId, delegateTaskPackage, postValidationFunction).get();
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(

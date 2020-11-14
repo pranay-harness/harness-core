@@ -87,7 +87,6 @@ import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.container.ContainerDummyTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
-import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.helm.HelmValuesFetchTask;
 import software.wings.delegatetasks.jira.JiraTask;
@@ -98,10 +97,7 @@ import software.wings.delegatetasks.s3.S3FetchFilesTask;
 import software.wings.delegatetasks.servicenow.ServicenowTask;
 import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
 import software.wings.delegatetasks.spotinst.SpotInstTask;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.delegatetasks.validation.DelegateValidateTask;
 
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -392,10 +388,5 @@ public enum TaskType {
     return on(delegateRunnableTaskClass)
         .create(delegateTaskPackage, logStreamingTaskClient, postExecute, preExecute)
         .get();
-  }
-
-  public DelegateValidateTask getDelegateValidateTaskVersionForCapabilityFramework(String delegateId,
-      DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> postExecute) {
-    return on(CapabilityCheckController.class).create(delegateId, delegateTaskPackage, postExecute).get();
   }
 }
