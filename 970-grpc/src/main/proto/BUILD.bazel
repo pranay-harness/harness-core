@@ -1,8 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 proto_library(
-    name = "13_grpc_api_proto",
+    name = "970_grpc_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
@@ -10,13 +9,5 @@ proto_library(
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
-    ],
-)
-
-java_grpc_library(
-    name = "13_grpc_api_java_proto",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":13_grpc_api_proto",
     ],
 )

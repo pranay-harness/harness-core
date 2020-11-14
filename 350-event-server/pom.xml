@@ -22,11 +22,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>13-grpc-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -40,6 +35,11 @@
                     <artifactId>22-delegate-service-beans</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>970-grpc</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

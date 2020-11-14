@@ -6,8 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>980-commons</module>-->
-        <!--<module>13-grpc-api</module>-->
         <!--<module>14-api-services-beans</module>-->
         <!--<module>13-ng-commons</module>-->
         <!--<module>15-api-services</module>-->
@@ -69,6 +67,8 @@
         <!--<module>440-connector-nextgen</module>-->
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
+        <!--<module>970-grpc</module>-->
+        <!--<module>980-commons</module>-->
         <!--<module>990-commons-test</module>-->
     </modules>
     <scm>

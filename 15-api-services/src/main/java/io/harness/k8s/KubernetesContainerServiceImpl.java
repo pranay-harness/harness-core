@@ -34,6 +34,7 @@ import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerNa
 import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
@@ -242,8 +243,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
-      return timeLimiter.callWithTimeout(
-          getControllerInternal(kubernetesConfig, name, namespace), 2, TimeUnit.MINUTES, true);
+      Callable<HasMetadata> controller = getControllerInternal(kubernetesConfig, name, namespace);
+      return timeLimiter.callWithTimeout(controller, 2L, TimeUnit.MINUTES, true);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -1461,7 +1462,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     String waitingMsg = "Waiting for pods to stop...";
     log.info(waitingMsg);
     try {
-      timeLimiter.callWithTimeout(() -> {
+      Callable<Boolean> callbable = () -> {
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
@@ -1472,11 +1473,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
           pods = prunePodsInFinalState(pods);
           if (pods.size() <= 0) {
-            return true;
+            return TRUE;
           }
           sleep(ofSeconds(5));
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      };
+      timeLimiter.callWithTimeout(callbable, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       log.error(msg, e);
@@ -1512,7 +1514,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
     try {
       int waitMinutes = serviceSteadyStateTimeout > 0 ? serviceSteadyStateTimeout : DEFAULT_STEADY_STATE_TIMEOUT;
-      return timeLimiter.callWithTimeout(() -> {
+      Callable<List<Pod>> callable = () -> {
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
@@ -1606,7 +1608,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             sleep(ofSeconds(15));
           }
         }
-      }, waitMinutes, TimeUnit.MINUTES, true);
+      };
+      return timeLimiter.callWithTimeout(callable, waitMinutes, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       log.error(msg, e);

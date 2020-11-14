@@ -11,15 +11,26 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-grpc-api:maven_deps",
-        "//13-grpc-api:module",
+        "//970-grpc:module",
+        "//980-commons:maven_deps",
         "//980-commons:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:io_grpc_grpc_context",
+        "@maven//:io_grpc_grpc_core",
         "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_grpc_grpc_netty_shaded",
         "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_services",
         "@maven//:io_grpc_grpc_stub",
+        "@maven//:joda_time_joda_time",
+        "@maven//:net_openhft_chronicle_queue",
+        "@maven//:net_openhft_chronicle_wire",
+        "@maven//:org_awaitility_awaitility",
         "@maven//:org_projectlombok_lombok",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 
@@ -30,9 +41,9 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//13-grpc-api:module",
         "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
         "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_proto",
+        "//970-grpc:module",
     ],
 )
 
@@ -49,7 +60,10 @@ java_library(
         "//:lombok",
         "//16-expression-service/src/main/proto/io/harness/expression/service:16_expression_service_java_proto",
         "//990-commons-test:module",
+        "@maven//:io_grpc_grpc_testing",
+        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 

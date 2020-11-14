@@ -51,9 +51,7 @@ java_library(
 )
 
 modules = [
-    "//980-commons",
     "//13-ng-commons",
-    "//13-grpc-api",
     "//14-api-services-beans",
     "//15-api-services",
     "//16-expression-service",
@@ -92,6 +90,8 @@ modules = [
     "//420-delegate-service",
     "//450-ce-views",
     "//490-ce-commons",
+    "//970-grpc",
+    "//980-commons",
     "//990-commons-test",
 ]
 

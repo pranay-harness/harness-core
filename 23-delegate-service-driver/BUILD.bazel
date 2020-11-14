@@ -10,9 +10,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-grpc-api:module",
         "//22-delegate-service-beans:module",
         "//22-wait-engine:module",
+        "//970-grpc:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
         "@maven//:io_fabric8_fabric8_utils",
