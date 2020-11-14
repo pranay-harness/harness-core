@@ -6,8 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>13-ng-commons</artifactId>
-
+    <artifactId>970-ng-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

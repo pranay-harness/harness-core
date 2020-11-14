@@ -18,7 +18,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>13-ng-commons</artifactId>
+            <artifactId>970-ng-commons</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

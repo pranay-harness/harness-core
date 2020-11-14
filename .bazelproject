@@ -1,5 +1,4 @@
 directories:
-  13-ng-commons
   14-api-services-beans
   15-api-services
   16-expression-service
@@ -44,6 +43,7 @@ directories:
   450-ce-views
   490-ce-commons
   970-grpc
+  970-ng-commons
   980-commons
   990-commons-test
   tools/bazel

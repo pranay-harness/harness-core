@@ -51,7 +51,7 @@ java_library(
 )
 
 modules = [
-    "//13-ng-commons",
+    "//970-ng-commons",
     "//14-api-services-beans",
     "//15-api-services",
     "//16-expression-service",

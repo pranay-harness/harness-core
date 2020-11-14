@@ -134,7 +134,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>13-ng-commons</artifactId>
+            <artifactId>970-ng-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

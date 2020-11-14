@@ -90,7 +90,6 @@ build_proto_module() {
    -f scripts/bazel/proto_pom.xml
 }
 
-build_bazel_module 13-ng-commons
 build_bazel_module 14-api-services-beans
 build_bazel_module 15-api-services
 build_bazel_module 16-expression-service
@@ -136,6 +135,7 @@ build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
 build_bazel_module 970-grpc
+build_bazel_module 970-ng-commons
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test
 

@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-ng-commons:module",
+        "//970-ng-commons:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:com_cronutils_cron_utils",
         "@maven//:com_deftlabs_mongo_java_distributed_lock",
