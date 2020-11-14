@@ -12,5 +12,5 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public interface StepRegistrar extends Registrar<StepType, Step> {
-  void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses);
+  void register(Set<Pair<StepType, Step>> stateClasses);
 }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -39,17 +40,15 @@ public class OrchestrationEventEmitterTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTestEmitEvent() {
-    OrchestrationSubject subject = spy(new OrchestrationSubject(injector));
-    SyncOrchestrationEventHandlerProxy syncProxy = spy(
-        SyncOrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(StartHandler1.class).build());
-    AsyncOrchestrationEventHandlerProxy asyncProxy = spy(AsyncOrchestrationEventHandlerProxy.builder()
-                                                             .injector(injector)
-                                                             .eventHandlerClass(StartHandler2.class)
-                                                             .build());
+    OrchestrationSubject subject = spy(new OrchestrationSubject());
+    SyncOrchestrationEventHandlerProxy syncProxy =
+        spy(SyncOrchestrationEventHandlerProxy.builder().eventHandler(new StartHandler1()).build());
+    AsyncOrchestrationEventHandlerProxy asyncProxy =
+        spy(AsyncOrchestrationEventHandlerProxy.builder().eventHandler(new StartHandler2()).build());
     subject.registerSyncHandler(syncProxy);
     subject.registerAsyncHandler(asyncProxy);
 
-    when(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).thenReturn(subject);
+    when(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).thenReturn(ImmutableSet.of());
     OrchestrationEvent event = OrchestrationEvent.builder()
                                    .ambiance(AmbianceTestUtils.buildAmbiance())
                                    .eventType(OrchestrationEventType.ORCHESTRATION_START)

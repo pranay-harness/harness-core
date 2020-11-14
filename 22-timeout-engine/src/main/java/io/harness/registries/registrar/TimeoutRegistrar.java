@@ -11,6 +11,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 @OwnedBy(CDC)
-public interface TimeoutRegistrar extends Registrar<Dimension, TimeoutTrackerFactory> {
-  void register(Set<Pair<Dimension, Class<? extends TimeoutTrackerFactory>>> adviserClasses);
+public interface TimeoutRegistrar extends Registrar<Dimension, TimeoutTrackerFactory<?>> {
+  void register(Set<Pair<Dimension, TimeoutTrackerFactory<?>>> adviserClasses);
 }

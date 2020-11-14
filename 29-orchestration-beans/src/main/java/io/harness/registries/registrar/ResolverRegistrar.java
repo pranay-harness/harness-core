@@ -12,5 +12,5 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public interface ResolverRegistrar extends Registrar<RefType, Resolver<?>> {
-  void register(Set<Pair<RefType, Class<? extends Resolver<?>>>> resolverClasses);
+  void register(Set<Pair<RefType, Resolver<?>>> resolverClasses);
 }

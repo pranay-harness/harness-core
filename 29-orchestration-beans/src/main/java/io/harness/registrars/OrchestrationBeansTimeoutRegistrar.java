@@ -2,6 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.TimeoutRegistrar;
 import io.harness.timeout.Dimension;
@@ -13,8 +16,11 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class OrchestrationBeansTimeoutRegistrar implements TimeoutRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<Dimension, Class<? extends TimeoutTrackerFactory>>> resolverClasses) {
-    resolverClasses.add(Pair.of(ActiveTimeoutTrackerFactory.DIMENSION, ActiveTimeoutTrackerFactory.class));
+  public void register(Set<Pair<Dimension, TimeoutTrackerFactory<?>>> resolverClasses) {
+    resolverClasses.add(
+        Pair.of(ActiveTimeoutTrackerFactory.DIMENSION, injector.getInstance(ActiveTimeoutTrackerFactory.class)));
   }
 }

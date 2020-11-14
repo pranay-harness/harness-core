@@ -2,8 +2,6 @@ package io.harness.registries.field;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -23,15 +21,11 @@ import javax.validation.Valid;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class OrchestrationFieldRegistry
-    implements Registry<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>> {
-  @Inject private Injector injector;
+public class OrchestrationFieldRegistry implements Registry<OrchestrationFieldType, OrchestrationFieldProcessor> {
+  private Map<OrchestrationFieldType, OrchestrationFieldProcessor> registry = new ConcurrentHashMap<>();
 
-  private Map<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>> registry =
-      new ConcurrentHashMap<>();
-
-  public void register(@NonNull OrchestrationFieldType orchestrationFieldType,
-      @NonNull Class<? extends OrchestrationFieldProcessor> processor) {
+  public void register(
+      @NonNull OrchestrationFieldType orchestrationFieldType, @NonNull OrchestrationFieldProcessor processor) {
     if (registry.containsKey(orchestrationFieldType)) {
       throw new DuplicateRegistryException(
           getType(), "Orchestration Field Processor Already Registered with this type: " + orchestrationFieldType);
@@ -41,7 +35,7 @@ public class OrchestrationFieldRegistry
 
   public OrchestrationFieldProcessor<?> obtain(@Valid OrchestrationFieldType orchestrationFieldType) {
     if (registry.containsKey(orchestrationFieldType)) {
-      return injector.getInstance(registry.get(orchestrationFieldType));
+      return registry.get(orchestrationFieldType);
     }
     throw new UnregisteredKeyAccessException(
         getType(), "No Orchestration Field Processor registered for type: " + orchestrationFieldType);

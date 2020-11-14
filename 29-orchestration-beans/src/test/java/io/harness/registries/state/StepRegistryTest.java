@@ -27,11 +27,11 @@ public class StepRegistryTest extends OrchestrationBeansTestBase {
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     StepType stepType = StepType.builder().type("DUMMY_TEST").build();
-    stepRegistry.register(stepType, DummyStep.class);
+    stepRegistry.register(stepType, new DummyStep());
     Step step = stepRegistry.obtain(stepType);
     assertThat(step).isNotNull();
 
-    assertThatThrownBy(() -> stepRegistry.register(stepType, DummyStep.class))
+    assertThatThrownBy(() -> stepRegistry.register(stepType, new DummyStep()))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> stepRegistry.obtain(StepType.builder().type("RANDOM").build()))

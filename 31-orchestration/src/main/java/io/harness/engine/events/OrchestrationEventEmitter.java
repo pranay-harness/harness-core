@@ -5,11 +5,14 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationSubject;
 import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueuePublisher;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
@@ -19,7 +22,9 @@ public class OrchestrationEventEmitter {
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
-      OrchestrationSubject subject = handlerRegistry.obtain(event.getEventType());
+      OrchestrationSubject subject = new OrchestrationSubject();
+      Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
+      subject.registerAll(handlers);
       subject.handleEventSync(event);
       orchestrationEventQueue.send(event);
     } catch (Exception ex) {

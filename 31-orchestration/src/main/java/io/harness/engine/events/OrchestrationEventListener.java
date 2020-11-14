@@ -6,12 +6,15 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationSubject;
 import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Set;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -29,7 +32,9 @@ public class OrchestrationEventListener extends QueueListener<OrchestrationEvent
       log.info("Notifying for OrchestrationEvent");
 
       try {
-        OrchestrationSubject subject = handlerRegistry.obtain(event.getEventType());
+        Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
+        OrchestrationSubject subject = new OrchestrationSubject();
+        subject.registerAll(handlers);
         subject.handleEventAsync(event);
       } catch (Exception ex) {
         log.error("Exception Occurred while handling OrchestrationEvent", ex);

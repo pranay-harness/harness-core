@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.ambiance.Level;
 import io.harness.references.RefObject;
-import io.harness.registries.RegistrableEntity;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
@@ -16,7 +15,7 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Resolver<T extends StepTransput> extends RegistrableEntity {
+public interface Resolver<T extends StepTransput> {
   T resolve(@NotNull Ambiance ambiance, @NotNull RefObject refObject);
 
   String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, T value, int levelsToKeep);

@@ -3,7 +3,6 @@ package io.harness.timeout;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.registries.RegistryKey;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -14,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @EqualsAndHashCode
-public class Dimension implements RegistryKey {
+public class Dimension {
   public static final String ABSOLUTE = "ABSOLUTE";
   public static final String ACTIVE = "ACTIVE";
 

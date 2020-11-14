@@ -2,9 +2,8 @@ package io.harness.execution.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.registries.RegistrableEntity;
 
 @OwnedBy(HarnessTeam.CDC)
-public interface OrchestrationEventHandler extends RegistrableEntity {
+public interface OrchestrationEventHandler {
   void handleEvent(OrchestrationEvent event);
 }

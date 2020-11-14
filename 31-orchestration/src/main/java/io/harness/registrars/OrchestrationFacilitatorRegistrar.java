@@ -2,6 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
@@ -23,18 +26,25 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<FacilitatorType, Class<? extends Facilitator>>> facilitatorClasses) {
-    facilitatorClasses.add(Pair.of(AsyncFacilitator.FACILITATOR_TYPE, AsyncFacilitator.class));
-    facilitatorClasses.add(Pair.of(SyncFacilitator.FACILITATOR_TYPE, SyncFacilitator.class));
-    facilitatorClasses.add(Pair.of(ChildFacilitator.FACILITATOR_TYPE, ChildFacilitator.class));
-    facilitatorClasses.add(Pair.of(ChildrenFacilitator.FACILITATOR_TYPE, ChildrenFacilitator.class));
-    facilitatorClasses.add(Pair.of(TaskFacilitator.FACILITATOR_TYPE, TaskFacilitator.class));
-    facilitatorClasses.add(Pair.of(TaskChainFacilitator.FACILITATOR_TYPE, TaskChainFacilitator.class));
-    facilitatorClasses.add(Pair.of(ChildChainFacilitator.FACILITATOR_TYPE, ChildChainFacilitator.class));
-    facilitatorClasses.add(Pair.of(TaskV2Facilitator.FACILITATOR_TYPE, TaskV2Facilitator.class));
-    facilitatorClasses.add(Pair.of(TaskChainV2Facilitator.FACILITATOR_TYPE, TaskChainV2Facilitator.class));
-    facilitatorClasses.add(Pair.of(TaskV3Facilitator.FACILITATOR_TYPE, TaskV3Facilitator.class));
-    facilitatorClasses.add(Pair.of(TaskChainV3Facilitator.FACILITATOR_TYPE, TaskChainV3Facilitator.class));
+  public void register(Set<Pair<FacilitatorType, Facilitator>> facilitatorClasses) {
+    facilitatorClasses.add(Pair.of(AsyncFacilitator.FACILITATOR_TYPE, injector.getInstance(AsyncFacilitator.class)));
+    facilitatorClasses.add(Pair.of(SyncFacilitator.FACILITATOR_TYPE, injector.getInstance(SyncFacilitator.class)));
+    facilitatorClasses.add(Pair.of(ChildFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildFacilitator.class)));
+    facilitatorClasses.add(
+        Pair.of(ChildrenFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildrenFacilitator.class)));
+    facilitatorClasses.add(Pair.of(TaskFacilitator.FACILITATOR_TYPE, injector.getInstance(TaskFacilitator.class)));
+    facilitatorClasses.add(
+        Pair.of(TaskChainFacilitator.FACILITATOR_TYPE, injector.getInstance(TaskChainFacilitator.class)));
+    facilitatorClasses.add(
+        Pair.of(ChildChainFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildChainFacilitator.class)));
+    facilitatorClasses.add(Pair.of(TaskV2Facilitator.FACILITATOR_TYPE, injector.getInstance(TaskV2Facilitator.class)));
+    facilitatorClasses.add(
+        Pair.of(TaskChainV2Facilitator.FACILITATOR_TYPE, injector.getInstance(TaskChainV2Facilitator.class)));
+    facilitatorClasses.add(Pair.of(TaskV3Facilitator.FACILITATOR_TYPE, injector.getInstance(TaskV3Facilitator.class)));
+    facilitatorClasses.add(
+        Pair.of(TaskChainV3Facilitator.FACILITATOR_TYPE, injector.getInstance(TaskChainV3Facilitator.class)));
   }
 }

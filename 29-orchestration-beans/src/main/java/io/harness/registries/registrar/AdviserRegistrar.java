@@ -11,6 +11,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 @OwnedBy(CDC)
-public interface AdviserRegistrar extends Registrar<AdviserType, Adviser> {
-  void register(Set<Pair<AdviserType, Class<? extends Adviser>>> adviserClasses);
+public interface AdviserRegistrar extends Registrar<AdviserType, Adviser<?>> {
+  void register(Set<Pair<AdviserType, Adviser<?>>> adviserClasses);
 }

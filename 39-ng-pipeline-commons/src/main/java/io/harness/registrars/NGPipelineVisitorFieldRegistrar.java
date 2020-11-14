@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.beans.ParameterField;
 import io.harness.ngpipeline.inputset.ParameterVisitorFieldProcessor;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
@@ -11,9 +14,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 public class NGPipelineVisitorFieldRegistrar implements VisitableFieldRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>>> fieldClasses) {
-    fieldClasses.add(Pair.of(ParameterField.VISITOR_FIELD_TYPE, ParameterVisitorFieldProcessor.class));
+  public void register(Set<Pair<VisitorFieldType, VisitableFieldProcessor<?>>> fieldClasses) {
+    fieldClasses.add(
+        Pair.of(ParameterField.VISITOR_FIELD_TYPE, injector.getInstance(ParameterVisitorFieldProcessor.class)));
   }
 
   @Override

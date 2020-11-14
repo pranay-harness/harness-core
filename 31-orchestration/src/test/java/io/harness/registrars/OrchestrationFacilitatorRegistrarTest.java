@@ -20,12 +20,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class OrchestrationFacilitatorRegistrarTest extends OrchestrationTestBase {
+  @Inject OrchestrationFacilitatorRegistrar orchestrationFacilitatorRegistrar;
   @Inject Map<String, FacilitatorRegistrar> facilitatorRegistrars;
+
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
-    new OrchestrationFacilitatorRegistrar().testClassesModule();
+    orchestrationFacilitatorRegistrar.testClassesModule();
   }
 
   @Test

@@ -2,6 +2,9 @@ package io.harness.cdng.orchestration;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -14,7 +17,6 @@ import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
-import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -24,21 +26,24 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class NgStepRegistrar implements StepRegistrar {
-  @Override
-  public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
-    stateClasses.add(Pair.of(ShellScriptStep.STEP_TYPE, ShellScriptStep.class));
+  @Inject Injector injector;
 
+  @Override
+  public void register(Set<Pair<StepType, Step>> stateClasses) {
     // Add CDNG steps here
-    stateClasses.add(Pair.of(RollbackOptionalChildChainStep.STEP_TYPE, RollbackOptionalChildChainStep.class));
-    stateClasses.add(Pair.of(RollbackOptionalChildrenStep.STEP_TYPE, RollbackOptionalChildrenStep.class));
-    stateClasses.add(Pair.of(NGSectionStep.STEP_TYPE, NGSectionStep.class));
-    stateClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class));
-    stateClasses.add(Pair.of(InfrastructureSectionStep.STEP_TYPE, InfrastructureSectionStep.class));
-    stateClasses.add(Pair.of(InfrastructureStep.STEP_TYPE, InfrastructureStep.class));
-    stateClasses.add(Pair.of(DeploymentStageStep.STEP_TYPE, DeploymentStageStep.class));
-    stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, ServiceStep.class));
-    stateClasses.add(Pair.of(K8sRollingStep.STEP_TYPE, K8sRollingStep.class));
-    stateClasses.add(Pair.of(K8sRollingRollbackStep.STEP_TYPE, K8sRollingRollbackStep.class));
-    stateClasses.add(Pair.of(HttpStep.STEP_TYPE, HttpStep.class));
+    stateClasses.add(
+        Pair.of(RollbackOptionalChildChainStep.STEP_TYPE, injector.getInstance(RollbackOptionalChildChainStep.class)));
+    stateClasses.add(
+        Pair.of(RollbackOptionalChildrenStep.STEP_TYPE, injector.getInstance(RollbackOptionalChildrenStep.class)));
+    stateClasses.add(Pair.of(NGSectionStep.STEP_TYPE, injector.getInstance(NGSectionStep.class)));
+    stateClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, injector.getInstance(PipelineSetupStep.class)));
+    stateClasses.add(
+        Pair.of(InfrastructureSectionStep.STEP_TYPE, injector.getInstance(InfrastructureSectionStep.class)));
+    stateClasses.add(Pair.of(InfrastructureStep.STEP_TYPE, injector.getInstance(InfrastructureStep.class)));
+    stateClasses.add(Pair.of(DeploymentStageStep.STEP_TYPE, injector.getInstance(DeploymentStageStep.class)));
+    stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, injector.getInstance(ServiceStep.class)));
+    stateClasses.add(Pair.of(K8sRollingStep.STEP_TYPE, injector.getInstance(K8sRollingStep.class)));
+    stateClasses.add(Pair.of(K8sRollingRollbackStep.STEP_TYPE, injector.getInstance(K8sRollingRollbackStep.class)));
+    stateClasses.add(Pair.of(HttpStep.STEP_TYPE, injector.getInstance(HttpStep.class)));
   }
 }

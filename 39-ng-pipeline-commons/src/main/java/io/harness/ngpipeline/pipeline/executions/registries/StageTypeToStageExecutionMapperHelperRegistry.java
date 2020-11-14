@@ -1,7 +1,5 @@
 package io.harness.ngpipeline.pipeline.executions.registries;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
@@ -15,15 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class StageTypeToStageExecutionMapperHelperRegistry
-    implements Registry<NGStageType, Class<? extends StageTypeToStageExecutionSummaryMapper<?>>> {
-  @Inject private Injector injector;
-
-  private final Map<NGStageType, Class<? extends StageTypeToStageExecutionSummaryMapper<?>>> registry =
-      new ConcurrentHashMap<>();
+    implements Registry<NGStageType, StageTypeToStageExecutionSummaryMapper<?>> {
+  private final Map<NGStageType, StageTypeToStageExecutionSummaryMapper<?>> registry = new ConcurrentHashMap<>();
 
   @Override
-  public void register(
-      NGStageType registryKey, Class<? extends StageTypeToStageExecutionSummaryMapper<?>> registrableEntity) {
+  public void register(NGStageType registryKey, StageTypeToStageExecutionSummaryMapper<?> registrableEntity) {
     if (registry.containsKey(registryKey)) {
       throw new DuplicateRegistryException(
           getType(), "StageTypeToStageExecutionSummaryWrapper Already Registered with this type: " + registrableEntity);
@@ -34,7 +28,7 @@ public class StageTypeToStageExecutionMapperHelperRegistry
   @Override
   public StageTypeToStageExecutionSummaryMapper<?> obtain(NGStageType s) {
     if (registry.containsKey(s)) {
-      return injector.getInstance(registry.get(s));
+      return registry.get(s);
     }
     throw new UnregisteredKeyAccessException(
         getType(), "No StageTypeToStageExecutionMapperHelper registered for type: " + s);

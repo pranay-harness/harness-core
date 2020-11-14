@@ -1,7 +1,5 @@
 package io.harness.execution.events;
 
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.observer.AsyncInformObserver;
@@ -17,8 +15,7 @@ import java.util.concurrent.Executors;
 public class AsyncOrchestrationEventHandlerProxy implements OrchestrationEventHandlerProxy, AsyncInformObserver {
   private static ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-  @NonNull Injector injector;
-  @Getter @NonNull Class<? extends OrchestrationEventHandler> eventHandlerClass;
+  @Getter @NonNull OrchestrationEventHandler eventHandler;
 
   @Override
   public ExecutorService getInformExecutorService() {
@@ -26,7 +23,6 @@ public class AsyncOrchestrationEventHandlerProxy implements OrchestrationEventHa
   }
 
   public void handleEvent(OrchestrationEvent event) {
-    OrchestrationEventHandler originalEventHandler = injector.getInstance(eventHandlerClass);
-    originalEventHandler.handleEvent(event);
+    eventHandler.handleEvent(event);
   }
 }

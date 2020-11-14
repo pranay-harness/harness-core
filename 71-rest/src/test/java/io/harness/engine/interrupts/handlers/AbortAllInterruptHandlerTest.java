@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
@@ -32,13 +33,14 @@ import java.util.Map;
 
 @Listeners(OrchestrationNotifyEventListener.class)
 public class AbortAllInterruptHandlerTest extends WingsBaseTest {
+  @Inject private Injector injector;
   @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
 
   @Before
   public void setUp() {
-    stepRegistry.register(SimpleAsyncStep.STEP_TYPE, SimpleAsyncStep.class);
+    stepRegistry.register(SimpleAsyncStep.STEP_TYPE, injector.getInstance(SimpleAsyncStep.class));
   }
 
   @Test

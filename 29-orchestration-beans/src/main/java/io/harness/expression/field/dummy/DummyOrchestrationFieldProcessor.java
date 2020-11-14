@@ -5,10 +5,12 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.ProcessorResult;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class DummyOrchestrationFieldProcessor implements OrchestrationFieldProcessor<DummyOrchestrationField> {
-  private final EngineExpressionEvaluator expressionEvaluator;
+  private EngineExpressionEvaluator expressionEvaluator;
 
   @Override
   public ProcessorResult process(Ambiance ambiance, DummyOrchestrationField field) {

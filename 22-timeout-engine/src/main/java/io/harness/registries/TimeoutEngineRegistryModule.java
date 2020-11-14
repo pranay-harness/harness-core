@@ -34,15 +34,11 @@ public class TimeoutEngineRegistryModule extends AbstractModule {
   @Provides
   @Singleton
   TimeoutRegistry providesTimeoutRegistry(Injector injector, Map<String, TimeoutRegistrar> timeoutRegistrarMap) {
-    Set classes = new HashSet<>();
-    timeoutRegistrarMap.values().forEach(timeoutRegistrar -> { timeoutRegistrar.register(classes); });
+    Set<Pair<Dimension, TimeoutTrackerFactory<?>>> classes = new HashSet<>();
+    timeoutRegistrarMap.values().forEach(timeoutRegistrar -> timeoutRegistrar.register(classes));
     TimeoutRegistry timeoutRegistry = new TimeoutRegistry();
     injector.injectMembers(timeoutRegistry);
-    classes.forEach(pair -> {
-      Pair<Dimension, Class<? extends TimeoutTrackerFactory>> timeoutPair =
-          (Pair<Dimension, Class<? extends TimeoutTrackerFactory>>) pair;
-      timeoutRegistry.register(timeoutPair.getLeft(), timeoutPair.getRight());
-    });
+    classes.forEach(pair -> { timeoutRegistry.register(pair.getLeft(), pair.getRight()); });
     return timeoutRegistry;
   }
 }

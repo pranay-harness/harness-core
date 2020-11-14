@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.registries.RegistryKey;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,7 +15,7 @@ import lombok.Value;
 @Value
 @Builder
 @EqualsAndHashCode
-public class StepType implements RegistryKey {
+public class StepType {
   // Provided From the orchestration layer system states
 
   public static final String FORK = "FORK";

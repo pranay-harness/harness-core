@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import io.harness.walktree.beans.DummyVisitorField;
 import io.harness.walktree.beans.DummyVisitorFieldProcessor;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
@@ -11,9 +14,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 public class WalkTreeVisitorFieldRegistrar implements VisitableFieldRegistrar {
+  @Inject private Injector injector;
+
   @Override
-  public void register(Set<Pair<VisitorFieldType, Class<? extends VisitableFieldProcessor<?>>>> fieldClasses) {
-    fieldClasses.add(Pair.of(DummyVisitorField.VISITOR_FIELD_TYPE, DummyVisitorFieldProcessor.class));
+  public void register(Set<Pair<VisitorFieldType, VisitableFieldProcessor<?>>> fieldClasses) {
+    fieldClasses.add(
+        Pair.of(DummyVisitorField.VISITOR_FIELD_TYPE, injector.getInstance(DummyVisitorFieldProcessor.class)));
   }
 
   @Override

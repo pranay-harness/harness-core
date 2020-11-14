@@ -32,11 +32,11 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTestBase {
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     FacilitatorType facilitatorType = FacilitatorType.builder().type("Type1").build();
-    facilitatorRegistry.register(facilitatorType, Type1Facilitator.class);
+    facilitatorRegistry.register(facilitatorType, new Type1Facilitator());
     Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
 
-    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, Type1Facilitator.class))
+    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1Facilitator()))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type("SKIP").build()))

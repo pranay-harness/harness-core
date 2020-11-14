@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.WalkTreeTestBase;
 import io.harness.category.element.UnitTests;
@@ -15,6 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class VisitorFieldRegistryTest extends WalkTreeTestBase {
+  @Inject Injector injector;
   @Inject VisitorFieldRegistry visitorFieldRegistry;
 
   @Test
@@ -22,12 +24,14 @@ public class VisitorFieldRegistryTest extends WalkTreeTestBase {
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     DummyVisitorTestField visitorField = new DummyVisitorTestField();
-    visitorFieldRegistry.register(visitorField.getVisitorFieldType(), DummyVisitorTestFieldProcessor.class);
+    visitorFieldRegistry.register(
+        visitorField.getVisitorFieldType(), injector.getInstance(DummyVisitorTestFieldProcessor.class));
     VisitableFieldProcessor<?> processor = visitorFieldRegistry.obtain(visitorField.getVisitorFieldType());
     assertThat(processor).isNotNull();
 
-    assertThatThrownBy(
-        () -> visitorFieldRegistry.register(visitorField.getVisitorFieldType(), DummyVisitorTestFieldProcessor.class))
+    assertThatThrownBy(()
+                           -> visitorFieldRegistry.register(visitorField.getVisitorFieldType(),
+                               injector.getInstance(DummyVisitorTestFieldProcessor.class)))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> visitorFieldRegistry.obtain(VisitorFieldType.builder().type("IGNORE").build()))

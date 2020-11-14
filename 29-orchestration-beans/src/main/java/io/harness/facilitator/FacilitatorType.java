@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.registries.RegistryKey;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -15,7 +14,7 @@ import lombok.Value;
 @Builder
 @Redesign
 @EqualsAndHashCode
-public class FacilitatorType implements RegistryKey {
+public class FacilitatorType {
   // Provided From the orchestration layer system facilitators
   public static final String SYNC = "SYNC";
   public static final String ASYNC = "ASYNC";

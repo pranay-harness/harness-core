@@ -5,10 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
-public interface Registry<K extends RegistryKey, V extends Class<? extends RegistrableEntity>> {
+public interface Registry<K, V> {
   void register(K registryKey, V registrableEntity);
 
-  RegistrableEntity obtain(K k);
+  V obtain(K k);
 
   String getType();
 }

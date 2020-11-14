@@ -13,5 +13,5 @@ import java.util.Set;
 @OwnedBy(CDC)
 public interface OrchestrationEventHandlerRegistrar
     extends Registrar<OrchestrationEventType, OrchestrationEventHandler> {
-  void register(Set<Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>>> handlerClasses);
+  void register(Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> handlerClasses);
 }
