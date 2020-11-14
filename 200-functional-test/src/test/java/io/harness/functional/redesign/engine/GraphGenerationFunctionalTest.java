@@ -17,9 +17,9 @@ import io.harness.StatusUtils;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EdgeList;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.GraphVertex;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
+import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.execution.PlanExecution;
 import io.harness.functional.AbstractFunctionalTest;
@@ -101,13 +101,13 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
         requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
     assertThat(response).isNotNull();
 
-    GraphVertex forkVertex = response.getAdjacencyList()
-                                 .getGraphVertexMap()
-                                 .values()
-                                 .stream()
-                                 .filter(graphVertex -> graphVertex.getName().equals("fork2"))
-                                 .findFirst()
-                                 .orElse(null);
+    GraphVertexDTO forkVertex = response.getAdjacencyList()
+                                    .getGraphVertexMap()
+                                    .values()
+                                    .stream()
+                                    .filter(graphVertex -> graphVertex.getName().equals("fork2"))
+                                    .findFirst()
+                                    .orElse(null);
     assertThat(forkVertex).isNotNull();
 
     OrchestrationGraphDTO partialOrchestrationResponse = requestOrchestrationGraph(
@@ -118,7 +118,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                    .getGraphVertexMap()
                    .values()
                    .stream()
-                   .map(GraphVertex::getName)
+                   .map(GraphVertexDTO::getName)
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder("fork2", "http1", "http2");
     assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(3);
@@ -131,7 +131,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                                                  .values()
                                                  .stream()
                                                  .filter(vertex -> vertex.getName().startsWith("http"))
-                                                 .map(GraphVertex::getUuid)
+                                                 .map(GraphVertexDTO::getUuid)
                                                  .collect(Collectors.toList()));
   }
 
@@ -155,15 +155,15 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(response.getEndTs()).isNotNull();
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    Map<String, GraphVertex> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
+    Map<String, GraphVertexDTO> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
     Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyMap();
     assertThat(graphVertexMap.size()).isEqualTo(9);
     assertThat(adjacencyList.size()).isEqualTo(9);
 
     assertThat(
-        graphVertexMap.values().stream().map(GraphVertex::getStatus).allMatch(status -> Status.SUCCEEDED == status))
+        graphVertexMap.values().stream().map(GraphVertexDTO::getStatus).allMatch(status -> Status.SUCCEEDED == status))
         .isTrue();
-    assertThat(graphVertexMap.values().stream().map(GraphVertex::getName).collect(Collectors.toList()))
+    assertThat(graphVertexMap.values().stream().map(GraphVertexDTO::getName).collect(Collectors.toList()))
         .containsExactlyInAnyOrderElementsOf(nodeNames);
 
     Map<String, String> nameVertexMap = graphVertexMap.entrySet().stream().collect(
@@ -217,15 +217,15 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(response.getEndTs()).isNotNull();
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    Map<String, GraphVertex> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
+    Map<String, GraphVertexDTO> graphVertexMap = response.getAdjacencyList().getGraphVertexMap();
     Map<String, EdgeList> adjacencyList = response.getAdjacencyList().getAdjacencyMap();
     assertThat(graphVertexMap.size()).isEqualTo(6);
     assertThat(adjacencyList.size()).isEqualTo(6);
 
     assertThat(
-        graphVertexMap.values().stream().map(GraphVertex::getStatus).allMatch(status -> Status.SUCCEEDED == status))
+        graphVertexMap.values().stream().map(GraphVertexDTO::getStatus).allMatch(status -> Status.SUCCEEDED == status))
         .isTrue();
-    assertThat(graphVertexMap.values().stream().map(GraphVertex::getName).collect(Collectors.toList()))
+    assertThat(graphVertexMap.values().stream().map(GraphVertexDTO::getName).collect(Collectors.toList()))
         .containsExactlyInAnyOrderElementsOf(nodeNames);
 
     Map<String, String> nameVertexMap = graphVertexMap.entrySet().stream().collect(

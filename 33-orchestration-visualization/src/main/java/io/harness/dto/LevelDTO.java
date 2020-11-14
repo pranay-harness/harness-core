@@ -1,4 +1,4 @@
-package io.harness.beans;
+package io.harness.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -8,14 +8,15 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.Map;
-
 @OwnedBy(CDC)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OrchestrationAdjacencyList {
-  Map<String, GraphVertex> graphVertexMap;
-  Map<String, EdgeList> adjacencyMap;
+public class LevelDTO {
+  String setupId;
+  String runtimeId;
+  String identifier;
+  String stepType;
+  String group;
 }

@@ -12,13 +12,14 @@ import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
-import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
+import io.harness.dto.GraphVertexDTO;
+import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -233,14 +234,14 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     OrchestrationGraphDTO graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
     assertThat(graphResponse).isNotNull();
 
-    OrchestrationAdjacencyList orchestrationAdjacencyList = graphResponse.getAdjacencyList();
-    assertThat(orchestrationAdjacencyList).isNotNull();
+    OrchestrationAdjacencyListDTO orchestrationAdjacencyListDTO = graphResponse.getAdjacencyList();
+    assertThat(orchestrationAdjacencyListDTO).isNotNull();
 
-    Map<String, GraphVertex> graphVertexMapResponse = orchestrationAdjacencyList.getGraphVertexMap();
+    Map<String, GraphVertexDTO> graphVertexMapResponse = orchestrationAdjacencyListDTO.getGraphVertexMap();
     assertThat(graphVertexMapResponse).isNotEmpty();
     assertThat(graphVertexMapResponse.size()).isEqualTo(2);
 
-    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyList.getAdjacencyMap();
+    Map<String, EdgeList> adjacencyList = orchestrationAdjacencyListDTO.getAdjacencyMap();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0))).isNotNull();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0)).getNextIds()).isNotEmpty();
     assertThat(adjacencyList.get(graphResponse.getRootNodeIds().get(0)).getNextIds())
@@ -258,6 +259,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   public void shouldReturnPartialOrchestrationGraph() {
     GraphVertex dummyStart = GraphVertex.builder()
                                  .uuid(generateUuid())
+                                 .ambiance(Ambiance.builder()
+                                               .planExecutionId("")
+                                               .levels(new ArrayList<>())
+                                               .setupAbstractions(new HashMap<>())
+                                               .build())
                                  .planNodeId("node1_plan")
                                  .name("dummyStart")
                                  .mode(ExecutionMode.SYNC)
@@ -265,6 +271,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                  .build();
     GraphVertex dummyFinish = GraphVertex.builder()
                                   .uuid(generateUuid())
+                                  .ambiance(Ambiance.builder()
+                                                .planExecutionId("")
+                                                .levels(new ArrayList<>())
+                                                .setupAbstractions(new HashMap<>())
+                                                .build())
                                   .planNodeId("node2_plan")
                                   .name("dummyFinish")
                                   .skipType(SkipType.NOOP)
@@ -297,6 +308,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   public void shouldReturnPartialOrchestrationGraphFromIdentifier() {
     GraphVertex dummyStart = GraphVertex.builder()
                                  .uuid(generateUuid())
+                                 .ambiance(Ambiance.builder()
+                                               .planExecutionId("")
+                                               .levels(new ArrayList<>())
+                                               .setupAbstractions(new HashMap<>())
+                                               .build())
                                  .planNodeId("node1_plan")
                                  .name("dummyStart")
                                  .identifier(generateUuid())
@@ -305,6 +321,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                  .build();
     GraphVertex dummyFinish = GraphVertex.builder()
                                   .uuid(generateUuid())
+                                  .ambiance(Ambiance.builder()
+                                                .planExecutionId("")
+                                                .levels(new ArrayList<>())
+                                                .setupAbstractions(new HashMap<>())
+                                                .build())
                                   .planNodeId("node2_plan")
                                   .identifier(generateUuid())
                                   .name("dummyFinish")
