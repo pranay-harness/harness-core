@@ -3,13 +3,15 @@ package software.wings.beans;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMinutes;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -20,10 +22,10 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "DelegateConnectionKeys")
@@ -32,13 +34,18 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdIndex(name = "index2",
-    fields =
-    {
-      @Field(DelegateConnectionKeys.accountId)
-      , @Field(DelegateConnectionKeys.delegateId), @Field(DelegateConnectionKeys.version)
-    })
 public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("index2")
+                 .field(DelegateConnectionKeys.accountId)
+                 .field(DelegateConnectionKeys.delegateId)
+                 .field(DelegateConnectionKeys.version)
+                 .build())
+        .build();
+  }
+
   public static final Duration TTL = ofDays(15);
   public static final Duration EXPIRY_TIME = ofMinutes(5);
 

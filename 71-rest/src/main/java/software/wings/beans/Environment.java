@@ -14,9 +14,9 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -54,9 +54,10 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
                  .field(EnvironmentKeys.appId)
                  .field(EnvironmentKeys.name)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountIdCreatedAt")
                  .field(EnvironmentKeys.accountId)
+                 .descSortField(EnvironmentKeys.createdAt)
                  .build())
         .build();
   }

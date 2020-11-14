@@ -15,11 +15,11 @@ import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.CreatedAtSortCompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -77,10 +77,11 @@ public class ServiceVariable extends Base implements EncryptableSetting {
                  .field(ServiceVariableKeys.envId)
                  .field(ServiceVariableKeys.templateId)
                  .build())
-        .add(CreatedAtSortCompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("appEntityIdx")
                  .field(ServiceVariableKeys.appId)
                  .field(ServiceVariableKeys.entityId)
+                 .descSortField(ServiceVariableKeys.createdAt)
                  .build())
         .build();
   }
