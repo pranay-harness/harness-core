@@ -11,10 +11,10 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-grpc-api:module",
         "//22-delegate-service-beans:module",
         "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
         "//31-orchestration:module",
+        "//970-grpc:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_github_reinert_jjschema",

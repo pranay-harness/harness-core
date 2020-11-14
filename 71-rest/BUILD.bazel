@@ -11,9 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//13-grpc-api:module",
-        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
-        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
         "//13-ng-commons:module",
         "//14-api-services-beans:module",
         "//15-api-services:module",
@@ -48,6 +45,7 @@ java_library(
         "//490-ce-commons:module",
         "//57-command-library-common:module",
         "//64-events-framework:module",
+        "//970-grpc:module",
         "//980-commons:module",
         "@data_collection_dsl//:io_harness_cv_data_collection_dsl",
         "@jira_client//jar",

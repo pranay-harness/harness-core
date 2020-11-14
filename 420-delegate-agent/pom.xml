@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>13-grpc-api</artifactId>
+            <artifactId>970-grpc</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
