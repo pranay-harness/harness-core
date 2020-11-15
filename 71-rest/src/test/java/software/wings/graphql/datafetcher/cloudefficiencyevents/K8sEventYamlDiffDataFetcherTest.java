@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -17,11 +19,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLK8sEventYamlDiffQueryParameters;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.SQLException;
 
 public class K8sEventYamlDiffDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock K8sYamlDao k8sYamlDao;
+  @Mock CeAccountExpirationChecker accountChecker;
   @Inject @InjectMocks K8sEventYamlDiffDataFetcher k8sEventYamlDiffDataFetcher;
 
   private static final String ACCOUNT_ID = "accountId";
@@ -37,6 +41,7 @@ public class K8sEventYamlDiffDataFetcherTest extends AbstractDataFetcherTestBase
   public void setup() throws SQLException {
     when(k8sYamlDao.getYaml(ACCOUNT_ID, HASH1)).thenReturn(getTestYamlRecord(UID, OLD_YAML));
     when(k8sYamlDao.getYaml(ACCOUNT_ID, HASH2)).thenReturn(getTestYamlRecord(UID, NEW_YAML));
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

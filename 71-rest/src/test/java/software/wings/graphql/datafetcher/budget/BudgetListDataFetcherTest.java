@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.budget;
 import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -28,6 +31,7 @@ import java.util.List;
 
 public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetServiceImpl budgetService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks BudgetListDataFetcher budgetListDataFetcher;
 
   private String accountId = "ACCOUNT_ID";
@@ -73,6 +77,7 @@ public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
     queryParameters = new QLBudgetQueryParameters(budgetId);
     when(budgetService.list(accountId)).thenReturn(Arrays.asList(budget));
     when(budgetService.getBudgetDetails(budget)).thenReturn(budgetDetails);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -33,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +45,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
   @Mock BillingDataHelper billingDataHelper;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks CloudTimeSeriesStatsDataFetcher cloudTimeSeriesStatsDataFetcher;
 
   private static final String COST = "unblendedCost";
@@ -125,6 +128,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
     qlData = PreAggregateBillingTimeSeriesStatsDTO.builder().stats(dataPoints).build();
     doCallRealMethod().when(billingDataHelper).getRoundedDoubleValue(anyDouble());
     doCallRealMethod().when(billingDataHelper).getElementIdsAfterLimit(any(), anyInt());
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

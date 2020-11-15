@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,12 +30,14 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.SQLException;
 
 public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks BudgetDataFetcher budgetDataFetcher;
 
   QLBudgetDataList data;
@@ -59,6 +63,7 @@ public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
     when(budgetService.getBudgetData(any(Budget.class))).thenReturn(data);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   private Budget mockBudget(String scope) {
@@ -83,7 +88,7 @@ public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldThrowWhenFetchWithInvalidBudgetId() {
-    when(budgetService.get(budgetId)).thenReturn(null);
+    when(budgetService.get(budgetId, accountId)).thenReturn(null);
     assertThatThrownBy(() -> budgetDataFetcher.fetch(queryParameters, accountId))
         .isInstanceOf(InvalidRequestException.class);
   }
@@ -92,7 +97,7 @@ public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testFetch() {
-    when(budgetService.get(budgetId)).thenReturn(mockBudget("CLUSTER"));
+    when(budgetService.get(budgetId, accountId)).thenReturn(mockBudget("CLUSTER"));
     budgetDataFetcher.fetch(queryParameters, accountId);
     verify(budgetService).getBudgetData(any(Budget.class));
   }

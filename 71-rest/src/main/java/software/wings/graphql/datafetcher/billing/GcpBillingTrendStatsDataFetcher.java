@@ -15,6 +15,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final String BILLING_GCP_TOTAL_COST_LABEL = "Total Cost";
   private static final String BILLING_GCP_TOTAL_COST_DESCRIPTION = "of %s - %s";
@@ -39,6 +41,7 @@ public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<Cl
   @Override
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
       List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
     // find the start date from the conditions
     Optional<CloudBillingFilter> startTimeFilter = filters.stream().filter(f -> f.getStartTime() != null).findFirst();

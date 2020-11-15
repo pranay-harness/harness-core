@@ -23,6 +23,15 @@ public class BudgetDao {
     return query.get();
   }
 
+  public Budget get(String budgetId, String accountId) {
+    Query<Budget> query = persistence.createQuery(Budget.class)
+                              .field(BudgetKeys.uuid)
+                              .equal(budgetId)
+                              .field(BudgetKeys.accountId)
+                              .equal(accountId);
+    return query.get();
+  }
+
   public List<Budget> list(String accountId) {
     return list(accountId, Integer.MAX_VALUE - 1, 0);
   }
@@ -63,7 +72,11 @@ public class BudgetDao {
     persistence.update(query, updateOperations);
   }
 
-  public boolean delete(String budgetId) {
-    return persistence.delete(Budget.class, budgetId);
+  public boolean delete(String budgetId, String accountId) {
+    Budget budget = get(budgetId, accountId);
+    if (budget != null) {
+      return persistence.delete(Budget.class, budgetId);
+    }
+    return false;
   }
 }

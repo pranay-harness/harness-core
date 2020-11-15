@@ -34,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.k8sLabel.QLK8sLabelFilter.
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -61,6 +62,7 @@ public class BillingStatsFilterValuesDataFetcher
   @Inject InstanceDataServiceImpl instanceDataService;
   @Inject K8sWorkloadDao k8sWorkloadDao;
   @Inject HarnessTagService harnessTagService;
+  @Inject CeAccountExpirationChecker accountChecker;
   private static final String TOTAL = "total";
   private static final String EMPTY = "";
 
@@ -69,6 +71,7 @@ public class BillingStatsFilterValuesDataFetcher
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
       Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);

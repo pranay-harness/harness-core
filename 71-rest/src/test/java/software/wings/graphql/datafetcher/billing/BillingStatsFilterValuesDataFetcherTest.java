@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -49,6 +50,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLFilterValuesListData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -70,6 +72,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   @Mock InstanceDataServiceImpl instanceDataService;
   @Mock K8sWorkloadDao k8sWorkloadDao;
   @Mock HarnessTagService harnessTagService;
+  @Mock CeAccountExpirationChecker accountChecker;
 
   @Inject @InjectMocks BillingStatsFilterValuesDataFetcher billingStatsFilterValuesDataFetcher;
 
@@ -163,6 +166,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
     resetValues();
     mockResultSet();
   }

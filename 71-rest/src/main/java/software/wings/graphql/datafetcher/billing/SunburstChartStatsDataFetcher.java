@@ -23,6 +23,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridData
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridDataPoint.QLSunburstGridDataPointBuilder;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -42,6 +43,7 @@ public class SunburstChartStatsDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper billingStatsHelper;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static int idleCostBaseline = 30;
   private static int unallocatedCostBaseline = 5;
@@ -52,6 +54,7 @@ public class SunburstChartStatsDataFetcher
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
       Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         boolean isClusterGroupBy = false;

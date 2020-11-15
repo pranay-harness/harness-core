@@ -403,6 +403,7 @@ import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImp
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureAppServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
+import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
@@ -610,6 +611,7 @@ import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.datadog.DatadogService;
@@ -957,6 +959,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
+    bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 

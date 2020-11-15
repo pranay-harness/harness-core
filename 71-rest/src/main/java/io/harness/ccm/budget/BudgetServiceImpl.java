@@ -34,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -59,6 +60,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject QLBillingStatsHelper statsHelper;
   @Inject @Named(CeBudgetFeature.FEATURE_NAME) private UsageLimitedFeature ceBudgetFeature;
   @Inject BudgetUtils budgetUtils;
+  @Inject CeAccountExpirationChecker accountChecker;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-dd-yyyy";
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
@@ -79,14 +81,16 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public String create(Budget budget) {
+    accountChecker.checkIsCeEnabled(budget.getAccountId());
     validateBudget(budget);
     removeEmailDuplicates(budget);
     return budgetDao.save(budget);
   }
 
   @Override
-  public String clone(String budgetId, String cloneBudgetName) {
-    Budget budget = budgetDao.get(budgetId);
+  public String clone(String budgetId, String cloneBudgetName, String accountId) {
+    Budget budget = budgetDao.get(budgetId, accountId);
+    accountChecker.checkIsCeEnabled(budget.getAccountId());
     validateBudget(budget);
     if (cloneBudgetName.equals(UNDEFINED_BUDGET)) {
       throw new InvalidRequestException(BUDGET_NAME_NOT_PROVIDED_EXCEPTION);
@@ -111,6 +115,7 @@ public class BudgetServiceImpl implements BudgetService {
       Budget existingBudget = budgetDao.get(budgetId);
       budget.setAccountId(existingBudget.getAccountId());
     }
+    accountChecker.checkIsCeEnabled(budget.getAccountId());
     if (budget.getUuid() == null) {
       budget.setUuid(budgetId);
     }
@@ -137,8 +142,8 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
-  public Budget get(String budgetId) {
-    return budgetDao.get(budgetId);
+  public Budget get(String budgetId, String accountId) {
+    return budgetDao.get(budgetId, accountId);
   }
 
   @Override
@@ -157,8 +162,8 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
-  public boolean delete(String budgetId) {
-    return budgetDao.delete(budgetId);
+  public boolean delete(String budgetId, String accountId) {
+    return budgetDao.delete(budgetId, accountId);
   }
 
   @Override

@@ -18,6 +18,7 @@ import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.cloudefficiencyevents.QLEventsDataPoint.QLEventsDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,12 +38,14 @@ public class EventsStatsDataFetcher
   @Inject QLBillingStatsHelper statsHelper;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private EventsDataQueryBuilder eventsDataQueryBuilder;
+  @Inject CeAccountExpirationChecker accountChecker;
   private static String offsetAndLimitQuery = " OFFSET %s LIMIT %s";
 
   @Override
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLEventsDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLEventsSortCriteria> sort, Integer limit,
       Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getEventsData(accountId, filters, sort, limit, offset);

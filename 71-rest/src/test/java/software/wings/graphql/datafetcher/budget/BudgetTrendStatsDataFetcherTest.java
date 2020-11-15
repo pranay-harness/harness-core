@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -32,6 +34,7 @@ import software.wings.graphql.schema.query.QLBudgetQueryParameters;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTrendStats;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.SQLException;
 
@@ -39,6 +42,7 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
   @Mock BillingDataHelper billingDataHelper;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks BudgetTrendStatsDataFetcher budgetTrendStatsDataFetcher;
 
   private QLBudgetTableData budgetDetails;
@@ -86,6 +90,7 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
                                                 .build()};
     when(budgetService.getBudgetDetails(any(Budget.class))).thenReturn(budgetDetails);
     when(billingDataHelper.getRoundedDoubleValue(budgetAmount)).thenReturn(budgetAmount);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   private Budget mockBudget(String scope) {
@@ -111,7 +116,7 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldThrowWhenFetchWithInvalidBudgetId() {
-    when(budgetService.get(budgetId)).thenReturn(null);
+    when(budgetService.get(budgetId, accountId)).thenReturn(null);
     assertThatThrownBy(() -> budgetTrendStatsDataFetcher.fetch(queryParameters, accountId))
         .isInstanceOf(InvalidRequestException.class);
   }
@@ -120,7 +125,7 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetch() {
-    when(budgetService.get(budgetId)).thenReturn(mockBudget(BudgetScopeType.APPLICATION));
+    when(budgetService.get(budgetId, accountId)).thenReturn(mockBudget(BudgetScopeType.APPLICATION));
     QLBudgetTrendStats budgetTrendStats = budgetTrendStatsDataFetcher.fetch(queryParameters, accountId);
     assertThat(budgetTrendStats.getTotalCost().getStatsLabel()).isEqualTo(ACTUAL_COST_LABEL);
     assertThat(budgetTrendStats.getTotalCost().getStatsValue()).isEqualTo("$0.0 / $25000.0");

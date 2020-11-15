@@ -10,15 +10,18 @@ import software.wings.graphql.datafetcher.cloudefficiencyevents.QLK8sEventYamls.
 import software.wings.graphql.schema.query.QLK8sEventYamlDiffQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 @Slf4j
 public class K8sEventYamlDiffDataFetcher
     extends AbstractObjectDataFetcher<QLK8sEventYamlDiff, QLK8sEventYamlDiffQueryParameters> {
   @Inject private K8sYamlDao k8sYamlDao;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLK8sEventYamlDiff fetch(QLK8sEventYamlDiffQueryParameters qlQuery, String accountId) {
+    accountChecker.checkIsCeEnabled(accountId);
     QLK8sEventYamlDiff yamlDiff = null;
     if (qlQuery != null) {
       K8sYaml oldYaml = k8sYamlDao.getYaml(accountId, qlQuery.getOldYamlRef());

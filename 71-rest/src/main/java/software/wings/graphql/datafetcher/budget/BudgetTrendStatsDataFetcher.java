@@ -14,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTrendStats;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 @Slf4j
 public class BudgetTrendStatsDataFetcher
@@ -27,14 +28,16 @@ public class BudgetTrendStatsDataFetcher
 
   @Inject BudgetService budgetService;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLBudgetTrendStats fetch(QLBudgetQueryParameters parameters, String accountId) {
+    accountChecker.checkIsCeEnabled(accountId);
     Budget budget = null;
     if (parameters.getBudgetId() != null) {
       log.info("Fetching budgetTrendStats data");
-      budget = budgetService.get(parameters.getBudgetId());
+      budget = budgetService.get(parameters.getBudgetId(), accountId);
     }
     if (budget == null) {
       throw new InvalidRequestException(BUDGET_DOES_NOT_EXIST_MSG, WingsException.USER);
