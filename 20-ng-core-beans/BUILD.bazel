@@ -10,7 +10,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//14-api-services-beans:module",
+        "//970-api-services-beans:module",
         "//970-ng-commons:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

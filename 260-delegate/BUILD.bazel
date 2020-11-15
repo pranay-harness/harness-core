@@ -12,7 +12,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//14-api-services-beans:module",
         "//15-api-services:module",
         "//16-expression-service:module",
         "//19-delegate-tasks-beans:module",
@@ -49,6 +48,7 @@ java_library(
         "//57-command-library-common:module",
         "//64-events-framework:module",
         "//71-rest:module",
+        "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-ng-commons:module",
         "//980-commons:module",

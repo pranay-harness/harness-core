@@ -8,36 +8,21 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//980-commons:module",
-        "@jira_client//jar",
-        "@maven//:com_amazonaws_aws_java_sdk_core",
-        "@maven//:com_amazonaws_aws_java_sdk_ec2",
-        "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
-        "@maven//:com_google_apis_google_api_services_monitoring",
-        "@maven//:com_google_code_gson_gson",
-        "@maven//:com_sumologic_api_client_sumo_java_client",
-        "@maven//:io_fabric8_kubernetes_api",
-        "@maven//:io_fabric8_kubernetes_client",
-        "@maven//:io_fabric8_kubernetes_model",
-        "@maven//:io_kubernetes_client_java",
-        "@maven//:io_kubernetes_client_java_api",
-        "@maven//:org_codehaus_jackson_jackson_core_asl",
-        "@maven//:org_json_json",
-        "@maven//:org_mongodb_mongo_java_driver",
-        "@maven//:org_slf4j_log4j_over_slf4j",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "//:lombok",
+        "//980-commons:module",
+        "@jira_client//jar",
+        "@maven//:com_amazonaws_aws_java_sdk_ec2",
+        "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
+        "@maven//:com_google_apis_google_api_services_monitoring",
+        "@maven//:com_sumologic_api_client_sumo_java_client",
+        "@maven//:io_fabric8_kubernetes_client",
+        "@maven//:io_kubernetes_client_java",
+        "@maven//:org_codehaus_jackson_jackson_core_asl",
+        "@maven//:org_json_json",
     ],
 )
 
@@ -45,16 +30,13 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = [
-        "//14-api-services-beans/src/test/resources:resource",
+        "//970-api-services-beans/src/test/resources:resource",
     ],
     visibility = ["//visibility:private"],
     deps = [
-        "maven_deps",
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
     ],
 )
 
@@ -66,7 +48,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

@@ -1,5 +1,4 @@
 directories:
-  14-api-services-beans
   15-api-services
   16-expression-service
   19-delegate-tasks-beans
@@ -42,6 +41,7 @@ directories:
   440-connector-nextgen
   450-ce-views
   490-ce-commons
+  970-api-services-beans
   970-grpc
   970-ng-commons
   980-commons

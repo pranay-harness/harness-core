@@ -3,7 +3,7 @@
 # gazelle:exclude vendor
 # gazelle:exclude build
 # gazelle:exclude */target
-# gazelle:exclude {990-commons-test,980-commons,13-grpc-api,14-api-services-beans,19-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,26-pms-contracts,71-rest}
+# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,19-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,26-pms-contracts,71-rest}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
@@ -51,8 +51,6 @@ java_library(
 )
 
 modules = [
-    "//970-ng-commons",
-    "//14-api-services-beans",
     "//15-api-services",
     "//16-expression-service",
     "//19-delegate-tasks-beans",
@@ -90,7 +88,9 @@ modules = [
     "//420-delegate-service",
     "//450-ce-views",
     "//490-ce-commons",
+    "//970-api-services-beans",
     "//970-grpc",
+    "//970-ng-commons",
     "//980-commons",
     "//990-commons-test",
 ]

@@ -23,10 +23,10 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//14-api-services-beans:module",
         "//19-delegate-tasks-beans:module",
         "//240-capability/src/main/proto:240_capability_java_proto",
         "//240-capability/src/main/proto:240_capability_proto",
+        "//970-api-services-beans:module",
     ],
 )
 

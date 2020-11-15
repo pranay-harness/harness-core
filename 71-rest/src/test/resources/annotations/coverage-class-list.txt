@@ -1,8 +1,3 @@
-14-api-services-beans/src/main/java/io/harness/jira/JiraCreateMetaResponse.java
-14-api-services-beans/src/main/java/io/harness/jira/JiraCustomFieldValue.java
-14-api-services-beans/src/main/java/io/harness/jira/JiraField.java
-14-api-services-beans/src/main/java/io/harness/jira/JiraIssueType.java
-14-api-services-beans/src/main/java/io/harness/jira/JiraProjectData.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerImageManifestResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerPublicImageTagResponse.java
 15-api-services/src/main/java/io/harness/artifacts/docker/client/DockerRestClientFactoryImpl.java
@@ -1012,6 +1007,11 @@
 71-rest/src/main/java/software/wings/yaml/workflow/RollingWorkflowYaml.java
 71-rest/src/main/java/software/wings/yaml/workflow/StepYaml.java
 71-rest/src/main/java/software/wings/yaml/workflow/WorkflowYaml.java
+970-api-services-beans/src/main/java/io/harness/jira/JiraCreateMetaResponse.java
+970-api-services-beans/src/main/java/io/harness/jira/JiraCustomFieldValue.java
+970-api-services-beans/src/main/java/io/harness/jira/JiraField.java
+970-api-services-beans/src/main/java/io/harness/jira/JiraIssueType.java
+970-api-services-beans/src/main/java/io/harness/jira/JiraProjectData.java
 980-commons/src/main/java/io/harness/expression/EngineExpressionEvaluator.java
 980-commons/src/main/java/io/harness/expression/EngineVariableResolver.java
 980-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
