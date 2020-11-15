@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureConfig;
 import software.wings.service.intfc.DelegateService;
-import software.wings.sm.states.azure.AzureVMSSStateHelper;
+import software.wings.sm.states.azure.AzureStateHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,10 +33,7 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListSubscriptions() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
-    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
-    DelegateService mockDelegateService = mock(DelegateService.class);
-    on(service).set("delegateService", mockDelegateService);
-    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
+    DelegateService mockDelegateService = getDelegateServiceMock(service);
 
     doReturn(AzureVMSSTaskExecutionResponse.builder()
                  .azureVMSSTaskResponse(AzureVMSSListSubscriptionsResponse.builder()
@@ -62,10 +59,7 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListResourceGroupsNames() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
-    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
-    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
-    DelegateService mockDelegateService = mock(DelegateService.class);
-    on(service).set("delegateService", mockDelegateService);
+    DelegateService mockDelegateService = getDelegateServiceMock(service);
 
     doReturn(AzureVMSSTaskExecutionResponse.builder()
                  .azureVMSSTaskResponse(AzureVMSSListResourceGroupsNamesResponse.builder()
@@ -90,10 +84,7 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListVirtualMachineScaleSets() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
-    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
-    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
-    DelegateService mockDelegateService = mock(DelegateService.class);
-    on(service).set("delegateService", mockDelegateService);
+    DelegateService mockDelegateService = getDelegateServiceMock(service);
 
     doReturn(AzureVMSSTaskExecutionResponse.builder()
                  .azureVMSSTaskResponse(AzureVMSSListVirtualMachineScaleSetsResponse.builder()
@@ -125,10 +116,7 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetVirtualMachineScaleSet() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
-    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
-    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
-    DelegateService mockDelegateService = mock(DelegateService.class);
-    on(service).set("delegateService", mockDelegateService);
+    DelegateService mockDelegateService = getDelegateServiceMock(service);
 
     doReturn(AzureVMSSTaskExecutionResponse.builder()
                  .azureVMSSTaskResponse(
@@ -152,5 +140,13 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
     assertThat(vmssData.getName()).isEqualTo("name");
     assertThat(vmssData.getId()).isEqualTo("id");
     assertThat(vmssData.getVirtualMachineAdministratorUsername()).isEqualTo("administratorName");
+  }
+
+  private DelegateService getDelegateServiceMock(AzureVMSSHelperServiceManagerImpl service) {
+    DelegateService mockDelegateService = mock(DelegateService.class);
+    AzureStateHelper azureStateHelper = mock(AzureStateHelper.class);
+    on(service).set("delegateService", mockDelegateService);
+    on(service).set("azureStateHelper", azureStateHelper);
+    return mockDelegateService;
   }
 }

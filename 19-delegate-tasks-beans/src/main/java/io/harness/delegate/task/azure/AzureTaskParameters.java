@@ -2,6 +2,7 @@ package io.harness.delegate.task.azure;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AzureTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
+public class AzureTaskParameters implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess {
   private String appId;
   private String accountId;
   private String activityId;

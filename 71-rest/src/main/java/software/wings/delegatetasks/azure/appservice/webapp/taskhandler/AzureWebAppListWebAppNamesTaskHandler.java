@@ -5,7 +5,9 @@ import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.appservice.WebApp;
 import io.harness.azure.client.AzureWebClient;
+import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
@@ -25,14 +27,15 @@ public class AzureWebAppListWebAppNamesTaskHandler extends AbstractAzureWebAppTa
   @Inject private AzureWebClient azureWebClient;
 
   @Override
-  protected AzureAppServiceTaskResponse executeTaskInternal(
-      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig) {
+  protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     String subscriptionId = azureAppServiceTaskParameters.getSubscriptionId();
     String resourceGroupName =
         ((AzureWebAppListWebAppNamesParameters) azureAppServiceTaskParameters).getResourceGroupName();
 
-    List<WebApp> webApps =
-        azureWebClient.listWebAppsByResourceGroupName(azureConfig, subscriptionId, resourceGroupName);
+    AzureClientContext azureClientContext = new AzureClientContext(azureConfig, subscriptionId, resourceGroupName);
+
+    List<WebApp> webApps = azureWebClient.listWebAppsByResourceGroupName(azureClientContext);
 
     return AzureWebAppListWebAppNamesResponse.builder().webAppNames(toWebAppNames(webApps)).build();
   }

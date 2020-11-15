@@ -13,12 +13,12 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.azure.AzureTaskExecutionRequest;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.delegatetasks.azure.AzureSecretHelper;
+import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -49,6 +49,7 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AzureTaskExecutionRequest azureTaskExecutionRequest = (AzureTaskExecutionRequest) parameters;
     AzureConfig azureConfig = azureSecretHelper.decryptAndGetAzureConfig(
         azureTaskExecutionRequest.getAzureConfigDTO(), azureTaskExecutionRequest.getAzureConfigEncryptionDetails());
+    ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient();
 
     AzureAppServiceTaskParameters azureAppServiceTaskParameters =
         (AzureAppServiceTaskParameters) azureTaskExecutionRequest.getAzureTaskParameters();
@@ -56,6 +57,6 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AbstractAzureAppServiceTaskHandler azureAppServiceTask =
         azureAppServiceTaskFactory.getAzureAppServiceTask(azureAppServiceTaskParameters.getCommandType().name());
 
-    return azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig);
+    return azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
   }
 }

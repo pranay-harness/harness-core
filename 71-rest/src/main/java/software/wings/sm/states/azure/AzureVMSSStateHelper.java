@@ -2,7 +2,6 @@ package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
 import static io.harness.exception.WingsException.USER;
@@ -22,7 +21,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
@@ -45,7 +43,6 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -73,7 +70,6 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
@@ -91,10 +87,9 @@ public class AzureVMSSStateHelper {
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s";
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
-  @Inject private AzureStateHelper azureStateHelper;
+  @Inject private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private SettingsService settingsService;
-  @Inject private SweepingOutputService sweepingOutputService;
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
@@ -311,21 +306,16 @@ public class AzureVMSSStateHelper {
 
   public List<InstanceElement> generateInstanceElements(ExecutionContext context,
       AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping, List<AzureVMInstanceData> vmInstances) {
-    return azureStateHelper.generateInstanceElements(context, azureVMSSInfrastructureMapping, vmInstances);
+    return azureSweepingOutputServiceHelper.generateInstanceElements(
+        context, azureVMSSInfrastructureMapping, vmInstances);
   }
 
   public void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
     if (isNotEmpty(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
-      List<InstanceDetails> instanceDetails = azureStateHelper.generateAzureVMSSInstanceDetails(instanceElements);
-      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                                     .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-                                     .value(InstanceInfoVariables.builder()
-                                                .instanceElements(instanceElements)
-                                                .instanceDetails(instanceDetails)
-                                                .skipVerification(isEmpty(instanceDetails))
-                                                .build())
-                                     .build());
+      List<InstanceDetails> instanceDetails =
+          azureSweepingOutputServiceHelper.generateAzureVMSSInstanceDetails(instanceElements);
+      azureSweepingOutputServiceHelper.saveInstanceDetails(context, instanceElements, instanceDetails);
     }
   }
 

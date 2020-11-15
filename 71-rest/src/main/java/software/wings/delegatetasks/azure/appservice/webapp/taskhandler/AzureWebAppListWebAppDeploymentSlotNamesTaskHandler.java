@@ -5,7 +5,9 @@ import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import io.harness.azure.client.AzureWebClient;
+import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
@@ -25,17 +27,22 @@ public class AzureWebAppListWebAppDeploymentSlotNamesTaskHandler extends Abstrac
   @Inject private AzureWebClient azureWebClient;
 
   @Override
-  protected AzureAppServiceTaskResponse executeTaskInternal(
-      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig) {
+  protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     String subscriptionId = azureAppServiceTaskParameters.getSubscriptionId();
-
     String resourceGroupName =
         ((AzureWebAppListWebAppDeploymentSlotNamesParameters) azureAppServiceTaskParameters).getResourceGroupName();
     String webAppName =
         ((AzureWebAppListWebAppDeploymentSlotNamesParameters) azureAppServiceTaskParameters).getAppName();
 
-    List<DeploymentSlot> deploymentSlots =
-        azureWebClient.listDeploymentSlotsByWebAppName(azureConfig, subscriptionId, resourceGroupName, webAppName);
+    AzureWebClientContext azureWebClientContext = AzureWebClientContext.builder()
+                                                      .azureConfig(azureConfig)
+                                                      .subscriptionId(subscriptionId)
+                                                      .resourceGroupName(resourceGroupName)
+                                                      .appName(webAppName)
+                                                      .build();
+
+    List<DeploymentSlot> deploymentSlots = azureWebClient.listDeploymentSlotsByWebAppName(azureWebClientContext);
 
     return AzureWebAppListWebAppDeploymentSlotNamesResponse.builder()
         .deploymentSlotNames(toDeploymentSlotNames(deploymentSlots))

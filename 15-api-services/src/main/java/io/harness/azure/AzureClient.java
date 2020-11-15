@@ -11,6 +11,7 @@ import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.rest.LogLevel;
+import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidCredentialsException;
@@ -20,6 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class AzureClient {
+  protected Azure getAzureClientByContext(AzureClientContext context) {
+    AzureConfig azureConfig = context.getAzureConfig();
+    String subscriptionId = context.getSubscriptionId();
+    return getAzureClient(azureConfig, subscriptionId);
+  }
+
   protected Azure getAzureClientWithDefaultSubscription(AzureConfig azureConfig) {
     try {
       ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),

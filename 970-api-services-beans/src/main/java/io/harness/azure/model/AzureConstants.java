@@ -121,6 +121,27 @@ public interface AzureConstants {
   String VM_POWER_STATE_PREFIX = "PowerState/";
 
   // Azure App Service
-  String COMMAND_TYPE_NULL_VALIDATION_MSG = "Parameter commandType is required and cannot be null";
-  String WEB_APP_NAME_NULL_VALIDATION_MSG = "Parameter webAppName is required and cannot be null";
+  String COMMAND_TYPE_BLANK_VALIDATION_MSG = "Parameter commandType is required and cannot be empty or null";
+  String WEB_APP_NAME_BLANK_VALIDATION_MSG = "Parameter webAppName is required and cannot be empty or null";
+  String SLOT_NAME_BLANK_VALIDATION_MSG = "Parameter slotName is required and cannot be empty or null";
+
+  // Azure App Service Deployment Slots
+  String DEPLOYMENT_SLOT_PRODUCTION_NAME = "production";
+  String DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_URL";
+  String DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_USERNAME";
+  String DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_PASSWORD";
+  String DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME = "DOCKER_CUSTOM_IMAGE_NAME";
+  String DOCKER_IMAGE_FULL_PATH_PATTERN = "DOCKER|%s";
+  String DOCKER_IMAGE_AND_TAG_PATH_PATTERN = "%s:%s";
+  String WEB_APP_NAME_BLANK_ERROR_MSG = "Parameter webAppName cannot be null or empty";
+  String SLOT_NAME_BLANK_ERROR_MSG = "Parameter slotName cannot be null or empty";
+  String IMAGE_AND_TAG_BLANK_ERROR_MSG = "Parameter imageAndTag cannot be null or empty";
+
+  // Azure App Service Command Units
+  String STOP_DEPLOYMENT_SLOT = "Stop Slot";
+  String UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS = "Update Slot Configuration Settings";
+  String UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS = "Update Slot Container Settings";
+  String START_DEPLOYMENT_SLOT = "Start Slot";
+  long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
+  long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 }

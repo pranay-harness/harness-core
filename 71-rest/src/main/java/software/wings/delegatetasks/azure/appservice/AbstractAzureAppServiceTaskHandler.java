@@ -9,32 +9,32 @@ import com.google.inject.Inject;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.utility.AzureResourceUtility;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
 @Slf4j
 public abstract class AbstractAzureAppServiceTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
 
-  AzureTaskExecutionResponse executeTask(
-      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig) {
+  AzureTaskExecutionResponse executeTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     try {
       AzureAppServiceTaskResponse azureAppServiceTaskResponse =
-          executeTaskInternal(azureAppServiceTaskParameters, azureConfig);
+          executeTaskInternal(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
       return successAppServiceTaskResponse(azureAppServiceTaskResponse);
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       if (azureAppServiceTaskParameters.isSyncTask()) {
         throw new InvalidRequestException(message, ex);
       }
-
-      ExecutionLogCallback logCallback = getLogCallBack(azureAppServiceTaskParameters, DEPLOYMENT_ERROR);
+      LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(DEPLOYMENT_ERROR);
       logCallback.saveExecutionLog(message, ERROR, FAILURE);
       log.error(format("Exception: [%s] while processing azure app service task: [%s].", message,
                     azureAppServiceTaskParameters.getCommandType().name()),
@@ -51,12 +51,6 @@ public abstract class AbstractAzureAppServiceTaskHandler {
         .build();
   }
 
-  protected ExecutionLogCallback getLogCallBack(
-      AzureAppServiceTaskParameters azureAppServiceTaskParameters, String commandUnit) {
-    return new ExecutionLogCallback(delegateLogService, azureAppServiceTaskParameters.getAccountId(),
-        azureAppServiceTaskParameters.getAppId(), azureAppServiceTaskParameters.getActivityId(), commandUnit);
-  }
-
   private AzureTaskExecutionResponse failureAppServiceTaskResponse(String message) {
     return AzureTaskExecutionResponse.builder()
         .errorMessage(message)
@@ -65,5 +59,6 @@ public abstract class AbstractAzureAppServiceTaskHandler {
   }
 
   protected abstract AzureAppServiceTaskResponse executeTaskInternal(
-      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig);
+      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient);
 }
