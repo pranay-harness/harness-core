@@ -29,7 +29,7 @@ public class AzureAppServiceTaskParameters extends AzureTaskParameters {
     this.appServiceType = appServiceType;
   }
 
-  public enum AzureAppServiceTaskType { LIST_WEB_APP_NAMES, LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES }
+  public enum AzureAppServiceTaskType { LIST_WEB_APP_NAMES, LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES, SLOT_SETUP }
 
   public enum AzureAppServiceType { WEB_APP, FUNCTION_APP, API_APP }
 

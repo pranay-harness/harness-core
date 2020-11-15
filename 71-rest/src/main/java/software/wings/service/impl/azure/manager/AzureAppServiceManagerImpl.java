@@ -15,7 +15,6 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.azure.AzureTaskExecutionRequest;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
@@ -30,14 +29,14 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
-import software.wings.sm.states.azure.AzureVMSSStateHelper;
+import software.wings.sm.states.azure.AzureStateHelper;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class AzureAppServiceManagerImpl implements AzureAppServiceManager {
   @Inject private DelegateService delegateService;
-  @Inject private transient AzureVMSSStateHelper azureVMSSStateHelper;
+  @Inject private transient AzureStateHelper azureStateHelper;
 
   @Override
   public List<String> getAppServiceNamesByResourceGroup(AzureConfig azureConfig,
@@ -70,7 +69,7 @@ public class AzureAppServiceManagerImpl implements AzureAppServiceManager {
   private AzureTaskResponse executeTask(AzureAppServiceTaskParameters parameters, AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String appId) {
     AzureTaskExecutionRequest request = AzureTaskExecutionRequest.builder()
-                                            .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureConfig))
+                                            .azureConfigDTO(azureStateHelper.createAzureConfigDTO(azureConfig))
                                             .azureConfigEncryptionDetails(encryptionDetails)
                                             .azureTaskParameters(parameters)
                                             .build();

@@ -5,8 +5,8 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.delegate.task.azure.AzureAppServiceApplicationSettings;
-import io.harness.delegate.task.azure.AzureAppServiceConnectionStrings;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.ResponseData;
@@ -26,8 +26,8 @@ import java.util.Map;
 public class AzureWebAppSlotSetup extends State {
   @Getter @Setter private String newSlotName;
   @Getter @Setter private String slotSteadyStateTimeout;
-  @Getter @Setter private List<AzureAppServiceApplicationSettings> applicationSettings;
-  @Getter @Setter private List<AzureAppServiceConnectionStrings> appServiceConnectionStrings;
+  @Getter @Setter private List<AzureAppServiceApplicationSetting> applicationSettings;
+  @Getter @Setter private List<AzureAppServiceConnectionString> appServiceConnectionStrings;
 
   public AzureWebAppSlotSetup(String name) {
     super(name, AZURE_WEBAPP_SLOT_SETUP.name());

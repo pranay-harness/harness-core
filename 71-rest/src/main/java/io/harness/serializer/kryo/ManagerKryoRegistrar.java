@@ -691,6 +691,7 @@ import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataRes
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
+import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.service.impl.azure.manager.AzureVMSSAllPhaseRollbackData;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
@@ -1710,8 +1711,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
     kryo.register(AzureVMSSAllPhaseRollbackData.class, 8092);
-
     kryo.register(TrialSignupOptions.class, 8093);
     kryo.register(TrialSignupOptions.Products.class, 8094);
+    kryo.register(AzureTaskExecutionRequest.class, 8095);
   }
 }

@@ -205,6 +205,7 @@ import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTask
 import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -853,6 +854,8 @@ public class DelegateModule extends AbstractModule {
     azureAppServiceTaskTypeToTaskHandlerMap
         .addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES.name())
         .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SETUP.name())
+        .to(AzureWebAppSlotSetupTaskHandler.class);
 
     registerSecretManagementBindings();
   }
