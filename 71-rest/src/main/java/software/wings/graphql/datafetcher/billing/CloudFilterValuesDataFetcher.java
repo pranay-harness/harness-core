@@ -13,6 +13,7 @@ import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregatio
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,12 +26,14 @@ public class CloudFilterValuesDataFetcher
         CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
     boolean isAWSCloudProvider = false;
     SqlObject leftJoin = null;

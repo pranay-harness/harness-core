@@ -61,7 +61,7 @@ public class BudgetResourceTest extends CategoryTest {
         .target(format("/budgets/%s/?accountId=%s&cloneName=%s", budgetId, accountId, cloneBudgetName))
         .request()
         .post(entity(budget, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
-    verify(budgetService).clone(eq(budgetId), eq(cloneBudgetName));
+    verify(budgetService).clone(eq(budgetId), eq(cloneBudgetName), eq(accountId));
   }
 
   @Test
@@ -72,7 +72,7 @@ public class BudgetResourceTest extends CategoryTest {
         .target(format("/budgets/%s/?accountId=%s", budgetId, accountId))
         .request()
         .get(new GenericType<RestResponse<Budget>>() {});
-    verify(budgetService).get(eq(budgetId));
+    verify(budgetService).get(eq(budgetId), eq(accountId));
   }
 
   @Test
@@ -102,6 +102,6 @@ public class BudgetResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDelete() {
     RESOURCES.client().target(format("/budgets/%s/?accountId=%s", budgetId, accountId)).request().delete();
-    verify(budgetService).delete(eq(budgetId));
+    verify(budgetService).delete(eq(budgetId), eq(accountId));
   }
 }

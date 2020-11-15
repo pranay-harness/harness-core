@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,6 +38,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstChartData;
 import software.wings.graphql.schema.type.aggregation.billing.QLSunburstGridDataPoint;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -55,6 +57,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTestBa
   @Mock BillingDataHelper billingDataHelper;
   @Mock Statement statement;
   @Mock ResultSet resultSet;
+  @Mock CeAccountExpirationChecker accountChecker;
 
   private final Double TOTAL_COST = 100.0;
   private final Double IDLE_COST = 30.0;
@@ -93,6 +96,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTestBa
         Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeUnallocatedCostAggregation());
     filters = Arrays.asList(makeStartTimeFilter(START_TIME), makeEndTimeFilter(END_TIME));
     sort = Arrays.asList(makeDescTotalCostSort());
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

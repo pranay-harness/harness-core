@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +22,12 @@ import java.util.stream.Collectors;
 public class GcpBillingAccountDataFetcher
     extends AbstractArrayDataFetcher<GcpBillingAccountDTO, GcpBillingAccountQueryArguments> {
   @Inject GcpBillingAccountService gcpBillingAccountService;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected List<GcpBillingAccountDTO> fetch(GcpBillingAccountQueryArguments arguments, String accountId) {
+    accountChecker.checkIsCeEnabled(accountId);
     String uuid = arguments.getUuid();
     String organizationSettingId = arguments.getOrganizationSettingId();
 

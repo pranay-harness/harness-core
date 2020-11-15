@@ -19,6 +19,7 @@ import software.wings.graphql.schema.type.aggregation.budget.QLBudgetNotificatio
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetNotificationsData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,11 +33,13 @@ public class BudgetNotificationsDataFetcher extends AbstractStatsDataFetcher<QLC
   @Inject BudgetService budgetService;
   @Inject BudgetTimescaleQueryHelper queryHelper;
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, QLCCMAggregationFunction aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return QLBudgetNotificationsData.builder()

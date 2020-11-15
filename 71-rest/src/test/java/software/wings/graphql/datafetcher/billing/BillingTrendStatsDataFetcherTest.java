@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -49,6 +51,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
   @Mock private DataFetcherUtils utils;
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock BillingDataHelper billingDataHelper;
+  @Mock CeAccountExpirationChecker accountChecker;
   @Inject @InjectMocks BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
 
   @Mock ResultSet resultSet;
@@ -91,6 +94,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBas
     when(billingDataHelper.getStartInstantForForecastCost()).thenReturn(START_TIME);
     when(billingDataHelper.getEndInstantForForecastCost(filters)).thenReturn(END_TIME);
     when(billingDataHelper.formatNumber(anyDouble())).then(i -> String.valueOf(i.getArgumentAt(0, Double.class)));
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
     mockResultSet();
   }
 

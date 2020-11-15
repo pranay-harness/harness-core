@@ -33,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -57,6 +58,7 @@ public class BillingStatsTimeSeriesDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final long ONE_HOUR_SEC = 3600;
@@ -69,6 +71,7 @@ public class BillingStatsTimeSeriesDataFetcher
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
       Integer limit, Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     boolean timeScaleDBServiceValid = timeScaleDBService.isValid();
     log.info("Timescale db service status {}", timeScaleDBServiceValid);
     if (!timeScaleDBServiceValid) {

@@ -12,6 +12,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCrite
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,6 +27,7 @@ public class BillingForecastCostDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final String EMPTY_VALUE = "-";
   private static final String FORECAST_COST_LABEL = "Forecasted total cost";
@@ -35,6 +37,7 @@ public class BillingForecastCostDataFetcher
   @Override
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters);

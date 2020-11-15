@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
@@ -53,6 +54,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListD
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -75,6 +77,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TagHelper tagHelper;
   @Mock BillingDataHelper billingDataHelper;
   @Mock FeatureFlagService featureFlagService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
@@ -150,6 +153,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
     when(featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, ACCOUNT1_ID)).thenReturn(false);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

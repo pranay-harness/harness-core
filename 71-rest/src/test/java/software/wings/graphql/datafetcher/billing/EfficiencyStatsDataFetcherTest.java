@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLEfficiencyStatsData;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -51,6 +53,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTestBase 
   @Mock BillingDataHelper billingDataHelper;
   @Mock Statement statement;
   @Mock ResultSet resultSet;
+  @Mock CeAccountExpirationChecker accountChecker;
 
   final int[] count = {0};
 
@@ -104,6 +107,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTestBase 
     doCallRealMethod().when(billingDataHelper).calculateEfficiencyScore(anyObject());
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

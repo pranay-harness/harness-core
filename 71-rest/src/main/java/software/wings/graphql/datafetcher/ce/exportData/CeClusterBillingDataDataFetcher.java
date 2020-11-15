@@ -37,6 +37,7 @@ import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETimeAggregation;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -58,6 +59,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject CEExportDataQueryBuilder queryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
   @Inject K8sWorkloadDao dao;
+  @Inject CeAccountExpirationChecker accountChecker;
   private static final int LIMIT_THRESHOLD = 100;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
@@ -73,6 +75,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   protected QLData fetchSelectedFields(String accountId, List<QLCEAggregation> aggregateFunction,
       List<QLCEFilter> filters, List<QLCEGroupBy> groupBy, List<QLCESort> sort, Integer limit, Integer offset,
       DataFetchingEnvironment dataFetchingEnvironment) {
+    accountChecker.checkIsCeEnabled(accountId);
     if (limit > LIMIT_THRESHOLD) {
       limit = LIMIT_THRESHOLD;
     }

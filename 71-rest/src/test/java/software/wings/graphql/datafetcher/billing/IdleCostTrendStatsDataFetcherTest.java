@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +32,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLIdleCostTrendStats;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -47,6 +49,7 @@ import java.util.List;
 public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private DataFetcherUtils utils;
   @Mock TimeScaleDBService timeScaleDBService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @Inject @InjectMocks IdleCostTrendStatsDataFetcher idleCostTrendStatsDataFetcher;
 
   @Mock Statement statement;
@@ -81,6 +84,7 @@ public class IdleCostTrendStatsDataFetcherTest extends AbstractDataFetcherTestBa
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
     mockResultSet();
   }
 

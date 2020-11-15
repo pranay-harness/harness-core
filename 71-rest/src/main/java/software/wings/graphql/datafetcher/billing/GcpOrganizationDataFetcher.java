@@ -11,6 +11,7 @@ import io.harness.ccm.config.GcpOrganizationService;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,10 +20,12 @@ import java.util.stream.Collectors;
 public class GcpOrganizationDataFetcher
     extends AbstractArrayDataFetcher<GcpOrganizationDTO, GcpOrganizationQueryArguments> {
   @Inject GcpOrganizationService gcpOrganizationService;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected List<GcpOrganizationDTO> fetch(GcpOrganizationQueryArguments arguments, String accountId) {
+    accountChecker.checkIsCeEnabled(accountId);
     String uuid = arguments.getUuid();
     List<GcpOrganization> gcpOrganizations;
     if (isNotEmpty(uuid)) {

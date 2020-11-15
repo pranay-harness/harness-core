@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetNotificationsData;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -46,6 +48,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks BudgetTimescaleQueryHelper queryHelper;
   @Inject @InjectMocks BudgetNotificationsDataFetcher budgetNotificationsDataFetcher;
 
@@ -83,6 +86,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
                  .build();
     when(budgetService.list(accountId)).thenReturn(Arrays.asList(budget));
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
     mockResultSet();
   }
 

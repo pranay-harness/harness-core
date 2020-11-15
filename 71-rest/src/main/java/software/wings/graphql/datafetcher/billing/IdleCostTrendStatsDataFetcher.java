@@ -18,6 +18,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLIdleCostTrendStats;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -34,6 +35,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final String TOTAL_IDLE_COST_DESCRIPTION = "%s of total cost $%s";
   private static final String TOTAL_IDLE_COST_LABEL = "Total Idle Cost of %s - %s";
@@ -54,6 +56,7 @@ public class IdleCostTrendStatsDataFetcher extends AbstractStatsDataFetcherWithA
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters);

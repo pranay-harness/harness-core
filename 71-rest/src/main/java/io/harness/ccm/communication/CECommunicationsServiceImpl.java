@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 public class CECommunicationsServiceImpl implements CECommunicationsService {
   @Inject CECommunicationsDao ceCommunicationsDao;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   public CECommunications get(String accountId, String email, CommunicationType type) {
@@ -24,6 +26,7 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
 
   @Override
   public void update(String accountId, String email, CommunicationType type, boolean enable, boolean selfEnabled) {
+    accountChecker.checkIsCeEnabled(accountId);
     CECommunications entry = get(accountId, email, type);
     if (entry == null) {
       entry = CECommunications.builder()
@@ -41,6 +44,7 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
 
   @Override
   public void delete(String accountId, String email, CommunicationType type) {
+    accountChecker.checkIsCeEnabled(accountId);
     CECommunications entry = get(accountId, email, type);
     if (entry != null) {
       ceCommunicationsDao.delete(entry.getUuid());

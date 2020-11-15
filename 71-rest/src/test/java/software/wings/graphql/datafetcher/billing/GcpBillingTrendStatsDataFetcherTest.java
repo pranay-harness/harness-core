@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpBillingService;
@@ -19,6 +21,7 @@ import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,6 +31,7 @@ import java.util.List;
 
 public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private GcpBillingService gcpBillingService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks private GcpBillingTrendStatsDataFetcher trendStatsDataFetcher;
 
   private String accountId = "ACCOUNT_ID";
@@ -52,6 +56,7 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
     endTimeFilter.setEndTime(
         CloudBillingTimeFilter.builder().value(calendar2.getTime().getTime()).operator(QLTimeOperator.BEFORE).build());
     filters.add(endTimeFilter);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

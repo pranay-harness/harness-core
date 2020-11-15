@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -29,6 +30,7 @@ import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.Set;
 public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks CloudFilterValuesDataFetcher cloudFilterValuesDataFetcher;
 
   private List<CloudBillingFilter> filters = new ArrayList<>();
@@ -77,6 +80,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTestBas
                                                 .build()))
                         .build());
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

@@ -17,6 +17,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,6 +34,7 @@ public class CloudTimeSeriesStatsDataFetcher
   @Inject PreAggregateBillingService preAggregateBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   public static final String OTHERS = "Others";
 
@@ -41,6 +43,7 @@ public class CloudTimeSeriesStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
     boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
     boolean isAWSCloudProvider = false;

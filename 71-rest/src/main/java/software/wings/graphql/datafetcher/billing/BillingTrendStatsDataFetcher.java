@@ -15,6 +15,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,16 +31,14 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
   @Inject private IdleCostTrendStatsDataFetcher idleCostTrendStatsDataFetcher;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final String TOTAL_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String TREND_COST_LABEL = "Cost Trend";
-  private static final String FORECAST_COST_LABEL = "Forecasted total cost";
   private static final String TREND_COST_DESCRIPTION = "$%s over %s - %s";
-  private static final String FORECAST_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_VALUE = "$%s";
   private static final String TREND_COST_VALUE = "%s";
-  private static final String FORECAST_COST_VALUE = "$%s";
   private static final String IDLE_COST_DESCRIPTION = "%s of total";
   private static final String IDLE_COST_LABEL = "Idle Cost";
   private static final String UNALLOCATED_COST_DESCRIPTION = "%s of total";
@@ -57,6 +56,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters);

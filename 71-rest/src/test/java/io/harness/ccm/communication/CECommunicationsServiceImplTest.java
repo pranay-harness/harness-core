@@ -2,7 +2,9 @@ package io.harness.ccm.communication;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,11 +20,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.List;
 
 public class CECommunicationsServiceImplTest extends WingsBaseTest {
   @Mock private CECommunicationsDao communicationsDao;
+  @Mock CeAccountExpirationChecker accountChecker;
   @Inject @InjectMocks private CECommunicationsServiceImpl communicationsService;
 
   private String accountId = "ACCOUNT_ID";
@@ -48,6 +52,7 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
                             .build();
     when(communicationsDao.get(accountId, email, type)).thenReturn(communications);
     when(communicationsDao.get(accountId2, defaultEmail, type)).thenReturn(null);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

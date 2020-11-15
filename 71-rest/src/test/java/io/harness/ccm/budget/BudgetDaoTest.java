@@ -95,7 +95,7 @@ public class BudgetDaoTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDelete() {
     String budgetId = budgetDao.save(budget1);
-    boolean result = budgetDao.delete(budgetId);
+    boolean result = budgetDao.delete(budgetId, accountId);
     assertThat(result).isTrue();
   }
 }

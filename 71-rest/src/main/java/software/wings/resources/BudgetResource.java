@@ -49,7 +49,7 @@ public class BudgetResource {
   @ExceptionMetered
   public RestResponse<String> clone(@QueryParam("accountId") String accountId, @PathParam("id") String budgetId,
       @QueryParam("cloneName") String budgetName) {
-    return new RestResponse<>(budgetService.clone(budgetId, budgetName));
+    return new RestResponse<>(budgetService.clone(budgetId, budgetName, accountId));
   }
 
   @GET
@@ -57,7 +57,7 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Budget> get(@QueryParam("accountId") String accountId, @PathParam("id") String budgetId) {
-    return new RestResponse<>(budgetService.get(budgetId));
+    return new RestResponse<>(budgetService.get(budgetId, accountId));
   }
 
   @GET
@@ -82,7 +82,7 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@NotEmpty @QueryParam("accountId") String accountId, @PathParam("id") String budgetId) {
-    budgetService.delete(budgetId);
+    budgetService.delete(budgetId, accountId);
     return new RestResponse();
   }
 }

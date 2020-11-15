@@ -20,6 +20,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownIn
 import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownInfo.QLStatsBreakdownInfoBuilder;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -39,6 +40,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   private static final String TOTAL_COST_DESCRIPTION = "Total Cost between %s - %s";
 
@@ -46,6 +48,7 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters, groupBy, sort);

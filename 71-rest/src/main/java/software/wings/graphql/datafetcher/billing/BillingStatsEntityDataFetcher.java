@@ -29,6 +29,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLStatsBreakdownIn
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -49,6 +50,7 @@ public class BillingStatsEntityDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
+  @Inject CeAccountExpirationChecker accountChecker;
   private static String OFFSET_AND_LIMIT_QUERY = " OFFSET %s LIMIT %s";
   private static final String EMPTY = "";
 
@@ -57,6 +59,7 @@ public class BillingStatsEntityDataFetcher
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
       Integer limit, Integer offset) {
+    accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {
         return getEntityData(accountId, filters, aggregateFunction, groupBy, sortCriteria, limit, offset);

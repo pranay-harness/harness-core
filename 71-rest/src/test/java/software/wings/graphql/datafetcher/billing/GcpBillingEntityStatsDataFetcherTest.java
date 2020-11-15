@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -26,6 +28,7 @@ import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +37,7 @@ import java.util.List;
 
 public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock GcpBillingServiceImpl gcpBillingServiceImpl;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks @Inject GcpBillingEntityStatsDataFetcher entityStatsDataFetcher;
 
   private static final String COST = "cost";
@@ -60,6 +64,7 @@ public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTes
 
     when(gcpBillingServiceImpl.getGcpBillingEntityStats(anyList(), anyList(), anyList()))
         .thenReturn(GcpBillingEntityStatsDTO.builder().build());
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

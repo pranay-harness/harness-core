@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,6 +52,7 @@ import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -69,6 +71,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Mock private QLBillingStatsHelper statsHelper;
   @Mock private BillingDataHelper billingDataHelper;
   @Mock private BudgetUtils budgetUtils;
+  @Mock CeAccountExpirationChecker accountChecker;
   @Mock @Named(CeBudgetFeature.FEATURE_NAME) private UsageLimitedFeature ceBudgetFeature;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -143,6 +146,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(budgetDao.list(accountId, budget2.getName())).thenReturn(Collections.singletonList(budget2));
     when(budgetDao.get(budget1.getUuid())).thenReturn(budget1);
     when(budgetDao.get(budget2.getUuid())).thenReturn(budget1);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
     resetValues();
     mockResultSet();
   }
@@ -358,9 +362,9 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldCloneBudget() {
-    when(budgetDao.get(budgetId1)).thenReturn(budget1);
-    when(budgetDao.save(any())).thenReturn(anyString());
-    String cloneBudgetId = budgetService.clone(budgetId1, "CLONE");
+    when(budgetDao.get(budgetId1, accountId)).thenReturn(budget1);
+    when(budgetDao.save(any())).thenReturn(budgetId1);
+    String cloneBudgetId = budgetService.clone(budgetId1, "CLONE", accountId);
     assertThat(cloneBudgetId).isNotNull();
   }
 
@@ -368,8 +372,9 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldNotCloneBudget() {
-    when(budgetDao.get(budgetId1)).thenReturn(budget1);
-    when(budgetDao.save(any())).thenReturn(anyString());
-    assertThatThrownBy(() -> budgetService.clone(budgetId1, "undefined")).isInstanceOf(InvalidRequestException.class);
+    when(budgetDao.get(budgetId1, accountId)).thenReturn(budget1);
+    when(budgetDao.save(any())).thenReturn(budgetId1);
+    assertThatThrownBy(() -> budgetService.clone(budgetId1, "undefined", accountId))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

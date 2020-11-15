@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import graphql.GraphQLContext;
@@ -21,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +38,7 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   private List<GcpBillingAccountDTO> gcpBillingAccountDTOs;
 
   @Mock private GraphQLContext graphQLContext;
+  @Mock CeAccountExpirationChecker accountChecker;
 
   @Mock GcpBillingAccountService gcpBillingAccountService;
   @InjectMocks GcpBillingAccountDataFetcher gcpBillingAccountDataFetcher;
@@ -47,6 +51,7 @@ public class GcpBillingAccountDataFetcherTest extends CategoryTest {
     gcpBillingAccounts = Arrays.asList(gcpBillingAccount);
     gcpBillingAccountDTOs = Arrays.asList(gcpBillingAccountDTO);
     when(graphQLContext.get(eq("accountId"))).thenReturn(accountId);
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test

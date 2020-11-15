@@ -90,6 +90,7 @@ public class CECommunicationsResource {
   @Path("{accountId}/addEmails")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = CE_ADMIN)
   public RestResponse addMultipleEmail(
       @PathParam("accountId") String accountId, @QueryParam("type") CommunicationType type, List<String> emails) {
     emails.forEach(email -> communicationsService.update(accountId, email, type, true, false));

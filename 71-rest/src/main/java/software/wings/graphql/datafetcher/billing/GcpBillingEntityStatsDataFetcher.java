@@ -12,6 +12,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,11 +24,13 @@ import java.util.stream.Stream;
 public class GcpBillingEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
+  @Inject CeAccountExpirationChecker accountChecker;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+    accountChecker.checkIsCeEnabled(accountId);
     return gcpBillingService.getGcpBillingEntityStats(Optional.ofNullable(aggregateFunction)
                                                           .map(Collection::stream)
                                                           .orElseGet(Stream::empty)

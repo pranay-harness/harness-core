@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -25,6 +26,7 @@ import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import java.util.List;
 public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
+  @Mock CeAccountExpirationChecker accountChecker;
   @InjectMocks CloudOverviewDataFetcher cloudOverviewDataFetcher;
 
   private static final String COST = "cost";
@@ -64,6 +67,7 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTestBase {
              anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(QLData);
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
   @Test
