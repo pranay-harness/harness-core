@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.resource;
+package io.harness.ng.ngtriggers.resource;
 
 import com.google.inject.Inject;
 
@@ -6,7 +6,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
+import io.harness.ng.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -41,7 +41,7 @@ public class NGTriggerWebhookExecutionResource {
   @ApiOperation(value = "Execute target after parsing payload", nickname = "executeTriggerTarget")
   public ResponseDTO<Boolean> executeTriggerTarget(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload) {
-    return ResponseDTO.newResponse(
-        triggerWebhookExecutionHelper.parsePayloadAndExecute(accountIdentifier, eventPayload));
+    return null; // ResponseDTO.newResponse(
+                 // triggerWebhookExecutionHelper.handleTriggerWebhookEvent(accountIdentifier, eventPayload));
   }
 }

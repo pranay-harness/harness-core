@@ -3,6 +3,7 @@ package io.harness.ngtriggers.beans.entity;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
@@ -31,6 +32,9 @@ import javax.validation.constraints.Size;
           @Field(NGTriggerEntity.NGTriggerEntityKeys.targetIdentifier),
           @Field(NGTriggerEntity.NGTriggerEntityKeys.type), @Field(NGTriggerEntity.NGTriggerEntityKeys.identifier)
     })
+@CdIndex(name = "index_typeWebhook_repoUrl",
+    fields = { @Field(NGTriggerEntity.NGTriggerEntityKeys.type)
+               , @Field("metadata.webhook.repoURL") })
 @Entity(value = "triggersNG", noClassnameStored = true)
 @Document("triggersNG")
 @TypeAlias("triggersNG")

@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.service;
+package io.harness.ngtriggers.helpers;
 
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 import java.util.*;
 
 @UtilityClass
-public class WebhookConfigService {
+public class WebhookConfigHelper {
   public Map<WebhookSourceRepo, List<WebhookEvent>> getSourceRepoToEvent() {
     Map<WebhookSourceRepo, List<WebhookEvent>> map = new HashMap<>();
     map.put(WebhookSourceRepo.GITHUB, new ArrayList<>(WebhookEvent.githubEvents));

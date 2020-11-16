@@ -1,13 +1,18 @@
 package io.harness.ngtriggers.resource;
 
 import com.google.inject.Inject;
+import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
-import io.harness.ngtriggers.service.WebhookConfigService;
+import io.harness.ngtriggers.helpers.WebhookConfigHelper;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
+import io.harness.ngtriggers.service.NGTriggerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -18,11 +23,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Api("triggers")
-@Path("triggers/webhook")
+import static io.harness.utils.PageUtils.getNGPageResponse;
+
+@Api("webhook")
+@Path("webhook")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
@@ -33,11 +43,13 @@ import java.util.Map;
     })
 @Slf4j
 public class NGTriggerWebhookConfigResource {
+  private final NGTriggerService ngTriggerService;
+
   @GET
   @Path("/sourceRepos")
   @ApiOperation(value = "Get Source Repo types with Events", nickname = "getSourceRepoToEvent")
   public ResponseDTO<Map<WebhookSourceRepo, List<WebhookEvent>>> getSourceRepoToEvent() {
-    return ResponseDTO.newResponse(WebhookConfigService.getSourceRepoToEvent());
+    return ResponseDTO.newResponse(WebhookConfigHelper.getSourceRepoToEvent());
   }
 
   @GET
@@ -46,6 +58,22 @@ public class NGTriggerWebhookConfigResource {
   public ResponseDTO<List<WebhookAction>> getActionsList(
       @NotNull @QueryParam("sourceRepo") WebhookSourceRepo sourceRepo,
       @NotNull @QueryParam("event") WebhookEvent event) {
-    return ResponseDTO.newResponse(WebhookConfigService.getActionsList(sourceRepo, event));
+    return ResponseDTO.newResponse(WebhookConfigHelper.getActionsList(sourceRepo, event));
+  }
+
+  @POST
+  @Path("/trigger")
+  @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
+  public ResponseDTO<String> processWebhookEvent(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
+      @Context HttpHeaders httpHeaders) {
+    List<HeaderConfig> headerConfigs = new ArrayList<>();
+    httpHeaders.getRequestHeaders().forEach(
+        (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
+
+    TriggerWebhookEvent eventEntity =
+        NGTriggerElementMapper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, headerConfigs);
+    TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
+    return ResponseDTO.newResponse(newEvent.getUuid());
   }
 }

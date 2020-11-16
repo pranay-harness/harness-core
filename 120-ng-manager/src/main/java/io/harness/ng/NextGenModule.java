@@ -56,6 +56,8 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.ng.ngtriggers.intfc.TriggerWebhookService;
+import io.harness.ng.ngtriggers.service.TriggerWebhookServiceImpl;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
@@ -241,6 +243,7 @@ public class NextGenModule extends AbstractModule {
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
+    bind(TriggerWebhookService.class).to(TriggerWebhookServiceImpl.class);
   }
 
   @Provides

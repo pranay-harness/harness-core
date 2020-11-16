@@ -3,7 +3,7 @@ package io.harness.ngtriggers.repository.custom;
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
-import io.harness.ngtriggers.mapper.NGTriggerFilterHelper;
+import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class NGTriggerRepositoryCustomImpl implements NGTriggerRepositoryCustom 
   @Override
   public NGTriggerEntity update(Criteria criteria, NGTriggerEntity ngTriggerEntity) {
     Query query = new Query(criteria);
-    Update update = NGTriggerFilterHelper.getUpdateOperations(ngTriggerEntity);
+    Update update = TriggerFilterHelper.getUpdateOperations(ngTriggerEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
     return Failsafe.with(retryPolicy)
@@ -53,7 +53,7 @@ public class NGTriggerRepositoryCustomImpl implements NGTriggerRepositoryCustom 
   @Override
   public UpdateResult delete(Criteria criteria) {
     Query query = new Query(criteria);
-    Update updateOperationsForDelete = NGTriggerFilterHelper.getUpdateOperationsForDelete();
+    Update updateOperationsForDelete = TriggerFilterHelper.getUpdateOperationsForDelete();
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed deleting Trigger; attempt: {}", "[Failed]: Failed deleting Trigger; attempt: {}");
     return Failsafe.with(retryPolicy)
