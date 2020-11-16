@@ -17,6 +17,7 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+// import io.harness.ngtriggers.utils.TriggerUtils;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.*;
 import lombok.AccessLevel;
@@ -51,6 +52,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class NGPipelineResource {
   private final NGPipelineService ngPipelineService;
   private final RestQueryFilterParser restQueryFilterParser;
+  //  private final TriggerUtils triggerUtils;
 
   @GET
   @Path("/{pipelineIdentifier}")

@@ -8,7 +8,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.repository.spring.NGTriggerRepository;
+import io.harness.ngtriggers.repository.spring.NGTriggerWebhookEventQueueRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,7 @@ import java.util.Optional;
 @Slf4j
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
+  private final NGTriggerWebhookEventQueueRepository webhookEventQueueRepository;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -62,6 +66,12 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public Page<NGTriggerEntity> listWebhookTriggers(String accountIdentifier, String repoUrl, boolean isDeleted) {
+    return list(TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(accountIdentifier, repoUrl, "", false),
+        Pageable.unpaged());
+  }
+
+  @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version) {
     Criteria criteria = getTriggerEqualityCriteria(
@@ -71,6 +81,15 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       throw new InvalidRequestException(String.format("NGTrigger [%s] couldn't be deleted", identifier));
     }
     return true;
+  }
+
+  @Override
+  public TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord) {
+    try {
+      return webhookEventQueueRepository.save(webhookEventQueueRecord);
+    } catch (Exception e) {
+      throw new InvalidRequestException("Webhook event could not be received");
+    }
   }
 
   private Criteria getTriggerEqualityCriteria(NGTriggerEntity ngTriggerEntity, boolean deleted) {

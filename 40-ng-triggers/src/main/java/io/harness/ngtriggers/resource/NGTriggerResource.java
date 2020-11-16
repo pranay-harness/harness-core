@@ -13,7 +13,7 @@ import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
-import io.harness.ngtriggers.mapper.NGTriggerFilterHelper;
+import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.*;
@@ -128,11 +128,31 @@ public class NGTriggerResource {
       @NotNull @QueryParam("targetIdentifier") String targetIdentifier, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    Criteria criteria = NGTriggerFilterHelper.createCriteriaForGetList(
+    Criteria criteria = TriggerFilterHelper.createCriteriaForGetList(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, null, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
+    Page<NGTriggerResponseDTO> triggers =
+        ngTriggerService.list(criteria, pageRequest).map(NGTriggerElementMapper::toResponseDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(triggers));
+  }
+
+  @GET
+  @Path("/triggersList")
+  @ApiOperation(value = "Gets Triggers list for Repo URL", nickname = "getTriggerListForRepoURL")
+  public ResponseDTO<PageResponse<NGTriggerResponseDTO>> getListForRepoURL(
+      @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
+      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false);
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest =
+          PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntity.NGTriggerEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }

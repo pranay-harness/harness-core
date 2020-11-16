@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.service;
 
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -17,6 +18,10 @@ public interface NGTriggerService {
 
   Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable);
 
+  Page<NGTriggerEntity> listWebhookTriggers(String accountIdentifier, String repoUrl, boolean isDeleted);
+
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);
+
+  TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord);
 }

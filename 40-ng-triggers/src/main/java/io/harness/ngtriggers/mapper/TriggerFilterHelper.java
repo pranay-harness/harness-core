@@ -5,6 +5,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import lombok.NoArgsConstructor;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -12,8 +13,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import com.google.inject.Singleton;
+
 @UtilityClass
-public class NGTriggerFilterHelper {
+public class TriggerFilterHelper {
   public Criteria createCriteriaForGetList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String targetIdentifier, NGTriggerType type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
@@ -34,6 +37,28 @@ public class NGTriggerFilterHelper {
     if (type != null) {
       criteria.and(NGTriggerEntityKeys.type).is(type);
     }
+    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+      Criteria searchCriteria = new Criteria().orOperator(
+          where(NGTriggerEntityKeys.identifier)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(NGTriggerEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      criteria.andOperator(searchCriteria);
+    }
+    return criteria;
+  }
+
+  public Criteria createCriteriaForWebhookTriggerGetList(
+      String accountIdentifier, String repoURL, String searchTerm, boolean deleted) {
+    Criteria criteria = new Criteria();
+    if (isNotEmpty(accountIdentifier)) {
+      criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
+    }
+    if (isNotEmpty(repoURL)) {
+      criteria.and("metadata.webhook.repoURL").is(repoURL);
+    }
+    criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
+    criteria.and(NGTriggerEntityKeys.type).is(NGTriggerType.WEBHOOK);
+
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(NGTriggerEntityKeys.identifier)

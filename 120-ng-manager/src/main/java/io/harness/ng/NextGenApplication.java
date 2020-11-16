@@ -8,12 +8,15 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -26,6 +29,8 @@ import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
@@ -34,6 +39,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
+import io.harness.ng.ngtriggers.intfc.TriggerWebhookService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
@@ -56,11 +62,14 @@ import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
@@ -72,6 +81,9 @@ import javax.ws.rs.container.ResourceInfo;
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
+
+  private final MetricRegistry metricRegistry = new MetricRegistry();
+  private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -108,7 +120,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new NextGenModule(appConfig));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
+    modules.add(new NextGenModule(appConfig));
+    modules.add(new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
@@ -125,6 +141,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    final ScheduledThreadPoolExecutor webhookEventExecutor =
+        new ScheduledThreadPoolExecutor(10, new ThreadFactoryBuilder().setNameFormat("Iterator-webhookEvent").build());
+    injector.getInstance(TriggerWebhookService.class).registerIterators(webhookEventExecutor);
     MaintenanceController.forceMaintenance(false);
   }
 

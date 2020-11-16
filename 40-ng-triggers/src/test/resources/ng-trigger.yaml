@@ -5,11 +5,11 @@ trigger:
     targetIdentifier: myPipeline
     type: Pipeline
     spec:
-      runtimeInputYaml:  yaml
+      runtimeInputYaml:  ''
   source:
     type: Webhook
     spec:
-      type: Github
+      type: Gitlab
       spec:
         event: Pull Request
         actions:

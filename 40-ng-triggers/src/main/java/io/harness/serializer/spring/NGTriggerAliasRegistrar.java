@@ -1,6 +1,8 @@
 package io.harness.serializer.spring;
 
+import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
@@ -15,5 +17,7 @@ public class NGTriggerAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("io.harness.ngtriggers.beans.target.targetType", TargetType.class);
     orchestrationElements.put("io.harness.ngtriggers.beans.source.metadata.ngTriggerMetadata", NGTriggerMetadata.class);
     orchestrationElements.put("io.harness.ngtriggers.beans.entity.ngTriggerEntity", NGTriggerEntity.class);
+    orchestrationElements.put("io.harness.ngtriggers.beans.entity.ngTriggerWebhookEvent", TriggerWebhookEvent.class);
+    orchestrationElements.put("io.harness.ngtriggers.beans.config.headerConfig", HeaderConfig.class);
   }
 }

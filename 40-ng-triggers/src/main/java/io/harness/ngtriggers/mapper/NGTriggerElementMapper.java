@@ -1,9 +1,11 @@
 package io.harness.ngtriggers.mapper;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
@@ -13,6 +15,7 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
+import java.util.List;
 
 @UtilityClass
 public class NGTriggerElementMapper {
@@ -81,5 +84,10 @@ public class NGTriggerElementMapper {
         .targetIdentifier(ngTriggerEntity.getTargetIdentifier())
         .version(ngTriggerEntity.getVersion())
         .build();
+  }
+
+  public TriggerWebhookEvent toNGTriggerWebhookEvent(
+      String accountIdentifier, String payload, List<HeaderConfig> headerConfigs) {
+    return TriggerWebhookEvent.builder().accountId(accountIdentifier).headers(headerConfigs).payload(payload).build();
   }
 }
