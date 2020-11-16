@@ -1,16 +1,19 @@
 package io.harness.node;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 
 import graph.StepInfoGraph;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,8 @@ import java.util.List;
 
 @Singleton
 public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<CIStepInfo> {
+  @Inject private KryoSerializer kryoSerializer;
+
   @Override
   public PlanNode convertStep(CIStepInfo step, List<String> nextStepUuids) {
     return PlanNode.builder()
@@ -44,9 +49,10 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
     // TODO Handle parallel execution
     if (!nextStepUuids.isEmpty() && !StepInfoGraph.isNILStepUuId(nextStepUuids.get(0))) {
       adviserObtainments.add(
-          AdviserObtainment.builder()
-              .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-              .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuids.get(0)).build())
+          AdviserObtainment.newBuilder()
+              .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                  OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuids.get(0)).build())))
               .build());
     }
 

@@ -9,8 +9,8 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Adviser<T extends AdviserParameters> {
-  @NotNull Advise onAdviseEvent(AdvisingEvent<T> advisingEvent);
+public interface Adviser {
+  @NotNull Advise onAdviseEvent(AdvisingEvent advisingEvent);
 
-  boolean canAdvise(AdvisingEvent<T> advisingEvent);
+  boolean canAdvise(AdvisingEvent advisingEvent);
 }

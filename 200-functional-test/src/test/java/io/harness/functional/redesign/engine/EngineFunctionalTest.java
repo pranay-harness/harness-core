@@ -55,7 +55,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI, intermittent = true)
+  @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   public void shouldExecuteSwitchPlan() {
     PlanExecution httpSwitchResponse =

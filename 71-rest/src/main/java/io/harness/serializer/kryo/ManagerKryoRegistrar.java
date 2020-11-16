@@ -23,6 +23,7 @@ import io.harness.ccm.license.CeLicenseType;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
+import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
@@ -1714,5 +1715,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TrialSignupOptions.class, 8093);
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
+
+    kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
   }
 }

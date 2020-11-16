@@ -9,8 +9,8 @@ import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
@@ -36,7 +36,9 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.states.BuildStatusStepNodeCreator;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
@@ -55,6 +57,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   public static final String SUCCESS_STATUS = "success";
 
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
+  @Inject private KryoSerializer kryoSerializer;
   @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
   @Override
@@ -142,15 +145,17 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
     adviserObtainments.add(
-        AdviserObtainment.builder()
-            .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-            .parameters(OnSuccessAdviserParameters.builder().nextNodeId(buildStatusSucceededStepNode.getUuid()).build())
+        AdviserObtainment.newBuilder()
+            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                OnSuccessAdviserParameters.builder().nextNodeId(buildStatusSucceededStepNode.getUuid()).build())))
             .build());
 
     adviserObtainments.add(
-        AdviserObtainment.builder()
-            .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
-            .parameters(OnFailAdviserParameters.builder().nextNodeId(buildStatusFailedStepNode.getUuid()).build())
+        AdviserObtainment.newBuilder()
+            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
+            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                OnFailAdviserParameters.builder().nextNodeId(buildStatusFailedStepNode.getUuid()).build())))
             .build());
 
     final PlanNode integrationStageNode = prepareIntegrationStageNode(

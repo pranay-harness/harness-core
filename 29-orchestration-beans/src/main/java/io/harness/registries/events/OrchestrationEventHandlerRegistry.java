@@ -25,7 +25,7 @@ public class OrchestrationEventHandlerRegistry
 
   @Override
   public Set<OrchestrationEventHandler> obtain(OrchestrationEventType orchestrationEventType) {
-    return registry.getOrDefault(orchestrationEventType, null);
+    return registry.getOrDefault(orchestrationEventType, new HashSet<>());
   }
 
   @Override

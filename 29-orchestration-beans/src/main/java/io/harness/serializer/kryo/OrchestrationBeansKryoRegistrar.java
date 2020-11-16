@@ -3,7 +3,6 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
@@ -49,7 +48,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(NodeExecution.class, 2506);
     kryo.register(PlanNode.class, 2508);
     kryo.register(StepType.class, 2509);
-    kryo.register(AdviserObtainment.class, 2511);
     kryo.register(FacilitatorObtainment.class, 2512);
     kryo.register(FacilitatorType.class, 2514);
     kryo.register(DefaultFacilitatorParams.class, 2515);

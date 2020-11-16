@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
@@ -14,25 +15,29 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 
 import java.util.Collections;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-public class OnFailAdviser implements Adviser<OnFailAdviserParameters> {
+public class OnFailAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build();
 
+  @Inject private KryoSerializer kryoSerializer;
+
   @Override
-  public Advise onAdviseEvent(AdvisingEvent<OnFailAdviserParameters> advisingEvent) {
-    OnFailAdviserParameters parameters = Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    OnFailAdviserParameters parameters = extractParameters(advisingEvent);
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
 
   @Override
-  public boolean canAdvise(AdvisingEvent<OnFailAdviserParameters> advisingEvent) {
-    OnFailAdviserParameters parameters = advisingEvent.getAdviserParameters();
+  public boolean canAdvise(AdvisingEvent advisingEvent) {
+    OnFailAdviserParameters parameters = extractParameters(advisingEvent);
     if (parameters.getNextNodeId() == null) {
       return false;
     }
@@ -42,5 +47,11 @@ public class OnFailAdviser implements Adviser<OnFailAdviserParameters> {
       return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
     }
     return canAdvise;
+  }
+
+  @NotNull
+  private OnFailAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
+    return (OnFailAdviserParameters) Preconditions.checkNotNull(
+        kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
   }
 }

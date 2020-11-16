@@ -2,7 +2,6 @@ package io.harness.advisers.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.advise.WithFailureTypes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,7 +16,7 @@ import java.util.Set;
 @Value
 @Builder
 @Redesign
-public class OnFailAdviserParameters implements AdviserParameters, WithFailureTypes {
+public class OnFailAdviserParameters implements WithFailureTypes {
   String nextNodeId;
   @Builder.Default Set<FailureType> applicableFailureTypes = EnumSet.noneOf(FailureType.class);
 }

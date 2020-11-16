@@ -3,6 +3,7 @@ package io.harness.advisers.success;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
@@ -13,21 +14,25 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 
 @OwnedBy(CDC)
 @Redesign
-public class OnSuccessAdviser implements Adviser<OnSuccessAdviserParameters> {
+public class OnSuccessAdviser implements Adviser {
+  @Inject KryoSerializer kryoSerializer;
+
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent<OnSuccessAdviserParameters> advisingEvent) {
-    OnSuccessAdviserParameters parameters = Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    OnSuccessAdviserParameters parameters = (OnSuccessAdviserParameters) Preconditions.checkNotNull(
+        kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
 
   @Override
-  public boolean canAdvise(AdvisingEvent<OnSuccessAdviserParameters> advisingEvent) {
+  public boolean canAdvise(AdvisingEvent advisingEvent) {
     return StatusUtils.positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

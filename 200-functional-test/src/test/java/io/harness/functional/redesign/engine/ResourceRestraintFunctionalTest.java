@@ -6,9 +6,9 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
 import io.harness.StatusUtils;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.EmbeddedUser;
@@ -25,9 +25,11 @@ import io.harness.generator.ResourceConstraintGenerator;
 import io.harness.generator.ResourceConstraintGenerator.ResourceConstraints;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.dummy.DummyStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
@@ -48,6 +50,7 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private CustomExecutionService customExecutionService;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
+  @Inject private KryoSerializer kryoSerializer;
 
   private ResourceConstraint resourceConstraint;
 
@@ -90,44 +93,47 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
     String complaintId = "kmpySmUISimoRrJL6NL73w";
     return Plan.builder()
         .startingNodeId(dummyNode1Id)
-        .node(PlanNode.builder()
-                  .uuid(dummyNode1Id)
-                  .name("Dummy Node 1")
-                  .stepType(DummyStep.STEP_TYPE)
-                  .identifier("dummy1")
-                  .adviserObtainment(
-                      AdviserObtainment.builder()
-                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-                          .parameters(
-                              OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())
-                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
-                  .build())
-        .node(PlanNode.builder()
-                  .uuid(resourceRestraintInstanceId)
-                  .identifier("resourceRestraint1")
-                  .name("resourceRestraint1")
-                  .stepType(ResourceRestraintStep.STEP_TYPE)
-                  .stepParameters(ResourceRestraintStepParameters.builder()
-                                      .claimantId(complaintId)
-                                      .permits(1)
-                                      .resourceUnit(generateUuid())
-                                      .resourceRestraintId(resourceConstraint.getUuid())
-                                      .acquireMode(AcquireMode.ACCUMULATE)
-                                      .holdingScope(HoldingScopeBuilder.aPlan().build())
-                                      .build())
-                  .adviserObtainment(
-                      AdviserObtainment.builder()
-                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
-                          .build())
-                  .facilitatorObtainment(
-                      FacilitatorObtainment.builder()
-                          .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
-                          .build())
-                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(dummyNode1Id)
+                .name("Dummy Node 1")
+                .stepType(DummyStep.STEP_TYPE)
+                .identifier("dummy1")
+                .adviserObtainment(
+                    AdviserObtainment.newBuilder()
+                        .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                            OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())))
+                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                           .build())
+                .build())
+        .node(
+            PlanNode.builder()
+                .uuid(resourceRestraintInstanceId)
+                .identifier("resourceRestraint1")
+                .name("resourceRestraint1")
+                .stepType(ResourceRestraintStep.STEP_TYPE)
+                .stepParameters(ResourceRestraintStepParameters.builder()
+                                    .claimantId(complaintId)
+                                    .permits(1)
+                                    .resourceUnit(generateUuid())
+                                    .resourceRestraintId(resourceConstraint.getUuid())
+                                    .acquireMode(AcquireMode.ACCUMULATE)
+                                    .holdingScope(HoldingScopeBuilder.aPlan().build())
+                                    .build())
+                .adviserObtainment(
+                    AdviserObtainment.newBuilder()
+                        .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                            OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())))
+                        .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
+                        .build())
+                .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")

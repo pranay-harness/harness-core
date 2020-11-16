@@ -19,6 +19,7 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 public class PipelinePlanTest extends CDNGBaseTest {
   @Inject ExecutionPlanCreatorRegistrar executionPlanCreatorRegistrar;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
+  @Inject private KryoSerializer kryoSerializer;
   Map<String, Object> contextAttributes = new HashMap<>();
 
   @Before
@@ -101,8 +103,9 @@ public class PipelinePlanTest extends CDNGBaseTest {
     assertThat(stageNode.getAdviserObtainments().size()).isEqualTo(1);
 
     // Advisor attached -> rollbackNode
-    String advisorNodeId =
-        ((OnFailAdviserParameters) stageNode.getAdviserObtainments().get(0).getParameters()).getNextNodeId();
+    String advisorNodeId = ((OnFailAdviserParameters) kryoSerializer.asObject(
+                                stageNode.getAdviserObtainments().get(0).getParameters().toByteArray()))
+                               .getNextNodeId();
     PlanNode rollbackPlanNode = getNodeByUUID(planNodes, advisorNodeId).get();
     assertThat(rollbackPlanNode.getIdentifier()).isEqualTo("managerDeploymentStageRollback");
 

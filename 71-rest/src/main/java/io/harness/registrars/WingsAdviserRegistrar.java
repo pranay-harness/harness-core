@@ -19,7 +19,7 @@ public class WingsAdviserRegistrar implements AdviserRegistrar {
   @Inject private Injector injector;
 
   @Override
-  public void register(Set<Pair<AdviserType, Adviser<?>>> adviserClasses) {
+  public void register(Set<Pair<AdviserType, Adviser>> adviserClasses) {
     adviserClasses.add(
         Pair.of(HttpResponseCodeSwitchAdviser.ADVISER_TYPE, injector.getInstance(HttpResponseCodeSwitchAdviser.class)));
   }

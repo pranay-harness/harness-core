@@ -16,6 +16,7 @@ import io.harness.data.Outcome;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepOutcomeRef;
 import software.wings.api.HttpStateExecutionData;
 
@@ -23,14 +24,16 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public class HttpResponseCodeSwitchAdviser implements Adviser<HttpResponseCodeSwitchAdviserParameters> {
+public class HttpResponseCodeSwitchAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.newBuilder().setType("HTTP_RESPONSE_CODE_SWITCH").build();
   @Inject private OutcomeService outcomeService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent<HttpResponseCodeSwitchAdviserParameters> advisingEvent) {
+  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     HttpResponseCodeSwitchAdviserParameters parameters =
-        Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+        (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(
+            kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
     // This will be changed to obtain via output type
     Outcome outcome = outcomeService.fetchOutcome(advisingEvent.getStepOutcomeRef()
                                                       .stream()
@@ -53,7 +56,7 @@ public class HttpResponseCodeSwitchAdviser implements Adviser<HttpResponseCodeSw
   }
 
   @Override
-  public boolean canAdvise(AdvisingEvent<HttpResponseCodeSwitchAdviserParameters> advisingEvent) {
+  public boolean canAdvise(AdvisingEvent advisingEvent) {
     return StatusUtils.positiveStatuses().contains(advisingEvent.getToStatus());
   }
 }

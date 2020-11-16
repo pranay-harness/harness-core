@@ -2,7 +2,6 @@ package io.harness.advisers.retry;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.FailureType;
@@ -17,7 +16,7 @@ import java.util.Set;
 @Value
 @Builder
 @Redesign
-public class RetryAdviserParameters implements AdviserParameters {
+public class RetryAdviserParameters {
   List<Integer> waitIntervalList;
   int retryCount;
   RepairActionCode repairActionCodeAfterRetry;

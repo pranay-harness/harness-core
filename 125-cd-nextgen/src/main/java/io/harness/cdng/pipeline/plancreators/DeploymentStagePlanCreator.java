@@ -10,8 +10,8 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
@@ -31,7 +31,9 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ import java.util.Map;
 public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<DeploymentStage>
     implements SupportDefinedExecutorPlanCreator<DeploymentStage> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
@@ -120,10 +123,10 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
                                    .build())
         .adviserObtainment(
-            AdviserObtainment.builder()
-                .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
-                .parameters(
-                    OnFailAdviserParameters.builder().nextNodeId(rollbackExecutionPlan.getStartingNodeId()).build())
+            AdviserObtainment.newBuilder()
+                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
+                .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                    OnFailAdviserParameters.builder().nextNodeId(rollbackExecutionPlan.getStartingNodeId()).build())))
                 .build())
         .build();
   }

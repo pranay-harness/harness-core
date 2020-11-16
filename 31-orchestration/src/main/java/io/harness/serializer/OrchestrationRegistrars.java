@@ -6,6 +6,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
+import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
@@ -46,5 +47,6 @@ public class OrchestrationRegistrars {
           .add(AmbianceMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
           .add(AdviserTypeMorphiaConverter.class)
+          .add(AdviserObtainmentMorphiaConverter.class)
           .build();
 }

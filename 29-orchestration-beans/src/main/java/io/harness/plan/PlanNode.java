@@ -2,7 +2,7 @@ package io.harness.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserObtainment;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.FacilitatorObtainment;

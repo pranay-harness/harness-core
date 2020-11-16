@@ -2,7 +2,6 @@ package io.harness.redesign.advisers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
@@ -15,6 +14,6 @@ import java.util.Map;
 @Value
 @Builder
 @Redesign
-public class HttpResponseCodeSwitchAdviserParameters implements AdviserParameters {
+public class HttpResponseCodeSwitchAdviserParameters {
   @Singular Map<Integer, String> responseCodeNodeIdMappings;
 }

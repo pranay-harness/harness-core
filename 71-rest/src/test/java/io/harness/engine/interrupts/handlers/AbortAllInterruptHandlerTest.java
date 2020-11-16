@@ -37,6 +37,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
+  @Inject private PlanRepo planRepo;
 
   @Before
   public void setUp() {
@@ -47,7 +48,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait(), getAbstractions());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     Interrupt handledInterrupt = orchestrationService.registerInterrupt(
