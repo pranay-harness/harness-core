@@ -52,8 +52,6 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
         }
       } else if (batchJobType == BatchJobType.CLUSTER_DATA_TO_BIG_QUERY) {
         instant = Instant.now().minus(45, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
-      } else if (batchJobType == BatchJobType.INSTANCE_BILLING_AGGREGATION) {
-        instant = Instant.now().minus(75, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       } else {
         instant = lastReceivedPublishedMessageDao.getFirstEventReceivedTime(accountId);
       }
