@@ -775,7 +775,10 @@ public class UserServiceImpl implements UserService {
     limitCheck(accountId, userInvite);
 
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-
+    if (userInvite.getEmails().isEmpty()) {
+      String message = "No email provided. Please provide vaild email info";
+      throw new InvalidArgumentsException(message);
+    }
     for (String email : userInvite.getEmails()) {
       UserInvite userInviteClone = kryoSerializer.clone(userInvite);
       userInviteClone.setEmail(email.trim());

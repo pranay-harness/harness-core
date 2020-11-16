@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MOHIT;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -901,6 +902,35 @@ public class UserServiceTest extends WingsBaseTest {
       fail("Exception is expected when inviting with invalid user email");
     } catch (WingsException e) {
       // Ignore, exception expected here.
+    }
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testInviteNewUser_emptyEmail_shouldFail() {
+    UserInvite userInvite = anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmails(asList())
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
+                                .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount()
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                        .build());
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
+
+    try {
+      userService.inviteUsers(userInvite);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo("No email provided. Please provide vaild email info");
     }
   }
 
