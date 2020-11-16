@@ -9,8 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.adviser.advise.EndPlanAdvise;
 import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.adviser.advise.NextStepAdvise;
@@ -20,6 +20,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.state.io.FailureInfo;
 
 import java.util.Collections;
@@ -30,7 +31,8 @@ import java.util.List;
 public class RetryAdviser implements Adviser<RetryAdviserParameters> {
   @Inject private NodeExecutionService nodeExecutionService;
 
-  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.RETRY).build();
+  public static final AdviserType ADVISER_TYPE =
+      AdviserType.newBuilder().setType(OrchestrationAdviserTypes.RETRY.name()).build();
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent<RetryAdviserParameters> advisingEvent) {

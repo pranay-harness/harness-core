@@ -8,7 +8,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
@@ -16,6 +15,7 @@ import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.references.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;

@@ -1,5 +1,6 @@
 package io.harness.pms.serializer.spring;
 
+import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
@@ -13,5 +14,6 @@ public class PmsContractsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("ambiance", Ambiance.class);
     orchestrationElements.put("level", Level.class);
     orchestrationElements.put("executionMode", ExecutionMode.class);
+    orchestrationElements.put("adviserType", AdviserType.class);
   }
 }

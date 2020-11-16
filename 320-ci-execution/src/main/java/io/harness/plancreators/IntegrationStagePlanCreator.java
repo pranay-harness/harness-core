@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -36,6 +36,7 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.states.BuildStatusStepNodeCreator;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
@@ -142,13 +143,13 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
     adviserObtainments.add(
         AdviserObtainment.builder()
-            .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+            .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
             .parameters(OnSuccessAdviserParameters.builder().nextNodeId(buildStatusSucceededStepNode.getUuid()).build())
             .build());
 
     adviserObtainments.add(
         AdviserObtainment.builder()
-            .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+            .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
             .parameters(OnFailAdviserParameters.builder().nextNodeId(buildStatusFailedStepNode.getUuid()).build())
             .build());
 

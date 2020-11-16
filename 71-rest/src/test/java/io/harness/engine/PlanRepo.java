@@ -3,7 +3,7 @@ package io.harness.engine;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
@@ -11,6 +11,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.state.StepType;
 import io.harness.steps.dummy.DummyStep;
 import io.harness.steps.section.SectionStepParameters;
@@ -33,10 +34,11 @@ public class PlanRepo {
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                              .build())
-                  .adviserObtainment(AdviserObtainment.builder()
-                                         .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                         .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test2Id).build())
-                                         .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test2Id).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(test2Id)
@@ -47,10 +49,11 @@ public class PlanRepo {
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                              .build())
-                  .adviserObtainment(AdviserObtainment.builder()
-                                         .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                         .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test3Id).build())
-                                         .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test3Id).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(test3Id)
@@ -62,21 +65,21 @@ public class PlanRepo {
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                              .build())
                   .build())
-        .node(
-            PlanNode.builder()
-                .uuid(sectionNodeId)
-                .name("Section")
-                .stepType(StepType.builder().type("SECTION").build())
-                .identifier("section_1")
-                .stepParameters(SectionStepParameters.builder().childNodeId(test1Id).build())
-                .adviserObtainment(AdviserObtainment.builder()
-                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
-                                       .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
-                .build())
+        .node(PlanNode.builder()
+                  .uuid(sectionNodeId)
+                  .name("Section")
+                  .stepType(StepType.builder().type("SECTION").build())
+                  .identifier("section_1")
+                  .stepParameters(SectionStepParameters.builder().childNodeId(test1Id).build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
@@ -95,24 +98,26 @@ public class PlanRepo {
     String dummyNodeId = generateUuid();
 
     return Plan.builder()
-        .node(
-            PlanNode.builder()
-                .uuid(test1Id)
-                .name("Test1 - No Wait")
-                .stepType(SimpleAsyncStep.STEP_TYPE)
-                .identifier("test1")
-                .stepParameters(SimpleStepAsyncParams.builder().shouldFail(true).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
-                .adviserObtainment(AdviserObtainment.builder()
-                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
-                                       .build())
-                .adviserObtainment(AdviserObtainment.builder()
-                                       .type(AdviserType.builder().type(AdviserType.MANUAL_INTERVENTION).build())
-                                       .build())
-                .build())
+        .node(PlanNode.builder()
+                  .uuid(test1Id)
+                  .name("Test1 - No Wait")
+                  .stepType(SimpleAsyncStep.STEP_TYPE)
+                  .identifier("test1")
+                  .stepParameters(SimpleStepAsyncParams.builder().shouldFail(true).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                          .build())
+                  .adviserObtainment(AdviserObtainment.builder()
+                                         .type(AdviserType.newBuilder()
+                                                   .setType(OrchestrationAdviserTypes.MANUAL_INTERVENTION.name())
+                                                   .build())
+                                         .build())
+                  .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")

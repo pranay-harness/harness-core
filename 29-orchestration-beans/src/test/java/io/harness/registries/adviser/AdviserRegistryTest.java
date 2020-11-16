@@ -10,9 +10,10 @@ import com.google.inject.Injector;
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
@@ -28,7 +29,7 @@ public class AdviserRegistryTest extends OrchestrationBeansTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    AdviserType adviserType = AdviserType.builder().type("Type1").build();
+    AdviserType adviserType = AdviserType.newBuilder().setType("Type1").build();
     adviserRegistry.register(adviserType, injector.getInstance(Type1Adviser.class));
     Adviser adviser = adviserRegistry.obtain(adviserType);
     assertThat(adviser).isNotNull();
@@ -36,7 +37,8 @@ public class AdviserRegistryTest extends OrchestrationBeansTestBase {
     assertThatThrownBy(() -> adviserRegistry.register(adviserType, injector.getInstance(Type1Adviser.class)))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> adviserRegistry.obtain(AdviserType.builder().type(AdviserType.IGNORE).build()))
+    assertThatThrownBy(
+        () -> adviserRegistry.obtain(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.IGNORE.name()).build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

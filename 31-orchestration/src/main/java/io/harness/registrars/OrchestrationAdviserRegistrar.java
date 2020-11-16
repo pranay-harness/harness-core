@@ -6,13 +6,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.advisers.fail.OnFailAdviser;
 import io.harness.advisers.ignore.IgnoreAdviser;
 import io.harness.advisers.manualintervention.ManualInterventionAdviser;
 import io.harness.advisers.retry.RetryAdviser;
 import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.registries.registrar.AdviserRegistrar;
 import org.apache.commons.lang3.tuple.Pair;
 
