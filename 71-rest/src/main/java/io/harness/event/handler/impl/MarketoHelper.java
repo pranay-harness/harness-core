@@ -15,7 +15,6 @@ import io.harness.event.model.marketo.Error;
 import io.harness.event.model.marketo.GetLeadResponse;
 import io.harness.event.model.marketo.GetLeadResponse.Result;
 import io.harness.event.model.marketo.Lead;
-import io.harness.event.model.marketo.Lead.LeadBuilder;
 import io.harness.event.model.marketo.LeadRequestWithEmail;
 import io.harness.event.model.marketo.LeadRequestWithId;
 import io.harness.event.model.marketo.LoginResponse;
@@ -102,7 +101,7 @@ public class MarketoHelper {
       throws IOException {
     log.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
 
-    Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
+    Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite, null);
 
     LeadRequestWithEmail leadRequestWithEmail =
         LeadRequestWithEmail.builder().action("createOrUpdate").lookupField("email").input(Arrays.asList(lead)).build();
@@ -118,10 +117,11 @@ public class MarketoHelper {
       UserInvite userInvite) throws IOException {
     log.info("Updating lead {} to marketo", existingLeadId);
 
-    Lead lead = buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite);
-
+    LeadRequestWithId.LeadWithId leadWithId = LeadRequestWithId.LeadWithId.builder().build();
+    buildLead(email, userName, account, userInviteUrl, oauthProvider, utmInfo, userInvite, leadWithId);
+    leadWithId.setId(existingLeadId);
     LeadRequestWithId leadRequestWithId =
-        LeadRequestWithId.builder().action("createOrUpdate").lookupField("id").input(Arrays.asList(lead)).build();
+        LeadRequestWithId.builder().action("createOrUpdate").lookupField("id").input(Arrays.asList(leadWithId)).build();
     retrofit2.Response<Response> response =
         retrofit.create(MarketoRestClient.class).updateLead(accessToken, leadRequestWithId).execute();
     log.info("Updated lead {} to marketo", existingLeadId);
@@ -129,64 +129,68 @@ public class MarketoHelper {
   }
 
   private Lead buildLead(String email, String userName, Account account, String userInviteUrl, String oauthProvider,
-      UtmInfo utmInfo, UserInvite userInvite) {
-    LeadBuilder leadBuilder = Lead.builder();
-    leadBuilder.email(email)
-        .firstName(utils.getFirstName(userName, email))
-        .lastName(utils.getLastName(userName, email));
+      UtmInfo utmInfo, UserInvite userInvite, Lead lead) {
+    if (lead == null) {
+      lead = new Lead();
+    }
+
+    lead.setEmail(email);
+    lead.setFirstName(utils.getFirstName(userName, email));
+    lead.setLastName(utils.getLastName(userName, email));
 
     if (account != null) {
       if (isNotEmpty(oauthProvider)) {
         // In case of sso, make the company name null because it's populated by harness using email.
-        leadBuilder.company(null).Harness_Account_ID__c_lead(account.getUuid());
+        lead.setCompany(null);
       } else {
-        leadBuilder.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+        lead.setCompany(account.getCompanyName());
       }
+      lead.setHarness_Account_ID__c_lead(account.getUuid());
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
-        leadBuilder.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-            .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
+        lead.setFree_Trial_Status__c(licenseInfo.getAccountStatus());
+        lead.setDays_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
     } else if (userInvite != null) {
-      leadBuilder.company(userInvite.getCompanyName());
+      lead.setCompany(userInvite.getCompanyName());
     }
 
     if (isNotEmpty(userInviteUrl)) {
-      leadBuilder.Freemium_Invite_URL__c(userInviteUrl);
+      lead.setFreemium_Invite_URL__c(userInviteUrl);
     }
 
     if (isNotEmpty(oauthProvider)) {
-      leadBuilder.SSO_Freemium_Type__c(oauthProvider);
+      lead.setSSO_Freemium_Type__c(oauthProvider);
     }
 
     if (utmInfo != null) {
-      leadBuilder.UTM_Source__c(utmInfo.getUtmSource());
-      leadBuilder.UTM_Content__c(utmInfo.getUtmContent());
-      leadBuilder.UTM_Medium__c(utmInfo.getUtmMedium());
-      leadBuilder.UTM_Term__c(utmInfo.getUtmTerm());
-      leadBuilder.UTM__c(utmInfo.getUtmCampaign());
+      lead.setUTM_Source__c(utmInfo.getUtmSource());
+      lead.setUTM_Content__c(utmInfo.getUtmContent());
+      lead.setUTM_Medium__c(utmInfo.getUtmMedium());
+      lead.setUTM_Term__c(utmInfo.getUtmTerm());
+      lead.setUTM__c(utmInfo.getUtmCampaign());
     }
 
     if (userInvite != null && isNotEmpty(userInvite.getFreemiumProducts())) {
-      leadBuilder.Freemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ","));
+      lead.setFreemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ","));
     }
 
     if (userInvite != null && userInvite.getFreemiumAssistedOption() != null) {
-      leadBuilder.freemiumassistedoption(userInvite.getFreemiumAssistedOption());
+      lead.setFreemiumassistedoption(userInvite.getFreemiumAssistedOption());
     }
 
     if (userInvite != null && userInvite.getCountry() != null) {
-      leadBuilder.country(userInvite.getCountry());
+      lead.setCountry(userInvite.getCountry());
     }
 
     if (userInvite != null && userInvite.getState() != null) {
-      leadBuilder.state(userInvite.getState());
+      lead.setState(userInvite.getState());
     }
 
     if (userInvite != null && userInvite.getPhone() != null) {
-      leadBuilder.phone(userInvite.getPhone());
+      lead.setPhone(userInvite.getPhone());
     }
-    return leadBuilder.build();
+    return lead;
   }
 
   private long processLeadResponse(retrofit2.Response<Response> response) {
