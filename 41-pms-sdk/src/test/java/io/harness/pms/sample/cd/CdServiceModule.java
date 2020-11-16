@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.PmsSdkModule;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
@@ -37,7 +38,14 @@ public class CdServiceModule extends AbstractModule {
     install(MongoModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
 
-    install(new PmsSdkModule(config.getPmsSdkGrpcServerConfig()));
+    install(PmsSdkModule.getInstance());
+  }
+
+  @Provides
+  @Singleton
+  @Named("pms-grpc-server-config")
+  public GrpcServerConfig pmsGrpcServerConfig() {
+    return config.getPmsSdkGrpcServerConfig();
   }
 
   @Provides

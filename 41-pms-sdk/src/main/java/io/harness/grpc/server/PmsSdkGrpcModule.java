@@ -18,10 +18,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PmsSdkGrpcModule extends AbstractModule {
-  private final GrpcServerConfig grpcServerConfig;
+  private static PmsSdkGrpcModule instance;
 
-  public PmsSdkGrpcModule(GrpcServerConfig grpcServerConfig) {
-    this.grpcServerConfig = grpcServerConfig;
+  public static PmsSdkGrpcModule getInstance() {
+    if (instance == null) {
+      instance = new PmsSdkGrpcModule();
+    }
+    return instance;
   }
 
   @Override
@@ -33,7 +36,8 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("pms-grpc-service")
-  public Service pmsGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+  public Service pmsGrpcService(@Named("pms-grpc-server-config") GrpcServerConfig grpcServerConfig,
+      HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
