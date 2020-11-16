@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
@@ -94,18 +93,20 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
         newInstanceDataList = resizeParams.getNewInstanceData();
         oldInstanceDataList = resizeParams.getOldInstanceData();
-        executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
-        if (isNotEmpty(originalServiceCounts)) {
-          newInstanceDataList = new ArrayList<>();
-          for (Map.Entry<String, Integer> entry : originalServiceCounts.entrySet()) {
-            newInstanceDataList.add(
-                ContainerServiceData.builder().desiredCount(entry.getValue()).name(entry.getKey()).build());
-          }
-        }
 
-        if (isNotEmpty(resizeParams.getContainerServiceName())) {
-          oldInstanceDataList = singletonList(
-              ContainerServiceData.builder().name(resizeParams.getContainerServiceName()).desiredCount(0).build());
+        if (resizeParams.isRollbackAllPhases()) {
+          // Roll back to original counts
+          executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
+          if (isNotEmpty(originalServiceCounts)) {
+            newInstanceDataList = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : originalServiceCounts.entrySet()) {
+              newInstanceDataList.add(
+                  ContainerServiceData.builder().desiredCount(entry.getValue()).name(entry.getKey()).build());
+            }
+          }
+          if (isNotEmpty(oldInstanceDataList)) {
+            ecsDeployCommandTaskHelper.setDesiredToOriginal(oldInstanceDataList, originalServiceCounts);
+          }
         }
       }
 
