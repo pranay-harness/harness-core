@@ -2,7 +2,6 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
@@ -131,7 +130,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), null, true, null, true);
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), null, true, null, true,
+        "workspace");
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -168,7 +168,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
-    String workDir = String.format("/%s/%s", STEP_EXEC, STEP_EXEC_WORKING_DIR);
+    String workDir = String.format("/%s/%s", STEP_EXEC, "workspace");
     assertThat(podParams.getContainerParamsList().get(2))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getRunStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
@@ -225,10 +225,10 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     K8PodDetails k8PodDetails =
         K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
-    assertThatThrownBy(
-        ()
-            -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-                ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true, null, true))
+    assertThatThrownBy(()
+                           -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
+                               ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true, null,
+                               true, "workspace"))
         .isInstanceOf(Exception.class);
 
     verify(logServiceUtils, times(1)).getLogServiceConfig();

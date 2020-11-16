@@ -48,6 +48,7 @@ public class CIWebhookTriggerResource {
   public RestResponse<String> runPipelineFromTrigger(
       @PathParam("id") String pipelineId, String eventPayload, @Context HttpHeaders httpHeaders) {
     try {
+      log.info("Received webhook for pipelineId {}", pipelineId);
       NgPipelineEntity ngPipelineEntity = ngPipelineService.getPipeline(pipelineId);
       BuildNumberDetails buildNumberDetails = buildNumberService.increaseBuildNumber(ngPipelineEntity.getAccountId(),
           ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());

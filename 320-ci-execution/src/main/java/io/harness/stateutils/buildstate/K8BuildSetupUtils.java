@@ -4,7 +4,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DEFAULT_INTERNAL_IMAGE_CONNECTOR;
 import static io.harness.common.CIExecutionConstants.GIT_SSH_URL_PREFIX;
@@ -103,10 +102,10 @@ public class K8BuildSetupUtils {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
-
+    String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
     CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, podSetupInfo, k8PodDetails,
         liteEngineTaskStepInfo, publishStepConnectorIdentifier, liteEngineTaskStepInfo.isUsePVC(),
-        liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone());
+        liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), workDir);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -114,7 +113,8 @@ public class K8BuildSetupUtils {
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, PodSetupInfo podSetupInfo,
       K8PodDetails k8PodDetails, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      Set<String> publishStepConnectorIdentifier, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
+      Set<String> publishStepConnectorIdentifier, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
+      String workDir) {
     ConnectorDetails harnessInternalImageRegistryConnectorDetails =
         connectorUtils.getConnectorDetails(ngAccess, DEFAULT_INTERNAL_IMAGE_CONNECTOR);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
@@ -141,7 +141,7 @@ public class K8BuildSetupUtils {
         .namespace(k8PodDetails.getNamespace())
         .gitConnector(gitConnector)
         .stepExecVolumeName(STEP_EXEC)
-        .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
+        .stepExecWorkingDir(workDir)
         .containerParamsList(containerParamsList)
         .pvcParamList(pvcParams)
         .initContainerParamsList(singletonList(setupAddOnContainerParams))
