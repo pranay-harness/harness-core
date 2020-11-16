@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
@@ -16,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.state.io.StepOutcomeRef;
 import software.wings.api.HttpStateExecutionData;
 
@@ -24,7 +24,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 public class HttpResponseCodeSwitchAdviser implements Adviser<HttpResponseCodeSwitchAdviserParameters> {
-  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
+  public static final AdviserType ADVISER_TYPE = AdviserType.newBuilder().setType("HTTP_RESPONSE_CODE_SWITCH").build();
   @Inject private OutcomeService outcomeService;
 
   @Override

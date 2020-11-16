@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.registries.registrar.AdviserRegistrar;
 import org.apache.commons.lang3.tuple.Pair;

@@ -4,12 +4,13 @@ import com.google.inject.Singleton;
 
 import graph.StepInfoGraph;
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,7 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
     if (!nextStepUuids.isEmpty() && !StepInfoGraph.isNILStepUuId(nextStepUuids.get(0))) {
       adviserObtainments.add(
           AdviserObtainment.builder()
-              .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+              .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
               .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuids.get(0)).build())
               .build());
     }

@@ -1,6 +1,7 @@
 package io.harness.pms.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
@@ -15,5 +16,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(Level.class, new LevelKryoSerializer(), 2602);
     kryo.register(ExecutionMode.class, 2603);
     kryo.register(Status.class, 2604);
+    kryo.register(AdviserType.class, 2605);
   }
 }

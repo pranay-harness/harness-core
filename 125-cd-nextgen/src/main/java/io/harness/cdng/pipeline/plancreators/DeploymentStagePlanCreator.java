@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -31,6 +31,7 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +121,7 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
                                    .build())
         .adviserObtainment(
             AdviserObtainment.builder()
-                .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
                 .parameters(
                     OnFailAdviserParameters.builder().nextNodeId(rollbackExecutionPlan.getStartingNodeId()).build())
                 .build())

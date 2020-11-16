@@ -4,13 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.domain.Sort.Direction;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import graphql.ExecutionInput;
 import graphql.GraphQL;
@@ -18,12 +14,6 @@ import graphql.GraphQLContext;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
@@ -37,7 +27,6 @@ import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,9 +36,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Account;
@@ -84,9 +70,7 @@ import software.wings.sm.StateExecutionInstance;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
@@ -102,7 +86,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
   @Inject FeatureFlagService featureFlagService;
   @Inject private InstanceService instanceService;
@@ -242,18 +225,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
   }
 
-  public PlanExecution executePlan(String bearerToken, String accountId, String appId, String planType) {
-    PlanExecution original = startPlanExecution(bearerToken, accountId, appId, planType);
-
-    final String finalStatusEnding = "ED";
-    Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
-      final PlanExecution planExecution = getPlanExecution(original.getUuid());
-      return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
-    });
-
-    return getPlanExecution(original.getUuid());
-  }
-
   protected void logStateExecutionInstanceErrors(WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
       log.info("Workflow execution didn't failed, skipping this step");
@@ -308,40 +279,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
           log.info("Analysis completed for failed state: {}", stateExecutionData.getStateName());
         });
-  }
-
-  private PlanExecution startPlanExecution(String bearerToken, String accountId, String appId, String planType) {
-    GenericType<RestResponse<PlanExecution>> returnType = new GenericType<RestResponse<PlanExecution>>() {};
-
-    Map<String, String> queryParams = new HashMap<>();
-    queryParams.put("accountId", accountId);
-    queryParams.put("appId", appId);
-
-    RestResponse<PlanExecution> response = Setup.portal()
-                                               .auth()
-                                               .oauth2(bearerToken)
-                                               .queryParams(queryParams)
-                                               .contentType(ContentType.JSON)
-                                               .get("/execute2/" + planType)
-                                               .as(returnType.getType());
-
-    return response.getResource();
-  }
-
-  public PlanExecution getPlanExecution(String uuid) {
-    Query query = query(where(PlanExecutionKeys.uuid).is(uuid));
-    query.fields().include(PlanExecutionKeys.status);
-    return mongoTemplate.findOne(query, PlanExecution.class);
-  }
-
-  public List<NodeExecution> getNodeExecutions(String planExecutionId) {
-    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
-                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
-    return mongoTemplate.find(query, NodeExecution.class);
-  }
-
-  public List<Interrupt> getPlanInterrupts(String planExecutionId) {
-    return mongoTemplate.find(query(where(InterruptKeys.planExecutionId).is(planExecutionId)), Interrupt.class);
   }
 
   private AnalysisContext getWorkflowExecutionWithVerification(

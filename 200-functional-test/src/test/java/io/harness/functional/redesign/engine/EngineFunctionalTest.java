@@ -14,6 +14,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.redesign.OrchestrationEngineTestSetupHelper;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 
 public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
+  @Inject private OrchestrationEngineTestSetupHelper testSetupHelper;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private MockServerExecutor mockServerExecutor;
 
@@ -57,7 +59,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteSwitchPlan() {
     PlanExecution httpSwitchResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-switch");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-switch");
 
     assertThat(httpSwitchResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
@@ -67,7 +69,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteForkPlan() {
     PlanExecution httpForkResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-fork");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-fork");
 
     assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
@@ -77,7 +79,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionPlan() {
     PlanExecution httpForkResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-section");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-section");
 
     assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
@@ -87,7 +89,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionChainPlan() {
     PlanExecution httpForkResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain");
 
     assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
@@ -96,10 +98,10 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionChainPlanWithFailure() {
-    PlanExecution sectionFailureResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain-failure");
+    PlanExecution sectionFailureResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "section-chain-failure");
 
-    List<NodeExecution> nodeExecutions = getNodeExecutions(sectionFailureResponse.getUuid());
+    List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(sectionFailureResponse.getUuid());
     assertThat(nodeExecutions).hasSize(3);
 
     NodeExecution sectionChainExecution =
@@ -117,8 +119,8 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionChainRollbackPlan() {
-    PlanExecution httpForkResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain-rollback");
+    PlanExecution httpForkResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "section-chain-rollback");
 
     assertThat(httpForkResponse.getStatus()).isEqualTo(FAILED);
   }
@@ -127,11 +129,11 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryIgnorePlan() {
-    PlanExecution httpRetryResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
+    PlanExecution httpRetryResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
     assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
-    List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
+    List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
 
     List<NodeExecution> retriedNodeExecutions =
@@ -145,7 +147,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     assertThat(retriedNodeExecutions.get(0).getRetryIds())
         .containsExactlyInAnyOrder(retriedNodeExecutions.get(1).getUuid(), retriedNodeExecutions.get(2).getUuid());
 
-    List<Interrupt> interrupts = getPlanInterrupts(httpRetryResponse.getUuid());
+    List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
         .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
@@ -155,11 +157,11 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = PRASHANT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryAbortPlan() {
-    PlanExecution httpRetryResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
+    PlanExecution httpRetryResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
 
     assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
-    List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
+    List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(3);
 
     List<NodeExecution> retriedNodeExecutions =
@@ -173,7 +175,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     assertThat(retriedNodeExecutions.get(0).getRetryIds())
         .containsExactlyInAnyOrder(retriedNodeExecutions.get(1).getUuid(), retriedNodeExecutions.get(2).getUuid());
 
-    List<Interrupt> interrupts = getPlanInterrupts(httpRetryResponse.getUuid());
+    List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
         .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
@@ -183,12 +185,12 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteSimpleShellScriptPlan() {
-    PlanExecution shellScriptResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-shell-script");
+    PlanExecution shellScriptResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "simple-shell-script");
 
     assertThat(shellScriptResponse.getStatus()).isEqualTo(SUCCEEDED);
 
-    List<NodeExecution> nodeExecutions = getNodeExecutions(shellScriptResponse.getUuid());
+    List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(shellScriptResponse.getUuid());
     assertThat(nodeExecutions).isNotNull();
 
     String shellScript11 = fetchShellScriptLogs(nodeExecutions, "shell11");
@@ -290,7 +292,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteSimpleTimeoutPlan() {
     PlanExecution timeoutResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-timeout");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-timeout");
     assertThat(timeoutResponse.getStatus()).isEqualTo(EXPIRED);
   }
 
@@ -298,8 +300,8 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   public void shouldExecuteMultipleBarriersPlan() {
-    PlanExecution multipleBarriersResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
+    PlanExecution multipleBarriersResponse = testSetupHelper.executePlan(
+        bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
 
     assertThat(multipleBarriersResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
@@ -309,7 +311,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldExecuteTaskChain() {
     PlanExecution taskChainResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "task-chain-v1");
+        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "task-chain-v1");
 
     assertThat(taskChainResponse.getStatus()).isEqualTo(SUCCEEDED);
   }

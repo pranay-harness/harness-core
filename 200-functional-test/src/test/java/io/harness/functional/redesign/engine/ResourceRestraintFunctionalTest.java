@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.StatusUtils;
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.FunctionalTests;
@@ -17,6 +17,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.redesign.OrchestrationEngineTestSetupHelper;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
@@ -24,6 +25,7 @@ import io.harness.generator.ResourceConstraintGenerator;
 import io.harness.generator.ResourceConstraintGenerator.ResourceConstraints;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rule.Owner;
 import io.harness.steps.dummy.DummyStep;
@@ -42,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
+  @Inject private OrchestrationEngineTestSetupHelper engineTestSetupHelper;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private CustomExecutionService customExecutionService;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
@@ -73,11 +76,11 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
         provideResourceRestraintPlan(), owners.obtainUser());
 
     Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
-      final PlanExecution planExecution = getPlanExecution(original.getUuid());
+      final PlanExecution planExecution = engineTestSetupHelper.getPlanExecution(original.getUuid());
       return planExecution != null && StatusUtils.finalStatuses().contains(planExecution.getStatus());
     });
 
-    assertThat(getPlanExecution(original.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
+    assertThat(engineTestSetupHelper.getPlanExecution(original.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
   }
 
   private Plan provideResourceRestraintPlan() {
@@ -94,7 +97,7 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
                   .identifier("dummy1")
                   .adviserObtainment(
                       AdviserObtainment.builder()
-                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
                           .parameters(
                               OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())
                           .build())
@@ -117,7 +120,7 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
                                       .build())
                   .adviserObtainment(
                       AdviserObtainment.builder()
-                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .type(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
                           .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
                           .build())
                   .facilitatorObtainment(

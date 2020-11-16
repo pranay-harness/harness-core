@@ -8,11 +8,12 @@ import com.google.common.base.Preconditions;
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.state.io.FailureInfo;
 
 import java.util.Collections;
@@ -20,7 +21,8 @@ import java.util.Collections;
 @OwnedBy(CDC)
 @Redesign
 public class OnFailAdviser implements Adviser<OnFailAdviserParameters> {
-  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.ON_FAIL).build();
+  public static final AdviserType ADVISER_TYPE =
+      AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build();
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent<OnFailAdviserParameters> advisingEvent) {

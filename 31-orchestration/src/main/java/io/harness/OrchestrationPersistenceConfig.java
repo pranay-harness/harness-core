@@ -6,6 +6,8 @@ import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.orchestration.persistence.OrchestrationBasePersistenceConfig;
+import io.harness.serializer.spring.converters.advisertype.AdviserTypeReadConverter;
+import io.harness.serializer.spring.converters.advisertype.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
@@ -25,9 +27,10 @@ import java.util.Set;
 @EnableMongoRepositories(basePackages = {"io.harness.engine"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "orchestrationMongoTemplate")
 public class OrchestrationPersistenceConfig extends OrchestrationBasePersistenceConfig {
-  private static final List<Class<? extends Converter>> converters = ImmutableList.of(
-      SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class, AmbianceReadConverter.class,
-      AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class);
+  private static final List<Class<? extends Converter>> converters =
+      ImmutableList.of(SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class,
+          AmbianceReadConverter.class, AmbianceWriteConverter.class, LevelReadConverter.class,
+          LevelWriteConverter.class, AdviserTypeReadConverter.class, AdviserTypeWriteConverter.class);
 
   @Inject
   public OrchestrationPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {

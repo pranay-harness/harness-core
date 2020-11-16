@@ -16,7 +16,6 @@ import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
@@ -32,6 +31,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
@@ -57,7 +57,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private EngineTestHelper engineTestHelper;
 
   private static final AdviserType TEST_ADVISER_TYPE =
-      AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
+      AdviserType.newBuilder().setType("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
   private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STEP_PLAN").build();
 
   @Before

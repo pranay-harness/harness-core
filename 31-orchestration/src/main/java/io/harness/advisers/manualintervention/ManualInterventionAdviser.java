@@ -6,15 +6,17 @@ import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.adviser.advise.InterventionWaitAdvise;
+import io.harness.pms.advisers.AdviserType;
 import io.harness.state.io.FailureInfo;
 
 import java.util.Collections;
 
 public class ManualInterventionAdviser implements Adviser<ManualInterventionAdviserParameters> {
-  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.MANUAL_INTERVENTION).build();
+  public static final AdviserType ADVISER_TYPE =
+      AdviserType.newBuilder().setType(OrchestrationAdviserTypes.MANUAL_INTERVENTION.name()).build();
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent<ManualInterventionAdviserParameters> advisingEvent) {
