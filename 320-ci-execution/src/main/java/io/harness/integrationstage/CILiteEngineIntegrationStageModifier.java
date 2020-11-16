@@ -30,6 +30,8 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
   public ExecutionElement modifyExecutionPlan(
       ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context) {
     IntegrationStage integrationStage = (IntegrationStage) stageType;
+    log.info(
+        "Modifying execution plan to add lite entine step for integration stage {}", integrationStage.getIdentifier());
     CIExecutionArgs ciExecutionArgs =
         (CIExecutionArgs) context.getAttribute(ExecutionArgs.EXEC_ARGS)
             .orElseThrow(()

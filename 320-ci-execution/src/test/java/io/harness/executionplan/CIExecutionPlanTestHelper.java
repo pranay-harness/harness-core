@@ -258,7 +258,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnFirstPod() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("/root")
+        .workDir("workspace")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
         .publishStepConnectorIdentifier(getPublishArtifactConnectorIds())
         .build();
@@ -266,7 +266,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("/root")
+        .workDir("workspace")
         .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
         .publishStepConnectorIdentifier(getPublishArtifactConnectorIds())
         .build();
@@ -828,7 +828,7 @@ public class CIExecutionPlanTestHelper {
   public IntegrationStage getIntegrationStage() {
     return IntegrationStage.builder()
         .identifier("intStageIdentifier")
-        .workingDirectory("/root")
+        .workingDirectory("workspace")
         .execution(getExecutionElement())
         .infrastructure(getInfrastructure())
         .customVariables(getCustomVariables())

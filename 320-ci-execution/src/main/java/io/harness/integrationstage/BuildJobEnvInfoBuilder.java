@@ -3,7 +3,6 @@ package io.harness.integrationstage;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.POD_NAME;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -16,6 +15,7 @@ import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.inject.Singleton;
@@ -37,6 +37,7 @@ import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.PVCParams;
@@ -75,7 +76,7 @@ public class BuildJobEnvInfoBuilder {
     if (integrationStage.getInfrastructure().getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, buildNumber))
-          .workDir(integrationStage.getWorkingDirectory())
+          .workDir(getWorkingDirectory(integrationStage))
           .publishStepConnectorIdentifier(getPublishStepConnectorRefs(integrationStage))
           .build();
     } else {
@@ -175,19 +176,27 @@ public class BuildJobEnvInfoBuilder {
         return createRunStepContainerDefinition(
             (RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder, stepIndex);
       case PLUGIN:
-        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex);
+        return createPluginStepContainerDefinition(
+            (PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex, getWorkingDirectory(integrationStage));
       default:
         return null;
     }
   }
 
+  private String getWorkingDirectory(IntegrationStage integrationStage) {
+    if (isNotEmpty(integrationStage.getWorkingDirectory())) {
+      return integrationStage.getWorkingDirectory();
+    } else {
+      return CICommonPodConstants.STEP_EXEC_WORKING_DIR;
+    }
+  }
   private ContainerDefinitionInfo createRunStepContainerDefinition(RunStepInfo runStepInfo,
       IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
     Integer port = portFinder.getNextPort();
     runStepInfo.setPort(port);
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
-    String workingDir = getStepWorkingDirectoryPath();
+    String workingDir = getStepWorkingDirectoryPath(getWorkingDirectory(integrationStage));
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -216,13 +225,13 @@ public class BuildJobEnvInfoBuilder {
         .build();
   }
 
-  private ContainerDefinitionInfo createPluginStepContainerDefinition(
-      PluginStepInfo pluginStepInfo, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
+  private ContainerDefinitionInfo createPluginStepContainerDefinition(PluginStepInfo pluginStepInfo,
+      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String workingDirectory) {
     Integer port = portFinder.getNextPort();
     pluginStepInfo.setPort(port);
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
-    String workingDir = getStepWorkingDirectoryPath();
+    String workingDir = getStepWorkingDirectoryPath(workingDirectory);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     if (!isEmpty(pluginStepInfo.getSettings())) {
@@ -448,7 +457,7 @@ public class BuildJobEnvInfoBuilder {
     }
   }
 
-  private String getStepWorkingDirectoryPath() {
-    return String.format("/%s/%s", STEP_EXEC, STEP_EXEC_WORKING_DIR);
+  private String getStepWorkingDirectoryPath(String workingDirectory) {
+    return String.format("/%s/%s", STEP_EXEC, workingDirectory);
   }
 }
