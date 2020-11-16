@@ -61,7 +61,8 @@ public class LocalSecretManagerServiceImpl implements LocalSecretManagerService 
 
   @Override
   public String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig) {
-    return accountId;
+    localEncryptionConfig.setAccountId(accountId);
+    return secretManagerConfigService.save(localEncryptionConfig);
   }
 
   @Override
