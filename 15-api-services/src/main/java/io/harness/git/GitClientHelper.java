@@ -63,8 +63,11 @@ import java.util.stream.Stream;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+).git";
+  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)(.git)";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
+  private static final Integer OWNER_GROUP = 4;
+  private static final Integer REPO_GROUP = 5;
+
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
                                                                 .maximumSize(2000)
                                                                 .expireAfterAccess(1, TimeUnit.HOURS)
@@ -79,7 +82,7 @@ public class GitClientHelper {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find() == true) {
-        return m.toMatchResult().group(5);
+        return m.toMatchResult().group(REPO_GROUP);
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }
@@ -93,7 +96,7 @@ public class GitClientHelper {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find() == true) {
-        return m.toMatchResult().group(4);
+        return m.toMatchResult().group(OWNER_GROUP);
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }
