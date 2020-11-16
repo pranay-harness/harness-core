@@ -44,8 +44,10 @@ public class GithubServiceImpl implements GithubService {
           executeRestCall(getGithubClient(githubAppConfig, encryptionDetails)
                               .createAccessToken(getAuthToken(jwtToken), githubAppConfig.getInstallationId()));
       return response.getToken();
-    } catch (Exception e) {
-      throw new InvalidRequestException("Failed to generate token :" + githubAppConfig.getGithubUrl(), e);
+    } catch (Exception ex) {
+      throw new InvalidRequestException(format("Failed to generate token for url %s, installation id %s",
+                                            githubAppConfig.getGithubUrl(), githubAppConfig.getInstallationId()),
+          ex);
     }
   }
 
@@ -67,7 +69,7 @@ public class GithubServiceImpl implements GithubService {
       }
 
     } catch (Exception e) {
-      log.error("Failed to send status :" + githubAppConfig.getGithubUrl(), e);
+      log.error("Failed to send status for github url {} and sha {} ", githubAppConfig.getGithubUrl(), sha, e);
       return false;
     }
   }
@@ -78,7 +80,7 @@ public class GithubServiceImpl implements GithubService {
     try {
       String githubUrl = githubAppConfig.getGithubUrl();
       if (githubUrl == null) {
-        throw new InvalidRequestException("Invalid Github Url Server URL");
+        throw new InvalidRequestException(format("Invalid Github Url Server URL %s ", githubAppConfig.getGithubUrl()));
       }
       if (!githubUrl.endsWith("/")) {
         githubUrl = githubUrl + "/";
