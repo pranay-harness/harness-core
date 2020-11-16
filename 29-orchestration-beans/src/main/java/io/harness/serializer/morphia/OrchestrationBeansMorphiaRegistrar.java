@@ -2,7 +2,6 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.Outcome;
@@ -40,7 +39,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(OutcomeInstance.class);
     set.add(StepTransput.class);
     set.add(FacilitatorParameters.class);
-    set.add(AdviserParameters.class);
     set.add(StepParameters.class);
     set.add(Outcome.class);
     set.add(RefObject.class);

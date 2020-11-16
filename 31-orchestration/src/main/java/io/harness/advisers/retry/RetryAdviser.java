@@ -21,22 +21,25 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 
 import java.util.Collections;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-public class RetryAdviser implements Adviser<RetryAdviserParameters> {
+public class RetryAdviser implements Adviser {
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private KryoSerializer kryoSerializer;
 
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.RETRY.name()).build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent<RetryAdviserParameters> advisingEvent) {
-    RetryAdviserParameters parameters = advisingEvent.getAdviserParameters();
+  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    RetryAdviserParameters parameters = extractParameters(advisingEvent);
     Ambiance ambiance = advisingEvent.getAmbiance();
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
@@ -48,10 +51,10 @@ public class RetryAdviser implements Adviser<RetryAdviserParameters> {
   }
 
   @Override
-  public boolean canAdvise(AdvisingEvent<RetryAdviserParameters> advisingEvent) {
+  public boolean canAdvise(AdvisingEvent advisingEvent) {
     boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
-    RetryAdviserParameters parameters = advisingEvent.getAdviserParameters();
+    RetryAdviserParameters parameters = extractParameters(advisingEvent);
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
       return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
     }
@@ -77,5 +80,11 @@ public class RetryAdviser implements Adviser<RetryAdviserParameters> {
     }
     return waitIntervalList.size() <= retryCount ? waitIntervalList.get(waitIntervalList.size() - 1)
                                                  : waitIntervalList.get(retryCount);
+  }
+
+  @NotNull
+  private RetryAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
+    return (RetryAdviserParameters) Preconditions.checkNotNull(
+        kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
   }
 }

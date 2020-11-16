@@ -14,12 +14,14 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.functional.redesign.mixins.adviserobtainment.AdviserObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.advisertype.AdviserTypeTestMixin;
 import io.harness.functional.redesign.mixins.ambiance.AmbianceTestMixin;
 import io.harness.functional.redesign.mixins.outcome.OutcomeTestMixin;
 import io.harness.functional.redesign.mixins.stepparameters.StepParametersTestMixin;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.rest.RestResponse;
 import io.harness.state.io.StepParameters;
@@ -53,6 +55,7 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                       mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
                       mapper.addMixIn(AdviserType.class, AdviserTypeTestMixin.class);
+                      mapper.addMixIn(AdviserObtainment.class, AdviserObtainmentTestMixin.class);
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))

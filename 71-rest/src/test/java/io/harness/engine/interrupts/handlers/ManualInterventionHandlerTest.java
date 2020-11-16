@@ -43,6 +43,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private StepRegistry stepRegistry;
+  @Inject private PlanRepo planRepo;
 
   @Before
   public void setUp() {
@@ -53,7 +54,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     assertThat(execution).isNotNull();
   }
@@ -62,7 +63,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithRetry() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -92,7 +93,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkSuccess() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -120,7 +121,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkFailed() {
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());

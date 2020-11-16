@@ -41,6 +41,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private InterruptService interruptService;
+  @Inject private PlanRepo planRepo;
 
   @Before
   public void setUp() {
@@ -53,7 +54,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status
-    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait());
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt

@@ -16,6 +16,7 @@ import static java.lang.String.format;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
 
 import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
@@ -23,7 +24,7 @@ import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdviseType;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserObtainment;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
@@ -65,6 +66,7 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -102,7 +104,7 @@ import javax.validation.constraints.NotNull;
 public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private StepRegistry stepRegistry;
+  @Inject private KryoSerializer kryoSerializer;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
@@ -294,7 +296,7 @@ public class OrchestrationEngine {
                                         .stepOutcomeRef(nodeExecution.getOutcomeRefs())
                                         .toStatus(status)
                                         .fromStatus(nodeExecution.getStatus())
-                                        .adviserParameters(obtainment.getParameters())
+                                        .adviserParameters(obtainment.getParameters().toByteArray())
                                         .failureInfo(nodeExecution.getFailureInfo())
                                         .build();
       if (adviser.canAdvise(advisingEvent)) {

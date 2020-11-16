@@ -22,6 +22,7 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
@@ -42,6 +43,7 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
   @InjectMocks @Inject OnFailAdviser onFailAdviser;
 
   @Mock NodeExecutionService nodeExecutionService;
+  @Inject KryoSerializer kryoSerializer;
 
   private Ambiance ambiance;
 
@@ -74,11 +76,11 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
                                       .status(Status.FAILED)
                                       .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent<OnFailAdviserParameters> advisingEvent =
-        AdvisingEvent.<OnFailAdviserParameters>builder()
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
             .ambiance(ambiance)
             .toStatus(Status.FAILED)
-            .adviserParameters(OnFailAdviserParameters.builder().nextNodeId(nextNodeId).build())
+            .adviserParameters(kryoSerializer.asBytes(OnFailAdviserParameters.builder().nextNodeId(nextNodeId).build()))
             .build();
     Advise advise = onFailAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(NextStepAdvise.class);
@@ -90,18 +92,18 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseNextNull() {
-    AdvisingEvent<OnFailAdviserParameters> advisingEvent =
-        AdvisingEvent.<OnFailAdviserParameters>builder()
-            .ambiance(ambiance)
-            .toStatus(Status.FAILED)
-            .adviserParameters(OnFailAdviserParameters.builder()
-                                   .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                                   .build())
-            .failureInfo(FailureInfo.builder()
-                             .errorMessage("Auth Error")
-                             .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                             .build())
-            .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.<OnFailAdviserParameters>builder()
+                                      .ambiance(ambiance)
+                                      .toStatus(Status.FAILED)
+                                      .adviserParameters(kryoSerializer.asBytes(
+                                          OnFailAdviserParameters.builder()
+                                              .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                              .build()))
+                                      .failureInfo(FailureInfo.builder()
+                                                       .errorMessage("Auth Error")
+                                                       .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                                       .build())
+                                      .build();
 
     boolean canAdvise = onFailAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
@@ -111,33 +113,32 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
-    AdvisingEventBuilder<OnFailAdviserParameters> advisingEventBuilder =
-        AdvisingEvent.<OnFailAdviserParameters>builder()
+    AdvisingEventBuilder advisingEventBuilder =
+        AdvisingEvent.builder()
             .ambiance(ambiance)
             .toStatus(Status.FAILED)
-            .adviserParameters(OnFailAdviserParameters.builder()
-                                   .nextNodeId(generateUuid())
-                                   .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                                   .build());
+            .adviserParameters(
+                kryoSerializer.asBytes(OnFailAdviserParameters.builder()
+                                           .nextNodeId(generateUuid())
+                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                           .build()));
 
-    AdvisingEvent<OnFailAdviserParameters> authFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.builder()
-                             .errorMessage("Auth Error")
-                             .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                             .build())
-            .build();
+    AdvisingEvent authFailEvent = advisingEventBuilder
+                                      .failureInfo(FailureInfo.builder()
+                                                       .errorMessage("Auth Error")
+                                                       .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                                       .build())
+                                      .build();
 
     boolean canAdvise = onFailAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    AdvisingEvent<OnFailAdviserParameters> appFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.builder()
-                             .errorMessage("Application Error")
-                             .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
-                             .build())
-            .build();
+    AdvisingEvent appFailEvent = advisingEventBuilder
+                                     .failureInfo(FailureInfo.builder()
+                                                      .errorMessage("Application Error")
+                                                      .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                                                      .build())
+                                     .build();
     canAdvise = onFailAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }
@@ -146,14 +147,15 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithNoFailureInfo() {
-    AdvisingEventBuilder<OnFailAdviserParameters> advisingEventBuilder =
+    AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.<OnFailAdviserParameters>builder()
             .ambiance(ambiance)
             .toStatus(Status.FAILED)
-            .adviserParameters(OnFailAdviserParameters.builder()
-                                   .nextNodeId(generateUuid())
-                                   .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                                   .build());
+            .adviserParameters(
+                kryoSerializer.asBytes(OnFailAdviserParameters.builder()
+                                           .nextNodeId(generateUuid())
+                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                           .build()));
 
     boolean canAdvise = onFailAdviser.canAdvise(advisingEventBuilder.build());
     assertThat(canAdvise).isTrue();

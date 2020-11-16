@@ -23,7 +23,7 @@ public class OrchestrationAdviserRegistrar implements AdviserRegistrar {
   @Inject private Injector injector;
 
   @Override
-  public void register(Set<Pair<AdviserType, Adviser<?>>> adviserClasses) {
+  public void register(Set<Pair<AdviserType, Adviser>> adviserClasses) {
     adviserClasses.add(Pair.of(IgnoreAdviser.ADVISER_TYPE, injector.getInstance(IgnoreAdviser.class)));
     adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnSuccessAdviser.class)));
     adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, injector.getInstance(RetryAdviser.class)));

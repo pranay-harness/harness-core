@@ -25,6 +25,7 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
@@ -47,6 +48,7 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @InjectMocks @Inject RetryAdviser retryAdviser;
 
   @Mock NodeExecutionService nodeExecutionService;
+  @Inject KryoSerializer kryoSerializer;
 
   private Ambiance ambiance;
 
@@ -78,11 +80,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
                                       .status(Status.FAILED)
                                       .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
-                                                              .ambiance(ambiance)
-                                                              .toStatus(Status.FAILED)
-                                                              .adviserParameters(getRetryParamsWithIgnore())
-                                                              .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                      .ambiance(ambiance)
+                                      .toStatus(Status.FAILED)
+                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
+                                      .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(RetryAdvise.class);
     RetryAdvise retryAdvise = (RetryAdvise) advise;
@@ -109,11 +111,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
-                                                              .ambiance(ambiance)
-                                                              .toStatus(Status.FAILED)
-                                                              .adviserParameters(getRetryParamsWithIgnore())
-                                                              .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
+                                      .ambiance(ambiance)
+                                      .toStatus(Status.FAILED)
+                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
+                                      .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(RetryAdvise.class);
     RetryAdvise retryAdvise = (RetryAdvise) advise;
@@ -140,11 +142,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
-    AdvisingEvent<RetryAdviserParameters> advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
-                                                              .ambiance(ambiance)
-                                                              .toStatus(Status.FAILED)
-                                                              .adviserParameters(getRetryParamsWithIgnore())
-                                                              .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                      .ambiance(ambiance)
+                                      .toStatus(Status.FAILED)
+                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
+                                      .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isInstanceOf(NextStepAdvise.class);
     NextStepAdvise nextStepAdvise = (NextStepAdvise) advise;
@@ -155,29 +157,27 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
-    AdvisingEventBuilder<RetryAdviserParameters> advisingEventBuilder =
-        AdvisingEvent.<RetryAdviserParameters>builder()
+    AdvisingEventBuilder advisingEventBuilder =
+        AdvisingEvent.builder()
             .ambiance(ambiance)
             .toStatus(Status.FAILED)
-            .adviserParameters(getRetryParamsWithIgnore());
+            .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()));
 
-    AdvisingEvent<RetryAdviserParameters> authFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.builder()
-                             .errorMessage("Auth Error")
-                             .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                             .build())
-            .build();
+    AdvisingEvent authFailEvent = advisingEventBuilder
+                                      .failureInfo(FailureInfo.builder()
+                                                       .errorMessage("Auth Error")
+                                                       .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                                       .build())
+                                      .build();
     boolean canAdvise = retryAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    AdvisingEvent<RetryAdviserParameters> appFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.builder()
-                             .errorMessage("Application Error")
-                             .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
-                             .build())
-            .build();
+    AdvisingEvent appFailEvent = advisingEventBuilder
+                                     .failureInfo(FailureInfo.builder()
+                                                      .errorMessage("Application Error")
+                                                      .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                                                      .build())
+                                     .build();
     canAdvise = retryAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }

@@ -2,7 +2,6 @@ package io.harness.advisers.success;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
@@ -12,6 +11,6 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class OnSuccessAdviserParameters implements AdviserParameters {
+public class OnSuccessAdviserParameters {
   String nextNodeId;
 }

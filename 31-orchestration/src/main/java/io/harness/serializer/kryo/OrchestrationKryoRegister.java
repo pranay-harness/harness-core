@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.ignore.IgnoreAdviserParameters;
+import io.harness.advisers.manualintervention.ManualInterventionAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
@@ -33,6 +34,7 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(OnSuccessAdviserParameters.class, 3104);
     kryo.register(OnFailAdviserParameters.class, 3105);
     kryo.register(IgnoreAdviserParameters.class, 3106);
+    kryo.register(ManualInterventionAdviserParameters.class, 3107);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);

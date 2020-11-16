@@ -11,11 +11,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.protobuf.ByteString;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
@@ -31,10 +31,12 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -55,6 +57,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private StepRegistry stepRegistry;
   @Inject private OrchestrationService orchestrationService;
   @Inject private EngineTestHelper engineTestHelper;
+  @Inject private KryoSerializer kryoSerializer;
 
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.newBuilder().setType("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
@@ -137,9 +140,10 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                       .identifier("test1")
                       .stepType(TEST_STEP_TYPE)
                       .adviserObtainment(
-                          AdviserObtainment.builder()
-                              .type(OnSuccessAdviser.ADVISER_TYPE)
-                              .parameters(OnSuccessAdviserParameters.builder().nextNodeId(testWaitNodeId).build())
+                          AdviserObtainment.newBuilder()
+                              .setType(OnSuccessAdviser.ADVISER_TYPE)
+                              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                                  OnSuccessAdviserParameters.builder().nextNodeId(testWaitNodeId).build())))
                               .build())
                       .facilitatorObtainment(FacilitatorObtainment.builder()
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())

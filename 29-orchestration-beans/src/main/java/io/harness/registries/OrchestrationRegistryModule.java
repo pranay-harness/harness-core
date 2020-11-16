@@ -66,7 +66,7 @@ public class OrchestrationRegistryModule extends AbstractModule {
   @Provides
   @Singleton
   AdviserRegistry providesAdviserRegistry(Injector injector, Map<String, AdviserRegistrar> adviserRegistrarMap) {
-    Set<Pair<AdviserType, Adviser<?>>> classes = new HashSet<>();
+    Set<Pair<AdviserType, Adviser>> classes = new HashSet<>();
     adviserRegistrarMap.values().forEach(adviserRegistrar -> adviserRegistrar.register(classes));
     AdviserRegistry adviserRegistry = new AdviserRegistry();
     injector.injectMembers(adviserRegistry);
