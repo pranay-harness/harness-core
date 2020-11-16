@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -21,6 +22,7 @@ import lombok.Setter;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.command.EcsResizeParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.service.intfc.ActivityService;
@@ -30,11 +32,13 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -75,6 +79,14 @@ public class EcsServiceRollback extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    ContextElement rollbackElement = ecsStateHelper.getDeployElementFromSweepingOutput(context);
+    if (rollbackElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
+          .build();
+    }
+
     EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
         context, serviceResourceService, infrastructureMappingService, settingsService, secretManager, true);
     if (deployDataBag.getContainerElement() == null) {
@@ -106,9 +118,12 @@ public class EcsServiceRollback extends State {
             .withUseFixedInstances(deployDataBag.getContainerElement().isUseFixedInstances())
             .withMaxInstances(deployDataBag.getContainerElement().getMaxInstances())
             .withFixedInstances(deployDataBag.getContainerElement().getFixedInstances())
+            .withNewInstanceData(deployDataBag.getRollbackElement().getNewInstanceData())
+            .withOldInstanceData(deployDataBag.getRollbackElement().getOldInstanceData())
             .withOriginalServiceCounts(deployDataBag.getContainerElement().getActiveServiceCounts())
             .withRollback(true)
-            .withRollbackAllPhases(true)
+            .withRollbackAllPhases(
+                getRollbackAtOnce(deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs()))
             .withPreviousAwsAutoScalarConfigs(deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs())
             .withContainerServiceName(deployDataBag.getContainerElement().getNewEcsServiceName())
             .build();
@@ -145,5 +160,12 @@ public class EcsServiceRollback extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(getMessage(e), e);
     }
+  }
+
+  private boolean getRollbackAtOnce(List<AwsAutoScalarConfig> awsAutoScalarConfigs) {
+    if (isNotEmpty(awsAutoScalarConfigs)) {
+      rollbackAllPhases = true;
+    }
+    return rollbackAllPhases;
   }
 }
