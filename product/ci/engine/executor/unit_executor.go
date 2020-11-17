@@ -10,11 +10,11 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/status"
 	"github.com/wings-software/portal/product/ci/engine/steps"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ var (
 	runStep              = steps.NewRunStep
 	pluginStep           = steps.NewPluginStep
 	sendStepStatus       = status.SendStepStatus
-	newRemoteLogger      = logger.GetRemoteLogger
+	newRemoteLogger      = logutil.GetGrpcRemoteLogger
 	newAddonClient       = caddon.NewAddonClient
 )
 

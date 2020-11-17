@@ -11,5 +11,6 @@ go_library(
     deps = [
         "//product/log-service/logger:go_default_library",
         "//product/log-service/stream:go_default_library",
+        "@com_github_cenkalti_backoff_v4//:go_default_library",
     ],
 )

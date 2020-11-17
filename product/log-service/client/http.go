@@ -1,17 +1,21 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+
+	// "strings"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/wings-software/portal/product/log-service/logger"
 	"github.com/wings-software/portal/product/log-service/stream"
 )
@@ -26,8 +30,6 @@ const (
 	downloadLinkEndpoint = "/blob/link/download?accountID=%s&key=%s"
 )
 
-var retryTime = 10 * time.Second
-
 // defaultClient is the default http.Client.
 var defaultClient = &http.Client{
 	CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -35,7 +37,7 @@ var defaultClient = &http.Client{
 	},
 }
 
-// New returns a new HTTPClient.
+// NewHTTPClient returns a new HTTPClient.
 func NewHTTPClient(endpoint, accountID, token string, skipverify bool) *HTTPClient {
 	client := &HTTPClient{
 		Endpoint:   endpoint,
@@ -71,7 +73,8 @@ type HTTPClient struct {
 // Upload uploads the file to remote storage.
 func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error {
 	path := fmt.Sprintf(blobEndpoint, c.AccountID, key)
-	resp, err := c.retry(ctx, path, "POST", r, nil, true)
+	backoff := createInfiniteBackoff()
+	resp, err := c.retry(ctx, c.Endpoint+path, "POST", r, nil, true, backoff)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -83,15 +86,24 @@ func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error 
 func (c *HTTPClient) UploadLink(ctx context.Context, key string) (*Link, error) {
 	path := fmt.Sprintf(uploadLinkEndpoint, c.AccountID, key)
 	out := new(Link)
-	_, err := c.retry(ctx, path, "POST", nil, out, false)
+	backoff := createInfiniteBackoff()
+	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, out, false, backoff)
 	return out, err
 }
 
 // Download downloads the file from remote storage.
 func (c *HTTPClient) Download(ctx context.Context, key string) (io.ReadCloser, error) {
 	path := fmt.Sprintf(blobEndpoint, c.AccountID, key)
-	resp, err := c.open(ctx, path, "GET", nil)
+	resp, err := c.open(ctx, c.Endpoint+path, "GET", nil)
 	return resp.Body, err
+}
+
+// UploadUsingLink takes in a reader and a link object and uploads directly to
+// remote storage.
+func (c *HTTPClient) UploadUsingLink(ctx context.Context, link string, r io.Reader) error {
+	backoff := createInfiniteBackoff()
+	_, err := c.retry(ctx, link, "PUT", r, nil, true, backoff)
+	return err
 }
 
 // DownloadLink returns a secure link that can be used to
@@ -99,40 +111,39 @@ func (c *HTTPClient) Download(ctx context.Context, key string) (io.ReadCloser, e
 func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*Link, error) {
 	path := fmt.Sprintf(downloadLinkEndpoint, c.AccountID, key)
 	out := new(Link)
-	_, err := c.do(ctx, path, "POST", nil, out)
+	_, err := c.do(ctx, c.Endpoint+path, "POST", nil, out)
 	return out, err
 }
 
 // Open opens the data stream.
 func (c *HTTPClient) Open(ctx context.Context, key string) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	_, err := c.retry(ctx, path, "POST", nil, nil, false)
+	backoff := createBackoff(60 * time.Second)
+	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, nil, false, backoff)
 	return err
 }
 
 // Close closes the data stream.
 func (c *HTTPClient) Close(ctx context.Context, key string) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	_, err := c.do(ctx, path, "DELETE", nil, nil)
+	_, err := c.do(ctx, c.Endpoint+path, "DELETE", nil, nil)
 	return err
 }
 
 // Write writes logs to the data stream.
 func (c *HTTPClient) Write(ctx context.Context, key string, lines []*stream.Line) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	_, err := c.do(ctx, path, "PUT", &lines, nil)
+	_, err := c.do(ctx, c.Endpoint+path, "PUT", &lines, nil)
 	return err
 }
 
 // Tail tails the data stream.
-// TODO: (vistaar) This currently doesn't work since server sends back server-sent events.
-// Need to find a library which can parse server sent response. This is not used right now.
-func (c *HTTPClient) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-chan error) {
+func (c *HTTPClient) Tail(ctx context.Context, key string) (<-chan string, <-chan error) {
 	errc := make(chan error, 1)
-	outc := make(chan *stream.Line, 100)
+	outc := make(chan string, 100)
 
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	res, err := c.open(ctx, path, "GET", nil)
+	res, err := c.open(ctx, c.Endpoint+path, "GET", nil)
 	if err != nil {
 		errc <- err
 		return outc, errc
@@ -142,23 +153,19 @@ func (c *HTTPClient) Tail(ctx context.Context, key string) (<-chan *stream.Line,
 		return outc, errc
 	}
 	go func(res *http.Response) {
+		reader := bufio.NewReader(res.Body)
 		defer res.Body.Close()
-		dec := json.NewDecoder(res.Body)
 		for {
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				errc <- err
+			}
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
-			line := new(stream.Line)
-			err := dec.Decode(line)
-			if err == io.EOF {
-				return
-			} else if err != nil {
-				errc <- err
-				return
-			}
-			outc <- line
+			outc <- string(line)
 		}
 	}(res)
 	return outc, errc
@@ -167,18 +174,18 @@ func (c *HTTPClient) Tail(ctx context.Context, key string) (<-chan *stream.Line,
 // Info returns the stream information.
 func (c *HTTPClient) Info(ctx context.Context) (*stream.Info, error) {
 	out := new(stream.Info)
-	_, err := c.do(ctx, infoEndpoint, "GET", nil, out)
+	_, err := c.do(ctx, c.Endpoint+infoEndpoint, "GET", nil, out)
 	return out, err
 }
 
-func (p *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool) (*http.Response, error) {
+func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {
 	for {
 		var res *http.Response
 		var err error
 		if !isOpen {
-			res, err = p.do(ctx, method, path, in, out)
+			res, err = c.do(ctx, method, path, in, out)
 		} else {
-			res, err = p.open(ctx, method, path, in.(io.Reader))
+			res, err = c.open(ctx, method, path, in.(io.Reader))
 		}
 
 		// do not retry on Canceled or DeadlineExceeded
@@ -187,19 +194,28 @@ func (p *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			return res, err
 		}
 
+		duration := b.NextBackOff()
+
 		if res != nil {
-			// Check the response code. We retry on 500-range
+			// Check the response code. We retry on 5xx-range
 			// responses to allow the server time to recover, as
-			// 500's are typically not permanent errors and may
+			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
-			if res.StatusCode > 501 {
+
+			if res.StatusCode >= 500 {
 				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
-				time.Sleep(retryTime)
+				if duration == backoff.Stop {
+					return nil, err
+				}
+				time.Sleep(duration)
 				continue
 			}
 		} else if err != nil {
 			logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: request error. Retrying ...")
-			time.Sleep(retryTime)
+			if duration == backoff.Stop {
+				return nil, err
+			}
+			time.Sleep(duration)
 			continue
 		}
 		return res, err
@@ -217,8 +233,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		r = buf
 	}
 
-	endpoint := c.Endpoint + path
-	req, err := http.NewRequestWithContext(ctx, method, endpoint, r)
+	req, err := http.NewRequestWithContext(ctx, method, path, r)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +241,6 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	// the request should include the secret shared between
 	// the agent and server for authorization.
 	req.Header.Add("X-Harness-Token", c.Token)
-
 	res, err := c.client().Do(req)
 	if res != nil {
 		defer func() {
@@ -279,8 +293,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 
 // helper function to open an http request
 func (c *HTTPClient) open(ctx context.Context, path, method string, body io.Reader) (*http.Response, error) {
-	endpoint := c.Endpoint + path
-	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
+	req, err := http.NewRequestWithContext(ctx, method, path, body)
 	if err != nil {
 		return nil, err
 	}
@@ -295,4 +308,14 @@ func (c *HTTPClient) client() *http.Client {
 		return defaultClient
 	}
 	return c.Client
+}
+
+func createInfiniteBackoff() *backoff.ExponentialBackOff {
+	return createBackoff(0)
+}
+
+func createBackoff(maxElapsedTime time.Duration) *backoff.ExponentialBackOff {
+	exp := backoff.NewExponentialBackOff()
+	exp.MaxElapsedTime = maxElapsedTime
+	return exp
 }

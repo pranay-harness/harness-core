@@ -16,9 +16,9 @@ func TestMainWithGrpc(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		log, _ := logs.GetObservedLogger(zap.InfoLevel)
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
@@ -48,9 +48,9 @@ func TestMainWithGrpcAndIntegrationService(t *testing.T) {
 	svcID := "db"
 	image := "alpine/git"
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		log, _ := logs.GetObservedLogger(zap.InfoLevel)
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}

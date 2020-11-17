@@ -51,6 +51,7 @@ func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
 //Start signals the GRPC server to begin serving on the configured port
 func (s *engineServer) Start() error {
 	pb.RegisterLiteEngineServer(s.grpcServer, NewEngineHandler(s.log))
+	pb.RegisterLogProxyServer(s.grpcServer, NewLogProxyHandler(s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
 		s.log.Errorw("error starting gRPC server", "error_msg", zap.Error(err))

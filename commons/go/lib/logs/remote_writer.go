@@ -170,8 +170,11 @@ func (b *RemoteWriter) upload() error {
 		}
 		data.Write(buf.Bytes())
 	}
-
-	err := b.client.Upload(context.Background(), b.key, data)
+	link, err := b.client.UploadLink(context.Background(), b.key)
+	if err != nil {
+		return err
+	}
+	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
 	return err
 }
 
@@ -183,6 +186,11 @@ func (b *RemoteWriter) flush() error {
 	b.Unlock()
 	if len(lines) == 0 {
 		return nil
+	}
+	// ONLY FOR DEBUG PURPOSES (TEMPORARY)
+	for _, line := range lines {
+		jsonLine, _ := json.Marshal(line)
+		fmt.Println(string(jsonLine))
 	}
 	return b.client.Write(
 		context.Background(), b.key, lines)

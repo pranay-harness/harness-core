@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
+	"github.com/wings-software/portal/product/ci/engine/logutil"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -19,9 +20,9 @@ type handler struct {
 }
 
 var (
-	newRemoteLogger = logger.GetRemoteLogger
-	newRunTask      = tasks.NewRunTask
-	newPluginTask   = tasks.NewPluginTask
+	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
+	newRunTask          = tasks.NewRunTask
+	newPluginTask       = tasks.NewPluginTask
 )
 
 // NewAddonHandler returns a GRPC handler that implements pb.AddonServer
@@ -37,12 +38,15 @@ func (h *handler) SignalStop(ctx context.Context, in *pb.SignalStopRequest) (*pb
 		time.Sleep(1 * time.Second)
 		h.stopCh <- true
 	}()
+	// Explicitly close pending logs before returning back, as they depend on the lite engine
+	// server being up.
+	addonlogs.LogState().ClosePendingLogs()
 	return &pb.SignalStopResponse{}, nil
 }
 
 // ExecuteStep executes a unit step.
 func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	rl, err := newRemoteLogger(in.GetStep().GetId())
+	rl, err := newGrpcRemoteLogger(in.GetStep().GetId())
 	if err != nil {
 		return &pb.ExecuteStepResponse{}, err
 	}

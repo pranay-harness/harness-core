@@ -11,8 +11,7 @@ import (
 	"os/exec"
 
 	"github.com/alexflint/go-arg"
-	"github.com/wings-software/portal/commons/go/lib/logs"
-	"github.com/wings-software/portal/product/log-service/client"
+	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"go.uber.org/zap"
 )
 
@@ -28,6 +27,10 @@ var args struct {
 	Command   string `arg:"--command, required" help:"Command to execute"`
 }
 
+var (
+	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
+)
+
 func parseArgs() {
 	arg.MustParse(&args)
 }
@@ -42,8 +45,7 @@ func main() {
 
 	// Create remote logger for command execution
 	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s", args.AccountID, args.OrgID, args.ProjectID, args.BuildID, args.StageID, args.StepID)
-	logClient := client.NewHTTPClient(args.Endpoint, args.AccountID, args.Token, false)
-	rl, err := logs.NewRemoteLogger(logClient, key)
+	rl, err := newGrpcRemoteLogger(key)
 	if err != nil {
 		panic(err)
 	}

@@ -108,7 +108,7 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 			return
 		}
 
-		io.WriteString(w, ": ping\n\n")
+		io.WriteString(w, ": ping\n")
 		f.Flush()
 
 		ctx, cancel := context.WithCancel(r.Context())
@@ -131,12 +131,12 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 			case <-time.After(time.Hour):
 				break L
 			case <-time.After(pingInterval):
-				io.WriteString(w, ": ping\n\n")
+				io.WriteString(w, ": ping\n")
 				f.Flush()
 			case line := <-linec:
 				io.WriteString(w, "data: ")
 				enc.Encode(line)
-				io.WriteString(w, "\n\n")
+				io.WriteString(w, "\n")
 				f.Flush()
 			}
 		}

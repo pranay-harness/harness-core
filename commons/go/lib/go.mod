@@ -8,21 +8,33 @@ require (
 	cloud.google.com/go/storage v1.8.0
 	github.com/aws/aws-sdk-go v1.34.29
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/cenkalti/backoff/v4 v4.0.2
+	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
 	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hpcloud/tail v1.0.0
 	github.com/minio/minio-go/v6 v6.0.57
-	github.com/opentracing/opentracing-go v1.1.0
+	github.com/neelance/parallel v0.0.0-20160708114440-4de9ce63d14c // indirect
+	github.com/opentracing/basictracer-go v1.1.0 // indirect
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.8.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/slimsag/godocmd v0.0.0-20161025000126-a1005ad29fe3 // indirect
+	github.com/sourcegraph/ctxvfs v0.0.0-20180418081416-2b65f1b1ea81 // indirect
+	github.com/sourcegraph/go-langserver v2.0.0+incompatible // indirect
+	github.com/sourcegraph/jsonrpc2 v0.0.0-20200429184054-15c2290dcb37 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/wings-software/portal/product/log-service v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.15.0
+	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102 // indirect
+	golang.org/x/sys v0.0.0-20201107080550-4d91cf3a1aaf // indirect
+	golang.org/x/tools v0.0.0-20201105220310-78b158585360 // indirect
 	google.golang.org/api v0.24.0
 	google.golang.org/grpc v1.29.1
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
