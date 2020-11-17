@@ -30,6 +30,14 @@ public class WebhookEventPayloadParser {
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
 
   public WebhookPayloadData parseEvent(TriggerWebhookEvent triggerWebhookEvent) {
+    ParseWebhookResponse parseWebhookResponse = invokeScmService(triggerWebhookEvent);
+
+    log.info(parseWebhookResponse.toString());
+    return convertWebhookResponse(parseWebhookResponse, triggerWebhookEvent);
+  }
+
+  @VisibleForTesting
+  ParseWebhookResponse invokeScmService(TriggerWebhookEvent triggerWebhookEvent) {
     Set<String> headerKeys =
         triggerWebhookEvent.getHeaders().stream().map(headerConfig -> headerConfig.getKey()).collect(toSet());
 
@@ -51,9 +59,7 @@ public class WebhookEventPayloadParser {
       log.error("Failed to parse webhook payload {}", triggerWebhookEvent.getPayload());
       throw e;
     }
-
-    log.info(parseWebhookResponse.toString());
-    return convertWebhookResponse(parseWebhookResponse, triggerWebhookEvent);
+    return parseWebhookResponse;
   }
 
   public WebhookPayloadData convertWebhookResponse(
@@ -77,8 +83,7 @@ public class WebhookEventPayloadParser {
     return webhookPayloadDataBuilder.build();
   }
 
-  @VisibleForTesting
-  WebhookPayloadDataBuilder convertPullRequestHook(PullRequestHook prHook) {
+  private WebhookPayloadDataBuilder convertPullRequestHook(PullRequestHook prHook) {
     WebhookGitUser webhookGitUser = convertUser(prHook.getSender());
     PRWebhookEvent prWebhookEvent = convertPRWebhookEvent(prHook);
 
@@ -88,8 +93,7 @@ public class WebhookEventPayloadParser {
         .webhookEvent(prWebhookEvent);
   }
 
-  @VisibleForTesting
-  WebhookPayloadDataBuilder converPushHook(PushHook pushHook) {
+  private WebhookPayloadDataBuilder converPushHook(PushHook pushHook) {
     WebhookGitUser webhookGitUser = convertUser(pushHook.getSender());
     BranchWebhookEvent webhookEvent = convertPushWebhookEvent(pushHook);
 
@@ -99,8 +103,7 @@ public class WebhookEventPayloadParser {
         .webhookEvent(webhookEvent);
   }
 
-  @VisibleForTesting
-  BranchWebhookEvent convertPushWebhookEvent(PushHook pushHook) {
+  private BranchWebhookEvent convertPushWebhookEvent(PushHook pushHook) {
     // TODO Add required push event details here with commit
     List<CommitDetails> commitDetailsList = new ArrayList<>();
     pushHook.getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
@@ -123,8 +126,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  CommitDetails convertCommit(Commit commit) {
+  private CommitDetails convertCommit(Commit commit) {
     return CommitDetails.builder()
         .commitId(commit.getSha())
         .message(commit.getMessage())
@@ -136,8 +138,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  Repository convertRepository(io.harness.product.ci.scm.proto.Repository repo) {
+  private Repository convertRepository(io.harness.product.ci.scm.proto.Repository repo) {
     return Repository.builder()
         .name(repo.getName())
         .namespace(repo.getNamespace())
@@ -150,8 +151,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
+  private PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
     // TODO Add commit details
     PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
@@ -168,8 +168,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  WebhookBaseAttributes convertPrHookBaseAttributes(PullRequestHook prHook) {
+  private WebhookBaseAttributes convertPrHookBaseAttributes(PullRequestHook prHook) {
     PullRequest pr = prHook.getPr();
     User author = prHook.getPr().getAuthor();
     String message = pr.getBody();
@@ -193,8 +192,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  WebhookBaseAttributes convertPushHookBaseAttributes(PushHook pushHook) {
+  private WebhookBaseAttributes convertPushHookBaseAttributes(PushHook pushHook) {
     String trimmedRef = pushHook.getRef().replaceFirst("^refs/heads/", "");
     Signature author = pushHook.getCommit().getAuthor();
     return WebhookBaseAttributes.builder()
@@ -213,8 +211,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  @VisibleForTesting
-  GitProvider obtainWebhookSource(Set<String> headerKeys) {
+  private GitProvider obtainWebhookSource(Set<String> headerKeys) {
     if (isEmpty(headerKeys)) {
       throw new InvalidRequestException("Failed to resolve Webhook Source. Reason: HttpHeaders are empty.");
     }
