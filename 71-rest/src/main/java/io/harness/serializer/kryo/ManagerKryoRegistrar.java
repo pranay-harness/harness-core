@@ -153,6 +153,7 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
@@ -1712,10 +1713,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
     kryo.register(AzureVMSSAllPhaseRollbackData.class, 8092);
+
     kryo.register(TrialSignupOptions.class, 8093);
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
 
     kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
+    kryo.register(TfVarGitSource.class, 8097);
   }
 }

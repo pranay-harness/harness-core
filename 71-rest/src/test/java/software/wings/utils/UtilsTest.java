@@ -2,9 +2,11 @@ package software.wings.utils;
 
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.Utils.escapifyString;
 import static software.wings.utils.Utils.getNameWithNextRevision;
 
@@ -12,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -112,5 +115,20 @@ public class UtilsTest extends CategoryTest {
     assertThat(Utils.emptyIfNull(null)).isEqualTo("");
     assertThat(Utils.emptyIfNull("")).isEqualTo("");
     assertThat(Utils.emptyIfNull("value")).isEqualTo("value");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testSplitCommaSeparatedFilePath() {
+    assertThatThrownBy(() -> Utils.splitCommaSeparatedFilePath(null)).isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> Utils.splitCommaSeparatedFilePath("")).isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> Utils.splitCommaSeparatedFilePath("null")).isInstanceOf(InvalidRequestException.class);
+    assertThat(Utils.splitCommaSeparatedFilePath("file1")).hasSize(1);
+    assertThat(Utils.splitCommaSeparatedFilePath("file1, file2")).hasSize(2);
+    assertThat(Utils.splitCommaSeparatedFilePath(" file1 , file2 ")).containsExactlyInAnyOrder("file1", "file2");
+    assertThat(Utils.splitCommaSeparatedFilePath(" p2/file1 , p1/file2 "))
+        .containsExactlyInAnyOrder("p2/file1", "p1/file2");
+    assertThat(Utils.splitCommaSeparatedFilePath(" file1 , file1 ")).containsExactlyInAnyOrder("file1", "file1");
   }
 }

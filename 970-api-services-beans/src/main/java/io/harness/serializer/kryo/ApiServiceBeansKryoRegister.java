@@ -67,11 +67,11 @@ import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.jira.JiraAction;
-import io.harness.jira.JiraCustomFieldValue;
-import io.harness.jira.JiraProjectData;
-import io.harness.jira.JiraIssueType;
-import io.harness.jira.JiraField;
 import io.harness.jira.JiraCreateMetaResponse;
+import io.harness.jira.JiraCustomFieldValue;
+import io.harness.jira.JiraField;
+import io.harness.jira.JiraIssueType;
+import io.harness.jira.JiraProjectData;
 import io.harness.jira.JiraStatus;
 import io.harness.jira.JiraStatusCategory;
 import io.harness.k8s.model.HelmVersion;
@@ -84,6 +84,9 @@ import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.ManifestType;
+import io.harness.provision.TfVarScriptRepositorySource;
+import io.harness.provision.TfVarSource;
+import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -209,7 +212,12 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsConfig.class, 1428);
     kryo.register(CrossAccountAccess.class, 1429);
     kryo.register(AwsAccessKeyCredential.class, 1430);
+
     kryo.register(JiraStatus.class, 1431);
     kryo.register(JiraStatusCategory.class, 1432);
+
+    kryo.register(TfVarScriptRepositorySource.class, 1433);
+    kryo.register(TfVarSource.class, 1434);
+    kryo.register(TfVarSourceType.class, 1435);
   }
 }

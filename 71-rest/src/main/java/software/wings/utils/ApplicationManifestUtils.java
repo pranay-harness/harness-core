@@ -17,6 +17,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
+import static software.wings.utils.Utils.splitCommaSeparatedFilePath;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -28,7 +29,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -67,7 +67,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -83,8 +82,6 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class ApplicationManifestUtils {
-  private static final String MULTIPLE_FILES_DELIMITER = ",";
-
   @Inject private AppService appService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -482,39 +479,20 @@ public class ApplicationManifestUtils {
         .map(Entry::getValue)
         .map(ApplicationManifest::getGitFileConfig)
         .filter(Objects::nonNull)
-        .forEach(gitFileConfig -> splitGitFileConfigFilePath(context, gitFileConfig));
+        .forEach(gitFileConfig -> {
+          gitFileConfigHelperService.renderGitFileConfig(context, gitFileConfig);
+          splitGitFileConfigFilePath(gitFileConfig);
+        });
   }
 
-  private void splitGitFileConfigFilePath(ExecutionContext context, GitFileConfig gitFileConfig) {
+  private void splitGitFileConfigFilePath(GitFileConfig gitFileConfig) {
     String filePath = gitFileConfig.getFilePath();
     gitFileConfig.setFilePath(null);
     gitFileConfig.setFilePathList(emptyList());
     if (filePath != null) {
-      String renderedFilePath = context.renderExpression(normalizeMultipleFilesFilePath(filePath));
-      List<String> multipleFiles = Arrays.stream(renderedFilePath.split(MULTIPLE_FILES_DELIMITER))
-                                       .map(String::trim)
-                                       .filter(value -> validateFilePath(value, filePath))
-                                       .collect(Collectors.toList());
+      List<String> multipleFiles = splitCommaSeparatedFilePath(filePath);
       gitFileConfig.setFilePathList(multipleFiles);
     }
-  }
-
-  private String normalizeMultipleFilesFilePath(String filePath) {
-    // Transform from filePath <,file1,file2,file3,> to <file1,file2,file3>
-    return Arrays.stream(filePath.split(MULTIPLE_FILES_DELIMITER))
-        .map(String::trim)
-        .filter(StringUtils::isNotBlank)
-        .collect(Collectors.joining(MULTIPLE_FILES_DELIMITER));
-  }
-
-  private boolean validateFilePath(String value, String originalValue) {
-    // expressions like <${valid}, ${missingValue}> could lead to result like <value, null>
-    if (isEmpty(value) || value.equals("null")) {
-      throw new InvalidRequestException(
-          "Invalid file path '" + value + "' after resolving value '" + originalValue + "'");
-    }
-
-    return true;
   }
 
   public void renderGitConfigForApplicationManifest(

@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -53,6 +54,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -93,7 +96,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private GitFileConfigHelperService gitFileConfigHelperService;
+  @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private ApplicationManifestUtils applicationManifestUtils;
@@ -729,12 +732,16 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
   private void testPopulateRemoteGitConfigFilePathListWith(
       K8sValuesLocation location, ApplicationManifest manifest, String... expectedFiles) {
-    doReturn("file").when(context).renderExpression("${expression}");
-    doReturn("file1, file2, file3").when(context).renderExpression("${expression1},${expression2},${expression3}");
-    doReturn("file3").when(context).renderExpression("${expression3}");
-    doReturn("file1, file2, file3").when(context).renderExpression("${multipleFilePathExpr}");
-    doReturn("file1, file2, file3").when(context).renderExpression("file1,file2,file3");
-    doReturn("file").when(context).renderExpression("file");
+    final Answer<String> answer = invocation -> {
+      String argument = invocation.getArgumentAt(0, String.class);
+      argument = argument.replace("${expression}", "file");
+      argument = argument.replace("${expression1}", "file1");
+      argument = argument.replace("${expression2}", "file2");
+      argument = argument.replace("${expression3}", "file3");
+      argument = argument.replace("${multipleFilePathExpr}", "file1, file2, file3");
+      return argument;
+    };
+    when(context.renderExpression(anyString())).thenAnswer(answer);
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(location, manifest);
     applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap);
@@ -758,15 +765,29 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
   public void testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(
       K8sValuesLocation location, ApplicationManifest manifest) {
-    doReturn("").when(context).renderExpression("${empty}");
-    doReturn("file, ").when(context).renderExpression("${valid},${empty}");
-    doReturn("null").when(context).renderExpression("${null}");
-    doReturn("file,null").when(context).renderExpression("${valid},${null}");
+    final Answer<String> answer = invocation -> {
+      String argument = invocation.getArgumentAt(0, String.class);
+      argument = argument.replace("${empty}", "");
+      argument = argument.replace("${valid}", "file");
+      argument = argument.replace("${null}", "null");
+      argument = argument.replace("${expression3}", "file3");
+      argument = argument.replace("${multipleFilePathExpr}", "file1, file2, file3");
+      return argument;
+    };
+    when(context.renderExpression(anyString())).thenAnswer(answer);
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(location, manifest);
-    assertThatThrownBy(() -> applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("Invalid file path");
+    if (ServiceOverride != location) {
+      assertThatThrownBy(() -> applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap))
+          .isInstanceOf(InvalidRequestException.class)
+          .hasMessageContaining("Invalid file path");
+    } else {
+      try {
+        applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap);
+      } catch (Exception e) {
+        fail("Should not reach here");
+      }
+    }
   }
 
   @Test

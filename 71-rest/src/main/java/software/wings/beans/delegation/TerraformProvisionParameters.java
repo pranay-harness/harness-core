@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
+import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
@@ -60,6 +61,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   @Builder.Default private long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
 
   private final List<String> targets;
+
   private final List<String> tfVarFiles;
   private final boolean runPlanOnly;
   private final boolean exportPlanToApplyStep;
@@ -69,6 +71,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final byte[] terraformPlan;
   private final boolean saveTerraformJson;
 
+  private final TfVarSource tfVarSource;
   /**
    * Boolean to indicate if we should skip updating terraform state using refresh command before applying an approved
    * terraform plan

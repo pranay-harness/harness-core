@@ -4,6 +4,7 @@ import static io.harness.beans.SweepingOutputInstance.Scope;
 import static io.harness.beans.SweepingOutputInstance.builder;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -20,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -37,6 +39,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.REPO_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -55,6 +59,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
+import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -66,6 +71,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -74,12 +81,14 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
@@ -88,6 +97,7 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -129,9 +139,12 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
+
+  private final Answer<String> answer = invocation -> invocation.getArgumentAt(0, String.class) + "-rendered";
 
   @Before
   public void setup() {
@@ -408,6 +421,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertParametersBackendConfigs(parameters);
     assertParametersEnvironmentVariables(parameters);
     assertThat(parameters.getTfVarFiles()).containsExactlyInAnyOrder("file1-rendered", "file2-rendered");
+    assertThat(parameters.getTfVarSource()).isNotNull();
+    TfVarScriptRepositorySource source = (TfVarScriptRepositorySource) parameters.getTfVarSource();
+    assertThat(source.getTfVarFilePaths()).containsExactlyInAnyOrder("file1-rendered", "file2-rendered");
     assertThat(parameters.getTargets()).containsExactlyInAnyOrder("target1-rendered", "target2-rendered");
   }
 
@@ -1002,5 +1018,64 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(activity.getEnvironmentName()).isEqualTo(envName);
     assertThat(activity.getEnvironmentId()).isEqualTo(envId);
     assertThat(activity.getEnvironmentType()).isEqualTo(envType);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetTfVarScriptRepositorySource() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    when(context.renderExpression(anyString())).thenAnswer(answer);
+    TerraformProvisionState spyState = spy(state);
+    List<String> tfVarFiles = Arrays.asList("path/to/file1.tfvar", "path/to/file2.tfvar");
+    spyState.setTfVarFiles(tfVarFiles);
+    TfVarScriptRepositorySource source = spyState.fetchTfVarScriptRepositorySource(context);
+    assertThat(source).isNotNull();
+    assertThat(source.getTfVarFilePaths())
+        .containsExactlyInAnyOrder("path/to/file1.tfvar-rendered", "path/to/file2.tfvar-rendered");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetTfVarGitSource() {
+    ExecutionContext context = Mockito.mock(ExecutionContext.class);
+    when(context.renderExpression(anyString())).thenAnswer(answer);
+    TerraformProvisionState spyState = spy(state);
+    GitFileConfig gitFileConfig = GitFileConfig.builder().connectorId(SETTING_ID).repoName(REPO_NAME).build();
+    spyState.setTfVarGitFileConfig(gitFileConfig);
+
+    GitConfig gitConfig = GitConfig.builder().build();
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(gitFileConfig.getConnectorId());
+    doNothing().when(gitConfigHelperService).renderGitConfig(context, gitConfig);
+    doNothing().when(gitConfigHelperService).convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
+    doReturn(new ArrayList<>()).when(secretManager).getEncryptionDetails(eq(gitConfig), eq(GLOBAL_APP_ID), any());
+
+    List<String> expectedPaths = Arrays.asList("/path/to/file1.tfvar", "/path/to/file2.tfvar-rendered");
+
+    validateGitSource(
+        "/path/to/file1.tfvar,/path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+    validateGitSource(
+        "/path/to/file1.tfvar, /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+    validateGitSource(
+        "/path/to/file1.tfvar , /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+    validateGitSource(
+        " /path/to/file1.tfvar , /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+    validateGitSource(
+        ", /path/to/file1.tfvar , /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+  }
+
+  private void validateGitSource(String input, List<String> expectedList, TerraformProvisionState spyState,
+      GitFileConfig gitFileConfig, ExecutionContext context, GitConfig gitConfig) {
+    gitFileConfig.setFilePath(input);
+    gitFileConfig.setFilePathList(null);
+
+    TfVarGitSource source = spyState.fetchTfVarGitSource(context);
+    assertThat(source).isNotNull();
+    assertThat(source.getGitConfig()).isEqualTo(gitConfig);
+    assertThat(source.getGitFileConfig().getFilePath()).isNull();
+    assertThat(source.getGitFileConfig().getFilePathList())
+        .containsExactlyInAnyOrder(expectedList.get(0), expectedList.get(1));
+    assertThat(source.getEncryptedDataDetails()).hasSize(0);
   }
 }
