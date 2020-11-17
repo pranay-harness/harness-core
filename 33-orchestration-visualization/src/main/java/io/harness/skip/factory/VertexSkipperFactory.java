@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.skip.SkipType;
+import io.harness.pms.steps.SkipType;
 import io.harness.skip.skipper.VertexSkipper;
 import io.harness.skip.skipper.impl.NoOpSkipper;
 import io.harness.skip.skipper.impl.SkipNodeSkipper;
