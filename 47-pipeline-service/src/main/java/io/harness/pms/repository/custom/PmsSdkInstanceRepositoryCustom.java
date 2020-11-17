@@ -1,8 +1,8 @@
 package io.harness.pms.repository.custom;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface PmsSdkInstanceRepositoryCustom {
-  void updateSupportedTypes(String name, Map<String, List<String>> supportedTypes);
+  void updateSupportedTypes(String name, Map<String, Set<String>> supportedTypes);
 }

@@ -7,6 +7,7 @@ import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.plan.PlanNode;
 import io.harness.pms.plan.common.creator.PlanCreationContext;
 import io.harness.pms.plan.common.creator.PlanCreationResponse;
+import io.harness.pms.plan.common.creator.PlanCreatorUtils;
 import io.harness.pms.plan.common.yaml.YamlField;
 import io.harness.pms.plan.common.yaml.YamlNode;
 import io.harness.pms.sdk.io.MapStepParameters;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 public class PipelinePlanCreator extends ParallelChildrenPlanCreator {
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("pipeline", Collections.singleton(ANY_TYPE));
+    return Collections.singletonMap("pipeline", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   @Override

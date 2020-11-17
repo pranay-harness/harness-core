@@ -35,7 +35,7 @@ public class YamlField {
     return builder.build();
   }
 
-  public static YamlField fromFieldFieldBlob(YamlFieldBlob fieldBlob) throws IOException {
+  public static YamlField fromFieldBlob(YamlFieldBlob fieldBlob) throws IOException {
     YamlField field = YamlUtils.readTree(fieldBlob.getBlob().toString(CHARSET));
     return new YamlField(EmptyPredicate.isEmpty(fieldBlob.getName()) ? null : fieldBlob.getName(), field.getNode());
   }

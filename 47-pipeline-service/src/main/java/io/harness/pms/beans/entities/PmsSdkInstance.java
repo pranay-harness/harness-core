@@ -20,8 +20,8 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -36,7 +36,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
   @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotNull @FdUniqueIndex String name;
-  Map<String, List<String>> supportedTypes;
+  Map<String, Set<String>> supportedTypes;
 
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;

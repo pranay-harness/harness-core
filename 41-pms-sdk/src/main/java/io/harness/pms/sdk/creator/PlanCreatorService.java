@@ -10,6 +10,7 @@ import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
 import io.harness.pms.plan.YamlFieldBlob;
 import io.harness.pms.plan.common.creator.PlanCreationContext;
 import io.harness.pms.plan.common.creator.PlanCreationResponse;
+import io.harness.pms.plan.common.creator.PlanCreatorUtils;
 import io.harness.pms.plan.common.utils.CompletableFutures;
 import io.harness.pms.plan.common.yaml.YamlField;
 import io.harness.serializer.KryoSerializer;
@@ -44,7 +45,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     if (EmptyPredicate.isNotEmpty(dependencyBlobs)) {
       try {
         for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
-          initialDependencies.put(entry.getKey(), YamlField.fromFieldFieldBlob(entry.getValue()));
+          initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
         }
       } catch (IOException e) {
         throw new InvalidRequestException("Invalid YAML found in dependency blobs");
@@ -117,24 +118,10 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private Optional<PartialPlanCreator> findPlanCreator(List<PartialPlanCreator> planCreators, YamlField field) {
-    String fieldName = field.getName();
     return planCreators.stream()
         .filter(planCreator -> {
           Map<String, Set<String>> supportedTypes = planCreator.getSupportedTypes();
-          if (EmptyPredicate.isEmpty(supportedTypes)) {
-            return false;
-          }
-
-          Set<String> types = supportedTypes.get(fieldName);
-          if (EmptyPredicate.isEmpty(types)) {
-            return false;
-          }
-
-          String fieldType = field.getNode().getType();
-          if (EmptyPredicate.isEmpty(fieldType)) {
-            fieldType = PartialPlanCreator.ANY_TYPE;
-          }
-          return types.contains(fieldType);
+          return PlanCreatorUtils.supportsField(supportedTypes, field);
         })
         .findFirst();
   }

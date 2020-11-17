@@ -18,7 +18,7 @@ import io.harness.PipelineServiceConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.plan.PlanCreationServiceGrpc;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
-import io.harness.pms.service.PmsService;
+import io.harness.pms.service.PmsSdkInstanceService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,11 +65,11 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("pms-grpc-service")
-  public Service pmsGrpcService(
-      PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager, PmsService pmsService) {
+  public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
+      PmsSdkInstanceService pmsSdkInstanceService) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
-    cdServices.add(pmsService);
+    cdServices.add(pmsSdkInstanceService);
     return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), cdServices,
         Collections.emptySet(), healthStatusManager);
   }
