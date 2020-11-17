@@ -18,6 +18,10 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+grpcServerConfig:
+  connectors:
+    - port: 12011
+
 grpcClientConfigs:
   cd:
     target: localhost:12101

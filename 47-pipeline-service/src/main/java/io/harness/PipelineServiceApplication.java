@@ -4,8 +4,12 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -16,6 +20,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
@@ -25,7 +30,9 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 
@@ -65,13 +72,28 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public void run(PipelineServiceConfiguration appConfig, Environment environment) {
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new PipelineServiceModule(appConfig));
 
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      PipelineServiceConfiguration configuration() {
+        return appConfig;
+      }
+    });
+    modules.add(PipelineServiceModule.getInstance());
+
+    Injector injector = Guice.createInjector(modules);
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
     registerManagedBeans(environment, injector);
+
+    log.info("Initializing gRPC servers...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     MaintenanceController.forceMaintenance(false);
   }

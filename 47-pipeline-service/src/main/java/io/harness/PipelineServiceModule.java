@@ -24,16 +24,19 @@ import java.util.Map;
 import java.util.Set;
 
 public class PipelineServiceModule extends AbstractModule {
-  private final PipelineServiceConfiguration appConfig;
+  private static PipelineServiceModule instance;
 
-  public PipelineServiceModule(PipelineServiceConfiguration appConfig) {
-    this.appConfig = appConfig;
+  public static PipelineServiceModule getInstance() {
+    if (instance == null) {
+      instance = new PipelineServiceModule();
+    }
+    return instance;
   }
 
   @Override
   protected void configure() {
     install(MongoModule.getInstance());
-    install(new PipelineServiceGrpcModule(appConfig));
+    install(PipelineServiceGrpcModule.getInstance());
     install(new PipelineServicePersistenceModule());
 
     bind(HPersistence.class).to(MongoPersistence.class);
@@ -74,8 +77,8 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public MongoConfig mongoConfig() {
-    return appConfig.getMongoConfig();
+  public MongoConfig mongoConfig(PipelineServiceConfiguration configuration) {
+    return configuration.getMongoConfig();
   }
 
   @Provides

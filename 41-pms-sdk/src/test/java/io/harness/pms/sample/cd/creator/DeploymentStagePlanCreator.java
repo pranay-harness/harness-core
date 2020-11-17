@@ -18,12 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DeploymentStagePlanCreator extends ParallelChildrenPlanCreator {
   @Override
-  public boolean supportsField(YamlField field) {
-    return "deployment".equals(field.getNode().getType());
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap("stage", Collections.singleton("deployment"));
   }
 
   @Override

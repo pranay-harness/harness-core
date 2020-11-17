@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -116,6 +117,25 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private Optional<PartialPlanCreator> findPlanCreator(List<PartialPlanCreator> planCreators, YamlField field) {
-    return planCreators.stream().filter(planCreator -> planCreator.supportsField(field)).findFirst();
+    String fieldName = field.getName();
+    return planCreators.stream()
+        .filter(planCreator -> {
+          Map<String, Set<String>> supportedTypes = planCreator.getSupportedTypes();
+          if (EmptyPredicate.isEmpty(supportedTypes)) {
+            return false;
+          }
+
+          Set<String> types = supportedTypes.get(fieldName);
+          if (EmptyPredicate.isEmpty(types)) {
+            return false;
+          }
+
+          String fieldType = field.getNode().getType();
+          if (EmptyPredicate.isEmpty(fieldType)) {
+            fieldType = PartialPlanCreator.ANY_TYPE;
+          }
+          return types.contains(fieldType);
+        })
+        .findFirst();
   }
 }
