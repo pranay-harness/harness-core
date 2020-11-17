@@ -2,8 +2,6 @@ package io.harness.integrationstage;
 
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
 
@@ -13,6 +11,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.exception.InvalidRequestException;
@@ -28,7 +27,7 @@ import java.util.Map;
 
 public class CIServiceBuilder {
   public static List<ContainerDefinitionInfo> createServicesContainerDefinition(
-      IntegrationStage integrationStage, PortFinder portFinder) {
+      IntegrationStage integrationStage, PortFinder portFinder, CIExecutionServiceConfig ciExecutionServiceConfig) {
     List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
     if (integrationStage.getDependencies() == null) {
       return containerDefinitionInfos;
@@ -41,8 +40,9 @@ public class CIServiceBuilder {
       }
 
       if (dependencyElement.getDependencySpecType() instanceof CIServiceInfo) {
-        ContainerDefinitionInfo containerDefinitionInfo = createServiceContainerDefinition(
-            (CIServiceInfo) dependencyElement.getDependencySpecType(), portFinder, serviceIdx);
+        ContainerDefinitionInfo containerDefinitionInfo =
+            createServiceContainerDefinition((CIServiceInfo) dependencyElement.getDependencySpecType(), portFinder,
+                serviceIdx, ciExecutionServiceConfig);
         if (containerDefinitionInfo != null) {
           containerDefinitionInfos.add(containerDefinitionInfo);
         }
@@ -53,7 +53,7 @@ public class CIServiceBuilder {
   }
 
   private static ContainerDefinitionInfo createServiceContainerDefinition(
-      CIServiceInfo service, PortFinder portFinder, int serviceIdx) {
+      CIServiceInfo service, PortFinder portFinder, int serviceIdx, CIExecutionServiceConfig ciExecutionServiceConfig) {
     Integer port = portFinder.getNextPort();
     service.setGrpcPort(port);
 
@@ -74,7 +74,7 @@ public class CIServiceBuilder {
                                    .imageDetails(getImageInfo(service.getImage()))
                                    .connectorIdentifier(service.getConnector())
                                    .build())
-        .containerResourceParams(getServiceContainerResource(service.getResources()))
+        .containerResourceParams(getServiceContainerResource(service.getResources(), ciExecutionServiceConfig))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.SERVICE)
         .volumeToMountPath(volumeToMountPath)
@@ -82,9 +82,10 @@ public class CIServiceBuilder {
         .build();
   }
 
-  private static ContainerResourceParams getServiceContainerResource(ContainerResource resource) {
-    Integer cpu = DEFAULT_LIMIT_MILLI_CPU;
-    Integer memory = DEFAULT_LIMIT_MEMORY_MIB;
+  private static ContainerResourceParams getServiceContainerResource(
+      ContainerResource resource, CIExecutionServiceConfig ciExecutionServiceConfig) {
+    Integer cpu = ciExecutionServiceConfig.getDefaultCPULimit();
+    Integer memory = ciExecutionServiceConfig.getDefaultMemoryLimit();
 
     if (resource != null && resource.getLimit() != null) {
       if (resource.getLimit().getCpu() != 0) {

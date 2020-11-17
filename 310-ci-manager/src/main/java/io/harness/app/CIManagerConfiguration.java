@@ -9,6 +9,7 @@ import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import lombok.Builder;
@@ -47,6 +48,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   private boolean enableAuth;
   private String managerTarget;
   private String managerAuthority;
+  private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();

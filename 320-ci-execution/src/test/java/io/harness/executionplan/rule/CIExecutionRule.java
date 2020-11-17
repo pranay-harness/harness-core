@@ -14,6 +14,7 @@ import com.google.inject.TypeLiteral;
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -100,7 +101,15 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     });
     modules.add(TestMongoModule.getInstance());
     modules.add(new CIExecutionPersistenceTestModule());
-    modules.add(new CIExecutionServiceModule());
+    modules.add(new CIExecutionServiceModule(CIExecutionServiceConfig.builder()
+                                                 .addonImageTag("v1.4-alpha")
+                                                 .defaultCPULimit(200)
+                                                 .defaultInternalImageConnector("account.harnessimage")
+                                                 .defaultMemoryLimit(200)
+                                                 .delegateServiceEndpointVariableValue("delegate-service:8080")
+                                                 .liteEngineImageTag("v1.4-alpha")
+                                                 .pvcDefaultStorageSize(25600)
+                                                 .build()));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

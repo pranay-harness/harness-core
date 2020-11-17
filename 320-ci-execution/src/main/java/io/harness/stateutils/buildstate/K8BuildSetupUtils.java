@@ -5,7 +5,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.DEFAULT_INTERNAL_IMAGE_CONNECTOR;
 import static io.harness.common.CIExecutionConstants.GIT_SSH_URL_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
@@ -33,6 +32,7 @@ import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
@@ -86,6 +86,7 @@ public class K8BuildSetupUtils {
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private ExecutionProtobufSerializer protobufSerializer;
+  @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
   @Inject CILogServiceUtils logServiceUtils;
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
@@ -116,15 +117,15 @@ public class K8BuildSetupUtils {
       Set<String> publishStepConnectorIdentifier, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
       String workDir) {
     ConnectorDetails harnessInternalImageRegistryConnectorDetails =
-        connectorUtils.getConnectorDetails(ngAccess, DEFAULT_INTERNAL_IMAGE_CONNECTOR);
+        connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
 
     List<CIK8ContainerParams> containerParamsList =
         getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess, publishStepConnectorIdentifier,
             harnessInternalImageRegistryConnectorDetails, gitConnector, liteEngineTaskStepInfo);
 
-    CIK8ContainerParams setupAddOnContainerParams =
-        internalContainerParamsProvider.getSetupAddonContainerParams(harnessInternalImageRegistryConnectorDetails);
+    CIK8ContainerParams setupAddOnContainerParams = internalContainerParamsProvider.getSetupAddonContainerParams(
+        harnessInternalImageRegistryConnectorDetails, workDir);
 
     List<HostAliasParams> hostAliasParamsList = new ArrayList<>();
     if (podSetupInfo.getServiceIdList() != null) {

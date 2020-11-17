@@ -108,7 +108,7 @@ public class CIManagerServiceModule extends AbstractModule {
         binder(), new TypeLiteral<String>() {}, new TypeLiteral<TaskExecutor<HDelegateTask>>() {});
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
 
-    install(CIExecutionServiceModule.getInstance());
+    install(new CIExecutionServiceModule(ciManagerConfiguration.getCiExecutionServiceConfig()));
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));

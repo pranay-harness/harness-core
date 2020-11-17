@@ -14,6 +14,7 @@ import io.harness.app.CIManagerServiceModule;
 import io.harness.app.SCMGrpcClientModule;
 import io.harness.app.ScmConnectionConfig;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -102,6 +103,15 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         CIManagerConfiguration.builder()
             .managerAuthority("localhost")
             .managerTarget("localhost:9880")
+            .ciExecutionServiceConfig(CIExecutionServiceConfig.builder()
+                                          .addonImageTag("v1.4-alpha")
+                                          .defaultCPULimit(200)
+                                          .defaultInternalImageConnector("account.harnessimage")
+                                          .defaultMemoryLimit(200)
+                                          .delegateServiceEndpointVariableValue("delegate-service:8080")
+                                          .liteEngineImageTag("v1.4-alpha")
+                                          .pvcDefaultStorageSize(25600)
+                                          .build())
             .logServiceConfig(
                 LogServiceConfig.builder().baseUrl("http://localhost-inc:8079").globalToken("global-token").build())
             .scmConnectionConfig(ScmConnectionConfig.builder().url("localhost:8181").build())

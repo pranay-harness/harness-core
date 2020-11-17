@@ -3,14 +3,11 @@ package io.harness.integrationstage;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.POD_NAME;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
-import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_SIZE;
 import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
@@ -18,6 +15,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -37,6 +35,7 @@ import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
@@ -64,6 +63,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildJobEnvInfoBuilder {
   private static final SecureRandom random = new SecureRandom();
+  @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
       List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
@@ -92,7 +92,7 @@ public class BuildJobEnvInfoBuilder {
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
     List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
-        CIServiceBuilder.createServicesContainerDefinition(integrationStage, portFinder);
+        CIServiceBuilder.createServicesContainerDefinition(integrationStage, portFinder, ciExecutionServiceConfig);
     List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
         createStepsContainerDefinition(steps, integrationStage, ciExecutionArgs, portFinder);
 
@@ -122,7 +122,7 @@ public class BuildJobEnvInfoBuilder {
         .claimName(buildNumber)
         .volumeName(STEP_EXEC)
         .isPresent(!isFirstPod)
-        .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+        .sizeMib(ciExecutionServiceConfig.getPvcDefaultStorageSize())
         .storageClass(PVC_DEFAULT_STORAGE_CLASS)
         .build();
   }
@@ -352,7 +352,7 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private Integer getContainerMemoryLimit(ContainerResource resource) {
-    Integer memoryLimit = DEFAULT_LIMIT_MEMORY_MIB;
+    Integer memoryLimit = ciExecutionServiceConfig.getDefaultMemoryLimit();
     if (resource != null && resource.getLimit() != null && resource.getLimit().getMemory() > 0) {
       memoryLimit = resource.getLimit().getMemory();
     }
@@ -360,7 +360,7 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private Integer getContainerCpuLimit(ContainerResource resource) {
-    Integer cpuLimit = DEFAULT_LIMIT_MILLI_CPU;
+    Integer cpuLimit = ciExecutionServiceConfig.getDefaultCPULimit();
     if (resource != null && resource.getLimit() != null && resource.getLimit().getCpu() > 0) {
       cpuLimit = resource.getLimit().getCpu();
     }

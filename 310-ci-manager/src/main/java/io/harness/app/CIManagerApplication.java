@@ -49,7 +49,7 @@ import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
@@ -170,7 +170,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(PersistenceRegistrars.morphiaConverters)
-            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+            .addAll(OrchestrationRegistrars.morphiaConverters)
             .build();
       }
     });
