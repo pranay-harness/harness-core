@@ -98,7 +98,6 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -1178,8 +1177,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       assertThat(exception.getParams().values().iterator().next())
           .isInstanceOf(String.class)
           .asString()
-          .startsWith("No WorkflowExecution for executionUuid");
-      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.name());
+          .startsWith("Workflow execution does not exist.");
     }
   }
 
