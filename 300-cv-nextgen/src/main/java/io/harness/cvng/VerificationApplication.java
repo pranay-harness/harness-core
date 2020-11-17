@@ -2,6 +2,7 @@ package io.harness.cvng;
 
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -430,6 +431,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     serviceToSecretMapping.put(
         MANAGER.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
     serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getManagerAuthConfig().getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        CV_NEXT_GEN.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
     environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
