@@ -1,6 +1,8 @@
 package io.harness.ng.core.user.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
@@ -15,7 +17,6 @@ import java.util.Optional;
 
 @OwnedBy(PL)
 public interface UserClient {
-  String ACCOUNT_ID_KEY = "accountId";
   String OFFSET_KEY = "offset";
   String LIMIT_KEY = "limit";
   String SEARCH_TERM_KEY = "searchTerm";
@@ -26,14 +27,18 @@ public interface UserClient {
   String USERNAME_API = "ng/users/usernames";
 
   @GET(USERS_SEARCH_API)
-  Call<RestResponse<PageResponse<User>>> list(@Query(value = ACCOUNT_ID_KEY) String accountId,
+  Call<RestResponse<PageResponse<User>>> list(@Query(value = ACCOUNT_KEY) String accountId,
       @Query(OFFSET_KEY) String offset, @Query(LIMIT_KEY) String limit, @Query(SEARCH_TERM_KEY) String searchTerm);
 
   @GET(USERNAME_API)
   Call<RestResponse<List<String>>> getUsernameFromEmail(
-      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = EMAIL_LIST) List<String> emailList);
+      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = EMAIL_LIST) List<String> emailList);
 
   @GET(USERS_API)
   Call<RestResponse<Optional<User>>> getUserFromEmail(
-      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = EMAIL_ID) String email);
+      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = EMAIL_ID) String email);
+
+  @GET(USERS_API)
+  Call<RestResponse<Optional<User>>> getEmailFromUserId(
+      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = IDENTIFIER_KEY) String targetId);
 }

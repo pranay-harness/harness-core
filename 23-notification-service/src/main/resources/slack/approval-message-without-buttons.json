@@ -1,0 +1,6 @@
+{
+  "channel" : "${channelName}", "blocks" : [ {
+    "type" : "section",
+    "text" : {"type" : "mrkdwn", "text" : "${approvalMessage}"}
+  } ]
+}

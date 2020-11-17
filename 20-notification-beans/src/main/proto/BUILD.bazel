@@ -1,0 +1,22 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+
+proto_library(
+    name = "20_notification_beans_proto",
+    srcs = glob(["**/*.proto"]),
+    strip_import_prefix = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+java_proto_library(
+    name = "20_notification_beans_java_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":20_notification_beans_proto",
+    ],
+)

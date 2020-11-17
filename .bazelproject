@@ -4,8 +4,10 @@ directories:
   19-delegate-tasks-beans
   20-delegate-tasks
   20-ng-core-beans
+  20-notification-beans
   21-delegate-agent-beans
   21-persistence
+  21-notification-client
   22-delegate-service-beans
   22-ng-core
   22-ng-project-n-orgs
@@ -15,6 +17,7 @@ directories:
   22-wait-engine
   23-ng-core-clients
   23-delegate-service-driver
+  23-notification-service
   23-sm-core
   24-common-entities
   26-pms-contracts
@@ -57,3 +60,5 @@ java_language_level: 8
 import_run_configurations:
   DelegateApp.xml
   WingsApp.xml
+  Notification Microservice.xml
+  Notification Client.xml

@@ -33,6 +33,22 @@ then
   # 71-rest and 260-delegate modules are excluded.
 fi
 
+build_bazel_application() {
+  module=$1
+  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:module_deploy.jar ${GCP} ${BAZEL_ARGUMENTS}
+
+  mvn -B install:install-file \
+   -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+   -DgroupId=software.wings \
+   -DartifactId=${module} \
+   -Dversion=0.0.1-SNAPSHOT \
+   -Dpackaging=jar \
+   -DgeneratePom=true \
+   -DpomFile=${module}/pom.xml \
+   -DlocalRepositoryPath=${local_repo}
+}
+
 build_bazel_module() {
   module=$1
   bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
@@ -96,7 +112,9 @@ build_bazel_module 19-delegate-tasks-beans
 build_bazel_module 20-delegate-beans
 build_bazel_module 20-delegate-tasks
 build_bazel_module 20-ng-core-beans
+build_bazel_module 20-notification-beans
 build_bazel_module 21-delegate-agent-beans
+build_bazel_application 21-notification-client
 build_bazel_module 21-persistence
 build_bazel_tests 21-persistence
 build_bazel_module 22-delegate-service-beans
@@ -108,6 +126,7 @@ build_bazel_module 22-timeout-engine
 build_bazel_module 22-wait-engine
 build_bazel_module 23-ng-core-clients
 build_bazel_module 23-delegate-service-driver
+build_bazel_application 23-notification-service
 build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
 build_bazel_module 26-pms-contracts
@@ -141,6 +160,7 @@ build_bazel_module 990-commons-test
 
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
+build_java_proto_module 20-notification-beans
 build_java_proto_module 21-delegate-agent-beans
 build_java_proto_module 22-delegate-service-beans
 build_java_proto_module 26-pms-contracts

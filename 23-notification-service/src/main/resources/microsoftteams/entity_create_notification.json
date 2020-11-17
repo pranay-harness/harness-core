@@ -1,0 +1,12 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "A new ${ENTITY_TYPE} **${ENTITY_NAME}** is created.",
+      "activitySubtitle": "Entity Notification",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    }
+  ]
+}
