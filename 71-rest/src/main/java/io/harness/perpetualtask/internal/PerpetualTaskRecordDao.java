@@ -2,6 +2,7 @@ package io.harness.perpetualtask.internal;
 
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_ASSIGNED;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -183,7 +184,8 @@ public class PerpetualTaskRecordDao {
 
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
-            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE);
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE)
+            .set(PerpetualTaskRecordKeys.rebalanceIteration, currentTimeMillis());
 
     persistence.update(query, updateOperations);
   }

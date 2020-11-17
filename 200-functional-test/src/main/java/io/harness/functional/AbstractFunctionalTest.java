@@ -83,6 +83,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
+
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
   @Inject private WingsPersistence wingsPersistence;
