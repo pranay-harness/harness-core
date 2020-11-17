@@ -71,3 +71,11 @@ managerClientConfig:
   baseUrl: http://localhost:3457/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+ciExecutionServiceConfig:
+  addonImageTag: v1.4-alpha
+  liteEngineImageTag: v1.4-alpha
+  defaultMemoryLimit: 200
+  defaultCPULimit: 200
+  defaultInternalImageConnector: account.harnessimage
+  pvcDefaultStorageSize: 25600
+  delegateServiceEndpointVariableValue: "delegate-service:8080"

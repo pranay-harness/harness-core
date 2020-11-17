@@ -3,11 +3,9 @@ package io.harness.stateutils.buildstate.providers;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_TAG;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
-import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
@@ -19,13 +17,13 @@ import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.INPUT_ARG_PREFIX;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_ARGS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_CPU;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_MEM;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_TAG;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_PATH;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PATH;
@@ -37,9 +35,11 @@ import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -62,18 +62,26 @@ import java.util.Map;
 @Singleton
 // TODO: fetch constants from config file.
 public class InternalContainerParamsProvider {
-  public CIK8ContainerParams getSetupAddonContainerParams(ConnectorDetails containerImageConnectorDetails) {
+  @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
+
+  public CIK8ContainerParams getSetupAddonContainerParams(
+      ConnectorDetails containerImageConnectorDetails, String workDir) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     List<String> args = new ArrayList<>(Collections.singletonList(SETUP_ADDON_ARGS));
+    Map<String, String> envVars = new HashMap<>();
+    envVars.put(HARNESS_WORKSPACE, workDir);
     return CIK8ContainerParams.builder()
         .name(SETUP_ADDON_CONTAINER_NAME)
+        .envVars(envVars)
         .containerType(CIContainerType.ADD_ON)
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(ImageDetails.builder().name(ADDON_IMAGE_NAME).tag(ADDON_IMAGE_TAG).build())
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(ImageDetails.builder()
+                                                         .name(ADDON_IMAGE_NAME)
+                                                         .tag(ciExecutionServiceConfig.getAddonImageTag())
+                                                         .build())
+                                       .imageConnectorDetails(containerImageConnectorDetails)
+                                       .build())
         .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
@@ -102,11 +110,13 @@ public class InternalContainerParamsProvider {
         .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().publishArtifactConnectors(publishArtifactConnectors).build())
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(ImageDetails.builder().name(LITE_ENGINE_IMAGE_NAME).tag(LITE_ENGINE_IMAGE_TAG).build())
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(ImageDetails.builder()
+                                                         .name(LITE_ENGINE_IMAGE_NAME)
+                                                         .tag(ciExecutionServiceConfig.getLiteEngineImageTag())
+                                                         .build())
+                                       .imageConnectorDetails(containerImageConnectorDetails)
+                                       .build())
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
         .args(args)
@@ -129,7 +139,7 @@ public class InternalContainerParamsProvider {
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
-    envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     envVars.put(LITE_ENGINE_JFROG_VARIABLE, LITE_ENGINE_JFROG_PATH);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);

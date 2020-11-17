@@ -1,10 +1,12 @@
 package io.harness;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
@@ -19,13 +21,11 @@ import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 public class CIExecutionServiceModule extends AbstractModule {
-  private static CIExecutionServiceModule instance;
+  private CIExecutionServiceConfig ciExecutionServiceConfig;
 
-  public static CIExecutionServiceModule getInstance() {
-    if (instance == null) {
-      instance = new CIExecutionServiceModule();
-    }
-    return instance;
+  @Inject
+  public CIExecutionServiceModule(CIExecutionServiceConfig ciExecutionServiceConfig) {
+    this.ciExecutionServiceConfig = ciExecutionServiceConfig;
   }
 
   @Override
@@ -36,6 +36,7 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(ExecutionPlanModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
+    this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

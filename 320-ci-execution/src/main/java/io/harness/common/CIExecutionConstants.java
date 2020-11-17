@@ -13,11 +13,9 @@ public class CIExecutionConstants {
 
   // Addon image
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "v1.4-alpha";
 
   // Lite-engine image
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v1.4-alpha";
 
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
@@ -36,10 +34,6 @@ public class CIExecutionConstants {
   public static final Integer PORT_STARTING_RANGE = 9000;
   public static final String PLUGIN_ENV_PREFIX = "PLUGIN_";
 
-  // Default memory & cpu
-  public static final Integer DEFAULT_LIMIT_MEMORY_MIB = 200;
-  public static final Integer DEFAULT_LIMIT_MILLI_CPU = 200;
-
   public static final String LOCALHOST_IP = "127.0.0.1";
   public static final String SERVICE_PREFIX = "service-";
   public static final String STEP_PREFIX = "step-";
@@ -47,7 +41,7 @@ public class CIExecutionConstants {
   // Container constants for setting up addon binary
   public static final String SETUP_ADDON_CONTAINER_NAME = "setup-addon";
   public static final String SETUP_ADDON_ARGS =
-      "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-addon-linux-amd64 /step-exec/.harness/bin/ci-addon; chmod +x /step-exec/.harness/bin/ci-addon;";
+      "mkdir -p ${HARNESS_WORKSPACE}; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-addon-linux-amd64 /step-exec/.harness/bin/ci-addon; chmod +x /step-exec/.harness/bin/ci-addon;";
 
   // Lite engine container constants
   public static final String LITE_ENGINE_CONTAINER_NAME = "lite-engine";
@@ -103,11 +97,9 @@ public class CIExecutionConstants {
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
 
-  public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "account.harnessimage";
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));
 
   public static final String IMAGE_PATH_SPLIT_REGEX = ":";
-  public static final Integer PVC_DEFAULT_STORAGE_SIZE = 25 * 1024;
   public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
 }

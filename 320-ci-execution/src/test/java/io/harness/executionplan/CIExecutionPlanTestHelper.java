@@ -4,8 +4,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.common.CIExecutionConstants.ARGS_PREFIX;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MEMORY_MIB;
-import static io.harness.common.CIExecutionConstants.DEFAULT_LIMIT_MILLI_CPU;
 import static io.harness.common.CIExecutionConstants.ENTRYPOINT_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
@@ -130,6 +128,9 @@ public class CIExecutionPlanTestHelper {
   private static final String ENV_SETUP_NAME = "envSetupName";
   private static final String BUILD_SCRIPT = "mvn clean install";
   private static final long BUILD_NUMBER = 20;
+  private static final Integer DEFAULT_LIMIT_MILLI_CPU = 200;
+  private static final Integer PVC_DEFAULT_STORAGE_SIZE = 25600;
+  private static final Integer DEFAULT_LIMIT_MEMORY_MIB = 200;
 
   private static final String RUN_STEP_IMAGE = "maven:3.6.3-jdk-8";
   private static final String RUN_STEP_CONNECTOR = "run";
@@ -283,7 +284,7 @@ public class CIExecutionPlanTestHelper {
                                 .volumeName("step-exec")
                                 .claimName("")
                                 .isPresent(false)
-                                .sizeMib(CIExecutionConstants.PVC_DEFAULT_STORAGE_SIZE)
+                                .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                 .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                 .build())
                  .podSetupParams(
@@ -311,7 +312,7 @@ public class CIExecutionPlanTestHelper {
                                 .volumeName("step-exec")
                                 .claimName("buildnumber22850")
                                 .isPresent(true)
-                                .sizeMib(CIExecutionConstants.PVC_DEFAULT_STORAGE_SIZE)
+                                .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                 .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                 .build())
                  .podSetupParams(PodSetupInfo.PodSetupParams.builder()
