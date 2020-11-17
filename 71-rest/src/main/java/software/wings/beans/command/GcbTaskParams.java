@@ -5,13 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -45,6 +48,13 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   @NotNull
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return gcpConfig.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = gcpConfig.fetchRequiredExecutionCapabilities();
+    if (gcpConfig.isUseDelegate()) {
+      executionCapabilities.add(SelectorCapability.builder()
+                                    .selectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+                                    .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
+                                    .build());
+    }
+    return executionCapabilities;
   }
 }
