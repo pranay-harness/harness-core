@@ -6,6 +6,7 @@ directories:
   20-ng-core-beans
   20-notification-beans
   21-delegate-agent-beans
+  21-events-api
   21-persistence
   21-notification-client
   22-delegate-service-beans
