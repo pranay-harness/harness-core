@@ -7,7 +7,7 @@ import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.HttpStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.StepType;
 import io.harness.walktree.beans.LevelNode;
@@ -53,7 +53,7 @@ public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo,
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return FacilitatorType.TASK_V3;
+    return OrchestrationFacilitatorType.TASK_V3;
   }
 
   @Override

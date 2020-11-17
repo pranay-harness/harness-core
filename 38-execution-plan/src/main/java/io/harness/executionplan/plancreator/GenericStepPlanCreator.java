@@ -15,9 +15,9 @@ import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.state.StepType;
 import io.harness.yaml.core.StepElement;
 import lombok.extern.slf4j.Slf4j;
@@ -67,9 +67,10 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .stepType(StepType.builder().type(genericStepInfo.getStepType().getType()).build())
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(genericStepInfo.getStepParameters())
-        .facilitatorObtainment(FacilitatorObtainment.builder()
-                                   .type(FacilitatorType.builder().type(genericStepInfo.getFacilitatorType()).build())
-                                   .build());
+        .facilitatorObtainment(
+            FacilitatorObtainment.builder()
+                .type(FacilitatorType.newBuilder().setType(genericStepInfo.getFacilitatorType()).build())
+                .build());
 
     return planNodeBuilder.build();
   }

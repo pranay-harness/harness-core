@@ -14,7 +14,7 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
@@ -59,7 +59,8 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
     assertThat(planNode.getIdentifier()).isEqualTo(stepInfo.getIdentifier());
     assertThat(planNode.getStepType()).isEqualTo(stepInfo.getNonYamlInfo().getStepType());
     assertThat(planNode.getStepParameters()).isEqualTo(stepInfo);
-    assertThat(planNode.getFacilitatorObtainments().get(0).getType().getType()).isEqualTo(FacilitatorType.SYNC);
+    assertThat(planNode.getFacilitatorObtainments().get(0).getType().getType())
+        .isEqualTo(OrchestrationFacilitatorType.SYNC);
   }
 
   @Test

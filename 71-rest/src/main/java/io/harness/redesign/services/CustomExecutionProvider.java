@@ -21,12 +21,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.MockServerConfig;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.steps.SkipType;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
@@ -103,9 +104,10 @@ public class CustomExecutionProvider {
                                                                         .responseCodeNodeIdMapping(500, dummyNode3Id)
                                                                         .build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -119,9 +121,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .refObject(OutcomeRefObject.builder().name("http").producerId(httpNodeId).build())
                 .build())
         .node(
@@ -136,9 +139,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -152,9 +156,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(waitNodeId)
@@ -162,9 +167,10 @@ public class CustomExecutionProvider {
                   .identifier("wait")
                   .stepType(StepType.builder().type("WAIT_STATE").build())
                   .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                          .build())
                   .build())
         .startingNodeId(httpNodeId)
         .build();
@@ -182,9 +188,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_1")
                   .stepParameters(basicHttpStateParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_V2).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V2).build())
+                          .build())
                   .build())
         .startingNodeId(httpNodeId)
         .build();
@@ -202,9 +209,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http")
                   .stepParameters(basicHttpStateParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_V3).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V3).build())
+                          .build())
                   .build())
         .startingNodeId(httpNodeId)
         .build();
@@ -229,9 +237,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_parallel_1")
                   .stepParameters(basicHttpStateParameters1)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNodeId2)
@@ -239,9 +248,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_parallel_2")
                   .stepParameters(basicHttpStateParameters2)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -257,9 +267,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -273,9 +284,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(emailNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(emailNodeId)
@@ -287,9 +299,10 @@ public class CustomExecutionProvider {
                                       .body("body")
                                       .toAddress("to1@harness.io, to2@harness.io")
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(forkNodeId)
         .build();
@@ -315,9 +328,10 @@ public class CustomExecutionProvider {
                 .stepType(BASIC_HTTP_STEP_TYPE)
                 .identifier("http_1")
                 .stepParameters(basicHttpStateParameters1)
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -332,9 +346,10 @@ public class CustomExecutionProvider {
                 .stepType(WaitStep.STEP_TYPE)
                 .identifier("wait_1")
                 .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -348,9 +363,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_2")
                   .stepParameters(basicHttpStateParameters2)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -365,18 +381,20 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionNodeId)
         .build();
@@ -395,9 +413,10 @@ public class CustomExecutionProvider {
                   .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("dummy")
                   .stepParameters(basicHttpStateParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .adviserObtainment(
                       AdviserObtainment.newBuilder()
                           .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.RETRY.name()).build())
@@ -415,9 +434,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -435,9 +455,10 @@ public class CustomExecutionProvider {
                   .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("dummy")
                   .stepParameters(basicHttpStateParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .adviserObtainment(
                       AdviserObtainment.newBuilder()
                           .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.RETRY.name()).build())
@@ -455,9 +476,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -476,9 +498,10 @@ public class CustomExecutionProvider {
                 .stepType(BasicHttpStep.STEP_TYPE)
                 .identifier("dummy")
                 .stepParameters(basicHttpStateParameters)
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                        .build())
                 .adviserObtainment(AdviserObtainment.newBuilder()
                                        .setType(AdviserType.newBuilder()
                                                     .setType(OrchestrationAdviserTypes.MANUAL_INTERVENTION.name())
@@ -496,9 +519,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -524,9 +548,10 @@ public class CustomExecutionProvider {
                 .stepType(BASIC_HTTP_STEP_TYPE)
                 .identifier("http-1")
                 .stepParameters(basicHttpStateParameters1)
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -540,9 +565,10 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http-2")
                   .stepParameters(basicHttpStateParameters2)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -563,9 +589,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(rollbackSectionNodeId)
@@ -573,9 +600,10 @@ public class CustomExecutionProvider {
                   .stepType(StepType.builder().type("SECTION").build())
                   .identifier("section-1")
                   .stepParameters(SectionStepParameters.builder().childNodeId(rollbackHttpNodeId1).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(rollbackHttpNodeId1)
@@ -583,18 +611,20 @@ public class CustomExecutionProvider {
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("rollback-http-1")
                   .stepParameters(basicHttpStateParameters1)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionNodeId)
         .build();
@@ -751,9 +781,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(section11NodeId)
@@ -765,9 +796,10 @@ public class CustomExecutionProvider {
                                       .childNodeId(shellScript11NodeId)
                                       .data(ImmutableMap.of("f1", "v111", "f2", "v112"))
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(section2NodeId)
@@ -779,9 +811,10 @@ public class CustomExecutionProvider {
                                       .childNodeId(section21NodeId)
                                       .data(ImmutableMap.of("f1", "v21", "f2", "v22"))
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(section21NodeId)
@@ -793,9 +826,10 @@ public class CustomExecutionProvider {
                                       .childNodeId(shellScript2NodeId)
                                       .data(ImmutableMap.of("f1", "v211", "f2", "v212"))
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -804,9 +838,10 @@ public class CustomExecutionProvider {
                 .identifier("shell0")
                 .stepType(ShellScriptStep.STEP_TYPE)
                 .stepParameters(shellScript11StepParameters)
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -820,9 +855,10 @@ public class CustomExecutionProvider {
                   .identifier("shell")
                   .stepType(ShellScriptStep.STEP_TYPE)
                   .stepParameters(shellScript12StepParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -831,9 +867,10 @@ public class CustomExecutionProvider {
                 .identifier("shell")
                 .stepType(ShellScriptStep.STEP_TYPE)
                 .stepParameters(shellScript2StepParameters)
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -846,9 +883,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -899,9 +937,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(section2NodeId)
@@ -913,9 +952,10 @@ public class CustomExecutionProvider {
                                       .childNodeId(shellScript2NodeId)
                                       .data(ImmutableMap.of("f1", "v21", "f2", "v22"))
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(shellScript1NodeId)
@@ -923,9 +963,10 @@ public class CustomExecutionProvider {
                   .identifier("shell1")
                   .stepType(ShellScriptStep.STEP_TYPE)
                   .stepParameters(shellScript1StepParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(shellScript2NodeId)
@@ -933,9 +974,10 @@ public class CustomExecutionProvider {
                   .identifier("shell2")
                   .stepType(ShellScriptStep.STEP_TYPE)
                   .stepParameters(shellScript2StepParameters)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .build();
   }
@@ -964,9 +1006,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(httpChainId)
@@ -978,7 +1021,7 @@ public class CustomExecutionProvider {
                                       .linkParameter(basicHttpStateParameters2)
                                       .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(facilitatorType).build())
+                                             .type(FacilitatorType.newBuilder().setType(facilitatorType).build())
                                              .build())
                   .build())
         .node(PlanNode.builder()
@@ -986,9 +1029,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionNodeId)
         .build();
@@ -1014,9 +1058,10 @@ public class CustomExecutionProvider {
                   .identifier("section_chain")
                   .stepParameters(
                       SectionChainStepParameters.builder().childNodeId(httpNode1Id).childNodeId(httpNode2Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode1Id)
@@ -1029,9 +1074,10 @@ public class CustomExecutionProvider {
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                                              OnSuccessAdviserParameters.builder().nextNodeId(dummyNode1Id).build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode2Id)
@@ -1044,27 +1090,30 @@ public class CustomExecutionProvider {
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                                              OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode1Id)
                   .name("Dummy Node 1")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
         .build();
@@ -1094,9 +1143,10 @@ public class CustomExecutionProvider {
                   .identifier("section_chain")
                   .stepParameters(
                       SectionChainStepParameters.builder().childNodeId(httpNode1Id).childNodeId(httpNode2Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode1Id)
@@ -1109,9 +1159,10 @@ public class CustomExecutionProvider {
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                                              OnSuccessAdviserParameters.builder().nextNodeId(httpNode3Id).build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode3Id)
@@ -1124,9 +1175,10 @@ public class CustomExecutionProvider {
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                                              OnSuccessAdviserParameters.builder().nextNodeId(dummyNode1Id).build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode2Id)
@@ -1139,27 +1191,30 @@ public class CustomExecutionProvider {
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                                              OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode1Id)
                   .name("Dummy Node 1")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
         .build();
@@ -1176,9 +1231,10 @@ public class CustomExecutionProvider {
                   .stepType(SectionChainStep.STEP_TYPE)
                   .identifier("section_chain")
                   .stepParameters(SectionChainStepParameters.builder().build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                          .build())
                   .adviserObtainment(AdviserObtainment.newBuilder()
                                          .setType(OnSuccessAdviser.ADVISER_TYPE)
                                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
@@ -1190,9 +1246,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 1")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
         .build();
@@ -1235,9 +1292,10 @@ public class CustomExecutionProvider {
                                       .childNodeId(httpNode2Id)
                                       .childNodeId(httpNode3Id)
                                       .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode1Id)
@@ -1245,9 +1303,10 @@ public class CustomExecutionProvider {
                   .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("http1")
                   .stepParameters(basicHttpStateParameters1)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode2Id)
@@ -1255,9 +1314,10 @@ public class CustomExecutionProvider {
                   .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("http2")
                   .stepParameters(basicHttpStateParameters2)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpNode3Id)
@@ -1265,27 +1325,30 @@ public class CustomExecutionProvider {
                   .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("http3")
                   .stepParameters(basicHttpStateParameters3)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode1Id)
                   .name("Dummy Node 1")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
         .build();
@@ -1327,9 +1390,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(
                             kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(forkId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1345,9 +1409,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummuNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(section1Id)
@@ -1355,9 +1420,10 @@ public class CustomExecutionProvider {
                   .name("section1")
                   .stepType(SectionStep.STEP_TYPE)
                   .stepParameters(SectionStepParameters.builder().childNodeId(forkId2).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(section2Id)
@@ -1365,9 +1431,10 @@ public class CustomExecutionProvider {
                   .name("section2")
                   .stepType(SectionStep.STEP_TYPE)
                   .stepParameters(SectionStepParameters.builder().childNodeId(httpSwitchId).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(forkId2)
@@ -1375,9 +1442,10 @@ public class CustomExecutionProvider {
                   .name("fork2")
                   .stepType(ForkStep.STEP_TYPE)
                   .stepParameters(ForkStepParameters.builder().parallelNodeId(http1Id).parallelNodeId(http2Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(httpSwitchId)
@@ -1393,9 +1461,10 @@ public class CustomExecutionProvider {
                                                                         .responseCodeNodeIdMapping(404, dummyNode2Id)
                                                                         .build())))
                                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(http1Id)
@@ -1403,9 +1472,10 @@ public class CustomExecutionProvider {
                   .name("http1")
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .stepParameters(basicHttpStepParameters1)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(http2Id)
@@ -1413,18 +1483,20 @@ public class CustomExecutionProvider {
                   .name("http2")
                   .stepType(BASIC_HTTP_STEP_TYPE)
                   .stepParameters(basicHttpStepParameters1)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode1Id)
                   .identifier("dummy1")
                   .name("dummy1")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .refObject(OutcomeRefObject.builder().name("http").producerId(httpSwitchId).build())
                   .build())
         .node(PlanNode.builder()
@@ -1432,18 +1504,20 @@ public class CustomExecutionProvider {
                   .identifier("dummy2")
                   .name("dummy2")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummuNodeId)
                   .identifier("dummy-final")
                   .name("dummy-final")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1462,9 +1536,10 @@ public class CustomExecutionProvider {
                   .identifier("fork1")
                   .stepParameters(
                       ForkStepParameters.builder().parallelNodeId(dummyNode1Id).parallelNodeId(dummyNode2Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -1478,18 +1553,20 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(barrierNodeId)
@@ -1497,9 +1574,10 @@ public class CustomExecutionProvider {
                   .name("barrier1")
                   .stepType(BarrierStep.STEP_TYPE)
                   .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(100000).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1523,9 +1601,10 @@ public class CustomExecutionProvider {
                   .identifier("fork1")
                   .stepParameters(
                       ForkStepParameters.builder().parallelNodeId(dummyNodeId1).parallelNodeId(dummyNodeId2).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -1539,9 +1618,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId1).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1549,9 +1629,10 @@ public class CustomExecutionProvider {
                 .name("Dummy Node 2")
                 .stepType(DUMMY_STEP_TYPE)
                 .identifier("dummy2")
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1566,9 +1647,10 @@ public class CustomExecutionProvider {
                 .identifier("wait")
                 .stepType(StepType.builder().type("WAIT_STATE").build())
                 .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1586,9 +1668,10 @@ public class CustomExecutionProvider {
                                     .identifier("BAR1")
                                     .timeoutInMillis(Duration.ofMinutes(10).toMillis())
                                     .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1606,9 +1689,10 @@ public class CustomExecutionProvider {
                                     .identifier("BAR1")
                                     .timeoutInMillis(Duration.ofMinutes(10).toMillis())
                                     .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1626,9 +1710,10 @@ public class CustomExecutionProvider {
                                     .identifier("BAR2")
                                     .timeoutInMillis(Duration.ofMinutes(10).toMillis())
                                     .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1641,18 +1726,20 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 3")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy3")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId4)
                   .name("Dummy Node 4")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy4")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1677,9 +1764,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1701,19 +1789,21 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())))
                         .build())
-                .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
-                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.newBuilder()
+                                                     .setType(OrchestrationFacilitatorType.RESOURCE_RESTRAINT)
+                                                     .build())
+                                           .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1739,9 +1829,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1763,10 +1854,11 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())))
                         .build())
-                .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
-                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.newBuilder()
+                                                     .setType(OrchestrationFacilitatorType.RESOURCE_RESTRAINT)
+                                                     .build())
+                                           .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1775,9 +1867,10 @@ public class CustomExecutionProvider {
                 .identifier("wait")
                 .stepType(StepType.builder().type("WAIT_STATE").build())
                 .stepParameters(WaitStepParameters.builder().waitDurationSeconds(50).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -1790,9 +1883,10 @@ public class CustomExecutionProvider {
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1823,9 +1917,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(
                             kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(forkId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1841,9 +1936,10 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummuNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(section1Id)
@@ -1851,9 +1947,10 @@ public class CustomExecutionProvider {
                   .name("section1")
                   .stepType(SectionStep.STEP_TYPE)
                   .stepParameters(SectionStepParameters.builder().childNodeId(forkId2).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(section2Id)
@@ -1861,9 +1958,10 @@ public class CustomExecutionProvider {
                   .name("section2")
                   .stepType(SectionStep.STEP_TYPE)
                   .stepParameters(SectionStepParameters.builder().childNodeId(forkId3).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(forkId2)
@@ -1873,9 +1971,10 @@ public class CustomExecutionProvider {
                   .skipGraphType(SkipType.SKIP_TREE)
                   .stepParameters(
                       ForkStepParameters.builder().parallelNodeId(dummyNode3Id).parallelNodeId(dummyNode4Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(forkId3)
@@ -1885,27 +1984,30 @@ public class CustomExecutionProvider {
                   .skipGraphType(SkipType.SKIP_NODE)
                   .stepParameters(
                       ForkStepParameters.builder().parallelNodeId(dummyNode1Id).parallelNodeId(dummyNode2Id).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode3Id)
                   .identifier("dummy3")
                   .name("dummy3")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode4Id)
                   .identifier("dummy4")
                   .name("dummy4")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode1Id)
@@ -1913,27 +2015,30 @@ public class CustomExecutionProvider {
                   .name("dummy1")
                   .stepType(DUMMY_STEP_TYPE)
                   .skipGraphType(SkipType.SKIP_NODE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .identifier("dummy2")
                   .name("dummy2")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummuNodeId)
                   .identifier("dummy-final")
                   .name("dummy-final")
                   .stepType(DUMMY_STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }
@@ -1951,9 +2056,10 @@ public class CustomExecutionProvider {
             .identifier("http4")
             .stepType(BasicHttpStep.STEP_TYPE)
             .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/201").method("GET").build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
             .build();
 
     PlanNode http1 =
@@ -1963,9 +2069,10 @@ public class CustomExecutionProvider {
             .identifier("http1")
             .stepType(BasicHttpStep.STEP_TYPE)
             .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/200").method("GET").build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
             .build();
 
     PlanNode http2 =
@@ -1975,9 +2082,10 @@ public class CustomExecutionProvider {
             .identifier("http2")
             .stepType(BasicHttpStep.STEP_TYPE)
             .stepParameters(BasicHttpStepParameters.builder().url("wrong").method("GET").build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
             .adviserObtainment(
                 AdviserObtainment.newBuilder()
                     .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
@@ -1993,9 +2101,10 @@ public class CustomExecutionProvider {
             .identifier("http3")
             .stepType(BasicHttpStep.STEP_TYPE)
             .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/202").method("GET").build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
             .adviserObtainment(
                 AdviserObtainment.newBuilder()
                     .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
@@ -2017,9 +2126,10 @@ public class CustomExecutionProvider {
             .identifier("parentSectionNode")
             .stepType(SectionChainStep.STEP_TYPE)
             .stepParameters(sectionChainStepParameters)
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                    .build())
             .build();
 
     return Plan.builder()

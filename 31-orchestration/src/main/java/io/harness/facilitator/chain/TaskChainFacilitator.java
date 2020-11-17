@@ -8,8 +8,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 
@@ -17,7 +18,7 @@ import io.harness.state.io.StepParameters;
 @Redesign
 public class TaskChainFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN).build();
+      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN).build();
 
   @Override
   public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,

@@ -9,10 +9,11 @@ import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.serializer.KryoSerializer;
 
 import java.util.ArrayList;
@@ -40,7 +41,9 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
   }
 
   private FacilitatorObtainment getFacilitatorsFromMetaData() {
-    return FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build();
+    return FacilitatorObtainment.builder()
+        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+        .build();
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(List<String> nextStepUuids) {

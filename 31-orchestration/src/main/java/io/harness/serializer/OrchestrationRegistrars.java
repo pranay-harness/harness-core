@@ -9,6 +9,7 @@ import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
+import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.spring.OrchestrationAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
@@ -48,5 +49,6 @@ public class OrchestrationRegistrars {
           .add(LevelMorphiaConverter.class)
           .add(AdviserTypeMorphiaConverter.class)
           .add(AdviserObtainmentMorphiaConverter.class)
+          .add(FacilitatorTypeMorphiaConverter.class)
           .build();
 }

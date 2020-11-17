@@ -7,6 +7,7 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.steps.SkipType;
 import io.harness.serializer.KryoRegistrar;
@@ -21,5 +22,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(AdviserType.class, 2605);
     kryo.register(AdviserObtainment.class, 2606);
     kryo.register(SkipType.class, 2607);
+    kryo.register(FacilitatorType.class, 2608);
   }
 }

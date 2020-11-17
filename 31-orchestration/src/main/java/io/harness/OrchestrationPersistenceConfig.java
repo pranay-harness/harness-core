@@ -12,6 +12,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeReadConverter;
+import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
@@ -32,7 +34,8 @@ public class OrchestrationPersistenceConfig extends OrchestrationBasePersistence
   private static final List<Class<? extends Converter>> converters = ImmutableList.of(
       SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class, AmbianceReadConverter.class,
       AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class, AdviserTypeReadConverter.class,
-      AdviserTypeWriteConverter.class, AdviserObtainmentReadConverter.class, AdviserObtainmentWriteConverter.class);
+      AdviserTypeWriteConverter.class, AdviserObtainmentReadConverter.class, AdviserObtainmentWriteConverter.class,
+      FacilitatorTypeReadConverter.class, FacilitatorTypeWriteConverter.class);
 
   @Inject
   public OrchestrationPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {

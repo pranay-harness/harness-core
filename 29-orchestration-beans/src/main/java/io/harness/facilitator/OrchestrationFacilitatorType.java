@@ -4,17 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
-@Value
-@Builder
 @Redesign
-@EqualsAndHashCode
-public class FacilitatorType {
+@UtilityClass
+public class OrchestrationFacilitatorType {
   // Provided From the orchestration layer system facilitators
   public static final String SYNC = "SYNC";
   public static final String ASYNC = "ASYNC";
@@ -29,6 +24,4 @@ public class FacilitatorType {
   public static final String CHILD_CHAIN = "CHILD_CHAIN";
   public static final String BARRIER = "BARRIER";
   public static final String RESOURCE_RESTRAINT = "RESOURCE_RESTRAINT";
-
-  @NonNull String type;
 }

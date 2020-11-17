@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;

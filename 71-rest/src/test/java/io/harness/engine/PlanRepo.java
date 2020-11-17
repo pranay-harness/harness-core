@@ -10,11 +10,12 @@ import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.StepType;
 import io.harness.steps.dummy.DummyStep;
@@ -38,9 +39,10 @@ public class PlanRepo {
                 .stepType(SimpleAsyncStep.STEP_TYPE)
                 .identifier("test1")
                 .stepParameters(SimpleStepAsyncParams.builder().build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -55,9 +57,10 @@ public class PlanRepo {
                 .stepType(SimpleAsyncStep.STEP_TYPE)
                 .identifier("test2")
                 .stepParameters(SimpleStepAsyncParams.builder().duration(15).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -71,9 +74,10 @@ public class PlanRepo {
                   .stepType(SimpleAsyncStep.STEP_TYPE)
                   .identifier("test3")
                   .stepParameters(SimpleStepAsyncParams.builder().duration(2).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                          .build())
                   .build())
         .node(
             PlanNode.builder()
@@ -88,18 +92,20 @@ public class PlanRepo {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                        .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DummyStep.STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(sectionNodeId)
         .build();
@@ -117,9 +123,10 @@ public class PlanRepo {
                 .stepType(SimpleAsyncStep.STEP_TYPE)
                 .identifier("test1")
                 .stepParameters(SimpleStepAsyncParams.builder().shouldFail(true).build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                        .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
                         .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -137,9 +144,10 @@ public class PlanRepo {
                   .name("Dummy Node 1")
                   .identifier("dummy")
                   .stepType(DummyStep.STEP_TYPE)
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .startingNodeId(test1Id)
         .build();

@@ -15,7 +15,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.FunctionalTests;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.redesign.OrchestrationEngineTestSetupHelper;
 import io.harness.generator.ApplicationGenerator;
@@ -27,6 +27,7 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -105,9 +106,10 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())))
                         .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                           .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                        .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -129,19 +131,21 @@ public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())))
                         .build())
-                .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
-                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.newBuilder()
+                                                     .setType(OrchestrationFacilitatorType.RESOURCE_RESTRAINT)
+                                                     .build())
+                                           .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)
                   .name("Dummy Node 2")
                   .stepType(DummyStep.STEP_TYPE)
                   .identifier("dummy2")
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                             .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          .build())
                   .build())
         .build();
   }

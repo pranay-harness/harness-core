@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.state.StepType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -85,6 +85,6 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.TASK_V3;
+    return OrchestrationFacilitatorType.TASK_V3;
   }
 }

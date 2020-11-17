@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Data;
@@ -73,6 +73,6 @@ public class TestStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.ASYNC;
+    return OrchestrationFacilitatorType.ASYNC;
   }
 }

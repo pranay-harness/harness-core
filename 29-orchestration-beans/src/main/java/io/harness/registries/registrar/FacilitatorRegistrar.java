@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.Registrar;
 import org.apache.commons.lang3.tuple.Pair;
 
