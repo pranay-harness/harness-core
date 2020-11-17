@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 public interface PartialPlanCreator {
-  String ANY_TYPE = "__any__";
-
   Map<String, Set<String>> getSupportedTypes();
   PlanCreationResponse createPlanForField(PlanCreationContext ctx, YamlField field);
 }

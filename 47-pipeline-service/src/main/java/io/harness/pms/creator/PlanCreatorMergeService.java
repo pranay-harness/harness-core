@@ -14,19 +14,24 @@ import io.harness.pms.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.YamlFieldBlob;
 import io.harness.pms.plan.common.creator.PlanCreationBlobResponseUtils;
+import io.harness.pms.plan.common.creator.PlanCreatorUtils;
 import io.harness.pms.plan.common.utils.CompletableFutures;
 import io.harness.pms.plan.common.yaml.YamlField;
 import io.harness.pms.plan.common.yaml.YamlNode;
 import io.harness.pms.plan.common.yaml.YamlUtils;
+import io.harness.pms.service.PmsSdkInstanceService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -35,34 +40,49 @@ public class PlanCreatorMergeService {
   private static final int MAX_DEPTH = 10;
 
   private final Executor executor = Executors.newFixedThreadPool(5);
+
   private final Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
+  private final PmsSdkInstanceService pmsSdkInstanceService;
 
   @Inject
-  public PlanCreatorMergeService(Map<String, PlanCreationServiceBlockingStub> planCreatorServices) {
+  public PlanCreatorMergeService(
+      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkInstanceService pmsSdkInstanceService) {
     this.planCreatorServices = planCreatorServices;
+    this.pmsSdkInstanceService = pmsSdkInstanceService;
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
+    Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getSdkInstancesMap();
+    Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
+      sdkInstances.forEach((k, v) -> {
+        if (planCreatorServices.containsKey(k)) {
+          services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
+        }
+      });
+    }
+
     String finalContent = preprocessYaml(content);
     YamlField rootYamlField = YamlUtils.readTree(finalContent);
     YamlField pipelineField = extractPipelineField(rootYamlField);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(dependencies);
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
     validatePlanCreationBlobResponse(finalResponse);
     return finalResponse;
   }
 
-  private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, YamlFieldBlob> initialDependencies) {
+  private PlanCreationBlobResponse createPlanForDependenciesRecursive(
+      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> initialDependencies) {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
         PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
-    if (EmptyPredicate.isEmpty(planCreatorServices) || EmptyPredicate.isEmpty(initialDependencies)) {
+    if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
 
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
       PlanCreationBlobResponse currIterationResponse =
-          createPlanForDependencies(finalResponseBuilder.getDependenciesMap());
+          createPlanForDependencies(services, finalResponseBuilder.getDependenciesMap());
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
       PlanCreationBlobResponseUtils.mergeStartingNodeId(
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
@@ -76,16 +96,35 @@ public class PlanCreatorMergeService {
     return finalResponseBuilder.build();
   }
 
-  private PlanCreationBlobResponse createPlanForDependencies(Map<String, YamlFieldBlob> dependencies) {
+  private PlanCreationBlobResponse createPlanForDependencies(
+      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
     PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
     CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
-    for (Map.Entry<String, PlanCreationServiceBlockingStub> entry : planCreatorServices.entrySet()) {
+    for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
+      Map<String, Set<String>> supportedTypes = serviceEntry.getValue().getSupportedTypes();
+      Map<String, YamlFieldBlob> filteredDependencies =
+          dependencies.entrySet()
+              .stream()
+              .filter(entry -> {
+                try {
+                  YamlField field = YamlField.fromFieldBlob(entry.getValue());
+                  return PlanCreatorUtils.supportsField(supportedTypes, field);
+                } catch (IOException e) {
+                  log.error("Invalid yaml field", e);
+                  return false;
+                }
+              })
+              .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+      if (EmptyPredicate.isEmpty(filteredDependencies)) {
+        continue;
+      }
+
       completableFutures.supplyAsync(() -> {
         try {
-          return entry.getValue().createPlan(
-              PlanCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
+          return serviceEntry.getValue().getPlanCreationClient().createPlan(
+              PlanCreationBlobRequest.newBuilder().putAllDependencies(filteredDependencies).build());
         } catch (Exception ex) {
-          log.error("Error fetching partial plan from service " + entry.getKey(), ex);
+          log.error("Error fetching partial plan from service " + serviceEntry.getKey(), ex);
           return null;
         }
       });

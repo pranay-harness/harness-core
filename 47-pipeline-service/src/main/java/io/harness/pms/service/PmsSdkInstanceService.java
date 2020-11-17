@@ -16,16 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class PmsService extends PmsServiceImplBase {
+public class PmsSdkInstanceService extends PmsServiceImplBase {
   private final PmsSdkInstanceRepository pmsSdkInstanceRepository;
 
   @Inject
-  public PmsService(PmsSdkInstanceRepository pmsSdkInstanceRepository) {
+  public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository) {
     this.pmsSdkInstanceRepository = pmsSdkInstanceRepository;
   }
 
+  @Override
   public void initializeSdk(InitializeSdkRequest request, StreamObserver<InitializeSdkResponse> responseObserver) {
     saveSdkInstance(request);
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
@@ -36,14 +38,14 @@ public class PmsService extends PmsServiceImplBase {
       throw new InvalidRequestException("Name is empty");
     }
 
-    Map<String, List<String>> supportedTypes = new HashMap<>();
+    Map<String, Set<String>> supportedTypes = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(request.getSupportedTypesMap())) {
       for (Map.Entry<String, Types> entry : request.getSupportedTypesMap().entrySet()) {
         if (EmptyPredicate.isEmpty(entry.getKey()) || EmptyPredicate.isEmpty(entry.getValue().getTypesList())) {
           continue;
         }
         supportedTypes.put(entry.getKey(),
-            entry.getValue().getTypesList().stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList()));
+            entry.getValue().getTypesList().stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet()));
       }
     }
 
@@ -54,5 +56,12 @@ public class PmsService extends PmsServiceImplBase {
       pmsSdkInstanceRepository.save(
           PmsSdkInstance.builder().name(request.getName()).supportedTypes(supportedTypes).build());
     }
+  }
+
+  public Map<String, Map<String, Set<String>>> getSdkInstancesMap() {
+    Map<String, Map<String, Set<String>>> instances = new HashMap<>();
+    pmsSdkInstanceRepository.findAll().forEach(
+        instance -> instances.put(instance.getName(), instance.getSupportedTypes()));
+    return instances;
   }
 }

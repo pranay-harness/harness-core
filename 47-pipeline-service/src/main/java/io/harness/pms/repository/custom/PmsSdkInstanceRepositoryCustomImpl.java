@@ -17,8 +17,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -29,7 +29,7 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public void updateSupportedTypes(String name, Map<String, List<String>> supportedTypes) {
+  public void updateSupportedTypes(String name, Map<String, Set<String>> supportedTypes) {
     Query query = Query.query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
     Update update = Update.update(PmsSdkInstanceKeys.supportedTypes, supportedTypes);
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",
