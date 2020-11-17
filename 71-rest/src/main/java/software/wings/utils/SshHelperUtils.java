@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -46,6 +45,7 @@ import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -249,29 +249,31 @@ public class SshHelperUtils {
 
   public static boolean executeLocalCommand(String cmdString, LogCallback logCallback) {
     String[] commandList = new String[] {"/bin/bash", "-c", cmdString};
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .command(commandList)
-                                          .directory(new File(System.getProperty("user.home")))
-                                          .readOutput(true)
-                                          .redirectOutput(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              logCallback.saveExecutionLog(line, LogLevel.INFO);
-                                            }
-                                          })
-                                          .redirectError(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              logCallback.saveExecutionLog(line, ERROR);
-                                            }
-                                          });
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+         ByteArrayOutputStream byteArrayErrorStream = new ByteArrayOutputStream()) {
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .command(commandList)
+                                            .directory(new File(System.getProperty("user.home")))
+                                            .readOutput(true)
+                                            .redirectOutput(byteArrayOutputStream)
+                                            .redirectError(byteArrayErrorStream);
 
-    ProcessResult processResult = null;
-    try {
-      processResult = processExecutor.execute();
-    } catch (IOException | InterruptedException | TimeoutException e) {
+      ProcessResult processResult = null;
+      try {
+        processResult = processExecutor.execute();
+      } catch (IOException | InterruptedException | TimeoutException e) {
+        log.error("Failed to execute command ", e);
+      }
+      if (byteArrayOutputStream.toByteArray().length != 0) {
+        logCallback.saveExecutionLog(byteArrayOutputStream.toString(), LogLevel.INFO);
+      }
+      if (byteArrayErrorStream.toByteArray().length != 0) {
+        logCallback.saveExecutionLog(byteArrayErrorStream.toString(), ERROR);
+      }
+      return processResult != null && processResult.getExitValue() == 0;
+    } catch (IOException e) {
       log.error("Failed to execute command ", e);
     }
-    return processResult != null && processResult.getExitValue() == 0;
+    return false;
   }
 }
