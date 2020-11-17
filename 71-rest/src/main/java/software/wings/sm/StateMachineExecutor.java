@@ -564,9 +564,10 @@ public class StateMachineExecutor implements StateInspectionListener {
       handleResponse(context, executionResponse);
     } catch (WingsException exception) {
       ex = exception;
-      log.error("Exception occurred while starting state execution : {}", exception.getMessage());
+      log.error("Exception occurred while starting state execution : {}", exception);
     } catch (Exception exception) {
       ex = new WingsException(exception);
+      log.error("Exception occurred while starting state execution : {}", ex);
     }
 
     if (ex != null) {
@@ -770,10 +771,10 @@ public class StateMachineExecutor implements StateInspectionListener {
       return stateExecutionInstance;
     } catch (Exception ex) {
       log.error("Error Occurred while handling the execution response: {}", ex.getStackTrace());
-      return null;
+      throw ex;
     } catch (Throwable t) {
       log.error("Encountered a throwable while handling the execution response: {}", t.getStackTrace());
-      return null;
+      throw t;
     }
   }
 
@@ -2117,8 +2118,10 @@ public class StateMachineExecutor implements StateInspectionListener {
         stateMachineExecutor.handleExecuteResponse(
             context, ExecutionResponse.builder().executionStatus(status).build());
       } catch (WingsException ex) {
+        stateMachineExecutor.addContext(context, ex);
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       } catch (Exception ex) {
+        stateMachineExecutor.addContext(context, new WingsException(ex));
         stateMachineExecutor.handleExecuteResponseException(context, new WingsException(ex));
       }
     }
