@@ -82,7 +82,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public String create(Budget budget) {
     accountChecker.checkIsCeEnabled(budget.getAccountId());
-    validateBudget(budget);
+    validateBudget(budget, true);
     removeEmailDuplicates(budget);
     return budgetDao.save(budget);
   }
@@ -91,7 +91,7 @@ public class BudgetServiceImpl implements BudgetService {
   public String clone(String budgetId, String cloneBudgetName, String accountId) {
     Budget budget = budgetDao.get(budgetId, accountId);
     accountChecker.checkIsCeEnabled(budget.getAccountId());
-    validateBudget(budget);
+    validateBudget(budget, true);
     if (cloneBudgetName.equals(UNDEFINED_BUDGET)) {
       throw new InvalidRequestException(BUDGET_NAME_NOT_PROVIDED_EXCEPTION);
     }
@@ -119,7 +119,7 @@ public class BudgetServiceImpl implements BudgetService {
     if (budget.getUuid() == null) {
       budget.setUuid(budgetId);
     }
-    validateBudget(budget);
+    validateBudget(budget, false);
     removeEmailDuplicates(budget);
     budgetDao.update(budgetId, budget);
   }
@@ -368,9 +368,11 @@ public class BudgetServiceImpl implements BudgetService {
     return entityIds;
   }
 
-  private void validateBudget(Budget budget) {
+  private void validateBudget(Budget budget, boolean validateCount) {
     validateBudgetAmount(budget);
-    validateBudgetCount(budget);
+    if (validateCount) {
+      validateBudgetCount(budget);
+    }
     validateBudgetName(budget);
   }
 
