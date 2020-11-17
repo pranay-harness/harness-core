@@ -9,8 +9,9 @@ trigger:
   source:
     type: Webhook
     spec:
-      type: Gitlab
+      type: Github
       spec:
+        repoUrl: https://github.com/test/myrepo
         event: Pull Request
         actions:
           - opened
@@ -22,12 +23,9 @@ trigger:
           - key: targetBranch
             operator: regex
             value: ^pr-[0-9a-f]{7}$
-          - key: title
-            operator: regex
-            value: ^pr-[0-9a-f]{7}$
           - key: ${pull_request.number}
             operator: regex
             value: ^pr-[0-9a-f]{7}$
         pathFilters:
-          - path1  (Folder / file / regex)
+          - path1
           - path2
