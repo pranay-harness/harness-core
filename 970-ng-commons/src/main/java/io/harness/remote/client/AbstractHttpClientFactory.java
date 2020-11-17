@@ -1,12 +1,10 @@
 package io.harness.remote.client;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.exception.GeneralException;
@@ -27,6 +25,9 @@ import software.wings.jersey.JsonViews;
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+
 public abstract class AbstractHttpClientFactory {
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final ServiceHttpClientConfig serviceHttpClientConfig;
@@ -35,9 +36,9 @@ public abstract class AbstractHttpClientFactory {
   private final KryoConverterFactory kryoConverterFactory;
   private final String clientId;
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret,
+  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    this.serviceHttpClientConfig = serviceHttpClientConfig;
+    this.serviceHttpClientConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
@@ -65,6 +66,7 @@ public abstract class AbstractHttpClientFactory {
     objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
     objectMapper.setConfig(objectMapper.getSerializationConfig().withView(JsonViews.Public.class));
     objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
+    objectMapper.registerModule(new ProtobufModule());
     objectMapper.registerModule(new Jdk8Module());
     objectMapper.registerModule(new GuavaModule());
     objectMapper.registerModule(new JavaTimeModule());

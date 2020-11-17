@@ -58,7 +58,6 @@
         <module>320-ci-execution</module>
         <module>330-ci-beans</module>
         <module>350-event-server</module>
-
         <!--<module>420-delegate-agent</module>-->
         <!--<module>420-delegate-service</module>-->
         <!--<module>430-cv-nextgen-commons</module>-->
@@ -1752,6 +1751,11 @@
         </dependencies>
     </dependencyManagement>
     <repositories>
+        <repository>
+            <id>confluent</id>
+            <name>confluent-maven</name>
+            <url>http://packages.confluent.io/maven</url>
+        </repository>
         <repository>
             <id>harness</id>
             <name>harness-releases</name>

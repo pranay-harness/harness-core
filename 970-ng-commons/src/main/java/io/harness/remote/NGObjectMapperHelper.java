@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
 import lombok.experimental.UtilityClass;
@@ -34,6 +35,7 @@ public class NGObjectMapperHelper {
         return emptyIfNull(subtypeResolver.findSubtypes(a));
       }
     });
+    mapper.registerModule(new ProtobufModule());
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
