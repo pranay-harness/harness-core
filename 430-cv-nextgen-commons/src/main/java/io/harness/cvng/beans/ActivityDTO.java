@@ -27,7 +27,7 @@ public abstract class ActivityDTO {
   private Long activityEndTime;
   private List<String> tags;
 
-  @JsonIgnore public abstract ActivityType getType();
+  public abstract ActivityType getType();
 
   @Data
   @Builder

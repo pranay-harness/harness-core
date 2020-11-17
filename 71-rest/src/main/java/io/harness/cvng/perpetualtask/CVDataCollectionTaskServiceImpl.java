@@ -1,5 +1,8 @@
 package io.harness.cvng.perpetualtask;
 
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -28,7 +31,11 @@ import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.kubernetes.client.openapi.ApiException;
 import org.jetbrains.annotations.NotNull;
+import software.wings.beans.SyncTaskContext;
+import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.service.intfc.security.NGSecretService;
 
 import java.util.Collections;
@@ -38,6 +45,8 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NGSecretService ngSecretService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
+
   @Override
   public String create(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
@@ -168,5 +177,27 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public void delete(String accountId, String taskId) {
     perpetualTaskService.deleteTask(accountId, taskId);
+  }
+
+  @Override
+  public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
+      DataCollectionConnectorBundle bundle) throws ApiException {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
+        .getNameSpaces(bundle, encryptedDataDetails);
+  }
+
+  @Override
+  public List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
+      DataCollectionConnectorBundle bundle) throws ApiException {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
+        .getWorkloads(namespace, bundle, encryptedDataDetails);
   }
 }

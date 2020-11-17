@@ -269,7 +269,9 @@ public enum TaskType {
   NG_AWS_TASK(TaskGroup.AWS),
   JIRA_TASK_NG(TaskGroup.JIRA_NG),
   BUILD_STATUS(TaskGroup.CI),
-  JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG);
+  JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG),
+  K8_FETCH_NAMESPACES(TaskGroup.CVNG),
+  K8_FETCH_WORKLOADS(TaskGroup.CVNG);
 
   private final TaskGroup taskGroup;
 

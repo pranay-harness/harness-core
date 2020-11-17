@@ -1,9 +1,9 @@
 package io.harness.verificationclient;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
 import static io.harness.cvng.core.services.CVNextGenConstants.HOST_RECORD_RESOURCE_PATH;
+import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.LOG_RECORD_RESOURCE_PATH;
 
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -43,7 +43,7 @@ public interface CVNextGenServiceClient {
   Call<RestResponse<Void>> updateTaskStatus(
       @Query("accountId") String accountId, @Body DataCollectionTaskResult dataCollectionTaskResult);
 
-  @POST(ACTIVITY_RESOURCE + "/kubernetes-activities")
+  @POST(KUBERNETES_RESOURCE + "/activities")
   Call<RestResponse<Boolean>> saveKubernetesActivities(@Query("accountId") String accountId,
       @Query("activitySourceId") String activitySourceId, @Body List<KubernetesActivityDTO> activityDTOS);
 }

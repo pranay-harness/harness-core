@@ -32,6 +32,7 @@ import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
+import io.harness.cvng.K8InfoDataServiceImpl;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
@@ -74,7 +75,6 @@ import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.jira.JiraTaskNG;
-import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
@@ -215,6 +215,7 @@ import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.container.ContainerDummyTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
+import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.helm.HelmValuesFetchTask;
 import software.wings.delegatetasks.jira.JiraTask;
@@ -730,6 +731,7 @@ public class DelegateModule extends AbstractModule {
     bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
     bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);
     bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
+    bind(K8InfoDataService.class).to(K8InfoDataServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -1133,7 +1135,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NG_AWS_TASK).toInstance(AwsDelegateTask.class);
     mapBinder.addBinding(TaskType.JIRA_TASK_NG).toInstance(JiraTaskNG.class);
     mapBinder.addBinding(TaskType.BUILD_STATUS).toInstance(CIBuildStatusPushTask.class);
-    mapBinder.addBinding(TaskType.JIRA_CONNECTIVITY_TASK_NG).toInstance(JiraTestConnectionTaskNG.class);
+    mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
   }
 
   private void registerSecretManagementBindings() {

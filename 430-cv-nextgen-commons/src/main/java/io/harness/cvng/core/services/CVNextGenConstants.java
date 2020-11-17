@@ -23,4 +23,5 @@ public interface CVNextGenConstants {
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
   String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
   String ACTIVITY_RESOURCE = "activity";
+  String KUBERNETES_RESOURCE = "kubernetes";
 }
