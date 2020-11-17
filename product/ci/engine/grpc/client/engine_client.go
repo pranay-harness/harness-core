@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-//go:generate mockgen -source client.go -package=grpcclient -destination mocks/engine_client_mock.go EngineClient
+//go:generate mockgen -source engine_client.go -package=grpcclient -destination mocks/engine_client_mock.go EngineClient
 
 const (
 	backoffTime = 100 * time.Millisecond

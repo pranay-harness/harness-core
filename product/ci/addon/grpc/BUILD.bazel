@@ -9,10 +9,11 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/addon/grpc",
     visibility = ["//visibility:public"],
     deps = [
+        "//product/ci/addon/logs:go_default_library",
         "//product/ci/addon/proto:go_default_library",
         "//product/ci/addon/tasks:go_default_library",
+        "//product/ci/engine/logutil:go_default_library",
         "//product/ci/engine/proto:go_default_library",
-        "//product/ci/logger/util:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_x_net//context:go_default_library",
         "@org_uber_go_zap//:go_default_library",

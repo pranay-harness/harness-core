@@ -33,6 +33,10 @@ type Client interface {
 	// upload a file to remote storage.
 	UploadLink(ctx context.Context, key string) (*Link, error)
 
+	// UploadUsingLink uses a link generated from UploadLink to upload
+	// direectly to the data store.
+	UploadUsingLink(ctx context.Context, link string, r io.Reader) error
+
 	// Download downloads the file from remote storage.
 	Download(ctx context.Context, key string) (io.ReadCloser, error)
 
@@ -50,7 +54,7 @@ type Client interface {
 	Write(ctx context.Context, key string, lines []*stream.Line) error
 
 	// Tail tails the data stream.
-	Tail(ctx context.Context, key string) (<-chan *stream.Line, <-chan error)
+	Tail(ctx context.Context, key string) (<-chan string, <-chan error)
 
 	// Info returns the stream information.
 	Info(ctx context.Context) (*stream.Info, error)

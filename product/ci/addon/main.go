@@ -8,9 +8,11 @@ import (
 	"os"
 
 	"github.com/alexflint/go-arg"
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/grpc"
+	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	"github.com/wings-software/portal/product/ci/addon/services"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
+	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"go.uber.org/zap"
 )
 
@@ -20,9 +22,9 @@ const (
 )
 
 var (
-	addonServer       = grpc.NewAddonServer
-	newRemoteLogger   = logger.GetRemoteLogger
-	newIntegrationSvc = services.NewIntegrationSvc
+	addonServer         = grpc.NewAddonServer
+	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
+	newIntegrationSvc   = services.NewIntegrationSvc
 )
 
 // schema for running functional test service
@@ -58,28 +60,32 @@ func main() {
 	parseArgs()
 
 	// Addon logs not part of a step go to addon_stage_logs-<port>
+	logState := addonlogs.LogState()
+	pendingLogs := logState.PendingLogs()
 	key := fmt.Sprintf("addon_stage_logs-%d", args.Port)
-	remoteLogger, err := newRemoteLogger(key)
+	remoteLogger, err := newGrpcRemoteLogger(key)
 	if err != nil {
 		// Could not create a logger
 		panic(err)
 	}
+	pendingLogs <- remoteLogger
 	log := remoteLogger.BaseLogger
-	defer remoteLogger.Writer.Close() // upload the logs to object storage and close the log stream
+
+	var serviceLogger *logs.RemoteLogger
 
 	// Start integration test service in a separate goroutine
 	if args.Service != nil {
 		svc := args.Service
 
 		// create logger for service logs
-		rl, err := newRemoteLogger(svc.ID)
+		serviceLogger, err = newGrpcRemoteLogger(svc.ID)
 		if err != nil {
 			panic(err) // Could not create a logger
 		}
-		defer rl.Writer.Close() // upload the service logs to object storage and close the log stream
+		pendingLogs <- serviceLogger
 
 		go func() {
-			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, rl.BaseLogger, rl.Writer).Run()
+			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger, serviceLogger.Writer).Run()
 		}()
 	}
 
@@ -87,14 +93,14 @@ func main() {
 	s, err := addonServer(args.Port, log)
 	if err != nil {
 		log.Errorw("error while running CI addon server", "port", args.Port, "error_msg", zap.Error(err))
-		remoteLogger.Writer.Close()
+		addonlogs.LogState().ClosePendingLogs()
 		os.Exit(1) // Exit addon with exit code 1
 	}
 
 	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 	go s.Stop()
 	if err := s.Start(); err != nil {
-		remoteLogger.Writer.Close()
+		addonlogs.LogState().ClosePendingLogs()
 		os.Exit(1) // Exit addon with exit code 1
 	}
 }

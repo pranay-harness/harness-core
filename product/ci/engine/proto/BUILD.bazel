@@ -8,6 +8,7 @@ proto_library(
     srcs = [
         "artifact.proto",
         "execution.proto",
+        "logproxy.proto",
     ],
     visibility = ["//visibility:public"],
 )

@@ -29,9 +29,9 @@ func TestMainEmptyStage(t *testing.T) {
 		args.Stage = nil
 	}()
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newHTTPRemoteLogger
+	defer func() { newHTTPRemoteLogger = oldLogger }()
+	newHTTPRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		log, _ := logs.GetObservedLogger(zap.InfoLevel)
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
@@ -72,9 +72,9 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 		args.Stage = nil
 	}()
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newHTTPRemoteLogger
+	defer func() { newHTTPRemoteLogger = oldLogger }()
+	newHTTPRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		log, _ := logs.GetObservedLogger(zap.InfoLevel)
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}

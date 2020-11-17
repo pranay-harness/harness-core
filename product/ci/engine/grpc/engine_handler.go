@@ -10,18 +10,18 @@ import (
 )
 
 // handler is used to implement EngineServer
-type handler struct {
+type engineHandler struct {
 	log *zap.SugaredLogger
 }
 
 // NewEngineHandler returns a GRPC handler that implements pb.EngineServer
 func NewEngineHandler(log *zap.SugaredLogger) pb.LiteEngineServer {
-	return &handler{log}
+	return &engineHandler{log}
 }
 
 // UpdateState updates the execution state.
 // If required state is resume, it sets the execution state to running and sends a signal via resume channel to resume the paused execution.
-func (h *handler) UpdateState(ctx context.Context, in *pb.UpdateStateRequest) (*pb.UpdateStateResponse, error) {
+func (h *engineHandler) UpdateState(ctx context.Context, in *pb.UpdateStateRequest) (*pb.UpdateStateResponse, error) {
 	if in.GetAction() == pb.UpdateStateRequest_UNKNOWN {
 		h.log.Errorw("Unknown action in incoming request")
 		return &pb.UpdateStateResponse{}, status.Error(codes.InvalidArgument, "Unknown action")

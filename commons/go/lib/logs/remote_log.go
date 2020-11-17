@@ -1,7 +1,6 @@
 package logs
 
 import (
-	"github.com/wings-software/portal/product/log-service/client"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -23,9 +22,8 @@ type RemoteLogger struct {
 }
 
 // NewRemoteLogger returns an instance of RemoteLogger
-func NewRemoteLogger(client client.Client, key string) (*RemoteLogger, error) {
-	w := NewRemoteWriter(client, key)
-	ws := zapcore.AddSync(w)
+func NewRemoteLogger(writer StreamWriter) (*RemoteLogger, error) {
+	ws := zapcore.AddSync(writer)
 	encoderCfg := zapcore.EncoderConfig{
 		MessageKey:     messageKey,
 		LevelKey:       levelKey,
@@ -37,7 +35,7 @@ func NewRemoteLogger(client client.Client, key string) (*RemoteLogger, error) {
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), ws, zap.DebugLevel)
 	logger := zap.New(core)
 	sugar := logger.Sugar()
-	rl := &RemoteLogger{sugar, w}
+	rl := &RemoteLogger{sugar, writer}
 	// Try to open the stream
 	err := rl.Writer.Open()
 	if err != nil {

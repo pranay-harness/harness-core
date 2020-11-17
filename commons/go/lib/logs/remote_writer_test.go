@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/wings-software/portal/product/log-service/client"
 	"github.com/wings-software/portal/product/log-service/mock"
 )
 
@@ -168,12 +169,15 @@ func Test_RemoteWriter_Close(t *testing.T) {
 	key := "key"
 
 	msg1 := `{"level":"warn","msg":"Testing","k1":"v1","k2":"v2"}`
+	strLink := "http://minio:9000"
+	link := &client.Link{Value: strLink}
 	msg1 = msg1 + "\n"
 	msg2 := "Another message" // Ensure this gets flushed on close
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	mclient.EXPECT().Upload(context.Background(), key, gomock.Any())
+	mclient.EXPECT().UploadLink(context.Background(), key).Return(link, nil)
+	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
 	rw := NewRemoteWriter(mclient, key)
 	rw.SetInterval(time.Duration(100))

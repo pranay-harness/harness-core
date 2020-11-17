@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = ["engine_client_mock.go"],
+    srcs = [
+        "engine_client_mock.go",
+        "logproxy_client_mock.go",
+    ],
     importpath = "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks",
     visibility = ["//visibility:public"],
     deps = [

@@ -31,9 +31,9 @@ func TestExecuteNilStep(t *testing.T) {
 	stopCh := make(chan bool)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
 
@@ -49,9 +49,9 @@ func TestExecuteLoggerErr(t *testing.T) {
 	stopCh := make(chan bool)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		return nil, fmt.Errorf("remote logger not found")
 	}
 
@@ -79,9 +79,9 @@ func TestExecuteRunStep(t *testing.T) {
 		},
 	}
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
 
@@ -116,9 +116,9 @@ func TestExecutePluginStep(t *testing.T) {
 		},
 	}
 
-	oldLogger := newRemoteLogger
-	defer func() { newRemoteLogger = oldLogger }()
-	newRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
+	oldLogger := newGrpcRemoteLogger
+	defer func() { newGrpcRemoteLogger = oldLogger }()
+	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
 
