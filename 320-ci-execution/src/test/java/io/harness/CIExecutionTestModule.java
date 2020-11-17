@@ -69,7 +69,7 @@ public class CIExecutionTestModule extends AbstractModule {
     install(new SecretNGManagerClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "CI"));
     install(new SecretManagementClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "NextGenManager"));
     install(new CILogServiceClientModule(
         LogServiceConfig.builder().baseUrl("http://localhost:8079").globalToken("token").build()));
   }

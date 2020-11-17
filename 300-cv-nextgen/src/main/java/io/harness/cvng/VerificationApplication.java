@@ -216,7 +216,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
     modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
-        configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "CVNextGen"));
+        configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();

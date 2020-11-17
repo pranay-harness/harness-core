@@ -118,7 +118,7 @@ public class CIManagerServiceModule extends AbstractModule {
                                             .build()));
 
     install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+        ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));
     install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
