@@ -20,11 +20,11 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.integrationstage.IntegrationPipelineExecutionModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.states.CIPipelineSetupStep;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
@@ -82,8 +82,8 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
         .facilitatorObtainment(
-            FacilitatorObtainment.builder()
-                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                 .build())
         .build();
   }

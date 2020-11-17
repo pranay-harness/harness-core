@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
+import io.harness.facilitator.FacilitatorUtils;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
@@ -17,6 +17,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
+import java.time.Duration;
 import java.util.List;
 
 public class BarrierFacilitator implements Facilitator {
@@ -24,12 +25,13 @@ public class BarrierFacilitator implements Facilitator {
       FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build();
 
   @Inject private BarrierService barrierService;
+  @Inject private FacilitatorUtils facilitatorUtils;
 
   @Override
-  public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,
-      FacilitatorParameters parameters, StepInputPackage inputPackage) {
-    FacilitatorResponseBuilder responseBuilder =
-        FacilitatorResponse.builder().initialWait(parameters.getWaitDurationSeconds());
+  public FacilitatorResponse facilitate(
+      Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
+    Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
+    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder().initialWait(waitDuration);
     if (isSingleBarrier(((BarrierStepParameters) stepParameters).getIdentifier(), ambiance.getPlanExecutionId())) {
       responseBuilder.executionMode(ExecutionMode.SYNC);
     } else {

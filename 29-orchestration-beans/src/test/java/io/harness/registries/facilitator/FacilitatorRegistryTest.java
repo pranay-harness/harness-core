@@ -10,7 +10,6 @@ import io.harness.OrchestrationBeansTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.RegistryType;
@@ -54,8 +53,8 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTestBase {
   @Builder
   private static class Type1Facilitator implements Facilitator {
     @Override
-    public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,
-        FacilitatorParameters parameters, StepInputPackage inputPackage) {
+    public FacilitatorResponse facilitate(
+        Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
       return null;
     }
   }

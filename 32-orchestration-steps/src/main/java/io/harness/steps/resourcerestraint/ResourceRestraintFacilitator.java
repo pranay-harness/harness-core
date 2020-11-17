@@ -14,8 +14,8 @@ import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.facilitator.FacilitatorUtils;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
@@ -28,6 +28,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.RestraintService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -41,12 +42,13 @@ public class ResourceRestraintFacilitator implements Facilitator {
   @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private EngineExpressionService engineExpressionService;
+  @Inject private FacilitatorUtils facilitatorUtils;
 
   @Override
-  public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,
-      FacilitatorParameters parameters, StepInputPackage inputPackage) {
-    FacilitatorResponseBuilder responseBuilder =
-        FacilitatorResponse.builder().initialWait(parameters.getWaitDurationSeconds());
+  public FacilitatorResponse facilitate(
+      Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
+    Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
+    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder().initialWait(waitDuration);
 
     ResourceRestraintStepParameters stepParams = (ResourceRestraintStepParameters) stepParameters;
     final ResourceRestraint resourceRestraint = Preconditions.checkNotNull(

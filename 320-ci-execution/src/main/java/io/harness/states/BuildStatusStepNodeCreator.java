@@ -2,10 +2,10 @@ package io.harness.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 
 public class BuildStatusStepNodeCreator {
@@ -28,8 +28,8 @@ public class BuildStatusStepNodeCreator {
                             .identifier(identifier)
                             .build())
         .facilitatorObtainment(
-            FacilitatorObtainment.builder()
-                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V3).build())
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V3).build())
                 .build())
         .build();
   }

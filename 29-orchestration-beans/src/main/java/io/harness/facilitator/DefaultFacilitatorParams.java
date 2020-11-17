@@ -11,6 +11,6 @@ import java.time.Duration;
 @OwnedBy(CDC)
 @Value
 @Builder
-public class DefaultFacilitatorParams implements FacilitatorParameters {
+public class DefaultFacilitatorParams {
   @Builder.Default Duration waitDurationSeconds = Duration.ofSeconds(0);
 }

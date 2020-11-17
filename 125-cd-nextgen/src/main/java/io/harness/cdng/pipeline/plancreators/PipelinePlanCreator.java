@@ -21,10 +21,10 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -92,8 +92,8 @@ public class PipelinePlanCreator
                             .build())
 
         .facilitatorObtainment(
-            FacilitatorObtainment.builder()
-                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                 .build())
         .build();
   }

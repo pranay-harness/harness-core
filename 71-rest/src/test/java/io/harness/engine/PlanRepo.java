@@ -9,12 +9,12 @@ import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.StepType;
@@ -40,8 +40,8 @@ public class PlanRepo {
                 .identifier("test1")
                 .stepParameters(SimpleStepAsyncParams.builder().build())
                 .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                    FacilitatorObtainment.newBuilder()
+                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
                         .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
@@ -58,8 +58,8 @@ public class PlanRepo {
                 .identifier("test2")
                 .stepParameters(SimpleStepAsyncParams.builder().duration(15).build())
                 .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                    FacilitatorObtainment.newBuilder()
+                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
                         .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
@@ -75,8 +75,8 @@ public class PlanRepo {
                   .identifier("test3")
                   .stepParameters(SimpleStepAsyncParams.builder().duration(2).build())
                   .facilitatorObtainment(
-                      FacilitatorObtainment.builder()
-                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                      FacilitatorObtainment.newBuilder()
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
                           .build())
                   .build())
         .node(
@@ -93,8 +93,8 @@ public class PlanRepo {
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())))
                         .build())
                 .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    FacilitatorObtainment.newBuilder()
+                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                         .build())
                 .build())
         .node(PlanNode.builder()
@@ -103,8 +103,8 @@ public class PlanRepo {
                   .identifier("dummy")
                   .stepType(DummyStep.STEP_TYPE)
                   .facilitatorObtainment(
-                      FacilitatorObtainment.builder()
-                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                      FacilitatorObtainment.newBuilder()
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                           .build())
                   .build())
         .startingNodeId(sectionNodeId)
@@ -124,8 +124,8 @@ public class PlanRepo {
                 .identifier("test1")
                 .stepParameters(SimpleStepAsyncParams.builder().shouldFail(true).build())
                 .facilitatorObtainment(
-                    FacilitatorObtainment.builder()
-                        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                    FacilitatorObtainment.newBuilder()
+                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
                         .build())
                 .adviserObtainment(
                     AdviserObtainment.newBuilder()
@@ -145,8 +145,8 @@ public class PlanRepo {
                   .identifier("dummy")
                   .stepType(DummyStep.STEP_TYPE)
                   .facilitatorObtainment(
-                      FacilitatorObtainment.builder()
-                          .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                      FacilitatorObtainment.newBuilder()
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                           .build())
                   .build())
         .startingNodeId(test1Id)
