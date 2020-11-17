@@ -17,13 +17,16 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
-import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
+import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
+import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
 import static io.harness.provision.TerraformConstants.VAR_FILE_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
 import static io.harness.provision.TerraformConstants.WORKSPACE_PLAN_FILE_PATH_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
+import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -69,6 +72,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.LogColor;
@@ -78,6 +82,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
+import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
@@ -192,7 +197,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(TerraformTaskUtils.getGitExceptionMessageIfExists(ex))
           .build();
     }
-    String workingDir = resolveWorkingDir(parameters.getAccountId(), parameters.getEntityId());
+
+    String baseDir = resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
+    String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
+    String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
+
+    if (null != parameters.getTfVarSource()
+        && parameters.getTfVarSource().getTfVarSourceType() == TfVarSourceType.GIT) {
+      fetchTfVarGitSource(parameters, tfVarDirectory);
+    }
+
     try {
       copyFilesToWorkingDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), workingDir);
     } catch (Exception ex) {
@@ -481,6 +495,30 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  private void fetchTfVarGitSource(TerraformProvisionParameters parameters, String tfVarDirectory) {
+    if (parameters.getTfVarSource().getTfVarSourceType() == TfVarSourceType.GIT) {
+      TfVarGitSource tfVarGitSource = (TfVarGitSource) parameters.getTfVarSource();
+      saveExecutionLog(parameters,
+          format("Fetching TfVar files from Git repository: [%s]", tfVarGitSource.getGitConfig().getRepoUrl()),
+          CommandExecutionStatus.RUNNING, INFO);
+
+      encryptionService.decrypt(tfVarGitSource.getGitConfig(), tfVarGitSource.getEncryptedDataDetails(), false);
+      gitClient.downloadFiles(tfVarGitSource.getGitConfig(),
+          GitFetchFilesRequest.builder()
+              .branch(tfVarGitSource.getGitFileConfig().getBranch())
+              .commitId(tfVarGitSource.getGitFileConfig().getCommitId())
+              .filePaths(tfVarGitSource.getGitFileConfig().getFilePathList())
+              .useBranch(tfVarGitSource.getGitFileConfig().isUseBranch())
+              .gitConnectorId(tfVarGitSource.getGitFileConfig().getConnectorId())
+              .recursive(true)
+              .build(),
+          tfVarDirectory);
+
+      saveExecutionLog(
+          parameters, format("TfVar Git directory: [%s]", tfVarDirectory), CommandExecutionStatus.RUNNING, INFO);
+    }
+  }
+
   private boolean shouldSkipRefresh(TerraformProvisionParameters parameters) {
     return parameters.getTerraformPlan() != null && parameters.isSkipRefreshBeforeApplyingPlan();
   }
@@ -564,8 +602,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   @NonNull
-  private String resolveWorkingDir(String accountId, String entityId) {
-    return TF_WORKING_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
+  private String resolveBaseDir(String accountId, String entityId) {
+    return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
   }
 
   @VisibleForTesting

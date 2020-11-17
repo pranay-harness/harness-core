@@ -5,8 +5,10 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
@@ -18,11 +20,14 @@ import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  *
@@ -30,6 +35,8 @@ import java.util.Map;
  */
 @Slf4j
 public class Utils {
+  private static final String MULTIPLE_FILES_DELIMITER = ",";
+
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
     for (String element : elements) {
@@ -204,5 +211,31 @@ public class Utils {
 
   public static String emptyIfNull(String value) {
     return value == null ? "" : value;
+  }
+
+  private static String normalizeMultipleFilesFilePath(String filePath) {
+    // Transform from filePath <,file1,file2,file3,> to <file1,file2,file3>
+    return Arrays.stream(filePath.split(MULTIPLE_FILES_DELIMITER))
+        .map(String::trim)
+        .filter(StringUtils::isNotBlank)
+        .collect(Collectors.joining(MULTIPLE_FILES_DELIMITER));
+  }
+
+  private static boolean validateFilePath(String value, String originalValue) {
+    // expressions like <${valid}, ${missingValue}> could lead to result like <value, null>
+    if (isEmpty(value) || value.equals("null")) {
+      throw new InvalidRequestException(
+          "Invalid file path '" + value + "' after resolving value '" + originalValue + "'");
+    }
+
+    return true;
+  }
+
+  public static List<String> splitCommaSeparatedFilePath(@NotNull String filePath) {
+    String renderedFilePath = normalizeMultipleFilesFilePath(filePath);
+    return Arrays.stream(renderedFilePath.split(MULTIPLE_FILES_DELIMITER))
+        .map(String::trim)
+        .filter(value -> validateFilePath(value, filePath))
+        .collect(Collectors.toList());
   }
 }

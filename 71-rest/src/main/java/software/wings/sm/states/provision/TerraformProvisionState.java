@@ -36,6 +36,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
+import static software.wings.utils.Utils.splitCommaSeparatedFilePath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -54,6 +55,8 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
+import io.harness.provision.TfVarScriptRepositorySource;
+import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
@@ -70,6 +73,7 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -78,6 +82,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
@@ -91,6 +96,7 @@ import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -133,6 +139,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient GitUtilsManager gitUtilsManager;
+  @Inject private transient GitFileConfigHelperService gitFileConfigHelperService;
 
   @Inject private transient ServiceVariableService serviceVariableService;
   @Inject private transient EncryptionService encryptionService;
@@ -156,6 +163,7 @@ public abstract class TerraformProvisionState extends State {
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;
+  @Getter @Setter private GitFileConfig tfVarGitFileConfig;
 
   @Getter @Setter private boolean runPlanOnly;
   @Getter @Setter private boolean inheritApprovedPlan;
@@ -759,6 +767,15 @@ public abstract class TerraformProvisionState extends State {
       }
     }
 
+    TfVarSource tfVarSource = null;
+
+    // Currently we allow only one tfVar source
+    if (isNotEmpty(tfVarFiles)) {
+      tfVarSource = fetchTfVarScriptRepositorySource(context);
+    } else if (null != tfVarGitFileConfig) {
+      tfVarSource = fetchTfVarGitSource(context);
+    }
+
     targets = resolveTargets(targets, context);
     gitConfigHelperService.convertToRepoGitConfig(
         gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
@@ -797,10 +814,41 @@ public abstract class TerraformProvisionState extends State {
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
+            .tfVarSource(tfVarSource)
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
+  }
+
+  @VisibleForTesting
+  TfVarScriptRepositorySource fetchTfVarScriptRepositorySource(ExecutionContext context) {
+    return TfVarScriptRepositorySource.builder().tfVarFilePaths(getRenderedTfVarFiles(tfVarFiles, context)).build();
+  }
+
+  @VisibleForTesting
+  TfVarGitSource fetchTfVarGitSource(ExecutionContext context) {
+    GitConfig tfVarGitConfig = gitUtilsManager.getGitConfig(tfVarGitFileConfig.getConnectorId());
+    gitConfigHelperService.renderGitConfig(context, tfVarGitConfig);
+    gitFileConfigHelperService.renderGitFileConfig(context, tfVarGitFileConfig);
+
+    gitConfigHelperService.convertToRepoGitConfig(
+        tfVarGitConfig, context.renderExpression(tfVarGitFileConfig.getRepoName()));
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(tfVarGitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId());
+
+    String filePath = tfVarGitFileConfig.getFilePath();
+    if (filePath != null) {
+      tfVarGitFileConfig.setFilePath(null);
+      List<String> multipleFiles = splitCommaSeparatedFilePath(filePath);
+      tfVarGitFileConfig.setFilePathList(multipleFiles);
+    }
+
+    return TfVarGitSource.builder()
+        .gitConfig(tfVarGitConfig)
+        .encryptedDataDetails(encryptionDetails)
+        .gitFileConfig(tfVarGitFileConfig)
+        .build();
   }
 
   private Map<String, String> extractData(FileMetadata fileMetadata, String dataKey) {
