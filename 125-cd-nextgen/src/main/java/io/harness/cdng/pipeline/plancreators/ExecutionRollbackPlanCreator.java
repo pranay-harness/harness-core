@@ -18,8 +18,9 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
@@ -73,9 +74,10 @@ public class ExecutionRollbackPlanCreator extends AbstractPlanCreatorWithChildre
                                                   .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                                   .collect(Collectors.toList()))
                                 .build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                    .build())
             .build();
 
     ExecutionPlanCreatorResponseImplBuilder executionPlanCreatorResponseImplBuilder =

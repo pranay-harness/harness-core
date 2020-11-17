@@ -28,9 +28,10 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.facilitators.FacilitatorType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -84,9 +85,10 @@ public class ServiceStepPlanCreator
             .stepType(ServiceStep.STEP_TYPE)
             .stepParameters(
                 ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN_V3).build())
-                                       .build());
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN_V3).build())
+                    .build());
 
     // Adding dependency provider.
     OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()

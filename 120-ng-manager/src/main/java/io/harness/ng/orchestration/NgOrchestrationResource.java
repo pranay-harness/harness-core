@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
@@ -57,7 +57,8 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V2), getAbstractions(accountId, appId));
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V2),
+        getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 
@@ -67,7 +68,8 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V3), getAbstractions(accountId, appId));
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V3),
+        getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
 

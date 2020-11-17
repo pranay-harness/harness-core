@@ -23,8 +23,9 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -93,9 +94,10 @@ public class ParallelStepGroupRollbackPlanCreator extends AbstractPlanCreatorWit
             .identifier(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER)
             .stepType(RollbackOptionalChildrenStep.STEP_TYPE)
             .stepParameters(rollbackOptionalChildrenParametersBuilder.build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                       .build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .build();
 
     ExecutionPlanCreatorResponseImplBuilder createExecutionPlanResponseImplBuilder =

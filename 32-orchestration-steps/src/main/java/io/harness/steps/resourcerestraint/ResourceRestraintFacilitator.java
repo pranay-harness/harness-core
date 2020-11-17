@@ -16,8 +16,9 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
@@ -33,7 +34,7 @@ import java.util.List;
 @Slf4j
 public class ResourceRestraintFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build();
+      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.RESOURCE_RESTRAINT).build();
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintService resourceRestraintService;

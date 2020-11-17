@@ -7,7 +7,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
@@ -36,7 +35,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("planNode", PlanNode.class);
     orchestrationElements.put("plan", Plan.class);
     orchestrationElements.put("stepType", StepType.class);
-    orchestrationElements.put("facilitatorType", FacilitatorType.class);
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);
     orchestrationElements.put("childChainResponse", ChildChainResponse.class);
     orchestrationElements.put("childExecutableResponse", ChildExecutableResponse.class);

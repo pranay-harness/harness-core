@@ -12,7 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
@@ -31,7 +31,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    FacilitatorType facilitatorType = FacilitatorType.builder().type("Type1").build();
+    FacilitatorType facilitatorType = FacilitatorType.newBuilder().setType("Type1").build();
     facilitatorRegistry.register(facilitatorType, new Type1Facilitator());
     Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
@@ -39,7 +39,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTestBase {
     assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, new Type1Facilitator()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type("SKIP").build()))
+    assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.newBuilder().setType("SKIP").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

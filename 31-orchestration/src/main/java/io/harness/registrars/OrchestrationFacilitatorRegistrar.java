@@ -7,7 +7,6 @@ import com.google.inject.Injector;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.async.AsyncFacilitator;
 import io.harness.facilitator.chain.ChildChainFacilitator;
 import io.harness.facilitator.chain.TaskChainFacilitator;
@@ -19,6 +18,7 @@ import io.harness.facilitator.sync.SyncFacilitator;
 import io.harness.facilitator.task.TaskFacilitator;
 import io.harness.facilitator.taskv2.TaskV2Facilitator;
 import io.harness.facilitator.taskv3.TaskV3Facilitator;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import org.apache.commons.lang3.tuple.Pair;
 

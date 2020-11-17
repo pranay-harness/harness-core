@@ -23,9 +23,10 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.steps.SkipType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
@@ -61,9 +62,10 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
             .stepType(InfrastructureStep.STEP_TYPE)
             .skipExpressionChain(true)
             .stepParameters(InfraStepParameters.builder().pipelineInfrastructure(pipelineInfrastructure).build())
-            .facilitatorObtainment(FacilitatorObtainment.builder()
-                                       .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                       .build());
+            .facilitatorObtainment(
+                FacilitatorObtainment.builder()
+                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                    .build());
 
     // Add step dependency provider.
     OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()
@@ -84,9 +86,10 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
         .stepType(NGSectionStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder().childNodeId(infraStepNode.getUuid()).build())
-        .facilitatorObtainment(FacilitatorObtainment.builder()
-                                   .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
-                                   .build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.builder()
+                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                .build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }

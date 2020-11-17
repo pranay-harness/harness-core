@@ -17,9 +17,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -124,7 +124,7 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFromStatus() {
     AdvisingEventBuilder advisingEventBuilder =
-        AdvisingEvent.<ManualInterventionAdviserParameters>builder()
+        AdvisingEvent.builder()
             .ambiance(ambiance)
             .toStatus(Status.FAILED)
             .fromStatus(Status.INTERVENTION_WAITING)

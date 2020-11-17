@@ -9,8 +9,9 @@ import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
-import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
@@ -20,7 +21,7 @@ import java.util.List;
 
 public class BarrierFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.builder().type(FacilitatorType.BARRIER).build();
+      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build();
 
   @Inject private BarrierService barrierService;
 

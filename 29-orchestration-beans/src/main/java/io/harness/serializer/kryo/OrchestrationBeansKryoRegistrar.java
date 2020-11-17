@@ -10,7 +10,6 @@ import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
@@ -49,7 +48,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PlanNode.class, 2508);
     kryo.register(StepType.class, 2509);
     kryo.register(FacilitatorObtainment.class, 2512);
-    kryo.register(FacilitatorType.class, 2514);
     kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
