@@ -15,6 +15,7 @@ import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoRequest;
 import io.harness.serializer.kryo.KryoResponse;
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -98,4 +99,12 @@ public interface DelegateAgentManagerClient {
   // Request: GetDelegatePropertiesRequest
   // Response: GetDelegatePropertiesResponse
   @GET("agent/delegates/properties") Call<RestResponse<String>> getDelegateProperties(@Query("request") String request);
+
+  @POST("logs/activity/{activityId}/unit/{unitName}/batched")
+  Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
+      @Query("accountId") String accountId, @Body RequestBody logObject);
+
+  @POST("agent/delegates/{delegateId}/state-executions")
+  Call<RestResponse> saveApiCallLogs(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
 }

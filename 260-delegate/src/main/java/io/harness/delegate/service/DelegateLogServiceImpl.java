@@ -30,6 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
@@ -71,14 +72,17 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
   private ManagerClient managerClient;
+  private DelegateAgentManagerClient delegateAgentManagerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
   private VerificationServiceClient verificationServiceClient;
   private final KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService,
-      VerificationServiceClient verificationServiceClient, KryoSerializer kryoSerializer) {
+  public DelegateLogServiceImpl(ManagerClient managerClient, DelegateAgentManagerClient delegateAgentManagerClient,
+      @Named("asyncExecutor") ExecutorService executorService, VerificationServiceClient verificationServiceClient,
+      KryoSerializer kryoSerializer) {
     this.managerClient = managerClient;
+    this.delegateAgentManagerClient = delegateAgentManagerClient;
     this.verificationServiceClient = verificationServiceClient;
     this.cache = Caffeine.newBuilder()
                      .executor(executorService)
@@ -209,7 +213,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
         log.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
             logObject.getCommandExecutionStatus());
-        RestResponse restResponse = execute(managerClient.saveCommandUnitLogs(activityId,
+        RestResponse restResponse = execute(delegateAgentManagerClient.saveCommandUnitLogs(activityId,
             URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId,
             RequestBody.create(MediaType.parse("application/octet-stream"), logSerialized)));
         log.info("{} logObject lines dispatched for accountId: {}",
@@ -258,7 +262,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
             log.debug("Logs successfully converted!");
 
             RestResponse restResponse =
-                execute(managerClient.saveApiCallLogs(delegateId, accountId, logsAsRequestBody));
+                execute(delegateAgentManagerClient.saveApiCallLogs(delegateId, accountId, logsAsRequestBody));
             log.info("Dispatched {} api call logs for [{}] [{}]",
                 restResponse == null || restResponse.getResource() != null ? logsList.size() : 0, stateExecutionId,
                 accountId);

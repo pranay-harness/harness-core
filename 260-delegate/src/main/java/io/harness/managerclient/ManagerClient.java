@@ -32,7 +32,6 @@ public interface ManagerClient {
   @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
-
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegateTaskPackage> acquireTask(

@@ -6,6 +6,7 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
@@ -22,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 public class DelegateLogServiceImplTest extends CategoryTest {
   private static final int ACTIVITY_LOGS_BATCH_SIZE = DelegateLogServiceImpl.ACTIVITY_LOGS_BATCH_SIZE;
   @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private VerificationServiceClient verificationServiceClient;
   @Mock private ExecutorService executorService;
   @Mock private KryoSerializer kryoSerializer;
@@ -30,8 +32,8 @@ public class DelegateLogServiceImplTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    delegateLogService =
-        new DelegateLogServiceImpl(managerClient, executorService, verificationServiceClient, kryoSerializer);
+    delegateLogService = new DelegateLogServiceImpl(
+        managerClient, delegateAgentManagerClient, executorService, verificationServiceClient, kryoSerializer);
   }
 
   @Test
