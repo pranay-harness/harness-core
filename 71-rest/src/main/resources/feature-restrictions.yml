@@ -146,9 +146,9 @@
 
   CE_BUDGETS:
     FULL_TRIAL:
-      maxBudgetsAllowed: 2
+      maxBudgetsAllowed: 10
     LIMITED_TRIAL:
-      maxBudgetsAllowed: 2
+      maxBudgetsAllowed: 10
 
   CE_CLUSTERS:
     LIMITED_TRIAL:
