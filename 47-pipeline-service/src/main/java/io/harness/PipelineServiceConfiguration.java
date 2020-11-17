@@ -18,6 +18,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +42,7 @@ public class PipelineServiceConfiguration extends Configuration {
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
 

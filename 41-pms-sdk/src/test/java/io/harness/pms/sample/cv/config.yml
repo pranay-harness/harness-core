@@ -9,3 +9,7 @@ mongo:
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12201
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost

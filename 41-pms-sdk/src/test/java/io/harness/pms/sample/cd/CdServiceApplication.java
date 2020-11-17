@@ -2,7 +2,6 @@ package io.harness.pms.sample.cd;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -13,8 +12,11 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.harness.PmsSdkConfiguration;
+import io.harness.PmsSdkModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sample.cd.creator.CdPlanCreatorProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -53,10 +55,12 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
 
-    log.info("Initializing gRPC servers...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+                                        .planCreatorProvider(new CdPlanCreatorProvider())
+                                        .build();
+    PmsSdkModule.initializeDefaultInstance(sdkConfig);
 
     MaintenanceController.forceMaintenance(false);
   }

@@ -9,6 +9,11 @@ import java.util.List;
 
 public class CdPlanCreatorProvider implements PlanCreatorProvider {
   @Override
+  public String getServiceName() {
+    return "cd";
+  }
+
+  @Override
   public List<PartialPlanCreator> getPlanCreators() {
     List<PartialPlanCreator> planCreators = new ArrayList<>();
     planCreators.add(new PipelinePlanCreator());

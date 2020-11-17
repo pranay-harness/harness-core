@@ -17,12 +17,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PipelinePlanCreator extends ParallelChildrenPlanCreator {
   @Override
-  public boolean supportsField(YamlField field) {
-    return "pipeline".equals(field.getName());
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap("pipeline", Collections.singleton(ANY_TYPE));
   }
 
   @Override

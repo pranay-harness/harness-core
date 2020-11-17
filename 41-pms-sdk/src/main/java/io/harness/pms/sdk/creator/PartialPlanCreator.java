@@ -4,7 +4,12 @@ import io.harness.pms.plan.common.creator.PlanCreationContext;
 import io.harness.pms.plan.common.creator.PlanCreationResponse;
 import io.harness.pms.plan.common.yaml.YamlField;
 
+import java.util.Map;
+import java.util.Set;
+
 public interface PartialPlanCreator {
-  boolean supportsField(YamlField field);
+  String ANY_TYPE = "__any__";
+
+  Map<String, Set<String>> getSupportedTypes();
   PlanCreationResponse createPlanForField(PlanCreationContext ctx, YamlField field);
 }

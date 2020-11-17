@@ -2,6 +2,7 @@ package io.harness.pms.sdk.creator;
 
 import com.google.common.base.Preconditions;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.plan.PlanNode;
@@ -12,16 +13,20 @@ import io.harness.pms.plan.common.yaml.YamlNode;
 import io.harness.pms.sdk.io.MapStepParameters;
 import io.harness.pms.steps.StepType;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class SimpleStepPlanCreator implements PartialPlanCreator {
   public abstract Set<String> getSupportedStepTypes();
 
   @Override
-  public boolean supportsField(YamlField field) {
-    YamlNode yamlNode = field.getNode();
-    String type = yamlNode.getType();
-    return type != null && getSupportedStepTypes().contains(type);
+  public Map<String, Set<String>> getSupportedTypes() {
+    Set<String> stepTypes = getSupportedStepTypes();
+    if (EmptyPredicate.isEmpty(stepTypes)) {
+      return Collections.emptyMap();
+    }
+    return Collections.singletonMap("step", stepTypes);
   }
 
   @Override

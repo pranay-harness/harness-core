@@ -10,7 +10,13 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.grpc.BindableService;
+import io.grpc.Channel;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.services.HealthStatusManager;
+import io.harness.PmsSdkConfiguration;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.pms.plan.PmsServiceGrpc;
+import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.sdk.creator.PlanCreatorService;
 
 import java.util.Collections;
@@ -30,18 +36,30 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Override
   protected void configure() {
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-service")));
+    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-sdk-grpc-service")));
   }
 
   @Provides
   @Singleton
-  @Named("pms-grpc-service")
-  public Service pmsGrpcService(@Named("pms-grpc-server-config") GrpcServerConfig grpcServerConfig,
-      HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+  @Named("pms-sdk-grpc-service")
+  public Service pmsSdkGrpcService(
+      PmsSdkConfiguration config, HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
     return new GrpcServer(
-        grpcServerConfig.getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
+        config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
+  }
+
+  @Provides
+  @Singleton
+  public PmsServiceBlockingStub pmsGrpcClient(
+      PmsSdkConfiguration config, HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
+    Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                          .overrideAuthority(clientConfig.getAuthority())
+                          .usePlaintext()
+                          .build();
+    return PmsServiceGrpc.newBlockingStub(channel);
   }
 }
