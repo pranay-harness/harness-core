@@ -300,12 +300,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
     CVConfigDataCollectionHandler cvConfigDataCollectionHandler =
         injector.getInstance(CVConfigDataCollectionHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
+    // TODO: We need to set alert for these intervals and find a way to implement transaction for this
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(CVConfig.class)
             .fieldName(CVConfigKeys.dataCollectionTaskIteration)
-            .targetInterval(ofMinutes(1))
+            .targetInterval(ofMinutes(5))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))
@@ -324,7 +325,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(KubernetesActivitySource.class)
             .fieldName(KubernetesActivitySourceKeys.dataCollectionTaskIteration)
-            .targetInterval(ofMinutes(1))
+            .targetInterval(ofMinutes(5))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))

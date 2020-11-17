@@ -1,6 +1,5 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThatCode;
 

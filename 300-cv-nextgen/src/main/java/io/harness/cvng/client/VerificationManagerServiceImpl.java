@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 
@@ -52,6 +53,15 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Override
   public void deletePerpetualTasks(String accountId, List<String> perpetualTaskIds) {
     perpetualTaskIds.forEach(dataCollectionWorkerId -> this.deletePerpetualTask(accountId, dataCollectionWorkerId));
+  }
+
+  @Override
+  public String getDataCollectionResponse(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest request) {
+    return requestExecutor
+        .execute(
+            verificationManagerClient.getDataCollectionResponse(accountId, orgIdentifier, projectIdentifier, request))
+        .getResource();
   }
 
   @Override

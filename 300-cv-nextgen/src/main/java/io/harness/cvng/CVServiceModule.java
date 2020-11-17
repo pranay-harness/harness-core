@@ -49,6 +49,7 @@ import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -65,6 +66,7 @@ import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
+import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
@@ -188,8 +190,8 @@ public class CVServiceModule extends AbstractModule {
       bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
       bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
       bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+      bind(OnboardingService.class).to(OnboardingServiceImpl.class);
       bind(CVSetupService.class).to(CVSetupServiceImpl.class);
-
       bindTheMonitoringSourceImportStatusCreators();
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);

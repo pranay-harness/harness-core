@@ -32,6 +32,7 @@ import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
+import io.harness.cvng.CVNGDataCollectionDelegateServiceImpl;
 import io.harness.cvng.K8InfoDataServiceImpl;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -404,6 +405,7 @@ import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate
 import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
+import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.instana.InstanaDelegateService;
@@ -826,6 +828,7 @@ public class DelegateModule extends AbstractModule {
     bind(GcpClient.class).to(GcpClientImpl.class);
     bind(ManifestRepositoryService.class).to(HelmRepositoryService.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
+    bind(CVNGDataCollectionDelegateService.class).to(CVNGDataCollectionDelegateServiceImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -954,6 +957,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.APM_GET_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.CVNG_CONNECTOR_VALIDATE_TASK).toInstance(CVNGConnectorValidationDelegateTask.class);
+    mapBinder.addBinding(TaskType.GET_DATA_COLLECTION_RESULT).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_GET_APP_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_GET_APP_TASK_NG).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_GET_TIER_TASK).toInstance(ServiceImplDelegateTask.class);
