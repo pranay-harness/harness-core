@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -46,5 +47,15 @@ public class CVDataCollectionTaskResource {
   @ExceptionMetered
   public void deleteTask(@QueryParam("accountId") String accountId, @QueryParam("taskId") String taskId) {
     dataCollectionTaskService.delete(accountId, taskId);
+  }
+  @POST
+  @Path("get-data-collection-result")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getDataCollectionResult(@QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionRequest dataCollectionRequest) {
+    return new RestResponse<>(dataCollectionTaskService.getDataCollectionResult(
+        accountId, orgIdentifier, projectIdentifier, dataCollectionRequest));
   }
 }

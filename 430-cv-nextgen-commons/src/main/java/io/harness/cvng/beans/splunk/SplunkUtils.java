@@ -1,6 +1,5 @@
 package io.harness.cvng.beans.splunk;
 
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
 import java.nio.charset.Charset;

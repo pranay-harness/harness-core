@@ -1,5 +1,6 @@
 package io.harness.cvng.client;
 
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionType;
 
 import java.util.List;
@@ -10,6 +11,8 @@ public interface VerificationManagerService {
       DataCollectionType dataCollectionType, Map<String, String> params);
   void deletePerpetualTask(String accountId, String perpetualTaskId);
   void deletePerpetualTasks(String accountId, List<String> perpetualTaskIds);
+  String getDataCollectionResponse(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest request);
   List<String> getKubernetesNamespaces(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
   List<String> getKubernetesWorkloads(

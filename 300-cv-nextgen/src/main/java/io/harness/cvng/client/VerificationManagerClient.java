@@ -8,6 +8,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
@@ -39,6 +40,11 @@ public interface VerificationManagerClient {
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionPerpetualTask(
       @Query("accountId") String accountId, @Query("taskId") String taskId);
+
+  @POST(CV_DATA_COLLECTION_PATH + "/get-data-collection-result")
+  Call<RestResponse<String>> getDataCollectionResponse(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionRequest request);
 
   @POST(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(@Query("accountId") String accountId,

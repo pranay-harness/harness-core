@@ -7,11 +7,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.HoverflyTest;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
+import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
@@ -34,6 +38,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SplunkDataCollectionDSLTest extends HoverflyTest {
@@ -135,6 +140,40 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
             "io.harness.datacollection.exception.DataCollectionException: io.harness.datacollection.exception.DataCollectionException: Response code: 405 Error: Response{protocol=http/1.1, code=405, message=Method Not Allowed, url=https://splunk.dev.harness.io:8089/invalid/services/search/jobs/?output_mode=json&exec_mode=blocking}");
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_splunkSavedSearches() throws IOException {
+    String filePath = "splunk/saved-searches.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    SplunkSavedSearchRequest splunkSavedSearchRequest =
+        SplunkSavedSearchRequest.builder()
+            .connectorInfoDTO(
+                ConnectorInfoDTO.builder()
+                    .connectorConfig(
+                        SplunkConnectorDTO.builder()
+                            .splunkUrl("https://splunk.dev.harness.io:8089/")
+                            .username("harnessadmin")
+                            .passwordRef(SecretRefData.builder().decryptedValue("Harness@123".toCharArray()).build())
+                            .build())
+                    .build())
+            .build();
+
+    Instant instant = Instant.parse("2020-10-30T10:44:48.164Z");
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(splunkSavedSearchRequest.getStartTime(instant))
+                                              .endTime(splunkSavedSearchRequest.getEndTime(instant))
+                                              .commonHeaders(splunkSavedSearchRequest.collectionHeaders())
+                                              .baseUrl(splunkSavedSearchRequest.getBaseUrl())
+                                              .build();
+    List<?> result = (List<?>) dataCollectionDSLService.execute(splunkSavedSearchRequest.getDSL(), runtimeParameters);
+    assertThat(result).hasSize(8);
+    assertThat(result).isEqualTo(
+        new Gson().fromJson(readJson("saved-searches-expectation.json"), new TypeToken<List<Map>>() {}.getType()));
+  }
+
   private String readDSL(String fileName) throws IOException {
     return Resources.toString(SplunkCVConfig.class.getResource(fileName), StandardCharsets.UTF_8);
   }
@@ -160,5 +199,10 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
         .endTime(instant)
         .startTime(instant.minus(Duration.ofMinutes(1)))
         .build();
+  }
+
+  private String readJson(String name) throws IOException {
+    return Resources.toString(
+        AppDynamicsDataCollectionDSLTest.class.getResource("/hoverfly/splunk/" + name), StandardCharsets.UTF_8);
   }
 }

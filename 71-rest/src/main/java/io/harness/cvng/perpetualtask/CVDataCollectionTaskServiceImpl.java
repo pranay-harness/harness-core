@@ -11,6 +11,7 @@ import com.google.protobuf.util.Durations;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourceDTOKeys;
@@ -36,8 +37,10 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
+import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
 import software.wings.service.intfc.security.NGSecretService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -180,6 +183,29 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   }
 
   @Override
+  public String getDataCollectionResult(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest dataCollectionRequest) {
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(accountId)
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    if (dataCollectionRequest.getConnectorConfigDTO() instanceof DecryptableEntity) {
+      encryptedDataDetails = ngSecretService.getEncryptionDetails(
+          basicNGAccessObject, (DecryptableEntity) dataCollectionRequest.getConnectorConfigDTO());
+    }
+    SyncTaskContext taskContext = getSyncTaskContext(accountId);
+    return delegateProxyFactory.get(CVNGDataCollectionDelegateService.class, taskContext)
+        .getDataCollectionResult(accountId, dataCollectionRequest, encryptedDataDetails);
+  }
+  private SyncTaskContext getSyncTaskContext(String accountId) {
+    return SyncTaskContext.builder()
+        .accountId(accountId)
+        .appId(GLOBAL_APP_ID)
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+        .build();
+  }
   public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
       DataCollectionConnectorBundle bundle) throws ApiException {
     List<EncryptedDataDetail> encryptedDataDetails =
