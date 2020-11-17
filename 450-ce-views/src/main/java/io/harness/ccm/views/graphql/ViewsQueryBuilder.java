@@ -1,5 +1,7 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
@@ -201,12 +203,12 @@ public class ViewsQueryBuilder {
               new CustomCondition(String.format(searchFilter, viewFieldInput.getFieldId(), searchString)));
           break;
         case LABEL:
-          if (viewFieldInput.getFieldId().equals(ViewsMetaDataFields.LABEL_KEY.getFieldName())) {
-            query.addCustomGroupings(ViewsMetaDataFields.LABEL_KEY.getAlias());
-            query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
-                ViewsMetaDataFields.LABEL_KEY.getAlias());
-            query.addCondition(new CustomCondition(
-                String.format(searchFilter, ViewsMetaDataFields.LABEL_KEY.getFieldName(), searchString)));
+          if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
+            query.addCustomGroupings(LABEL_KEY.getAlias());
+            query.addAliasedColumn(
+                new CustomSql(String.format(distinct, viewFieldInput.getFieldId())), LABEL_KEY.getAlias());
+            query.addCondition(
+                new CustomCondition(String.format(searchFilter, LABEL_KEY.getFieldName(), searchString)));
           } else {
             query.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
             query.addCondition(getCondition(getLabelKeyFilter(new String[] {viewFieldInput.getFieldName()})));
@@ -257,7 +259,7 @@ public class ViewsQueryBuilder {
   private QLCEViewFilter getLabelKeyFilter(String[] values) {
     return QLCEViewFilter.builder()
         .field(QLCEViewFieldInput.builder()
-                   .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
+                   .fieldId(LABEL_KEY.getFieldName())
                    .identifier(ViewFieldIdentifier.LABEL)
                    .identifierName(ViewFieldIdentifier.LABEL.getDisplayName())
                    .build())
@@ -304,8 +306,8 @@ public class ViewsQueryBuilder {
       for (String fieldId : listOfNotNullEntities) {
         conditionList.add(UnaryCondition.isNotNull(new CustomSql(fieldId)));
       }
-      conditionList.add(new InCondition(new CustomSql(ViewsMetaDataFields.LABEL_KEY.getFieldName()),
-          (Object[]) labelsKeysListAcrossCustomFieldsStringArray));
+      conditionList.add(new InCondition(
+          new CustomSql(LABEL_KEY.getFieldName()), (Object[]) labelsKeysListAcrossCustomFieldsStringArray));
       selectQuery.addCondition(getSqlOrCondition(conditionList));
     }
     return isLabelsPresent;
@@ -451,6 +453,8 @@ public class ViewsQueryBuilder {
       return QLCEViewFilterOperator.IN;
     } else if (operator.equals(ViewIdOperator.NOT_IN)) {
       return QLCEViewFilterOperator.NOT_IN;
+    } else if (operator.equals(ViewIdOperator.NOT_NULL)) {
+      return QLCEViewFilterOperator.NOT_NULL;
     }
     return null;
   }
@@ -559,6 +563,11 @@ public class ViewsQueryBuilder {
     if (conditionKey.toString().equals(ViewsMetaDataFields.LABEL_VALUE.getFieldName())) {
       conditionKey = new CustomSql(labelsFilter);
       String labelKey = filter.getField().getFieldName();
+
+      if (filter.getOperator() == QLCEViewFilterOperator.NOT_NULL) {
+        return BinaryCondition.equalTo(LABEL_KEY.getFieldName(), labelKey);
+      }
+
       String[] values = filter.getValues();
       for (int i = 0; i < values.length; i++) {
         values[i] = labelKey + ":" + values[i];
@@ -577,6 +586,8 @@ public class ViewsQueryBuilder {
         return new InCondition(conditionKey, (Object[]) filter.getValues());
       case NOT_IN:
         return new InCondition(conditionKey, (Object[]) filter.getValues()).setNegate(true);
+      case NOT_NULL:
+        return UnaryCondition.isNotNull(conditionKey);
       default:
         throw new InvalidRequestException("Invalid View Filter operator: " + operator);
     }
@@ -619,8 +630,8 @@ public class ViewsQueryBuilder {
       case COMMON:
         return field.getFieldId();
       case LABEL:
-        if (field.getFieldId().equals(ViewsMetaDataFields.LABEL_KEY.getFieldName())) {
-          return ViewsMetaDataFields.LABEL_KEY.getAlias();
+        if (field.getFieldId().equals(LABEL_KEY.getFieldName())) {
+          return LABEL_KEY.getAlias();
         } else {
           return ViewsMetaDataFields.LABEL_VALUE.getAlias();
         }
