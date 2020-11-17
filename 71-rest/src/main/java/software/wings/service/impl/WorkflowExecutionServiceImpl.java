@@ -2651,8 +2651,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "No WorkflowExecution for executionUuid:" + executionUuid);
+      throw new InvalidRequestException("Workflow execution does not exist.");
     }
 
     // handling abort_all interrupt explicitly when execution in preparing state.
@@ -2666,7 +2665,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // There is a race between the workflow progress and request coming from the user.
       // It is completely normal the workflow to finish while interrupt request is coming.
       // Therefore there is nothing alarming when this occurs.
-      throw new InvalidRequestException("Workflow execution already completed. executionUuid:" + executionUuid, USER);
+      throw new InvalidRequestException(
+          "Workflow execution [" + workflowExecution.getName() + "] already completed.", USER);
     }
 
     if (workflowExecution.getWorkflowType() != PIPELINE) {
