@@ -1,5 +1,7 @@
 package io.harness.cvng.client;
 
+import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -8,6 +10,7 @@ import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,5 +52,46 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Override
   public void deletePerpetualTasks(String accountId, List<String> perpetualTaskIds) {
     perpetualTaskIds.forEach(dataCollectionWorkerId -> this.deletePerpetualTask(accountId, dataCollectionWorkerId));
+  }
+
+  @Override
+  public List<String> getKubernetesNamespaces(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+    if (!connectorDTO.isPresent()) {
+      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
+    }
+
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .connectorDTO(connectorDTO.get())
+                                               .params(Collections.emptyMap())
+                                               .dataCollectionType(KUBERNETES)
+                                               .build();
+
+    return requestExecutor
+        .execute(verificationManagerClient.getKubernetesNamespaces(accountId, orgIdentifier, projectIdentifier, bundle))
+        .getResource();
+  }
+
+  @Override
+  public List<String> getKubernetesWorkloads(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace) {
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+    if (!connectorDTO.isPresent()) {
+      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
+    }
+
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .connectorDTO(connectorDTO.get())
+                                               .params(Collections.emptyMap())
+                                               .dataCollectionType(KUBERNETES)
+                                               .build();
+
+    return requestExecutor
+        .execute(verificationManagerClient.getKubernetesWorkloads(
+            accountId, orgIdentifier, projectIdentifier, namespace, bundle))
+        .getResource();
   }
 }

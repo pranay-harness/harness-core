@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -53,6 +55,27 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
                                  .clusterName(activitySourceDTO.getClusterName())
                                  .workloadName(activitySourceDTO.getWorkloadName())
                                  .build());
+  }
+
+  @Override
+  public List<String> saveKubernetesSources(String accountId, String orgIdentifier, String projectIdentifier,
+      List<KubernetesActivitySourceDTO> activitySourceDTOs) {
+    Preconditions.checkState(isNotEmpty(activitySourceDTOs));
+    List<KubernetesActivitySource> kubernetesActivitySources = new ArrayList<>();
+    activitySourceDTOs.forEach(activitySourceDTO
+        -> kubernetesActivitySources.add(KubernetesActivitySource.builder()
+                                             .accountId(accountId)
+                                             .orgIdentifier(orgIdentifier)
+                                             .projectIdentifier(projectIdentifier)
+                                             .uuid(activitySourceDTO.getUuid())
+                                             .connectorIdentifier(activitySourceDTO.getConnectorIdentifier())
+                                             .serviceIdentifier(activitySourceDTO.getServiceIdentifier())
+                                             .envIdentifier(activitySourceDTO.getEnvIdentifier())
+                                             .namespace(activitySourceDTO.getNamespace())
+                                             .clusterName(activitySourceDTO.getClusterName())
+                                             .workloadName(activitySourceDTO.getWorkloadName())
+                                             .build()));
+    return hPersistence.save(kubernetesActivitySources);
   }
 
   @Override
@@ -124,5 +147,19 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
         hPersistence.getCollection(KubernetesActivitySource.class)
             .distinct(KubernetesActivitySourceKeys.serviceIdentifier, scopeIdentifiersFilter);
     return serviceIdentifiers.size();
+  }
+
+  @Override
+  public List<String> getKubernetesNamespaces(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    return verificationManagerService.getKubernetesNamespaces(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier);
+  }
+
+  @Override
+  public List<String> getKubernetesWorkloads(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace) {
+    return verificationManagerService.getKubernetesWorkloads(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace);
   }
 }

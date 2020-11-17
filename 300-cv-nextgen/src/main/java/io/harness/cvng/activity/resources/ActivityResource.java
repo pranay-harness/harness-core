@@ -12,13 +12,9 @@ import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
@@ -43,7 +39,6 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 public class ActivityResource {
   @Inject private ActivityService activityService;
-  @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
 
   @POST
   @Timed
@@ -94,32 +89,6 @@ public class ActivityResource {
       @NotNull @PathParam("deploymentTag") String deploymentTag) {
     return new RestResponse(activityService.getDeploymentActivityVerificationsPopoverSummary(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag));
-  }
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @Path("/kubernetes-source")
-  @ApiOperation(value = "register a kubernetes event source", nickname = "registerKubernetesSource")
-  public RestResponse<String> registerKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @Body KubernetesActivitySourceDTO activitySourceDTO) {
-    return new RestResponse<>(kubernetesActivitySourceService.saveKubernetesSource(
-        accountId, orgIdentifier, projectIdentifier, activitySourceDTO));
-  }
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @DelegateAuth
-  @Path("/kubernetes-activities")
-  @ApiOperation(value = "saves a list of kubernetes activities", nickname = "saveKubernetesActivities")
-  public RestResponse<Boolean> saveKubernetesActivities(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("activitySourceId") @NotNull String activitySourceId,
-      @NotNull @Valid @Body List<KubernetesActivityDTO> activities) {
-    return new RestResponse<>(
-        kubernetesActivitySourceService.saveKubernetesActivities(accountId, activitySourceId, activities));
   }
 
   @GET

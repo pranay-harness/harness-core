@@ -1,0 +1,83 @@
+package io.harness.cvng;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import com.google.inject.Inject;
+
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
+import io.harness.k8s.apiclient.ApiClientFactory;
+import io.harness.k8s.model.KubernetesConfig;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
+import io.kubernetes.client.openapi.models.V1PodList;
+import software.wings.delegatetasks.cvng.K8InfoDataService;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class K8InfoDataServiceImpl implements K8InfoDataService {
+  @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private ApiClientFactory apiClientFactory;
+
+  @Override
+  public List<String> getNameSpaces(
+      DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails) throws ApiException {
+    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
+    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
+    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig =
+        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+    CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+    V1NamespaceList v1NamespaceList =
+        coreV1Api.listNamespace(null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
+    List<String> rv = new ArrayList<>();
+    v1NamespaceList.getItems().forEach(v1Namespace -> rv.add(v1Namespace.getMetadata().getName()));
+    return rv;
+  }
+
+  @Override
+  public List<String> getWorkloads(String namespace, DataCollectionConnectorBundle bundle,
+      List<EncryptedDataDetail> encryptedDataDetails) throws ApiException {
+    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
+    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
+    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig =
+        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+    CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+    V1PodList podList = coreV1Api.listNamespacedPod(
+        namespace, null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
+    Set<String> rv = new HashSet<>();
+    podList.getItems().forEach(viPod -> {
+      List<V1OwnerReference> ownerReferences = viPod.getMetadata().getOwnerReferences();
+      if (isNotEmpty(ownerReferences)) {
+        ownerReferences.forEach(v1OwnerReference -> {
+          if ("ReplicaSet".equals(v1OwnerReference.getKind())) {
+            rv.add(v1OwnerReference.getName().substring(0, v1OwnerReference.getName().lastIndexOf("-")));
+          }
+
+          if ("StatefulSet".equals(v1OwnerReference.getKind()) || "DaemonSet".equals(v1OwnerReference.getKind())) {
+            rv.add(v1OwnerReference.getName());
+          }
+        });
+      }
+    });
+    return rv.stream().collect(Collectors.toList());
+  }
+}

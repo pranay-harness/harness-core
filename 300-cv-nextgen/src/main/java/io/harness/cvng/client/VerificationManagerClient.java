@@ -1,6 +1,7 @@
 package io.harness.cvng.client;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
+import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
@@ -70,4 +71,14 @@ public interface VerificationManagerClient {
   @POST("account/validate-delegate-token")
   Call<RestResponse<Boolean>> authenticateDelegateRequest(
       @Query("accountId") String accountId, @Query("delegateToken") String delegateToken);
+
+  @POST(KUBERNETES_RESOURCE + "/namespaces")
+  Call<RestResponse<List<String>>> getKubernetesNamespaces(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionConnectorBundle bundle);
+
+  @POST(KUBERNETES_RESOURCE + "/workloads")
+  Call<RestResponse<List<String>>> getKubernetesWorkloads(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("namespace") String namespace, @Body DataCollectionConnectorBundle bundle);
 }

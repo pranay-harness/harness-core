@@ -2,12 +2,14 @@ package io.harness.cvng.client;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
+import io.harness.utils.IdentifierRefHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +26,12 @@ public class NextGenServiceImpl implements NextGenService {
   @Override
   public Optional<ConnectorInfoDTO> get(
       String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
     ConnectorResponseDTO connectorResponse =
         requestExecutor
-            .execute(nextGenClient.get(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier))
+            .execute(nextGenClient.get(identifierRef.getIdentifier(), identifierRef.getAccountIdentifier(),
+                identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier()))
             .getData();
     return connectorResponse != null ? Optional.of(connectorResponse.getConnector()) : Optional.empty();
   }
