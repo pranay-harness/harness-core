@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
-import io.harness.skip.SkipType;
+import io.harness.pms.steps.SkipType;
 import io.harness.skip.factory.VertexSkipperFactory;
 import io.harness.skip.service.VertexSkipperService;
 import io.harness.skip.skipper.VertexSkipper;

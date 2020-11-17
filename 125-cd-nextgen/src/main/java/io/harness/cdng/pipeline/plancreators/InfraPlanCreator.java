@@ -26,7 +26,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
-import io.harness.skip.SkipType;
+import io.harness.pms.steps.SkipType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import java.util.Collections;

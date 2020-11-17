@@ -21,7 +21,7 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.rule.Owner;
-import io.harness.skip.SkipType;
+import io.harness.pms.steps.SkipType;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.utils.DummyForkStepParameters;

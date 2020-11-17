@@ -31,7 +31,7 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import io.harness.skip.SkipType;
+import io.harness.pms.steps.SkipType;
 import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;

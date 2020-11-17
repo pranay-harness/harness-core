@@ -2,8 +2,8 @@ package io.harness.skip.skipper.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static io.harness.skip.SkipType.NOOP;
-import static io.harness.skip.SkipType.SKIP_NODE;
+import static io.harness.pms.steps.SkipType.NOOP;
+import static io.harness.pms.steps.SkipType.SKIP_NODE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
