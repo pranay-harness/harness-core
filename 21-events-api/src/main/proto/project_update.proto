@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.harness.eventsframework;
+
+option java_multiple_files = true;
+
+message ProjectUpdate {
+  string projectId = 1;
+  string description = 2;
+}
