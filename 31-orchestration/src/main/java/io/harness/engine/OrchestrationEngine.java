@@ -53,12 +53,12 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.execution.Status;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -192,7 +192,7 @@ public class OrchestrationEngine {
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
       facilitatorResponse = facilitator.facilitate(
-          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters(), inputPackage);
+          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters().toByteArray(), inputPackage);
       if (facilitatorResponse != null) {
         break;
       }

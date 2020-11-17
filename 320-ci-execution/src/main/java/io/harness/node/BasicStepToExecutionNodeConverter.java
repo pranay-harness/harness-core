@@ -8,11 +8,11 @@ import graph.StepInfoGraph;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.steps.CIStepInfo;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.serializer.KryoSerializer;
 
@@ -41,8 +41,8 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
   }
 
   private FacilitatorObtainment getFacilitatorsFromMetaData() {
-    return FacilitatorObtainment.builder()
-        .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+    return FacilitatorObtainment.newBuilder()
+        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
         .build();
   }
 

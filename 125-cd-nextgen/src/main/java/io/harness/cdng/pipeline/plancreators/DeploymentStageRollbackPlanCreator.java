@@ -24,9 +24,9 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.Execu
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -149,8 +149,8 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
             .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
             .stepParameters(stepParametersBuilder.build())
             .facilitatorObtainment(
-                FacilitatorObtainment.builder()
-                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                     .build())
             .skipExpressionChain(true)
             .build();

@@ -24,7 +24,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -33,6 +32,7 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
@@ -84,8 +84,8 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                       .identifier("test1")
                       .stepType(TEST_STEP_TYPE)
                       .facilitatorObtainment(
-                          FacilitatorObtainment.builder()
-                              .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          FacilitatorObtainment.newBuilder()
+                              .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                               .build())
                       .build())
             .startingNodeId(testNodeId)
@@ -113,8 +113,8 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                       .identifier("test1")
                       .stepType(TEST_STEP_TYPE)
                       .facilitatorObtainment(
-                          FacilitatorObtainment.builder()
-                              .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          FacilitatorObtainment.newBuilder()
+                              .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                               .build())
                       .build())
             .startingNodeId(testStartNodeId)
@@ -149,23 +149,24 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                                   OnSuccessAdviserParameters.builder().nextNodeId(testWaitNodeId).build())))
                               .build())
                       .facilitatorObtainment(
-                          FacilitatorObtainment.builder()
-                              .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          FacilitatorObtainment.newBuilder()
+                              .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                               .build())
                       .build())
-            .node(PlanNode.builder()
-                      .uuid(testWaitNodeId)
-                      .name("Finish Node")
-                      .identifier("finish")
-                      .stepType(ASYNC_STEP_TYPE)
-                      .stepParameters(TestStepParameters.builder().param("Param").build())
-                      .facilitatorObtainment(
-                          FacilitatorObtainment.builder()
-                              .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
-                              .parameters(
-                                  DefaultFacilitatorParams.builder().waitDurationSeconds(Duration.ofSeconds(2)).build())
-                              .build())
-                      .build())
+            .node(
+                PlanNode.builder()
+                    .uuid(testWaitNodeId)
+                    .name("Finish Node")
+                    .identifier("finish")
+                    .stepType(ASYNC_STEP_TYPE)
+                    .stepParameters(TestStepParameters.builder().param("Param").build())
+                    .facilitatorObtainment(
+                        FacilitatorObtainment.newBuilder()
+                            .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.ASYNC).build())
+                            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                                DefaultFacilitatorParams.builder().waitDurationSeconds(Duration.ofSeconds(2)).build())))
+                            .build())
+                    .build())
             .startingNodeId(testStartNodeId)
             .build();
 
@@ -205,8 +206,8 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                       .identifier("test1")
                       .stepType(TEST_STEP_TYPE)
                       .facilitatorObtainment(
-                          FacilitatorObtainment.builder()
-                              .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                          FacilitatorObtainment.newBuilder()
+                              .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                               .build())
                       .build())
             .startingNodeId(testNodeId)

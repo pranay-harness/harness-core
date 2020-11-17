@@ -3,7 +3,6 @@ package io.harness.steps.barriers;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.execution.ExecutionMode.ASYNC;
 import static io.harness.pms.execution.ExecutionMode.SYNC;
-
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,9 +15,9 @@ import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 import org.junit.Test;
@@ -30,6 +29,7 @@ import java.util.Collections;
 
 public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
   @Mock private BarrierService barrierService;
+  @Inject private KryoSerializer kryoSerializer;
   @Inject @InjectMocks private BarrierFacilitator barrierFacilitator;
 
   @Test
@@ -38,7 +38,7 @@ public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
   public void shouldTestFacilitateForSyncResponse() {
     when(barrierService.findByIdentifierAndPlanExecutionId(any(), any())).thenReturn(Collections.emptyList());
     Ambiance ambiance = Ambiance.builder().build();
-    FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
+    byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier("someString").build();
     FacilitatorResponse response = barrierFacilitator.facilitate(ambiance, stepParameters, parameters, null);
     assertThat(response).isNotNull();
@@ -63,7 +63,7 @@ public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
                 .planExecutionId(planExecutionId)
                 .build()));
     Ambiance ambiance = Ambiance.builder().build();
-    FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
+    byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(identifier).build();
     FacilitatorResponse response = barrierFacilitator.facilitate(ambiance, stepParameters, parameters, null);
     assertThat(response).isNotNull();

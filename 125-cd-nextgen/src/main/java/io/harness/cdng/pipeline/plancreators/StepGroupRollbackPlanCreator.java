@@ -16,9 +16,9 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
@@ -93,8 +93,8 @@ public class StepGroupRollbackPlanCreator extends AbstractPlanCreatorWithChildre
                                               .collect(Collectors.toList()))
                             .build())
         .facilitatorObtainment(
-            FacilitatorObtainment.builder()
-                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                 .build())
         .build();
   }

@@ -5,6 +5,7 @@ import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.spring.AliasRegistrar;
 
@@ -19,5 +20,6 @@ public class PmsContractsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("adviserType", AdviserType.class);
     orchestrationElements.put("adviserObtainment", AdviserObtainment.class);
     orchestrationElements.put("facilitatorType", FacilitatorType.class);
+    orchestrationElements.put("facilitatorObtainment", FacilitatorObtainment.class);
   }
 }

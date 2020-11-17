@@ -11,6 +11,6 @@ import io.harness.state.io.StepParameters;
 @OwnedBy(CDC)
 @Redesign
 public interface Facilitator {
-  FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters,
-      StepInputPackage inputPackage);
+  FacilitatorResponse facilitate(
+      Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage);
 }

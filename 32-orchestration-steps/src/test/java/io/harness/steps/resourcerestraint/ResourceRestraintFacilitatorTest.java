@@ -19,10 +19,10 @@ import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
@@ -44,6 +44,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
   private static final String RESOURCE_UNIT = generateUuid();
 
+  @Inject private KryoSerializer kryoSerializer;
   @Mock private ResourceRestraintService resourceRestraintService;
   @Mock private RestraintService restraintService;
   @Mock private EngineExpressionService engineExpressionService;
@@ -81,7 +82,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
             .planExecutionId(generateUuid())
             .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
-    FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
+    byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
@@ -117,7 +118,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
             .planExecutionId(generateUuid())
             .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
             .build();
-    FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
+    byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)

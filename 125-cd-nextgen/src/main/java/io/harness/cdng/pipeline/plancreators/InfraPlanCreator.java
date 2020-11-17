@@ -22,10 +22,10 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
-import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.steps.SkipType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
@@ -63,8 +63,8 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
             .skipExpressionChain(true)
             .stepParameters(InfraStepParameters.builder().pipelineInfrastructure(pipelineInfrastructure).build())
             .facilitatorObtainment(
-                FacilitatorObtainment.builder()
-                    .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                     .build());
 
     // Add step dependency provider.
@@ -87,8 +87,8 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .stepType(NGSectionStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder().childNodeId(infraStepNode.getUuid()).build())
         .facilitatorObtainment(
-            FacilitatorObtainment.builder()
-                .type(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                 .build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
