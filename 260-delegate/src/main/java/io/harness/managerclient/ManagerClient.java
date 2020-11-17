@@ -16,10 +16,6 @@ import software.wings.beans.Delegate;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.service.impl.analysis.LogElement;
-import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.StateType;
 
 import java.util.List;
 
@@ -36,13 +32,6 @@ public interface ManagerClient {
   @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
-
-  @POST(LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
-  Call<RestResponse<Boolean>> saveLogs(@Query("accountId") String accountId, @Query("appId") String appId,
-      @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
-      @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
-      @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
-      @Query("stateType") StateType stateType, @Body List<LogElement> metricData);
 
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
