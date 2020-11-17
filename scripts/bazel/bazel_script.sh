@@ -9,8 +9,7 @@ then
   local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]
   then
-    BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
-    BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
+    bash scripts/bazel/testDistribute.sh
   fi
 fi
 
@@ -75,6 +74,33 @@ build_bazel_tests() {
    -DartifactId=${module} \
    -Dversion=0.0.1-SNAPSHOT \
    -Dclassifier=tests \
+   -Dpackaging=jar \
+   -DgeneratePom=true \
+   -DpomFile=${module}/pom.xml \
+   -DlocalRepositoryPath=${local_repo}
+}
+
+build_bazel_application() {
+  module=$1
+  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:module_deploy.jar ${GCP} ${BAZEL_ARGUMENTS}
+
+  mvn -B install:install-file \
+   -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+   -DgroupId=software.wings \
+   -DartifactId=${module} \
+   -Dversion=0.0.1-SNAPSHOT \
+   -Dpackaging=jar \
+   -DgeneratePom=true \
+   -DpomFile=${module}/pom.xml \
+   -DlocalRepositoryPath=${local_repo}
+
+  mvn -B install:install-file \
+   -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
+   -DgroupId=software.wings \
+   -DartifactId=${module} \
+   -Dversion=0.0.1-SNAPSHOT \
+   -Dclassifier=capsule \
    -Dpackaging=jar \
    -DgeneratePom=true \
    -DpomFile=${module}/pom.xml \
