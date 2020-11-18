@@ -99,6 +99,7 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Pipeline;
@@ -170,6 +171,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   public static final String APPLICATION = "APPLICATION";
   public static final String APPLICATION_NAME = "APPLICATION_NAME";
   public static final String APPLICATION_URL = "APPLICATION_URL";
+  public static final String DEBUG_LINE = "stateMachine processor: ";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -401,7 +403,19 @@ public class StateMachineExecutor implements StateInspectionListener {
     injector.injectMembers(context);
     stateExecutionInstance = updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
     context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
-    executorService.execute(new SmExecutionDispatcher(context, this));
+    log.info(DEBUG_LINE + "about to start stateExecutionInstance for {}", stateExecutionInstance.getUuid());
+    if (featureFlagService.isEnabled(FeatureName.REFACTOR_STATEMACHINEXECUTOR, context.getAccountId())) {
+      try (AutoLogContext ignore = context.autoLogContext()) {
+        startExecution(context);
+      } catch (WingsException exception) {
+        addContext(context, exception);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
+      } catch (Exception exception) {
+        log.error("Unhandled exception from trigger execution", exception);
+      }
+    } else {
+      executorService.execute(new SmExecutionDispatcher(context, this));
+    }
     return stateExecutionInstance;
   }
 
@@ -517,6 +531,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (currentState == null && stateExecutionInstance.isParentLoopedState()) {
+      log.info(
+          DEBUG_LINE + "Parent Looped State is set, call startStateExecution for {}", stateExecutionInstance.getUuid());
       startStateExecution(context, stateExecutionInstance);
       return;
     }
@@ -1657,6 +1673,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    */
   public void resume(String appId, String executionUuid, String stateExecutionInstanceId,
       Map<String, ResponseData> response, boolean asyncError) {
+    log.info(DEBUG_LINE + "resuming stateExecution for stateExecutionId {}", stateExecutionInstanceId);
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
@@ -1685,6 +1702,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
+    log.info(DEBUG_LINE + "kick off stateExecution from resume for state {}", currentState);
     executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this, asyncError));
   }
 
@@ -1858,6 +1876,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     sweepingOutputService.cleanForStateExecutionInstance(stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
+    log.info(DEBUG_LINE + "retrying stateExecutionInstance {}", stateExecutionInstance.getUuid());
     executorService.execute(new SmExecutionDispatcher(context, this));
   }
 
