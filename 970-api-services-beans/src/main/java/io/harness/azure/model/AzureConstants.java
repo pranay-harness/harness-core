@@ -124,6 +124,10 @@ public interface AzureConstants {
   String COMMAND_TYPE_BLANK_VALIDATION_MSG = "Parameter commandType is required and cannot be empty or null";
   String WEB_APP_NAME_BLANK_VALIDATION_MSG = "Parameter webAppName is required and cannot be empty or null";
   String SLOT_NAME_BLANK_VALIDATION_MSG = "Parameter slotName is required and cannot be empty or null";
+  String ACR_USERNAME_BLANK_VALIDATION_MSG = "Parameter username cannot be null or empty";
+  String ACR_ACCESS_KEYS_BLANK_VALIDATION_MSG = "Primary and secondary ACR access keys cannot be null or empty";
+  String DOCKER_REGISTRY_URL_BLANK_VALIDATION_MSG = "Parameter dockerRegistryUrl cannot be empty or null";
+  String ACR_REGISTRY_NAME_BLANK_VALIDATION_MSG = "Parameter registryName cannot be empty or null";
 
   // Azure App Service Deployment Slots
   String DEPLOYMENT_SLOT_PRODUCTION_NAME = "production";
@@ -144,4 +148,10 @@ public interface AzureConstants {
   String START_DEPLOYMENT_SLOT = "Start Slot";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
+
+  // Azure Docker Registry Type
+  String ACR = "ACR";
+  String DOCKER_HUB_PRIVATE = "DOCKER_HUB_PRIVATE";
+  String DOCKER_HUB_PUBLIC = "DOCKER_HUB_PUBLIC";
+  String ARTIFACTORY_PRIVATE_REGISTRY = "ARTIFACTORY_PRIVATE_REGISTRY";
 }

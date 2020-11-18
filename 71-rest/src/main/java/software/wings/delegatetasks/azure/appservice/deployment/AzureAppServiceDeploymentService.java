@@ -11,27 +11,35 @@ import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerregistry.RegistryCredentials;
+import io.harness.azure.client.AzureContainerRegistryClient;
 import io.harness.azure.client.AzureWebClient;
+import io.harness.azure.context.AzureContainerRegistryClientContext;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceDockerSetting;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.WebAppHostingOS;
+import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.DefaultCompletableSubscriber;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -44,15 +52,16 @@ import java.util.function.Supplier;
 @Slf4j
 public class AzureAppServiceDeploymentService {
   @Inject private AzureWebClient azureWebClient;
+  @Inject private AzureContainerRegistryClient azureContainerRegistryClient;
   @Inject private AzureTimeLimiter azureTimeLimiter;
 
-  public void deployDockerImage(AzureAppServiceDeploymentContext deploymentContext) {
+  public void deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
     validateContextForDockerDeployment(deploymentContext);
 
     AzureWebClientContext azureWebClientContext = deploymentContext.getAzureWebClientContext();
     String slotName = deploymentContext.getSlotName();
-    long slotStoppingSteadyStateTimeoutInMinutes = deploymentContext.getSlotStoppingSteadyStateTimeoutInMinutes();
-    long slotStartingSteadyStateTimeoutInMinutes = deploymentContext.getSlotStartingSteadyStateTimeoutInMinutes();
+    long slotStoppingSteadyStateTimeoutInMinutes = deploymentContext.getSteadyStateTimeoutInMin();
+    long slotStartingSteadyStateTimeoutInMinutes = deploymentContext.getSteadyStateTimeoutInMin();
     DeploymentSlot deploymentSlot = getDeploymentSlot(azureWebClientContext, slotName);
     ILogStreamingTaskClient logStreamingTaskClient = deploymentContext.getLogStreamingTaskClient();
 
@@ -62,17 +71,17 @@ public class AzureAppServiceDeploymentService {
     startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, slotStartingSteadyStateTimeoutInMinutes);
   }
 
-  private void validateContextForDockerDeployment(AzureAppServiceDeploymentContext deploymentContext) {
+  private void validateContextForDockerDeployment(AzureAppServiceDockerDeploymentContext deploymentContext) {
     String webAppName = deploymentContext.getAzureWebClientContext().getAppName();
-    if (StringUtils.isBlank(webAppName)) {
+    if (isBlank(webAppName)) {
       throw new InvalidRequestException(WEB_APP_NAME_BLANK_ERROR_MSG);
     }
     String slotName = deploymentContext.getSlotName();
-    if (StringUtils.isBlank(slotName)) {
+    if (isBlank(slotName)) {
       throw new InvalidRequestException(SLOT_NAME_BLANK_ERROR_MSG);
     }
-    String imageAndTag = deploymentContext.getImageAndTag();
-    if (StringUtils.isBlank(imageAndTag)) {
+    String imageAndTag = deploymentContext.getImagePathAndTag();
+    if (isBlank(imageAndTag)) {
       throw new InvalidRequestException(AzureConstants.IMAGE_AND_TAG_BLANK_ERROR_MSG);
     }
   }
@@ -133,10 +142,10 @@ public class AzureAppServiceDeploymentService {
         format("Connection settings updated successfully for slot [%s]", slotName));
   }
 
-  private void updateDeploymentSlotContainerSettings(AzureAppServiceDeploymentContext deploymentContext) {
+  private void updateDeploymentSlotContainerSettings(AzureAppServiceDockerDeploymentContext deploymentContext) {
     AzureWebClientContext azureWebClientContext = deploymentContext.getAzureWebClientContext();
     Map<String, AzureAppServiceDockerSetting> dockerSettings = deploymentContext.getDockerSettings();
-    String imageAndTag = deploymentContext.getImageAndTag();
+    String imageAndTag = deploymentContext.getImagePathAndTag();
     String slotName = deploymentContext.getSlotName();
     ILogStreamingTaskClient logStreamingTaskClient = deploymentContext.getLogStreamingTaskClient();
     LogCallback containerLogCallback =
@@ -255,5 +264,47 @@ public class AzureAppServiceDeploymentService {
         .appName(azureWebClientContext.getAppName())
         .slotName(slotName)
         .build();
+  }
+
+  public RegistryCredentials getContainerRegistryCredentials(
+      AzureConfig azureConfig, AzureContainerRegistryConnectorDTO connectorConfigDTO) {
+    String azureRegistryName = connectorConfigDTO.getAzureRegistryName();
+    String subscriptionId = connectorConfigDTO.getSubscriptionId();
+    String resourceGroupName = fixResourceGroupName(azureConfig, connectorConfigDTO, azureRegistryName, subscriptionId);
+    log.info(
+        "Start getting container registry credentials azureRegistryName: {}, resourceGroupName: {}, subscriptionId: {}",
+        azureRegistryName, resourceGroupName, subscriptionId);
+    Optional<RegistryCredentials> containerRegistryCredentialsOp =
+        azureContainerRegistryClient.getContainerRegistryCredentials(AzureContainerRegistryClientContext.builder()
+                                                                         .azureConfig(azureConfig)
+                                                                         .subscriptionId(subscriptionId)
+                                                                         .registryName(azureRegistryName)
+                                                                         .resourceGroupName(resourceGroupName)
+                                                                         .build());
+
+    return containerRegistryCredentialsOp.orElseThrow(
+        ()
+            -> new InvalidRequestException(format(
+                "Not found container registry credentials, azureRegistryName: %s, subscriptionId: %s, resourceGroupName: %s ",
+                azureRegistryName, subscriptionId, resourceGroupName)));
+  }
+
+  private String fixResourceGroupName(AzureConfig azureConfig, AzureContainerRegistryConnectorDTO acrConnectorConfigDTO,
+      String azureRegistryName, String subscriptionId) {
+    String resourceGroupName = acrConnectorConfigDTO.getResourceGroupName();
+    if (isBlank(resourceGroupName)) {
+      log.info(
+          "Resource group name is blank, start filtering subscription by container registry name: {}, subscriptionId: {}",
+          azureRegistryName, subscriptionId);
+      Optional<Registry> registryOp = azureContainerRegistryClient.filterSubsriptionByContainerRegistryName(
+          azureConfig, subscriptionId, azureRegistryName);
+      Registry registry =
+          registryOp.orElseThrow(()
+                                     -> new InvalidRequestException(
+                                         format("Not found Azure container registry by name: %s, subscription id: %s",
+                                             azureRegistryName, subscriptionId)));
+      resourceGroupName = registry.resourceGroupName();
+    }
+    return resourceGroupName;
   }
 }
