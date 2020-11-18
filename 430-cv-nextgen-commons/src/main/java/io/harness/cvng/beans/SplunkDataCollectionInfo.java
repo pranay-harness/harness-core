@@ -19,8 +19,7 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo<SplunkConnec
   public Map<String, Object> getDslEnvVariables() {
     Map<String, Object> map = new HashMap<>();
     map.put("query", query);
-    map.put("hostCollectionQuery",
-        serviceInstanceIdentifier + "=*|stats values(" + serviceInstanceIdentifier + ") as hosts");
+    map.put("hostCollectionQuery", serviceInstanceIdentifier + "=*|stats count by " + serviceInstanceIdentifier);
     map.put("serviceInstanceIdentifier", "$." + serviceInstanceIdentifier);
     // TODO: setting max to 10000 now. We need to find a generic way to throw exception
     // in case of too many logs.

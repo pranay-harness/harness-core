@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.cvng.beans.HostRecordDTO;
@@ -28,7 +30,7 @@ public class HostRecordServiceImpl implements HostRecordService {
 
   @Override
   public Set<String> get(String verificationTaskId, Instant startTime, Instant endTime) {
-    List<HostRecord> hostRecords = hPersistence.createQuery(HostRecord.class)
+    List<HostRecord> hostRecords = hPersistence.createQuery(HostRecord.class, excludeAuthority)
                                        .filter(HostRecordKeys.verificationTaskId, verificationTaskId)
                                        .field(HostRecordKeys.startTime)
                                        .greaterThanOrEq(startTime)

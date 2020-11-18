@@ -26,8 +26,10 @@ import io.harness.cvng.activity.beans.ActivityVerificationStatus;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
@@ -45,7 +47,6 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
-import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
@@ -93,7 +94,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private AnalysisStateMachineService stateMachineService;
 
   @Mock private Clock clock;
   private Instant fakeNow;
@@ -700,6 +700,33 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier)
                    .get())
         .isEqualTo(verificationJobInstances.get(1).getUuid());
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDeploymentVerificationJobInstanceSummary() {
+    VerificationJobInstance devVerificationJobInstance =
+        createVerificationJobInstance("devVerificationJobInstance", "dev");
+    VerificationJobInstance prodVerificationJobInstance =
+        createVerificationJobInstance("prodVerificationJobInstance", "prod");
+    DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(
+            Lists.newArrayList(devVerificationJobInstance.getUuid(), prodVerificationJobInstance.getUuid()));
+    assertThat(deploymentVerificationJobInstanceSummary.getEnvironmentName()).isEqualTo("Harness dev");
+    assertThat(deploymentVerificationJobInstanceSummary.getVerificationJobInstanceId())
+        .isEqualTo(devVerificationJobInstance.getUuid());
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isNull();
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityStartTime()).isZero();
+    assertThat(deploymentVerificationJobInstanceSummary.getJobName())
+        .isEqualTo(devVerificationJobInstance.getResolvedJob().getJobName());
+    assertThat(deploymentVerificationJobInstanceSummary.getProgressPercentage()).isEqualTo(0);
+    assertThat(deploymentVerificationJobInstanceSummary.getRiskScore()).isNull();
+    assertThat(deploymentVerificationJobInstanceSummary.getStatus()).isEqualTo(ActivityVerificationStatus.NOT_STARTED);
+    assertThat(deploymentVerificationJobInstanceSummary.getAdditionalInfo())
+        .isEqualTo(CanaryDeploymentAdditionalInfo.builder()
+                       .primary(Collections.emptySet())
+                       .canary(Collections.emptySet())
+                       .build());
   }
 
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {

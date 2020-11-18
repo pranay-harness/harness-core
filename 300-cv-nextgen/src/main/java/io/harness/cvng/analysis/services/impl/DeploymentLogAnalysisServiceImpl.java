@@ -10,6 +10,7 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import org.apache.commons.lang3.StringUtils;
@@ -17,10 +18,12 @@ import org.mongodb.morphia.query.Sort;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
   public static final int DEFAULT_PAGE_SIZE = 10;
@@ -90,13 +93,13 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   }
 
   @Override
-  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
-    DeploymentLogAnalysis latestDeploymentLogAnalysis =
-        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
-    if (latestDeploymentLogAnalysis == null) {
+  public Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
+    DeploymentLogAnalysis recentHighestDeploymentLogAnalysis =
+        getRecentHighestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+    if (recentHighestDeploymentLogAnalysis == null) {
       return Optional.empty();
     } else {
-      return Optional.of(latestDeploymentLogAnalysis.getResultSummary().getScore());
+      return Optional.of(recentHighestDeploymentLogAnalysis.getResultSummary().getScore());
     }
   }
 
@@ -124,6 +127,25 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         .content(returnList)
         .build();
   }
+  @Override
+  @Nullable
+  public DeploymentLogAnalysis getRecentHighestDeploymentLogAnalysis(
+      String accountId, String verificationJobInstanceId) {
+    Set<String> verificationTaskIds =
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+    DeploymentLogAnalysis max = null;
+    for (String verificationTaskId : verificationTaskIds) {
+      DeploymentLogAnalysis deploymentLogAnalysis =
+          hPersistence.createQuery(DeploymentLogAnalysis.class)
+              .filter(DeploymentLogAnalysisKeys.verificationTaskId, verificationTaskId)
+              .order(Sort.descending(DeploymentLogAnalysisKeys.startTime))
+              .get();
+      max = CVNGObjectUtils.max(max, deploymentLogAnalysis,
+          Comparator.comparingDouble(logAnalysis -> logAnalysis.getResultSummary().getScore()));
+    }
+    return max;
+  }
+
   @Override
   public DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =

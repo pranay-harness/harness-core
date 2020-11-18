@@ -11,7 +11,11 @@ public interface DeploymentTimeSeriesAnalysisService {
   TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
       boolean anomalousMetricsOnly, String hostName, int pageNumber);
   List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId);
-  Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
+  Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
+
+  DeploymentTimeSeriesAnalysis getRecentHighestDeploymentTimeSeriesAnalysis(
+      String accountId, String verificationJobInstanceId);
+
   DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId);
 }

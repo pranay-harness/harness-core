@@ -56,6 +56,7 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -291,22 +292,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                                        .build();
     verificationJobDetails.add(runtimeDetails);
     Instant now = Instant.now();
-    ActivityDTO activityDTO = DeploymentActivityDTO.builder()
-                                  .dataCollectionDelayMs(2000l)
-                                  .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
-                                  .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
-                                  .verificationStartTime(now.toEpochMilli())
-                                  .deploymentTag("build#1")
-                                  .build();
-    activityDTO.setAccountIdentifier(accountId);
-    activityDTO.setProjectIdentifier(projectIdentifier);
-    activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(now.toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
-    activityDTO.setName("Build 23 deploy");
-    activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
-    activityDTO.setServiceIdentifier(generateUuid());
-    activityDTO.setTags(Arrays.asList("build88", "prod deploy"));
+    ActivityDTO activityDTO =
+        getDeploymentActivityDTO(verificationJobDetails, now, "build#1", generateUuid(), generateUuid());
     activityService.register(accountId, generateUuid(), activityDTO);
     List<DeploymentActivityVerificationResultDTO> deploymentActivityVerificationResultDTOs =
         activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier);
@@ -588,6 +575,26 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     verify(verificationJobInstanceService, times(2)).getActivityVerificationSummary(anyList());
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDeploymentSummary() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
+    String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
+    DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder().build();
+    when(verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(anyList()))
+        .thenReturn(deploymentVerificationJobInstanceSummary);
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isNull();
+    activityService.getDeploymentSummary(activityId);
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isEqualTo(activityId);
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityStartTime())
+        .isEqualTo(deploymentActivityDTO.getActivityStartTime());
+  }
+
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
@@ -600,17 +607,25 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                                        .build();
     verificationJobDetails.add(runtimeDetails);
 
+    DeploymentActivityDTO activityDTO =
+        getDeploymentActivityDTO(verificationJobDetails, instant, deploymentTag, envIdentifier, serviceIdentifier);
+    return activityDTO;
+  }
+
+  @NotNull
+  private DeploymentActivityDTO getDeploymentActivityDTO(List<VerificationJobRuntimeDetails> verificationJobDetails,
+      Instant verificationStartTime, String deploymentTag, String envIdentifier, String serviceIdentifier) {
     DeploymentActivityDTO activityDTO = DeploymentActivityDTO.builder()
                                             .dataCollectionDelayMs(2000l)
                                             .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
                                             .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
-                                            .verificationStartTime(instant.toEpochMilli())
+                                            .verificationStartTime(verificationStartTime.toEpochMilli())
                                             .deploymentTag(deploymentTag)
                                             .build();
     activityDTO.setAccountIdentifier(accountId);
     activityDTO.setProjectIdentifier(projectIdentifier);
     activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(instant.toEpochMilli());
+    activityDTO.setActivityStartTime(verificationStartTime.toEpochMilli());
     activityDTO.setEnvironmentIdentifier(envIdentifier);
     activityDTO.setName("Build 23 deploy");
     activityDTO.setVerificationJobRuntimeDetails(verificationJobDetails);
