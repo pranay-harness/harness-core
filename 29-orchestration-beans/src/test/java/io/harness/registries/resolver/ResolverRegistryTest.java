@@ -9,8 +9,9 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.refobjects.RefType;
+import io.harness.references.OrchestrationRefType;
 import io.harness.references.RefObject;
-import io.harness.references.RefType;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
@@ -29,7 +30,7 @@ public class ResolverRegistryTest extends OrchestrationBeansTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    RefType refType = RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
+    RefType refType = RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build();
     resolverRegistry.register(refType, new SweepingOutputResolver());
     Resolver resolver = resolverRegistry.obtain(refType);
     assertThat(resolver).isNotNull();
@@ -37,7 +38,7 @@ public class ResolverRegistryTest extends OrchestrationBeansTestBase {
     assertThatThrownBy(() -> resolverRegistry.register(refType, new SweepingOutputResolver()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> resolverRegistry.obtain(RefType.builder().type("RANDOM").build()))
+    assertThatThrownBy(() -> resolverRegistry.obtain(RefType.newBuilder().setType("RANDOM").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

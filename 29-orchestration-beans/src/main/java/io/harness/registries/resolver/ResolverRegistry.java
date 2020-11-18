@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.references.RefType;
+import io.harness.pms.refobjects.RefType;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;

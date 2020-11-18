@@ -8,7 +8,8 @@ import com.google.inject.Injector;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
-import io.harness.references.RefType;
+import io.harness.pms.refobjects.RefType;
+import io.harness.references.OrchestrationRefType;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.resolvers.Resolver;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,9 +22,9 @@ public class OrchestrationResolverRegistrar implements ResolverRegistrar {
 
   @Override
   public void register(Set<Pair<RefType, Resolver<?>>> resolverClasses) {
-    resolverClasses.add(
-        Pair.of(RefType.builder().type(RefType.OUTCOME).build(), injector.getInstance(OutcomeService.class)));
-    resolverClasses.add(Pair.of(RefType.builder().type(RefType.SWEEPING_OUTPUT).build(),
+    resolverClasses.add(Pair.of(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build(),
+        injector.getInstance(OutcomeService.class)));
+    resolverClasses.add(Pair.of(RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build(),
         injector.getInstance(ExecutionSweepingOutputService.class)));
   }
 }

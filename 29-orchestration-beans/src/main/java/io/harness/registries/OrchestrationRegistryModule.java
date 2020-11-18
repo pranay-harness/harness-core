@@ -16,7 +16,7 @@ import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.facilitator.Facilitator;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.references.RefType;
+import io.harness.pms.refobjects.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;

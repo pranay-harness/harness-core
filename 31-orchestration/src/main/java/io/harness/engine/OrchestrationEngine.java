@@ -323,7 +323,7 @@ public class OrchestrationEngine {
     stepOutcomes.forEach((name, stepOutcome) -> {
       Outcome outcome = stepOutcome.getOutcome();
       if (outcome != null) {
-        Resolver resolver = resolverRegistry.obtain(outcome.getRefType());
+        Resolver resolver = resolverRegistry.obtain(Outcome.REF_TYPE);
         String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
         outcomeRefs.add(StepOutcomeRef.builder().name(name).instanceId(instanceId).build());
       }

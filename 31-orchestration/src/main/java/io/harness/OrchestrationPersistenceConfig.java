@@ -18,6 +18,8 @@ import io.harness.serializer.spring.converters.facilitators.type.FacilitatorType
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
+import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
 import io.harness.spring.AliasRegistrar;
@@ -38,7 +40,7 @@ public class OrchestrationPersistenceConfig extends OrchestrationBasePersistence
       AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class, AdviserTypeReadConverter.class,
       AdviserTypeWriteConverter.class, AdviserObtainmentReadConverter.class, AdviserObtainmentWriteConverter.class,
       FacilitatorTypeReadConverter.class, FacilitatorTypeWriteConverter.class, FacilitatorObtainmentReadConverter.class,
-      FacilitatorObtainmentWriteConverter.class);
+      FacilitatorObtainmentWriteConverter.class, RefTypeReadConverter.class, RefTypeWriteConverter.class);
 
   @Inject
   public OrchestrationPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {
