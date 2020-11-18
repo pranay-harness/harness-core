@@ -18,11 +18,11 @@ trigger:
           - closed
         payloadConditions:
           - key: sourceBranch
-            operator: regex
-            value: ^pr-[0-9a-f]{7}$
+            operator: equals
+            value: dev
           - key: targetBranch
-            operator: regex
-            value: ^pr-[0-9a-f]{7}$
+            operator: in
+            value: master, on-prem
           - key: ${pull_request.number}
             operator: regex
             value: ^pr-[0-9a-f]{7}$

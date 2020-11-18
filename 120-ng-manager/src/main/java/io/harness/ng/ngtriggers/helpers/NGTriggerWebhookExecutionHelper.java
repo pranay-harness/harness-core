@@ -18,7 +18,7 @@ import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,12 +33,10 @@ public class NGTriggerWebhookExecutionHelper {
   private final NGTriggerService ngTriggerService;
   private final NGPipelineExecuteHelper ngPipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
-  // a trigger utils field inside this class for the scm parsing
-  // private TriggerUtilsNG triggerUtils;
 
   // return type can change
   public boolean handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
-    // parse the eventPayload using the trigger utils
+    // parse the eventPayload using the SCM service
     WebhookPayloadData webhookPayloadData = parseEventData(triggerWebhookEvent);
 
     // from the parsed payload, retrieve the repo url
@@ -50,10 +48,6 @@ public class NGTriggerWebhookExecutionHelper {
 
     applyFiltersAndInvokePipelineExecutionIfNeeded(webhookPayloadData, triggersForRepo);
 
-    // if any trigger remains, execute the target of that trigger. return true in this case, false if no trigger matches
-    // the condition
-    // execute pipeline
-    // return triggerEntity.filter(this ::executePipeline).isPresent();
     return false;
   }
 
@@ -61,15 +55,16 @@ public class NGTriggerWebhookExecutionHelper {
   void applyFiltersAndInvokePipelineExecutionIfNeeded(
       WebhookPayloadData webhookPayloadData, List<NGTriggerEntity> triggersForRepo) {
     for (NGTriggerEntity ngTriggerEntity : triggersForRepo) {
-      if (checkTriggerEligibility(webhookPayloadData, ngTriggerEntity)) {
-        // test
+      NGTriggerConfig ngTriggerConfig = NGTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
+      if (checkTriggerEligibility(webhookPayloadData, ngTriggerEntity, ngTriggerConfig)) {
+        resolveRuntimeInputAndSubmitExecutionRequest(ngTriggerEntity, ngTriggerConfig);
       }
     }
   }
 
-  private boolean checkTriggerEligibility(WebhookPayloadData webhookPayloadData, NGTriggerEntity ngTriggerEntity) {
+  private boolean checkTriggerEligibility(
+      WebhookPayloadData webhookPayloadData, NGTriggerEntity ngTriggerEntity, NGTriggerConfig ngTriggerConfig) {
     try {
-      NGTriggerConfig ngTriggerConfig = NGTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
       NGTriggerSpec spec = ngTriggerConfig.getSource().getSpec();
       if (!WebhookTriggerConfig.class.isAssignableFrom(spec.getClass())) {
         return false;
@@ -78,12 +73,7 @@ public class NGTriggerWebhookExecutionHelper {
 
       WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) spec;
       WebhookTriggerSpec webhookTriggerConfigSpec = webhookTriggerConfig.getSpec();
-      boolean conditionMatched = WebhookEventFilter.checkIfEventTypeMatches(
-          webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent());
-
-      conditionMatched =
-          conditionMatched && WebhookEventFilter.checkIfActionMatches(webhookPayloadData, webhookTriggerConfigSpec);
-      return conditionMatched;
+      return WebhookTriggerFilterUtil.evaluateFilterConditions(webhookPayloadData, webhookTriggerConfigSpec);
     } catch (Exception e) {
       log.error(new StringBuilder(128)
                     .append("Failed while evaluating Trigger: ")
@@ -121,32 +111,5 @@ public class NGTriggerWebhookExecutionHelper {
   // Add error handling
   private WebhookPayloadData parseEventData(TriggerWebhookEvent triggerWebhookEvent) {
     return webhookEventPayloadParser.parseEvent(triggerWebhookEvent);
-  }
-
-  private String getRepoUrl(ParseWebhookResponse parseWebhookResponse) {
-    // dummy return value
-    return parseWebhookResponse.toString();
-  }
-
-  private List<NGTriggerEntity> getTriggers(String accountIdentifier, String repoUrl) {
-    // create criteria, send it to ngTriggerService.list();
-
-    // dummy return value
-    return Collections.emptyList();
-  }
-
-  private List<NGTriggerEntity> applyFiltering(
-      List<NGTriggerEntity> listOfTriggers, WebhookPayloadData webhookPayloadData) {
-    // filter based on events, actions, etc
-
-    // dummy return value
-    return Collections.EMPTY_LIST;
-  }
-
-  private boolean executePipeline(NGTriggerEntity triggerEntity) {
-    // execute pipeline by calling the relevant method in ngPipelineExecuteHelper
-
-    // true if it was executed, false otherwise
-    return true;
   }
 }
