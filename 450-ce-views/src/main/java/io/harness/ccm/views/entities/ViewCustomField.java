@@ -35,6 +35,7 @@ public class ViewCustomField implements PersistentEntity, UuidAware, CreatedAtAw
   String name;
   String description;
   String sqlFormula;
+  String displayFormula;
   String userDefinedExpression;
   List<ViewField> viewFields;
 
