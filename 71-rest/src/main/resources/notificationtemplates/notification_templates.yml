@@ -46,6 +46,18 @@ WORKFLOW_NOTIFICATION:
             href: ${WORKFLOW_URL}
             text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
+PIPELINE_NOTIFICATION:
+  web: <<top-div>>${PIPELINE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${PIPELINE_NAME}</a></b> ${VERB}, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APPLICATION_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+  slack: Pipeline ${VERB}\n || ${PIPELINE_STEP}\n${PIPELINE}\n${APPLICATION}\n*TriggeredBy:* ${USER_NAME}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_ ||${DURATION}||${VERB}
+  email:
+    subject: ${PIPELINE_NAME} ${VERB}
+    body: <<top-div>>${PIPELINE_STEP_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${PIPELINE_NAME}</a></b> ${VERB}, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APPLICATION_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started on ${START_DATE} and ${VERB} on ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+  pagerDuty:
+    summary: ${PIPELINE_STEP_NAME} step in ${PIPELINE_NAME} ${VERB}, triggered by ${USER_NAME} in ${APPLICATION_NAME} application. Started on ${START_DATE} and ${VERB} on ${END_DATE} with duration ${DURATION}.
+    link:
+      href: ${WORKFLOW_URL}
+      text: ${PIPELINE_NAME} - Started on ${START_DATE} and ${VERB} on ${END_DATE}
+
 DELEGATE_STATE_NOTIFICATION:
       web: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} <b>${HOST_NAMES}</b>
       slack: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}
@@ -191,16 +203,28 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
 NEEDS_RUNTIME_INPUTS:
-  web: Runtime Inputs Required - ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME} is waiting for inputs in ${APP_NAME}.
-  slack:  Runtime Inputs Required \n || ${PIPELINE_STEP}\n${PIPELINE}\n${APPLICATION}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+  web: Runtime Inputs Required - ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME} is waiting for inputs
+  slack: Runtime Inputs Required \n || ${PIPELINE_STEP}\n${PIPELINE}\n${APPLICATION}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}| ${END_DATE}>_\n _Expires <!date^${EXPIRES_TS_SECS}^ {date_short_pretty} at {time}| ${EXPIRES_DATE}>_ ||${DURATION}||${VERB}
   email:
     subject: Runtime Inputs Required for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}
-    body: <<top-div>>${PIPELINE_STEP}<b><<a>>href="${PIPELINE_URL}" target="_blank">${PIPELINE}</a></b> is waiting for runtime inputs, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+    body: <<top-div>>${PIPELINE_STEP}<b><<a>>href="${PIPELINE_URL}" target="_blank">${PIPELINE}</a></b> is waiting for runtime inputs, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started on ${START_DATE}, ${VERB} on ${END_DATE} and will expire on ${EXPIRES_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
   pagerDuty:
-    summary: Runtime inputs required for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}, triggered by ${USER_NAME}, in ${APP_NAME} application Started ${START_DATE} and will expire at at ${END_DATE}
+    summary: Runtime inputs required for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}, triggered by ${USER_NAME} in ${APP_NAME} application. Started on ${START_DATE} and will expire on ${EXPIRES_DATE}.
     link:
       href: ${PIPELINE_URL}
       text: ${PIPELINE} - Started ${START_DATE}
+
+RUNTIME_INPUTS_PROVIDED:
+  web: Runtime Inputs Provided - Inputs provided for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME} by ${USER_NAME}
+  slack: Runtime Inputs Provided \n || ${PIPELINE_STEP}\n${PIPELINE}\n${APPLICATION}\n*ProvidedBy:* ${USER_NAME}\n _Paused <!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} <!date^${END_TS_SECS}^ {date_short_pretty} at {time}| ${END_DATE}>_ ||${DURATION}||${VERB}
+  email:
+    subject: Runtime Inputs Provided for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}
+    body: <<top-div>>${PIPELINE_STEP}<b><<a>>href="${PIPELINE_URL}" target="_blank">${PIPELINE}</a></b> resumed, provided by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><i>Paused on ${START_DATE} and ${VERB} on ${END_DATE}</i><<img-suffix>>${DURATION}</span></div></div>
+  pagerDuty:
+    summary: Runtime inputs provided for ${PIPELINE_STEP_NAME} in ${PIPELINE_NAME}, provided by ${USER_NAME} in ${APP_NAME} application. Paused on ${START_DATE} and resumed on ${END_DATE}.
+    link:
+      href: ${PIPELINE_URL}
+      text: ${PIPELINE} - Resumed ${END_DATE}
 
 RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION:
       web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME}.

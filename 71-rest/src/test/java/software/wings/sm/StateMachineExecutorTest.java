@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
@@ -24,6 +25,9 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.NEEDS_RUNTIME_INPUTS;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.PIPELINE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RUNTIME_INPUTS_PROVIDED;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -52,6 +56,7 @@ import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver;
@@ -63,6 +68,7 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineTest.StateAsync;
@@ -88,14 +94,18 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
 
   @Mock private Workflow workflow;
+  @Mock private Pipeline pipeline;
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService mockWorkflowService;
+  @Mock private PipelineService pipelineService;
   @Mock private NotificationService notificationService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private WorkflowNotificationHelper workflowNotificationHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
+  @Mock private ExecutionEventAdvice executionEventAdvice;
+  @Mock private StateExecutionInstance stateExecutionInstance;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
@@ -951,6 +961,150 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);
     assertThat(notificationRule.getNotificationGroups().get(0).getUuid()).isEqualTo(NOTIFICATION_GROUP_ID);
     assertThat(notificationRule.getNotificationGroups().get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSendRuntimeinputsNeededNotification() {
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
+                                                                                      .withName(USER_NAME)
+                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
+                                                                                      .withAccountId(ACCOUNT_ID)
+                                                                                      .build()))
+                                            .build();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+        .thenReturn(WorkflowExecution.builder()
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
+                        .build());
+
+    Map<String, String> placeholders = new HashMap<>();
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(placeholders);
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+
+    injectStateMachineExecutor.sendRuntimeInputNeededNotification(
+        context, executionEventAdvice, stateExecutionInstance);
+    verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), notificationRuleArgumentCaptor.capture());
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(NEEDS_RUNTIME_INPUTS.name());
+    assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSendRuntimeinputsProvidedNotification() {
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
+                                                                                      .withName(USER_NAME)
+                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
+                                                                                      .withAccountId(ACCOUNT_ID)
+                                                                                      .build()))
+                                            .build();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+        .thenReturn(WorkflowExecution.builder()
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
+                        .build());
+
+    Map<String, String> placeholders = new HashMap<>();
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(placeholders);
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+
+    injectStateMachineExecutor.sendRuntimeInputsProvidedNotification(
+        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance);
+    verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), notificationRuleArgumentCaptor.capture());
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(RUNTIME_INPUTS_PROVIDED.name());
+    assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSendPipelineNotification() {
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withNotificationGroups(Arrays.asList(aNotificationGroup()
+                                                                                      .withName(USER_NAME)
+                                                                                      .withUuid(NOTIFICATION_GROUP_ID)
+                                                                                      .withAccountId(ACCOUNT_ID)
+                                                                                      .build()))
+                                            .build();
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
+
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+        .thenReturn(WorkflowExecution.builder()
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
+                        .build());
+
+    Map<String, String> placeholders = new HashMap<>();
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(placeholders);
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+    when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+
+    injectStateMachineExecutor.sendPipelineNotification(
+        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance, ExecutionStatus.SUCCESS);
+    verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), notificationRuleArgumentCaptor.capture());
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(PIPELINE_NOTIFICATION.name());
+    assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 
   @Test

@@ -4,32 +4,48 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MILOS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.StateExecutionService;
+import software.wings.sm.states.WorkflowState;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,11 +56,20 @@ import java.util.List;
  * @author Rishi
  */
 @Slf4j
+@RunWith(MockitoJUnitRunner.class)
 public class ExecutionInterruptManagerTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
-  @InjectMocks @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Spy @InjectMocks @Inject private ExecutionInterruptManager executionInterruptManager;
   @Mock private StateMachineExecutor stateMachineExecutor;
+  @Mock private WorkflowNotificationHelper workflowNotificationHelper;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock WorkflowState workflowState;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   /**
    * Should throw invalid argument for null state execution instance.
@@ -121,7 +146,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
+        aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(app.getUuid())
@@ -150,7 +175,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
+        aStateExecutionInstance().appId(app.getUuid()).displayName("state1").build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(app.getUuid())
@@ -178,11 +203,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
-    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .appId(app.getUuid())
-                                                        .displayName("state1")
-                                                        .status(ExecutionStatus.SUCCESS)
-                                                        .build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().appId(app.getUuid()).displayName("state1").status(ExecutionStatus.SUCCESS).build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(app.getUuid())
@@ -210,11 +232,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
-    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
-                                                        .appId(app.getUuid())
-                                                        .displayName("state1")
-                                                        .status(ExecutionStatus.SUCCESS)
-                                                        .build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().appId(app.getUuid()).displayName("state1").status(ExecutionStatus.SUCCESS).build();
     wingsPersistence.save(stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(app.getUuid())
@@ -314,8 +333,17 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().appId(app.getAppId()).build();
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().appId(app.getAppId()).workflowType(WorkflowType.ORCHESTRATION).build();
     wingsPersistence.save(workflowExecution);
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .appId(app.getAppId())
+                                                        .executionUuid(workflowExecution.getUuid())
+                                                        .createdAt(workflowExecution.getCreatedAt())
+                                                        .build();
+    wingsPersistence.save(stateExecutionInstance);
+
+    doNothing().when(workflowNotificationHelper).sendWorkflowStatusChangeNotification(any(), any());
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(app.getUuid())
@@ -323,7 +351,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .envId(env.getUuid())
                                                 .executionUuid(workflowExecution.getUuid())
                                                 .build();
-    executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
     ExecutionInterrupt resumeAll = anExecutionInterrupt()
                                        .appId(app.getUuid())
@@ -339,7 +367,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                              .envId(env.getUuid())
                              .executionUuid(workflowExecution.getUuid())
                              .build();
-    executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     final ExecutionInterrupt interrupt =
         wingsPersistence.getWithAppId(ExecutionInterrupt.class, resumeAll.getAppId(), resumeAll.getUuid());
     assertThat(interrupt.isSeized()).isTrue();
@@ -383,8 +411,15 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().appId(app.getAppId()).build();
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().appId(app.getAppId()).workflowType(WorkflowType.ORCHESTRATION).build();
     wingsPersistence.save(workflowExecution);
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .appId(app.getAppId())
+                                                        .executionUuid(workflowExecution.getUuid())
+                                                        .createdAt(workflowExecution.getCreatedAt())
+                                                        .build();
+    wingsPersistence.save(stateExecutionInstance);
 
     ExecutionInterrupt pauseAll = anExecutionInterrupt()
                                       .appId(app.getUuid())
@@ -400,7 +435,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .envId(env.getUuid())
                                                 .executionUuid(workflowExecution.getUuid())
                                                 .build();
-    executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
     final ExecutionInterrupt interrupt =
         wingsPersistence.getWithAppId(ExecutionInterrupt.class, pauseAll.getAppId(), pauseAll.getUuid());
@@ -486,5 +521,131 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     assertThat(executionInterrupts).isNotNull();
     assertThat(executionInterrupts.size()).isEqualTo(1);
     assertThat(executionInterrupts.get(0).getUuid()).isEqualTo(id);
+  }
+
+  /**
+   * Tries to resume all clear prev pause all without StateExecutionInstance
+   */
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resumeAllWithoutStateExecutionInstanceTest() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().appId(app.getAppId()).workflowType(WorkflowType.ORCHESTRATION).build();
+    wingsPersistence.save(workflowExecution);
+
+    ExecutionInterrupt pauseAll = anExecutionInterrupt()
+                                      .appId(app.getUuid())
+                                      .executionInterruptType(ExecutionInterruptType.PAUSE_ALL)
+                                      .envId(env.getUuid())
+                                      .executionUuid(workflowExecution.getUuid())
+                                      .build();
+    pauseAll = executionInterruptManager.registerExecutionInterrupt(pauseAll);
+
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.RESUME_ALL)
+                                                .envId(env.getUuid())
+                                                .executionUuid(workflowExecution.getUuid())
+                                                .build();
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+
+    final ExecutionInterrupt interrupt =
+        wingsPersistence.getWithAppId(ExecutionInterrupt.class, pauseAll.getAppId(), pauseAll.getUuid());
+    assertThat(interrupt.isSeized()).isTrue();
+  }
+
+  /**
+   * Should mark expired prev pause all.
+   */
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void markExpiredPrevPauseAllTest() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().appId(app.getAppId()).workflowType(WorkflowType.PIPELINE).build();
+    wingsPersistence.save(workflowExecution);
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .appId(app.getAppId())
+                                                        .executionUuid(workflowExecution.getUuid())
+                                                        .status(ExecutionStatus.PAUSED)
+                                                        .createdAt(workflowExecution.getCreatedAt())
+                                                        .build();
+    wingsPersistence.save(stateExecutionInstance);
+
+    doReturn(workflowState).when(executionInterruptManager).getWorkflowState(any(), any());
+    doNothing().when(stateMachineExecutor).sendPipelineNotification(any(), any(), any(), any());
+
+    ExecutionInterrupt pauseAll = anExecutionInterrupt()
+                                      .appId(app.getUuid())
+                                      .executionInterruptType(ExecutionInterruptType.PAUSE_ALL)
+                                      .envId(env.getUuid())
+                                      .executionUuid(workflowExecution.getUuid())
+                                      .build();
+    executionInterruptManager.registerExecutionInterrupt(pauseAll);
+
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.MARK_EXPIRED)
+                                                .envId(env.getUuid())
+                                                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                                .executionUuid(workflowExecution.getUuid())
+                                                .build();
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+
+    verify(stateMachineExecutor, times(1)).sendPipelineNotification(any(), any(), any(), any());
+  }
+
+  /**
+   * Should abort previously paused all.
+   */
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void abortPrevPauseAllTest() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().appId(app.getAppId()).workflowType(WorkflowType.PIPELINE).build();
+    wingsPersistence.save(workflowExecution);
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .appId(app.getAppId())
+                                                        .executionUuid(workflowExecution.getUuid())
+                                                        .status(ExecutionStatus.PAUSED)
+                                                        .createdAt(workflowExecution.getCreatedAt())
+                                                        .build();
+    wingsPersistence.save(stateExecutionInstance);
+
+    doReturn(workflowState).when(executionInterruptManager).getWorkflowState(any(), any());
+    doNothing().when(stateMachineExecutor).sendPipelineNotification(any(), any(), any(), any());
+
+    ExecutionInterrupt pauseAll = anExecutionInterrupt()
+                                      .appId(app.getUuid())
+                                      .executionInterruptType(ExecutionInterruptType.PAUSE_ALL)
+                                      .envId(env.getUuid())
+                                      .executionUuid(workflowExecution.getUuid())
+                                      .build();
+    executionInterruptManager.registerExecutionInterrupt(pauseAll);
+
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                .envId(env.getUuid())
+                                                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                                .executionUuid(workflowExecution.getUuid())
+                                                .build();
+    executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+
+    verify(stateMachineExecutor, times(1)).sendPipelineNotification(any(), any(), any(), any());
   }
 }
