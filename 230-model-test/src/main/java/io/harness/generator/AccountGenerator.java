@@ -106,11 +106,11 @@ public class AccountGenerator {
   public Account ensurePredefined(Randomizer.Seed seed, Owners owners, Accounts predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest();
+        return owners.obtainAccount(() -> ensureGenericTest());
       case HARNESS_TEST:
-        return ensureHarnessTest();
+        return owners.obtainAccount(() -> ensureHarnessTest());
       case RBAC_TEST:
-        return ensureRbacTest();
+        return owners.obtainAccount(() -> ensureRbacTest());
       default:
         unhandled(predefined);
     }
