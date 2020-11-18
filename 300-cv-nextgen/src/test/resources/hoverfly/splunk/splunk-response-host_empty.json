@@ -30,12 +30,12 @@
         },
         "body" : [ {
           "matcher" : "exact",
-          "value" : "search=search%20host%3D*%7Cstats%20count%20by%20host&earliest_time=1605689517&latest_time=1605689577"
+          "value" : "search=search%20host%3D*%7Cstats%20count%20by%20host&earliest_time=1598612744&latest_time=1598612804"
         } ]
       },
       "response" : {
         "status" : 201,
-        "body" : "{\"sid\":\"1605689827.514\"}",
+        "body" : "{\"sid\":\"1605690096.531\"}",
         "encodedBody" : false,
         "templated" : false,
         "headers" : {
@@ -43,10 +43,10 @@
           "Connection" : [ "Keep-Alive" ],
           "Content-Length" : [ "24" ],
           "Content-Type" : [ "application/json; charset=UTF-8" ],
-          "Date" : [ "Wed, 18 Nov 2020 08:57:07 GMT" ],
+          "Date" : [ "Wed, 18 Nov 2020 09:01:36 GMT" ],
           "Expires" : [ "Thu, 26 Oct 1978 00:00:00 GMT" ],
           "Hoverfly" : [ "Was-Here" ],
-          "Location" : [ "/services/search/jobs/1605689827.514" ],
+          "Location" : [ "/services/search/jobs/1605690096.531" ],
           "Server" : [ "Splunkd" ],
           "Vary" : [ "Cookie, Authorization" ],
           "X-Content-Type-Options" : [ "nosniff" ],
@@ -57,7 +57,7 @@
       "request" : {
         "path" : [ {
           "matcher" : "exact",
-          "value" : "/services/search/jobs/1605689827.514/results"
+          "value" : "/services/search/jobs/1605690096.531/results"
         } ],
         "method" : [ {
           "matcher" : "exact",
@@ -88,15 +88,15 @@
       },
       "response" : {
         "status" : 200,
-        "body" : "{\"preview\":false,\"init_offset\":0,\"messages\":[],\"fields\":[{\"name\":\"host\",\"groupby_rank\":\"0\"},{\"name\":\"count\"}],\"results\":[{\"host\":\"harness-test-appd-deployment-77b974d77-f7hlb\",\"count\":\"41\"},{\"host\":\"harness-test-appd-deployment-77b974d77-m4w7x\",\"count\":\"41\"},{\"host\":\"harness-test-appd-deployment-canary-5bb85ff9f4-9lpl9\",\"count\":\"40\"}], \"highlighted\":{}}",
+        "body" : "{\"preview\":false,\"init_offset\":0,\"post_process_count\":0,\"messages\":[],\"results\":[]}",
         "encodedBody" : false,
         "templated" : false,
         "headers" : {
           "Cache-Control" : [ "no-store, no-cache, must-revalidate, max-age=0" ],
           "Connection" : [ "Keep-Alive" ],
-          "Content-Length" : [ "355" ],
+          "Content-Length" : [ "83" ],
           "Content-Type" : [ "application/json; charset=UTF-8" ],
-          "Date" : [ "Wed, 18 Nov 2020 08:57:08 GMT" ],
+          "Date" : [ "Wed, 18 Nov 2020 09:01:37 GMT" ],
           "Expires" : [ "Thu, 26 Oct 1978 00:00:00 GMT" ],
           "Hoverfly" : [ "Was-Here" ],
           "Server" : [ "Splunkd" ],
@@ -113,6 +113,6 @@
   "meta" : {
     "schemaVersion" : "v5",
     "hoverflyVersion" : "v1.1.5",
-    "timeExported" : "2020-11-18T14:27:08+05:30"
+    "timeExported" : "2020-11-18T14:31:37+05:30"
   }
 }

@@ -81,7 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void register(String accountId, String webhookToken, ActivityDTO activityDTO) {
+  public String register(String accountId, String webhookToken, ActivityDTO activityDTO) {
     webhookService.validateWebhookToken(
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     Preconditions.checkNotNull(activityDTO);
@@ -91,6 +91,7 @@ public class ActivityServiceImpl implements ActivityService {
     hPersistence.save(activity);
     log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
         activity.getProjectIdentifier(), activity.getOrgIdentifier());
+    return activity.getUuid();
   }
 
   public String createActivity(Activity activity) {
@@ -175,6 +176,17 @@ public class ActivityServiceImpl implements ActivityService {
         deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
       });
     }
+  }
+
+  @Override
+  public DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId) {
+    Activity activity = get(activityId);
+    List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(verificationJobInstanceIds);
+    deploymentVerificationJobInstanceSummary.setActivityId(activity.getUuid());
+    deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
+    return deploymentVerificationJobInstanceSummary;
   }
 
   @Override

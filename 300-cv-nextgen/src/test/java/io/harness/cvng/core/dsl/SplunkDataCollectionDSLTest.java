@@ -58,7 +58,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk.datacollection");
 
-    final RuntimeParameters runtimeParameters = getRuntimeParameters();
+    final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
     List<LogDataRecord> logDataRecords =
         (List<LogDataRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
     Assertions.assertThat(logDataRecords).isNotNull();
@@ -78,11 +78,24 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
-    final RuntimeParameters runtimeParameters = getRuntimeParameters();
+    final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-11-18T08:52:57.079Z"));
     Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters));
-    assertThat(hosts).hasSize(2);
-    assertThat(hosts).isEqualTo(Sets.newHashSet(
-        "harness-test-appd-deployment-5bd684f655-cslds", "harness-test-appd-deployment-5bd684f655-lqfrp"));
+    assertThat(hosts).hasSize(3);
+    assertThat(hosts).isEqualTo(Sets.newHashSet("harness-test-appd-deployment-canary-5bb85ff9f4-9lpl9",
+        "harness-test-appd-deployment-77b974d77-m4w7x", "harness-test-appd-deployment-77b974d77-f7hlb"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecute_splunkHostDSLEmptyResponse() throws IOException {
+    String filePath = "splunk/splunk-response-host_empty.json";
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
+    code = readDSL("splunk_host_collection.datacollection");
+    final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
+    Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters));
+    assertThat(hosts).isEmpty();
   }
 
   @Test
@@ -178,7 +191,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     return Resources.toString(SplunkCVConfig.class.getResource(fileName), StandardCharsets.UTF_8);
   }
 
-  private RuntimeParameters getRuntimeParameters() {
+  private RuntimeParameters getRuntimeParameters(Instant instant) {
     SplunkDataCollectionInfo dataCollectionInfo =
         SplunkDataCollectionInfo.builder().query("*").serviceInstanceIdentifier("host").build();
     dataCollectionInfo.setHostCollectionDSL(code);
@@ -190,7 +203,6 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
             .username("harnessadmin")
             .passwordRef(SecretRefData.builder().decryptedValue("Harness@123".toCharArray()).build())
             .build();
-    Instant instant = Instant.parse("2020-08-28T11:06:44.711Z");
     return RuntimeParameters.builder()
         .baseUrl(dataCollectionInfo.getBaseUrl(splunkConnectorDTO))
         .commonHeaders(dataCollectionInfo.collectionHeaders(splunkConnectorDTO))

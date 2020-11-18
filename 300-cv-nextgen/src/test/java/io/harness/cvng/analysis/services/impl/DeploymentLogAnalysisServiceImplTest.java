@@ -273,16 +273,16 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetLatestRiskScore_noData() {
+  public void testGetRecentHighestRiskScore_noData() {
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
-    assertThat(deploymentLogAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId))
+    assertThat(deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
         .isEqualTo(Optional.empty());
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetLatestRiskScore_getLatestData() {
+  public void testGetRecentHighestRiskScore_getLatestData() {
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
     List<ClusterSummary> clusterSummaries = new ArrayList();
@@ -294,7 +294,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
     deploymentLogAnalysis.setClusters(clusters);
     deploymentLogAnalysis.setResultSummary(createResultSummary(0, .7654, null, clusterSummaries));
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
-    assertThat(deploymentLogAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId).get())
+    assertThat(deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
         .isCloseTo(.7654, offset(.0001));
   }
 

@@ -14,6 +14,7 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
@@ -23,6 +24,7 @@ import org.mongodb.morphia.query.Sort;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -167,14 +169,32 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
+  public Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
+        getRecentHighestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
     if (deploymentTimeSeriesAnalysis == null) {
       return Optional.empty();
     } else {
       return Optional.of(deploymentTimeSeriesAnalysis.getScore());
     }
+  }
+  @Override
+  @Nullable
+  public DeploymentTimeSeriesAnalysis getRecentHighestDeploymentTimeSeriesAnalysis(
+      String accountId, String verificationJobInstanceId) {
+    Set<String> verificationTaskIds =
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+    DeploymentTimeSeriesAnalysis max = null;
+    for (String verificationTaskId : verificationTaskIds) {
+      DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
+          hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
+              .filter(DeploymentTimeSeriesAnalysisKeys.verificationTaskId, verificationTaskId)
+              .order(Sort.descending(DeploymentTimeSeriesAnalysisKeys.startTime))
+              .get();
+      max = CVNGObjectUtils.max(
+          max, deploymentTimeSeriesAnalysis, Comparator.comparingDouble(DeploymentTimeSeriesAnalysis::getScore));
+    }
+    return max;
   }
 
   @Override

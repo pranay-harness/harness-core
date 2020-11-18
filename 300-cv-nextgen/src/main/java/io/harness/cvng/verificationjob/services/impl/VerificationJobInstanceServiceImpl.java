@@ -21,7 +21,6 @@ import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.DeploymentVerificationJobInstanceSummaryBuilder;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -364,17 +363,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
     if (!isEmpty(verificationJobInstances)) {
       verificationJobInstances.forEach(verificationJobInstance -> {
-        DeploymentVerificationJobInstanceSummaryBuilder deploymentVerificationJobInstanceSummaryBuilder =
-            DeploymentVerificationJobInstanceSummary.builder()
-                .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
-                .progressPercentage(verificationJobInstance.getProgressPercentage())
-                .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
-                .jobName(verificationJobInstance.getResolvedJob().getJobName())
-                .verificationJobInstanceId(verificationJobInstance.getUuid())
-                .status(getDeploymentVerificationStatus(verificationJobInstance))
-                .additionalInfo(getAdditionalInfo(accountId, verificationJobInstance));
-        deploymentVerificationJobInstanceSummaries.add(deploymentVerificationJobInstanceSummaryBuilder.build());
+        deploymentVerificationJobInstanceSummaries.add(
+            getDeploymentVerificationJobInstanceSummary(verificationJobInstance));
       });
     }
   }
@@ -452,6 +442,30 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                     verificationJobInstance.getAccountId(), verificationJobInstance.getUuid()))
             .collect(Collectors.toList());
     return summarizeVerificationJobInstances(verificationJobInstances, latestRiskScores);
+  }
+
+  private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
+      VerificationJobInstance verificationJobInstance) {
+    return DeploymentVerificationJobInstanceSummary.builder()
+        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
+        .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
+        .progressPercentage(verificationJobInstance.getProgressPercentage())
+        .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
+        .jobName(verificationJobInstance.getResolvedJob().getJobName())
+        .verificationJobInstanceId(verificationJobInstance.getUuid())
+        .status(getDeploymentVerificationStatus(verificationJobInstance))
+        .additionalInfo(getAdditionalInfo(verificationJobInstance.getAccountId(), verificationJobInstance))
+        .build();
+  }
+
+  @Override
+  public DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
+      List<String> verificationJobInstanceIds) {
+    Preconditions.checkState(isNotEmpty(verificationJobInstanceIds), "Should have at least one element");
+    // TODO:  Currently taking just first element to respond. We need to talk to UX and create mocks to show the full
+    // details in case of multiple verificationJobInstances.
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceIds.get(0));
+    return getDeploymentVerificationJobInstanceSummary(verificationJobInstance);
   }
 
   private ActivityVerificationSummary summarizeVerificationJobInstances(

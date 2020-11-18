@@ -38,14 +38,14 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
 
   @Override
   public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
-    Optional<Double> latestTimeSeriesRiskScore =
-        deploymentTimeSeriesAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId);
+    Optional<Double> recentHighestTimeSeriesRiskScore =
+        deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
     Optional<Double> latestLogRiskScore =
-        deploymentLogAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId);
-    if (latestTimeSeriesRiskScore.isPresent() && latestLogRiskScore.isPresent()) {
-      return Optional.of(Math.max(latestTimeSeriesRiskScore.get(), latestLogRiskScore.get()));
-    } else if (latestTimeSeriesRiskScore.isPresent()) {
-      return latestTimeSeriesRiskScore;
+        deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
+    if (recentHighestTimeSeriesRiskScore.isPresent() && latestLogRiskScore.isPresent()) {
+      return Optional.of(Math.max(recentHighestTimeSeriesRiskScore.get(), latestLogRiskScore.get()));
+    } else if (recentHighestTimeSeriesRiskScore.isPresent()) {
+      return recentHighestTimeSeriesRiskScore;
     } else if (latestLogRiskScore.isPresent()) {
       return latestLogRiskScore;
     } else {
@@ -87,11 +87,11 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
     if (preDeploymentTimeRange.isPresent()) {
       preDeploymentHosts = getPreDeploymentHosts(verificationTaskIds, preDeploymentTimeRange.get());
     }
-
+    // TODO: need to use all latest DeploymentTimeSeriesAnalysis
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
             accountId, verificationJobInstance.getUuid());
-
+    // TODO: need to use all latest DeploymentLogAnalysis
     DeploymentLogAnalysis deploymentLogAnalysis =
         deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid());
 

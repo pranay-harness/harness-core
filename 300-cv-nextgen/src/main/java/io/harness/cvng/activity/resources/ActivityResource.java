@@ -78,6 +78,14 @@ public class ActivityResource {
   }
 
   @GET
+  @Path("/{activityId}/deployment-activity-summary")
+  @ApiOperation(value = "get summary of deployment activity", nickname = "getDeploymentSummary")
+  public RestResponse<DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary> getDeploymentSummary(
+      @NotNull @QueryParam("accountId") String accountId, @NotNull @PathParam("activityId") String activityId) {
+    return new RestResponse(activityService.getDeploymentSummary(activityId));
+  }
+
+  @GET
   @Path("deployment-activity-verifications-popover-summary/{deploymentTag}")
   @ApiOperation(value = "get deployment activities summary for given build tag",
       nickname = "getDeploymentActivityVerificationsPopoverSummaryByTag")

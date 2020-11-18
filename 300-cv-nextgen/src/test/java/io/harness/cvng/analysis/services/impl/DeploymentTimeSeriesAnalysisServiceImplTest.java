@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -324,19 +325,19 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetLatestRiskScore_noData() {
+  public void testGetRecentHighestRiskScore_noData() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId =
         verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
     verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    assertThat(deploymentTimeSeriesAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId))
+    assertThat(deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
         .isEqualTo(Optional.empty());
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetLatestRiskScore_getLatest() {
+  public void testGetRecentHighestRiskScore_getLatest() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId =
         verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
@@ -350,8 +351,41 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     }
     deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(transactionSummaries);
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
-    assertThat(deploymentTimeSeriesAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceId).get())
+    assertThat(
+        deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
         .isCloseTo(.7, offset(.01));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetRecentHighestRiskScore_getRecentHighest() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationTaskId1 =
+        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+    String verificationTaskId2 =
+        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis1 = createDeploymentTimSeriesAnalysis(verificationTaskId1);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis2 = createDeploymentTimSeriesAnalysis(verificationTaskId2);
+    deploymentTimeSeriesAnalysis2.setStartTime(
+        deploymentTimeSeriesAnalysis1.getStartTime().minus(Duration.ofMinutes(2)));
+    deploymentTimeSeriesAnalysis2.setEndTime(deploymentTimeSeriesAnalysis1.getStartTime().minus(Duration.ofMinutes(1)));
+    deploymentTimeSeriesAnalysis2.setScore(.9);
+    List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
+    for (int i = 0; i < 25; i++) {
+      transactionSummaries.add(createTransactionMetricHostData("transaction " + i, "metric", 0, 0.0,
+          deploymentTimeSeriesAnalysis1.getTransactionMetricSummaries().get(0).getHostData()));
+    }
+    deploymentTimeSeriesAnalysis1.setTransactionMetricSummaries(transactionSummaries);
+    deploymentTimeSeriesAnalysis2.setTransactionMetricSummaries(transactionSummaries);
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis1);
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis2);
+    assertThat(
+        deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
+        .isCloseTo(.9, offset(.01));
   }
 
   private VerificationJobInstanceDTO createVerificationJobInstanceDTO() {

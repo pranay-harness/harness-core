@@ -18,10 +18,22 @@ while Var:respCode not equal to Var:httpOk {
   respCode = Var:rawResults[1]
   print Var:respCode
 }
+Var hosts = []
+print Var:rawResults
 Var resultData = Var:rawResults[0]
 print Var:resultData
 Var results = extract(Var:resultData,$.results)
 print Var:results
-Var hostResults = Var:results[0]
-Var hosts = extract(Var:hostResults, $.hosts)
+Var isEmpty = "True"
+foreach t in Var:results {
+  isEmpty = "False"
+}
+print Var:isEmpty
+if Var:isEmpty == "False" {
+  foreach result in Var:results {
+    Var host = extract(Var:result, Env:serviceInstanceIdentifier)
+    Var:hosts.append(Var:host)
+  }
+}
+
 return Var:hosts
