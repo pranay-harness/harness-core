@@ -1,4 +1,4 @@
-package io.harness.pms.plan.common.creator;
+package io.harness.pms.creator;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;

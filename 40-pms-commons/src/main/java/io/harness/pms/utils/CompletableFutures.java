@@ -1,4 +1,4 @@
-package io.harness.pms.plan.common.utils;
+package io.harness.pms.utils;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package io.harness.pms.plan.common.yaml;
+package io.harness.pms.yaml;
 
 import com.google.protobuf.ByteString;
 

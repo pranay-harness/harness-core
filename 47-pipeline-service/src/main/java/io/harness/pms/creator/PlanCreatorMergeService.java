@@ -13,13 +13,11 @@ import io.harness.pms.plan.PlanCreationBlobRequest;
 import io.harness.pms.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.YamlFieldBlob;
-import io.harness.pms.plan.common.creator.PlanCreationBlobResponseUtils;
-import io.harness.pms.plan.common.creator.PlanCreatorUtils;
-import io.harness.pms.plan.common.utils.CompletableFutures;
-import io.harness.pms.plan.common.yaml.YamlField;
-import io.harness.pms.plan.common.yaml.YamlNode;
-import io.harness.pms.plan.common.yaml.YamlUtils;
 import io.harness.pms.service.PmsSdkInstanceService;
+import io.harness.pms.utils.CompletableFutures;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
