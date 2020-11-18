@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.grpc.stub.StreamObserver;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -23,6 +24,7 @@ import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceImplBase;
 import io.harness.delegateprofile.DeleteProfileRequest;
 import io.harness.delegateprofile.DeleteProfileResponse;
+import io.harness.delegateprofile.EmbeddedUserDetails;
 import io.harness.delegateprofile.GetProfileRequest;
 import io.harness.delegateprofile.GetProfileResponse;
 import io.harness.delegateprofile.ListProfilesRequest;
@@ -39,7 +41,10 @@ import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.paging.PageRequestGrpc;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.DelegateProfileService;
+import software.wings.service.intfc.UserService;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,10 +58,12 @@ import java.util.stream.Stream;
 @Singleton
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
+  private UserService userService;
 
   @Inject
-  public DelegateProfileServiceGrpcImpl(DelegateProfileService delegateProfileService) {
+  public DelegateProfileServiceGrpcImpl(DelegateProfileService delegateProfileService, UserService userService) {
     this.delegateProfileService = delegateProfileService;
+    this.userService = userService;
   }
 
   @Override
@@ -206,6 +213,22 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
             .setPrimary(delegateProfile.isPrimary())
             .setApprovalRequired(delegateProfile.isApprovalRequired());
 
+    if (delegateProfile.getCreatedBy() != null) {
+      delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()
+                                                  .setUuid(delegateProfile.getCreatedBy().getUuid())
+                                                  .setName(delegateProfile.getCreatedBy().getName())
+                                                  .setEmail(delegateProfile.getCreatedBy().getEmail())
+                                                  .build());
+    }
+
+    if (delegateProfile.getLastUpdatedBy() != null) {
+      delegateProfileGrpcBuilder.setLastUpdatedBy(EmbeddedUserDetails.newBuilder()
+                                                      .setUuid(delegateProfile.getLastUpdatedBy().getUuid())
+                                                      .setName(delegateProfile.getLastUpdatedBy().getName())
+                                                      .setEmail(delegateProfile.getLastUpdatedBy().getEmail())
+                                                      .build());
+    }
+
     if (isNotBlank(delegateProfile.getName())) {
       delegateProfileGrpcBuilder.setName(delegateProfile.getName());
     }
@@ -256,6 +279,19 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .primary(delegateProfileGrpc.getPrimary())
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
+
+    if (delegateProfileGrpc.hasCreatedBy()) {
+      delegateProfileBuilder.createdBy(EmbeddedUser.builder()
+                                           .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
+                                           .name(delegateProfileGrpc.getCreatedBy().getName())
+                                           .email(delegateProfileGrpc.getCreatedBy().getEmail())
+                                           .build());
+    }
+
+    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+      User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
+      UserThreadLocal.set(user);
+    }
 
     if (delegateProfileGrpc.getProfileId() != null && isNotBlank(delegateProfileGrpc.getProfileId().getId())) {
       delegateProfileBuilder.uuid(delegateProfileGrpc.getProfileId().getId());

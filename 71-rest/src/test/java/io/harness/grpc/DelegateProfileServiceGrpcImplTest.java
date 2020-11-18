@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -48,8 +49,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
+import software.wings.beans.User;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.intfc.DelegateProfileService;
+import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,6 +78,7 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   private DelegateProfileServiceGrpcImpl delegateProfileServiceGrpcImpl;
 
   private DelegateProfileService delegateProfileService;
+  private UserService userService;
 
   private Server server;
   private Logger mockClientLogger;
@@ -95,7 +99,9 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     delegateProfileServiceGrpcClient = new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub);
 
     delegateProfileService = mock(DelegateProfileService.class);
-    delegateProfileServiceGrpcImpl = new DelegateProfileServiceGrpcImpl(delegateProfileService);
+    userService = mock(UserService.class);
+    when(userService.getUserFromCacheOrDB(anyString())).thenReturn(new User());
+    delegateProfileServiceGrpcImpl = new DelegateProfileServiceGrpcImpl(delegateProfileService, userService);
 
     server = InProcessServerBuilder.forName(serverName)
                  .directExecutor()

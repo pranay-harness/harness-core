@@ -29,6 +29,12 @@ message ProfileSelector {
   string selector = 1;
 }
 
+message EmbeddedUserDetails {
+  string uuid = 1;
+  string name = 2;
+  string email = 3;
+}
+
 // Represents Delegate Profile
 message DelegateProfileGrpc {
   ProfileId profile_id = 1;
@@ -40,6 +46,8 @@ message DelegateProfileGrpc {
   string startup_script = 7;
   repeated ProfileSelector selectors = 8;
   repeated ProfileScopingRule scoping_rules = 9;
+  EmbeddedUserDetails createdBy = 10;
+  EmbeddedUserDetails lastUpdatedBy = 11;
 }
 
 message DelegateProfilePageResponseGrpc {
