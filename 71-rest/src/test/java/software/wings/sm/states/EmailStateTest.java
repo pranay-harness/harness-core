@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,14 +38,19 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The Class EmailStateTest.
@@ -53,6 +60,9 @@ import software.wings.sm.WorkflowStandardParams;
 public class EmailStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String stateName = "emailState1";
+  private static final String EMAIL = "user@test.com";
+  private static final String USERNAME = "username";
+  private static final String UUID = RandomStringUtils.randomAlphanumeric(32);
   private static final EmailStateExecutionData.Builder expected =
       anEmailStateExecutionData().withToAddress("to1,to2").withCcAddress("cc1,cc2").withSubject("subject").withBody(
           "body");
@@ -72,6 +82,7 @@ public class EmailStateTest extends WingsBaseTest {
 
   @Mock private MainConfiguration configuration;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private UserServiceImpl userServiceImpl;
 
   private ExecutionContextImpl context;
 
@@ -106,6 +117,9 @@ public class EmailStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+
+    User user = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user);
   }
 
   /**
@@ -238,5 +252,119 @@ public class EmailStateTest extends WingsBaseTest {
                   .subject("Deployment triggered by: admin")
                   .body("Deployment triggered by: admin")
                   .build());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void sendEmailWithInvalidToAddressTest() {
+    emailState.setToAddress("toAddress1, toAddress2");
+    emailState.setCcAddress("");
+    emailState.setBody("body");
+    emailState.setSubject("subject");
+
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData().getErrorMsg())
+        .isEqualTo("Email was not sent to the following unregistered addresses: toAddress2");
+    assertThat(emailState.getBody()).isNotEmpty();
+    assertThat(emailState.getSubject()).isNotEmpty();
+    assertThat(emailState.getToAddress()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isEmpty();
+    assertThat(emailState.getToAddress()).isEqualTo("toAddress1");
+    assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
+
+    verify(emailNotificationService).send(getEmailData(Lists.newArrayList("toAddress1"), Collections.emptyList()));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void sendEmailWithInvalidCcAddressTest() {
+    emailState.setToAddress("");
+    emailState.setCcAddress("ccAddress1, ccAddress2");
+    emailState.setBody("body");
+    emailState.setSubject("subject");
+
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData().getErrorMsg())
+        .isEqualTo("Email was not sent to the following unregistered addresses: ccAddress1");
+    assertThat(emailState.getBody()).isNotEmpty();
+    assertThat(emailState.getSubject()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isEqualTo("ccAddress2");
+    assertThat(emailState.getToAddress()).isEmpty();
+    assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
+
+    verify(emailNotificationService).send(getEmailData(Collections.emptyList(), Lists.newArrayList("ccAddress2")));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void skipSendEmailWithAllInvalidAddressTest() {
+    emailState.setToAddress("toAddress1");
+    emailState.setCcAddress("ccAddress1");
+    emailState.setBody("body");
+    emailState.setSubject("subject");
+
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(executionResponse.getStateExecutionData().getErrorMsg())
+        .isEqualTo("Email was not sent to the following unregistered addresses: toAddress1,ccAddress1");
+    assertThat(emailState.getBody()).isNotEmpty();
+    assertThat(emailState.getSubject()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isEmpty();
+    assertThat(emailState.getToAddress()).isEmpty();
+    assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void sendEmailWithNullToAddressTest() {
+    emailState.setToAddress(null);
+    emailState.setCcAddress("ccAddress1, ccAddress2");
+    emailState.setBody("body");
+    emailState.setSubject("subject");
+
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(emailState.getBody()).isNotEmpty();
+    assertThat(emailState.getSubject()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isEqualTo("ccAddress1,ccAddress2");
+    assertThat(emailState.getToAddress()).isEmpty();
+    assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
+
+    verify(emailNotificationService)
+        .send(getEmailData(Collections.emptyList(), Lists.newArrayList("ccAddress1", "ccAddress2")));
+  }
+
+  private EmailData getEmailData(List<String> toAddress, List<String> ccAddress) {
+    return EmailData.builder()
+        .accountId(ACCOUNT_ID)
+        .to(toAddress)
+        .cc(ccAddress)
+        .subject("subject")
+        .body("body")
+        .build();
   }
 }

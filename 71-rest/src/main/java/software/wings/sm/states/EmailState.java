@@ -6,6 +6,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.partitioningBy;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
 import com.google.common.base.Splitter;
@@ -16,10 +17,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
+import software.wings.beans.User;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.mail.EmailData.EmailDataBuilder;
+import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -29,7 +34,11 @@ import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The Class EmailState.
@@ -41,6 +50,7 @@ import java.util.List;
 @Slf4j
 public class EmailState extends State {
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
+  private static final String EMAIL_NOT_SENT_MESSAGE = "Email was not sent to the following unregistered addresses: %s";
 
   @Attributes(required = true, title = "To") private String toAddress;
   @Attributes(title = "CC") private String ccAddress;
@@ -49,6 +59,7 @@ public class EmailState extends State {
   @Attributes(title = "Ignore delivery failure?") private Boolean ignoreDeliveryFailure = true;
 
   @Transient @Inject private EmailNotificationService emailNotificationService;
+  @Inject UserServiceImpl userServiceImpl;
 
   /**
    * Instantiates a new email state.
@@ -65,44 +76,101 @@ public class EmailState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
-    EmailStateExecutionData emailStateExecutionData = anEmailStateExecutionData()
-                                                          .withBody(body)
-                                                          .withCcAddress(ccAddress)
-                                                          .withToAddress(toAddress)
-                                                          .withSubject(subject)
-                                                          .build();
+    EmailStateExecutionData emailStateExecutionData;
+    String accountId = context.getAccountId();
+
+    Map<Boolean, List<String>> toAddressMap = getEmailAddressMap(toAddress, accountId);
+    Map<Boolean, List<String>> ccAddressMap = getEmailAddressMap(ccAddress, accountId);
+    toAddress = StringUtils.join(toAddressMap.get(true), ",");
+    ccAddress = StringUtils.join(ccAddressMap.get(true), ",");
+
+    List<String> unregisteredAddressList =
+        Stream.concat(toAddressMap.get(false).stream(), ccAddressMap.get(false).stream()).collect(Collectors.toList());
+    String unregisteredAddress = StringUtils.join(unregisteredAddressList, ",");
+
+    emailStateExecutionData = getEmailStateExecutionData(toAddress, ccAddress, subject, body);
+
     try {
       ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
-      emailStateExecutionData.setToAddress(expressionEvaluator.substitute(toAddress, Collections.emptyMap()));
-      emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
-      emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
-      emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
+      if (StringUtils.isNotBlank(unregisteredAddress)) {
+        log.warn(String.format(EMAIL_NOT_SENT_MESSAGE, unregisteredAddress));
+        emailStateExecutionData.setErrorMsg(String.format(EMAIL_NOT_SENT_MESSAGE, unregisteredAddress));
+        executionResponseBuilder.errorMessage(String.format(EMAIL_NOT_SENT_MESSAGE, unregisteredAddress));
+      }
 
-      String evaluatedTo = context.renderExpression(toAddress);
-      String evaluatedCc = context.renderExpression(ccAddress);
-      String evaluatedSubject = context.renderExpression(subject);
-      String evaluatedBody = context.renderExpression(body);
-      log.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
-      emailNotificationService.send(EmailData.builder()
-                                        .to(getEmailAddressList(evaluatedTo))
-                                        .cc(getEmailAddressList(evaluatedCc))
-                                        .subject(evaluatedSubject)
-                                        .body(evaluatedBody)
-                                        .accountId(context.getAccountId())
-                                        .workflowExecutionId(context.getWorkflowExecutionId())
-                                        .build());
-      executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
+      if (StringUtils.isNotBlank(toAddress) || StringUtils.isNotBlank(ccAddress)) {
+        String evaluatedTo = null;
+        String evaluatedCc;
+
+        emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
+        emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
+        String evaluatedSubject = context.renderExpression(subject);
+        String evaluatedBody = context.renderExpression(body);
+        log.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
+
+        if (StringUtils.isNotBlank(toAddress)) {
+          emailStateExecutionData.setToAddress(expressionEvaluator.substitute(toAddress, Collections.emptyMap()));
+          emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
+          evaluatedTo = context.renderExpression(toAddress);
+          evaluatedCc = context.renderExpression(ccAddress);
+
+          emailNotificationService.send(getEmailData(
+              evaluatedTo, evaluatedCc, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
+
+        } else if (StringUtils.isNotBlank(ccAddress)) {
+          emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
+          evaluatedCc = context.renderExpression(ccAddress);
+
+          emailNotificationService.send(getEmailData(
+              evaluatedTo, evaluatedCc, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
+        }
+        executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
+
+      } else {
+        executionResponseBuilder.executionStatus(ExecutionStatus.SKIPPED);
+      }
     } catch (Exception e) {
       executionResponseBuilder.errorMessage(
           e.getCause() == null ? ExceptionUtils.getMessage(e) : ExceptionUtils.getMessage(e.getCause()));
       executionResponseBuilder.executionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
       log.error("Exception while sending email", e);
     }
-
     executionResponseBuilder.stateExecutionData(emailStateExecutionData);
-
     return executionResponseBuilder.build();
+  }
+
+  private EmailStateExecutionData getEmailStateExecutionData(
+      String toAddress, String ccAddress, String subject, String body) {
+    if (StringUtils.isNotBlank(toAddress)) {
+      return anEmailStateExecutionData()
+          .withBody(body)
+          .withToAddress(toAddress)
+          .withCcAddress(ccAddress)
+          .withSubject(subject)
+          .build();
+    } else if (StringUtils.isNotBlank(ccAddress)) {
+      return anEmailStateExecutionData().withBody(body).withCcAddress(ccAddress).withSubject(subject).build();
+    } else {
+      return anEmailStateExecutionData().build();
+    }
+  }
+
+  private EmailData getEmailData(String evaluatedTo, String evaluatedCc, String evaluatedSubject, String evaluatedBody,
+      String accountId, String workflowExecutionId) {
+    EmailDataBuilder emailDataBuilder = EmailData.builder()
+                                            .subject(evaluatedSubject)
+                                            .body(evaluatedBody)
+                                            .accountId(accountId)
+                                            .workflowExecutionId(workflowExecutionId);
+
+    if (evaluatedTo != null) {
+      emailDataBuilder.to(getEmailAddressList(evaluatedTo));
+    }
+    if (evaluatedCc != null) {
+      emailDataBuilder.cc(getEmailAddressList(evaluatedCc));
+    }
+    return emailDataBuilder.build();
   }
 
   private List<String> getEmailAddressList(String address) {
@@ -111,6 +179,48 @@ public class EmailState extends State {
       addressList.addAll(COMMA_SPLITTER.splitToList(address));
     }
     return addressList;
+  }
+
+  /**
+   * Retrieves map divided on two partitions, the first partition holds registered addresses while the second holds
+   * unregistered addresses
+   *
+   * @param emailList - email list
+   * @param accountId - account identifier
+   *
+   * @return map with two partitions
+   */
+  private Map<Boolean, List<String>> getEmailAddressMap(String emailList, String accountId) {
+    if (emailList != null) {
+      return Stream.of(emailList.split(","))
+          .filter(StringUtils::isNotBlank)
+          .map(String::trim)
+          .collect(partitioningBy(address -> isEmailAddressRegistered(address, accountId)));
+    } else {
+      return retrieveEmptyAddressMap();
+    }
+  }
+
+  private boolean isEmailAddressRegistered(String address, String accountId) {
+    User user = userServiceImpl.getUserByEmail(address, accountId);
+    if (user != null && user.isEmailVerified()) {
+      return true;
+    } else {
+      log.warn(String.format("Unregistered email %s", address));
+      return false;
+    }
+  }
+
+  /**
+   * Retrieves map with two empty partitions
+   *
+   * @return map with empty partitions
+   */
+  private Map<Boolean, List<String>> retrieveEmptyAddressMap() {
+    Map<Boolean, List<String>> emptyMap = new HashMap<>();
+    emptyMap.put(false, Collections.emptyList());
+    emptyMap.put(true, Collections.emptyList());
+    return emptyMap;
   }
 
   /**
