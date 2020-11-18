@@ -31,6 +31,29 @@ fi
 if [[ "" != "$NG_MANAGER_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_URL"
 fi
+
+if [[ "" != "$ADDON_IMAGE_TAG" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.addonImageTag "$ADDON_IMAGE_TAG"
+fi
+if [[ "" != "$LE_IMAGE_TAG" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.liteEngineImageTag "$LE_IMAGE_TAG"
+fi
+if [[ "" != "$DEFAULT_MEMORY_LIMIT" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.defaultMemoryLimit "$DEFAULT_MEMORY_LIMIT"
+fi
+if [[ "" != "$DEFAULT_CPU_LIMIT" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.defaultCPULimit "$DEFAULT_CPU_LIMIT"
+fi
+if [[ "" != "$DEFAULT_INTERNAL_IMAGE_CONNECTOR" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.defaultInternalImageConnector "$DEFAULT_INTERNAL_IMAGE_CONNECTOR"
+fi
+if [[ "" != "$PVC_DEFAULT_STORAGE_SIZE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.pvcDefaultStorageSize "$PVC_DEFAULT_STORAGE_SIZE"
+fi
+if [[ "" != "$DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.delegateServiceEndpointVariableValue "$DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE"
+fi
+
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
 fi
