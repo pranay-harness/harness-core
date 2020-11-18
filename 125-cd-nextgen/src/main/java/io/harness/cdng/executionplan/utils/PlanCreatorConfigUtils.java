@@ -32,7 +32,7 @@ public class PlanCreatorConfigUtils {
     return getConfig(CD_CURRENT_STAGE_CONFIG, context);
   }
 
-  private <T> void setConfig(String key, T config, ExecutionPlanCreationContext context) {
+  public <T> void setConfig(String key, T config, ExecutionPlanCreationContext context) {
     if (config == null) {
       context.removeAttribute(key);
     } else {
@@ -40,7 +40,7 @@ public class PlanCreatorConfigUtils {
     }
   }
 
-  private <T> Optional<T> getConfig(String key, ExecutionPlanCreationContext context) {
+  public <T> Optional<T> getConfig(String key, ExecutionPlanCreationContext context) {
     return context.getAttribute(key);
   }
 

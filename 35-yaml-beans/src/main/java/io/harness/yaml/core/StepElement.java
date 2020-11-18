@@ -14,10 +14,13 @@ import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +29,8 @@ import lombok.NoArgsConstructor;
 public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;
+  List<FailureStrategyConfig> failureStrategies;
+
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)

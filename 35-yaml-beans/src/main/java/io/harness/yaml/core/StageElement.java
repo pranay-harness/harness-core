@@ -19,6 +19,7 @@ import io.harness.walktree.visitor.validation.annotations.Required;
 import io.harness.walktree.visitor.validation.modes.PostInputSet;
 import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import io.swagger.annotations.ApiModelProperty;
@@ -27,6 +28,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -36,6 +38,9 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
+
+  @NotNull List<FailureStrategyConfig> failureStrategies;
+
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)

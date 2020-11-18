@@ -13,6 +13,35 @@ pipeline:
     - stage:
         name: qa
         identifier: qa
+        failureStrategies:
+          - onFailure:
+              errors:
+                - Timeout
+              action:
+                type: Abort
+          - onFailure:
+              errors:
+                - Connectivity
+              action:
+                type: ManualIntervention
+                spec:
+                  timeout: 1d
+                  onTimeout:
+                    action:
+                      type: Ignore
+          - onFailure:
+              errors:
+                - AnyOther
+              action:
+                type: Retry
+                spec:
+                  retryCount: 3
+                  retryInterval:
+                    - 1s
+                    - 5s
+                  onRetryFailure:
+                    action:
+                      type: Abort
         type: Deployment
         spec:
           variables:
@@ -114,6 +143,15 @@ pipeline:
                         skipDryRun: ${input}.allowedValues(true, false)
               - stepGroup:
                   identifier: HttpValidationSteps
+                  failureStrategies:
+                    - onFailure:
+                        errors:
+                          - Authentication
+                          - Authorization
+                          - Verification
+                          - DelegateProvisioning
+                        action:
+                          type: Abort
                   steps:
                     - step:
                         identifier: HttpValidation
@@ -124,6 +162,22 @@ pipeline:
               - step:
                   name: http step 1
                   identifier: httpStep1
+                  failureStrategies:
+                    - onFailure:
+                        errors:
+                          - Timeout
+                        action:
+                          type: StepGroupRollback
+                    - onFailure:
+                        errors:
+                          - Connectivity
+                        action:
+                          type: StageRollback
+                    - onFailure:
+                        errors:
+                          - AnyOther
+                        action:
+                          type: MarkAsSuccess
                   type: Http
                   spec:
                     socketTimeoutMillis: 1000
