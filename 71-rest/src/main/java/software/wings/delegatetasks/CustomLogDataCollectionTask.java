@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
  * @author Praveen
  */
 @Slf4j
-public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
+public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private RequestExecutor requestExecutor;
   @Inject private DelegateLogService delegateLogService;
@@ -68,8 +68,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   // special case for azure. This is unfortunately a hack
   private AzureLogAnalyticsConnectionDetails azureLogAnalyticsConnectionDetails;
 
-  public LogDataCollectionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
-      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+  public CustomLogDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 

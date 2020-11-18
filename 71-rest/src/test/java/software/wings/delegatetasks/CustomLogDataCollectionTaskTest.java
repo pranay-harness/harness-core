@@ -53,14 +53,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class LogDataCollectionTaskTest extends CategoryTest {
+public class CustomLogDataCollectionTaskTest extends CategoryTest {
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
   @Mock private DelegateLogService delegateLogService;
   @Mock private ScheduledFuture future;
   @Mock private EncryptionService encryptionService;
   @Mock private RequestExecutor requestExecutor;
-  private LogDataCollectionTask dataCollectionTask;
+  private CustomLogDataCollectionTask dataCollectionTask;
 
   public void setup(Map<String, Map<String, ResponseMapper>> logDefinition, Set<String> hosts) throws Exception {
     String delegateId = UUID.randomUUID().toString();
@@ -79,7 +79,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
                             .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
 
-    dataCollectionTask = new LogDataCollectionTask(
+    dataCollectionTask = new CustomLogDataCollectionTask(
         DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
 
     MockitoAnnotations.initMocks(this);

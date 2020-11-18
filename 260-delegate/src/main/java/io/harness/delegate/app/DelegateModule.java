@@ -148,6 +148,7 @@ import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.ConnectivityValidationTask;
+import software.wings.delegatetasks.CustomLogDataCollectionTask;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.delegatetasks.DelegateConfigService;
@@ -166,7 +167,6 @@ import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
 import software.wings.delegatetasks.KubernetesSwapServiceSelectorsTask;
 import software.wings.delegatetasks.LogAnalysisStoreService;
-import software.wings.delegatetasks.LogDataCollectionTask;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
@@ -215,6 +215,7 @@ import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.container.ContainerDummyTask;
+import software.wings.delegatetasks.cv.LogDataCollectionTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.delegatetasks.helm.HelmCommandTask;
@@ -975,7 +976,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NEWRELIC_VALIDATE_CONFIGURATION_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.BUGSNAG_GET_APP_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.BUGSNAG_GET_RECORDS).toInstance(ServiceImplDelegateTask.class);
-    mapBinder.addBinding(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA).toInstance(LogDataCollectionTask.class);
+    mapBinder.addBinding(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA).toInstance(CustomLogDataCollectionTask.class);
     mapBinder.addBinding(TaskType.CUSTOM_APM_COLLECT_METRICS_V2).toInstance(MetricsDataCollectionTask.class);
     mapBinder.addBinding(TaskType.NEWRELIC_GET_APP_TASK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEWRELIC_RESOLVE_APP_TASK).toInstance(ServiceImplDelegateTask.class);
@@ -1081,7 +1082,7 @@ public class DelegateModule extends AbstractModule {
 
     mapBinder.addBinding(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK).toInstance(APMDataCollectionTask.class);
 
-    mapBinder.addBinding(TaskType.CUSTOM_LOG_COLLECTION_TASK).toInstance(LogDataCollectionTask.class);
+    mapBinder.addBinding(TaskType.CUSTOM_LOG_COLLECTION_TASK).toInstance(CustomLogDataCollectionTask.class);
     mapBinder.addBinding(TaskType.CLOUD_FORMATION_TASK).toInstance(CloudFormationCommandTask.class);
     mapBinder.addBinding(TaskType.FETCH_S3_FILE_TASK).toInstance(S3FetchFilesTask.class);
 
