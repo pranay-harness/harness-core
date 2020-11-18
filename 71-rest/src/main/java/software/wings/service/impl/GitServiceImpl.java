@@ -208,6 +208,9 @@ public class GitServiceImpl implements GitService {
   }
 
   private GitPushResult toGitPushResult(PushResultGit pushResultGit) {
+    if (pushResultGit == null) {
+      return null;
+    }
     PushResultGit.RefUpdate refUpdate = pushResultGit.getRefUpdate();
     RefUpdate ref = RefUpdate.builder()
                         .expectedOldObjectId(refUpdate.getExpectedOldObjectId())
@@ -220,6 +223,9 @@ public class GitServiceImpl implements GitService {
   }
 
   private GitCommitResult castToCommitResult(CommitResult commitResult) {
+    if (commitResult == null) {
+      return null;
+    }
     return GitCommitResult.builder()
         .commitId(commitResult.getCommitId())
         .commitMessage(commitResult.getCommitMessage())
@@ -228,10 +234,16 @@ public class GitServiceImpl implements GitService {
   }
 
   private List<software.wings.beans.yaml.GitFileChange> toManagerGitFileChange(List<GitFileChange> gitFileChanges) {
+    if (gitFileChanges == null) {
+      return Collections.emptyList();
+    }
     return gitFileChanges.stream().map(this ::toManagerGitFileChange).collect(Collectors.toList());
   }
 
   private software.wings.beans.yaml.GitFileChange toManagerGitFileChange(GitFileChange gitFileChange) {
+    if (gitFileChange == null) {
+      return null;
+    }
     return software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange()
         .withFilePath(gitFileChange.getFilePath())
         .withAccountId(gitFileChange.getAccountId())
