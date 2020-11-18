@@ -21,6 +21,7 @@ import freemarker.template.TemplateException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,10 @@ import software.wings.WingsBaseTest;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
@@ -48,6 +51,9 @@ import java.io.IOException;
 public class PauseStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String stateName = "PauseState1";
+  private static final String EMAIL = "user@test.com";
+  private static final String USERNAME = "username";
+  private static final String UUID = RandomStringUtils.randomAlphanumeric(32);
   private static final EmailStateExecutionData.Builder expected =
       EmailStateExecutionData.Builder.anEmailStateExecutionData()
           .withToAddress("to1,to2")
@@ -64,6 +70,7 @@ public class PauseStateTest extends WingsBaseTest {
   @InjectMocks private PauseState pauseState = new PauseState(stateName);
 
   @Mock private MainConfiguration configuration;
+  @Mock private UserServiceImpl userServiceImpl;
 
   private ExecutionContextImpl context;
 
@@ -93,6 +100,9 @@ public class PauseStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+
+    User user = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
+    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user);
   }
 
   /**
