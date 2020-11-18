@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface PlanCreatorProvider {
   String getServiceName();
-  List<PartialPlanCreator> getPlanCreators();
+  List<PartialPlanCreator<?>> getPlanCreators();
 }

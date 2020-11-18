@@ -14,8 +14,8 @@ public class CdPlanCreatorProvider implements PlanCreatorProvider {
   }
 
   @Override
-  public List<PartialPlanCreator> getPlanCreators() {
-    List<PartialPlanCreator> planCreators = new ArrayList<>();
+  public List<PartialPlanCreator<?>> getPlanCreators() {
+    List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
     planCreators.add(new PipelinePlanCreator());
     planCreators.add(new DeploymentStagePlanCreator());
     planCreators.add(new CdStepPlanCreator());
