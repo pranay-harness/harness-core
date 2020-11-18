@@ -7,7 +7,8 @@ public enum AuthorizationServiceHeader {
   CI_MANAGER("CIManager"),
   CV_NEXT_GEN("CVNextGen"),
   IDENTITY_SERVICE("IdentityService"),
-  ADMIN_PORTAL("AdminPortal");
+  ADMIN_PORTAL("AdminPortal"),
+  DEFAULT("Default");
 
   private final String serviceId;
 

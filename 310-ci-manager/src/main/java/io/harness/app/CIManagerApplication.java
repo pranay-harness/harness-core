@@ -25,6 +25,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.AuthorizationServiceHeader;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -312,6 +313,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
       serviceToSecretMapping.put("Bearer", configuration.getJwtAuthSecret());
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }

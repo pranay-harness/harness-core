@@ -1,5 +1,6 @@
 package io.harness.security;
 
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -74,10 +75,13 @@ public class JWTTokenServiceUtils {
   }
 
   public String extractSecret(Map<String, String> serviceToSecretMapping, String source) {
-    if (serviceToSecretMapping == null || !serviceToSecretMapping.containsKey(source)) {
-      throw new InvalidRequestException(String.format("Unknown Source [%s]", source), USER);
+    if (serviceToSecretMapping != null && serviceToSecretMapping.containsKey(source)) {
+      return serviceToSecretMapping.get(source);
     }
-    return serviceToSecretMapping.get(source);
+    if (serviceToSecretMapping != null && serviceToSecretMapping.containsKey(DEFAULT.getServiceId())) {
+      return serviceToSecretMapping.get(DEFAULT.getServiceId());
+    }
+    throw new InvalidRequestException(String.format("Unknown Source [%s]", source), USER);
   }
 
   public String extractSource(ContainerRequestContext requestContext) {

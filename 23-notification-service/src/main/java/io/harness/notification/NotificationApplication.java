@@ -11,6 +11,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.AuthorizationServiceHeader;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -197,6 +198,8 @@ public class NotificationApplication extends Application<NotificationConfigurati
       Map<String, String> serviceToSecretMapping = new HashMap<>();
       serviceToSecretMapping.put("IdentityService", configuration.getNotificationSecrets().getManagerServiceSecret());
       serviceToSecretMapping.put("Manager", configuration.getNotificationSecrets().getManagerServiceSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
+          configuration.getNotificationSecrets().getManagerServiceSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }
