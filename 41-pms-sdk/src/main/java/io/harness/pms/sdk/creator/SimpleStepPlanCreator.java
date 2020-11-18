@@ -17,8 +17,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class SimpleStepPlanCreator implements PartialPlanCreator {
+public abstract class SimpleStepPlanCreator implements PartialPlanCreator<YamlField> {
   public abstract Set<String> getSupportedStepTypes();
+
+  @Override
+  public Class<YamlField> getFieldClass() {
+    return YamlField.class;
+  }
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {

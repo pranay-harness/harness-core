@@ -13,6 +13,7 @@ import io.harness.pms.plan.common.creator.PlanCreationResponse;
 import io.harness.pms.plan.common.creator.PlanCreatorUtils;
 import io.harness.pms.plan.common.utils.CompletableFutures;
 import io.harness.pms.plan.common.yaml.YamlField;
+import io.harness.pms.plan.common.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final Executor executor = Executors.newFixedThreadPool(2);
 
   private final KryoSerializer kryoSerializer;
-  private final List<PartialPlanCreator> planCreators;
+  private final List<PartialPlanCreator<?>> planCreators;
 
   public PlanCreatorService(@NotNull KryoSerializer kryoSerializer, @NotNull PlanCreatorProvider planCreatorProvider) {
     this.kryoSerializer = kryoSerializer;
@@ -88,14 +89,28 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     CompletableFutures<PlanCreationResponse> completableFutures = new CompletableFutures<>(executor);
     for (YamlField field : dependenciesList) {
       completableFutures.supplyAsync(() -> {
-        Optional<PartialPlanCreator> planCreatorOptional = findPlanCreator(planCreators, field);
-        return planCreatorOptional.map(partialPlanCreator -> partialPlanCreator.createPlanForField(ctx, field))
-            .orElse(null);
+        Optional<PartialPlanCreator<?>> planCreatorOptional = findPlanCreator(planCreators, field);
+        if (!planCreatorOptional.isPresent()) {
+          return null;
+        }
+
+        PartialPlanCreator planCreator = planCreatorOptional.get();
+        Class<?> cls = planCreator.getFieldClass();
+        if (YamlField.class.isAssignableFrom(cls)) {
+          return planCreator.createPlanForField(ctx, field);
+        }
+
+        try {
+          Object obj = YamlUtils.read(field.getNode().toString(), cls);
+          return planCreator.createPlanForField(ctx, obj);
+        } catch (IOException e) {
+          throw new InvalidRequestException("Invalid yaml", e);
+        }
       });
     }
 
     try {
-      List<PlanCreationResponse> planCreationBlobResponses = completableFutures.allOf().get(1, TimeUnit.MINUTES);
+      List<PlanCreationResponse> planCreationBlobResponses = completableFutures.allOf().get(2, TimeUnit.MINUTES);
       for (int i = 0; i < dependenciesList.size(); i++) {
         YamlField field = dependenciesList.get(i);
         PlanCreationResponse response = planCreationBlobResponses.get(i);
@@ -117,7 +132,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     }
   }
 
-  private Optional<PartialPlanCreator> findPlanCreator(List<PartialPlanCreator> planCreators, YamlField field) {
+  private Optional<PartialPlanCreator<?>> findPlanCreator(List<PartialPlanCreator<?>> planCreators, YamlField field) {
     return planCreators.stream()
         .filter(planCreator -> {
           Map<String, Set<String>> supportedTypes = planCreator.getSupportedTypes();

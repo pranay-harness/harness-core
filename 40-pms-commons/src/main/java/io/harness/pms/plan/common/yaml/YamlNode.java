@@ -17,8 +17,8 @@ public class YamlNode {
 
   @NotNull JsonNode currNode;
 
-  public YamlNode(JsonNode rootNode) {
-    this.currNode = rootNode;
+  public YamlNode(JsonNode currNode) {
+    this.currNode = currNode;
   }
 
   public YamlNode(JsonNode currNode, YamlNode parentNode) {

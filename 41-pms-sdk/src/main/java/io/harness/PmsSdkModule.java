@@ -124,13 +124,13 @@ public class PmsSdkModule {
   }
 
   private Map<String, Types> calculateSupportedTypes(PlanCreatorProvider planCreatorProvider) {
-    List<PartialPlanCreator> planCreators = planCreatorProvider.getPlanCreators();
+    List<PartialPlanCreator<?>> planCreators = planCreatorProvider.getPlanCreators();
     if (EmptyPredicate.isEmpty(planCreators)) {
       return Collections.emptyMap();
     }
 
     Map<String, Set<String>> supportedTypes = new HashMap<>();
-    for (PartialPlanCreator planCreator : planCreators) {
+    for (PartialPlanCreator<?> planCreator : planCreators) {
       Map<String, Set<String>> currTypes = planCreator.getSupportedTypes();
       if (EmptyPredicate.isEmpty(currTypes)) {
         continue;

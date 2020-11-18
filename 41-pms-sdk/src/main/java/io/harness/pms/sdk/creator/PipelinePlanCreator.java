@@ -21,20 +21,20 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class PipelinePlanCreator extends ParallelChildrenPlanCreator {
+public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
+  @Override
+  public Class<YamlField> getFieldClass() {
+    return YamlField.class;
+  }
+
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap("pipeline", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   @Override
-  public StepType getStepType() {
-    return StepType.newBuilder().setType("pipeline").build();
-  }
-
-  @Override
-  public boolean isStartingNode() {
-    return true;
+  public String getStartingNodeId(YamlField field) {
+    return field.getNode().getUuid();
   }
 
   @Override
@@ -71,5 +71,21 @@ public class PipelinePlanCreator extends ParallelChildrenPlanCreator {
     responseMap.put(node.getUuid(),
         PlanCreationResponse.builder().node(node.getUuid(), node).dependencies(stageYamlFieldMap).build());
     return responseMap;
+  }
+
+  @Override
+  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField field, Set<String> childrenNodeIds) {
+    YamlNode yamlNode = field.getNode();
+    return PlanNode.newBuilder()
+        .setUuid(yamlNode.getUuid())
+        .setIdentifier(yamlNode.getIdentifier())
+        .setStepType(StepType.newBuilder().setType("pipeline").build())
+        .setName(yamlNode.getNameOrIdentifier())
+        .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds", childrenNodeIds)))
+        .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
+                                       .setType(FacilitatorType.newBuilder().setType("CHILD_CHAIN").build())
+                                       .build())
+        .setSkipExpressionChain(false)
+        .build();
   }
 }
