@@ -369,7 +369,16 @@ public class BillingDataQueryBuilder {
     SelectQuery selectQuery = new SelectQuery();
 
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
-    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    if (!shouldUseHourlyData(filters, accountId)) {
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
 
     if (isValidGroupByForFilterValues(groupBy)) {
       DbColumn column = getColumnAssociatedWithGroupBy(groupBy.get(0));
