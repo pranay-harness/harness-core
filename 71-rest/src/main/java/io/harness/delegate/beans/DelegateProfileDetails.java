@@ -21,4 +21,7 @@ public class DelegateProfileDetails {
 
   private List<ScopingRuleDetails> scopingRules;
   private List<String> selectors;
+
+  private EmbeddedUserDetails createdBy;
+  private EmbeddedUserDetails lastUpdatedBy;
 }

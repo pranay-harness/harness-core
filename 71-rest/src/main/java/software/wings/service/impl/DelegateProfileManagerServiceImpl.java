@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateProfileDetails.DelegateProfileDetailsBu
 import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
+import io.harness.delegateprofile.EmbeddedUserDetails;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
@@ -28,6 +29,8 @@ import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateProfileManagerService;
 
@@ -156,6 +159,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
         .map(selector -> ProfileSelector.newBuilder().setSelector(selector).build())
         .collect(Collectors.toList());
   }
+
   private DelegateProfileGrpc convert(DelegateProfileDetails delegateProfile) {
     DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
         DelegateProfileGrpc.newBuilder()
@@ -163,6 +167,18 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
             .setName(delegateProfile.getName())
             .setPrimary(delegateProfile.isPrimary())
             .setApprovalRequired(delegateProfile.isApprovalRequired());
+
+    if (delegateProfile.getCreatedBy() != null) {
+      delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()
+                                                  .setUuid(delegateProfile.getCreatedBy().getUuid())
+                                                  .setName(delegateProfile.getCreatedBy().getName())
+                                                  .setEmail(delegateProfile.getCreatedBy().getEmail())
+                                                  .build());
+    } else {
+      delegateProfileGrpcBuilder.setCreatedBy(getEmbeddedUser());
+    }
+
+    delegateProfileGrpcBuilder.setLastUpdatedBy(getEmbeddedUser());
 
     if (isNotBlank(delegateProfile.getUuid())) {
       delegateProfileGrpcBuilder.setProfileId(ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
@@ -240,6 +256,22 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
             .primary(delegateProfileGrpc.getPrimary())
             .approvalRequired(delegateProfileGrpc.getApprovalRequired())
             .startupScript(delegateProfileGrpc.getStartupScript());
+
+    if (delegateProfileGrpc.hasCreatedBy()) {
+      delegateProfileDetailsBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+                                                  .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
+                                                  .name(delegateProfileGrpc.getCreatedBy().getName())
+                                                  .email(delegateProfileGrpc.getCreatedBy().getEmail())
+                                                  .build());
+    }
+
+    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+      delegateProfileDetailsBuilder.lastUpdatedBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+                                                      .uuid(delegateProfileGrpc.getLastUpdatedBy().getUuid())
+                                                      .name(delegateProfileGrpc.getLastUpdatedBy().getName())
+                                                      .email(delegateProfileGrpc.getLastUpdatedBy().getEmail())
+                                                      .build());
+    }
 
     if (isNotEmpty(delegateProfileGrpc.getSelectorsList())) {
       delegateProfileDetailsBuilder.selectors(delegateProfileGrpc.getSelectorsList()
@@ -364,5 +396,17 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
         throw new InvalidArgumentsException(appName + " is already used for a scoping rule!");
       }
     }
+  }
+
+  private EmbeddedUserDetails getEmbeddedUser() {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return EmbeddedUserDetails.newBuilder().build();
+    }
+    return EmbeddedUserDetails.newBuilder()
+        .setUuid(user.getUuid())
+        .setEmail(user.getEmail())
+        .setName(user.getName())
+        .build();
   }
 }
