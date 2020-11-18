@@ -7,6 +7,7 @@ import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.refobjects.RefType;
 import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
@@ -21,5 +22,6 @@ public class PmsContractsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("adviserObtainment", AdviserObtainment.class);
     orchestrationElements.put("facilitatorType", FacilitatorType.class);
     orchestrationElements.put("facilitatorObtainment", FacilitatorObtainment.class);
+    orchestrationElements.put("refType", RefType.class);
   }
 }

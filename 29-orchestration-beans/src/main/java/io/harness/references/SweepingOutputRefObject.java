@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.refobjects.RefType;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -22,7 +23,7 @@ public class SweepingOutputRefObject implements RefObject {
 
   @Override
   public RefType getRefType() {
-    return RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
+    return RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build();
   }
 
   public static class SweepingOutputRefObjectBuilder {

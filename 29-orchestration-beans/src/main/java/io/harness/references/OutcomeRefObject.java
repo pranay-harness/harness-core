@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.refobjects.RefType;
 import lombok.Builder;
 import lombok.Value;
 
@@ -17,7 +18,7 @@ public class OutcomeRefObject implements RefObject {
 
   @Override
   public RefType getRefType() {
-    return RefType.builder().type(RefType.OUTCOME).build();
+    return RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build();
   }
 
   public static class OutcomeRefObjectBuilder {
