@@ -611,7 +611,7 @@ import software.wings.sm.ExecutionWaitCallback;
 import software.wings.sm.ExecutionWaitRetryCallback;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.PipelineConitnueWithInputsCallback;
+import software.wings.sm.PipelineContinueWithInputsCallback;
 import software.wings.sm.ResourceConstraintStatusData;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -1466,7 +1466,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.ResourceConstraintStatusData", ResourceConstraintStatusData.class);
     w.put("sm.StateExecutionData", StateExecutionData.class);
     w.put("sm.StateMachineResumeCallback", StateMachineResumeCallback.class);
-    w.put("sm.PipelineConitnueWithInputsCallback", PipelineConitnueWithInputsCallback.class);
+    w.put("sm.PipelineContinueWithInputsCallback", PipelineContinueWithInputsCallback.class);
     w.put("sm.states.APMVerificationState", APMVerificationState.class);
     w.put("sm.states.AppDynamicsState", AppDynamicsState.class);
     w.put("sm.states.ApprovalResumeState", ApprovalResumeState.class);

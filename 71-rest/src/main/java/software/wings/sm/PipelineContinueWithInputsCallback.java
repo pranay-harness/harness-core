@@ -34,7 +34,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor
-public class PipelineConitnueWithInputsCallback implements NotifyCallback {
+public class PipelineContinueWithInputsCallback implements NotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
@@ -51,7 +51,7 @@ public class PipelineConitnueWithInputsCallback implements NotifyCallback {
    * @param appId                    the app id
    * @param stateExecutionInstanceId the state execution instance id
    */
-  public PipelineConitnueWithInputsCallback(
+  public PipelineContinueWithInputsCallback(
       String appId, String executionUuid, String stateExecutionInstanceId, String pipelineStageElementId) {
     this.appId = appId;
     this.executionUuid = executionUuid;
@@ -104,6 +104,7 @@ public class PipelineConitnueWithInputsCallback implements NotifyCallback {
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .appId(appId)
+                                                .accountId(stateExecutionInstance.getAccountId())
                                                 .executionInterruptType(CONTINUE_PIPELINE_STAGE)
                                                 .executionUuid(executionUuid)
                                                 .stateExecutionInstanceId(stateExecutionInstanceId)
@@ -111,8 +112,11 @@ public class PipelineConitnueWithInputsCallback implements NotifyCallback {
     wingsPersistence.save(executionInterrupt);
 
     try {
+      stateMachineExecutor.sendRuntimeInputsProvidedNotification(
+          context, workflowState.getUserGroupIds(), stateExecutionInstance);
       stateMachineExecutor.startExecutionRuntime(appId, executionUuid, stateExecutionInstanceId, stateMachine);
     } finally {
+      executionInterruptManager.closeAlertsIfOpened(stateExecutionInstance, executionInterrupt);
       executionInterruptManager.seize(executionInterrupt);
     }
   }

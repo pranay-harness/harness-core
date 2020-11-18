@@ -25,6 +25,7 @@ import io.harness.serializer.YamlUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.text.WordUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -70,6 +71,7 @@ public class NotificationMessageResolver {
     ARTIFACT_APPROVAL_NOTIFICATION,
     ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
     WORKFLOW_NOTIFICATION,
+    PIPELINE_NOTIFICATION,
     DELEGATE_STATE_NOTIFICATION,
     SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION,
     ALL_DELEGATE_DOWN_NOTIFICATION,
@@ -79,6 +81,7 @@ public class NotificationMessageResolver {
     APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION,
     MANUAL_INTERVENTION_NEEDED_NOTIFICATION,
     NEEDS_RUNTIME_INPUTS,
+    RUNTIME_INPUTS_PROVIDED,
     RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION,
     RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION,
     DELEGATE_DOWN_ALERT_NOTIFICATION,
@@ -377,7 +380,7 @@ public class NotificationMessageResolver {
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
-    if (alertType == AlertType.ApprovalNeeded) {
+    if (alertType == AlertType.ApprovalNeeded || alertType == AlertType.ManualInterventionNeeded) {
       if (context.getWorkflowType() == WorkflowType.PIPELINE) {
         return buildAbsoluteUrl(configuration,
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", app.getAccountId(),
@@ -411,16 +414,6 @@ public class NotificationMessageResolver {
         log.error("Unhandled Approval case. No URL can be generated for alertType ", alertType.name());
         return "";
       }
-    } else if (alertType == AlertType.ManualInterventionNeeded) {
-      String envId = "empty";
-      if (((ExecutionContextImpl) context).getEnv() != null) {
-        envId = ((ExecutionContextImpl) context).getEnv().getUuid();
-      }
-
-      return buildAbsoluteUrl(configuration,
-          format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
-              context.getWorkflowExecutionId()),
-          baseUrl);
     } else {
       log.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
       return "";
@@ -444,8 +437,16 @@ public class NotificationMessageResolver {
       String timeout, String statusMsg, String artifactsMessage, ExecutionStatus status, AlertType alertType) {
     Application app = ((ExecutionContextImpl) context).getApp();
     String workflowUrl = (app == null) ? null : generateUrl(app, context, alertType);
+    long expiresTs = endTs;
+
+    if (StringUtils.isNumeric(timeout)) {
+      expiresTs += parseLong(timeout);
+    }
+
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
     String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
+    String expiresTime =
+        format("%s at %s", dateFormat.format(new Date(expiresTs)), timeFormat.format(new Date(expiresTs)));
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
     String envName = (env != null) ? env.getName() : "";
@@ -454,8 +455,10 @@ public class NotificationMessageResolver {
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
+    placeHolderValues.put("EXPIRES_TS_SECS", String.valueOf(expiresTs / 1000L));
     placeHolderValues.put("START_DATE", startTime);
     placeHolderValues.put("END_DATE", endTime);
+    placeHolderValues.put("EXPIRES_DATE", expiresTime);
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
     placeHolderValues.put("VERB", verb);
     placeHolderValues.put("STATUS_CAMELCASE", toCamelCase(verb));
@@ -477,5 +480,13 @@ public class NotificationMessageResolver {
     }
 
     return placeHolderValues;
+  }
+
+  private Long parseLong(String s) {
+    if (StringUtils.isNotBlank(s)) {
+      return Long.parseLong(s);
+    } else {
+      return 0L;
+    }
   }
 }

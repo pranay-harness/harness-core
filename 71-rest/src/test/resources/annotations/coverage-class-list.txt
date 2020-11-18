@@ -923,7 +923,7 @@
 71-rest/src/main/java/software/wings/sm/OverridingStateTypeDescriptor.java
 71-rest/src/main/java/software/wings/sm/PhaseExecutionSummary.java
 71-rest/src/main/java/software/wings/sm/PhaseStepExecutionSummary.java
-71-rest/src/main/java/software/wings/sm/PipelineConitnueWithInputsCallback.java
+71-rest/src/main/java/software/wings/sm/PipelineContinueWithInputsCallback.java
 71-rest/src/main/java/software/wings/sm/PipelineSummary.java
 71-rest/src/main/java/software/wings/sm/ResourceConstraintStatusData.java
 71-rest/src/main/java/software/wings/sm/resume/ResumeStateUtils.java

@@ -5,8 +5,10 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
@@ -43,6 +45,7 @@ import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
+import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +58,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -64,7 +68,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
+import software.wings.beans.alert.RuntimeInputsRequiredAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
@@ -72,6 +78,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import software.wings.sm.states.WorkflowState;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -183,17 +190,33 @@ public class ExecutionInterruptManager {
 
   private void sendNotificationIfRequired(ExecutionInterrupt executionInterrupt) {
     final ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
+
+    WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
+
     switch (executionInterruptType) {
       case PAUSE_ALL:
-        sendNotification(executionInterrupt, PAUSED);
+        if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+          sendWorkflowNotification(workflowExecution, executionInterrupt, PAUSED);
+        }
         break;
       case RESUME_ALL:
       case CONTINUE_WITH_DEFAULTS:
-        sendNotification(executionInterrupt, RESUMED);
+        if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+          sendWorkflowNotification(workflowExecution, executionInterrupt, RESUMED);
+        }
+        break;
+      case MARK_EXPIRED:
+        if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+          sendPipelineNotification(workflowExecution, executionInterrupt, EXPIRED);
+        }
         break;
       case ABORT_ALL:
+        if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+          sendPipelineNotification(workflowExecution, executionInterrupt, ABORTED);
+        }
+        break;
       case ABORT:
-      case MARK_EXPIRED:
       case PAUSE:
       case RESUME:
       case RETRY:
@@ -215,13 +238,13 @@ public class ExecutionInterruptManager {
    * @param stateExecutionInstance
    * @param executionInterrupt
    */
-  private void closeAlertsIfOpened(
+  protected void closeAlertsIfOpened(
       StateExecutionInstance stateExecutionInstance, ExecutionInterrupt executionInterrupt) {
+    String appId = stateExecutionInstance != null ? stateExecutionInstance.getAppId() : executionInterrupt.getAppId();
     String stateExecutionInstanceId = stateExecutionInstance != null ? stateExecutionInstance.getUuid()
                                                                      : executionInterrupt.getStateExecutionInstanceId();
     String executionId = stateExecutionInstance != null ? stateExecutionInstance.getExecutionUuid()
                                                         : executionInterrupt.getExecutionUuid();
-    String appId = stateExecutionInstance != null ? stateExecutionInstance.getAppId() : executionInterrupt.getAppId();
     try {
       final ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
       switch (executionInterruptType) {
@@ -233,17 +256,12 @@ public class ExecutionInterruptManager {
         case MARK_EXPIRED:
         case RESUME_ALL:
         case CONTINUE_WITH_DEFAULTS:
+        case CONTINUE_PIPELINE_STAGE:
         case MARK_SUCCESS:
         case MARK_FAILED:
         case END_EXECUTION:
         case ABORT_ALL:
-          // Close ManualIntervention alert
-          ManualInterventionNeededAlert manualInterventionNeededAlert =
-              ManualInterventionNeededAlert.builder()
-                  .executionId(executionId)
-                  .stateExecutionInstanceId(stateExecutionInstanceId)
-                  .build();
-          alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
+          closeAlerts(executionInterrupt, stateExecutionInstanceId, executionId, appId);
           break;
         case PAUSE:
         case PAUSE_ALL:
@@ -259,36 +277,96 @@ public class ExecutionInterruptManager {
     }
   }
 
-  private void sendNotification(ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
-    try {
-      WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
-          WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
-      PageRequest<StateExecutionInstance> pageRequest =
-          aPageRequest()
-              .withLimit("1")
-              .addFilter("appId", EQ, executionInterrupt.getAppId())
-              .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-              .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
-              .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.DESC)
-              .build();
+  private void closeAlerts(
+      ExecutionInterrupt executionInterrupt, String stateExecutionInstanceId, String executionId, String appId) {
+    ApprovalNeededAlert approvalNeededAlert =
+        ApprovalNeededAlert.builder().executionId(executionId).approvalId(executionId).build();
+    alertService.closeAlert(executionInterrupt.getAccountId(), appId, ApprovalNeeded, approvalNeededAlert);
 
-      PageResponse<StateExecutionInstance> pageResponse =
-          wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-      if (isEmpty(pageResponse)) {
-        log.error("No StateExecutionInstance found for sendNotification");
+    ManualInterventionNeededAlert manualInterventionNeededAlert =
+        ManualInterventionNeededAlert.builder()
+            .executionId(executionId)
+            .stateExecutionInstanceId(stateExecutionInstanceId)
+            .build();
+    alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
+
+    RuntimeInputsRequiredAlert runtimeInputsRequiredAlert =
+        RuntimeInputsRequiredAlert.builder().executionId(executionId).build();
+    alertService.closeAlert(
+        executionInterrupt.getAccountId(), appId, ManualInterventionNeeded, runtimeInputsRequiredAlert);
+  }
+
+  private void sendWorkflowNotification(
+      WorkflowExecution workflowExecution, ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
+    try {
+      final StateExecutionInstance stateExecutionInstance =
+          getStateExecutionInstance(workflowExecution, executionInterrupt);
+
+      if (stateExecutionInstance == null) {
         return;
       }
-      final StateExecutionInstance stateExecutionInstance = pageResponse.get(0);
+
       StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
+
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (RuntimeException exception) {
       log.error("Unknown runtime exception: ", exception);
     }
+  }
+
+  private void sendPipelineNotification(
+      WorkflowExecution workflowExecution, ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
+    try {
+      final StateExecutionInstance stateExecutionInstance =
+          getStateExecutionInstance(workflowExecution, executionInterrupt);
+
+      if (stateExecutionInstance == null) {
+        return;
+      }
+
+      StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
+      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+      injector.injectMembers(context);
+
+      WorkflowState workflowState = getWorkflowState(stateExecutionInstance, context);
+      stateMachineExecutor.sendPipelineNotification(
+          context, workflowState.getUserGroupIds(), stateExecutionInstance, status);
+
+    } catch (WingsException exception) {
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
+    } catch (RuntimeException exception) {
+      log.error("Unknown runtime exception: ", exception);
+    }
+  }
+
+  WorkflowState getWorkflowState(StateExecutionInstance stateExecutionInstance, ExecutionContextImpl context) {
+    State currentState = stateMachineExecutor.getStateForExecution(context, stateExecutionInstance);
+    return (WorkflowState) currentState;
+  }
+
+  private StateExecutionInstance getStateExecutionInstance(
+      WorkflowExecution workflowExecution, ExecutionInterrupt executionInterrupt) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit("1")
+            .addFilter("appId", EQ, executionInterrupt.getAppId())
+            .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
+            .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
+            .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.DESC)
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (isEmpty(pageResponse)) {
+      log.error("No StateExecutionInstance found for sendNotification");
+      return null;
+    }
+    return pageResponse.get(0);
   }
 
   public void seize(ExecutionInterrupt executionInterrupt) {

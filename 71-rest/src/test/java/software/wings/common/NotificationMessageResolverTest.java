@@ -85,8 +85,9 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
         String.format("PORTAL_URL/#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
             ACCOUNT_ID, APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
-    String ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/%s/executions/%s/details",
-        ACCOUNT_ID, APP_ID, ENV_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
+    String ManualInterventionUrl =
+        String.format("PORTAL_URL/#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+            ACCOUNT_ID, APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
     Application app = anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build();
 
     // Pipeline placeholder values
@@ -113,8 +114,9 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
     assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ManualInterventionUrl);
 
     // Manual Intervention URL (No Environment)
-    ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/empty/executions/%s/details", ACCOUNT_ID,
-        APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
+    ManualInterventionUrl =
+        String.format("PORTAL_URL/#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+            ACCOUNT_ID, APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
     when(context.getEnv()).thenReturn(null);
     placeholderValues = notificationMessageResolver.getPlaceholderValues(
         context, "", 500L, 100L, "1000", "", "", ExecutionStatus.PAUSED, AlertType.ManualInterventionNeeded);
