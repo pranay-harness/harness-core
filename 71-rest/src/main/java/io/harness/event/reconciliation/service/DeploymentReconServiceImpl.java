@@ -69,7 +69,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
       "SELECT EXECUTIONID,STARTTIME FROM DEPLOYMENT WHERE EXECUTIONID=?";
 
   private static final String RUNNING_DEPLOYMENTS =
-      "SELECT EXECUTIONID,STATUS FROM DEPLOYMENT WHERE STATUS IN ('RUNNING','PAUSED')";
+      "SELECT EXECUTIONID,STATUS FROM DEPLOYMENT WHERE ACCOUNTID=? AND STATUS IN ('RUNNING','PAUSED')";
 
   @Override
   public ReconciliationStatus performReconciliation(String accountId, long durationStartTs, long durationEndTs) {
@@ -360,6 +360,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(RUNNING_DEPLOYMENTS)) {
+        statement.setString(1, accountId);
         resultSet = statement.executeQuery();
         while (resultSet.next()) {
           runningWFs.put(resultSet.getString("executionId"), resultSet.getString("status"));
