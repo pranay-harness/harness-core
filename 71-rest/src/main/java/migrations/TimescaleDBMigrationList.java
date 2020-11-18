@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import migrations.timescaledb.AddCostEvents;
 import migrations.timescaledb.AddDeploymentTagsToDeployment;
 import migrations.timescaledb.AddExplorerV2Indices;
@@ -81,6 +82,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(33, AddExplorerV2Indices.class))
         .add(Pair.of(34, CreateAggregatedBillingTable.class))
         .add(Pair.of(35, CreateAnomaliesDataV2.class))
+        .add(Pair.of(36, AddAccountIdStatusIndexToDeployment.class))
         .build();
   }
 }
