@@ -22,6 +22,7 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
+import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
@@ -127,6 +128,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisResult> logAnalysisResults = createLogAnalysisResults(start, end);
     hPersistence.save(logAnalysisClusters);
     hPersistence.save(logAnalysisResults);
+    saveLELogAnalysisTask(start, end, false);
     String learningEngineTaskId = saveLETask(start, end);
 
     trendAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO(start, end));
@@ -174,6 +176,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     List<LogAnalysisResult> logAnalysisResults = createLogAnalysisResults(start, end);
     hPersistence.save(logAnalysisClusters);
     hPersistence.save(logAnalysisResults);
+    saveLELogAnalysisTask(start, end, false);
     String learningEngineTaskId = saveLETask(start, end);
 
     trendAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO_emptySums(start, end));
@@ -205,6 +208,54 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
+  public void testSaveAnalysis_baselineWindow() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
+    List<LogAnalysisResult> logAnalysisResults = createLogAnalysisResults(start, end);
+    hPersistence.save(logAnalysisClusters);
+    hPersistence.save(logAnalysisResults);
+    saveLELogAnalysisTask(start, end, true);
+    String learningEngineTaskId = saveLETask(start, end);
+
+    trendAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO(start, end));
+
+    TimeSeriesCumulativeSums cumulativeSums =
+        hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
+    assertThat(cumulativeSums).isNotNull();
+    TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
+                                                        .filter("verificationTaskId", verificationTaskId)
+                                                        .get();
+    assertThat(anomalousPatterns).isNotNull();
+    TimeSeriesShortTermHistory shortTermHistory = hPersistence.createQuery(TimeSeriesShortTermHistory.class)
+                                                      .filter("verificationTaskId", verificationTaskId)
+                                                      .get();
+    assertThat(shortTermHistory).isNotNull();
+
+    List<LogAnalysisCluster> savedClusters =
+        hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority).asList();
+    assertThat(savedClusters).isNotEmpty();
+    assertThat(savedClusters.size()).isEqualTo(2);
+    int index = 0;
+    for (LogAnalysisCluster cluster : savedClusters) {
+      for (Frequency frequency : cluster.getFrequencyTrend()) {
+        assertThat(frequency.getRiskScore()).isEqualTo((double) index);
+      }
+      index++;
+    }
+
+    LogAnalysisResult analysisResult = hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority).get();
+    assertThat(analysisResult).isNotNull();
+    assertThat(analysisResult.getOverallRisk()).isEqualTo(0.872);
+    assertThat(analysisResult.getLogAnalysisResults().get(0))
+        .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).build());
+    assertThat(analysisResult.getLogAnalysisResults().get(1))
+        .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.KNOWN).count(14).build());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
   public void testGetTimeSeriesMetricDefinitions() {
     List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
         trendAnalysisService.getTimeSeriesMetricDefinitions();
@@ -223,6 +274,16 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     timeSeriesLearningEngineTask.setAnalysisStartTime(start);
     timeSeriesLearningEngineTask.setAnalysisEndTime(end);
     return learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
+  }
+
+  private void saveLELogAnalysisTask(Instant start, Instant end, boolean isBaselineWindow) {
+    ServiceGuardLogAnalysisTask serviceGuardLogAnalysisTask =
+        ServiceGuardLogAnalysisTask.builder().isBaselineWindow(isBaselineWindow).build();
+    serviceGuardLogAnalysisTask.setVerificationTaskId(verificationTaskId);
+    serviceGuardLogAnalysisTask.setAnalysisStartTime(start);
+    serviceGuardLogAnalysisTask.setAnalysisEndTime(end);
+    serviceGuardLogAnalysisTask.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(serviceGuardLogAnalysisTask);
   }
 
   private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO(Instant start, Instant end) {

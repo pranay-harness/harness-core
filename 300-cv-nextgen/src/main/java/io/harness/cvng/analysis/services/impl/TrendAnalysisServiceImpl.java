@@ -11,6 +11,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_P
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_NAME;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
+import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -25,6 +26,7 @@ import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
+import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
@@ -32,6 +34,7 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKe
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
+import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
@@ -222,6 +225,14 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    ServiceGuardLogAnalysisTask logAnalysisTask =
+        (ServiceGuardLogAnalysisTask) hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+            .filter(LearningEngineTaskKeys.verificationTaskId, learningEngineTask.getVerificationTaskId())
+            .filter(LearningEngineTaskKeys.analysisEndTime, learningEngineTask.getAnalysisEndTime())
+            .filter(LearningEngineTaskKeys.analysisType, SERVICE_GUARD_LOG_ANALYSIS)
+            .get();
+    Preconditions.checkNotNull(
+        logAnalysisTask, "Log analysis task not present for trend task id: ", learningEngineTask.getUuid());
     Instant startTime = learningEngineTask.getAnalysisStartTime();
     Instant endTime = learningEngineTask.getAnalysisEndTime();
     analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
@@ -232,16 +243,18 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
     TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
 
-    saveRisk(analysis, startTime, endTime, learningEngineTask.getVerificationTaskId(), riskSummary);
+    saveRisk(
+        analysis, startTime, endTime, learningEngineTask.getVerificationTaskId(), logAnalysisTask.isBaselineWindow());
     saveShortTermHistory(shortTermHistory);
     saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(cumulativeSums);
+    hPersistence.save(riskSummary);
     log.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
     learningEngineTaskService.markCompleted(taskId);
   }
 
   private void saveRisk(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime,
-      String verificationTaskId, TimeSeriesRiskSummary riskSummary) {
+      String verificationTaskId, boolean isBaselineRun) {
     List<Long> unexpectedClusters = new ArrayList<>();
     String cvConfigId = verificationTaskService.getCVConfigId(verificationTaskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
@@ -249,12 +262,12 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
 
     saveRiskForLogClusters(analysis, startTime, endTime, verificationTaskId, unexpectedClusters);
     updateRiskForLogAnalysisResult(
-        analysis, startTime, endTime, riskSummary, cvConfig, verificationTaskId, unexpectedClusters);
+        analysis, startTime, endTime, cvConfig, verificationTaskId, unexpectedClusters, isBaselineRun);
   }
 
   private void updateRiskForLogAnalysisResult(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime,
-      Instant endTime, TimeSeriesRiskSummary riskSummary, CVConfig cvConfig, String verificationTaskId,
-      List<Long> unexpectedClusters) {
+      Instant endTime, CVConfig cvConfig, String verificationTaskId, List<Long> unexpectedClusters,
+      boolean isBaselineRun) {
     LogAnalysisResult analysisResult = hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
                                            .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
                                            .filter(LogAnalysisResultKeys.analysisEndTime, endTime)
@@ -264,7 +277,8 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
           analysisResult.getOverallRisk());
       analysisResult.setOverallRisk(score);
       analysisResult.getLogAnalysisResults().forEach(logAnalysisCluster -> {
-        if (unexpectedClusters.contains(logAnalysisCluster.getLabel())) {
+        if (unexpectedClusters.contains(logAnalysisCluster.getLabel())
+            && logAnalysisCluster.getTag() == LogAnalysisTag.KNOWN && !isBaselineRun) {
           logAnalysisCluster.setTag(LogAnalysisTag.UNEXPECTED);
         }
       });
