@@ -21,6 +21,7 @@ import java.util.Map;
 public class AzureWebAppSlotShiftTraffic extends State {
   @Getter @Setter private String trafficWeightExpr;
   @Getter @Setter private boolean deleteOldSlot;
+  public static final String APP_SERVICE_SLOT_TRAFFIC_SHIT = "App Service Slot Traffic Shift";
 
   public AzureWebAppSlotShiftTraffic(String name) {
     super(name, AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name());

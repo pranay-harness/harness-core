@@ -796,6 +796,9 @@ import software.wings.sm.states.azure.AzureVMSSDeployExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.azure.AzureVMSSSetupExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
@@ -1713,12 +1716,14 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PodStatus.class, 8090);
     kryo.register(PodStatus.Status.class, 8091);
     kryo.register(AzureVMSSAllPhaseRollbackData.class, 8092);
-
     kryo.register(TrialSignupOptions.class, 8093);
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
 
     kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
+    kryo.register(AzureAppServiceSlotSetupContextElement.class, 8098);
+    kryo.register(AzureAppServiceSlotSetupExecutionData.class, 8099);
+    kryo.register(AzureAppServiceSlotSetupExecutionSummary.class, 8110);
   }
 }
