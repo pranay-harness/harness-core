@@ -38,6 +38,7 @@ import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
+import io.harness.generator.DelegateProfileGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator;
@@ -151,6 +152,7 @@ public class DataGenService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private IndexManager indexManager;
+  @Inject private DelegateProfileGenerator delegateProfileGenerator;
 
   public void populateData() {
     dropDBAndEnsureIndexes();
@@ -166,7 +168,9 @@ public class DataGenService {
 
     accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.HARNESS_TEST);
 
-    Account account = accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.GENERIC_TEST);
+    Owners owners = ownerManager.create();
+    Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    delegateProfileGenerator.ensureAllPredefined(seed, owners);
     createGlobalSettings(account);
     createApps(account);
     createTestApplication(account);
