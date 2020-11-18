@@ -53,6 +53,7 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
 
     AzureAppServiceTaskParameters azureAppServiceTaskParameters =
         (AzureAppServiceTaskParameters) azureTaskExecutionRequest.getAzureTaskParameters();
+    azureSecretHelper.decryptAzureAppServiceTaskParameters(azureAppServiceTaskParameters);
 
     AbstractAzureAppServiceTaskHandler azureAppServiceTask =
         azureAppServiceTaskFactory.getAzureAppServiceTask(azureAppServiceTaskParameters.getCommandType().name());

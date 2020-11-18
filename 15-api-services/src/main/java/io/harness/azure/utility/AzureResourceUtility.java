@@ -75,7 +75,7 @@ public class AzureResourceUtility {
     return String.format(DOCKER_IMAGE_FULL_PATH_PATTERN, imageAndTag);
   }
 
-  public String getDockerImageAndTagPath(String imageName, String imageTag) {
+  public String getDockerImagePathAndTagPath(String imageName, String imageTag) {
     return String.format(DOCKER_IMAGE_AND_TAG_PATH_PATTERN, imageName, imageTag);
   }
 

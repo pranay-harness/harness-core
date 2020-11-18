@@ -59,11 +59,11 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
 
     log.debug("Start getting Web Applications by subscriptionId: {}, resourceGroupName: {}", subscriptionId,
         resourceGroupName);
-    Instant startListingVMSS = Instant.now();
+    Instant startListingWebApps = Instant.now();
     PagedList<WebApp> webApps = azure.webApps().listByResourceGroup(resourceGroupName);
 
     List<WebApp> webAppsList = new ArrayList<>(webApps);
-    long elapsedTime = Duration.between(startListingVMSS, Instant.now()).toMillis();
+    long elapsedTime = Duration.between(startListingWebApps, Instant.now()).toMillis();
     log.info("Obtained Web Applications items: {} for elapsed time: {}, resourceGroupName: {}, subscriptionId: {} ",
         webAppsList.size(), elapsedTime, resourceGroupName, subscriptionId);
 

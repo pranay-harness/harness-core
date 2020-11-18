@@ -144,7 +144,6 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
-import io.harness.delegate.task.azure.AzureTaskExecutionRequest;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.AzureTaskParameters;
 import io.harness.delegate.task.azure.AzureTaskResponse;
@@ -449,7 +448,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureTaskResponse.class, 19389);
     kryo.register(AzureAppServiceTaskType.class, 19390);
     kryo.register(AzureAppServiceType.class, 19391);
-    kryo.register(AzureTaskExecutionRequest.class, 19392);
     kryo.register(AzureTaskExecutionResponse.class, 19393);
     kryo.register(CIBuildSetupTaskParams.class, 19394);
     kryo.register(CIK8BuildTaskParams.class, 19395);
