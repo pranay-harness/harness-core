@@ -9,7 +9,7 @@ import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,7 +19,7 @@ public class PlanTest extends OrchestrationBeansTestBase {
   private static final String DUMMY_NODE_2_ID = generateUuid();
   private static final String DUMMY_NODE_3_ID = generateUuid();
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
 
   @Test
   @Owner(developers = PRASHANT)

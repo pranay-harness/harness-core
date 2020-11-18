@@ -13,6 +13,7 @@ import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConv
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
 import io.harness.serializer.spring.OrchestrationAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
@@ -49,6 +50,7 @@ public class OrchestrationRegistrars {
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .add(AmbianceMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
+          .add(StepTypeMorphiaConverter.class)
           .add(AdviserTypeMorphiaConverter.class)
           .add(AdviserObtainmentMorphiaConverter.class)
           .add(FacilitatorTypeMorphiaConverter.class)

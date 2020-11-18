@@ -33,8 +33,8 @@ import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
@@ -52,7 +52,7 @@ import java.util.Optional;
 
 @Slf4j
 public class ServiceStep implements Step, TaskChainExecutable<ServiceStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.SERVICE.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
 
   @Inject private OutcomeService outcomeService;
   @Inject private ServiceEntityService serviceEntityService;

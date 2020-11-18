@@ -14,7 +14,7 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.orchestration.persistence.OrchestrationMongoTemplate;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -33,7 +33,7 @@ import java.util.Map;
 @Slf4j
 public class BarrierStep
     implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.BARRIER).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.BARRIER).build();
 
   private static final String BARRIER = "barrier";
 

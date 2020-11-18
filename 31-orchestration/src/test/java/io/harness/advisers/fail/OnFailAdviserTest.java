@@ -70,7 +70,7 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
                                                 .uuid(NODE_SETUP_ID)
                                                 .name(NODE_NAME)
                                                 .identifier("dummy")
-                                                .stepType(io.harness.state.StepType.builder().type("DUMMY").build())
+                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)

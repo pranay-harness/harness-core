@@ -1,6 +1,6 @@
 package io.harness.beans.steps;
 
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.yaml.core.nonyaml.NonYamlInfo;
 import lombok.Builder;
 import lombok.Value;

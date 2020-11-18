@@ -12,7 +12,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.Status;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
                                                 .uuid(generateUuid())
                                                 .name("name")
                                                 .identifier("dummy")
-                                                .stepType(StepType.builder().type("DUMMY").build())
+                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.QUEUED)

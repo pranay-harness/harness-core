@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.http.chain.BasicHttpChainStep;
@@ -13,7 +14,6 @@ import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.wait.WaitStep;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;

@@ -20,7 +20,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.steps.TestStepParameters;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -187,7 +187,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     return PlanNode.builder()
         .uuid(generateUuid())
         .name(identifier + "n")
-        .stepType(StepType.builder().type("DUMMY").build())
+        .stepType(StepType.newBuilder().setType("DUMMY").build())
         .group(groupName)
         .identifier(identifier)
         .skipExpressionChain(skipExpressionChain)

@@ -16,8 +16,8 @@ import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.steps.StepType;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.StepType;
 import io.harness.steps.dummy.DummyStep;
 import io.harness.steps.section.SectionStepParameters;
 
@@ -83,7 +83,7 @@ public class PlanRepo {
             PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
-                .stepType(StepType.builder().type("SECTION").build())
+                .stepType(StepType.newBuilder().setType("SECTION").build())
                 .identifier("section_1")
                 .stepParameters(SectionStepParameters.builder().childNodeId(test1Id).build())
                 .adviserObtainment(

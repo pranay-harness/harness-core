@@ -15,8 +15,8 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Slf4j
 public class BuildStatusStep implements Step, TaskExecutable<BuildStatusUpdateParameter> {
-  public static final StepType STEP_TYPE = StepType.builder().type("COMMIT_STATUS").build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType("COMMIT_STATUS").build();
   private static final int socketTimeoutMillis = 10000;
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;

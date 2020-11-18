@@ -9,7 +9,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -30,10 +30,11 @@ public class BuildStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(CIStepInfoType.BUILD)
-                                              .stepType(StepType.builder().type(CIStepInfoType.BUILD.name()).build())
-                                              .build();
+  public static final TypeInfo typeInfo =
+      TypeInfo.builder()
+          .stepInfoType(CIStepInfoType.BUILD)
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.BUILD.name()).build())
+          .build();
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;

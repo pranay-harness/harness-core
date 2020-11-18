@@ -9,7 +9,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -32,7 +32,7 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final TypeInfo typeInfo =
       TypeInfo.builder()
           .stepInfoType(CIStepInfoType.SETUP_ENV)
-          .stepType(StepType.builder().type(CIStepInfoType.SETUP_ENV.name()).build())
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build())
           .build();
 
   @NotNull @EntityIdentifier private String identifier;

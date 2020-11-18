@@ -17,7 +17,7 @@ import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.steps.fork.ForkStep;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.yaml.core.ParallelStageElement;
@@ -70,7 +70,7 @@ public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreat
         .uuid(deploymentStageUid)
         .name("parallel-stage")
         .identifier("parallel-stage-" + deploymentStageUid)
-        .stepType(StepType.builder().type(ForkStep.STEP_TYPE.getType()).build())
+        .stepType(StepType.newBuilder().setType(ForkStep.STEP_TYPE.getType()).build())
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childNodeIds).build())
         .facilitatorObtainment(

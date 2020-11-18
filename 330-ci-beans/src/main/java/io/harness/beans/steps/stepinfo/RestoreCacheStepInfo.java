@@ -9,7 +9,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -32,7 +32,7 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   public static final TypeInfo typeInfo =
       TypeInfo.builder()
           .stepInfoType(CIStepInfoType.RESTORE_CACHE)
-          .stepType(StepType.builder().type(CIStepInfoType.RESTORE_CACHE.name()).build())
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE.name()).build())
           .build();
 
   @NotNull @EntityIdentifier private String identifier;

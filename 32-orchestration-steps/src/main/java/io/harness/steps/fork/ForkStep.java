@@ -11,7 +11,7 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -24,7 +24,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 public class ForkStep implements Step, ChildrenExecutable<ForkStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.FORK).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.FORK).build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(

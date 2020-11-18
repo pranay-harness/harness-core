@@ -13,7 +13,7 @@ import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class StepRegistryTest extends OrchestrationBeansTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    StepType stepType = StepType.builder().type("DUMMY_TEST").build();
+    StepType stepType = StepType.newBuilder().setType("DUMMY_TEST").build();
     stepRegistry.register(stepType, new DummyStep());
     Step step = stepRegistry.obtain(stepType);
     assertThat(step).isNotNull();
@@ -34,7 +34,7 @@ public class StepRegistryTest extends OrchestrationBeansTestBase {
     assertThatThrownBy(() -> stepRegistry.register(stepType, new DummyStep()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> stepRegistry.obtain(StepType.builder().type("RANDOM").build()))
+    assertThatThrownBy(() -> stepRegistry.obtain(StepType.newBuilder().setType("RANDOM").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

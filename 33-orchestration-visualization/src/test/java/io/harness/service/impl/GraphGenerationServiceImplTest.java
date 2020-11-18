@@ -32,7 +32,7 @@ import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.pms.steps.SkipType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,7 +72,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .node(PlanNode.builder()
                       .uuid("node1_plan")
                       .name("name")
-                      .stepType(StepType.builder().type("DUMMY").build())
+                      .stepType(StepType.newBuilder().setType("DUMMY").build())
                       .identifier("identifier1")
                       .build())
             .build();
@@ -108,7 +108,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .node(PlanNode.builder()
                       .uuid("node1_plan")
                       .name("name")
-                      .stepType(StepType.builder().type("DUMMY").build())
+                      .stepType(StepType.newBuilder().setType("DUMMY").build())
                       .identifier("identifier1")
                       .build())
             .build();
@@ -157,7 +157,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .node(PlanNode.builder()
                       .uuid("node1_plan")
                       .name("name")
-                      .stepType(StepType.builder().type("DUMMY").build())
+                      .stepType(StepType.newBuilder().setType("DUMMY").build())
                       .identifier("identifier1")
                       .build())
             .build();
@@ -193,7 +193,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .node(PlanNode.builder()
                       .uuid("node1_plan")
                       .name("name")
-                      .stepType(StepType.builder().type("DUMMY").build())
+                      .stepType(StepType.newBuilder().setType("DUMMY").build())
                       .identifier("identifier1")
                       .build())
             .build();
@@ -209,7 +209,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
             .node(PlanNode.builder()
                       .uuid("node2_plan")
                       .name("nam2")
-                      .stepType(StepType.builder().type("DUMMY").build())
+                      .stepType(StepType.newBuilder().setType("DUMMY").build())
                       .identifier("identifier2")
                       .build())
             .previousId(dummyStart.getUuid())

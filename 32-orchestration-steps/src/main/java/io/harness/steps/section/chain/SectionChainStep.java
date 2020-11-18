@@ -10,7 +10,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public class SectionChainStep implements Step, ChildChainExecutable<SectionChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.SECTION_CHAIN).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).build();
 
   @Override
   public ChildChainResponse executeFirstChild(

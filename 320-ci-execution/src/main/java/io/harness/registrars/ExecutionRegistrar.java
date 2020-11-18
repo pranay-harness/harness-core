@@ -3,9 +3,9 @@ package io.harness.registrars;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.states.BuildStatusStep;
 import io.harness.states.BuildStep;
 import io.harness.states.CIPipelineSetupStep;

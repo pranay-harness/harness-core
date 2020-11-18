@@ -10,7 +10,7 @@ import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -31,10 +31,11 @@ public class PublishStepInfo implements CIStepInfo {
   @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(CIStepInfoType.PUBLISH)
-                                              .stepType(StepType.builder().type(CIStepInfoType.PUBLISH.name()).build())
-                                              .build();
+  public static final TypeInfo typeInfo =
+      TypeInfo.builder()
+          .stepInfoType(CIStepInfoType.PUBLISH)
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.PUBLISH.name()).build())
+          .build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

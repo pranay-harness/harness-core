@@ -10,8 +10,8 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class RollbackOptionalChildChainStep
     implements Step, ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
 

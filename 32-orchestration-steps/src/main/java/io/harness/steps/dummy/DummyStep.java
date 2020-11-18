@@ -9,7 +9,7 @@ import io.harness.pms.execution.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Redesign
 public class DummyStep implements Step, SyncExecutable<DummyStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.DUMMY).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.DUMMY).build();
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, DummyStepParameters dummyStepParameters,

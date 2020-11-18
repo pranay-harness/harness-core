@@ -12,6 +12,7 @@ import io.harness.pms.refobjects.RefType;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.RefTypeKryoSerializer;
 import io.harness.pms.steps.SkipType;
+import io.harness.pms.steps.StepType;
 import io.harness.serializer.KryoRegistrar;
 
 public class PmsContractsKryoRegistrar implements KryoRegistrar {
@@ -25,6 +26,7 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(AdviserObtainment.class, 2606);
     kryo.register(SkipType.class, 2607);
     kryo.register(FacilitatorType.class, 2608);
+    kryo.register(StepType.class, 2609);
     kryo.register(RefType.class, new RefTypeKryoSerializer(), 2609);
   }
 }

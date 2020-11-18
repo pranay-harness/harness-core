@@ -17,9 +17,9 @@ import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
