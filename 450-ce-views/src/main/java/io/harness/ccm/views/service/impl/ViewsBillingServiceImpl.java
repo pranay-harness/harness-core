@@ -52,7 +52,6 @@ import io.harness.ccm.views.graphql.ViewsQueryBuilder;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.graphql.ViewsQueryMetadata;
 import io.harness.ccm.views.service.CEViewService;
-import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +74,6 @@ import java.util.stream.Collectors;
 public class ViewsBillingServiceImpl implements ViewsBillingService {
   @Inject ViewsQueryBuilder viewsQueryBuilder;
   @Inject CEViewService viewService;
-  @Inject ViewCustomFieldService customFieldService;
   @Inject ViewsQueryHelper viewsQueryHelper;
 
   public static final String nullStringValueConstant = "Others";
@@ -83,7 +81,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   private static final String COST_VALUE = "$%s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
-  private static final String DEFAULT_TIMEZONE = "GMT";
 
   @Override
   public List<String> getFilterValueStats(
@@ -274,15 +271,13 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       List<QLCEViewTimeFilter> timeFilters, List<QLCEViewAggregation> aggregateFunction, List<ViewRule> viewRuleList,
       String cloudProviderTableName) {
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
-    List<ViewField> customFields = new ArrayList<>();
     if (viewMetadataFilter.isPresent()) {
       final String viewId = viewMetadataFilter.get().getViewMetadataFilter().getViewId();
       CEView ceView = viewService.get(viewId);
       viewRuleList = ceView.getViewRules();
-      customFields = customFieldService.getCustomFieldsPerView(viewId);
     }
     return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, Collections.EMPTY_LIST, aggregateFunction,
-        Collections.EMPTY_LIST, customFields, cloudProviderTableName);
+        Collections.EMPTY_LIST, cloudProviderTableName);
   }
 
   private SelectQuery getQuery(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
@@ -290,7 +285,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       boolean isTimeTruncGroupByRequired) {
     List<ViewRule> viewRuleList = new ArrayList<>();
     List<QLCEViewGroupBy> modifiedGroupBy = new ArrayList<>(groupBy);
-    List<ViewField> customFields = new ArrayList<>();
 
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
 
@@ -315,13 +309,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
               getModifiedGroupBy(groupBy, defaultGroupByField, defaultTimeGranularity, isTimeTruncGroupByRequired);
         }
       }
-      customFields = customFieldService.getCustomFieldsPerView(viewId);
     }
     List<QLCEViewFilter> idFilters = getIdFilters(filters);
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
 
-    return viewsQueryBuilder.getQuery(viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort,
-        customFields, cloudProviderTableName);
+    return viewsQueryBuilder.getQuery(
+        viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort, cloudProviderTableName);
   }
 
   private ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
