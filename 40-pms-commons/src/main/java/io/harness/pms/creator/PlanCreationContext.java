@@ -1,4 +1,4 @@
-package io.harness.pms.plan.common.creator;
+package io.harness.pms.creator;
 
 import com.google.protobuf.ByteString;
 

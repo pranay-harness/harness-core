@@ -1,10 +1,10 @@
-package io.harness.pms.plan.common.creator;
+package io.harness.pms.creator;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.common.yaml.YamlField;
 import io.harness.pms.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.PlanNode;
+import io.harness.pms.yaml.YamlField;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;

@@ -6,7 +6,7 @@ import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.resources.PMSPipelineResponseDTO;
 import io.harness.pms.beans.resources.PMSPipelineSummaryResponseDTO;
 import io.harness.pms.beans.yaml.BasicPipeline;
-import io.harness.pms.plan.common.yaml.YamlUtils;
+import io.harness.pms.yaml.YamlUtils;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;

@@ -1,7 +1,7 @@
-package io.harness.pms.plan.common.creator;
+package io.harness.pms.creator;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.plan.common.yaml.YamlField;
+import io.harness.pms.yaml.YamlField;
 import lombok.experimental.UtilityClass;
 
 import java.util.Map;
