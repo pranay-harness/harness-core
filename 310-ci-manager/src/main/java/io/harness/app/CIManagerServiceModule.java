@@ -65,7 +65,8 @@ public class CIManagerServiceModule extends AbstractModule {
   @Singleton
   Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
       DelegateServiceGrpcClient delegateServiceGrpcClient) {
-    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, ciManagerConfiguration));
+    return (Supplier<DelegateCallbackToken>) Suppliers.memoize(
+        () -> getDelegateCallbackToken(delegateServiceGrpcClient, ciManagerConfiguration));
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(

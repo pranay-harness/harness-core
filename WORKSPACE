@@ -993,6 +993,7 @@ maven_install(
         "ch.qos.logback:logback-access:1.2.3",
         "ch.qos.logback:logback-classic:1.2.3",
         "ch.qos.logback:logback-core:1.2.3",
+        "net.openhft:compiler:2.3.4",
         maven.artifact(
             group = "com.amazonaws",
             artifact = "aws-java-sdk-applicationautoscaling",
