@@ -29,6 +29,7 @@ import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.steps.SkipType;
+import io.harness.pms.steps.StepType;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
@@ -43,7 +44,6 @@ import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.BarrierStepParameters;
@@ -75,8 +75,8 @@ public class CustomExecutionProvider {
   private static final String BASIC_HTTP_STATE_URL_404 = "404";
   private static final String BASIC_HTTP_STATE_URL_200 = "200";
   private static final String BASIC_HTTP_STATE_URL_500 = "500";
-  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
-  private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  private static final StepType BASIC_HTTP_STEP_TYPE = StepType.newBuilder().setType("BASIC_HTTP").build();
   private static final String RESOURCE_UNIT = generateUuid();
 
   public Plan provideHttpSwitchPlan() {
@@ -165,7 +165,7 @@ public class CustomExecutionProvider {
                   .uuid(waitNodeId)
                   .name("Wait Node")
                   .identifier("wait")
-                  .stepType(StepType.builder().type("WAIT_STATE").build())
+                  .stepType(StepType.newBuilder().setType("WAIT_STATE").build())
                   .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(
                       FacilitatorObtainment.newBuilder()
@@ -257,7 +257,7 @@ public class CustomExecutionProvider {
             PlanNode.builder()
                 .uuid(forkNodeId)
                 .name("FORK")
-                .stepType(StepType.builder().type("FORK").build())
+                .stepType(StepType.newBuilder().setType("FORK").build())
                 .identifier("fork")
                 .stepParameters(
                     ForkStepParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
@@ -372,7 +372,7 @@ public class CustomExecutionProvider {
             PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
-                .stepType(StepType.builder().type("SECTION").build())
+                .stepType(StepType.newBuilder().setType("SECTION").build())
                 .identifier("section_1")
                 .stepParameters(SectionStepParameters.builder().childNodeId(httpNodeId1).build())
                 .adviserObtainment(
@@ -574,7 +574,7 @@ public class CustomExecutionProvider {
             PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
-                .stepType(StepType.builder().type("SECTION").build())
+                .stepType(StepType.newBuilder().setType("SECTION").build())
                 .identifier("section-1")
                 .stepParameters(SectionStepParameters.builder().childNodeId(httpNodeId1).build())
                 .adviserObtainment(
@@ -597,7 +597,7 @@ public class CustomExecutionProvider {
         .node(PlanNode.builder()
                   .uuid(rollbackSectionNodeId)
                   .name("Section")
-                  .stepType(StepType.builder().type("SECTION").build())
+                  .stepType(StepType.newBuilder().setType("SECTION").build())
                   .identifier("section-1")
                   .stepParameters(SectionStepParameters.builder().childNodeId(rollbackHttpNodeId1).build())
                   .facilitatorObtainment(
@@ -1649,7 +1649,7 @@ public class CustomExecutionProvider {
                 .uuid(waitNodeId)
                 .name("Wait Node")
                 .identifier("wait")
-                .stepType(StepType.builder().type("WAIT_STATE").build())
+                .stepType(StepType.newBuilder().setType("WAIT_STATE").build())
                 .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
                 .facilitatorObtainment(
                     FacilitatorObtainment.newBuilder()
@@ -1869,7 +1869,7 @@ public class CustomExecutionProvider {
                 .uuid(waitNodeId)
                 .name("Wait Node")
                 .identifier("wait")
-                .stepType(StepType.builder().type("WAIT_STATE").build())
+                .stepType(StepType.newBuilder().setType("WAIT_STATE").build())
                 .stepParameters(WaitStepParameters.builder().waitDurationSeconds(50).build())
                 .facilitatorObtainment(
                     FacilitatorObtainment.newBuilder()

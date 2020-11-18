@@ -17,7 +17,7 @@ import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

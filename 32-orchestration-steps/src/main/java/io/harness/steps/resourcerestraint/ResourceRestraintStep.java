@@ -26,7 +26,7 @@ import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
@@ -47,7 +47,8 @@ import java.util.Map;
 @Slf4j
 public class ResourceRestraintStep
     implements Step, SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.RESOURCE_RESTRAINT).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.RESOURCE_RESTRAINT).build();
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintService resourceRestraintService;

@@ -20,7 +20,7 @@ import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ParallelStageElement;
@@ -105,7 +105,7 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
         .uuid(nodeId)
         .name(PlanCreatorConstants.STAGES_NODE_IDENTIFIER)
         .identifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER)
-        .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
+        .stepType(StepType.newBuilder().setType(SectionChainStep.STEP_TYPE.getType()).build())
         .group(StepOutcomeGroup.STAGES.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForStages.stream()

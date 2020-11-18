@@ -11,7 +11,7 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.NonNull;
 
 import java.util.Map;

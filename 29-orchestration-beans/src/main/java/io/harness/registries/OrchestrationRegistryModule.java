@@ -31,7 +31,7 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 

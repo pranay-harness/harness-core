@@ -8,7 +8,7 @@ import com.google.inject.Injector;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.dummy.DummySectionStep;
 import io.harness.steps.dummy.DummyStep;

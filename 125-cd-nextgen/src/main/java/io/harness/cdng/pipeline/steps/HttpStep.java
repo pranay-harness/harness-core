@@ -12,9 +12,9 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -33,7 +33,7 @@ import java.util.Map;
 @Redesign
 @Slf4j
 public class HttpStep implements Step, TaskExecutable<BasicHttpStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.HTTP.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getName()).build();
   private static final int socketTimeoutMillis = 10000;
 
   @Override

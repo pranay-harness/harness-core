@@ -49,9 +49,9 @@ import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -69,7 +69,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.K8S_ROLLING.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getName()).build();
 
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;

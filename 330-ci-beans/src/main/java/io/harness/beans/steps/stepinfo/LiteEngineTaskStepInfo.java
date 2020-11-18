@@ -9,7 +9,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import lombok.Builder;
@@ -35,7 +35,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final TypeInfo typeInfo =
       TypeInfo.builder()
           .stepInfoType(CIStepInfoType.LITE_ENGINE_TASK)
-          .stepType(StepType.builder().type(CIStepInfoType.LITE_ENGINE_TASK.name()).build())
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.name()).build())
           .build();
 
   @NotNull @EntityIdentifier private String identifier;

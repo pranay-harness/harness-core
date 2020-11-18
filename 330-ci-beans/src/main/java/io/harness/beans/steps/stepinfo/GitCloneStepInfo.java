@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -31,7 +31,7 @@ public class GitCloneStepInfo implements CIStepInfo {
   public static final TypeInfo typeInfo =
       TypeInfo.builder()
           .stepInfoType(CIStepInfoType.GIT_CLONE)
-          .stepType(StepType.builder().type(CIStepInfoType.GIT_CLONE.name()).build())
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.name()).build())
           .build();
 
   @NotNull @EntityIdentifier private String identifier;

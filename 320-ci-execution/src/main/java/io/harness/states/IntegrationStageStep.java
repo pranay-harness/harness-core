@@ -14,8 +14,8 @@ import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -25,7 +25,7 @@ import java.util.Map;
 
 @Slf4j
 public class IntegrationStageStep implements Step, ChildExecutable<IntegrationStageStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type("INTEGRATION_STAGE_STEP").build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType("INTEGRATION_STAGE_STEP").build();
   public static final String CHILD_PLAN_START_NODE = "io/harness/beans/execution";
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;

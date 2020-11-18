@@ -7,8 +7,8 @@ import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStageStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.builder().type(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName()).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

@@ -33,7 +33,7 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.DummyOutcome;
 import org.assertj.core.util.Maps;
@@ -98,7 +98,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                    .node(PlanNode.builder()
                                              .uuid(generateUuid())
                                              .name("name")
-                                             .stepType(StepType.builder().type("DUMMY").build())
+                                             .stepType(StepType.newBuilder().setType("DUMMY").build())
                                              .identifier("identifier1")
                                              .build())
                                    .build();
@@ -169,7 +169,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                    .node(PlanNode.builder()
                                              .uuid(generateUuid())
                                              .name("name")
-                                             .stepType(StepType.builder().type("DUMMY").build())
+                                             .stepType(StepType.newBuilder().setType("DUMMY").build())
                                              .identifier("identifier1")
                                              .build())
                                    .build();

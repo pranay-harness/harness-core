@@ -39,7 +39,7 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
@@ -62,7 +62,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.newBuilder().setType("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
-  private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STEP_PLAN").build();
+  private static final StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").build();
 
   @Before
   public void setUp() {

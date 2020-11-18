@@ -20,7 +20,6 @@ import io.harness.plan.PlanNode;
 import io.harness.references.OutcomeRefObject;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.spring.AliasRegistrar;
-import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.timeout.TimeoutDetails;
@@ -34,7 +33,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("ambiance", Ambiance.class);
     orchestrationElements.put("planNode", PlanNode.class);
     orchestrationElements.put("plan", Plan.class);
-    orchestrationElements.put("stepType", StepType.class);
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);
     orchestrationElements.put("childChainResponse", ChildChainResponse.class);
     orchestrationElements.put("childExecutableResponse", ChildExecutableResponse.class);

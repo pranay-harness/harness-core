@@ -18,7 +18,7 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.yaml.core.StepElement;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +64,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     planNodeBuilder.uuid(nodeId)
         .name(nodeName)
         .identifier(stepElement.getIdentifier())
-        .stepType(StepType.builder().type(genericStepInfo.getStepType().getType()).build())
+        .stepType(StepType.newBuilder().setType(genericStepInfo.getStepType().getType()).build())
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(genericStepInfo.getStepParameters())
         .facilitatorObtainment(

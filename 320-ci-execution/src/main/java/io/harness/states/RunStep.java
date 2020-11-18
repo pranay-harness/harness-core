@@ -1,7 +1,7 @@
 package io.harness.states;
 
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 
 public class RunStep extends AbstractStepExecutable {
   public static final StepType STEP_TYPE = RunStepInfo.typeInfo.getStepType();

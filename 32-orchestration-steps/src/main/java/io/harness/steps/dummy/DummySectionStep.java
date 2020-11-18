@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public class DummySectionStep implements Step, ChildExecutable<DummySectionStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(OrchestrationStepTypes.DUMMY_SECTION).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.DUMMY_SECTION).build();
 
   @Override
   public ChildExecutableResponse obtainChild(

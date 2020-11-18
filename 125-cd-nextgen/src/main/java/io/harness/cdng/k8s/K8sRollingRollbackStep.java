@@ -18,8 +18,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRollbackStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.builder().type(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getName()).build();
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;

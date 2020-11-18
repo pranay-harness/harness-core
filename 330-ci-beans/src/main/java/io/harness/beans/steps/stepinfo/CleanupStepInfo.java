@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.facilitator.OrchestrationFacilitatorType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
@@ -28,10 +28,11 @@ public class CleanupStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(CIStepInfoType.CLEANUP)
-                                              .stepType(StepType.builder().type(CIStepInfoType.CLEANUP.name()).build())
-                                              .build();
+  public static final TypeInfo typeInfo =
+      TypeInfo.builder()
+          .stepInfoType(CIStepInfoType.CLEANUP)
+          .stepType(StepType.newBuilder().setType(CIStepInfoType.CLEANUP.name()).build())
+          .build();
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;

@@ -25,14 +25,15 @@ import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 
 public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
-  public static final StepType STEP_TYPE = StepType.builder().type(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
 
   @Inject private EnvironmentService environmentService;
 

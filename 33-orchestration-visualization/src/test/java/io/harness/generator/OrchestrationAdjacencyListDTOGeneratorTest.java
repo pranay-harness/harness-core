@@ -22,7 +22,7 @@ import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.rule.Owner;
 import io.harness.pms.steps.SkipType;
-import io.harness.state.StepType;
+import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.utils.DummyForkStepParameters;
 import io.harness.utils.DummyOutcome;
@@ -49,7 +49,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
 
   @Mock private OutcomeService outcomeService;
   @InjectMocks @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
@@ -92,7 +92,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
             .node(PlanNode.builder()
                       .uuid("section_2")
                       .name("name2")
-                      .stepType(StepType.builder().type("SECTION").build())
+                      .stepType(StepType.newBuilder().setType("SECTION").build())
                       .identifier("identifier2")
                       .stepParameters(sectionStepParams)
                       .build())
@@ -155,7 +155,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                       .uuid("section_chain_plan_node")
                       .name("name_section_chain")
                       .identifier("name_section_chain")
-                      .stepType(StepType.builder().type("_DUMMY_SECTION_CHAIN").build())
+                      .stepType(StepType.newBuilder().setType("_DUMMY_SECTION_CHAIN").build())
                       .build())
             .createdAt(System.currentTimeMillis())
             .lastUpdatedAt(System.currentTimeMillis())
@@ -283,7 +283,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                              .node(PlanNode.builder()
                                        .uuid(STARTING_EXECUTION_NODE_ID)
                                        .name("name1")
-                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .stepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .identifier("identifier1")
                                        .stepParameters(forkStepParams)
                                        .build())
@@ -379,7 +379,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                              .node(PlanNode.builder()
                                        .uuid(STARTING_EXECUTION_NODE_ID)
                                        .name("name1")
-                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .stepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .identifier("identifier1")
                                        .stepParameters(forkStepParams)
                                        .build())
@@ -525,19 +525,20 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   @Category(UnitTests.class)
   public void shouldTestPopulateAdjacencyListForChain() {
     String dummyNode1Uuid = "dummyNode1 ";
-    NodeExecution sectionChainParentNode = NodeExecution.builder()
-                                               .uuid("section_chain_start")
-                                               .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
-                                               .mode(ExecutionMode.CHILD_CHAIN)
-                                               .node(PlanNode.builder()
-                                                         .uuid("section_chain_plan_node")
-                                                         .name("name_section_chain")
-                                                         .identifier("name_section_chain")
-                                                         .stepType(StepType.builder().type("SECTION_CHAIN").build())
-                                                         .build())
-                                               .createdAt(System.currentTimeMillis())
-                                               .lastUpdatedAt(System.currentTimeMillis())
-                                               .build();
+    NodeExecution sectionChainParentNode =
+        NodeExecution.builder()
+            .uuid("section_chain_start")
+            .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+            .mode(ExecutionMode.CHILD_CHAIN)
+            .node(PlanNode.builder()
+                      .uuid("section_chain_plan_node")
+                      .name("name_section_chain")
+                      .identifier("name_section_chain")
+                      .stepType(StepType.newBuilder().setType("SECTION_CHAIN").build())
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
 
     NodeExecution sectionChain1 = NodeExecution.builder()
                                       .uuid("section_chain_child1")
@@ -547,7 +548,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                                 .uuid("section_chain_child1_plan_node")
                                                 .name("name_section_chain_child1_plan_node")
                                                 .identifier("name_section_chain_child1_plan_node")
-                                                .stepType(StepType.builder().type("DUMMY").build())
+                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .createdAt(System.currentTimeMillis())
                                       .lastUpdatedAt(System.currentTimeMillis())
@@ -563,7 +564,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                                 .uuid("section_chain_child2_plan_node")
                                                 .name("name_section_chain_child2_plan_node")
                                                 .identifier("name_section_chain_child2_plan_node")
-                                                .stepType(StepType.builder().type("DUMMY").build())
+                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .createdAt(System.currentTimeMillis())
                                       .lastUpdatedAt(System.currentTimeMillis())
@@ -577,7 +578,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                    .node(PlanNode.builder()
                                              .uuid("dummy_plan_node_1")
                                              .name("name_dummy_node_1")
-                                             .stepType(StepType.builder().type("DUMMY").build())
+                                             .stepType(StepType.newBuilder().setType("DUMMY").build())
                                              .identifier("name_dummy_node_1")
                                              .build())
                                    .createdAt(System.currentTimeMillis())
@@ -665,7 +666,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                              .node(PlanNode.builder()
                                        .uuid(STARTING_EXECUTION_NODE_ID)
                                        .name("name1")
-                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
+                                       .stepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .identifier("identifier1")
                                        .stepParameters(forkStepParams)
                                        .build())
