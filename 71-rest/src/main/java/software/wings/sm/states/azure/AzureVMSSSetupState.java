@@ -92,7 +92,13 @@ public class AzureVMSSSetupState extends AbstractAzureState {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return azureVMSSStateHelper.getAzureVMSSStateTimeoutFromContext(context);
+    return getTimeOut(context);
+  }
+
+  @NotNull
+  private Integer getTimeOut(ExecutionContext context) {
+    return azureVMSSStateHelper.renderExpressionOrGetDefault(
+        autoScalingSteadyStateVMSSTimeout, context, AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
   }
 
   @Override

@@ -133,6 +133,8 @@ public enum ContextElementType {
 
   AZURE_VMSS_SETUP,
 
+  AZURE_WEBAPP_SETUP,
+
   HELM_CHART,
 
   MANIFEST_VARIABLE

@@ -722,6 +722,9 @@ import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
@@ -1601,6 +1604,12 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.azure.appservices.AzureWebAppSlotSwap", AzureWebAppSlotSwap.class);
     w.put("sm.states.azure.appservices.AzureWebAppSlotShiftTraffic", AzureWebAppSlotShiftTraffic.class);
     w.put("sm.states.azure.appservices.AzureWebAppSlotRollback", AzureWebAppSlotRollback.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement",
+        AzureAppServiceSlotSetupContextElement.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData",
+        AzureAppServiceSlotSetupExecutionData.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary",
+        AzureAppServiceSlotSetupExecutionSummary.class);
     w.put("sm.WorkflowStandardParams", WorkflowStandardParams.class);
     w.put("verification.apm.APMCVServiceConfiguration", APMCVServiceConfiguration.class);
     w.put("verification.appdynamics.AppDynamicsCVServiceConfiguration", AppDynamicsCVServiceConfiguration.class);

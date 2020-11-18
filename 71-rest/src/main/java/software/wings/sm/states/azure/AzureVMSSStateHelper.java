@@ -29,6 +29,7 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
@@ -48,6 +49,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -74,6 +76,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.List;
@@ -275,6 +278,18 @@ public class AzureVMSSStateHelper {
     return (AzureVMSSInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
   }
 
+  public AzureWebAppInfrastructureMapping getAzureWebAppInfrastructureMapping(String infraMappingId, String appId) {
+    notNullCheck("Infrastructure Mapping id is null or empty", infraMappingId);
+    notNullCheck("Application id is null or empty", appId);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (!(infrastructureMapping instanceof AzureWebAppInfrastructureMapping)) {
+      throw new InvalidRequestException(
+          format("Infrastructure Mapping is not instance of AzureVMSSInfrastructureMapping, infrastructureMapping: %s",
+              infrastructureMapping));
+    }
+    return (AzureWebAppInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
+  }
+
   public AzureConfig getAzureConfig(final String computeProviderSettingId) {
     SettingAttribute settingAttribute = settingsService.get(computeProviderSettingId);
     return (AzureConfig) settingAttribute.getValue();
@@ -320,6 +335,11 @@ public class AzureVMSSStateHelper {
   }
 
   public ExecutionStatus getExecutionStatus(AzureVMSSTaskExecutionResponse executionResponse) {
+    return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
+                                                                                           : ExecutionStatus.FAILED;
+  }
+
+  public ExecutionStatus getAppServieExecutionStatus(AzureTaskExecutionResponse executionResponse) {
     return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
                                                                                            : ExecutionStatus.FAILED;
   }
@@ -441,5 +461,35 @@ public class AzureVMSSStateHelper {
     return isNotBlank(newVirtualMachineScaleSetName)
         ? format(VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN, subscriptionId, resourceGroupName, newVirtualMachineScaleSetName)
         : EMPTY;
+  }
+
+  public AzureAppServiceStateData populateAzureAppServiceData(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = getWorkflowStandardParams(context);
+    Application application = getApplication(context);
+    Service service = getServiceByAppId(context, application.getUuid());
+    String serviceId = getServiceId(context);
+    Artifact artifact = getArtifact((DeploymentExecutionContext) context, service.getUuid());
+    Environment environment = getEnvironment(context);
+    AzureWebAppInfrastructureMapping infrastructureMapping =
+        getAzureWebAppInfrastructureMapping(context.fetchInfraMappingId(), application.getUuid());
+    AzureConfig azureConfig = getAzureConfig(infrastructureMapping.getComputeProviderSettingId());
+    List<EncryptedDataDetail> encryptionDetails =
+        getEncryptedDataDetails(context, infrastructureMapping.getComputeProviderSettingId());
+
+    return AzureAppServiceStateData.builder()
+        .artifact(artifact)
+        .application(application)
+        .service(service)
+        .serviceId(serviceId)
+        .environment(environment)
+        .azureConfig(azureConfig)
+        .resourceGroup(infrastructureMapping.getResourceGroup())
+        .subscriptionId(infrastructureMapping.getSubscriptionId())
+        .appService(infrastructureMapping.getWebApp())
+        .deploymentSlot(infrastructureMapping.getDeploymentSlot())
+        .infrastructureMapping(infrastructureMapping)
+        .azureEncryptedDataDetails(encryptionDetails)
+        .currentUser(workflowStandardParams.getCurrentUser())
+        .build();
   }
 }

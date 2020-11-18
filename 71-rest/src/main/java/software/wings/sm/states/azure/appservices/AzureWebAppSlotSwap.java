@@ -25,6 +25,7 @@ public class AzureWebAppSlotSwap extends State {
   @Getter @Setter private String resourceGroup;
   @Getter @Setter private String webApp;
   @Getter @Setter private String targetSlot;
+  public static final String APP_SERVICE_SLOT_SWAP = "App Service Slot Swap";
 
   public AzureWebAppSlotSwap(String name) {
     super(name, AZURE_WEBAPP_SLOT_SWAP.name());
