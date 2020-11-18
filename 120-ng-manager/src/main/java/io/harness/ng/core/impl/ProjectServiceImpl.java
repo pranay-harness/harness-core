@@ -9,7 +9,7 @@ import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
-import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChangedIfPresent;
+import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
@@ -198,8 +198,9 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
-    verifyValuesNotChangedIfPresent(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-        Pair.of(orgIdentifier, project.getOrgIdentifier())));
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
+                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
+        true);
     if (!organizationService.get(accountIdentifier, orgIdentifier).isPresent()) {
       throw new InvalidArgumentsException(
           String.format("Organization [%s] in Account [%s] does not exist", orgIdentifier, accountIdentifier),
@@ -209,7 +210,9 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void validateUpdateProjectRequest(
       String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project) {
-    verifyValuesNotChangedIfPresent(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-        Pair.of(orgIdentifier, project.getOrgIdentifier()), Pair.of(identifier, project.getIdentifier())));
+    verifyValuesNotChanged(
+        Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
+            Pair.of(orgIdentifier, project.getOrgIdentifier()), Pair.of(identifier, project.getIdentifier())),
+        true);
   }
 }
