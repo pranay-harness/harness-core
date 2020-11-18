@@ -11,7 +11,7 @@ import (
 	"github.com/wings-software/portal/product/log-service/server"
 	"github.com/wings-software/portal/product/log-service/store"
 	"github.com/wings-software/portal/product/log-service/store/bolt"
-	"github.com/wings-software/portal/product/log-service/store/minio"
+	"github.com/wings-software/portal/product/log-service/store/s3"
 	"github.com/wings-software/portal/product/log-service/stream"
 	"github.com/wings-software/portal/product/log-service/stream/memory"
 	"github.com/wings-software/portal/product/log-service/stream/redis"
@@ -40,19 +40,19 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	initLogging(config)
 
 	var store store.Store
-	if config.Minio.Bucket != "" {
-		// create the minio store.
-		store = minio.NewEnv(
-			config.Minio.Bucket,
-			config.Minio.Prefix,
-			config.Minio.Endpoint,
-			config.Minio.PathStyle,
+	if config.S3.Bucket != "" {
+		// create the s3 store.
+		logrus.Infof("configuring log store to use s3 compatible backend with endpoint: %s and bucket name: %s",
+			config.S3.Endpoint, config.S3.Bucket)
+		store = s3.NewEnv(
+			config.S3.Bucket,
+			config.S3.Prefix,
+			config.S3.Endpoint,
+			config.S3.PathStyle,
+			config.S3.AccessKeyID,
+			config.S3.AccessKeySecret,
+			config.S3.Region,
 		)
-		if err != nil {
-			logrus.WithError(err).
-				Fatalln("cannot initialize the minio database")
-			return err
-		}
 	} else {
 		// create the blob store.
 		store, err = bolt.New(config.Bolt.Path)

@@ -1,6 +1,6 @@
-// Package minio provides a log storage driver backed by
-// Minio or a Minio-compatible storage system.
-package minio
+// Package S3 provides a log storage driver backed by
+// S3 or a S3-compatible storage system.
+package s3
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/wings-software/portal/product/log-service/store"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,8 +20,8 @@ import (
 
 var _ store.Store = (*Store)(nil)
 
-// Store provides a log storage driver backed by Minio or a
-// Minio-compatible storage system.
+// Store provides a log storage driver backed by S3 or a
+// S3 compatible store.
 type Store struct {
 	bucket  string
 	prefix  string
@@ -28,7 +29,7 @@ type Store struct {
 }
 
 // NewEnv returns a new S3 log store from the environment.
-func NewEnv(bucket, prefix, endpoint string, pathStyle bool) *Store {
+func NewEnv(bucket, prefix, endpoint string, pathStyle bool, accessKeyID string, accessSecretKey string, region string) *Store {
 	disableSSL := false
 
 	if endpoint != "" {
@@ -40,9 +41,11 @@ func NewEnv(bucket, prefix, endpoint string, pathStyle bool) *Store {
 		prefix: prefix,
 		session: session.Must(
 			session.NewSession(&aws.Config{
+				Region:           aws.String(region),
 				Endpoint:         aws.String(endpoint),
 				DisableSSL:       aws.Bool(disableSSL),
 				S3ForcePathStyle: aws.Bool(pathStyle),
+				Credentials:      credentials.NewStaticCredentials(accessKeyID, accessSecretKey, ""),
 			}),
 		),
 	}
@@ -57,7 +60,7 @@ func New(session *session.Session, bucket, prefix string) *Store {
 	}
 }
 
-// Download downloads a log stream from the Minio datastore.
+// Download downloads a log stream from the S3 datastore.
 func (s *Store) Download(ctx context.Context, key string) (io.ReadCloser, error) {
 	svc := s3.New(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)
@@ -72,7 +75,7 @@ func (s *Store) Download(ctx context.Context, key string) (io.ReadCloser, error)
 }
 
 // DownloadLink creates a pre-signed link that can be used to
-// download the logs to the Minio datastore.
+// download the logs to the S3 datastore.
 func (s *Store) DownloadLink(ctx context.Context, key string, expire time.Duration) (string, error) {
 	svc := s3.New(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)
@@ -84,7 +87,7 @@ func (s *Store) DownloadLink(ctx context.Context, key string, expire time.Durati
 }
 
 // Upload uploads the log stream from Reader r to the
-// Minio datastore.
+// S3 datastore.
 func (s *Store) Upload(ctx context.Context, key string, r io.Reader) error {
 	uploader := s3manager.NewUploader(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)
@@ -99,7 +102,7 @@ func (s *Store) Upload(ctx context.Context, key string, r io.Reader) error {
 }
 
 // UploadLink creates a pre-signed link that can be used to
-// upload the logs to the Minio datastore.
+// upload the logs to the S3 datastore.
 func (s *Store) UploadLink(ctx context.Context, key string, expire time.Duration) (string, error) {
 	svc := s3.New(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)
@@ -110,7 +113,7 @@ func (s *Store) UploadLink(ctx context.Context, key string, expire time.Duration
 	return req.Presign(expire)
 }
 
-// Delete purges the log stream from the Minio datastore.
+// Delete purges the log stream from the S3 datastore.
 func (s *Store) Delete(ctx context.Context, key string) error {
 	svc := s3.New(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)

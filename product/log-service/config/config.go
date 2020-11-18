@@ -10,8 +10,8 @@ type Config struct {
 	Trace bool `envconfig:"LOG_SERVICE_TRACE"`
 
 	Secrets struct {
-		LogSecret   string `envconfig:"LOG_SERVICE_SECRET"`
-		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN"`
+		LogSecret   string `envconfig:"LOG_SERVICE_SECRET" default:"secret"`
+		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN" default:"token"`
 	}
 
 	Server struct {
@@ -25,11 +25,15 @@ type Config struct {
 		Path string `envconfig:"LOG_SERVICE_BOLT_PATH" default:"bolt.db"`
 	}
 
-	Minio struct {
-		Bucket    string `envconfig:"LOG_SERVICE_MINIO_BUCKET"`
-		Prefix    string `envconfig:"LOG_SERVICE_MINIO_PREFIX"`
-		Endpoint  string `envconfig:"LOG_SERVICE_MINIO_ENDPOINT"`
-		PathStyle bool   `envconfig:"LOG_SERVICE_MINIO_PATH_STYLE"`
+	// S3 compatible store
+	S3 struct {
+		Bucket          string `envconfig:"LOG_SERVICE_S3_BUCKET"`
+		Prefix          string `envconfig:"LOG_SERVICE_S3_PREFIX"`
+		Endpoint        string `envconfig:"LOG_SERVICE_S3_ENDPOINT"`
+		PathStyle       bool   `envconfig:"LOG_SERVICE_S3_PATH_STYLE"`
+		Region          string `envconfig:"LOG_SERVICE_S3_REGION"`
+		AccessKeyID     string `envconfig:"LOG_SERVICE_S3_ACCESS_KEY_ID"`
+		AccessKeySecret string `envconfig:"LOG_SERVICE_S3_SECRET_ACCESS_KEY"`
 	}
 
 	Redis struct {
