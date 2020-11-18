@@ -427,7 +427,6 @@ bazel test //path/to/project:target # will run the test named "target" under //p
 ```
 Note that test targets tagged as `manual` are skipped in `...` if not specified explicitly.
 
-
 Examples:
 #### Running all tests under lib:
 ```lang=bash
