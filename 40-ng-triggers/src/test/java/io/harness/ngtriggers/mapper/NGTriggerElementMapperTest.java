@@ -74,7 +74,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
                                           .collect(Collectors.toSet());
 
     assertThat(payloadConditionSet)
-        .containsOnly("sourceBranch:regex:^pr-[0-9a-f]{7}$", "targetBranch:regex:^pr-[0-9a-f]{7}$",
+        .containsOnly("sourceBranch:equals:dev", "targetBranch:in:master, on-prem",
             "${pull_request.number}:regex:^pr-[0-9a-f]{7}$");
   }
 
