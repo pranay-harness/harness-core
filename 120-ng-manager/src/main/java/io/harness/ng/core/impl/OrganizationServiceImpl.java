@@ -9,7 +9,7 @@ import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
-import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChangedIfPresent;
+import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
@@ -179,13 +179,13 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
-    verifyValuesNotChangedIfPresent(
-        Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())));
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
   }
 
   private void validateUpdateOrganizationRequest(
       String accountIdentifier, String identifier, OrganizationDTO organization) {
-    verifyValuesNotChangedIfPresent(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier()),
-        Pair.of(identifier, organization.getIdentifier())));
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier()),
+                               Pair.of(identifier, organization.getIdentifier())),
+        true);
   }
 }

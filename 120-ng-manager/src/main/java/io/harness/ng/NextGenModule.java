@@ -45,7 +45,9 @@ import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
+import io.harness.ng.core.api.impl.UserGroupServiceImpl;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
@@ -240,6 +242,7 @@ public class NextGenModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
+    bind(UserGroupService.class).to(UserGroupServiceImpl.class);
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);

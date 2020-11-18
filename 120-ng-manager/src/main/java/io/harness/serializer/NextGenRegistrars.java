@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NextGenMorphiaClassesRegistrar;
+import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 
 public class NextGenRegistrars {
@@ -21,6 +22,7 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
+          .add(UserGroupMorphiaRegistrar.class)
           .add(NextGenMorphiaClassesRegistrar.class)
           .build();
 

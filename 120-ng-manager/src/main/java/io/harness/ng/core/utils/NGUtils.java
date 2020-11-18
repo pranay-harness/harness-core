@@ -20,6 +20,12 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -48,13 +54,30 @@ public class NGUtils {
     }
   }
 
-  public static void verifyValuesNotChangedIfPresent(List<Pair<?, ?>> valuesList) {
-    for (Pair<?, ?> pair : valuesList) {
-      if (pair.getValue() != null && !pair.getKey().equals(pair.getValue())) {
-        throw new InvalidRequestException(
-            "Value mismatch, previous: " + pair.getKey() + " current: " + pair.getValue());
+  public static void verifyValuesNotChanged(List<Pair<?, ?>> valuesList, boolean present) {
+    if (present) {
+      for (Pair<?, ?> pair : valuesList) {
+        if (pair.getValue() != null && (pair.getKey() == null || !pair.getKey().equals(pair.getValue()))) {
+          throw new InvalidRequestException(
+              "Value mismatch, previous: " + pair.getKey() + " current: " + pair.getValue());
+        }
+      }
+    } else {
+      for (Pair<?, ?> pair : valuesList) {
+        if (!pair.getKey().equals(pair.getValue())) {
+          throw new InvalidRequestException(
+              "Value mismatch, previous: " + pair.getKey() + " current: " + pair.getValue());
+        }
       }
     }
+  }
+
+  public static <T> Page<T> getPaginatedResult(
+      Criteria criteria, Pageable pageable, Class<T> clazz, MongoTemplate mongoTemplate) {
+    Query query = new Query(criteria).with(pageable);
+    List<T> objects = mongoTemplate.find(query, clazz);
+    return PageableExecutionUtils.getPage(
+        objects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1L), clazz));
   }
 
   public static ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
