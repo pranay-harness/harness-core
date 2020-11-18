@@ -12,7 +12,7 @@ go_library(
         "//product/log-service/xxxxxxxxgo_default_library",
         "//product/log-service/store:go_default_library",
         "//product/log-service/store/bolt:go_default_library",
-        "//product/log-service/store/minio:go_default_library",
+        "//product/log-service/store/s3:go_default_library",
         "//product/log-service/stream:go_default_library",
         "//product/log-service/stream/memory:go_default_library",
         "//product/log-service/stream/redis:go_default_library",
