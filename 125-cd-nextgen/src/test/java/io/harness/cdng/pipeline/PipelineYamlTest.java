@@ -30,8 +30,14 @@ import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureType;
+import io.harness.yaml.core.failurestrategy.OnFailureConfig;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
+import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
@@ -68,7 +74,35 @@ public class PipelineYamlTest extends CategoryTest {
 
     // First Stage
     StageElementWrapper stageWrapper = ngPipeline.getStages().get(0);
-    DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
+    StageElement stageElement = (StageElement) stageWrapper;
+
+    // Stage Failure Strategy
+    assertThat(stageElement.getFailureStrategies().size()).isEqualTo(3);
+
+    OnFailureConfig onFailure = stageElement.getFailureStrategies().get(0).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.TIMEOUT_ERROR);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.ABORT);
+
+    onFailure = stageElement.getFailureStrategies().get(1).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.CONNECTIVITY_ERROR);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MANUAL_INTERVENTION);
+    ManualInterventionFailureActionConfig manualAction = (ManualInterventionFailureActionConfig) onFailure.getAction();
+    assertThat(manualAction.getSpecConfig().getTimeout()).isEqualTo("1d");
+    assertThat(manualAction.getSpecConfig().getOnTimeout().getAction().getType()).isEqualTo(NGFailureActionType.IGNORE);
+
+    onFailure = stageElement.getFailureStrategies().get(2).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
+    RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
+    assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
+    assertThat(retryAction.getSpecConfig().getRetryInterval().size()).isEqualTo(2);
+    assertThat(retryAction.getSpecConfig().getOnRetryFailure().getAction().getType())
+        .isEqualTo(NGFailureActionType.ABORT);
+
+    DeploymentStage deploymentStage = (DeploymentStage) stageElement.getStageType();
 
     // StageVariables
     assertThat(deploymentStage.getVariables().size()).isEqualTo(2);
@@ -204,6 +238,32 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(k8sStepInfo.getSkipDryRun().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
 
+    StepGroupElement stepGroupElement = (StepGroupElement) steps.get(1);
+    assertThat(stepGroupElement.getFailureStrategies().size()).isEqualTo(1);
+    onFailure = stepGroupElement.getFailureStrategies().get(0).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(4);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.AUTHENTICATION_ERROR);
+    assertThat(onFailure.getErrors().get(1)).isEqualTo(NGFailureType.AUTHORIZATION_ERROR);
+    assertThat(onFailure.getErrors().get(2)).isEqualTo(NGFailureType.VERIFICATION_ERROR);
+    assertThat(onFailure.getErrors().get(3)).isEqualTo(NGFailureType.DELEGATE_PROVISIONING_ERROR);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.ABORT);
+
+    stepElement = (StepElement) steps.get(2);
+    assertThat(stepElement.getFailureStrategies().size()).isEqualTo(3);
+
+    onFailure = stepElement.getFailureStrategies().get(0).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.TIMEOUT_ERROR);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.STEP_GROUP_ROLLBACK);
+    onFailure = stepElement.getFailureStrategies().get(1).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.CONNECTIVITY_ERROR);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.STAGE_ROLLBACK);
+    onFailure = stepElement.getFailureStrategies().get(2).getOnFailure();
+    assertThat(onFailure.getErrors().size()).isEqualTo(1);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MARK_AS_SUCCESS);
+
     stepElement = (StepElement) deploymentStage.getExecution().getRollbackSteps().get(0);
     K8sRollingRollbackStepInfo rollbackStepInfo = (K8sRollingRollbackStepInfo) stepElement.getStepSpecType();
     assertThat(rollbackStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
@@ -215,7 +275,8 @@ public class PipelineYamlTest extends CategoryTest {
 
     // Second stage
     stageWrapper = ngPipeline.getStages().get(1);
-    deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
+    stageElement = (StageElement) stageWrapper;
+    deploymentStage = (DeploymentStage) stageElement.getStageType();
 
     // Service
     service = deploymentStage.getService();

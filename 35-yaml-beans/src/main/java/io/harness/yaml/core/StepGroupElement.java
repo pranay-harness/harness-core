@@ -10,6 +10,7 @@ import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,9 @@ import javax.validation.constraints.NotNull;
 public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;
+
+  List<FailureStrategyConfig> failureStrategies;
+
   @NotNull List<ExecutionWrapper> steps;
   List<ExecutionWrapper> rollbackSteps;
 

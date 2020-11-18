@@ -13,19 +13,19 @@ import lombok.experimental.UtilityClass;
 public class YamlBeansModuleRegistrars {
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
+          .addAll(OrchestrationRegistrars.aliasRegistrars)
           .add(YamlBeansAliasRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
+          .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(YamlKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(YamlMorphiaRegistrar.class)
           .build();
 }
