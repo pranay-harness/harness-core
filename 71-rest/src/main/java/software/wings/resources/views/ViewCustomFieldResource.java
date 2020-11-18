@@ -1,15 +1,20 @@
 package software.wings.resources.views;
 
+import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
+
+import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.graphql.CustomFieldExpressionHelper;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestBody;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -28,12 +33,17 @@ import javax.ws.rs.core.Response;
 public class ViewCustomFieldResource {
   private ViewCustomFieldService viewCustomFieldService;
   private CustomFieldExpressionHelper customFieldExpressionHelper;
+  private BigQueryService bigQueryService;
+  private CloudBillingHelper cloudBillingHelper;
 
   @Inject
-  public ViewCustomFieldResource(
-      ViewCustomFieldService viewCustomFieldService, CustomFieldExpressionHelper customFieldExpressionHelper) {
+  public ViewCustomFieldResource(ViewCustomFieldService viewCustomFieldService,
+      CustomFieldExpressionHelper customFieldExpressionHelper, BigQueryService bigQueryService,
+      CloudBillingHelper cloudBillingHelper) {
     this.viewCustomFieldService = viewCustomFieldService;
     this.customFieldExpressionHelper = customFieldExpressionHelper;
+    this.bigQueryService = bigQueryService;
+    this.cloudBillingHelper = cloudBillingHelper;
   }
 
   @POST
@@ -43,7 +53,9 @@ public class ViewCustomFieldResource {
       @QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
     viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
         viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
-    return new RestResponse<>(viewCustomFieldService.save(viewCustomField));
+    BigQuery bigQuery = bigQueryService.get();
+    String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
+    return new RestResponse<>(viewCustomFieldService.save(viewCustomField, bigQuery, cloudProviderTableName));
   }
 
   @GET
@@ -54,6 +66,20 @@ public class ViewCustomFieldResource {
     return new RestResponse<>(viewCustomFieldService.get(customFieldId));
   }
 
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("/validate")
+  public Response validate(@QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
+    viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
+        viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
+    BigQuery bigQuery = bigQueryService.get();
+    String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
+    viewCustomFieldService.validate(viewCustomField, bigQuery, cloudProviderTableName);
+    RestResponse rr = new RestResponse("Valid Formula");
+    return prepareResponse(rr, Response.Status.OK);
+  }
+
   @PUT
   @Timed
   @ExceptionMetered
@@ -62,7 +88,9 @@ public class ViewCustomFieldResource {
     viewCustomField.setAccountId(accountId);
     viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
         viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
-    return new RestResponse<>(viewCustomFieldService.update(viewCustomField));
+    BigQuery bigQuery = bigQueryService.get();
+    String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
+    return new RestResponse<>(viewCustomFieldService.update(viewCustomField, bigQuery, cloudProviderTableName));
   }
 
   @DELETE

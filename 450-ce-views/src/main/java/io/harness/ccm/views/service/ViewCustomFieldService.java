@@ -1,12 +1,14 @@
 package io.harness.ccm.views.service;
 
+import com.google.cloud.bigquery.BigQuery;
+
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 
 import java.util.List;
 
 public interface ViewCustomFieldService {
-  ViewCustomField save(ViewCustomField viewCustomField);
+  ViewCustomField save(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName);
 
   List<ViewField> getCustomFields(String accountId);
 
@@ -14,7 +16,9 @@ public interface ViewCustomFieldService {
 
   ViewCustomField get(String uuid);
 
-  ViewCustomField update(ViewCustomField viewCustomField);
+  ViewCustomField update(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName);
+
+  boolean validate(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName);
 
   boolean delete(String uuid, String accountId);
 

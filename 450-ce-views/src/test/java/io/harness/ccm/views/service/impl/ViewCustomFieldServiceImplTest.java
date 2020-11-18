@@ -5,6 +5,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.doReturn;
 
+import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
@@ -25,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 public class ViewCustomFieldServiceImplTest extends CategoryTest {
   @InjectMocks @Inject private ViewCustomFieldServiceImpl viewCustomFieldService;
   @Mock private ViewCustomFieldDao viewCustomFieldDao;
+  @Mock BigQuery bigQuery;
 
   private static final String ACCOUNT_ID = "account_id";
   private static final String VIEW_ID = "view_id";
@@ -43,7 +45,7 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
   public void shouldThrowExceptionWhileSavingCustomField() {
     doReturn(viewCustomField()).when(viewCustomFieldDao).findByName(ACCOUNT_ID, VIEW_ID, CUSTOM_FIELD_NAME);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> viewCustomFieldService.save(viewCustomField()));
+        .isThrownBy(() -> viewCustomFieldService.save(viewCustomField(), bigQuery, "tableName"));
   }
 
   private ViewCustomField viewCustomField() {

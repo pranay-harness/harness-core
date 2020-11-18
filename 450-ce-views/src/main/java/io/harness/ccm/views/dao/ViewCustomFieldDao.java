@@ -74,6 +74,7 @@ public class ViewCustomFieldDao {
             .set(ViewCustomFieldKeys.name, viewCustomField.getName())
             .set(ViewCustomFieldKeys.viewFields, viewCustomField.getViewFields())
             .set(ViewCustomFieldKeys.sqlFormula, viewCustomField.getSqlFormula())
+            .set(ViewCustomFieldKeys.displayFormula, viewCustomField.getDisplayFormula())
             .set(ViewCustomFieldKeys.description, viewCustomField.getDescription())
             .set(ViewCustomFieldKeys.userDefinedExpression, viewCustomField.getUserDefinedExpression());
     hPersistence.update(query, updateOperations);
