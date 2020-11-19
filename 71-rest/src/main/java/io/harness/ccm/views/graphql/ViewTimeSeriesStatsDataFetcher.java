@@ -1,7 +1,6 @@
 package io.harness.ccm.views.graphql;
 
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.convertTimeSeriesPointsMapToList;
-import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.fetchStringValue;
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.getNumericValue;
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.graphql.datafetcher.billing.CloudTimeSeriesStatsDataFetcher.OTHERS;
@@ -42,6 +41,8 @@ public class ViewTimeSeriesStatsDataFetcher
   @Inject CloudBillingHelper cloudBillingHelper;
   @Inject BigQueryService bigQueryService;
   @Inject BillingDataHelper billingDataHelper;
+
+  public static final String nullStringValueConstant = "Others";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -92,6 +93,14 @@ public class ViewTimeSeriesStatsDataFetcher
     }
 
     return QLViewTimeSeriesData.builder().stats(convertTimeSeriesPointsMapToList(timeSeriesDataPointsMap)).build();
+  }
+
+  public static String fetchStringValue(FieldValueList row, Field field) {
+    Object value = row.get(field.getName()).getValue();
+    if (value != null) {
+      return value.toString();
+    }
+    return nullStringValueConstant;
   }
 
   private double getRoundedDoubleValue(double value) {

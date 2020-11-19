@@ -19,6 +19,7 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
+import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HIterator;
@@ -47,6 +48,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.security.UserGroup;
@@ -71,15 +73,17 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   private final HPersistence persistence;
   private final WingsPersistence wingsPersistence;
   private final DeploymentService deploymentService;
+  private final CEMetadataRecordDao ceMetadataRecordDao;
 
   private static final String EXC_MSG_USER_DOESNT_EXIST = "User does not exist";
 
   @Inject
-  public CloudToHarnessMappingServiceImpl(
-      HPersistence persistence, WingsPersistence wingsPersistence, DeploymentService deploymentService) {
+  public CloudToHarnessMappingServiceImpl(HPersistence persistence, WingsPersistence wingsPersistence,
+      DeploymentService deploymentService, CEMetadataRecordDao ceMetadataRecordDao) {
     this.persistence = persistence;
     this.wingsPersistence = wingsPersistence;
     this.deploymentService = deploymentService;
+    this.ceMetadataRecordDao = ceMetadataRecordDao;
   }
 
   @Override
@@ -481,5 +485,10 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       }
     }
     return userGroups;
+  }
+
+  @Override
+  public CEMetadataRecord upsertCEMetaDataRecord(CEMetadataRecord ceMetadataRecord) {
+    return ceMetadataRecordDao.upsert(ceMetadataRecord);
   }
 }

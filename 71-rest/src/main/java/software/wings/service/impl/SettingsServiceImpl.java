@@ -62,6 +62,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
@@ -122,6 +123,7 @@ import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEGcpConfig;
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -230,6 +232,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
   @Inject @Getter private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
   @Inject private SettingAttributeDao settingAttributeDao;
+  @Inject private CEMetadataRecordDao ceMetadataRecordDao;
 
   private static final String OPEN_SSH = "OPENSSH";
 
@@ -717,6 +720,8 @@ public class SettingsServiceImpl implements SettingsService {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
+      ceMetadataRecordDao.upsert(
+          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
     settingValidationService.validate(settingAttribute);
@@ -781,6 +786,13 @@ public class SettingsServiceImpl implements SettingsService {
           isGCPConnectorPresent = true;
         }
       }
+
+      ceMetadataRecordDao.upsert(
+          CEMetadataRecord.builder()
+              .accountId(settingAttribute.getAccountId())
+              .awsConnectorConfigured(isAwsConnectorPresent || (settingAttribute.getValue() instanceof CEAwsConfig))
+              .gcpConnectorConfigured(isGCPConnectorPresent || (settingAttribute.getValue() instanceof CEGcpConfig))
+              .build());
 
       int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
       int currentCloudAccountsCount = settingAttributesList.size();
@@ -965,6 +977,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
+      ceMetadataRecordDao.upsert(
+          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
 

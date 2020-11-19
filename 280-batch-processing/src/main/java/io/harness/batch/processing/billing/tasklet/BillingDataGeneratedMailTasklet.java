@@ -18,6 +18,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.User;
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -65,6 +66,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder().clusterDataConfigured(true).build());
     log.info("Running BillingDataGeneratedMailTasklet for accountId : {}", accountId);
     boolean notificationSend = notificationDao.isMailSent(accountId);
     if (!notificationSend) {
