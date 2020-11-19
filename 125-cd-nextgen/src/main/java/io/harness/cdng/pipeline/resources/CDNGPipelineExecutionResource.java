@@ -88,7 +88,7 @@ public class CDNGPipelineExecutionResource {
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
     return ResponseDTO.newResponse(ngPipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, useFQNIfErrorResponse, EMBEDDED_USER));
+        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null, useFQNIfErrorResponse, EMBEDDED_USER));
   }
 
   @POST

@@ -26,4 +26,8 @@ public class AmbianceHelper {
         .projectIdentifier(getProjectIdentifier(ambiance))
         .build();
   }
+
+  public String getEventPayload(Ambiance ambiance) {
+    return ambiance.getSetupAbstractions().get("EventPayload");
+  }
 }

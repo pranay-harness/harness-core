@@ -24,4 +24,6 @@ public interface NGTriggerService {
       String identifier, Long version);
 
   TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord);
+  TriggerWebhookEvent updateTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
+  void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
 }

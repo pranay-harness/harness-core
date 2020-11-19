@@ -3,6 +3,7 @@ package io.harness.cdng.expressions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
@@ -10,6 +11,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ngpipeline.expressions.functors.OrgFunctor;
 import io.harness.ngpipeline.expressions.functors.ProjectFunctor;
+import io.harness.ngtriggers.functor.EventPayloadFunctor;
 
 import java.util.Set;
 
@@ -30,5 +32,6 @@ public class CDExpressionEvaluator extends AmbianceExpressionEvaluator {
     // TODO(archit): Add new AccountService when done for NG
     addToContext("org", new OrgFunctor(organizationService, ambiance));
     addToContext("project", new ProjectFunctor(projectService, ambiance));
+    addToContext(PipelinePlanCreator.EVENT_PAYLOAD_KEY, new EventPayloadFunctor(ambiance));
   }
 }

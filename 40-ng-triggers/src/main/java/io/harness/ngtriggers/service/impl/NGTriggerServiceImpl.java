@@ -9,9 +9,10 @@ import io.harness.exception.WingsException;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.repository.spring.NGTriggerRepository;
-import io.harness.ngtriggers.repository.spring.NGTriggerWebhookEventQueueRepository;
+import io.harness.ngtriggers.repository.spring.TriggerWebhookEventRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @Slf4j
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
-  private final NGTriggerWebhookEventQueueRepository webhookEventQueueRepository;
+  private final TriggerWebhookEventRepository webhookEventQueueRepository;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -90,6 +91,26 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     } catch (Exception e) {
       throw new InvalidRequestException("Webhook event could not be received");
     }
+  }
+
+  @Override
+  public TriggerWebhookEvent updateTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord) {
+    Criteria criteria = getTriggerWebhookEventEqualityCriteria(webhookEventQueueRecord);
+    TriggerWebhookEvent updatedEntity = webhookEventQueueRepository.update(criteria, webhookEventQueueRecord);
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          "TriggerWebhookEvent with uuid " + webhookEventQueueRecord.getUuid() + " could not be updated");
+    }
+    return updatedEntity;
+  }
+
+  @Override
+  public void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord) {
+    webhookEventQueueRepository.delete(webhookEventQueueRecord);
+  }
+
+  private Criteria getTriggerWebhookEventEqualityCriteria(TriggerWebhookEvent webhookEventQueueRecord) {
+    return Criteria.where(TriggerWebhookEventsKeys.uuid).is(webhookEventQueueRecord.getUuid());
   }
 
   private Criteria getTriggerEqualityCriteria(NGTriggerEntity ngTriggerEntity, boolean deleted) {
