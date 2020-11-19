@@ -31,6 +31,7 @@ public class VariableController {
                    .allowMultipleValues(variable.isAllowMultipleValues())
                    .defaultValue(variable.getValue())
                    .fixed(variable.isFixed())
+                   .runtimeInput(variable.getRuntimeInput())
                    .build())
         .forEach(qlVariables::add);
   }
