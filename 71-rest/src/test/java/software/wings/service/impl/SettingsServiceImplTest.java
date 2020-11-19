@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
@@ -43,8 +44,10 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -392,5 +395,21 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     settingsService.validateSettingAttribute(repoSetting, repoSetting);
     settingsService.validateSettingAttribute(emptySetting, repoSetting);
     settingsService.validateSettingAttribute(emptySetting, accountSetting);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnTrueWhenSettingAttributeValueIsInstanceOfGcpConfig() {
+    SettingAttribute settingAttribute = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
+    assertThat(settingsService.isSettingValueGcp(settingAttribute)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenSettingAttributeValueIsNotInstanceOfGcpConfig() {
+    SettingAttribute settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    assertThat(settingsService.isSettingValueGcp(settingAttribute)).isFalse();
   }
 }

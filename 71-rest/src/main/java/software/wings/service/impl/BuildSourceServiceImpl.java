@@ -36,6 +36,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
+import software.wings.beans.SyncTaskContext.SyncTaskContextBuilder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -70,6 +71,7 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -426,15 +428,17 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
-    SyncTaskContext syncTaskContext =
+    SyncTaskContextBuilder syncTaskContextBuilder =
         SyncTaskContext.builder()
             .accountId(settingAttribute.getAccountId())
             .appId(appId)
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
                         || settingAttribute.getValue().getType().equals(SettingVariableTypes.BAMBOO.name())
                     ? 120 * 1000
-                    : DEFAULT_SYNC_CALL_TIMEOUT)
-            .build();
+                    : DEFAULT_SYNC_CALL_TIMEOUT);
+    SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
+        ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
+        : syncTaskContextBuilder.build();
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
 
@@ -460,8 +464,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return getBuildService(settingAttribute, appId);
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000).build();
+    SyncTaskContextBuilder syncTaskContextBuilder =
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000);
+    SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
+        ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
+        : syncTaskContextBuilder.build();
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 
@@ -503,13 +510,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildService getBuildService(SettingAttribute settingAttribute) {
-    SyncTaskContext syncTaskContext =
+    SyncTaskContextBuilder syncTaskContextBuilder =
         SyncTaskContext.builder()
             .accountId(settingAttribute.getAccountId())
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
                     ? 120 * 1000
-                    : DEFAULT_SYNC_CALL_TIMEOUT)
-            .build();
+                    : DEFAULT_SYNC_CALL_TIMEOUT);
+    SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
+        ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
+        : syncTaskContextBuilder.build();
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
 
@@ -518,8 +527,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return getBuildService(settingAttribute);
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(120 * 1000).build();
+    SyncTaskContextBuilder syncTaskContextBuilder =
+        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(120 * 1000);
+    SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
+        ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
+        : syncTaskContextBuilder.build();
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 
@@ -738,5 +750,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
                       .build())
             .build());
     return delegateResponseData.getTriggers();
+  }
+
+  private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
+    return settingsService.isSettingValueGcp(settingAttribute)
+        && ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+  }
+
+  private SyncTaskContext appendDelegateSelector(
+      SettingAttribute settingAttribute, SyncTaskContextBuilder syncTaskContextBuilder) {
+    return syncTaskContextBuilder.tags(Arrays.asList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector()))
+        .build();
   }
 }
