@@ -2,7 +2,6 @@ package io.harness.batch.processing.config.k8s.recommendation;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -225,17 +224,6 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("cpu", "1")
                        .limit("memory", "2G")
                        .build());
-  }
-
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldThrowOnNonDirtyWrite() throws Exception {
-    List<K8sWorkloadRecommendation> recommendations =
-        ImmutableList.of(K8sWorkloadRecommendation.builder().dirty(false).build());
-    assertThatThrownBy(() -> computedRecommendationWriter.write(recommendations))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Dirty flag should be set");
   }
 
   @Test
