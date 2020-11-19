@@ -27,6 +27,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.PmsSdkConfiguration;
+import io.harness.PmsSdkModule;
+import io.harness.cdng.creator.NGPlanCreatorProvider;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
@@ -148,6 +151,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerAuthFilters(appConfig, environment, injector);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookService.class).registerIterators();
+
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
+                                        .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
+                                        .planCreatorProvider(new NGPlanCreatorProvider())
+                                        .build();
+    PmsSdkModule.initializeDefaultInstance(sdkConfig);
+
     MaintenanceController.forceMaintenance(false);
   }
 

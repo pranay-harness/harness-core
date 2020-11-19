@@ -18,11 +18,19 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({PmsSdkModule.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
 public class NGAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
   public static DropwizardTestSupport<NextGenConfiguration> SUPPORT;
@@ -48,6 +56,8 @@ public class NGAppStartupTest extends CategoryTest {
   @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
+    PowerMockito.mockStatic(PmsSdkModule.class);
+    //    initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,
         ResourceHelpers.resourceFilePath("test-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
     SUPPORT.before();

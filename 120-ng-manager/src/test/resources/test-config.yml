@@ -89,3 +89,11 @@ smtp:
   useSSL: true
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
+
+pmsSdkGrpcServerConfig:
+  connectors:
+    - port: 12101
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost

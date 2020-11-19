@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -40,7 +40,22 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>22-timeout-engine</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>26-pms-contracts-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>31-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>40-pms-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
