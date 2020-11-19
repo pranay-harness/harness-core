@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.connector.types;
 
 import io.harness.exception.InvalidRequestException;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
-import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -11,9 +11,9 @@ public class ConnectorFactory {
     throw new IllegalStateException("Utility class");
   }
 
-  public static Connector getConnector(QLConnectorInput input, ConnectorsController connectorsController,
+  public static Connector getConnector(QLConnectorType qlConnectorType, ConnectorsController connectorsController,
       SecretManager secretManager, SettingsService settingsService) {
-    switch (input.getConnectorType()) {
+    switch (qlConnectorType) {
       case GIT:
         return new GitConnector(secretManager, settingsService, connectorsController);
       case DOCKER:

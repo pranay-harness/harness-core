@@ -46,7 +46,8 @@ public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnect
       throw new InvalidRequestException("Invalid connector type provided");
     }
 
-    Connector connector = ConnectorFactory.getConnector(input, connectorsController, secretManager, settingsService);
+    Connector connector =
+        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
     connector.checkInputExists(input);
     connector.checkSecrets(input, accountId);
     SettingAttribute settingAttribute = connector.getSettingAttribute(input, accountId);

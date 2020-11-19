@@ -8,6 +8,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -41,7 +42,7 @@ public class NexusConnector extends Connector {
   }
 
   @Override
-  public void updateSettingAttribute(SettingAttribute settingAttribute, QLConnectorInput input) {
+  public void updateSettingAttribute(SettingAttribute settingAttribute, QLUpdateConnectorInput input) {
     QLNexusConnectorInput nexusConnectorInput = input.getNexusConnector();
     NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
 
@@ -59,6 +60,10 @@ public class NexusConnector extends Connector {
   @Override
   public void checkSecrets(QLConnectorInput input, String accountId) {
     QLNexusConnectorInput nexusConnectorInput = input.getNexusConnector();
+    checkNexusConnectorSecrets(accountId, nexusConnectorInput);
+  }
+
+  private void checkNexusConnectorSecrets(String accountId, QLNexusConnectorInput nexusConnectorInput) {
     checkUserNameExists(nexusConnectorInput);
 
     nexusConnectorInput.getPasswordSecretId().getValue().ifPresent(
@@ -66,7 +71,18 @@ public class NexusConnector extends Connector {
   }
 
   @Override
+  public void checkSecrets(QLUpdateConnectorInput input, SettingAttribute settingAttribute) {
+    QLNexusConnectorInput nexusConnectorInput = input.getNexusConnector();
+    checkNexusConnectorSecrets(settingAttribute.getAccountId(), nexusConnectorInput);
+  }
+
+  @Override
   public void checkInputExists(QLConnectorInput input) {
+    connectorsController.checkInputExists(input.getConnectorType(), input.getNexusConnector());
+  }
+
+  @Override
+  public void checkInputExists(QLUpdateConnectorInput input) {
     connectorsController.checkInputExists(input.getConnectorType(), input.getNexusConnector());
   }
 

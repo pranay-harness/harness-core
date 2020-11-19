@@ -20,7 +20,7 @@ input UpdateConnectorInput {
   clientMutationId: String
   connectorId: String!
   connectorType: ConnectorType!
-  gitConnector: GitConnectorInput
+  gitConnector: UpdateGitConnectorInput
   dockerConnector: DockerConnectorInput
   nexusConnector: NexusConnectorInput
   helmConnector: HelmConnectorInput
@@ -50,6 +50,17 @@ input GitConnectorInput {
   userName: String
   URL: String!
   urlType: UrlType!
+  branch: String
+  passwordSecretId: String
+  sshSettingId: String
+  generateWebhookUrl: Boolean
+  customCommitDetails: CustomCommitDetailsInput
+}
+
+input UpdateGitConnectorInput {
+  name: String
+  userName: String
+  URL: String
   branch: String
   passwordSecretId: String
   sshSettingId: String
