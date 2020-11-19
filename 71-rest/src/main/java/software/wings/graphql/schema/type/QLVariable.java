@@ -20,5 +20,6 @@ public class QLVariable implements QLObject {
   String defaultValue;
   boolean fixed;
   String description;
+  Boolean runtimeInput;
   boolean allowMultipleValues;
 }

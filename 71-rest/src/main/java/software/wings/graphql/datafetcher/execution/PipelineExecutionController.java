@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -58,6 +59,7 @@ import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutio
 import software.wings.graphql.schema.type.QLPipelineStageExecution;
 import software.wings.graphql.schema.type.QLVariable;
 import software.wings.graphql.schema.type.QLWorkflowStageExecution;
+import software.wings.graphql.schema.type.QLWorkflowStageExecution.QLWorkflowStageExecutionBuilder;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
@@ -181,18 +183,28 @@ public class PipelineExecutionController {
                 .orElseThrow(() -> new UnexpectedException("Expected at least one workflow execution"))
                 .getUuid();
       }
-      WorkflowVariablesMetadata metadata = workflowExecutionService.fetchWorkflowVariables(
-          pipeline.getAppId(), args, pipelineExecutionId, execution.getPipelineStageElementId());
+      QLWorkflowStageExecutionBuilder builder = QLWorkflowStageExecution.builder();
+      if (ExecutionStatus.PAUSED.equals(execution.getStatus())) {
+        // We will set variables only for paused pipeline stages.
+        // Since we do not store information about a WF definition in the execution entity
+        // we need to read the WF every time and this can be different from the time of execution.
+        // We need Workflow variables here. For which we need to read from DB.
+        try {
+          WorkflowVariablesMetadata metadata = workflowExecutionService.fetchWorkflowVariables(
+              pipeline.getAppId(), args, pipelineExecutionId, execution.getPipelineStageElementId());
 
-      List<QLVariable> variables = new ArrayList<>();
-      VariableController.populateVariables(metadata.getWorkflowVariables(), variables);
-      return QLWorkflowStageExecution.builder()
-          .pipelineStageElementId(execution.getPipelineStageElementId())
+          List<QLVariable> variables = new ArrayList<>();
+          VariableController.populateVariables(metadata.getWorkflowVariables(), variables);
+          builder.runtimeInputVariables(variables);
+        } catch (Exception e) {
+          log.warn("Exception was thrown try to fetch runtime variables for a paused pipeline stage", e);
+        }
+      }
+      return builder.pipelineStageElementId(execution.getPipelineStageElementId())
           .pipelineStageName(element.getProperties().get("stageName").toString())
           .pipelineStepName(element.getName())
           .status(ExecutionController.convertStatus(execution.getStatus()))
           .workflowExecutionId(workflowExecutionId)
-          .runtimeInputVariables(variables)
           .build();
     }
   }
