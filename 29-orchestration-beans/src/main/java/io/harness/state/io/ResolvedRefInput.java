@@ -1,6 +1,6 @@
 package io.harness.state.io;
 
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;

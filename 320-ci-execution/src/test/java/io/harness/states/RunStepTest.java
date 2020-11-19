@@ -20,7 +20,8 @@ import io.harness.exception.FailureType;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.pms.refobjects.RefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
@@ -50,7 +51,7 @@ public class RunStepTest extends CIExecutionTest {
   private Ambiance ambiance;
   private RunStepInfo stepInfo;
   private StepInputPackage stepInputPackage;
-  private SweepingOutputRefObject refObject;
+  private RefObject refObject;
   private StepTaskDetails stepTaskDetails;
   private final String callbackId = UUID.randomUUID().toString();
   private Map<String, ResponseData> responseDataMap;
@@ -60,7 +61,7 @@ public class RunStepTest extends CIExecutionTest {
     ambiance = Ambiance.builder().build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
-    refObject = SweepingOutputRefObject.builder().name(CALLBACK_IDS).build();
+    refObject = RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS);
     Map<String, String> callbackIds = new HashMap<>();
     callbackIds.put(STEP_ID, callbackId);
     stepTaskDetails = StepTaskDetails.builder().taskIds(callbackIds).build();

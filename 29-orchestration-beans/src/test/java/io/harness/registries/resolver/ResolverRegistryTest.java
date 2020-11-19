@@ -11,7 +11,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.refobjects.RefType;
 import io.harness.references.OrchestrationRefType;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;

@@ -22,7 +22,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
-import io.harness.references.OutcomeRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
@@ -54,11 +54,11 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepTransput transput = new DummyOutcome("value");
     StepInputPackage inputPackage = StepInputPackage.builder()
                                         .input(ResolvedRefInput.builder()
-                                                   .refObject(OutcomeRefObject.builder().key("TEST").build())
+                                                   .refObject(RefObjectUtil.getOutcomeRefObject("TEST"))
                                                    .transput(transput)
                                                    .build())
                                         .input(ResolvedRefInput.builder()
-                                                   .refObject(OutcomeRefObject.builder().key("TEST").build())
+                                                   .refObject(RefObjectUtil.getOutcomeRefObject("TEST"))
                                                    .transput(transput)
                                                    .build())
                                         .build();

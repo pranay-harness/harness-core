@@ -42,7 +42,7 @@ import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
-import io.harness.references.OutcomeRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.BarrierStep;
@@ -125,7 +125,7 @@ public class CustomExecutionProvider {
                     FacilitatorObtainment.newBuilder()
                         .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                         .build())
-                .refObject(OutcomeRefObject.builder().name("http").producerId(httpNodeId).build())
+                .refObject(RefObjectUtil.getOutcomeRefObject("http", httpNodeId, null))
                 .build())
         .node(
             PlanNode.builder()
@@ -1501,7 +1501,7 @@ public class CustomExecutionProvider {
                       FacilitatorObtainment.newBuilder()
                           .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                           .build())
-                  .refObject(OutcomeRefObject.builder().name("http").producerId(httpSwitchId).build())
+                  .refObject(RefObjectUtil.getOutcomeRefObject("http", httpSwitchId, null))
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)

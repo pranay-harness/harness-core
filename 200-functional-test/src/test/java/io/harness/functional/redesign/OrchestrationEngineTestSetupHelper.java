@@ -20,6 +20,7 @@ import io.harness.functional.redesign.mixins.ambiance.AmbianceTestMixin;
 import io.harness.functional.redesign.mixins.facilitatorobtainment.FacilitatorObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.facilitatortype.FacilitatorTypeTestMixin;
 import io.harness.functional.redesign.mixins.outcome.OutcomeTestMixin;
+import io.harness.functional.redesign.mixins.refobject.RefObjectTestMixin;
 import io.harness.functional.redesign.mixins.reftype.RefTypeTestMixin;
 import io.harness.functional.redesign.mixins.stepType.StepTypeTestMixin;
 import io.harness.functional.redesign.mixins.stepparameters.StepParametersTestMixin;
@@ -29,6 +30,7 @@ import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.refobjects.RefType;
 import io.harness.pms.steps.StepType;
 import io.harness.rest.RestResponse;
@@ -68,6 +70,7 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(RefType.class, RefTypeTestMixin.class);
                       mapper.addMixIn(FacilitatorObtainment.class, FacilitatorObtainmentTestMixin.class);
                       mapper.addMixIn(StepType.class, StepTypeTestMixin.class);
+                      mapper.addMixIn(RefObject.class, RefObjectTestMixin.class);
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))

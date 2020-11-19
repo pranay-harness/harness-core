@@ -27,7 +27,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
@@ -59,7 +59,7 @@ public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
       Ambiance ambiance, BuildStepInfo buildStepInfo, StepInputPackage inputPackage, PassThroughData passThroughData) {
     try {
       K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-          ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
+          ambiance, RefObjectUtil.getSweepingOutputRefObject(ContextElement.podDetails));
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
 

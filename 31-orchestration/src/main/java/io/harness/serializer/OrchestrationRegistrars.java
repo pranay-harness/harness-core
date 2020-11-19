@@ -6,14 +6,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
-import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
-import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
-import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
-import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
-import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.*;
 import io.harness.serializer.spring.OrchestrationAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
@@ -51,6 +44,7 @@ public class OrchestrationRegistrars {
           .add(AmbianceMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
           .add(StepTypeMorphiaConverter.class)
+          .add(RefObjectMorphiaConverter.class)
           .add(AdviserTypeMorphiaConverter.class)
           .add(AdviserObtainmentMorphiaConverter.class)
           .add(FacilitatorTypeMorphiaConverter.class)

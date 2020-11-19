@@ -5,7 +5,7 @@ import io.harness.executionplan.stepsdependency.KeyAware;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
-import io.harness.references.OutcomeRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -20,8 +20,7 @@ public class OutcomeRefStepDependencyInstructor implements StepDependencyInstruc
   @Override
   public void attachDependency(
       StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, ExecutionPlanCreationContext context) {
-    planNodeBuilder.refObject(
-        OutcomeRefObject.builder().name(outcomeExpression).producerId(providerPlanNodeId).key(key).build());
+    planNodeBuilder.refObject(RefObjectUtil.getOutcomeRefObject(outcomeExpression, providerPlanNodeId, key));
   }
 
   @Override

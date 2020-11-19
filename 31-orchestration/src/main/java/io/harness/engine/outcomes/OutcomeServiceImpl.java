@@ -25,7 +25,7 @@ import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.ambiance.Level;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.resolvers.ResolverUtils;
 import lombok.NonNull;
 import org.springframework.data.domain.Sort;

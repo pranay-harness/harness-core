@@ -14,7 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.resolvers.GroupNotFoundException;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.rule.Owner;
@@ -146,6 +146,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   }
 
   private SweepingOutput resolve(Ambiance ambiance, String outputName) {
-    return executionSweepingOutputService.resolve(ambiance, SweepingOutputRefObject.builder().name(outputName).build());
+    return executionSweepingOutputService.resolve(ambiance, RefObjectUtil.getSweepingOutputRefObject(outputName));
   }
 }
