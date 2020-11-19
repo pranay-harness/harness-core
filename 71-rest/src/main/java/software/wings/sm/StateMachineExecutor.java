@@ -903,7 +903,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .executionId(context.getWorkflowExecutionId())
                 .name(context.getWorkflowExecutionName())
                 .build();
-        openAnAlert(context, stateExecutionInstance, manualInterventionNeededAlert);
+        openAnAlert(context, manualInterventionNeededAlert);
         sendManualInterventionNeededNotification(context);
         break;
       }
@@ -929,7 +929,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .executionId(context.getWorkflowExecutionId())
                 .name(context.getWorkflowExecutionName())
                 .build();
-        openAnAlert(context, stateExecutionInstance, runtimeInputsRequiredAlert);
+        openAnAlert(context, runtimeInputsRequiredAlert);
         sendRuntimeInputNeededNotification(context, executionEventAdvice, stateExecutionInstance);
         break;
       }
@@ -1206,8 +1206,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     return placeholderValues;
   }
 
-  private void openAnAlert(
-      ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance, AlertData alertData) {
+  private void openAnAlert(ExecutionContextImpl context, AlertData alertData) {
     try {
       Application app = context.getApp();
       notNullCheck("app", app);
