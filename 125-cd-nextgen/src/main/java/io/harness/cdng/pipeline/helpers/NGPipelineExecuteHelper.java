@@ -53,8 +53,12 @@ public class NGPipelineExecuteHelper {
           projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, false, useFQNIfErrorResponse);
     }
     Map<String, Object> contextAttributes = new HashMap<>();
-    contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipelineYaml);
-    contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, eventPayload);
+    if (inputSetPipelineYaml != null) {
+      contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipelineYaml);
+    }
+    if (eventPayload != null) {
+      contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, eventPayload);
+    }
     return getPipelineResponseDTO(
         accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, contextAttributes);
   }
@@ -137,9 +141,13 @@ public class NGPipelineExecuteHelper {
         ImmutableMap.<String, String>builder()
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
-            .put(PipelinePlanCreator.EVENT_PAYLOAD_KEY,
-                (String) contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY));
+            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
+
+    if (contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY) != null) {
+      abstractionsBuilder.put(
+          PipelinePlanCreator.EVENT_PAYLOAD_KEY, (String) contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY));
+    }
+
     if (user != null) {
       abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
           .put(SetupAbstractionKeys.userName, user.getName())
