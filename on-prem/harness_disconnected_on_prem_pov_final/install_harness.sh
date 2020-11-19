@@ -289,7 +289,7 @@ function populateEnvironmentVariablesFromMongo(){
 function setUpProxy(){
     echo "################################ Setting up proxy ################################"
 
-    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
+    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy-signed:$PROXY_VERSION
     sleep 5
 
     if [[ $(checkDockerImageRunning "harness-proxy") -eq 1 ]]; then
