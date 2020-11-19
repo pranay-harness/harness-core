@@ -1,6 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -16,9 +17,13 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
+import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SecretParams;
@@ -133,7 +138,10 @@ public class CIK8CtlHandler {
       }
 
       if (isPodInRunningState(pod)) {
-        return PodStatus.builder().status(PodStatus.Status.RUNNING).build();
+        return PodStatus.builder()
+            .status(PodStatus.Status.RUNNING)
+            .ciContainerStatusList(getContainersStatus(pod))
+            .build();
       } else if (!isPodInPendingState(pod)) {
         List<String> posStatusLogs = pod.getStatus()
                                          .getConditions()
@@ -141,7 +149,11 @@ public class CIK8CtlHandler {
                                          .filter(condition -> condition != null)
                                          .map(condition -> condition.getMessage())
                                          .collect(Collectors.toList());
-        return PodStatus.builder().status(PodStatus.Status.ERROR).errorMessage(String.join(" ", posStatusLogs)).build();
+        return PodStatus.builder()
+            .status(PodStatus.Status.ERROR)
+            .errorMessage(String.join(" ", posStatusLogs))
+            .ciContainerStatusList(getContainersStatus(pod))
+            .build();
       }
 
       sleeper.sleep(CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000);
@@ -160,6 +172,55 @@ public class CIK8CtlHandler {
   private boolean isPodInRunningState(Pod pod) {
     String podPhase = pod.getStatus().getPhase();
     return podPhase.equals(CIConstants.POD_RUNNING_PHASE);
+  }
+
+  private List<CIContainerStatus> getContainersStatus(Pod pod) {
+    List<CIContainerStatus> containerStatusList = new ArrayList<>();
+    for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
+      String name = containerStatus.getName();
+      String image = containerStatus.getImage();
+      if (containerStatus.getState().getRunning() != null) {
+        containerStatusList.add(CIContainerStatus.builder()
+                                    .name(name)
+                                    .image(image)
+                                    .status(CIContainerStatus.Status.SUCCESS)
+                                    .startTime(containerStatus.getState().getRunning().getStartedAt())
+                                    .build());
+      } else if (containerStatus.getState().getTerminated() != null) {
+        ContainerStateTerminated containerStateTerminated = containerStatus.getState().getTerminated();
+        containerStatusList.add(CIContainerStatus.builder()
+                                    .name(name)
+                                    .image(image)
+                                    .status(CIContainerStatus.Status.ERROR)
+                                    .startTime(containerStateTerminated.getStartedAt())
+                                    .endTime(containerStateTerminated.getFinishedAt())
+                                    .errorMsg(getContainerErrMsg(
+                                        containerStateTerminated.getReason(), containerStateTerminated.getMessage()))
+                                    .build());
+      } else if (containerStatus.getState().getWaiting() != null) {
+        ContainerStateWaiting containerStateWaiting = containerStatus.getState().getWaiting();
+        containerStatusList.add(
+            CIContainerStatus.builder()
+                .name(name)
+                .image(image)
+                .status(CIContainerStatus.Status.ERROR)
+                .errorMsg(getContainerErrMsg(containerStateWaiting.getReason(), containerStateWaiting.getMessage()))
+                .build());
+      }
+    }
+    return containerStatusList;
+  }
+
+  private String getContainerErrMsg(String reason, String message) {
+    if (isEmpty(message)) {
+      return reason;
+    }
+
+    if (isEmpty(reason)) {
+      return message;
+    } else {
+      return format("%s: %s", reason, message);
+    }
   }
 
   public Boolean deletePod(KubernetesClient kubernetesClient, String podName, String namespace) {

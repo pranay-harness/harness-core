@@ -222,6 +222,8 @@ public class BuildJobEnvInfoBuilder {
         .containerType(CIContainerType.RUN)
         .volumeToMountPath(volumeToMountPath)
         .workingDirectory(workingDir)
+        .stepIdentifier(runStepInfo.getIdentifier())
+        .stepName(runStepInfo.getName())
         .build();
   }
 
@@ -258,6 +260,8 @@ public class BuildJobEnvInfoBuilder {
         .containerType(CIContainerType.PLUGIN)
         .volumeToMountPath(volumeToMountPath)
         .workingDirectory(workingDir)
+        .stepIdentifier(pluginStepInfo.getIdentifier())
+        .stepName(pluginStepInfo.getName())
         .build();
   }
 
