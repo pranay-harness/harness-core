@@ -1,6 +1,5 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import static com.google.common.base.Preconditions.checkState;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.burstableRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.guaranteedRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.recommendedRecommender;
@@ -73,7 +72,10 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
   @Override
   public void write(List<? extends K8sWorkloadRecommendation> items) {
     for (K8sWorkloadRecommendation recommendation : items) {
-      checkState(recommendation.isDirty(), "Dirty flag should be set");
+      if (!recommendation.isDirty()) {
+        log.warn("Skipping as dirty flag is not set");
+        continue;
+      }
       ResourceId workloadId = ResourceId.builder()
                                   .accountId(recommendation.getAccountId())
                                   .clusterId(recommendation.getClusterId())
