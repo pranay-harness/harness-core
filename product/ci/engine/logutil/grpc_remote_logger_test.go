@@ -79,7 +79,7 @@ func Test_GetGrpcRemoteLogger(t *testing.T) {
 	assert.Equal(t, mGrpcClient.ops[0], "open")
 }
 
-func Test_GetGrpcRemoteLogger_ClientFailure(t *testing.T) {
+func Test_GetGrpcRemoteLogger_OpenFailure(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
@@ -89,8 +89,7 @@ func Test_GetGrpcRemoteLogger_ClientFailure(t *testing.T) {
 		newLogProxyClient = oldEngineClient
 		getLogKey = oldGetLogKey
 	}()
-	expectedErr := errors.New("failure")
-	mGrpcClient := NewMockGrpcLogProxyClient(expectedErr)
+	mGrpcClient := NewMockGrpcLogProxyClient(errors.New("failure"))
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
 	getLogKey = func(stepID string) (string, error) {
@@ -102,7 +101,8 @@ func Test_GetGrpcRemoteLogger_ClientFailure(t *testing.T) {
 	key := "test"
 	_, err := GetGrpcRemoteLogger(key)
 
-	assert.Equal(t, err, expectedErr)
+	// Failure of opening the stream should not error out the logger
+	assert.Nil(t, err)
 }
 
 func Test_GetGrpcRemoteLogger_KeyFailure(t *testing.T) {

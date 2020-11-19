@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -112,7 +113,10 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 		line := b.Convert(part)
 
 		for b.size+len(p) > b.limit {
-			b.stop() // buffer is full, stop streaming data
+			// Keep streaming even after the limit, but only upload last `b.limit` data to the store
+			if len(b.history) == 0 {
+				break
+			}
 			b.size -= len(b.history[0].Message)
 			b.history = b.history[1:]
 		}
@@ -140,7 +144,12 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 }
 
 func (b *RemoteWriter) Open() error {
-	return b.client.Open(context.Background(), b.key)
+	err := b.client.Open(context.Background(), b.key)
+	if err != nil {
+		b.stop() // stop trying to stream if we could not open the stream
+		return err
+	}
+	return nil
 }
 
 // Close closes the writer and uploads the full contents to
@@ -180,6 +189,10 @@ func (b *RemoteWriter) upload() error {
 
 // flush batch uploads all buffered logs to the server.
 func (b *RemoteWriter) flush() error {
+	// If the stream was not opened successfully, skip trying to flush logs to the stream
+	if b.closed {
+		return errors.New("stream is not open")
+	}
 	b.Lock()
 	lines := b.copy()
 	b.clear()
@@ -194,7 +207,6 @@ func (b *RemoteWriter) flush() error {
 	}
 	return b.client.Write(
 		context.Background(), b.key, lines)
-
 }
 
 // copy returns a copy of the buffered lines.
@@ -226,6 +238,7 @@ func (b *RemoteWriter) stopped() bool {
 	return closed
 }
 
+// Start starts a periodic loop to flush logs to the live stream
 func (b *RemoteWriter) Start() error {
 	for {
 		select {
