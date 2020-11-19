@@ -22,6 +22,7 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,8 +34,8 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   @Inject private ApiClientFactory apiClientFactory;
 
   @Override
-  public List<String> getNameSpaces(
-      DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails) throws ApiException {
+  public List<String> getNameSpaces(DataCollectionConnectorBundle bundle,
+      List<EncryptedDataDetail> encryptedDataDetails, String filter) throws ApiException {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
     KubernetesAuthCredentialDTO kubernetesCredentialAuth =
         ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
@@ -46,13 +47,20 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     V1NamespaceList v1NamespaceList =
         coreV1Api.listNamespace(null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
     List<String> rv = new ArrayList<>();
-    v1NamespaceList.getItems().forEach(v1Namespace -> rv.add(v1Namespace.getMetadata().getName()));
+    v1NamespaceList.getItems().forEach(v1Namespace -> {
+      if (isNotEmpty(filter)
+          && !v1Namespace.getMetadata().getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+        return;
+      }
+      rv.add(v1Namespace.getMetadata().getName());
+    });
+    Collections.sort(rv);
     return rv;
   }
 
   @Override
   public List<String> getWorkloads(String namespace, DataCollectionConnectorBundle bundle,
-      List<EncryptedDataDetail> encryptedDataDetails) throws ApiException {
+      List<EncryptedDataDetail> encryptedDataDetails, String filter) throws ApiException {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
     KubernetesAuthCredentialDTO kubernetesCredentialAuth =
         ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
@@ -68,6 +76,9 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       List<V1OwnerReference> ownerReferences = viPod.getMetadata().getOwnerReferences();
       if (isNotEmpty(ownerReferences)) {
         ownerReferences.forEach(v1OwnerReference -> {
+          if (isNotEmpty(filter) && !v1OwnerReference.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+            return;
+          }
           if ("ReplicaSet".equals(v1OwnerReference.getKind())) {
             rv.add(v1OwnerReference.getName().substring(0, v1OwnerReference.getName().lastIndexOf("-")));
           }
@@ -78,6 +89,8 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
         });
       }
     });
-    return rv.stream().collect(Collectors.toList());
+    List<String> workloads = rv.stream().collect(Collectors.toList());
+    Collections.sort(workloads);
+    return workloads;
   }
 }

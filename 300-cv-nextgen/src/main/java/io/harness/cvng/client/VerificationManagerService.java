@@ -14,7 +14,7 @@ public interface VerificationManagerService {
   String getDataCollectionResponse(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest request);
   List<String> getKubernetesNamespaces(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
-  List<String> getKubernetesWorkloads(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace);
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String filter);
+  List<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String namespace, String filter);
 }

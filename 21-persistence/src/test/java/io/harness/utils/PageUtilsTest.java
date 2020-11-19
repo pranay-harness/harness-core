@@ -1,10 +1,14 @@
 package io.harness.utils;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.collect.Lists;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,5 +54,55 @@ public class PageUtilsTest extends CategoryTest {
     List<String> sortList = new ArrayList<>();
     sortList.add("name,des");
     PageUtils.getPageRequest(1, sortList.size(), sortList);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testOffsetAndLimit_whenNotEnoughElements() {
+    assertThatThrownBy(() -> PageUtils.offsetAndLimit(Lists.newArrayList("1", "2"), 1, 4))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("for a list of size 2 the offset 1 and pagesize 4 is invalid");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testOffsetAndLimit() {
+    int numOfElements = 35;
+    List<String> input = new ArrayList<>();
+    for (int i = 0; i < numOfElements; i++) {
+      input.add("e-" + i);
+    }
+
+    // assert all are returned if page size is big enough
+    PageResponse<String> output = PageUtils.offsetAndLimit(input, 0, numOfElements);
+    assertThat(output.getTotalPages()).isEqualTo(1);
+    assertThat(output.getPageIndex()).isEqualTo(0);
+    assertThat(output.getTotalItems()).isEqualTo(numOfElements);
+    assertThat(output.getContent()).isEqualTo(input);
+
+    output = PageUtils.offsetAndLimit(input, 0, 4);
+    assertThat(output.getTotalPages()).isEqualTo(9);
+    assertThat(output.getPageIndex()).isEqualTo(0);
+    assertThat(output.getTotalItems()).isEqualTo(numOfElements);
+    assertThat(output.getPageItemCount()).isEqualTo(4);
+    assertThat(output.getContent()).isEqualTo(Lists.newArrayList("e-0", "e-1", "e-2", "e-3"));
+
+    output = PageUtils.offsetAndLimit(input, 3, 7);
+    assertThat(output.getTotalPages()).isEqualTo(5);
+    assertThat(output.getPageIndex()).isEqualTo(3);
+    assertThat(output.getTotalItems()).isEqualTo(numOfElements);
+    assertThat(output.getPageItemCount()).isEqualTo(7);
+    assertThat(output.getContent())
+        .isEqualTo(Lists.newArrayList("e-21", "e-22", "e-23", "e-24", "e-25", "e-26", "e-27"));
+
+    // last page
+    output = PageUtils.offsetAndLimit(input, 8, 4);
+    assertThat(output.getTotalPages()).isEqualTo(9);
+    assertThat(output.getPageIndex()).isEqualTo(8);
+    assertThat(output.getTotalItems()).isEqualTo(numOfElements);
+    assertThat(output.getPageItemCount()).isEqualTo(3);
+    assertThat(output.getContent()).isEqualTo(Lists.newArrayList("e-32", "e-33", "e-34"));
   }
 }

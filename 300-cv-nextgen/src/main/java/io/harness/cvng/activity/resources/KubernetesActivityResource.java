@@ -10,6 +10,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -80,12 +81,14 @@ public class KubernetesActivityResource {
   @NextGenManagerAuth
   @Path("/namespaces")
   @ApiOperation(value = "gets a list of kubernetes namespaces", nickname = "getNamespaces")
-  public RestResponse<List<String>> getNamespaces(@QueryParam("accountId") @NotNull String accountId,
+  public RestResponse<PageResponse<String>> getNamespaces(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("connnectorIdentifier") @NotNull String connectorIdentifier) {
+      @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
+      @QueryParam("filter") String filter) {
     return new RestResponse<>(kubernetesActivitySourceService.getKubernetesNamespaces(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier));
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, offset, pageSize, filter));
   }
 
   @GET
@@ -94,12 +97,13 @@ public class KubernetesActivityResource {
   @NextGenManagerAuth
   @Path("/workloads")
   @ApiOperation(value = "gets a list of kubernetes workloads", nickname = "getWorkloads")
-  public RestResponse<List<String>> getWorkloads(@QueryParam("accountId") @NotNull String accountId,
+  public RestResponse<PageResponse<String>> getWorkloads(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("connnectorIdentifier") @NotNull String connectorIdentifier,
-      @QueryParam("namespace") @NotNull String namespace) {
+      @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
+      @QueryParam("namespace") @NotNull String namespace, @QueryParam("offset") @NotNull Integer offset,
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return new RestResponse<>(kubernetesActivitySourceService.getKubernetesWorkloads(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace));
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, offset, pageSize, filter));
   }
 }

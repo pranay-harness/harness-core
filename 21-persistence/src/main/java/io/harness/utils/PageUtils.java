@@ -2,6 +2,7 @@ package io.harness.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.base.Preconditions;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -80,6 +81,24 @@ public class PageUtils {
         .pageSize(page.getPageSize())
         .pageIndex(page.getStart())
         .empty(page.isEmpty())
+        .build();
+  }
+
+  public <T> PageResponse<T> offsetAndLimit(List<T> input, int offset, int pageSize) {
+    Preconditions.checkState(input.size() >= offset * pageSize,
+        "for a list of size %s the offset %s and pagesize %s is invalid", input.size(), offset, pageSize);
+
+    int startIndex = offset * pageSize;
+    int endIndex = startIndex + pageSize < input.size() ? startIndex + pageSize : input.size();
+    int totalPages = (input.size() / pageSize) + (input.size() % pageSize == 0 ? 0 : 1);
+    List<T> returnList = input.subList(startIndex, endIndex);
+    return PageResponse.<T>builder()
+        .pageSize(pageSize)
+        .pageIndex(offset)
+        .totalPages(totalPages)
+        .totalItems(input.size())
+        .pageItemCount(returnList.size())
+        .content(returnList)
         .build();
   }
 }
