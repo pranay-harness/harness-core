@@ -8,6 +8,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -45,7 +46,7 @@ public class DockerConnector extends Connector {
   }
 
   @Override
-  public void updateSettingAttribute(SettingAttribute settingAttribute, QLConnectorInput input) {
+  public void updateSettingAttribute(SettingAttribute settingAttribute, QLUpdateConnectorInput input) {
     QLDockerConnectorInput dockerConnectorInput = input.getDockerConnector();
     DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
 
@@ -66,7 +67,10 @@ public class DockerConnector extends Connector {
 
   @Override
   public void checkSecrets(QLConnectorInput input, String accountId) {
-    QLDockerConnectorInput dockerConnectorInput = input.getDockerConnector();
+    checkDockerConnectorSecrets(input.getDockerConnector(), accountId);
+  }
+
+  private void checkDockerConnectorSecrets(QLDockerConnectorInput dockerConnectorInput, String accountId) {
     checkUserNameExists(dockerConnectorInput);
 
     dockerConnectorInput.getPasswordSecretId().getValue().ifPresent(
@@ -74,7 +78,17 @@ public class DockerConnector extends Connector {
   }
 
   @Override
+  public void checkSecrets(QLUpdateConnectorInput input, SettingAttribute settingAttribute) {
+    checkDockerConnectorSecrets(input.getDockerConnector(), settingAttribute.getAccountId());
+  }
+
+  @Override
   public void checkInputExists(QLConnectorInput input) {
+    connectorsController.checkInputExists(input.getConnectorType(), input.getDockerConnector());
+  }
+
+  @Override
+  public void checkInputExists(QLUpdateConnectorInput input) {
     connectorsController.checkInputExists(input.getConnectorType(), input.getDockerConnector());
   }
 

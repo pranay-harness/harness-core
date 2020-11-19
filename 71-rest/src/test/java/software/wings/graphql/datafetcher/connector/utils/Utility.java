@@ -5,6 +5,8 @@ import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerCon
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput.QLGitConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.git.QLUpdateGitConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLUpdateGitConnectorInput.QLUpdateGitConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLAmazonS3PlatformInput;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLAmazonS3PlatformInput.QLAmazonS3PlatformInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLGCSPlatformInput;
@@ -19,6 +21,18 @@ import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConne
 public class Utility {
   public static QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {
     return QLGitConnectorInput.builder()
+        .name(RequestField.ofNullable("NAME"))
+        .URL(RequestField.ofNullable("URL"))
+        .userName(RequestField.ofNullable("USER"))
+        .branch(RequestField.absent())
+        .passwordSecretId(RequestField.absent())
+        .sshSettingId(RequestField.absent())
+        .generateWebhookUrl(RequestField.absent())
+        .customCommitDetails(RequestField.absent());
+  }
+
+  public static QLUpdateGitConnectorInputBuilder getQlUpdateGitConnectorInputBuilder() {
+    return QLUpdateGitConnectorInput.builder()
         .name(RequestField.ofNullable("NAME"))
         .URL(RequestField.ofNullable("URL"))
         .userName(RequestField.ofNullable("USER"))

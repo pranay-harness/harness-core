@@ -8,8 +8,10 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.git.QLUpdateGitConnectorInput;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -59,8 +61,8 @@ public class GitConnector extends Connector {
   }
 
   @Override
-  public void updateSettingAttribute(SettingAttribute settingAttribute, QLConnectorInput input) {
-    QLGitConnectorInput gitConnectorInput = input.getGitConnector();
+  public void updateSettingAttribute(SettingAttribute settingAttribute, QLUpdateConnectorInput input) {
+    QLUpdateGitConnectorInput gitConnectorInput = input.getGitConnector();
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
     handleSecrets(gitConnectorInput.getPasswordSecretId(), gitConnectorInput.getSshSettingId(), gitConfig);
@@ -122,7 +124,47 @@ public class GitConnector extends Connector {
   }
 
   @Override
+  public void checkSecrets(QLUpdateConnectorInput input, SettingAttribute settingAttribute) {
+    QLUpdateGitConnectorInput updateGitConnectorInput = input.getGitConnector();
+    boolean passwordSecretIsPresent = false;
+    boolean sshSettingIdIsPresent = false;
+    if (updateGitConnectorInput.getPasswordSecretId().isPresent()
+        && updateGitConnectorInput.getPasswordSecretId().getValue().isPresent()) {
+      throwExceptionIfUsernameShouldBeSpecified(updateGitConnectorInput, settingAttribute);
+      passwordSecretIsPresent = true;
+    }
+    if (updateGitConnectorInput.getSshSettingId().isPresent()) {
+      sshSettingIdIsPresent = updateGitConnectorInput.getSshSettingId().getValue().isPresent();
+    }
+    if (passwordSecretIsPresent && sshSettingIdIsPresent) {
+      throw new InvalidRequestException("Just one secretId should be specified");
+    }
+    if (passwordSecretIsPresent) {
+      checkSecretExists(secretManager, settingAttribute.getAccountId(),
+          updateGitConnectorInput.getPasswordSecretId().getValue().get());
+    }
+    if (sshSettingIdIsPresent) {
+      checkSSHSettingExists(
+          settingsService, settingAttribute.getAccountId(), updateGitConnectorInput.getSshSettingId().getValue().get());
+    }
+  }
+
+  private void throwExceptionIfUsernameShouldBeSpecified(
+      QLUpdateGitConnectorInput gitConnectorInput, SettingAttribute settingAttribute) {
+    if (null == ((GitConfig) settingAttribute.getValue()).getUsername()) {
+      if (!gitConnectorInput.getUserName().isPresent() || !gitConnectorInput.getUserName().getValue().isPresent()) {
+        throw new InvalidRequestException("userName should be specified");
+      }
+    }
+  }
+
+  @Override
   public void checkInputExists(QLConnectorInput input) {
+    connectorsController.checkInputExists(input.getConnectorType(), input.getGitConnector());
+  }
+
+  @Override
+  public void checkInputExists(QLUpdateConnectorInput input) {
     connectorsController.checkInputExists(input.getConnectorType(), input.getGitConnector());
   }
 

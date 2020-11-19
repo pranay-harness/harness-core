@@ -10,6 +10,7 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLAmazonS3PlatformInput;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLGCSPlatformInput;
 import software.wings.graphql.schema.mutation.connector.input.helm.QLHelmConnectorInput;
@@ -67,7 +68,7 @@ public class HelmConnector extends Connector {
   }
 
   @Override
-  public void updateSettingAttribute(SettingAttribute settingAttribute, QLConnectorInput input) {
+  public void updateSettingAttribute(SettingAttribute settingAttribute, QLUpdateConnectorInput input) {
     QLHelmConnectorInput helmConnectorInput = input.getHelmConnector();
 
     QLAmazonS3PlatformInput amazonS3PlatformInput = getAmazonS3PlatformInput(helmConnectorInput);
@@ -99,6 +100,10 @@ public class HelmConnector extends Connector {
   @Override
   public void checkSecrets(QLConnectorInput input, String accountId) {
     QLHelmConnectorInput helmConnectorInput = input.getHelmConnector();
+    checkHelmConnectorSecrets(accountId, helmConnectorInput);
+  }
+
+  private void checkHelmConnectorSecrets(String accountId, QLHelmConnectorInput helmConnectorInput) {
     QLHttpServerPlatformInput httpServerPlatformInput = getHttpServerPlatformInput(helmConnectorInput);
 
     if (httpServerPlatformInput != null) {
@@ -110,10 +115,19 @@ public class HelmConnector extends Connector {
   }
 
   @Override
+  public void checkSecrets(QLUpdateConnectorInput input, SettingAttribute settingAttribute) {
+    QLHelmConnectorInput helmConnectorInput = input.getHelmConnector();
+    checkHelmConnectorSecrets(settingAttribute.getAccountId(), helmConnectorInput);
+  }
+
+  @Override
   public void checkInputExists(QLConnectorInput input) {
     QLConnectorType type = input.getConnectorType();
     QLHelmConnectorInput helmConnectorInput = input.getHelmConnector();
+    checkHelmConnectorExists(type, helmConnectorInput);
+  }
 
+  private void checkHelmConnectorExists(QLConnectorType type, QLHelmConnectorInput helmConnectorInput) {
     connectorsController.checkInputExists(type, helmConnectorInput);
 
     QLAmazonS3PlatformInput amazonS3PlatformInput = getAmazonS3PlatformInput(helmConnectorInput);
@@ -134,6 +148,13 @@ public class HelmConnector extends Connector {
       throw new InvalidRequestException(
           String.format("Wrong hosting platform provided with the request for %s connector", type.getStringValue()));
     }
+  }
+
+  @Override
+  public void checkInputExists(QLUpdateConnectorInput input) {
+    QLConnectorType type = input.getConnectorType();
+    QLHelmConnectorInput helmConnectorInput = input.getHelmConnector();
+    checkHelmConnectorExists(type, helmConnectorInput);
   }
 
   private QLAmazonS3PlatformInput getAmazonS3PlatformInput(QLHelmConnectorInput helmConnectorInput) {

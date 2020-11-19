@@ -16,7 +16,7 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.types.Connector;
 import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
-import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload.QLUpdateConnectorPayloadBuilder;
 import software.wings.graphql.schema.type.QLConnectorType;
@@ -30,19 +30,20 @@ import software.wings.utils.ConstraintViolationHandlerUtils;
 import javax.validation.ConstraintViolationException;
 
 @Slf4j
-public class UpdateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnectorInput, QLUpdateConnectorPayload> {
+public class UpdateConnectorDataFetcher
+    extends BaseMutatorDataFetcher<QLUpdateConnectorInput, QLUpdateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
 
   public UpdateConnectorDataFetcher() {
-    super(QLConnectorInput.class, QLUpdateConnectorPayload.class);
+    super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
   }
 
   @Override
   @AuthRule(permissionType = MANAGE_CONNECTORS)
-  protected QLUpdateConnectorPayload mutateAndFetch(QLConnectorInput input, MutationContext mutationContext) {
+  protected QLUpdateConnectorPayload mutateAndFetch(QLUpdateConnectorInput input, MutationContext mutationContext) {
     String connectorId = input.getConnectorId();
     String accountId = mutationContext.getAccountId();
 
@@ -64,9 +65,10 @@ public class UpdateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnect
     QLUpdateConnectorPayloadBuilder builder =
         QLUpdateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
-    Connector connector = ConnectorFactory.getConnector(input, connectorsController, secretManager, settingsService);
+    Connector connector =
+        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
     connector.checkInputExists(input);
-    connector.checkSecrets(input, accountId);
+    connector.checkSecrets(input, settingAttribute);
     connector.updateSettingAttribute(settingAttribute, input);
 
     try {

@@ -24,10 +24,10 @@ import static software.wings.graphql.datafetcher.connector.utils.ConnectorConsta
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlAmazonS3PlatformInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlDockerConnectorInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGCSPlatformInputBuilder;
-import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGitConnectorInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlHelmConnectorInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlHttpServerPlatformInputBuilder;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlNexusConnectorInputBuilder;
+import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlUpdateGitConnectorInputBuilder;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
 import com.google.inject.Inject;
@@ -53,10 +53,10 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.utils.Utility;
-import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
+import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
-import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput.QLGitConnectorInputBuilder;
+import software.wings.graphql.schema.mutation.connector.input.git.QLUpdateGitConnectorInput.QLUpdateGitConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusVersion;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
@@ -93,7 +93,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Category(UnitTests.class)
   public void checkIfPermissionCorrect() throws NoSuchMethodException {
     Method method = UpdateConnectorDataFetcher.class.getDeclaredMethod(
-        "mutateAndFetch", QLConnectorInput.class, MutationContext.class);
+        "mutateAndFetch", QLUpdateConnectorInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
     assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONNECTORS);
   }
@@ -127,11 +127,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
 
     QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
-        QLConnectorInput.builder()
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.GIT)
             .gitConnector(
-                getQlGitConnectorInputBuilder()
+                getQlUpdateGitConnectorInputBuilder()
                     .branch(RequestField.ofNullable(BRANCH))
                     .generateWebhookUrl(RequestField.ofNullable(true))
                     .customCommitDetails(RequestField.ofNullable(QLCustomCommitDetailsInput.builder()
@@ -164,14 +164,14 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.GIT)
-                                 .gitConnector(getQlGitConnectorInputBuilder()
-                                                   .passwordSecretId(RequestField.ofNullable(PASSWORD))
-                                                   .sshSettingId(RequestField.ofNullable(SSH))
-                                                   .build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(getQlUpdateGitConnectorInputBuilder()
+                                                         .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                                         .sshSettingId(RequestField.ofNullable(SSH))
+                                                         .build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -190,11 +190,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.GIT)
-            .gitConnector(getQlGitConnectorInputBuilder().sshSettingId(RequestField.ofNullable(SSH)).build())
+            .gitConnector(getQlUpdateGitConnectorInputBuilder().sshSettingId(RequestField.ofNullable(SSH)).build())
             .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
@@ -212,18 +212,18 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                    .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
                                    .build();
 
-    QLGitConnectorInputBuilder updateGitConnectorInputBuilder =
-        getQlGitConnectorInputBuilder()
+    QLUpdateGitConnectorInputBuilder updateGitConnectorInputBuilder =
+        getQlUpdateGitConnectorInputBuilder()
             .userName(RequestField.absent())
             .passwordSecretId(RequestField.ofNullable(PASSWORD));
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.GIT)
-                                 .gitConnector(updateGitConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(updateGitConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -242,11 +242,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.GIT)
-                                 .gitConnector(getQlGitConnectorInputBuilder().build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(getQlUpdateGitConnectorInputBuilder().build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -265,11 +265,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.ARTIFACTORY)
-                                 .gitConnector(getQlGitConnectorInputBuilder().build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.ARTIFACTORY)
+                                       .gitConnector(getQlUpdateGitConnectorInputBuilder().build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -308,7 +308,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
 
     QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
-        QLConnectorInput.builder()
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.DOCKER)
             .dockerConnector(
@@ -342,11 +342,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.DOCKER)
-                                 .dockerConnector(updateDockerConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.DOCKER)
+                                       .dockerConnector(updateDockerConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -363,11 +363,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
             .userName(RequestField.ofNullable(USERNAME))
             .passwordSecretId(RequestField.ofNullable(PASSWORD));
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(null)
-                                 .dockerConnector(updateDockerConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(null)
+                                       .dockerConnector(updateDockerConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -384,11 +384,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
             .userName(RequestField.ofNullable(USERNAME))
             .passwordSecretId(RequestField.ofNullable(PASSWORD));
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(null)
-                                 .connectorType(QLConnectorType.DOCKER)
-                                 .dockerConnector(updateDockerConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(null)
+                                       .connectorType(QLConnectorType.DOCKER)
+                                       .dockerConnector(updateDockerConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -425,7 +425,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
 
     QLUpdateConnectorPayload payload =
-        dataFetcher.mutateAndFetch(QLConnectorInput.builder()
+        dataFetcher.mutateAndFetch(QLUpdateConnectorInput.builder()
                                        .connectorId(CONNECTOR_ID)
                                        .connectorType(QLConnectorType.NEXUS)
                                        .nexusConnector(getQlNexusConnectorInputBuilder()
@@ -460,11 +460,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.NEXUS)
-                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.NEXUS)
+                                       .nexusConnector(updateNexusConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -481,11 +481,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
             .userName(RequestField.ofNullable(USERNAME))
             .passwordSecretId(RequestField.ofNullable(PASSWORD));
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(null)
-                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(null)
+                                       .nexusConnector(updateNexusConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -502,11 +502,11 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
             .userName(RequestField.ofNullable(USERNAME))
             .passwordSecretId(RequestField.ofNullable(PASSWORD));
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(null)
-                                 .connectorType(QLConnectorType.NEXUS)
-                                 .nexusConnector(updateNexusConnectorInputBuilder.build())
-                                 .build();
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(null)
+                                       .connectorType(QLConnectorType.NEXUS)
+                                       .nexusConnector(updateNexusConnectorInputBuilder.build())
+                                       .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -544,7 +544,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
 
     QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
-        QLConnectorInput.builder()
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.HTTP_HELM_REPO)
             .helmConnector(Utility
@@ -576,8 +576,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.HTTP_HELM_REPO)
             .helmConnector(Utility
@@ -598,8 +598,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmHttpServerConnectorWithoutConnectorType() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(null)
             .helmConnector(
@@ -616,8 +616,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmHttpServerConnectorWithoutConnectorID() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(null)
             .connectorType(QLConnectorType.HTTP_HELM_REPO)
             .helmConnector(
@@ -659,7 +659,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
 
     QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
-        QLConnectorInput.builder()
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.GCS_HELM_REPO)
             .helmConnector(
@@ -690,8 +690,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.GCS_HELM_REPO)
             .helmConnector(Utility
@@ -719,8 +719,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
     doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
 
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.GCS_HELM_REPO)
             .helmConnector(Utility
@@ -739,8 +739,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmGCSConnectorWithoutConnectorType() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(null)
             .helmConnector(Utility.getQlHelmConnectorInputBuilder(getQlGCSPlatformInputBuilder().build()).build())
@@ -756,8 +756,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmGCSConnectorWithoutConnectorID() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(null)
             .connectorType(QLConnectorType.GCS_HELM_REPO)
             .helmConnector(Utility.getQlHelmConnectorInputBuilder(getQlGCSPlatformInputBuilder().build()).build())
@@ -798,7 +798,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "AWS");
 
     QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
-        QLConnectorInput.builder()
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
             .helmConnector(getQlHelmConnectorInputBuilder(
@@ -827,8 +827,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
             .helmConnector(getQlHelmConnectorInputBuilder(
@@ -855,13 +855,14 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
     doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "AWS");
 
-    QLConnectorInput input = QLConnectorInput.builder()
-                                 .connectorId(CONNECTOR_ID)
-                                 .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
-                                 .helmConnector(getQlHelmConnectorInputBuilder(
-                                     getQlAmazonS3PlatformInputBuilder().bucketName(RequestField.absent()).build())
-                                                    .build())
-                                 .build();
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
+            .helmConnector(getQlHelmConnectorInputBuilder(
+                getQlAmazonS3PlatformInputBuilder().bucketName(RequestField.absent()).build())
+                               .build())
+            .build();
     MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
@@ -873,8 +874,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmAmazonS3ConnectorWithoutConnectorType() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(CONNECTOR_ID)
             .connectorType(null)
             .helmConnector(getQlHelmConnectorInputBuilder(getQlAmazonS3PlatformInputBuilder().build()).build())
@@ -890,8 +891,8 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateHelmAmazonS3ConnectorWithoutConnectorID() {
-    QLConnectorInput input =
-        QLConnectorInput.builder()
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
             .connectorId(null)
             .connectorType(QLConnectorType.AMAZON_S3_HELM_REPO)
             .helmConnector(getQlHelmConnectorInputBuilder(getQlAmazonS3PlatformInputBuilder().build()).build())
