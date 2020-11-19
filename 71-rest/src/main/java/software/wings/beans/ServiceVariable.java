@@ -16,9 +16,7 @@ import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
@@ -46,14 +44,6 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @OwnedBy(CDC)
-
-@NgUniqueIndex(name = "serviceVariableUniqueIdx",
-    fields =
-    {
-      @Field("entityId")
-      , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
-          @Field("name")
-    })
 @Data
 @Builder
 @NoArgsConstructor
@@ -82,6 +72,17 @@ public class ServiceVariable extends Base implements EncryptableSetting {
                  .field(ServiceVariableKeys.appId)
                  .field(ServiceVariableKeys.entityId)
                  .descSortField(ServiceVariableKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serviceVariableUniqueIdx")
+                 .unique(true)
+                 .field(ServiceVariableKeys.entityId)
+                 .field(ServiceVariableKeys.templateId)
+                 .field(ServiceVariableKeys.overrideType)
+                 .field(ServiceVariableKeys.instances)
+                 .field(ServiceVariableKeys.expression)
+                 .field(ServiceVariableKeys.type)
+                 .field(ServiceVariableKeys.name)
                  .build())
         .build();
   }

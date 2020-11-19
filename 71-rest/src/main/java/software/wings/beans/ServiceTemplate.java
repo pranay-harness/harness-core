@@ -4,15 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -20,7 +20,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.utils.ArtifactType;
@@ -31,17 +30,27 @@ import java.util.Objects;
 
 @OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("envId"), @Field("name") })
-@CdIndex(name = "app_env_createdAt",
-    fields =
-    {
-      @Field(ServiceTemplateKeys.appId)
-      , @Field(ServiceTemplateKeys.envId), @Field(value = ServiceTemplateKeys.createdAt, type = IndexType.DESC)
-    })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
 public class ServiceTemplate extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(ServiceTemplateKeys.appId)
+                 .field(ServiceTemplateKeys.envId)
+                 .field(ServiceTemplateKeys.name)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("app_env_createdAt")
+                 .field(ServiceTemplateKeys.appId)
+                 .field(ServiceTemplateKeys.envId)
+                 .descSortField(ServiceTemplateKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";
 

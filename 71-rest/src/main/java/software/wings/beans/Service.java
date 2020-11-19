@@ -3,6 +3,8 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -11,11 +13,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.k8s.model.HelmVersion;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
@@ -30,7 +31,6 @@ import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
 import software.wings.api.DeploymentType;
-import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
@@ -51,11 +51,6 @@ import java.util.Set;
  */
 @OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("name") })
-@CdIndex(name = "accountCreatedAtIndex",
-    fields = { @Field(ServiceKeys.accountId)
-               , @Field(value = ServiceKeys.createdAt, type = IndexType.DESC) })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -64,6 +59,21 @@ import java.util.Set;
 @HarnessEntity(exportable = true)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(ServiceKeys.appId)
+                 .field(ServiceKeys.name)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountCreatedAtIndex")
+                 .field(ServiceKeys.accountId)
+                 .descSortField(ServiceKeys.createdAt)
+                 .build())
+        .build();
+  }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
   @Trimmed(message = "Service Name should not contain leading and trailing spaces")
   @EntityName

@@ -8,11 +8,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -23,7 +22,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -34,36 +32,44 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@NgUniqueIndex(name = "uniqueUnitOrder",
-    fields =
-    {
-      @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
-      , @Field(ResourceConstraintInstanceKeys.resourceUnit), @Field(ResourceConstraintInstanceKeys.order),
-    })
-@CdIndex(name = "usageIndex",
-    fields =
-    { @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
-      , @Field(ResourceConstraintInstanceKeys.order), })
-@CdIndex(name = "iterationIndex",
-    fields = { @Field(ResourceConstraintInstanceKeys.state)
-               , @Field(ResourceConstraintInstanceKeys.nextIteration), })
-@CdIndex(name = "app_release_entity",
-    fields =
-    {
-      @Field(ResourceConstraintInstanceKeys.appId)
-      , @Field(ResourceConstraintInstanceKeys.releaseEntityType), @Field(ResourceConstraintInstanceKeys.releaseEntityId)
-    })
-@CdIndex(name = "constraintStateUnitOrderIdx",
-    fields =
-    {
-      @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
-      , @Field(ResourceConstraintInstanceKeys.state), @Field(ResourceConstraintInstanceKeys.resourceUnit),
-          @Field(ResourceConstraintInstanceKeys.order)
-    })
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueUnitOrder")
+                 .unique(true)
+                 .field(ResourceConstraintInstanceKeys.resourceConstraintId)
+                 .field(ResourceConstraintInstanceKeys.resourceUnit)
+                 .field(ResourceConstraintInstanceKeys.order)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("usageIndex")
+                 .field(ResourceConstraintInstanceKeys.resourceConstraintId)
+                 .field(ResourceConstraintInstanceKeys.order)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("iterationIndex")
+                 .field(ResourceConstraintInstanceKeys.state)
+                 .field(ResourceConstraintInstanceKeys.nextIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("app_release_entity")
+                 .field(ResourceConstraintInstanceKeys.appId)
+                 .field(ResourceConstraintInstanceKeys.releaseEntityType)
+                 .field(ResourceConstraintInstanceKeys.releaseEntityId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("constraintStateUnitOrderIdx")
+                 .field(ResourceConstraintInstanceKeys.resourceConstraintId)
+                 .field(ResourceConstraintInstanceKeys.state)
+                 .field(ResourceConstraintInstanceKeys.resourceUnit)
+                 .field(ResourceConstraintInstanceKeys.order)
+                 .build())
+        .build();
+  }
   public static final List<String> NOT_FINISHED_STATES =
       ImmutableList.<String>builder().add(State.ACTIVE.name()).add(State.BLOCKED.name()).build();
 

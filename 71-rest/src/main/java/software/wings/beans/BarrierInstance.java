@@ -1,14 +1,15 @@
 package software.wings.beans;
 
+import com.google.common.collect.ImmutableList;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -24,13 +25,9 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@NgUniqueIndex(
-    name = "search2", fields = { @Field("name")
-                                 , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
-@CdIndex(name = "next", fields = { @Field("state")
-                                   , @Field("nextIteration") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -38,6 +35,23 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("search2")
+                 .unique(true)
+                 .field(BarrierInstanceKeys.name)
+                 .field(BarrierInstanceKeys.pipeline_executionId)
+                 .field(BarrierInstanceKeys.pipeline_parallelIndex)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("next")
+                 .field(BarrierInstanceKeys.state)
+                 .field(BarrierInstanceKeys.nextIteration)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @FdIndex @NotNull protected String appId;
 

@@ -1,14 +1,16 @@
 package software.wings.beans;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.EntityVersion.EntityVersionKeys;
+
+import java.util.List;
 
 /**
  * Created by rishi on 10/13/16.
@@ -16,22 +18,26 @@ import software.wings.beans.EntityVersion.EntityVersionKeys;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
-
-@CdIndex(name = "app_type_uuid_createdAt",
-    fields =
-    {
-      @Field(value = EntityVersionKeys.appId)
-      , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
-          @Field(value = EntityVersionKeys.createdAt, type = IndexType.DESC)
-    })
-@CdIndex(name = "app_type_uuid_version",
-    fields =
-    {
-      @Field(value = EntityVersionKeys.appId)
-      , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
-          @Field(value = EntityVersionKeys.version, type = IndexType.DESC)
-    })
 public class EntityVersion extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("app_type_uuid_createdAt")
+                 .field(EntityVersionKeys.appId)
+                 .field(EntityVersionKeys.entityType)
+                 .field(EntityVersionKeys.entityUuid)
+                 .descSortField(EntityVersionKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("app_type_uuid_version")
+                 .field(EntityVersionKeys.appId)
+                 .field(EntityVersionKeys.entityType)
+                 .field(EntityVersionKeys.entityUuid)
+                 .descSortField(EntityVersionKeys.version)
+                 .build())
+        .build();
+  }
+
   public static final Integer INITIAL_VERSION = 1;
 
   private EntityType entityType;
