@@ -39,7 +39,23 @@ public class PyWinrmArgs {
         .collect(joining(SPACE));
   }
 
+  /**
+   * <ul>
+   *   <li>Replaces the single quotes inside the key or value to escaped single quotes and checks if the value ends
+   *   with slash, add one more slash so that the single quote at the end won't get esccaped</li>
+   *   <li>The regex uses lookbehind to check how many slashes are present before the single quote.
+   *   It only replaces if there are even number of slashes which would be considered as non-escaped inside shell.
+   *   </li>
+   * </ul>
+   *
+   */
   private String quoteAndEscapeQuote(String val) {
-    return String.format("$'%s'", val.replace("'", "\\'"));
+    // Checks if there are even number of slashes before quote. If yes, then add one extra slash to make it odd so
+    // that the quote becomes escaped single quote. For example ' become \' and \\' becomes \\\'
+    String formattedValue = val.replaceAll("(?<!\\\\)(?:\\\\{2})*'", "\\\\'");
+    if (formattedValue.endsWith("\\") && !formattedValue.endsWith("\\\\")) {
+      formattedValue += "\\";
+    }
+    return String.format("$'%s'", formattedValue);
   }
 }

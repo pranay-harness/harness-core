@@ -34,6 +34,27 @@ public class PyWinrmArgsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.SAHIL)
+  @Category(UnitTests.class)
+  public void getArgsEscapedValueEnvMap() {
+    Map<String, String> m = new HashMap<>();
+    m.put("k1", "v1");
+    m.put("k2", ",=v2=,==j' now escape quote \\' now double quote \\\\\\' now ends with \\");
+    m.put("VARIA'BLE_N?AME_F'OO", "\"SOME_%$!_VA'LUE@?=A");
+    PyWinrmArgs args = PyWinrmArgs.builder()
+                           .username("harness")
+                           .hostname("host")
+                           .workingDir("/temp")
+                           .timeout(10)
+                           .serverCertValidation(true)
+                           .environmentMap(m)
+                           .build();
+    Assertions.assertThat(args.getArgs("/commandFile.path"))
+        .isEqualTo(
+            "-e 'host' -u 'harness' -s 'true' -env $'k1=v1' $'k2=,=v2=,==j\\' now escape quote \\' now double quote \\\\\\' now ends with \\\\' $'VARIA\\'BLE_N?AME_F\\'OO=\"SOME_%$!_VA\\'LUE@?=A' -w '/temp' -t '10' -cfile '/commandFile.path'");
+  }
+
+  @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void getArgsEmptyEnvMap() {
