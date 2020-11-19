@@ -18,6 +18,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -38,8 +40,10 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.pms.steps.StepType;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -53,6 +57,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
+import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -114,6 +119,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   @Override
   public String getName() {
     return APP_NAME;
+  }
+
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    SimpleModule module = new SimpleModule();
+    // Todo: Discuss with Prashant on having an impl just like Morphia Converters
+    module.addSerializer(StepType.class, new StepTypeSerializer());
+    mapper.registerModule(module);
+    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
   @Override
@@ -237,6 +250,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+    configureObjectMapper(bootstrap.getObjectMapper());
     log.info("bootstrapping done.");
   }
 
