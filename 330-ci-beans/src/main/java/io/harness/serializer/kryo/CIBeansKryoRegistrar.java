@@ -6,6 +6,7 @@ import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
+import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -22,6 +23,7 @@ import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
+import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.steps.CiStepOutcome;
@@ -140,5 +142,8 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(Infrastructure.Type.class, 100069);
     kryo.register(WebhookBaseAttributes.class, 100070);
     kryo.register(Repository.class, 100071);
+    kryo.register(DependencyOutcome.class, 100072);
+    kryo.register(ServiceDependency.class, 100073);
+    kryo.register(ServiceDependency.Status.class, 100074);
   }
 }

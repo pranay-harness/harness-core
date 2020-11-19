@@ -79,6 +79,8 @@ public class CIServiceBuilder {
         .containerType(CIContainerType.SERVICE)
         .volumeToMountPath(volumeToMountPath)
         .workingDirectory(mountPath)
+        .stepIdentifier(service.getIdentifier())
+        .stepName(service.getName())
         .build();
   }
 

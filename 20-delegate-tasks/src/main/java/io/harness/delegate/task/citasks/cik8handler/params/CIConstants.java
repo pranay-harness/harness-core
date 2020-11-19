@@ -17,7 +17,7 @@ public final class CIConstants {
   public static final long POD_MAX_TTL_SECS = 86400L; // 1 day
   public static final String POD_PENDING_PHASE = "Pending";
   public static final String POD_RUNNING_PHASE = "Running";
-  public static final int POD_MAX_WAIT_UNTIL_READY_SECS = 300; // 5 minutes
+  public static final int POD_MAX_WAIT_UNTIL_READY_SECS = 5 * 60; // 5 minutes
   public static final int POD_WAIT_UNTIL_READY_SLEEP_SECS = 2; // Time to sleep in between pod status checks
 
   public static final String SECRET_VOLUME_NAME = "secrets";

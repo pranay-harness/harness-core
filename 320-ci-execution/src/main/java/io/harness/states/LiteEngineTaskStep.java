@@ -1,10 +1,14 @@
 package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.dependencies.ServiceDependency;
+import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -14,12 +18,15 @@ import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.plancreators.IntegrationStagePlanCreator;
@@ -38,7 +45,9 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,6 +62,7 @@ public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskSt
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
+  private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
 
   @Override
@@ -79,16 +89,70 @@ public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskSt
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
+    DependencyOutcome dependencyOutcome =
+        getDependencyOutcome(stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse().getPodStatus());
+    StepResponse.StepOutcome stepOutcome =
+        StepResponse.StepOutcome.builder().name(DEPENDENCY_OUTCOME).outcome(dependencyOutcome).build();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info(
           "LiteEngineTaskStep pod creation task executed successfully with response [{}]", k8sTaskExecutionResponse);
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return StepResponse.builder().status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
 
     } else {
       log.error("LiteEngineTaskStep execution finished with status [{}] and response [{}]",
           k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse);
-      return StepResponse.builder().status(Status.FAILED).build();
+      return StepResponse.builder().status(Status.FAILED).stepOutcome(stepOutcome).build();
     }
+  }
+
+  private DependencyOutcome getDependencyOutcome(LiteEngineTaskStepInfo stepParameters, PodStatus podStatus) {
+    List<ContainerDefinitionInfo> serviceContainers = buildSetupUtils.getBuildServiceContainers(stepParameters);
+    List<ServiceDependency> serviceDependencyList = new ArrayList<>();
+    if (serviceContainers == null) {
+      return DependencyOutcome.builder().serviceDependencyList(serviceDependencyList).build();
+    }
+
+    Map<String, CIContainerStatus> containerStatusMap = new HashMap<>();
+    if (podStatus != null && podStatus.getCiContainerStatusList() != null) {
+      for (CIContainerStatus containerStatus : podStatus.getCiContainerStatusList()) {
+        containerStatusMap.put(containerStatus.getName(), containerStatus);
+      }
+    }
+
+    for (ContainerDefinitionInfo serviceContainer : serviceContainers) {
+      String containerName = serviceContainer.getName();
+      if (containerStatusMap.containsKey(containerName)) {
+        CIContainerStatus containerStatus = containerStatusMap.get(containerName);
+
+        ServiceDependency.Status status = ServiceDependency.Status.SUCCESS;
+        if (containerStatus.getStatus() == CIContainerStatus.Status.ERROR) {
+          status = ServiceDependency.Status.ERROR;
+        }
+        serviceDependencyList.add(ServiceDependency.builder()
+                                      .identifier(serviceContainer.getStepIdentifier())
+                                      .name(serviceContainer.getStepName())
+                                      .image(containerStatus.getImage())
+                                      .startTime(containerStatus.getStartTime())
+                                      .endTime(containerStatus.getEndTime())
+                                      .errorMessage(containerStatus.getErrorMsg())
+                                      .status(status)
+                                      .build());
+      } else {
+        ImageDetails imageDetails = serviceContainer.getContainerImageDetails().getImageDetails();
+        String image = imageDetails.getName();
+        if (isEmpty(imageDetails.getTag())) {
+          image += String.format(":%s", imageDetails.getTag());
+        }
+        serviceDependencyList.add(ServiceDependency.builder()
+                                      .identifier(serviceContainer.getStepIdentifier())
+                                      .name(serviceContainer.getStepName())
+                                      .image(image)
+                                      .errorMessage("Unknown")
+                                      .status(ServiceDependency.Status.ERROR)
+                                      .build());
+      }
+    }
+    return DependencyOutcome.builder().serviceDependencyList(serviceDependencyList).build();
   }
 
   private void addCallBackIds(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {

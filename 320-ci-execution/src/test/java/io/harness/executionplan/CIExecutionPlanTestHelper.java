@@ -135,9 +135,12 @@ public class CIExecutionPlanTestHelper {
   private static final String RUN_STEP_IMAGE = "maven:3.6.3-jdk-8";
   private static final String RUN_STEP_CONNECTOR = "run";
   private static final String RUN_STEP_ID = "step-2";
+  private static final String RUN_STEP_NAME = "test script";
 
   private static final String PLUGIN_STEP_IMAGE = "plugins/git";
   private static final String PLUGIN_STEP_ID = "step-3";
+  private static final String PLUGIN_STEP_NAME = "plugin step";
+
   private static final Integer PLUGIN_STEP_LIMIT_MEM = 50;
   private static final Integer PLUGIN_STEP_LIMIT_CPU = 100;
   private static final String PLUGIN_ENV_VAR = "foo";
@@ -375,10 +378,10 @@ public class CIExecutionPlanTestHelper {
     return StepElement.builder()
         .identifier(RUN_STEP_ID)
         .type("run")
-        .name("testScript1")
+        .name(RUN_STEP_NAME)
         .stepSpecType(RunStepInfo.builder()
                           .identifier(RUN_STEP_ID)
-                          .name("testScript1")
+                          .name(RUN_STEP_NAME)
                           .command(singletonList("./test-script1.sh"))
                           .callbackId("test-p1-callbackId")
                           .image(RUN_STEP_IMAGE)
@@ -414,6 +417,7 @@ public class CIExecutionPlanTestHelper {
                                      .build())
         .volumeToMountPath(volumeToMountPath)
         .workingDirectory("/" + SERVICE_VOLUME_NAME)
+        .stepIdentifier(SERVICE_ID)
         .build();
   }
 
@@ -468,6 +472,8 @@ public class CIExecutionPlanTestHelper {
         .secretVariables(getCustomSecretVariable())
         .workingDirectory(WORK_DIR)
         .volumeToMountPath(volumeToMountPath)
+        .stepIdentifier(RUN_STEP_ID)
+        .stepName(RUN_STEP_NAME)
         .build();
   }
 
@@ -498,10 +504,10 @@ public class CIExecutionPlanTestHelper {
     return StepElement.builder()
         .identifier(PLUGIN_STEP_ID)
         .type("plugin")
-        .name("testPlugin")
+        .name(PLUGIN_STEP_NAME)
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(PLUGIN_STEP_ID)
-                          .name("testPlugin")
+                          .name(PLUGIN_STEP_NAME)
                           .callbackId("test-p1-callbackId")
                           .image(PLUGIN_STEP_IMAGE)
                           .resources(ContainerResource.builder()
@@ -544,6 +550,8 @@ public class CIExecutionPlanTestHelper {
         .envVars(envVar)
         .workingDirectory(WORK_DIR)
         .volumeToMountPath(volumeToMountPath)
+        .stepIdentifier(PLUGIN_STEP_ID)
+        .stepName(PLUGIN_STEP_NAME)
         .build();
   }
 
@@ -575,6 +583,8 @@ public class CIExecutionPlanTestHelper {
         .envVars(envVar)
         .workingDirectory(WORK_DIR)
         .volumeToMountPath(volumeToMountPath)
+        .stepName(GIT_CLONE_STEP_NAME)
+        .stepIdentifier(GIT_CLONE_STEP_ID)
         .build();
   }
 

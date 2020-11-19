@@ -3,6 +3,8 @@ package io.harness.delegate.beans.ci.k8s;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class PodStatus {
@@ -13,4 +15,5 @@ public class PodStatus {
   }
   Status status;
   String errorMessage;
+  List<CIContainerStatus> ciContainerStatusList;
 }

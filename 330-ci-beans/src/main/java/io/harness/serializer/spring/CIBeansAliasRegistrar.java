@@ -1,8 +1,11 @@
 package io.harness.serializer.spring;
 
 import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.beans.dependencies.CIServiceInfo;
+import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.execution.ManualExecutionSource;
+import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.steps.CiStepOutcome;
@@ -93,5 +96,9 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("customTextVariable", CustomTextVariable.class);
     orchestrationElements.put("manualExecutionSource", ManualExecutionSource.class);
     orchestrationElements.put("ciStepOutcome", CiStepOutcome.class);
+    orchestrationElements.put("ciServiceInfo", CIServiceInfo.class);
+    orchestrationElements.put("dependencyOutcome", DependencyOutcome.class);
+    orchestrationElements.put("serviceDependency", ServiceDependency.class);
+    orchestrationElements.put("serviceDependency_status", ServiceDependency.Status.class);
   }
 }

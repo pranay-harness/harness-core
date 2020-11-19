@@ -21,6 +21,8 @@ public class ContainerDefinitionInfo {
   @NotEmpty private ContainerImageDetails containerImageDetails;
   @NotEmpty private CIContainerType containerType;
   @NotEmpty private ContainerResourceParams containerResourceParams;
+  private String stepIdentifier;
+  private String stepName;
   private List<String> commands;
   private boolean isMainLiteEngine;
   private List<String> args;

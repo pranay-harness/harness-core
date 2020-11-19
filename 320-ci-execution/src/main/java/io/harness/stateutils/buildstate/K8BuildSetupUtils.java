@@ -34,6 +34,7 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
+import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -110,6 +111,15 @@ public class K8BuildSetupUtils {
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
+  }
+
+  public List<ContainerDefinitionInfo> getCIk8BuildServiceContainers(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
+    PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
+    return podSetupInfo.getPodSetupParams()
+        .getContainerDefinitionInfos()
+        .stream()
+        .filter(containerDefinitionInfo -> containerDefinitionInfo.getContainerType().equals(CIContainerType.SERVICE))
+        .collect(toList());
   }
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, PodSetupInfo podSetupInfo,
