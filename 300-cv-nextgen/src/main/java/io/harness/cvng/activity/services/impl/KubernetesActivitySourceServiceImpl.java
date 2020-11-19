@@ -18,7 +18,9 @@ import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourc
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -150,16 +152,18 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   }
 
   @Override
-  public List<String> getKubernetesNamespaces(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    return verificationManagerService.getKubernetesNamespaces(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier);
+  public PageResponse<String> getKubernetesNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, int offset, int pageSize, String filter) {
+    List<String> kubernetesNamespaces = verificationManagerService.getKubernetesNamespaces(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, filter);
+    return PageUtils.offsetAndLimit(kubernetesNamespaces, offset, pageSize);
   }
 
   @Override
-  public List<String> getKubernetesWorkloads(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace) {
-    return verificationManagerService.getKubernetesWorkloads(
-        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace);
+  public PageResponse<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String namespace, int offset, int pageSize, String filter) {
+    List<String> kubernetesWorkloads = verificationManagerService.getKubernetesWorkloads(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, filter);
+    return PageUtils.offsetAndLimit(kubernetesWorkloads, offset, pageSize);
   }
 }

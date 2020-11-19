@@ -206,24 +206,24 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
         .build();
   }
-  public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
+  public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier, String filter,
       DataCollectionConnectorBundle bundle) throws ApiException {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
-        .getNameSpaces(bundle, encryptedDataDetails);
+        .getNameSpaces(bundle, encryptedDataDetails, filter);
   }
 
   @Override
   public List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
-      DataCollectionConnectorBundle bundle) throws ApiException {
+      String filter, DataCollectionConnectorBundle bundle) throws ApiException {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
-        .getWorkloads(namespace, bundle, encryptedDataDetails);
+        .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
   }
 }

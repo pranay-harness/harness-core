@@ -3,6 +3,7 @@ package io.harness.cvng.activity.services.api;
 import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -17,8 +18,8 @@ public interface KubernetesActivitySourceService {
   void enqueueDataCollectionTask(KubernetesActivitySource activitySource);
   boolean doesAActivitySourceExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
-  List<String> getKubernetesNamespaces(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
-  List<String> getKubernetesWorkloads(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace);
+  PageResponse<String> getKubernetesNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, int offset, int pageSize, String filter);
+  PageResponse<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String namespace, int offset, int pageSize, String filter);
 }

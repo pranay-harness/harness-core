@@ -37,9 +37,9 @@ public class KubernetesResource {
   @ExceptionMetered
   public RestResponse<List<String>> getNamespaces(@QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @Body DataCollectionConnectorBundle bundle) throws ApiException {
+      @QueryParam("filter") String filter, @Body DataCollectionConnectorBundle bundle) throws ApiException {
     return new RestResponse<>(
-        dataCollectionTaskService.getNamespaces(accountId, orgIdentifier, projectIdentifier, bundle));
+        dataCollectionTaskService.getNamespaces(accountId, orgIdentifier, projectIdentifier, filter, bundle));
   }
 
   @POST
@@ -48,8 +48,9 @@ public class KubernetesResource {
   @ExceptionMetered
   public RestResponse<List<String>> getWorkloads(@QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("namespace") String namespace, @Body DataCollectionConnectorBundle bundle) throws ApiException {
+      @QueryParam("namespace") String namespace, @QueryParam("filter") String filter,
+      @Body DataCollectionConnectorBundle bundle) throws ApiException {
     return new RestResponse<>(
-        dataCollectionTaskService.getWorkloads(accountId, orgIdentifier, projectIdentifier, namespace, bundle));
+        dataCollectionTaskService.getWorkloads(accountId, orgIdentifier, projectIdentifier, namespace, filter, bundle));
   }
 }

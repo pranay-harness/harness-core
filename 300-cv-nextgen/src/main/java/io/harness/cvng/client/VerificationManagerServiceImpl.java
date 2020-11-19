@@ -66,7 +66,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
 
   @Override
   public List<String> getKubernetesNamespaces(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
@@ -80,13 +80,14 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
                                                .build();
 
     return requestExecutor
-        .execute(verificationManagerClient.getKubernetesNamespaces(accountId, orgIdentifier, projectIdentifier, bundle))
+        .execute(verificationManagerClient.getKubernetesNamespaces(
+            accountId, orgIdentifier, projectIdentifier, filter, bundle))
         .getResource();
   }
 
   @Override
-  public List<String> getKubernetesWorkloads(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String namespace) {
+  public List<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String namespace, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
@@ -101,7 +102,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
 
     return requestExecutor
         .execute(verificationManagerClient.getKubernetesWorkloads(
-            accountId, orgIdentifier, projectIdentifier, namespace, bundle))
+            accountId, orgIdentifier, projectIdentifier, namespace, filter, bundle))
         .getResource();
   }
 }

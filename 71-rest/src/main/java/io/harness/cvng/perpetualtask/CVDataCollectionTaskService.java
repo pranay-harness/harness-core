@@ -1,7 +1,6 @@
 package io.harness.cvng.perpetualtask;
 
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
-
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.kubernetes.client.openapi.ApiException;
 
@@ -14,8 +13,8 @@ public interface CVDataCollectionTaskService {
   String getDataCollectionResult(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest dataCollectionRequest);
 
-  List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
+  List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier, String filter,
       DataCollectionConnectorBundle bundle) throws ApiException;
   List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
-      DataCollectionConnectorBundle bundle) throws ApiException;
+      String filter, DataCollectionConnectorBundle bundle) throws ApiException;
 }
