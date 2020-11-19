@@ -11,10 +11,10 @@ import java.util.Set;
  */
 @Slf4j
 public class GenericLogSanitizer extends LogSanitizer {
-  private final Set<String> secrets;
+  private final Set<String> secretLines;
 
   public GenericLogSanitizer(Set<String> secrets) {
-    this.secrets = secrets;
+    secretLines = calculateSecretLines(secrets);
   }
 
   /**
@@ -25,9 +25,9 @@ public class GenericLogSanitizer extends LogSanitizer {
    */
   @Override
   public String sanitizeLog(String activityId, String message) {
-    if (isEmpty(secrets)) {
+    if (isEmpty(secretLines)) {
       return message;
     }
-    return sanitizeLogInternal(message, secrets);
+    return sanitizeLogInternal(message, secretLines);
   }
 }
