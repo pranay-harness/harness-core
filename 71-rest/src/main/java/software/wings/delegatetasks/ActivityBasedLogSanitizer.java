@@ -13,11 +13,11 @@ import java.util.Set;
 @Slf4j
 public class ActivityBasedLogSanitizer extends LogSanitizer {
   private final String activityId;
-  private final Set<String> secrets;
+  private final Set<String> secretLines;
 
   public ActivityBasedLogSanitizer(String activityId, Set<String> secrets) {
     this.activityId = activityId;
-    this.secrets = secrets;
+    secretLines = calculateSecretLines(secrets);
   }
 
   /**
@@ -29,10 +29,10 @@ public class ActivityBasedLogSanitizer extends LogSanitizer {
   @Override
   public String sanitizeLog(String activityId, String message) {
     if (StringUtils.equals(activityId, this.activityId)) {
-      if (isEmpty(secrets)) {
+      if (isEmpty(secretLines)) {
         return message;
       }
-      return sanitizeLogInternal(message, secrets);
+      return sanitizeLogInternal(message, secretLines);
     }
     return message;
   }
