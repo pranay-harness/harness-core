@@ -61,6 +61,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.alert.AlertData;
 import io.harness.annotations.dev.OwnedBy;
@@ -184,6 +185,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private DelegateService delegateService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject @Named("stateMachineExecutor-handler") private ExecutorService stateMachineExecutor;
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private Injector injector;
@@ -402,6 +404,24 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @return the state execution instance
    */
   StateExecutionInstance triggerExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
+    stateExecutionInstance = saveAndUpdateStateExecutionInstance(stateMachine, stateExecutionInstance);
+    submitToSMDispatcher(stateExecutionInstance, stateMachine);
+    return stateExecutionInstance;
+  }
+
+  private void submitToSMDispatcher(StateExecutionInstance stateExecutionInstance, StateMachine stateMachine) {
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
+    log.info(DEBUG_LINE + "about to start stateExecutionInstance for {}", stateExecutionInstance.getUuid());
+    if (featureFlagService.isEnabled(FeatureName.REFACTOR_STATEMACHINEXECUTOR, context.getAccountId())) {
+      stateMachineExecutor.execute(new SmExecutionDispatcher(context, this));
+    } else {
+      executorService.execute(new SmExecutionDispatcher(context, this));
+    }
+  }
+
+  private StateExecutionInstance saveAndUpdateStateExecutionInstance(
+      StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
+    log.info(DEBUG_LINE + "save and update stateMachineInstance");
     stateExecutionInstance = saveStateExecutionInstance(stateMachine, stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
@@ -1820,6 +1840,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     log.info(DEBUG_LINE + "kick off stateExecution from resume for state {}", currentState);
+    // TODO: Should this changed to stateMachineExecutor or Not?
     executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this, asyncError));
   }
 
@@ -2217,6 +2238,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     @Override
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
+        log.info(DEBUG_LINE + "inside run of SmExecutionDispatcher");
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         stateMachineExecutor.addContext(context, exception);
