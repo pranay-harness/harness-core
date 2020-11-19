@@ -1192,7 +1192,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return builder;
   }
 
-  public void populateNamespaceInInfraMappingElement(
+  @VisibleForTesting
+  @software.wings.security.annotations.Scope()
+  protected void populateNamespaceInInfraMappingElement(
       InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
@@ -1225,7 +1227,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
     String infraMappingId = fetchInfraMappingId();
     notNullCheck("infraMappingId", infraMappingId);
-
+    CloudProvider cloudProvider = generateCloudProviderElement(infrastructureMapping);
+    builder.cloudProvider(cloudProvider);
     if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
 
@@ -1236,13 +1239,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           ? pcfInfrastructureMapping.getTempRouteMap().get(0)
           : StringUtils.EMPTY;
 
-      CloudProvider cloudProvider = generateCloudProviderElement(infrastructureMapping);
       builder.pcf(Pcf.builder()
                       .route(route)
                       .tempRoute(tempRoute)
                       .organization(pcfInfrastructureMapping.getOrganization())
                       .space(pcfInfrastructureMapping.getSpace())
-                      .cloudProvider(cloudProvider)
                       .build());
     } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
       builder.helm(Helm.builder()
@@ -1307,16 +1308,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
-
-    CloudProvider cloudProvider = findCloudProviderElement(infrastructureMapping);
-    builder.cloudProvider(cloudProvider);
     return builder.build();
-  }
-
-  private CloudProvider findCloudProviderElement(InfrastructureMapping infrastructureMapping) {
-    // upon rerunning the workflow the whole object is repopulated
-    String computeProviderName = infrastructureMapping.getComputeProviderName();
-    return CloudProvider.builder().name(computeProviderName).build();
   }
 
   @Override

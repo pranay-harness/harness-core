@@ -339,6 +339,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Before
   public void setup() throws InterruptedException {
     context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("settingsService", settingsService);
     helmDeployState.setHelmReleaseNamePrefix(HELM_RELEASE_NAME_PREFIX);
     infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
 
@@ -1083,6 +1084,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
             .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(0).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("settingsService", settingsService);
 
     helmDeployState.setStateType(StateType.HELM_ROLLBACK.name());
 
@@ -1095,6 +1097,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
             .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(1).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("settingsService", settingsService);
 
     helmDeployState.setStateType(StateType.HELM_ROLLBACK.name());
 
@@ -1110,6 +1113,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
             .addContextElement(HelmDeployContextElement.builder().previousReleaseRevision(0).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("settingsService", settingsService);
     HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder().build();
 
     doReturn(true).when(logService).batchedSaveCommandUnitLogs(any(), any(), any());

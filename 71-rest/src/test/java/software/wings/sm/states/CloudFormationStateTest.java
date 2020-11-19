@@ -338,6 +338,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("featureFlagService", featureFlagService);
+    on(context).set("settingsService", settingsService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     //    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
