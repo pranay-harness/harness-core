@@ -20,25 +20,19 @@ public interface UserClient {
   String OFFSET_KEY = "offset";
   String LIMIT_KEY = "limit";
   String SEARCH_TERM_KEY = "searchTerm";
-  String EMAIL_LIST = "emailList";
-  String EMAIL_ID = "emailId";
   String USERS_SEARCH_API = "ng/users/search";
   String USERS_API = "ng/users";
   String USERNAME_API = "ng/users/usernames";
 
   @GET(USERS_SEARCH_API)
-  Call<RestResponse<PageResponse<User>>> list(@Query(value = ACCOUNT_KEY) String accountId,
-      @Query(OFFSET_KEY) String offset, @Query(LIMIT_KEY) String limit, @Query(SEARCH_TERM_KEY) String searchTerm);
+  Call<RestResponse<PageResponse<User>>> list(@Query(value = "accountId") String accountId,
+      @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm);
 
   @GET(USERNAME_API)
   Call<RestResponse<List<String>>> getUsernameFromEmail(
-      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = EMAIL_LIST) List<String> emailList);
+      @Query(value = "accountId") String accountId, @Query(value = "emailList") List<String> emailList);
 
   @GET(USERS_API)
   Call<RestResponse<Optional<User>>> getUserFromEmail(
-      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = EMAIL_ID) String email);
-
-  @GET(USERS_API)
-  Call<RestResponse<Optional<User>>> getEmailFromUserId(
-      @Query(value = ACCOUNT_KEY) String accountId, @Query(value = IDENTIFIER_KEY) String targetId);
+      @Query(value = "accountId") String accountId, @Query(value = "emailId") String email);
 }
