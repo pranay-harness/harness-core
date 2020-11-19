@@ -34,12 +34,12 @@ func NewRemoteLogger(writer StreamWriter) (*RemoteLogger, error) {
 	}
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), ws, zap.DebugLevel)
 	logger := zap.New(core)
-	sugar := logger.Sugar()
-	rl := &RemoteLogger{sugar, writer}
-	// Try to open the stream
+	log := logger.Sugar()
+	rl := &RemoteLogger{log, writer}
+	// Try to open the stream. Continue using the writer even if it's unsuccessful
 	err := rl.Writer.Open()
 	if err != nil {
-		return nil, err
+		log.Errorw("Unable to open log stream", zap.Error(err))
 	}
 	return rl, nil
 }

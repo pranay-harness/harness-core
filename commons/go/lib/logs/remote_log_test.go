@@ -10,7 +10,7 @@ import (
 	"github.com/wings-software/portal/product/log-service/mock"
 )
 
-func Test_GetRemoteLogger_Success(t *testing.T) {
+func Test_GetRemoteLogger_OpenSuccess(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
@@ -21,7 +21,7 @@ func Test_GetRemoteLogger_Success(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
-func Test_GetRemoteLogger_Failure(t *testing.T) {
+func Test_GetRemoteLogger_OpenFailure(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
@@ -29,5 +29,5 @@ func Test_GetRemoteLogger_Failure(t *testing.T) {
 	mclient.EXPECT().Open(context.Background(), "key").Return(errors.New("err"))
 	writer := NewRemoteWriter(mclient, "key")
 	_, err := NewRemoteLogger(writer)
-	assert.NotEqual(t, err, nil)
+	assert.Equal(t, err, nil)
 }
