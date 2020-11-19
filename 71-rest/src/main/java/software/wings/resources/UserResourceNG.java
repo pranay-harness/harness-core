@@ -57,7 +57,7 @@ public class UserResourceNG {
   @GET
   @Path("/usernames")
   public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountID") String accountId, @QueryParam("emailList") List<String> emailList) {
+      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
     List<String> usernames = new ArrayList<>();
     for (String email : emailList) {
       Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
@@ -72,7 +72,7 @@ public class UserResourceNG {
 
   @GET
   public RestResponse<Optional<User>> getUserFromEmail(
-      @QueryParam("accountID") String accountId, @QueryParam("emailId") String emailId) {
+      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
   }
 }
