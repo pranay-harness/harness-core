@@ -62,6 +62,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.alert.AlertData;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
@@ -108,6 +109,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.RuntimeInputsRequiredAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
@@ -873,7 +875,15 @@ public class StateMachineExecutor implements StateInspectionListener {
         });
 
         // Open an alert
-        openAnAlert(context, stateExecutionInstance);
+        Environment environment = context.getEnv();
+        ManualInterventionNeededAlert manualInterventionNeededAlert =
+            ManualInterventionNeededAlert.builder()
+                .envId(environment != null ? environment.getUuid() : null)
+                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                .executionId(context.getWorkflowExecutionId())
+                .name(context.getWorkflowExecutionName())
+                .build();
+        openAnAlert(context, stateExecutionInstance, manualInterventionNeededAlert);
         sendManualInterventionNeededNotification(context);
         break;
       }
@@ -891,7 +901,15 @@ public class StateMachineExecutor implements StateInspectionListener {
                 stateExecutionInstance.getPipelineStageElementId(), stateExecutionInstance.getExecutionUuid()));
 
         // Open an alert
-        openAnAlert(context, stateExecutionInstance);
+        Environment environment = context.getEnv();
+        RuntimeInputsRequiredAlert runtimeInputsRequiredAlert =
+            RuntimeInputsRequiredAlert.builder()
+                .envId(environment != null ? environment.getUuid() : null)
+                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                .executionId(context.getWorkflowExecutionId())
+                .name(context.getWorkflowExecutionName())
+                .build();
+        openAnAlert(context, stateExecutionInstance, runtimeInputsRequiredAlert);
         sendRuntimeInputNeededNotification(context, executionEventAdvice, stateExecutionInstance);
         break;
       }
@@ -1168,21 +1186,14 @@ public class StateMachineExecutor implements StateInspectionListener {
     return placeholderValues;
   }
 
-  private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
+  private void openAnAlert(
+      ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance, AlertData alertData) {
     try {
       Application app = context.getApp();
       notNullCheck("app", app);
       Environment environment = context.getEnv();
 
-      RuntimeInputsRequiredAlert runtimeInputsRequiredAlert =
-          RuntimeInputsRequiredAlert.builder()
-              .envId(environment != null ? environment.getUuid() : null)
-              .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-              .executionId(context.getWorkflowExecutionId())
-              .name(context.getWorkflowExecutionName())
-              .build();
-
-      alertService.openAlert(app.getAccountId(), app.getUuid(), ManualInterventionNeeded, runtimeInputsRequiredAlert);
+      alertService.openAlert(app.getAccountId(), app.getUuid(), ManualInterventionNeeded, alertData);
     } catch (Exception e) {
       log.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
           context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
