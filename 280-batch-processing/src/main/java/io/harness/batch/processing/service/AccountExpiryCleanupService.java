@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEGcpConfig;
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -33,6 +34,9 @@ public class AccountExpiryCleanupService {
     List<Account> accounts = cloudToHarnessMappingService.getCeAccountsWithLicense();
     log.info("Accounts batch size is AccountExpiryCleanupTasklet {} ", accounts.size());
     accounts.forEach(account -> {
+      Boolean isAwsConnectorPresent = false;
+      Boolean isGCPConnectorPresent = false;
+
       String accountId = account.getUuid();
       List<SettingAttribute> ceConnectors = cloudToHarnessMappingService.getCEConnectors(accountId);
       Set<String> settingIdsSet =
@@ -41,12 +45,23 @@ public class AccountExpiryCleanupService {
               .map(SettingAttribute::getUuid)
               .collect(Collectors.toSet());
 
+      if (!settingIdsSet.isEmpty()) {
+        isAwsConnectorPresent = true;
+      }
+
       for (SettingAttribute ceConnector : ceConnectors) {
         SettingValue value = ceConnector.getValue();
         if (value.getType().equals(SettingVariableTypes.CE_GCP.toString())) {
+          isGCPConnectorPresent = true;
           settingIdsSet.add(((CEGcpConfig) value).getOrganizationSettingId());
         }
       }
+
+      cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder()
+                                                              .accountId(accountId)
+                                                              .awsConnectorConfigured(isAwsConnectorPresent)
+                                                              .gcpConnectorConfigured(isGCPConnectorPresent)
+                                                              .build());
 
       List<BillingDataPipelineRecord> billingDataPipelineRecordList =
           billingDataPipelineRecordDao.getAllRecordsByAccountId(accountId);

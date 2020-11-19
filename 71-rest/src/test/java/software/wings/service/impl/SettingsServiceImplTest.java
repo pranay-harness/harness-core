@@ -28,6 +28,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -52,6 +53,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEGcpConfig;
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.features.CeCloudAccountFeature;
@@ -82,6 +84,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   private Account account;
   private SettingAttribute settingAttribute;
 
+  @Mock private CEMetadataRecordDao ceMetadataRecordDao;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private EnvironmentService environmentService;
   @Mock private AppService appService;
@@ -155,6 +158,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.ROHIT)
   @Category(UnitTests.class)
   public void testValidateAndUpdateCEDetailsMethod() {
+    when(ceMetadataRecordDao.upsert(any())).thenReturn(CEMetadataRecord.builder().build());
     SettingAttribute attribute = new SettingAttribute();
     attribute.setCategory(SettingCategory.CE_CONNECTOR);
     CEAwsConfig ceAwsConfig =
@@ -185,6 +189,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.ROHIT)
   @Category(UnitTests.class)
   public void testAllowOnlyOneAWSConnectorCase() {
+    when(ceMetadataRecordDao.upsert(any())).thenReturn(CEMetadataRecord.builder().build());
     SettingAttribute attribute = new SettingAttribute();
     attribute.setCategory(SettingCategory.CE_CONNECTOR);
     CEAwsConfig ceAwsConfig =
@@ -209,6 +214,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.ROHIT)
   @Category(UnitTests.class)
   public void testAllowOnlyOneGCPConnectorCase() {
+    when(ceMetadataRecordDao.upsert(any())).thenReturn(CEMetadataRecord.builder().build());
     SettingAttribute attribute = new SettingAttribute();
     attribute.setCategory(SettingCategory.CE_CONNECTOR);
     CEGcpConfig ceGcpConfig = CEGcpConfig.builder().organizationSettingId("orgSettingId").build();

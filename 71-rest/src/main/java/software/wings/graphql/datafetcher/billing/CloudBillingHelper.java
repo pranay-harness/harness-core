@@ -48,6 +48,7 @@ public class CloudBillingHelper {
   private static final String tags = "tags";
   private static final String labels = "labels";
   private static final String credits = "credits";
+  public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
 
   private Cache<String, BillingDataPipelineCacheObject> billingDataPipelineRecordCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -82,13 +83,21 @@ public class CloudBillingHelper {
   public String getCloudProviderTableName(String accountId, String tableName) {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
-    String dataSetId = getDataPipelineMetadata(accountId).getDataSetId();
+    String dataSetId = getDataSetId(accountId);
     return format("%s.%s.%s", projectId, dataSetId, tableName);
   }
 
   public String getCloudProviderTableName(String gcpProjectId, String accountId, String tableName) {
-    String dataSetId = getDataPipelineMetadata(accountId).getDataSetId();
+    String dataSetId = getDataSetId(accountId);
     return format("%s.%s.%s", gcpProjectId, dataSetId, tableName);
+  }
+
+  public String getDataSetId(String accountId) {
+    return String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
+  }
+
+  public String modifyStringToComplyRegex(String accountInfo) {
+    return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
   }
 
   public String getCloudProvider(List<CloudBillingFilter> filters) {
