@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -201,16 +202,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     List<DelegateProfileScopingRule> delegateProfileScopingRules = delegateProfile.getScopingRules();
 
+    String failedRuleDescription = null;
+
     if (isEmpty(delegateProfileScopingRules)) {
       return true;
+    } else if (isEmpty(taskSetupAbstractions)) {
+      return false;
     }
 
-    String failedRuleDescription = null;
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;
-      for (Map.Entry<String, String> setupAbstraction : taskSetupAbstractions.entrySet()) {
-        Set<String> entityIds = scopingRule.getScopingEntities().get(setupAbstraction.getKey());
-        if (isNotEmpty(entityIds) && !entityIds.contains(setupAbstraction.getValue())) {
+
+      for (Map.Entry<String, Set<String>> entity : scopingRule.getScopingEntities().entrySet()) {
+        String taskSetupAbstractionValue = taskSetupAbstractions.get(entity.getKey());
+
+        if (isBlank(taskSetupAbstractionValue)
+            || (entity.getValue() != null && !entity.getValue().contains(taskSetupAbstractionValue))) {
           failedRuleDescription = scopingRule.getDescription();
           scopingRuleMatched = false;
           break;
@@ -224,6 +231,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     delegateSelectionLogsService.logProfileScopeRuleNotMatched(
         batch, delegate.getAccountId(), delegate.getUuid(), failedRuleDescription);
+
     return false;
   }
 
