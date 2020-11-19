@@ -41,8 +41,8 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
-import io.harness.ng.ngtriggers.intfc.TriggerWebhookService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -51,6 +51,8 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -71,7 +73,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
@@ -121,6 +122,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
@@ -144,9 +147,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    final ScheduledThreadPoolExecutor webhookEventExecutor =
-        new ScheduledThreadPoolExecutor(10, new ThreadFactoryBuilder().setNameFormat("Iterator-webhookEvent").build());
-    injector.getInstance(TriggerWebhookService.class).registerIterators(webhookEventExecutor);
+    injector.getInstance(TriggerWebhookService.class).registerIterators();
     MaintenanceController.forceMaintenance(false);
   }
 

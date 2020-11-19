@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.StatusRuntimeException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.*;
@@ -38,8 +39,7 @@ public class WebhookEventPayloadParser {
 
   @VisibleForTesting
   ParseWebhookResponse invokeScmService(TriggerWebhookEvent triggerWebhookEvent) {
-    Set<String> headerKeys =
-        triggerWebhookEvent.getHeaders().stream().map(headerConfig -> headerConfig.getKey()).collect(toSet());
+    Set<String> headerKeys = triggerWebhookEvent.getHeaders().stream().map(HeaderConfig::getKey).collect(toSet());
 
     GitProvider gitProvider = obtainWebhookSource(headerKeys);
     Header.Builder header = Header.newBuilder();
@@ -54,7 +54,7 @@ public class WebhookEventPayloadParser {
                                                               .setProvider(gitProvider)
                                                               .setHeader(header.build())
                                                               .build());
-      log.info("This is a parsewebhookresponse", parseWebhookResponse);
+      log.info("This is a parseWebhookResponse:");
     } catch (StatusRuntimeException e) {
       log.error("Failed to parse webhook payload {}", triggerWebhookEvent.getPayload());
       throw e;
@@ -73,7 +73,7 @@ public class WebhookEventPayloadParser {
       if (pushHook.getRef().startsWith("refs/tags/")) {
         throw new InvalidRequestException("Tag event not supported", USER);
       }
-      webhookPayloadDataBuilder = converPushHook(pushHook);
+      webhookPayloadDataBuilder = convertPushHook(pushHook);
     } else {
       log.error("Unknown webhook event");
       throw new InvalidRequestException("Unknown webhook event", USER);
@@ -93,7 +93,7 @@ public class WebhookEventPayloadParser {
         .webhookEvent(prWebhookEvent);
   }
 
-  private WebhookPayloadDataBuilder converPushHook(PushHook pushHook) {
+  WebhookPayloadDataBuilder convertPushHook(PushHook pushHook) {
     WebhookGitUser webhookGitUser = convertUser(pushHook.getSender());
     BranchWebhookEvent webhookEvent = convertPushWebhookEvent(pushHook);
 

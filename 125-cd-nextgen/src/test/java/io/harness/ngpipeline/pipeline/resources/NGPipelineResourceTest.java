@@ -63,7 +63,7 @@ public class NGPipelineResourceTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
-    NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURL(), NgPipeline.class);
+    NgPipeline ngPipeline = YamlPipelineUtils.read(file.toURI().toURL(), NgPipeline.class);
     ngPipelineResource = new NGPipelineResource(ngPipelineService, restQueryFilterParser);
     ngPipelineResponseDTO = NGPipelineResponseDTO.builder()
                                 .ngPipeline(ngPipeline)

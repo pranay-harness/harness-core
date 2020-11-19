@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//35-yaml-beans:module",
+        "//39-ng-pipeline-commons:module",
         "//970-ng-commons:module",
         "//product/ci/scm/proto:ciscm_java_proto",
         "@maven//:net_jodah_failsafe",

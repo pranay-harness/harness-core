@@ -4,6 +4,8 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import lombok.NoArgsConstructor;
 import lombok.experimental.UtilityClass;
@@ -81,6 +83,12 @@ public class TriggerFilterHelper {
 
     update.set(NGTriggerEntityKeys.deleted, false);
 
+    return update;
+  }
+
+  public Update getUpdateOperations(TriggerWebhookEvent triggerWebhookEvent) {
+    Update update = new Update();
+    update.set(TriggerWebhookEventsKeys.attemptCount, triggerWebhookEvent.getAttemptCount());
     return update;
   }
 

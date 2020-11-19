@@ -42,7 +42,7 @@ public class NGPipelineExecuteHelper {
 
   public NGPipelineExecutionResponseDTO runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
-      String inputSetPipelineYaml, boolean useFQNIfErrorResponse, EmbeddedUser user) {
+      String inputSetPipelineYaml, String eventPayload, boolean useFQNIfErrorResponse, EmbeddedUser user) {
     MergeInputSetResponse mergeInputSetResponse;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       NgPipeline pipeline = inputSetMergeHelper.getOriginalOrTemplatePipeline(
@@ -52,8 +52,11 @@ public class NGPipelineExecuteHelper {
       mergeInputSetResponse = inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier,
           projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, false, useFQNIfErrorResponse);
     }
+    Map<String, Object> contextAttributes = new HashMap<>();
+    contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipelineYaml);
+    contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, eventPayload);
     return getPipelineResponseDTO(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, inputSetPipelineYaml);
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, contextAttributes);
   }
 
   public NGPipelineExecutionResponseDTO runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
@@ -74,8 +77,10 @@ public class NGPipelineExecuteHelper {
         inputSetMergeHelper.getMergePipelineYamlFromInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
             pipelineIdentifier, "inputSet", mergeInputSetResponse.getMergedPipeline(), false, useFQNIfErrorResponse);
 
+    Map<String, Object> contextAttributes = new HashMap<>();
+    contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipeline);
     return getPipelineResponseDTO(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, inputSetPipeline);
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, contextAttributes);
   }
 
   /**
@@ -110,19 +115,18 @@ public class NGPipelineExecuteHelper {
   }
 
   private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,
-      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user, String inputSetYaml) {
+      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user,
+      Map<String, Object> contextAttributes) {
     if (mergeInputSetResponse.isErrorResponse()) {
       return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(null, mergeInputSetResponse);
     }
-    PlanExecution planExecution = startPipelinePlanExecution(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse.getMergedPipeline(), user, inputSetYaml);
+    PlanExecution planExecution = startPipelinePlanExecution(accountId, orgIdentifier, projectIdentifier,
+        mergeInputSetResponse.getMergedPipeline(), user, contextAttributes);
     return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
   }
 
   private PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      NgPipeline finalPipeline, EmbeddedUser user, String inputSetYaml) {
-    Map<String, Object> contextAttributes = new HashMap<>();
-    contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetYaml);
+      NgPipeline finalPipeline, EmbeddedUser user, Map<String, Object> contextAttributes) {
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(finalPipeline, accountId, contextAttributes);
 
@@ -133,7 +137,9 @@ public class NGPipelineExecuteHelper {
         ImmutableMap.<String, String>builder()
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
+            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
+            .put(PipelinePlanCreator.EVENT_PAYLOAD_KEY,
+                (String) contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY));
     if (user != null) {
       abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
           .put(SetupAbstractionKeys.userName, user.getName())

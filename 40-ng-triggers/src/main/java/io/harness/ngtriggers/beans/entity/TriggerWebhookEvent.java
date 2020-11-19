@@ -34,6 +34,8 @@ public class TriggerWebhookEvent implements PersistentEntity, UuidAccess, Persis
   List<HeaderConfig> headers;
   String accountId;
 
+  @Builder.Default Integer attemptCount = 0;
+
   @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @CreatedDate Long createdAt;
