@@ -10,6 +10,7 @@ import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Path("deployment-log-analysis")
 @Produces("application/json")
 @ExposeInternalException
+@NextGenManagerAuth
 public class DeploymentLogAnalysisResource {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
