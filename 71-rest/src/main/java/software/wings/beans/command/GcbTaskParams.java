@@ -14,6 +14,7 @@ import software.wings.beans.GitConfig;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   @NotNull
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    List<ExecutionCapability> executionCapabilities = gcpConfig.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities());
     if (gcpConfig.isUseDelegate()) {
       executionCapabilities.add(SelectorCapability.builder()
                                     .selectors(Collections.singleton(gcpConfig.getDelegateSelector()))
