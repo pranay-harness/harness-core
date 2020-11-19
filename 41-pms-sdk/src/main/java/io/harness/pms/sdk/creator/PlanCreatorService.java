@@ -1,11 +1,11 @@
 package io.harness.pms.sdk.creator;
 
+import com.google.inject.Inject;
+
 import io.grpc.stub.StreamObserver;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.creator.PlanCreationContext;
-import io.harness.pms.creator.PlanCreationResponse;
 import io.harness.pms.creator.PlanCreatorUtils;
 import io.harness.pms.plan.PlanCreationBlobRequest;
 import io.harness.pms.plan.PlanCreationBlobResponse;
@@ -14,7 +14,6 @@ import io.harness.pms.plan.YamlFieldBlob;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.serializer.KryoSerializer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,11 +30,10 @@ import javax.validation.constraints.NotNull;
 public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final Executor executor = Executors.newFixedThreadPool(2);
 
-  private final KryoSerializer kryoSerializer;
   private final List<PartialPlanCreator<?>> planCreators;
 
-  public PlanCreatorService(@NotNull KryoSerializer kryoSerializer, @NotNull PlanCreatorProvider planCreatorProvider) {
-    this.kryoSerializer = kryoSerializer;
+  @Inject
+  public PlanCreatorService(@NotNull PlanCreatorProvider planCreatorProvider) {
     this.planCreators = planCreatorProvider.getPlanCreators();
   }
 
@@ -65,7 +63,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       return finalResponse;
     }
 
-    PlanCreationContext ctx = PlanCreationContext.builder().kryoSerializer(kryoSerializer).build();
+    PlanCreationContext ctx = new PlanCreationContext();
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
       createPlanForDependencies(ctx, finalResponse, dependencies);

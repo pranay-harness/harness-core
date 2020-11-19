@@ -8,5 +8,5 @@ import "io/harness/pms/plan/plan_node.proto";
 
 message Plan {
   string startingNodeId = 1;
-  repeated PlanNode nodes = 2;
+  repeated PlanNodeProto nodes = 2;
 }

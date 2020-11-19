@@ -2,12 +2,10 @@ package io.harness.pms.sdk.creator;
 
 import com.google.common.base.Preconditions;
 
-import io.harness.pms.creator.PlanCreationContext;
-import io.harness.pms.creator.PlanCreationResponse;
 import io.harness.pms.creator.PlanCreatorUtils;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.pms.plan.PlanNode;
+import io.harness.pms.sdk.beans.PlanNode;
 import io.harness.pms.sdk.io.MapStepParameters;
 import io.harness.pms.steps.StepType;
 import io.harness.pms.yaml.YamlField;
@@ -52,19 +50,18 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
                                           .map(el -> el.getField("stage"))
                                           .collect(Collectors.toList());
     String uuid = "stages-" + yamlNode.getUuid();
-    PlanNode node =
-        PlanNode.newBuilder()
-            .setUuid(uuid)
-            .setIdentifier("stages-" + yamlNode.getIdentifier())
-            .setStepType(StepType.newBuilder().setType("stages").build())
-            .setName("stages")
-            .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds",
-                stageYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList()))))
-            .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                           .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
-                                           .build())
-            .setSkipExpressionChain(false)
-            .build();
+    PlanNode node = PlanNode.builder()
+                        .uuid(uuid)
+                        .identifier("stages-" + yamlNode.getIdentifier())
+                        .stepType(StepType.newBuilder().setType("stages").build())
+                        .name("stages")
+                        .stepParameters(new MapStepParameters("childrenNodeIds",
+                            stageYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList())))
+                        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                                   .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
+                                                   .build())
+                        .skipExpressionChain(false)
+                        .build();
 
     Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
     stageYamlFields.forEach(stepField -> stageYamlFieldMap.put(stepField.getNode().getUuid(), stepField));
@@ -76,16 +73,16 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
   @Override
   public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField field, Set<String> childrenNodeIds) {
     YamlNode yamlNode = field.getNode();
-    return PlanNode.newBuilder()
-        .setUuid(yamlNode.getUuid())
-        .setIdentifier(yamlNode.getIdentifier())
-        .setStepType(StepType.newBuilder().setType("pipeline").build())
-        .setName(yamlNode.getNameOrIdentifier())
-        .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds", childrenNodeIds)))
-        .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                       .setType(FacilitatorType.newBuilder().setType("CHILD_CHAIN").build())
-                                       .build())
-        .setSkipExpressionChain(false)
+    return PlanNode.builder()
+        .uuid(yamlNode.getUuid())
+        .identifier(yamlNode.getIdentifier())
+        .stepType(StepType.newBuilder().setType("pipeline").build())
+        .name(yamlNode.getNameOrIdentifier())
+        .stepParameters(new MapStepParameters("childrenNodeIds", childrenNodeIds))
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                   .setType(FacilitatorType.newBuilder().setType("CHILD_CHAIN").build())
+                                   .build())
+        .skipExpressionChain(false)
         .build();
   }
 }

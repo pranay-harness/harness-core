@@ -3,7 +3,7 @@ package io.harness.pms.creator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanNode;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.plan.YamlFieldBlob;
 import lombok.experimental.UtilityClass;
 
@@ -20,14 +20,14 @@ public class PlanCreationBlobResponseUtils {
     mergeStartingNodeId(builder, other.getStartingNodeId());
   }
 
-  public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNode> newNodes) {
+  public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
     if (EmptyPredicate.isEmpty(newNodes)) {
       return;
     }
     newNodes.values().forEach(newNode -> addNode(builder, newNode));
   }
 
-  public void addNode(PlanCreationBlobResponse.Builder builder, PlanNode newNode) {
+  public void addNode(PlanCreationBlobResponse.Builder builder, PlanNodeProto newNode) {
     // TODO: Add logic to update only if newNode has a more recent version.
     builder.putNodes(newNode.getUuid(), newNode);
     builder.removeDependencies(newNode.getUuid());
