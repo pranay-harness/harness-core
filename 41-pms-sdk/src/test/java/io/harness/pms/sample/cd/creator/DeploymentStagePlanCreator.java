@@ -3,11 +3,8 @@ package io.harness.pms.sample.cd.creator;
 import com.google.common.base.Preconditions;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.harness.pms.creator.PlanCreationContext;
-import io.harness.pms.creator.PlanCreationResponse;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.pms.plan.PlanNode;
 import io.harness.pms.sample.cd.beans.DeploymentStage;
 import io.harness.pms.sample.cd.beans.DeploymentStageSpec;
 import io.harness.pms.sample.cd.beans.Environment;
@@ -16,7 +13,10 @@ import io.harness.pms.sample.cd.beans.Infrastructure;
 import io.harness.pms.sample.cd.beans.InfrastructureDefinition;
 import io.harness.pms.sample.cd.beans.Service;
 import io.harness.pms.sample.cd.beans.ServiceDefinition;
+import io.harness.pms.sdk.beans.PlanNode;
 import io.harness.pms.sdk.creator.ChildrenPlanCreator;
+import io.harness.pms.sdk.creator.PlanCreationContext;
+import io.harness.pms.sdk.creator.PlanCreationResponse;
 import io.harness.pms.sdk.io.MapStepParameters;
 import io.harness.pms.steps.StepType;
 import io.harness.pms.yaml.YamlField;
@@ -54,17 +54,17 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, DeploymentStage deploymentStage, Set<String> childrenNodeIds) {
-    return PlanNode.newBuilder()
-        .setUuid(deploymentStage.getUuid())
-        .setIdentifier(deploymentStage.getIdentifier())
-        .setStepType(StepType.newBuilder().setType("stage").build())
-        .setGroup("stage")
-        .setName(deploymentStage.getIdentifier())
-        .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds", childrenNodeIds)))
-        .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                       .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
-                                       .build())
-        .setSkipExpressionChain(false)
+    return PlanNode.builder()
+        .uuid(deploymentStage.getUuid())
+        .identifier(deploymentStage.getIdentifier())
+        .stepType(StepType.newBuilder().setType("stage").build())
+        .group("stage")
+        .name(deploymentStage.getIdentifier())
+        .stepParameters(new MapStepParameters("childrenNodeIds", childrenNodeIds))
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                   .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
+                                   .build())
+        .skipExpressionChain(false)
         .build();
   }
 
@@ -95,17 +95,17 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
   }
 
   private void createSyncPlanNode(Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, String type,
-      String uuid, String identifier, Map<String, Object> stepParameters) {
-    PlanNode node = PlanNode.newBuilder()
-                        .setUuid(uuid)
-                        .setIdentifier(identifier)
-                        .setStepType(StepType.newBuilder().setType(type).build())
-                        .setName(type)
-                        .setStepParameters(ctx.toByteString(stepParameters))
-                        .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                                       .setType(FacilitatorType.newBuilder().setType("SYNC").build())
-                                                       .build())
-                        .setSkipExpressionChain(false)
+      String uuid, String identifier, MapStepParameters stepParameters) {
+    PlanNode node = PlanNode.builder()
+                        .uuid(uuid)
+                        .identifier(identifier)
+                        .stepType(StepType.newBuilder().setType(type).build())
+                        .name(type)
+                        .stepParameters(stepParameters)
+                        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                                   .setType(FacilitatorType.newBuilder().setType("SYNC").build())
+                                                   .build())
+                        .skipExpressionChain(false)
                         .build();
     responseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
   }
@@ -120,19 +120,18 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
     List<YamlField> stepYamlFields =
         steps.stream().map(el -> new YamlField("step", new YamlNode(el.get("step")))).collect(Collectors.toList());
     String uuid = "steps-" + execution.getUuid();
-    PlanNode node =
-        PlanNode.newBuilder()
-            .setUuid(uuid)
-            .setIdentifier("steps")
-            .setStepType(StepType.newBuilder().setType("steps").build())
-            .setName("steps")
-            .setStepParameters(ctx.toByteString(new MapStepParameters("childrenNodeIds",
-                stepYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList()))))
-            .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                           .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
-                                           .build())
-            .setSkipExpressionChain(false)
-            .build();
+    PlanNode node = PlanNode.builder()
+                        .uuid(uuid)
+                        .identifier("steps")
+                        .stepType(StepType.newBuilder().setType("steps").build())
+                        .name("steps")
+                        .stepParameters(new MapStepParameters("childrenNodeIds",
+                            stepYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList())))
+                        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                                   .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())
+                                                   .build())
+                        .skipExpressionChain(false)
+                        .build();
 
     Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
     stepYamlFields.forEach(stepField -> stepYamlFieldMap.put(stepField.getNode().getUuid(), stepField));

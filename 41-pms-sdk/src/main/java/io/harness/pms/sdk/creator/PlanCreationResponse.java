@@ -1,9 +1,11 @@
-package io.harness.pms.creator;
+package io.harness.pms.sdk.creator;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanNode;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.beans.PlanNode;
+import io.harness.pms.sdk.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;
 import lombok.Builder;
 import lombok.Data;
@@ -84,7 +86,9 @@ public class PlanCreationResponse {
   public PlanCreationBlobResponse toBlobResponse() {
     PlanCreationBlobResponse.Builder finalBlobResponseBuilder = PlanCreationBlobResponse.newBuilder();
     if (EmptyPredicate.isNotEmpty(nodes)) {
-      finalBlobResponseBuilder.putAllNodes(nodes);
+      Map<String, PlanNodeProto> newNodes = new HashMap<>();
+      nodes.forEach((k, v) -> newNodes.put(k, PlanNodeProtoMapper.toPlanNodeProto(v)));
+      finalBlobResponseBuilder.putAllNodes(newNodes);
     }
     if (EmptyPredicate.isNotEmpty(dependencies)) {
       for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {

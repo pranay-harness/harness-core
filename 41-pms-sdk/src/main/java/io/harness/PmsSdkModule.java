@@ -18,9 +18,7 @@ import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.plan.Types;
 import io.harness.pms.sdk.creator.PartialPlanCreator;
 import io.harness.pms.sdk.creator.PlanCreatorProvider;
-import io.harness.pms.sdk.creator.PlanCreatorService;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -98,8 +96,8 @@ public class PmsSdkModule {
 
       @Provides
       @Singleton
-      public PlanCreatorService planCreatorService(KryoSerializer kryoSerializer) {
-        return new PlanCreatorService(kryoSerializer, config.getPlanCreatorProvider());
+      public PlanCreatorProvider planCreatorProvider() {
+        return config.getPlanCreatorProvider();
       }
 
       @Provides

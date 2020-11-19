@@ -18,7 +18,7 @@ import "io/harness/pms/data/step_outcome_ref.proto";
 message NodeExecution {
   string uuid = 1;
   io.harness.pms.ambiance.Ambiance ambiance = 2;
-  io.harness.pms.plan.PlanNode planNode = 3;
+  io.harness.pms.plan.PlanNodeProto planNode = 3;
   ExecutionMode mode = 4;
 
   google.protobuf.Timestamp startTs = 5;
