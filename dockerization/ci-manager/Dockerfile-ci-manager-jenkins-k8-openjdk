@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM harness/alpine:safe-alpine3.12-sec864
+FROM harness/alpine:safe-alpine3.12-sec874
 
 # Add the capsule JAR and ci-manager-config.yml
 COPY ci-manager-capsule.jar keystore.jks ci-manager-config.yml /opt/harness/

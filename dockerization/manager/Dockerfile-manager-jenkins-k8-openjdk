@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM harness/alpine:safe-alpine3.12-sec864
+FROM harness/alpine:safe-alpine3.12-sec874
 
 # Add the capsule JAR and config.yml
 COPY rest-capsule.jar newrelic.yml keystore.jks config.yml hazelcast.xml redisson-jcache.yaml /opt/harness/
