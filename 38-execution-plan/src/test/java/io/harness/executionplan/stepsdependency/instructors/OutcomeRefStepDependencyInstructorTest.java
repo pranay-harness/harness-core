@@ -10,8 +10,7 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
-import io.harness.references.OutcomeRefObject;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,10 +50,8 @@ public class OutcomeRefStepDependencyInstructorTest extends CategoryTest {
     List<RefObject> refObjects = planNode.getRefObjects();
     assertThat(refObjects.size()).isEqualTo(1);
     RefObject refObject = refObjects.get(0);
-    assertThat(refObject).isInstanceOf(OutcomeRefObject.class);
-    OutcomeRefObject outcomeRefObject = (OutcomeRefObject) refObject;
-    assertThat(outcomeRefObject.getKey()).isEqualTo("TEST");
-    assertThat(outcomeRefObject.getProducerId()).isEqualTo("ID");
-    assertThat(outcomeRefObject.getName()).isEqualTo("expression");
+    assertThat(refObject.getKey()).isEqualTo("TEST");
+    assertThat(refObject.getProducerId()).isEqualTo("ID");
+    assertThat(refObject.getName()).isEqualTo("expression");
   }
 }

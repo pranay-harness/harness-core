@@ -8,7 +8,7 @@ import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Singular;

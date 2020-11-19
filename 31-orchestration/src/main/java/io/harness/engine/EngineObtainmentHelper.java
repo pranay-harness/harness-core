@@ -13,7 +13,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.io.ResolvedRefInput;

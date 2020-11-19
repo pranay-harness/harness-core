@@ -10,7 +10,7 @@ import io.harness.OrchestrationTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.Outcome;
-import io.harness.references.OutcomeRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
@@ -36,14 +36,13 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     outcomeService.consume(ambiance, outcomeName, outcome, "PHASE");
 
     // Resolve with producer id
-    DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance,
-        OutcomeRefObject.builder().producerId(ambiance.obtainCurrentLevel().getSetupId()).name(outcomeName).build());
+    DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, ambiance.obtainCurrentLevel().getSetupId(), null));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
 
     // Resolve with scope
-    savedOutcome =
-        (DummyOutcome) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
+    savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
   }
@@ -57,7 +56,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcomeName";
     outcomeService.consume(ambiance, outcomeName, null, null);
 
-    Outcome outcome = outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
+    Outcome outcome = outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
     assertThat(outcome).isNull();
   }
 

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyOutcome;
 import org.junit.Test;
@@ -16,32 +16,21 @@ import org.junit.experimental.categories.Category;
 import java.util.List;
 
 public class StepInputPackageTest extends OrchestrationBeansTestBase {
-  StepInputPackage inputPackage = StepInputPackage.builder()
-                                      .input(ResolvedRefInput.builder()
-                                                 .refObject(SweepingOutputRefObject.builder()
-                                                                .name("refName1")
-                                                                .key("refKey")
-                                                                .producerId(generateUuid())
-                                                                .build())
-                                                 .transput(new DummyOutcome("name1"))
-                                                 .build())
-                                      .input(ResolvedRefInput.builder()
-                                                 .refObject(SweepingOutputRefObject.builder()
-                                                                .name("refName2")
-                                                                .key("refKey")
-                                                                .producerId(generateUuid())
-                                                                .build())
-                                                 .transput(new DummyOutcome("name2"))
-                                                 .build())
-                                      .input(ResolvedRefInput.builder()
-                                                 .refObject(SweepingOutputRefObject.builder()
-                                                                .name("refName1")
-                                                                .key("refKeyBlah")
-                                                                .producerId(generateUuid())
-                                                                .build())
-                                                 .transput(new DummyOutcome("name3"))
-                                                 .build())
-                                      .build();
+  StepInputPackage inputPackage =
+      StepInputPackage.builder()
+          .input(ResolvedRefInput.builder()
+                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName1", "refKey", generateUuid()))
+                     .transput(new DummyOutcome("name1"))
+                     .build())
+          .input(ResolvedRefInput.builder()
+                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName2", "refKey", generateUuid()))
+                     .transput(new DummyOutcome("name2"))
+                     .build())
+          .input(ResolvedRefInput.builder()
+                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName1", "refKeyBlah", generateUuid()))
+                     .transput(new DummyOutcome("name3"))
+                     .build())
+          .build();
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)

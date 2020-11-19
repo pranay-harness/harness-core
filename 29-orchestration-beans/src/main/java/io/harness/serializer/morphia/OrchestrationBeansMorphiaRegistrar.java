@@ -22,8 +22,6 @@ import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.references.OutcomeRefObject;
-import io.harness.references.RefObject;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 
@@ -41,7 +39,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(FacilitatorParameters.class);
     set.add(StepParameters.class);
     set.add(Outcome.class);
-    set.add(RefObject.class);
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);
     set.add(SweepingOutput.class);
@@ -52,8 +49,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
-    h.put("references.OutcomeRefObject", OutcomeRefObject.class);
-
     h.put("facilitator.modes.async.AsyncExecutableResponse", AsyncExecutableResponse.class);
     h.put("facilitator.modes.chain.TaskChainResponse", TaskChainResponse.class);
     h.put("facilitator.modes.child.ChildExecutableResponse", ChildExecutableResponse.class);

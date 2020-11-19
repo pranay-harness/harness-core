@@ -58,7 +58,7 @@ import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.product.ci.engine.proto.Execution;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.CodeBaseSpec;
@@ -91,7 +91,7 @@ public class K8BuildSetupUtils {
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-        ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
+        ambiance, RefObjectUtil.getSweepingOutputRefObject(ContextElement.podDetails));
 
     Set<String> publishStepConnectorIdentifier =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();

@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.expression.LateBindingMap;
-import io.harness.references.OutcomeRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -21,6 +21,6 @@ public class OutcomeFunctor extends LateBindingMap {
 
   @Override
   public synchronized Object get(Object key) {
-    return outcomeService.resolve(ambiance, OutcomeRefObject.builder().name((String) key).build());
+    return outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject((String) key));
   }
 }

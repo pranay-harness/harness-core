@@ -16,7 +16,7 @@ import io.harness.exception.FailureType;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
@@ -34,7 +34,7 @@ public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CI
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
-        ambiance, SweepingOutputRefObject.builder().name(CALLBACK_IDS).build());
+        ambiance, RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS));
 
     log.info("Waiting on response for task id {} and step Id {}",
         stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()), stepParameters.getIdentifier());

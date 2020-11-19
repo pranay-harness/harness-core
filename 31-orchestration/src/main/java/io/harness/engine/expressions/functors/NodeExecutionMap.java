@@ -15,8 +15,7 @@ import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
-import io.harness.references.OutcomeRefObject;
-import io.harness.references.SweepingOutputRefObject;
+import io.harness.refObjects.RefObjectUtil;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -149,7 +148,7 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return Optional.ofNullable(outcomeService.resolve(newAmbiance, OutcomeRefObject.builder().name(key).build()));
+      return Optional.ofNullable(outcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
     } catch (OutcomeException ignored) {
       return Optional.empty();
     }
@@ -162,7 +161,7 @@ public class NodeExecutionMap extends LateBindingMap {
 
     try {
       return Optional.ofNullable(
-          executionSweepingOutputService.resolve(newAmbiance, SweepingOutputRefObject.builder().name(key).build()));
+          executionSweepingOutputService.resolve(newAmbiance, RefObjectUtil.getSweepingOutputRefObject(key)));
     } catch (SweepingOutputException ignored) {
       return Optional.empty();
     }

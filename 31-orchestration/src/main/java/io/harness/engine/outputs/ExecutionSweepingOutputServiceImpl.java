@@ -23,7 +23,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.resolvers.ResolverUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;

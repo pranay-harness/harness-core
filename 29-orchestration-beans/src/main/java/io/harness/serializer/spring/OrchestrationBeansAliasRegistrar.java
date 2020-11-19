@@ -17,8 +17,6 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
-import io.harness.references.OutcomeRefObject;
-import io.harness.references.SweepingOutputRefObject;
 import io.harness.spring.AliasRegistrar;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
@@ -43,9 +41,7 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("interruptEffect", InterruptEffect.class);
     orchestrationElements.put("nodeExecution", NodeExecution.class);
     orchestrationElements.put("outcomeInstance", OutcomeInstance.class);
-    orchestrationElements.put("outcomeRefObject", OutcomeRefObject.class);
     orchestrationElements.put("planExecution", PlanExecution.class);
-    orchestrationElements.put("sweepingOutputRefObject", SweepingOutputRefObject.class);
     orchestrationElements.put("taskChainExecutableResponse", TaskChainExecutableResponse.class);
     orchestrationElements.put("taskExecutableResponse", TaskExecutableResponse.class);
     orchestrationElements.put("executionSweepingOutput", ExecutionSweepingOutputInstance.class);

@@ -7,7 +7,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.ambiance.Level;
-import io.harness.references.RefObject;
+import io.harness.pms.refobjects.RefObject;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
