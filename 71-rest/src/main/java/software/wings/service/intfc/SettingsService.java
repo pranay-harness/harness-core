@@ -159,4 +159,6 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   String getSSHSettingId(String accountId, String sshKeyName);
 
   CEK8sDelegatePrerequisite validateCEDelegateSetting(String accountId, String delegateName);
+
+  boolean isSettingValueGcp(SettingAttribute settingAttribute);
 }

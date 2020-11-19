@@ -100,6 +100,7 @@ import software.wings.beans.Base;
 import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
@@ -624,6 +625,11 @@ public class SettingsServiceImpl implements SettingsService {
       return CEK8sDelegatePrerequisite.builder().build();
     }
     return settingValidationService.validateCEK8sDelegateSetting(settingAttribute);
+  }
+
+  @Override
+  public boolean isSettingValueGcp(SettingAttribute settingAttribute) {
+    return settingAttribute.getValue() instanceof GcpConfig;
   }
 
   @Override

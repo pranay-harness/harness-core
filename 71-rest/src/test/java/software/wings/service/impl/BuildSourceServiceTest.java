@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -36,6 +37,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -99,6 +101,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class BuildSourceServiceTest extends WingsBaseTest {
+  public static final String DELEGATE_SELECTOR = "delegateSelector";
   @Mock private SettingsService settingsService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
@@ -1254,5 +1257,45 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     assertThat(packageNames).isNotEmpty();
     assertThat(packageNames.size()).isEqualTo(2);
     assertThat(packageNames).contains("group1", "group2");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsUseDelegate() {
+    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(GcpConfig.builder().useDelegate(true).delegateSelector(DELEGATE_SELECTOR).build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).contains(DELEGATE_SELECTOR);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsNotUseDelegate() {
+    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(GcpConfig.builder().useDelegate(false).delegateSelector(DELEGATE_SELECTOR).build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendDelegateSelectorToSyncTaskContextWhenSettingAttributeValuesIsNotGcp() {
+    when(settingsService.isSettingValueGcp(any())).thenReturn(false);
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
   }
 }
