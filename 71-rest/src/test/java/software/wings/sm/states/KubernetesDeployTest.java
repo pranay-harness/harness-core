@@ -318,6 +318,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("featureFlagService", featureFlagService);
+    on(context).set("settingsService", settingsService);
     on(kubernetesDeploy).set("containerDeploymentManagerHelper", containerDeploymentManagerHelper);
 
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
@@ -394,6 +395,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("featureFlagService", featureFlagService);
     on(context).set("evaluator", evaluator);
+    on(context).set("settingsService", settingsService);
 
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 

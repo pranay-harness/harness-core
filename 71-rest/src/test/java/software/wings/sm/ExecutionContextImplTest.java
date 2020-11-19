@@ -60,7 +60,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import org.assertj.core.util.Maps;
-import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -98,6 +97,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
@@ -259,9 +259,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
     injector.injectMembers(context);
-    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
-    Reflect.on(context).set("artifactService", artifactService);
-    Reflect.on(context).set("featureFlagService", featureFlagService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("artifactService", artifactService);
+    on(context).set("featureFlagService", featureFlagService);
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
@@ -299,9 +299,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
     injector.injectMembers(context);
-    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
-    Reflect.on(context).set("artifactService", artifactService);
-    Reflect.on(context).set("featureFlagService", featureFlagService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("artifactService", artifactService);
+    on(context).set("featureFlagService", featureFlagService);
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
@@ -384,8 +384,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PIPELINE));
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
     injector.injectMembers(context);
-    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
-    Reflect.on(context).set("artifactService", artifactService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("artifactService", artifactService);
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
@@ -985,7 +985,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRenderExpressionsForInstanceDetails() {
     ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
-    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     List<String> expected = asList("host-1", "host-2");
     List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
 
@@ -1009,7 +1009,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRenderExpressionsForInstanceDetailsForWorkflow() {
     ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
-    Reflect.on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
     List<String> expected = asList("host-1", "host-2");
     List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
 
@@ -1034,10 +1034,11 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   public void ensureCloudProviderParamInInfraMappingElement() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
-    Reflect.on(context).set("featureFlagService", featureFlagService);
-    Reflect.on(context).set("serviceResourceService", serviceResourceService);
-    Reflect.on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
-    Reflect.on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("featureFlagService", featureFlagService);
+    on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("settingsService", settingsService);
 
     doReturn(PhaseElement.builder().build())
         .when(context)
@@ -1054,6 +1055,9 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     doReturn(InfrastructureDefinition.builder().infrastructure(GoogleKubernetesEngine.builder().build()).build())
         .when(infrastructureDefinitionService)
         .get(anyString(), anyString());
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withName("gcp-name").build())
+        .when(settingsService)
+        .get(eq("gcp-id"));
 
     InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
     CloudProvider cloudProvider = infraMappingElement.getCloudProvider();
@@ -1109,6 +1113,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         NameValuePair.builder().name("a2").value("b22").build(), NameValuePair.builder().name("a5").build(),
         NameValuePair.builder().name("a6").value("").build(), NameValuePair.builder().name("a7").value("b7").build());
 
+    on(context).set("settingsService", settingsService);
     on(context).set("customDeploymentTypeService", customDeploymentTypeService);
     doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
     doReturn(CustomDeploymentTypeDTO.builder().infraVariables(templateVariables).build())
@@ -1136,6 +1141,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     final List<Variable> templateVariables = asList(aVariable().name("a1").value("b1").build(),
         aVariable().name("a2").build(), aVariable().name("a3").value("").build());
 
+    on(context).set("settingsService", settingsService);
     on(context).set("customDeploymentTypeService", customDeploymentTypeService);
     doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
     doReturn(CustomDeploymentTypeDTO.builder().infraVariables(templateVariables).build())
@@ -1157,6 +1163,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
     final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
 
+    on(context).set("settingsService", settingsService);
     on(context).set("customDeploymentTypeService", customDeploymentTypeService);
     doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
     doReturn(CustomDeploymentTypeDTO.builder().infraVariables(emptyList()).build())
@@ -1176,6 +1183,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
     final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
 
+    on(context).set("settingsService", settingsService);
     on(context).set("customDeploymentTypeService", customDeploymentTypeService);
     doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
     doReturn(CustomDeploymentTypeDTO.builder().build())

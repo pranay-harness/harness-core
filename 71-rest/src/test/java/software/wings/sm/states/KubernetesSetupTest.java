@@ -337,6 +337,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("evaluator", evaluator);
+    on(context).set("settingsService", settingsService);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
@@ -532,6 +533,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     on(context).set("featureFlagService", featureFlagService);
+    on(context).set("settingsService", settingsService);
 
     CommandExecutionResult result =
         CommandExecutionResult.builder()
