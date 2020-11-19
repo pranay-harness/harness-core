@@ -47,5 +47,12 @@ public class ManagerExecutorModule extends AbstractModule {
         .annotatedWith(Names.named("gdsExecutor"))
         .toInstance(ThreadPool.create(
             2, 10, 5, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("gds-log-fetcher-%d").build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("stateMachineExecutor-handler"))
+        .toInstance(ThreadPool.create(10, 1000, 1, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("stateMachineExecutor-handler-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
   }
 }
