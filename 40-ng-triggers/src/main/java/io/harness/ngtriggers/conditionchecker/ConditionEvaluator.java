@@ -1,6 +1,14 @@
 package io.harness.ngtriggers.conditionchecker;
 
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.CONTAINS_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.ENDS_WITH_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.EQUALS_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.IN_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_EQUALS_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_IN_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.REGEX_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_WITH_OPERATOR;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -30,14 +38,14 @@ public class ConditionEvaluator {
 
   static Map<String, OperationEvaluator> evaluatorMap = new HashMap<>();
   static {
-    evaluatorMap.put("equals", new EqualsOperatorEvaluator());
-    evaluatorMap.put("not equals", new NotEqualsOperatorEvaluator());
-    evaluatorMap.put("in", new INOperatorEvaluator());
-    evaluatorMap.put("not in", new NotINOperatorEvaluator());
-    evaluatorMap.put("contains", new ContainsOperatorEvaluator());
-    evaluatorMap.put("starts with", new StartsWithOperatorEvaluator());
-    evaluatorMap.put("ends with", new EndsWithOperatorEvaluator());
-    evaluatorMap.put("regex", new RegexOperatorEvaluator());
+    evaluatorMap.put(EQUALS_OPERATOR, new EqualsOperatorEvaluator());
+    evaluatorMap.put(NOT_EQUALS_OPERATOR, new NotEqualsOperatorEvaluator());
+    evaluatorMap.put(IN_OPERATOR, new INOperatorEvaluator());
+    evaluatorMap.put(NOT_IN_OPERATOR, new NotINOperatorEvaluator());
+    evaluatorMap.put(CONTAINS_OPERATOR, new ContainsOperatorEvaluator());
+    evaluatorMap.put(STARTS_WITH_OPERATOR, new StartsWithOperatorEvaluator());
+    evaluatorMap.put(ENDS_WITH_OPERATOR, new EndsWithOperatorEvaluator());
+    evaluatorMap.put(REGEX_OPERATOR, new RegexOperatorEvaluator());
   }
 
   static class EqualsOperatorEvaluator implements OperationEvaluator {
