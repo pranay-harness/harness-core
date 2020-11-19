@@ -1,9 +1,12 @@
 package io.harness;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import io.harness.beans.SecretManagerConfig;
@@ -14,6 +17,7 @@ import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,10 +27,18 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.graphql.schema.type.QLEnvFilterType;
+import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerKeys;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManagerType;
+import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.UsageRestrictions;
 
 import java.util.List;
+import java.util.Set;
 
 public class SecretManagerTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
@@ -40,6 +52,7 @@ public class SecretManagerTest extends GraphQLTest {
     account = accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
     secretManagerConfig = AwsSecretsManagerConfig.builder().name(SECRET_MANAGER_NAME).build();
     secretManagerConfig.setAccountId(account.getUuid());
+    secretManagerConfig.setUsageRestrictions(createUsageRestrictions());
     secretManagerConfigService.save(secretManagerConfig);
   }
 
@@ -108,6 +121,43 @@ public class SecretManagerTest extends GraphQLTest {
     assertThat(EncryptionType.values().length).isEqualTo(QLSecretManagerType.values().length + 1);
   }
 
+  @Test
+  @Owner(developers = VOJIN)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void testSecretManagerQuery_usageScope() {
+    String secretManagerQueryPattern = MultilineStringMixin.$.GQL(/*
+{
+    secretManager(secretManagerId: "%s"){
+    usageScope{
+      appEnvScopes{
+        application {
+          appId
+          filterType
+        }
+        environment {
+          envId
+          filterType
+        }
+      }
+    }
+  }
+}
+*/ SecretManagerTest.class);
+    String query = String.format(secretManagerQueryPattern, secretManagerConfig.getUuid());
+    final QLTestObject qlSecretManagerObject = qlExecute(query, account.getUuid());
+
+    QLUsageScope usageScope =
+        JsonUtils.convertValue(qlSecretManagerObject.get(QLSecretManagerKeys.usageScope), QLUsageScope.class);
+    assertThat(usageScope).isNotNull();
+
+    Set<QLAppEnvScope> appEnvScopes = usageScope.getAppEnvScopes();
+    assertThat(appEnvScopes.size()).isEqualTo(1);
+
+    QLAppEnvScope appEnvScope = Iterables.getOnlyElement(appEnvScopes);
+    assertThat(appEnvScope.getApplication().getFilterType()).isEqualTo(QLGenericFilterType.ALL);
+    assertThat(appEnvScope.getEnvironment().getFilterType()).isEqualTo(QLEnvFilterType.PRODUCTION_ENVIRONMENTS);
+  }
+
   private void addAzureAndAwsKmsSecretManagers() {
     SecretManagerConfig awsKms = KmsConfig.builder().name("test aws kms").build();
     awsKms.setAccountId(account.getUuid());
@@ -123,5 +173,14 @@ public class SecretManagerTest extends GraphQLTest {
         AwsSecretsManagerConfig.builder().name("test aws kms diff account").build();
     awsKmsDifferentAccount.setAccountId("random");
     secretManagerConfigService.save(awsKmsDifferentAccount);
+  }
+
+  private UsageRestrictions createUsageRestrictions() {
+    GenericEntityFilter appFilter =
+        GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build();
+    EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(EnvFilter.FilterType.PROD)).build();
+    UsageRestrictions.AppEnvRestriction appEnvRestriction =
+        UsageRestrictions.AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    return UsageRestrictions.builder().appEnvRestrictions(newHashSet(appEnvRestriction)).build();
   }
 }

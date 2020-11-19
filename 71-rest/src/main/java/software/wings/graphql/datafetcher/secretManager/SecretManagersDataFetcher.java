@@ -28,6 +28,7 @@ import java.util.List;
 public class SecretManagersDataFetcher
     extends AbstractConnectionV2DataFetcher<QLSecretManagerFilter, QLNoOpSortCriteria, QLSecretManagerConnection> {
   @Inject protected DataFetcherUtils dataFetcherUtils;
+  @Inject private SecretManagerController secretManagerController;
 
   @Override
   protected QLSecretManagerFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
@@ -43,7 +44,7 @@ public class SecretManagersDataFetcher
     QLSecretManagerConnectionBuilder connectionBuilder = QLSecretManagerConnection.builder();
     connectionBuilder.pageInfo(dataFetcherUtils.populate(pageQueryParameters, query, secretManager -> {
       QLSecretManagerBuilder builder = QLSecretManager.builder();
-      SecretManagerController.populateSecretManager(secretManager, builder);
+      secretManagerController.populateSecretManager(secretManager, builder);
       connectionBuilder.node(builder.build());
     }));
     return connectionBuilder.build();

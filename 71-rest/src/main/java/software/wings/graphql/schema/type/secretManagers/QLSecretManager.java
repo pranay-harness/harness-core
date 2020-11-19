@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import software.wings.graphql.schema.type.QLObject;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -14,4 +15,5 @@ import software.wings.security.annotations.Scope;
 public class QLSecretManager implements QLObject {
   String id;
   String name;
+  QLUsageScope usageScope;
 }

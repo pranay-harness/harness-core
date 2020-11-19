@@ -21,6 +21,7 @@ import software.wings.security.annotations.AuthRule;
 public class SecretManagerDataFetcher
     extends AbstractObjectDataFetcher<QLSecretManager, QLSecretManagerQueryParameters> {
   @Inject private HPersistence persistence;
+  @Inject private SecretManagerController secretManagerController;
   private static final String SECURITY_MANAGER_DOES_NOT_EXIST_MSG = "Secret Manager does not exist";
 
   @Override
@@ -41,7 +42,7 @@ public class SecretManagerDataFetcher
     }
 
     final QLSecretManagerBuilder builder = QLSecretManager.builder();
-    SecretManagerController.populateSecretManager(secretManager, builder);
+    secretManagerController.populateSecretManager(secretManager, builder);
     return builder.build();
   }
 
