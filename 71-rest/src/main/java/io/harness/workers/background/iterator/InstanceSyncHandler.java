@@ -57,7 +57,6 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
     try (AutoLogContext ignore1 = new AccountLogContext(infrastructureMapping.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new InfraMappingLogContext(infrastructureMapping.getUuid(), OVERRIDE_ERROR)) {
       if (instanceHelper.shouldSkipIteratorInstanceSync(infrastructureMapping)) {
-        log.info("Skipping Instance Sync for Infrastructure Mapping {}", infrastructureMapping.getUuid());
         return;
       }
 
