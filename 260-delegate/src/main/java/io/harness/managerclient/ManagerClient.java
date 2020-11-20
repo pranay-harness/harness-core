@@ -14,7 +14,6 @@ import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
-import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
@@ -48,9 +47,4 @@ public interface ManagerClient {
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
-
-  @POST("agent/delegates/manifest-collection/{perpetualTaskId}")
-  Call<RestResponse<Boolean>> publishManifestCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId,
-      @Body ManifestCollectionExecutionResponse manifestCollectionExecutionResponse);
 }

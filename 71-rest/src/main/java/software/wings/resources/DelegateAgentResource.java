@@ -407,9 +407,12 @@ public class DelegateAgentResource {
   @Path("manifest-collection/{perpetualTaskId}")
   public RestResponse<Boolean> processManifestCollectionResult(
       @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
-      @QueryParam("accountId") @NotEmpty String accountId, ManifestCollectionExecutionResponse executionResponse) {
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      ManifestCollectionExecutionResponse executionResponse =
+          (ManifestCollectionExecutionResponse) kryoSerializer.asObject(serializedExecutionResponse);
+
       if (executionResponse.getManifestCollectionResponse() != null) {
         log.info("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
       }
