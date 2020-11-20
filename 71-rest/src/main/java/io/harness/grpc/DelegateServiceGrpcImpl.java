@@ -66,6 +66,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.mongodb.morphia.query.Query;
 import software.wings.service.intfc.DelegateService;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,6 +98,10 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       String taskId = generateUuid();
       TaskDetails taskDetails = request.getDetails();
       Map<String, String> setupAbstractions = request.getSetupAbstractions().getValuesMap();
+      LinkedHashMap<String, String> logAbstractions =
+          request.getLogAbstractions() == null || request.getLogAbstractions().getValuesMap() == null
+          ? new LinkedHashMap<>()
+          : new LinkedHashMap<>(request.getLogAbstractions().getValuesMap());
       List<ExecutionCapability> capabilities = request.getCapabilitiesList()
                                                    .stream()
                                                    .map(capability
@@ -112,6 +117,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                               .waitId(taskId)
                               .accountId(request.getAccountId().getId())
                               .setupAbstractions(setupAbstractions)
+                              .logStreamingAbstractions(logAbstractions)
                               .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
                               .executionCapabilities(capabilities)
                               .tags(taskSelectors)

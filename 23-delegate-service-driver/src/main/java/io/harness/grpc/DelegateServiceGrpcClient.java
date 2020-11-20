@@ -32,6 +32,7 @@ import io.harness.delegate.SubmitTaskResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
@@ -96,13 +97,14 @@ public class DelegateServiceGrpcClient {
   }
 
   public SubmitTaskResponse submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
-      TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, List<ExecutionCapability> capabilities,
-      List<String> taskSelectors) {
+      TaskSetupAbstractions taskSetupAbstractions, TaskLogAbstractions taskLogAbstractions, TaskDetails taskDetails,
+      List<ExecutionCapability> capabilities, List<String> taskSelectors) {
     try {
       SubmitTaskRequest.Builder submitTaskRequestBuilder = SubmitTaskRequest.newBuilder()
                                                                .setCallbackToken(delegateCallbackToken)
                                                                .setAccountId(accountId)
                                                                .setSetupAbstractions(taskSetupAbstractions)
+                                                               .setLogAbstractions(taskLogAbstractions)
                                                                .setDetails(taskDetails);
 
       if (isNotEmpty(capabilities)) {
@@ -147,6 +149,9 @@ public class DelegateServiceGrpcClient {
     return submitTask(delegateCallbackToken, AccountId.newBuilder().setId(taskRequest.getAccountId()).build(),
         TaskSetupAbstractions.newBuilder()
             .putAllValues(MapUtils.emptyIfNull(taskRequest.getTaskSetupAbstractions()))
+            .build(),
+        TaskLogAbstractions.newBuilder()
+            .putAllValues(MapUtils.emptyIfNull(taskRequest.getLogStreamingAbstractions()))
             .build(),
         TaskDetails.newBuilder()
             .setParked(taskRequest.isParked())

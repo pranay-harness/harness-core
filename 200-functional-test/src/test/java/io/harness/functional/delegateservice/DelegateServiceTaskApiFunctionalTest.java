@@ -23,6 +23,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
@@ -103,7 +104,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     TaskId taskId =
         delegateServiceGrpcClient
             .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
-                TaskSetupAbstractions.newBuilder().build(),
+                TaskSetupAbstractions.newBuilder().build(), TaskLogAbstractions.newBuilder().build(),
                 TaskDetails.newBuilder()
                     .setMode(TaskMode.SYNC)
                     .setType(TaskType.newBuilder().setType("HTTP").build())
@@ -156,7 +157,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     TaskId taskId =
         delegateServiceGrpcClient
             .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
-                TaskSetupAbstractions.newBuilder().build(),
+                TaskSetupAbstractions.newBuilder().build(), TaskLogAbstractions.newBuilder().build(),
                 TaskDetails.newBuilder()
                     .setMode(TaskMode.SYNC)
                     .setType(TaskType.newBuilder().setType("HTTP").build())
@@ -213,7 +214,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
         ()
             -> delegateServiceGrpcClient.submitTask(callbackToken,
                 AccountId.newBuilder().setId(getAccount().getUuid()).build(),
-                TaskSetupAbstractions.newBuilder().build(),
+                TaskSetupAbstractions.newBuilder().build(), TaskLogAbstractions.newBuilder().build(),
                 TaskDetails.newBuilder()
                     .setMode(TaskMode.SYNC)
                     .setType(TaskType.newBuilder().setType("HTTP").build())
@@ -260,7 +261,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     TaskId taskId =
         delegateServiceGrpcClient
             .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
-                TaskSetupAbstractions.newBuilder().build(),
+                TaskSetupAbstractions.newBuilder().build(), TaskLogAbstractions.newBuilder().build(),
                 TaskDetails.newBuilder()
                     .setMode(TaskMode.ASYNC)
                     .setType(TaskType.newBuilder().setType("HTTP").build())
@@ -317,7 +318,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     TaskId taskId =
         delegateServiceGrpcClient
             .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
-                TaskSetupAbstractions.newBuilder().build(),
+                TaskSetupAbstractions.newBuilder().build(), TaskLogAbstractions.newBuilder().build(),
                 TaskDetails.newBuilder()
                     .setMode(TaskMode.ASYNC)
                     .setType(TaskType.newBuilder().setType("HTTP").build())
