@@ -1,5 +1,6 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -48,6 +50,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api("organizations")
 @Path("organizations")
 @Produces({"application/json", "application/yaml"})

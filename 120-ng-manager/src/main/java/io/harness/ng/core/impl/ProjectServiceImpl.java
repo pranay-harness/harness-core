@@ -1,6 +1,8 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -18,12 +20,16 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.services.ConnectorService;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
+import io.harness.ng.core.DefaultOrganization;
+import io.harness.ng.core.OrgIdentifier;
+import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -44,6 +50,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
@@ -64,6 +71,7 @@ public class ProjectServiceImpl implements ProjectService {
 
   @Override
   public Project create(String accountIdentifier, String orgIdentifier, ProjectDTO projectDTO) {
+    orgIdentifier = orgIdentifier == null ? DEFAULT_ORG_IDENTIFIER : orgIdentifier;
     validateCreateProjectRequest(accountIdentifier, orgIdentifier, projectDTO);
     Project project = toProject(projectDTO);
     project.setOrgIdentifier(orgIdentifier);
@@ -102,13 +110,17 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Optional<Project> get(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  @DefaultOrganization
+  public Optional<Project> get(
+      String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
         accountIdentifier, orgIdentifier, projectIdentifier, true);
   }
 
   @Override
-  public Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO projectDTO) {
+  @DefaultOrganization
+  public Project update(String accountIdentifier, @OrgIdentifier String orgIdentifier,
+      @ProjectIdentifier String identifier, ProjectDTO projectDTO) {
     validateUpdateProjectRequest(accountIdentifier, orgIdentifier, identifier, projectDTO);
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -193,7 +205,9 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, Long version) {
+  @DefaultOrganization
+  public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
+      @ProjectIdentifier String projectIdentifier, Long version) {
     return projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
   }
 

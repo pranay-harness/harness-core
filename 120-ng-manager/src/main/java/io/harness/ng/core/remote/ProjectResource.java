@@ -1,5 +1,7 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -14,6 +16,7 @@ import com.google.inject.Inject;
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -50,6 +53,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api("projects")
 @Path("projects")
 @Produces({"application/json", "application/yaml"})
@@ -68,7 +72,7 @@ public class ProjectResource {
   @ApiOperation(value = "Create a Project", nickname = "postProject")
   public ResponseDTO<ProjectDTO> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
       @NotNull @Valid ProjectDTO projectDTO) {
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
     return ResponseDTO.newResponse(createdProject.getVersion().toString(), writeDTO(createdProject));
@@ -79,7 +83,7 @@ public class ProjectResource {
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
   public ResponseDTO<ProjectDTO> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
     Optional<Project> projectOptional = projectService.get(accountIdentifier, orgIdentifier, identifier);
     if (!projectOptional.isPresent()) {
       throw new NotFoundException("Resource not found");
@@ -116,7 +120,7 @@ public class ProjectResource {
   public ResponseDTO<ProjectDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
       @NotNull @Valid ProjectDTO projectDTO) {
     projectDTO.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
@@ -129,7 +133,7 @@ public class ProjectResource {
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(
         accountIdentifier, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }

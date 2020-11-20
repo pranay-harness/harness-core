@@ -42,6 +42,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
+import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -166,6 +167,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule());
     install(new GitSyncModule());
+    install(new DefaultOrganizationModule());
     install(NGModule.getInstance());
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
