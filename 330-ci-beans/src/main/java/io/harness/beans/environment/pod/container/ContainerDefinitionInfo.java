@@ -27,8 +27,6 @@ public class ContainerDefinitionInfo {
   private boolean isMainLiteEngine;
   private List<String> args;
   private List<Integer> ports;
-  private Map<String, String> volumeToMountPath;
   Map<String, String> envVars;
   List<CustomSecretVariable> secretVariables;
-  private String workingDirectory;
 }

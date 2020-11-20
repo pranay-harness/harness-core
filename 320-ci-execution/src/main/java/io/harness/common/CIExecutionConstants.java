@@ -37,6 +37,7 @@ public class CIExecutionConstants {
   public static final String LOCALHOST_IP = "127.0.0.1";
   public static final String SERVICE_PREFIX = "service-";
   public static final String STEP_PREFIX = "step-";
+  public static final String SHARED_VOLUME_PREFIX = "shared-";
 
   // Container constants for setting up addon binary
   public static final String SETUP_ADDON_CONTAINER_NAME = "setup-addon";
@@ -68,9 +69,6 @@ public class CIExecutionConstants {
   public static final String ARGS_PREFIX = "--args";
   public static final String GRPC_SERVICE_PORT_PREFIX = "--svc_ports";
   public static final String DEBUG_PREFIX = "--debug";
-
-  // Image details
-  public static final String ADDON_CONTAINER_NAME = "addon";
 
   public static final String ACCESS_KEY_MINIO_VARIABLE = "ACCESS_KEY_MINIO";
   public static final String SECRET_KEY_MINIO_VARIABLE = "SECRET_KEY_MINIO";

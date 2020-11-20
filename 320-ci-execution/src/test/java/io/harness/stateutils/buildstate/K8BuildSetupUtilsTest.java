@@ -164,7 +164,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     stepEnvVars.put(HARNESS_BUILD_ID_VARIABLE, buildID.toString());
     stepEnvVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
-    stepEnvVars.putAll(ciExecutionPlanTestHelper.getEnvVariables());
+    stepEnvVars.putAll(ciExecutionPlanTestHelper.getEnvVariables(true));
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);

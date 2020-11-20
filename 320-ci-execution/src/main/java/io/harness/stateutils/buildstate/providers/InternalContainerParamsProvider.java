@@ -1,7 +1,5 @@
 package io.harness.stateutils.buildstate.providers;
 
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
@@ -65,9 +63,7 @@ public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public CIK8ContainerParams getSetupAddonContainerParams(
-      ConnectorDetails containerImageConnectorDetails, String workDir) {
-    Map<String, String> map = new HashMap<>();
-    map.put(STEP_EXEC, MOUNT_PATH);
+      ConnectorDetails containerImageConnectorDetails, Map<String, String> volumeToMountPath, String workDir) {
     List<String> args = new ArrayList<>(Collections.singletonList(SETUP_ADDON_ARGS));
     Map<String, String> envVars = new HashMap<>();
     envVars.put(HARNESS_WORKSPACE, workDir);
@@ -83,7 +79,7 @@ public class InternalContainerParamsProvider {
                                        .imageConnectorDetails(containerImageConnectorDetails)
                                        .build())
         .containerSecrets(ContainerSecrets.builder().build())
-        .volumeToMountPath(map)
+        .volumeToMountPath(volumeToMountPath)
         .commands(SH_COMMAND)
         .args(args)
         .build();
@@ -92,9 +88,10 @@ public class InternalContainerParamsProvider {
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
-      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars) {
+      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> volumeToMountPath,
+      String workDirPath) {
     Map<String, String> map = new HashMap<>();
-    map.put(STEP_EXEC, MOUNT_PATH);
+    map.putAll(volumeToMountPath);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
     String arg = String.format("%s %s %s %s %s %s", LITE_ENGINE_ARGS, STAGE_ARG_COMMAND, INPUT_ARG_PREFIX,
         serializedLiteEngineTaskStepInfo, TMP_PATH_ARG_PREFIX, TMP_PATH);
@@ -107,7 +104,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, workDirPath))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().publishArtifactConnectors(publishArtifactConnectors).build())
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -120,11 +117,12 @@ public class InternalContainerParamsProvider {
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
         .args(args)
+        .workingDir(workDirPath)
         .build();
   }
 
   private Map<String, String> getLiteEngineEnvVars(
-      K8PodDetails k8PodDetails, String serviceToken, Map<String, String> logEnvVars) {
+      K8PodDetails k8PodDetails, String serviceToken, Map<String, String> logEnvVars, String workDirPath) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
@@ -136,6 +134,7 @@ public class InternalContainerParamsProvider {
     envVars.putAll(logEnvVars);
 
     // Add environment variables that need to be used inside the lite engine container
+    envVars.put(HARNESS_WORKSPACE, workDirPath);
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);

@@ -35,7 +35,8 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     ConnectorDetails connectorDetails = ConnectorDetails.builder().build();
 
     CIK8ContainerParams containerParams =
-        internalContainerParamsProvider.getSetupAddonContainerParams(connectorDetails, "workspace");
+        internalContainerParamsProvider.getSetupAddonContainerParams(connectorDetails, null, "workspace");
+
     assertThat(containerParams.getName()).isEqualTo(SETUP_ADDON_CONTAINER_NAME);
     assertThat(containerParams.getContainerType()).isEqualTo(CIContainerType.ADD_ON);
     assertThat(containerParams.getArgs()).isEqualTo(Arrays.asList(SETUP_ADDON_ARGS));
@@ -56,6 +57,8 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     logEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     logEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
 
+    Map<String, String> volumeToMountPath = new HashMap<>();
+
     String serialisedStage = "test";
     String serviceToken = "test";
     Integer stageCpuRequest = 500;
@@ -63,7 +66,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest, null, logEnvVars);
+        stageMemoryRequest, null, logEnvVars, volumeToMountPath, "/step-exec/workspace");
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);

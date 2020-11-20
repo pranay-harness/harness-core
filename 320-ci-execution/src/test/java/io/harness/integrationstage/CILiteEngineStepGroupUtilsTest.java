@@ -42,7 +42,8 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
         .getPodsSetupInfo()
         .getPodSetupInfoList()
         .get(0)
-        .getPvcParams()
+        .getPvcParamsList()
+        .get(0)
         .setClaimName("");
     ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo())
         .getPodsSetupInfo()

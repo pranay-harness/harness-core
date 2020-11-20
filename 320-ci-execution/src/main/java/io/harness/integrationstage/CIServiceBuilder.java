@@ -1,7 +1,5 @@
 package io.harness.integrationstage;
 
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
 
@@ -21,9 +19,7 @@ import io.harness.util.PortFinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CIServiceBuilder {
   public static List<ContainerDefinitionInfo> createServicesContainerDefinition(
@@ -57,13 +53,7 @@ public class CIServiceBuilder {
     Integer port = portFinder.getNextPort();
     service.setGrpcPort(port);
 
-    Map<String, String> volumeToMountPath = new HashMap<>();
-    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
-
-    String volumeName = String.format("%s%d", SERVICE_PREFIX, serviceIdx);
     String containerName = String.format("%s%d", SERVICE_PREFIX, serviceIdx);
-    String mountPath = "/" + volumeName;
-    volumeToMountPath.put(volumeName, mountPath);
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(ServiceContainerUtils.getCommand())
@@ -77,8 +67,6 @@ public class CIServiceBuilder {
         .containerResourceParams(getServiceContainerResource(service.getResources(), ciExecutionServiceConfig))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.SERVICE)
-        .volumeToMountPath(volumeToMountPath)
-        .workingDirectory(mountPath)
         .stepIdentifier(service.getIdentifier())
         .stepName(service.getName())
         .build();

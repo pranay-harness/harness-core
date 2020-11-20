@@ -29,7 +29,7 @@ public class BuildJobEnvInfoBuilderTest extends CIExecutionTest {
         ciExecutionPlanTestHelper.getExpectedExecutionSectionsWithLESteps(false), true, "buildnumber22850");
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(podSetupInfo -> podSetupInfo.setName(""));
     actual.getPodsSetupInfo().getPodSetupInfoList().forEach(
-        podSetupInfo -> podSetupInfo.getPvcParams().setClaimName(""));
+        podSetupInfo -> podSetupInfo.getPvcParamsList().get(0).setClaimName(""));
 
     BuildJobEnvInfo expected = ciExecutionPlanTestHelper.getCIBuildJobEnvInfoOnFirstPod();
 
