@@ -7,6 +7,9 @@ import org.springframework.data.convert.WritingConverter;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Singleton;
+
 @OwnedBy(CDC)
+@Singleton
 @WritingConverter
 public class StepTypeWriteConverter extends ProtoWriteConverter<StepType> {}

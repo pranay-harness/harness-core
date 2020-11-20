@@ -7,7 +7,10 @@ import org.springframework.data.convert.ReadingConverter;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Singleton;
+
 @OwnedBy(CDC)
+@Singleton
 @ReadingConverter
 public class StepTypeReadConverter extends ProtoReadConverter<StepType> {
   public StepTypeReadConverter() {
