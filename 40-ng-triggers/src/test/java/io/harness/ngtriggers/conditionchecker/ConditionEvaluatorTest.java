@@ -5,6 +5,7 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.EQUALS_O
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.IN_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_EQUALS_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_IN_OPERATOR;
+import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.REGEX_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_WITH_OPERATOR;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -39,5 +40,7 @@ public class ConditionEvaluatorTest extends CategoryTest {
 
     assertThat(ConditionEvaluator.evaluate("prod", "qa, stage, uat", NOT_IN_OPERATOR)).isTrue();
     assertThat(ConditionEvaluator.evaluate("prod", "prod, qa, stage, uat", NOT_IN_OPERATOR)).isFalse();
+
+    assertThat(ConditionEvaluator.evaluate("21699507", "[0-9]+", REGEX_OPERATOR)).isTrue();
   }
 }

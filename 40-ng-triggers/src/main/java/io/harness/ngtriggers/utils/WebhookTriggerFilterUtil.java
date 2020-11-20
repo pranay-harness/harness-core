@@ -4,7 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.engine.expressions.AmbianceExpressionEvaluator;
+import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.JsonFunctor;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
@@ -12,10 +17,16 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
+import io.harness.ngtriggers.functor.EventPayloadFunctor;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @UtilityClass
@@ -72,6 +83,7 @@ public class WebhookTriggerFilterUtil {
     String input;
     String standard;
     String operator;
+    Map<String, Object> context = null;
     boolean allConditionsMatched = true;
     for (WebhookPayloadCondition webhookPayloadCondition : payloadConditions) {
       standard = webhookPayloadCondition.getValue();
@@ -82,7 +94,10 @@ public class WebhookTriggerFilterUtil {
       } else if (webhookPayloadCondition.getKey().equals("targetBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getTarget();
       } else {
-        input = readFromPayload(webhookPayloadCondition.getKey(), webhookPayloadData.getOriginalEvent().getPayload());
+        if (context == null) {
+          context = generateContext(webhookPayloadData.getOriginalEvent().getPayload());
+        }
+        input = readFromPayload(webhookPayloadCondition.getKey(), context);
       }
 
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
@@ -95,13 +110,18 @@ public class WebhookTriggerFilterUtil {
   }
 
   @VisibleForTesting
-  String readFromPayload(String key, String payload) {
-    JsonFunctor jsonFunctor = new JsonFunctor();
-    Object value = jsonFunctor.select(key, payload);
-    if (value instanceof String) {
-      return (String) value;
-    }
+  String readFromPayload(String key, Map<String, Object> context) {
+    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+    return expressionEvaluator.substitute(key, context);
+  }
 
-    return null;
+  @VisibleForTesting
+  Map<String, Object> generateContext(String payload) {
+    EventPayloadFunctor eventPayloadFunctor = new EventPayloadFunctor(
+        Ambiance.builder().setupAbstractions(Collections.singletonMap("eventPayload", payload)).build());
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("eventPayload", eventPayloadFunctor);
+    return context;
   }
 }

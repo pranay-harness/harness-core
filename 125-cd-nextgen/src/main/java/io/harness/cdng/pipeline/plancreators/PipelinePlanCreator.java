@@ -39,7 +39,7 @@ import java.util.Optional;
 public class PipelinePlanCreator
     extends AbstractPlanCreatorWithChildren<NgPipeline> implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   public static String INPUT_SET_YAML_KEY = "InputSetYaml";
-  public static String EVENT_PAYLOAD_KEY = "EventPayload";
+  public static String EVENT_PAYLOAD_KEY = "eventPayload";
 
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 

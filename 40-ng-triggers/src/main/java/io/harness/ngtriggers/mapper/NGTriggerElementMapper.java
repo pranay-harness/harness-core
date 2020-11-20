@@ -83,6 +83,7 @@ public class NGTriggerElementMapper {
         .projectIdentifier(ngTriggerEntity.getProjectIdentifier())
         .targetIdentifier(ngTriggerEntity.getTargetIdentifier())
         .version(ngTriggerEntity.getVersion())
+        .yaml(ngTriggerEntity.getYaml())
         .build();
   }
 

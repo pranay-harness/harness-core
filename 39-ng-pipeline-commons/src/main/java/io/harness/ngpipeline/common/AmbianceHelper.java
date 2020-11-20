@@ -28,6 +28,6 @@ public class AmbianceHelper {
   }
 
   public String getEventPayload(Ambiance ambiance) {
-    return ambiance.getSetupAbstractions().get("EventPayload");
+    return ambiance.getSetupAbstractions().get("eventPayload");
   }
 }

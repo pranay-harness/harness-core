@@ -58,10 +58,16 @@ public class TriggerWebhookServiceImpl
 
   @Override
   public void handle(TriggerWebhookEvent event) {
-    boolean success = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
-    if (success) {
+    try {
+      // ideally hangit reset -dleTriggerWebhookEvent should return response, with some info:
+      // retryNeeded or not.
+      // payload parsing failed: no rety
+      // scm service couldt be reached: retry
+      // no trigger found for repo, trigger found but triggerConditions fail : no retry
+      //
+      ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
       ngTriggerService.deleteTriggerWebhookEvent(event);
-    } else {
+    } catch (Exception e) {
       event.setAttemptCount(event.getAttemptCount() + 1);
       ngTriggerService.updateTriggerWebhookEvent(event);
     }

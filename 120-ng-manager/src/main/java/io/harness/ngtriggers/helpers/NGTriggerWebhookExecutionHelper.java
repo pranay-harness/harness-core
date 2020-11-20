@@ -9,6 +9,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
@@ -40,16 +41,17 @@ public class NGTriggerWebhookExecutionHelper {
   public boolean handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
     WebhookPayloadData webhookPayloadData = parseEventData(triggerWebhookEvent);
 
-    List<NGTriggerEntity> triggersForRepo = retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData);
+    List<NGTriggerEntity> triggersForRepo =
+        retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
       return true;
     }
-    Optional<NGTriggerEntity> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
+    Optional<TriggerDetails> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
     if (optionalEntity.isPresent()) {
-      NGTriggerEntity entity = optionalEntity.get();
+      TriggerDetails triggerDetails = optionalEntity.get();
       try {
         NGPipelineExecutionResponseDTO response =
-            resolveRuntimeInputAndSubmitExecutionRequest(entity, triggerWebhookEvent.getPayload());
+            resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
         return !response.isErrorResponse();
       } catch (Exception e) {
         return false;
@@ -64,8 +66,7 @@ public class NGTriggerWebhookExecutionHelper {
   }
 
   private List<NGTriggerEntity> retrieveTriggersConfiguredForRepo(
-      TriggerWebhookEvent triggerWebhookEvent, WebhookPayloadData webhookPayloadData) {
-    String repoUrl = webhookPayloadData.getRepository().getLink();
+      TriggerWebhookEvent triggerWebhookEvent, String repoUrl) {
     Page<NGTriggerEntity> triggerPage =
         ngTriggerService.listWebhookTriggers(triggerWebhookEvent.getAccountId(), repoUrl, false);
 
@@ -74,15 +75,17 @@ public class NGTriggerWebhookExecutionHelper {
   }
 
   @VisibleForTesting
-  Optional<NGTriggerEntity> applyFilters(WebhookPayloadData webhookPayloadData, List<NGTriggerEntity> triggersForRepo) {
-    NGTriggerEntity matchedTrigger = null;
+  Optional<TriggerDetails> applyFilters(WebhookPayloadData webhookPayloadData, List<NGTriggerEntity> triggersForRepo) {
+    TriggerDetails matchedTrigger = null;
     for (NGTriggerEntity ngTriggerEntity : triggersForRepo) {
       NGTriggerConfig ngTriggerConfig = NGTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
-      if (checkTriggerEligibility(webhookPayloadData, ngTriggerEntity, ngTriggerConfig)) {
+      TriggerDetails triggerDetails =
+          TriggerDetails.builder().ngTriggerConfig(ngTriggerConfig).ngTriggerEntity(ngTriggerEntity).build();
+      if (checkTriggerEligibility(webhookPayloadData, triggerDetails)) {
         if (matchedTrigger != null) {
           throw new InvalidRequestException("More than one trigger matched the eligibility criteria");
         }
-        matchedTrigger = ngTriggerEntity;
+        matchedTrigger = triggerDetails;
       }
     }
     if (matchedTrigger == null) {
@@ -91,10 +94,9 @@ public class NGTriggerWebhookExecutionHelper {
     return Optional.of(matchedTrigger);
   }
 
-  private boolean checkTriggerEligibility(
-      WebhookPayloadData webhookPayloadData, NGTriggerEntity ngTriggerEntity, NGTriggerConfig ngTriggerConfig) {
+  private boolean checkTriggerEligibility(WebhookPayloadData webhookPayloadData, TriggerDetails triggerDetails) {
     try {
-      NGTriggerSpec spec = ngTriggerConfig.getSource().getSpec();
+      NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
       if (!WebhookTriggerConfig.class.isAssignableFrom(spec.getClass())) {
         log.error("Trigger spec is not a WebhookTriggerConfig");
         return false;
@@ -103,6 +105,7 @@ public class NGTriggerWebhookExecutionHelper {
       WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
       return WebhookTriggerFilterUtil.evaluateFilterConditions(webhookPayloadData, triggerSpec);
     } catch (Exception e) {
+      NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       log.error("Failed while evaluating Trigger: " + ngTriggerEntity.getIdentifier()
           + ", For Account: " + ngTriggerEntity.getAccountId()
           + ", correlationId for event is: " + webhookPayloadData.getOriginalEvent().getUuid());
@@ -111,16 +114,18 @@ public class NGTriggerWebhookExecutionHelper {
   }
 
   private NGPipelineExecutionResponseDTO resolveRuntimeInputAndSubmitExecutionRequest(
-      NGTriggerEntity trigger, String eventPayload) {
-    NGTriggerConfig ngTriggerConfig = NGTriggerElementMapper.toTriggerConfig(trigger.getYaml());
+      TriggerDetails triggerDetails, String eventPayload) {
+    NGTriggerConfig ngTriggerConfig = triggerDetails.getNgTriggerConfig();
+    NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     TargetSpec targetSpec = ngTriggerConfig.getTarget().getSpec();
     EmbeddedUser embeddedUser = EmbeddedUser.builder().email("email").name("name").uuid("uuid").build();
 
     if (PipelineTargetSpec.class.isAssignableFrom(targetSpec.getClass())) {
       PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-      return ngPipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(trigger.getAccountId(),
-          trigger.getOrgIdentifier(), trigger.getProjectIdentifier(), trigger.getTargetIdentifier(),
-          pipelineTargetSpec.getRuntimeInputYaml(), eventPayload, false, embeddedUser);
+      return ngPipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(ngTriggerEntity.getAccountId(),
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
+          ngTriggerEntity.getTargetIdentifier(), pipelineTargetSpec.getRuntimeInputYaml(), eventPayload, false,
+          embeddedUser);
     }
     throw new InvalidRequestException("Target type does not match");
   }

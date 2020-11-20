@@ -92,8 +92,9 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
     }
 
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    if (!environment.getName().isExpression()
-        && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName()))) {
+    if (environment.getName() == null
+        || (!environment.getName().isExpression()
+               && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName())))) {
       environment.setName(environment.getIdentifier());
     }
 
