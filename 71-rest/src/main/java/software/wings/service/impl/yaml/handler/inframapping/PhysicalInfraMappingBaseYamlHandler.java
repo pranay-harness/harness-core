@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingBase.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -22,7 +21,7 @@ public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfr
 
   @Override
   protected void toBean(ChangeContext<Y> changeContext, B bean, String appId, String envId, String computeProviderId,
-      String serviceId, String provisionerId) throws HarnessException {
+      String serviceId, String provisionerId) {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
     if (isNotBlank(yaml.getLoadBalancer())) {

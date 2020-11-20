@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -25,8 +24,8 @@ public class AzureInfraMappingYamlHandler
   }
 
   @Override
-  public AzureInfrastructureMapping upsertFromYaml(ChangeContext<AzureInfrastructureMapping.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  public AzureInfrastructureMapping upsertFromYaml(
+      ChangeContext<AzureInfrastructureMapping.Yaml> changeContext, List<ChangeContext> changeSetContext) {
     AzureInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -50,7 +49,7 @@ public class AzureInfraMappingYamlHandler
   }
 
   private void toBean(AzureInfrastructureMapping bean, ChangeContext<AzureInfrastructureMapping.Yaml> changeContext,
-      String appId, String envId, String computeProviderId, String serviceId) throws HarnessException {
+      String appId, String envId, String computeProviderId, String serviceId) {
     AzureInfrastructureMapping.Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());

@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -31,7 +30,7 @@ public class AzureKubernetesInfraMappingYamlHandler
 
   @Override
   public AzureKubernetesInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -55,7 +54,7 @@ public class AzureKubernetesInfraMappingYamlHandler
   }
 
   private void toBean(AzureKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) throws HarnessException {
+      String envId, String computeProviderId, String serviceId) {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());

@@ -32,6 +32,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -702,8 +703,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (taskResponse.getTerraformExecutionData().getExecutionStatus() == ExecutionStatus.SUCCESS) {
       return taskResponse.getVariablesList();
     } else {
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", taskResponse.getTerraformExecutionData().getErrorMessage());
+      throw new GeneralException(taskResponse.getTerraformExecutionData().getErrorMessage());
     }
   }
 
@@ -729,7 +729,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         (TerraformInfrastructureProvisioner) infrastructureProvisioner;
     validateTerraformProvisioner(terraformInfrastructureProvisioner);
     if (isTemplatizedProvisioner(terraformInfrastructureProvisioner)) {
-      throw new WingsException(ErrorCode.INVALID_TERRAFORM_TARGETS_REQUEST);
+      throw new InvalidRequestException("Cannot Fetch Targets Since Terraform Provisioner is templatized",
+          ErrorCode.INVALID_TERRAFORM_TARGETS_REQUEST, USER);
     }
     SettingAttribute settingAttribute = settingService.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof GitConfig)) {

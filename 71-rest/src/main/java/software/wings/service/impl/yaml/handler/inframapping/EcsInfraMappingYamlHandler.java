@@ -11,9 +11,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.LaunchType;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping.Yaml;
@@ -101,11 +100,11 @@ public class EcsInfraMappingYamlHandler
   @VisibleForTesting
   static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args",
-              format("Failed to parse yaml for EcsInfraMapping: %s, App: %s, "
-                      + "For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
-                  bean.getName(), bean.getAppId()));
+      throw new InvalidArgumentsException(
+          format("Failed to parse yaml for EcsInfraMapping: %s, App: %s, "
+                  + "For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
+              bean.getName(), bean.getAppId()),
+          USER);
     }
   }
 

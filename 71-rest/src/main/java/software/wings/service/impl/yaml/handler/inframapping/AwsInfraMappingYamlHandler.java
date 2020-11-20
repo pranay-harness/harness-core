@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
 import software.wings.beans.AwsInstanceFilter;
@@ -79,7 +78,7 @@ public class AwsInfraMappingYamlHandler
 
   @Override
   public AwsInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -120,7 +119,7 @@ public class AwsInfraMappingYamlHandler
   }
 
   private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId, String provisionerId) throws HarnessException {
+      String computeProviderId, String serviceId, String provisionerId) {
     Yaml yaml = changeContext.getYaml();
 
     AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder().vpcIds(yaml.getVpcs());

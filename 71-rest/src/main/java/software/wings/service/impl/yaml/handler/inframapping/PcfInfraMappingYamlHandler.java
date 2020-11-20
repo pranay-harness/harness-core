@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping.Yaml;
@@ -30,7 +29,7 @@ public class PcfInfraMappingYamlHandler
 
   @Override
   public PcfInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -54,7 +53,7 @@ public class PcfInfraMappingYamlHandler
   }
 
   private void toBean(PcfInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) throws HarnessException {
+      String computeProviderId, String serviceId) {
     Yaml yaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);

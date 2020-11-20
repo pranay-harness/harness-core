@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -18,7 +17,7 @@ public abstract class InfraMappingYamlWithComputeProviderHandler<
   }
 
   protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String computeProviderId,
-      String serviceId, String provisionerId) throws HarnessException {
+      String serviceId, String provisionerId) {
     super.toBean(context, bean, appId, envId, serviceId, provisionerId);
     Y yaml = context.getYaml();
     bean.setComputeProviderSettingId(computeProviderId);

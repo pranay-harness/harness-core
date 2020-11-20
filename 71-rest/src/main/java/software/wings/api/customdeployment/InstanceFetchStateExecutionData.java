@@ -3,6 +3,7 @@ package software.wings.api.customdeployment;
 import io.harness.data.Outcome;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.InstanceFetchStateExecutionSummary;
 import software.wings.sm.InstanceStatusSummary;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class InstanceFetchStateExecutionData extends StateExecutionData implements Outcome {
   private String activityId;
   private String hostObjectArrayPath;

@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -34,7 +33,7 @@ public class CodeDeployInfraMappingYamlHandler
 
   @Override
   public CodeDeployInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -58,7 +57,7 @@ public class CodeDeployInfraMappingYamlHandler
   }
 
   private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,
-      String computeProviderId, String serviceId) throws HarnessException {
+      String computeProviderId, String serviceId) {
     Yaml infraMappingYaml = context.getYaml();
     super.toBean(context, bean, appId, envId, computeProviderId, serviceId, null);
 
