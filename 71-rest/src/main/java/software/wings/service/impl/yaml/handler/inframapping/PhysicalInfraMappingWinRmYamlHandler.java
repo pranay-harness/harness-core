@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm.Yaml;
@@ -34,7 +33,7 @@ public class PhysicalInfraMappingWinRmYamlHandler
 
   @Override
   public PhysicalInfrastructureMappingWinRm upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -59,7 +58,7 @@ public class PhysicalInfraMappingWinRmYamlHandler
 
   @Override
   public void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMappingWinRm bean, String appId,
-      String envId, String computeProviderId, String serviceId) throws HarnessException {
+      String envId, String computeProviderId, String serviceId) {
     Yaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 

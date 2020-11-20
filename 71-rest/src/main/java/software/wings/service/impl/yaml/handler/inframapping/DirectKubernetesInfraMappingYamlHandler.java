@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -31,7 +30,7 @@ public class DirectKubernetesInfraMappingYamlHandler
 
   @Override
   public DirectKubernetesInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -55,7 +54,7 @@ public class DirectKubernetesInfraMappingYamlHandler
   }
 
   private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) throws HarnessException {
+      String envId, String computeProviderId, String serviceId) {
     Yaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, serviceId, null);

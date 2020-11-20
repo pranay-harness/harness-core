@@ -203,7 +203,6 @@ public class InstanceFetchState extends State {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .description("Fetch Instances")
-                                    .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
                                     .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
                                     .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)

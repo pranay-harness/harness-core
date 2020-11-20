@@ -121,8 +121,8 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     yaml.setBlueprints(infraMapping.getBlueprints());
   }
 
-  protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId,
-      String provisionerId) throws HarnessException {
+  protected void toBean(
+      ChangeContext<Y> context, B bean, String appId, String envId, String serviceId, String provisionerId) {
     Y yaml = context.getYaml();
     bean.setAutoPopulate(false);
     bean.setInfraMappingType(yaml.getInfraMappingType());
