@@ -39,6 +39,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.api.ResourceConstraintExecutionData;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
@@ -50,6 +51,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -76,6 +78,7 @@ public class ResourceConstraintState extends State {
   @Inject @Transient private NotificationService notificationService;
   @Inject @Transient private WingsPersistence wingsPersistence;
   @Inject @Transient private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject @Transient private FeatureFlagService featureFlagService;
 
   @Getter @Setter private String resourceConstraintId;
   @Getter @Setter private String resourceUnit;
@@ -173,6 +176,8 @@ public class ResourceConstraintState extends State {
     constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityId, releaseEntityId);
     constraintContext.put(
         ResourceConstraintInstanceKeys.order, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
+    constraintContext.put(FeatureName.RESOURCE_CONSTRAINT_MAX_QUEUE.name(),
+        featureFlagService.isEnabled(FeatureName.RESOURCE_CONSTRAINT_MAX_QUEUE, accountId));
 
     ConstraintUnit renderedResourceUnit = new ConstraintUnit(context.renderExpression(resourceUnit));
 
@@ -193,6 +198,15 @@ public class ResourceConstraintState extends State {
       }
       final Consumer.State state = constraint.registerConsumer(renderedResourceUnit, new ConsumerId(consumerId),
           permits, constraintContext, resourceConstraintService.getRegistry());
+
+      // TODO: Write unit test for this on removing FF
+      if (featureFlagService.isEnabled(FeatureName.RESOURCE_CONSTRAINT_MAX_QUEUE, accountId)
+          && state == Consumer.State.REJECTED) {
+        return executionResponseBuilder.executionStatus(ExecutionStatus.FAILED)
+            .errorMessage("Limit exceeded. Only " + Constraint.MAX_CONSUMERS_WAITING_FOR_RESOURCE
+                + " executions can be queued for acquiring the resource lock per target infrastructure at a time")
+            .build();
+      }
 
       if (state == Consumer.State.ACTIVE) {
         return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();

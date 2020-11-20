@@ -19,7 +19,10 @@ public class Consumer {
     ACTIVE,
 
     // The consumer is already done
-    FINISHED
+    FINISHED,
+
+    // The consumer is not allowed to take the resource
+    REJECTED
   }
 
   private State state;

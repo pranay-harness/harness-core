@@ -2,11 +2,11 @@ package io.harness.distribution.constraint;
 
 import static io.harness.distribution.constraint.Constraint.Strategy.ASAP;
 import static io.harness.distribution.constraint.Constraint.Strategy.FIFO;
-import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
-import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
+import static io.harness.distribution.constraint.Consumer.State.*;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
+import io.harness.annotations.test.FeatureName;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.distribution.constraint.RunnableConsumers.RunnableConsumersBuilder;
 import io.harness.threading.Morpheus;
@@ -43,6 +43,7 @@ import java.util.Map;
 @Builder
 public class Constraint {
   private static final int DELAY_FOR_OPTIMISTIC_RETRIES = 10;
+  public static final int MAX_CONSUMERS_WAITING_FOR_RESOURCE = 20;
 
   private static final SecureRandom random = new SecureRandom();
 
@@ -133,6 +134,11 @@ public class Constraint {
       List<Consumer> consumers = registry.loadConsumers(id, unit);
       final int usedPermits = getUsedPermits(consumers);
       State state = calculateConsumerState(consumers, permits, usedPermits);
+
+      if (context != null && Boolean.TRUE.equals(context.get("RESOURCE_CONSTRAINT_MAX_QUEUE"))
+          && consumers.size() > MAX_CONSUMERS_WAITING_FOR_RESOURCE) {
+        state = REJECTED;
+      }
 
       final Consumer consumer =
           Consumer.builder().id(consumerId).permits(permits).state(state).context(context).build();
