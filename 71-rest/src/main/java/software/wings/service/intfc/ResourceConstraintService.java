@@ -50,6 +50,9 @@ public interface ResourceConstraintService extends OwnedByAccount {
   List<ResourceConstraintInstance> fetchResourceConstraintInstancesForUnitAndEntityType(
       String appId, String resourceConstraintId, String unit, String entityType);
 
+  ResourceConstraintInstance fetchResourceConstraintInstanceForUnitAndWFExecution(
+      String appId, String resourceConstraintId, String unit, String releaseEntityId, String entityType);
+
   static String workflowExecutionIdFromReleaseEntityId(String releaseEntityId) {
     return releaseEntityId.split("[|]")[0];
   }

@@ -4736,7 +4736,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     responseBuilder.unitType(
         execution.getConcurrencyStrategy() != null ? execution.getConcurrencyStrategy().getUnitType() : null);
     responseBuilder.infrastructureDetails(extractServiceInfrastructureDetails(appId, execution));
-    if (ExecutionStatus.isRunningStatus(execution.getStatus())) {
+
+    // TODO: Write unit tests for this on removing FF.
+    ResourceConstraintInstance resourceConstraintInstance = null;
+    String accountId = execution.getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.RESOURCE_CONSTRAINT_MAX_QUEUE, accountId)) {
+      resourceConstraintInstance = resourceConstraintService.fetchResourceConstraintInstanceForUnitAndWFExecution(
+          appId, resourceConstraint.getUuid(), unit, workflowExecutionId, HoldingScope.WORKFLOW.name());
+    }
+
+    if (ExecutionStatus.isRunningStatus(execution.getStatus()) || resourceConstraintInstance != null) {
       List<ResourceConstraintInstance> instances =
           resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
               appId, resourceConstraint.getUuid(), unit, HoldingScope.WORKFLOW.name());

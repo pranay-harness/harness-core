@@ -536,6 +536,19 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
+  public ResourceConstraintInstance fetchResourceConstraintInstanceForUnitAndWFExecution(
+      String appId, String resourceConstraintId, String unit, String releaseEntityId, String entityType) {
+    return wingsPersistence.createQuery(ResourceConstraintInstance.class)
+        .filter(ResourceConstraintInstanceKeys.appId, appId)
+        .filter(ResourceConstraintInstanceKeys.state, State.REJECTED.name())
+        .filter(ResourceConstraintInstanceKeys.releaseEntityId, releaseEntityId)
+        .filter(ResourceConstraintInstanceKeys.resourceConstraintId, resourceConstraintId)
+        .filter(ResourceConstraintInstanceKeys.resourceUnit, unit)
+        .filter(ResourceConstraintInstanceKeys.releaseEntityType, entityType)
+        .get();
+  }
+
+  @Override
   public int getAllCurrentlyAcquiredPermits(String holdingScope, String releaseEntityId, String appId) {
     int currentPermits = 0;
     List<ResourceConstraintInstance> resourceConstraintInstances =
