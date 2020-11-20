@@ -23,6 +23,11 @@ message TaskSetupAbstractions {
   map<string, string> values = 1;
 }
 
+// This map is used to form base logging key for log service
+message TaskLogAbstractions {
+  map<string, string> values = 1;
+}
+
 // Specifies the execution mode of the task
 enum TaskMode {
   MODE_UNSPECIFIED = 0;

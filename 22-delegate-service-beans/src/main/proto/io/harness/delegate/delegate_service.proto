@@ -45,6 +45,7 @@ message SubmitTaskRequest {
   AccountId account_id = 2;
 
   TaskSetupAbstractions setup_abstractions = 3;
+  TaskLogAbstractions log_abstractions = 7;
   TaskDetails details = 4;
   repeated Capability capabilities = 5;
   repeated TaskSelector selectors = 6;

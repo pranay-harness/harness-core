@@ -27,6 +27,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor<HDelegateTask> {
                                                         .taskParameters(extractTaskParameters(taskData))
                                                         .executionTimeout(Duration.ofMillis(taskData.getTimeout()))
                                                         .taskSetupAbstractions(setupAbstractions)
+                                                        .logStreamingAbstractions(task.getLogStreamingAbstractions())
                                                         .build();
     return delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
   }

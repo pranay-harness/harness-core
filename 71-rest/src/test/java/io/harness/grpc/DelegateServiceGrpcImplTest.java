@@ -44,6 +44,7 @@ import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
@@ -81,6 +82,7 @@ import software.wings.service.intfc.DelegateService;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -150,6 +152,10 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
     setupAbstractions.put(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, "artifactStreamId");
     setupAbstractions.put(DelegateTaskKeys.workflowExecutionId, "workflowExecutionId");
 
+    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
+    logAbstractions.put(Cd1SetupFields.APP_ID_FIELD, "appId");
+    logAbstractions.put(Cd1SetupFields.ENV_ID_FIELD, "envId");
+
     Map<String, String> expressions = new HashMap<>();
     expressions.put("expression1", "exp1");
     expressions.put("expression1", "exp1");
@@ -167,6 +173,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                          .submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
                              AccountId.newBuilder().setId(generateUuid()).build(),
                              TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                             TaskLogAbstractions.newBuilder().putAllValues(logAbstractions).build(),
                              builder.setMode(TaskMode.SYNC).setParked(false).build(),
                              asList(SystemEnvCheckerCapability.builder().build()), taskSelectors)
                          .getTaskId();
@@ -178,6 +185,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                          .submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
                              AccountId.newBuilder().setId(generateUuid()).build(),
                              TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                             TaskLogAbstractions.newBuilder().putAllValues(new LinkedHashMap<>()).build(),
                              builder.setMode(TaskMode.ASYNC).setParked(false).build(),
                              asList(SystemEnvCheckerCapability.builder().build()), taskSelectors)
                          .getTaskId();
@@ -189,6 +197,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                          .submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
                              AccountId.newBuilder().setId(generateUuid()).build(),
                              TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                             TaskLogAbstractions.newBuilder().putAllValues(new LinkedHashMap<>()).build(),
                              builder.setMode(TaskMode.ASYNC).setParked(true).build(),
                              asList(SystemEnvCheckerCapability.builder().build()), taskSelectors)
                          .getTaskId();
@@ -202,6 +211,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
             -> delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
                 AccountId.newBuilder().setId(generateUuid()).build(),
                 TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                TaskLogAbstractions.newBuilder().putAllValues(new LinkedHashMap<>()).build(),
                 builder.setMode(TaskMode.SYNC).setParked(false).build(),
                 asList(SystemEnvCheckerCapability.builder().build()), taskSelectors))
         .isInstanceOf(DelegateServiceDriverException.class)

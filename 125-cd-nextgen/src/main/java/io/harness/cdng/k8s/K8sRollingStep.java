@@ -64,6 +64,7 @@ import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -146,7 +147,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
-    final Task delegateTask = prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
+    final Task delegateTask =
+        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions(), new LinkedHashMap<>());
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -197,7 +199,12 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
             .async(true)
             .build();
 
-    final Task delegateTask = prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
+    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
+    logAbstractions.put("key2", "val2");
+    logAbstractions.put("key1", "val1");
+
+    final Task delegateTask =
+        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions(), logAbstractions);
 
     return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
   }

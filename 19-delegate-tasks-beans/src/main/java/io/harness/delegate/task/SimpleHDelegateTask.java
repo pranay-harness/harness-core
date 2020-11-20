@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Value
@@ -15,4 +16,5 @@ public class SimpleHDelegateTask implements HDelegateTask {
   @NonNull TaskData data;
   @Singular Map<String, String> setupAbstractions;
   String uuid;
+  LinkedHashMap<String, String> logStreamingAbstractions;
 }

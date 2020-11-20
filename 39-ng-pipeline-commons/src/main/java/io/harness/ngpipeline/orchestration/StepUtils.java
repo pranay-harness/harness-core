@@ -9,6 +9,7 @@ import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class StepUtils {
@@ -27,16 +28,23 @@ public class StepUtils {
     return responseBuilder.build();
   }
 
-  public static Task prepareDelegateTaskInput(
-      String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
-    return createHDelegateTask(accountId, taskData, setupAbstractions);
+  public static Task prepareDelegateTaskInput(String accountId, TaskData taskData,
+      Map<String, String> setupAbstractions, LinkedHashMap<String, String> logAbstractions) {
+    return createHDelegateTask(accountId, taskData, setupAbstractions, logAbstractions);
   }
 
-  private static Task createHDelegateTask(String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
+  public static Task prepareDelegateTaskInput(
+      String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
+    return createHDelegateTask(accountId, taskData, setupAbstractions, new LinkedHashMap<>());
+  }
+
+  private static Task createHDelegateTask(String accountId, TaskData taskData, Map<String, String> setupAbstractions,
+      LinkedHashMap<String, String> logAbstractions) {
     return SimpleHDelegateTask.builder()
         .accountId(accountId)
         .data(taskData)
         .setupAbstractions(setupAbstractions)
+        .logStreamingAbstractions(logAbstractions)
         .build();
   }
 }

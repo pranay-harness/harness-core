@@ -6,6 +6,7 @@ import lombok.Singular;
 import lombok.Value;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,4 +21,5 @@ public class DelegateTaskRequest {
   @Singular List<String> taskSelectors;
   Duration executionTimeout;
   String taskDescription;
+  LinkedHashMap<String, String> logStreamingAbstractions;
 }
