@@ -152,12 +152,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookService.class).registerIterators();
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
-                                        .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
-                                        .planCreatorProvider(new NGPlanCreatorProvider())
-                                        .build();
-    PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
+      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                          .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
+                                          .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
+                                          .planCreatorProvider(new NGPlanCreatorProvider())
+                                          .build();
+      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    }
 
     MaintenanceController.forceMaintenance(false);
   }
