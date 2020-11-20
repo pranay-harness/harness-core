@@ -90,7 +90,7 @@ public class WinRmSession implements AutoCloseable {
     shell = client.createShell();
   }
 
-  public int executeCommandString(String command, Writer output, Writer error) {
+  public int executeCommandString(String command, Writer output, Writer error, boolean isOutputWriter) {
     if (args != null) {
       try {
         File commandFile = File.createTempFile("winrm-kerberos-command", null);
@@ -99,7 +99,7 @@ public class WinRmSession implements AutoCloseable {
 
         return SshHelperUtils.executeLocalCommand(format(COMMAND_PLACEHOLDER, InstallUtils.getHarnessPywinrmToolPath(),
                                                       args.getArgs(commandFile.getAbsolutePath())),
-                   logCallback)
+                   logCallback, output, isOutputWriter)
             ? 0
             : 1;
       } catch (IOException e) {
@@ -111,7 +111,8 @@ public class WinRmSession implements AutoCloseable {
     return shell.execute(command, output, error);
   }
 
-  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error) throws IOException {
+  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter)
+      throws IOException {
     WinRmToolResponse winRmToolResponse = null;
     if (commandList.isEmpty()) {
       return -1;
@@ -120,7 +121,7 @@ public class WinRmSession implements AutoCloseable {
     if (args != null) {
       for (List<String> list : commandList) {
         String command = String.join(" & ", list);
-        statusCode = executeCommandString(command, output, error);
+        statusCode = executeCommandString(command, output, error, isOutputWriter);
         if (statusCode != 0) {
           return statusCode;
         }

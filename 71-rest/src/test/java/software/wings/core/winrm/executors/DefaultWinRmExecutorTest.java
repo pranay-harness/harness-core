@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -109,7 +110,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
     DefaultWinRmExecutor defaultWinRmExecutorFFOn =
         new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
     defaultWinRmExecutorFFOn.cleanupFiles(winRmSession, "PSFileName.ps1");
-    verify(winRmSession, times(1)).executeCommandString(any(), any(), any());
+    verify(winRmSession, times(1)).executeCommandString(any(), any(), any(), eq(false));
   }
 
   @Test

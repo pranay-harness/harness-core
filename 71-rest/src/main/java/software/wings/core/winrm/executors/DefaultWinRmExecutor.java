@@ -113,9 +113,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
         exitCode = session.executeCommandsList(
-            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter, false);
       } else {
-        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+        exitCode =
+            session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter, false);
       }
       commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
@@ -186,9 +187,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = getPSScriptFile();
 
         exitCode = session.executeCommandsList(
-            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter, false);
       } else {
-        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+        exitCode =
+            session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter, false);
       }
       commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
 
@@ -236,11 +238,11 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       int exitCode;
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
-        exitCode = session.executeCommandsList(
-            constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile), outputAccumulator, errorAccumulator);
+        exitCode = session.executeCommandsList(constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile),
+            outputAccumulator, errorAccumulator, true);
       } else {
-        exitCode =
-            session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, errorAccumulator);
+        exitCode = session.executeCommandString(
+            psWrappedCommandWithEncoding(command), outputAccumulator, errorAccumulator, true);
       }
       if (exitCode != 0) {
         log.error("Powershell script collecting output environment Variables failed with exitCode {}", exitCode);
@@ -289,9 +291,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         command = format(
             "%s Invoke-Command -command {$FILE_PATH=[System.Environment]::ExpandEnvironmentVariables(\\\"%s\\\") ;  Remove-Item -Path $FILE_PATH}",
             powershell, file);
-        session.executeCommandString(command, outputAccumulator, outputAccumulator);
+        session.executeCommandString(command, outputAccumulator, outputAccumulator, false);
       } else {
-        session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, outputAccumulator);
+        session.executeCommandString(
+            psWrappedCommandWithEncoding(command), outputAccumulator, outputAccumulator, false);
       }
     } catch (RuntimeException re) {
       throw re;
@@ -421,7 +424,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
             + "Write-Host \"Copied config file to the host.\"\n";
         exitCode = session.executeCommandsList(
-            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter, false);
       } else {
         String encodedFile = EncodingUtils.encodeBase64(fileBytes);
         command = "#### Convert Base64 string back to config file ####\n"
@@ -433,7 +436,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
             + "Write-Host \"Copied config file to the host.\"\n";
 
-        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+        exitCode =
+            session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter, false);
       }
       log.info("Execute Command String returned exit code.", exitCode);
       commandExecutionStatus = SUCCESS;
