@@ -3,6 +3,7 @@ package io.harness.persistence;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,6 +17,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
 import io.harness.persistence.TestEntityCreatedAware.TestEntityCreatedAwareKeys;
+import io.harness.persistence.TestEntityCreatedLastUpdatedAware.TestEntityCreatedLastUpdatedAwareKeys;
 import io.harness.rule.Owner;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -202,5 +204,39 @@ public class HPersistenceTest extends PersistenceTestBase {
 
     testEntities = query.asList();
     assertThat(testEntities).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldUpdate() {
+    TestEntityCreatedLastUpdatedAware entity =
+        TestEntityCreatedLastUpdatedAware.builder().uuid(generateUuid()).test("foo").build();
+
+    try {
+      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
+      String id = persistence.save(entity);
+      final TestEntityCreatedLastUpdatedAware testEntity = persistence.get(TestEntityCreatedLastUpdatedAware.class, id);
+      assertThat(testEntity.getCreatedAt()).isNotZero();
+      assertThat(testEntity.getLastUpdatedAt()).isNotZero();
+      assertThat(testEntity.getLastUpdatedBy()).isNotNull();
+      assertThat(testEntity.getCreatedBy()).isNotNull();
+
+      final UpdateOperations<TestEntityCreatedLastUpdatedAware> entityUpdateOperations =
+          persistence.createUpdateOperations(TestEntityCreatedLastUpdatedAware.class)
+              .set(TestEntityCreatedLastUpdatedAwareKeys.test, "bar");
+      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user2").build());
+      persistence.update(testEntity, entityUpdateOperations);
+
+      final TestEntityCreatedLastUpdatedAware testEntityAfterUpdate =
+          persistence.get(TestEntityCreatedLastUpdatedAware.class, id);
+      assertThat(testEntity.getCreatedAt()).isEqualTo(testEntityAfterUpdate.getCreatedAt());
+      assertThat(testEntityAfterUpdate.getTest()).isEqualTo("bar");
+      assertThat(testEntity.getLastUpdatedAt()).isLessThan(testEntityAfterUpdate.getLastUpdatedAt());
+      assertThat(testEntity.getCreatedBy()).isEqualTo(testEntityAfterUpdate.getCreatedBy());
+      assertThat(testEntityAfterUpdate.getLastUpdatedBy().getName()).isEqualTo("user2");
+    } finally {
+      testUserProvider.setActiveUser(null);
+    }
   }
 }
