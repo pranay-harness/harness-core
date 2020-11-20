@@ -9,11 +9,7 @@ import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 
-import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.advisers.fail.OnFailAdviserParameters;
-import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -34,13 +30,12 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
-import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.serializer.KryoSerializer;
-import io.harness.states.BuildStatusStepNodeCreator;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
@@ -123,8 +118,9 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
+    // No need to send status to git in case of manual execution
     final PlanNode integrationStageNode = prepareIntegrationStageNode(
-        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments);
+        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments, null);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(integrationStageNode)
@@ -136,37 +132,21 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   private ExecutionPlanCreatorResponse createExecutionPlanForWebhookExecution(IntegrationStage integrationStage,
       ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context,
       BuildNumberDetails buildNumberDetails, String podName, String sha, String connectorRef) {
+    BuildStatusUpdateParameter buildStatusUpdateParameter = BuildStatusUpdateParameter.builder()
+                                                                .sha(sha)
+                                                                .connectorIdentifier(connectorRef)
+                                                                .identifier(integrationStage.getIdentifier())
+                                                                .build();
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
-    PlanNode buildStatusFailedStepNode = BuildStatusStepNodeCreator.prepareBuildStatusStepNode(
-        FAILED_STATUS, "Integration stage failed", sha, integrationStage.getIdentifier(), connectorRef);
-
-    PlanNode buildStatusSucceededStepNode = BuildStatusStepNodeCreator.prepareBuildStatusStepNode(
-        SUCCESS_STATUS, "Integration stage succeeded", sha, integrationStage.getIdentifier(), connectorRef);
 
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
-    adviserObtainments.add(
-        AdviserObtainment.newBuilder()
-            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                OnSuccessAdviserParameters.builder().nextNodeId(buildStatusSucceededStepNode.getUuid()).build())))
-            .build());
-
-    adviserObtainments.add(
-        AdviserObtainment.newBuilder()
-            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build())
-            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                OnFailAdviserParameters.builder().nextNodeId(buildStatusFailedStepNode.getUuid()).build())))
-            .build());
-
-    final PlanNode integrationStageNode = prepareIntegrationStageNode(
-        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments);
+    final PlanNode integrationStageNode = prepareIntegrationStageNode(integrationStage, planForExecution, podName,
+        buildNumberDetails, adviserObtainments, buildStatusUpdateParameter);
 
     // TODO Harsh Check whether we also have to add pending status
     return ExecutionPlanCreatorResponse.builder()
         .planNode(integrationStageNode)
-        .planNode(buildStatusFailedStepNode)
-        .planNode(buildStatusSucceededStepNode)
         .planNodes(planForExecution.getPlanNodes())
         .startingNodeId(integrationStageNode.getUuid())
         .build();
@@ -183,7 +163,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
   private PlanNode prepareIntegrationStageNode(IntegrationStage integrationStage,
       ExecutionPlanCreatorResponse planForExecution, String podName, BuildNumberDetails buildNumberDetails,
-      ArrayList<AdviserObtainment> adviserObtainments) {
+      ArrayList<AdviserObtainment> adviserObtainments, BuildStatusUpdateParameter buildStatusUpdateParameter) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -196,6 +176,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
             IntegrationStageStepParameters.builder()
                 .buildNumberDetails(buildNumberDetails)
                 .podName(podName)
+                .buildStatusUpdateParameter(buildStatusUpdateParameter)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))
                 .build())
