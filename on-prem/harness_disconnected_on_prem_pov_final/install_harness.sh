@@ -314,6 +314,8 @@ function setupManager(){
     WATCHER_METADATA_URL=$LOAD_BALANCER_URL/storage/wingswatchers/watcherprod.txt
     HAZELCAST_PORT=$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
     managerVersion=$(getProperty "version.properties" "MANAGER_VERSION")
+    DELEGATE_SERVICE_TARGET=$host1:$proxyPort
+    DELEGATE_SERVICE_AUTHORITY=manager-grpc-$host1
 
 #    echo $LOAD_BALANCER_URL
 #    echo $ALLOWED_ORIGINS
@@ -334,7 +336,7 @@ function setupManager(){
   mkdir -p $runtime_dir/manager/logs
   chmod -R 777 $runtime_dir/manager
 
- docker run -d -u 0:0 --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager-signed:$managerVersion
+ docker run -d -u 0:0 --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -e DELEGATE_SERVICE_TARGET=$DELEGATE_SERVICE_TARGET -e DELEGATE_SERVICE_AUTHORITY=$DELEGATE_SERVICE_AUTHORITY -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager-signed:$managerVersion
 
  sleep 10
 
