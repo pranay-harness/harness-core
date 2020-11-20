@@ -230,7 +230,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
       if (needToNotifyPipeline) {
         try {
+          log.info("Need to notify the pipeline");
           waitNotifyEngine.doneWith(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+          log.info("Successfully notified the pipeline");
         } catch (WingsException exception) {
           ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
         }
@@ -456,6 +458,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private void handlePostExecution(ExecutionContext context) {
     // TODO: this is temporary. this should be part of its own callback and with more precise filter
     try {
+      log.info("Update Active Barriers if any");
       barrierService.updateAllActiveBarriers(context.getAppId());
     } catch (RuntimeException exception) {
       // Do not block the execution for possible exception in the barrier update
@@ -464,9 +467,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     // TODO: this is temporary. this should be part of its own callback and with more precise filter
     try {
+      log.info("Update Active Resource constraints");
       final Set<String> constraintIds =
           resourceConstraintService.updateActiveConstraints(context.getAppId(), workflowExecutionId);
 
+      log.info("Update Blocked Resource constraints");
       resourceConstraintService.updateBlockedConstraints(constraintIds);
 
     } catch (RuntimeException exception) {

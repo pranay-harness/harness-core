@@ -425,22 +425,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance = saveStateExecutionInstance(stateMachine, stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
-    stateExecutionInstance = updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
-    context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
-    log.info(DEBUG_LINE + "about to start stateExecutionInstance for {}", stateExecutionInstance.getUuid());
-    if (featureFlagService.isEnabled(FeatureName.REFACTOR_STATEMACHINEXECUTOR, context.getAccountId())) {
-      try (AutoLogContext ignore = context.autoLogContext()) {
-        startExecution(context);
-      } catch (WingsException exception) {
-        addContext(context, exception);
-        ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
-      } catch (Exception exception) {
-        log.error("Unhandled exception from trigger execution", exception);
-      }
-    } else {
-      executorService.execute(new SmExecutionDispatcher(context, this));
-    }
-    return stateExecutionInstance;
+    return updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
   }
 
   /**
@@ -2244,6 +2229,8 @@ public class StateMachineExecutor implements StateInspectionListener {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception exception) {
         log.error("Unhandled exception", exception);
+      } catch (Throwable throwable) {
+        log.error("Catching a throwable here, this shouldn't happen", throwable);
       }
     }
   }
@@ -2280,6 +2267,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       } catch (Exception ex) {
         stateMachineExecutor.addContext(context, new WingsException(ex));
         stateMachineExecutor.handleExecuteResponseException(context, new WingsException(ex));
+      } catch (Throwable throwable) {
+        log.error("Catching a throwable here, this shouldn't happen", throwable);
       }
     }
   }
