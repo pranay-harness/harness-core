@@ -17,6 +17,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import software.wings.app.JobsFrequencyConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
+import software.wings.beans.AccountStatus;
 import software.wings.service.intfc.AccountService;
 
 @OwnedBy(PL)
@@ -49,8 +50,8 @@ public class DeleteAccountHandler implements Handler<Account> {
   @Override
   public void handle(Account account) {
     // Delete accounts only on weekend
-    if (isWeekend()) {
-      accountService.deleteAccount(account.getUuid());
+    if (isWeekend() && AccountStatus.MARKED_FOR_DELETION.equals(account.getLicenseInfo().getAccountStatus())) {
+      accountService.delete(account.getUuid());
     }
   }
 }

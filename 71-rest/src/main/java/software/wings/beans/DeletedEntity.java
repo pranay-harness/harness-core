@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "DeletedEntityKeys")
 public class DeletedEntity implements PersistentEntity, PersistentRegularIterable {
   @Id private String uuid;
-  private String entityId;
+  @FdUniqueIndex private String entityId;
   private DeletedEntityType entityType;
   private int deletionAlgoNum;
   @FdIndex private long nextIteration;

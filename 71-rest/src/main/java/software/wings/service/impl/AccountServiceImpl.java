@@ -375,17 +375,6 @@ public class AccountServiceImpl implements AccountService {
     return licenseService.updateAccountLicense(accountId, licenseInfo);
   }
 
-  @Override
-  public boolean canProcessAccount(String accountId, long allowedNumberOfDaysSinceExpiry) {
-    Account account = getFromCacheWithFallback(accountId);
-    String accountStatus = account.getLicenseInfo().getAccountStatus();
-    if (AccountStatus.EXPIRED.equals(accountStatus)) {
-      long numberOfDaysSinceExpiry = account.getNumberOfDaysSinceExpiry(System.currentTimeMillis());
-      return allowedNumberOfDaysSinceExpiry > numberOfDaysSinceExpiry;
-    }
-    return AccountStatus.ACTIVE.equals(accountStatus);
-  }
-
   private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp) {
     createDefaultRoles(account)
         .stream()
@@ -511,23 +500,23 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean delete(String accountId) {
-    Account account = wingsPersistence.get(Account.class, accountId);
-    if (null == account) {
-      return false;
-    }
-    return deleteAccountHelper.deleteAccount(accountId);
+    return accountId != null && deleteAccountHelper.deleteAccount(accountId);
   }
 
   @Override
-  public void deleteAccount(String accountId) {
-    String accountStatus = getAccountStatus(accountId);
-    if (AccountStatus.MARKED_FOR_DELETION.equals(accountStatus)) {
-      deleteAccountHelper.deleteAccount(accountId);
+  public void handleNonExistentAccount(String accountId) {
+    if (accountId != null) {
+      deleteAccountHelper.upsertDeletedEntity(accountId, 0);
     }
   }
 
   @Override
   public boolean deleteExportableAccountData(String accountId) {
+    log.info("Deleting exportable data for account {}", accountId);
+    if (get(accountId) == null) {
+      throw new InvalidRequestException("The account to be deleted doesn't exist");
+    }
+
     return deleteAccountHelper.deleteExportableAccountData(accountId);
   }
 

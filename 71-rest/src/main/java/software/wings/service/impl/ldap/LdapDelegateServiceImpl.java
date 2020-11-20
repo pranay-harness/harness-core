@@ -184,9 +184,8 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     try {
       LdapListGroupsResponse listGroupsResponse = helper.getGroupByDn(settings.getGroupSettingsList(), dn);
 
-      if (listGroupsResponse != null && listGroupsResponse.getLdapResponse() != null
-          && listGroupsResponse.getLdapResponse().getStatus() != null
-          && LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
+      if (listGroupsResponse == null || listGroupsResponse.getLdapResponse() == null
+          || LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
         log.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
             settings.getUuid(), settings.getAccountId());
         return null;
