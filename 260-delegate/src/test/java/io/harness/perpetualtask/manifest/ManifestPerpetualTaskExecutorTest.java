@@ -18,6 +18,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.exception.HelmClientException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -28,7 +29,9 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
 import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import okio.Buffer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -62,14 +65,15 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
 
   @Mock private ManifestRepositoryService manifestRepositoryService;
   @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   private PerpetualTaskId perpetualTaskId;
 
   @Before
   public void setUp() throws Exception {
-    manifestPerpetualTaskExecutor =
-        new ManifestPerpetualTaskExecutor(manifestRepositoryService, managerClient, kryoSerializer);
+    manifestPerpetualTaskExecutor = new ManifestPerpetualTaskExecutor(
+        manifestRepositoryService, managerClient, delegateAgentManagerClient, kryoSerializer);
     perpetualTaskId = PerpetualTaskId.newBuilder().setId(UUIDGenerator.generateUuid()).build();
   }
 
@@ -83,23 +87,37 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
     // Manifest  collection is done once as there are no unpublished build details initially.
     verify(manifestRepositoryService, times(1)).collectManifests(any(ManifestCollectionParams.class));
 
-    ArgumentCaptor<ManifestCollectionExecutionResponse> captor =
-        ArgumentCaptor.forClass(ManifestCollectionExecutionResponse.class);
+    ArgumentCaptor<RequestBody> captor = ArgumentCaptor.forClass(RequestBody.class);
 
     // Chart versions are published 2 times because of batching.
-    verify(managerClient, times(2)).publishManifestCollectionResult(anyString(), anyString(), captor.capture());
+    verify(delegateAgentManagerClient, times(2))
+        .publishManifestCollectionResult(anyString(), anyString(), captor.capture());
 
-    assertThat(captor.getValue().getAppManifestId()).isEqualTo(APP_MANIFEST_ID);
-    assertThat(captor.getValue().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    List<ManifestCollectionExecutionResponse> responses = captor.getAllValues();
+    Buffer bufferedSink = new Buffer();
+    captor.getValue().writeTo(bufferedSink);
 
-    assertThat(responses.get(0).getManifestCollectionResponse().getToBeDeletedKeys()).containsExactly("1", "2");
-    assertThat(responses.get(0).getManifestCollectionResponse().getHelmCharts().size()).isEqualTo(500);
-    assertThat(responses.get(0).getManifestCollectionResponse().isStable()).isFalse();
+    ManifestCollectionExecutionResponse executionResponse =
+        (ManifestCollectionExecutionResponse) kryoSerializer.asObject(bufferedSink.readByteArray());
 
-    assertThat(responses.get(1).getManifestCollectionResponse().getToBeDeletedKeys()).isEmpty();
-    assertThat(responses.get(1).getManifestCollectionResponse().getHelmCharts().size()).isEqualTo(7);
-    assertThat(responses.get(1).getManifestCollectionResponse().isStable()).isTrue();
+    assertThat(executionResponse.getAppManifestId()).isEqualTo(APP_MANIFEST_ID);
+    assertThat(executionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    List<RequestBody> responses = captor.getAllValues();
+
+    responses.get(0).writeTo(bufferedSink);
+    ManifestCollectionExecutionResponse executionResponse0 =
+        (ManifestCollectionExecutionResponse) kryoSerializer.asObject(bufferedSink.readByteArray());
+
+    assertThat(executionResponse0.getManifestCollectionResponse().getToBeDeletedKeys()).containsExactly("1", "2");
+    assertThat(executionResponse0.getManifestCollectionResponse().getHelmCharts().size()).isEqualTo(500);
+    assertThat(executionResponse0.getManifestCollectionResponse().isStable()).isFalse();
+
+    responses.get(1).writeTo(bufferedSink);
+    ManifestCollectionExecutionResponse executionResponse1 =
+        (ManifestCollectionExecutionResponse) kryoSerializer.asObject(bufferedSink.readByteArray());
+    assertThat(executionResponse1.getManifestCollectionResponse().getToBeDeletedKeys()).isEmpty();
+    assertThat(executionResponse1.getManifestCollectionResponse().getHelmCharts().size()).isEqualTo(7);
+    assertThat(executionResponse1.getManifestCollectionResponse().isStable()).isTrue();
 
     ArtifactsPublishedCache<HelmChart> manifestCache =
         manifestPerpetualTaskExecutor.getCache().getIfPresent(APP_MANIFEST_ID);
@@ -120,8 +138,8 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
     // Manifest collection is done once as there are no unpublished build details initially.
     verify(manifestRepositoryService, times(1)).collectManifests(any(ManifestCollectionParams.class));
 
-    verify(managerClient, times(1))
-        .publishManifestCollectionResult(anyString(), anyString(), any(ManifestCollectionExecutionResponse.class));
+    verify(delegateAgentManagerClient, times(1))
+        .publishManifestCollectionResult(anyString(), anyString(), any(RequestBody.class));
     verify(call, times(1)).execute();
   }
 
@@ -135,14 +153,18 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
     // Manifest collection is done once as there are no unpublished build details initially.
     verify(manifestRepositoryService, times(1)).collectManifests(any(ManifestCollectionParams.class));
 
-    ArgumentCaptor<ManifestCollectionExecutionResponse> responseArgumentCaptor =
-        ArgumentCaptor.forClass(ManifestCollectionExecutionResponse.class);
-    verify(managerClient, times(1))
+    ArgumentCaptor<RequestBody> responseArgumentCaptor = ArgumentCaptor.forClass(RequestBody.class);
+    verify(delegateAgentManagerClient, times(1))
         .publishManifestCollectionResult(anyString(), anyString(), responseArgumentCaptor.capture());
     verify(call, times(1)).execute();
 
-    assertThat(responseArgumentCaptor.getValue().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(responseArgumentCaptor.getValue().getErrorMessage()).isEqualTo("COLLECTION_ERROR");
+    Buffer bufferedSink = new Buffer();
+    responseArgumentCaptor.getValue().writeTo(bufferedSink);
+    ManifestCollectionExecutionResponse executionResponse =
+        (ManifestCollectionExecutionResponse) kryoSerializer.asObject(bufferedSink.readByteArray());
+
+    assertThat(executionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("COLLECTION_ERROR");
   }
 
   @Test
@@ -200,8 +222,7 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
                                                                     .setAppManifestId(APP_MANIFEST_ID)
                                                                     .setManifestCollectionParams(bytes)
                                                                     .build();
-    when(managerClient.publishManifestCollectionResult(
-             anyString(), anyString(), any(ManifestCollectionExecutionResponse.class)))
+    when(delegateAgentManagerClient.publishManifestCollectionResult(anyString(), anyString(), any(RequestBody.class)))
         .thenReturn(call);
     when(call.execute())
         .thenReturn(throwErrorWhilePublishing

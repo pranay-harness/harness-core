@@ -107,4 +107,8 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/{delegateId}/state-executions")
   Call<RestResponse> saveApiCallLogs(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
+
+  @POST("agent/delegates/manifest-collection/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishManifestCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body RequestBody manifestCollectionExecutionResponse);
 }

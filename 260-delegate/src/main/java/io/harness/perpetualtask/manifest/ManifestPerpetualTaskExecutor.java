@@ -15,6 +15,7 @@ import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
@@ -25,6 +26,8 @@ import io.harness.perpetualtask.artifact.ArtifactsPublishedCache;
 import io.harness.serializer.KryoSerializer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.delegatetasks.manifest.ApplicationManifestLogContext;
@@ -44,17 +47,19 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final long INTERNAL_TIMEOUT_IN_MS = 120L * 1000;
 
   private final ManagerClient managerClient;
+  private final DelegateAgentManagerClient delegateAgentManagerClient;
   private final KryoSerializer kryoSerializer;
   private final ManifestRepositoryService manifestRepositoryService;
 
   private final @Getter Cache<String, ArtifactsPublishedCache<HelmChart>> cache = Caffeine.newBuilder().build();
 
   @Inject
-  public ManifestPerpetualTaskExecutor(
-      ManifestRepositoryService manifestRepositoryService, ManagerClient managerClient, KryoSerializer kryoSerializer) {
+  public ManifestPerpetualTaskExecutor(ManifestRepositoryService manifestRepositoryService, ManagerClient managerClient,
+      DelegateAgentManagerClient delegateAgentManagerClient, KryoSerializer kryoSerializer) {
     this.managerClient = managerClient;
     this.kryoSerializer = kryoSerializer;
     this.manifestRepositoryService = manifestRepositoryService;
+    this.delegateAgentManagerClient = delegateAgentManagerClient;
   }
 
   @Override
@@ -131,7 +136,10 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
   private boolean publishToManager(String accountId, String taskId, ManifestCollectionExecutionResponse response) {
     try {
-      executeWithExceptions(managerClient.publishManifestCollectionResult(taskId, accountId, response));
+      byte[] responseSerialized = kryoSerializer.asBytes(response);
+
+      executeWithExceptions(delegateAgentManagerClient.publishManifestCollectionResult(
+          taskId, accountId, RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
       return true;
     } catch (Exception ex) {
       log.error("Failed to publish build source execution response with status: {}",
