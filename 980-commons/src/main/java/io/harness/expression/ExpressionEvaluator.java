@@ -34,6 +34,7 @@ public class ExpressionEvaluator {
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
   private static final Pattern serviceDefaultArtifactVariablePattern = Pattern.compile("\\$\\{artifact[.}]");
   private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)[.}]");
+  private static final Pattern emptyCustomExpression = Pattern.compile("\\$\\{[{ }]*}");
 
   private Map<String, Object> expressionFunctorMap = new HashMap<>();
 
@@ -159,6 +160,13 @@ public class ExpressionEvaluator {
       return false;
     }
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
+  }
+
+  public static boolean isEmptyCustomExpression(String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return ExpressionEvaluator.emptyCustomExpression.matcher(expression).matches();
   }
 
   public static void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {

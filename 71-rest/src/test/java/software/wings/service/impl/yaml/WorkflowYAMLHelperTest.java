@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -337,5 +338,15 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
 
     workflowYAMLHelper.getWorkflowVariableValueBean(
         ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SS_SSH_CONNECTION_ATTRIBUTE.name(), "    ", false, variable);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void showThrowErrorWhenEmptyCustomExpressionUsed() {
+    Variable variable = aVariable().name("test").entityType(EntityType.SERVICE).build();
+
+    workflowYAMLHelper.getWorkflowVariableValueBean(
+        ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SERVICE.name(), "${}", false, variable);
   }
 }

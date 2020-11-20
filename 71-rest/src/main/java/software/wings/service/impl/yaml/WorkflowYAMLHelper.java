@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.isEmptyCustomExpression;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -46,13 +47,19 @@ public class WorkflowYAMLHelper {
 
   public String getWorkflowVariableValueBean(String accountId, String envId, String appId, String entityType,
       String variableValue, boolean skipEmpty, Variable variable) {
-    if (entityType == null || (skipEmpty && isEmpty(variableValue)) || matchesVariablePattern(variableValue)) {
+    if (entityType == null || (skipEmpty && isEmpty(variableValue))
+        || (matchesVariablePattern(variableValue) && (!isEmptyCustomExpression(variableValue)))) {
       return variableValue;
     }
 
     if (isBlank(variableValue)) {
       throw new InvalidRequestException(
           format("Empty value from YAML for variable: %s & EntityType %s", variable.getName(), entityType));
+    }
+
+    if (isEmptyCustomExpression(variableValue)) {
+      throw new InvalidRequestException(
+          format("Custom Expression is empty for variable: %s & EntityType %s", variable.getName(), entityType));
     }
 
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
