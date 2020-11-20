@@ -177,6 +177,7 @@ delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds":
 delegates {"name": "accountId_1", "background": true} {"accountId": 1}
 delegates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegates {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+deletedEntities {"name": "entityId_1", "unique": true} {"entityId": 1}
 deletedEntities {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 deploymentEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 deploymentEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}

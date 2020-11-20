@@ -5,11 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.reflect.Modifier.isAbstract;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.signup.BugsnagConstants.ACCOUNT;
-import static software.wings.signup.BugsnagConstants.ENTITIES_REMAINING_FOR_DELETION;
-import static software.wings.signup.BugsnagConstants.ID;
-import static software.wings.signup.BugsnagConstants.JOB_NAME;
-import static software.wings.signup.BugsnagConstants.STATUS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -17,8 +12,6 @@ import com.google.inject.name.Named;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.GeneralException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -36,11 +29,9 @@ import org.reflections.Reflections;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
-import software.wings.beans.BugsnagTab;
 import software.wings.beans.DeletedEntity;
 import software.wings.beans.DeletedEntity.DeletedEntityKeys;
 import software.wings.beans.DeletedEntity.DeletedEntityType;
-import software.wings.beans.ErrorData;
 import software.wings.beans.User;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.sso.SSOSettings;
@@ -48,12 +39,10 @@ import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.SegmentGroupEventJobContextKeys;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.ServiceClassLocator;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
-import software.wings.signup.BugsnagErrorReporter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +62,6 @@ public class DeleteAccountHelper {
 
   private static final int CURRENT_DELETION_ALGO_NUM = 1;
 
-  @Inject private AccountService accountService;
   @Inject private Morphia morphia;
   @Inject ServiceClassLocator serviceClassLocator;
   @Inject private SSOSettingServiceImpl ssoSettingService;
@@ -82,7 +70,6 @@ public class DeleteAccountHelper {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler persistentScheduler;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private BugsnagErrorReporter bugsnagErrorReporter;
   @Inject private DelegateService delegateService;
 
   public List<String> deleteAllEntities(String accountId) {
@@ -181,11 +168,6 @@ public class DeleteAccountHelper {
   }
 
   public boolean deleteExportableAccountData(String accountId) {
-    log.info("Deleting exportable data for account {}", accountId);
-    if (accountService.get(accountId) == null) {
-      throw new InvalidRequestException("The account to be deleted doesn't exist");
-    }
-
     Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
     log.info("The exportable entities are {}", toBeExported);
 
@@ -243,11 +225,10 @@ public class DeleteAccountHelper {
     if (isEmpty(entitiesRemainingForDeletion)) {
       log.info("Deleting account entry {}", accountId);
       hPersistence.delete(Account.class, accountId);
-      upsertDeletedEntity(accountId);
+      upsertDeletedEntity(accountId, CURRENT_DELETION_ALGO_NUM);
       return true;
     } else {
       log.info("Not all entities are deleted for account {}", accountId);
-      reportToBugsnag(accountId, entitiesRemainingForDeletion);
       return false;
     }
   }
@@ -258,14 +239,13 @@ public class DeleteAccountHelper {
     }
   }
 
-  private void upsertDeletedEntity(String accountId) {
+  public void upsertDeletedEntity(String accountId, int deletionAlgoNum) {
     Query<DeletedEntity> query =
         hPersistence.createQuery(DeletedEntity.class).filter(DeletedEntityKeys.entityId, accountId);
-    UpdateOperations<DeletedEntity> updateOperations =
-        hPersistence.createUpdateOperations(DeletedEntity.class)
-            .set(DeletedEntityKeys.entityId, accountId)
-            .set(DeletedEntityKeys.entityType, DeletedEntityType.ACCOUNT)
-            .set(DeletedEntityKeys.deletionAlgoNum, CURRENT_DELETION_ALGO_NUM);
+    UpdateOperations<DeletedEntity> updateOperations = hPersistence.createUpdateOperations(DeletedEntity.class)
+                                                           .set(DeletedEntityKeys.entityId, accountId)
+                                                           .set(DeletedEntityKeys.entityType, DeletedEntityType.ACCOUNT)
+                                                           .set(DeletedEntityKeys.deletionAlgoNum, deletionAlgoNum);
     hPersistence.upsert(query, updateOperations);
   }
 
@@ -310,28 +290,5 @@ public class DeleteAccountHelper {
         }
       }
     }
-  }
-
-  private void reportToBugsnag(String accountId, List<String> entitiesRemainingForDeletion) {
-    String accountStatus = accountService.getAccountStatus(accountId);
-    String message =
-        String.format("Could not delete collections: [%s] for accountId: %s", entitiesRemainingForDeletion, accountId);
-    log.info(message);
-    Exception exception = new GeneralException(message);
-    List<BugsnagTab> bugsnagTabs = getBugsnagTabs(accountId, entitiesRemainingForDeletion, accountStatus);
-    ErrorData errorData = ErrorData.builder().exception(exception).tabs(bugsnagTabs).build();
-    bugsnagErrorReporter.report(errorData);
-  }
-
-  private List<BugsnagTab> getBugsnagTabs(
-      String accountId, List<String> entitiesRemainingForDeletion, String accountStatus) {
-    return Arrays.asList(BugsnagTab.builder().tabName(ACCOUNT).key(ID).value(accountId).build(),
-        BugsnagTab.builder().tabName(ACCOUNT).key(STATUS).value(accountStatus).build(),
-        BugsnagTab.builder().tabName(ACCOUNT).key(JOB_NAME).value("DeleteAccount").build(),
-        BugsnagTab.builder()
-            .tabName(ACCOUNT)
-            .key(ENTITIES_REMAINING_FOR_DELETION)
-            .value(entitiesRemainingForDeletion)
-            .build());
   }
 }

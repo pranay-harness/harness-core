@@ -51,7 +51,7 @@ public interface AccountService {
 
   boolean delete(String accountId);
 
-  void deleteAccount(String accountId);
+  void handleNonExistentAccount(String accountId);
 
   boolean deleteExportableAccountData(String accountId);
 
@@ -182,8 +182,6 @@ public interface AccountService {
   boolean updatePovFlag(String accountId, boolean isPov);
 
   boolean updateAccountStatus(String accountId, String accountStatus);
-
-  boolean canProcessAccount(String accountId, long allowedNumberOfDaysSinceExpiry);
 
   Optional<String> getCeAccountType(String accountId);
 

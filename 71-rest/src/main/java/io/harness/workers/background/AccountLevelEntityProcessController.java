@@ -28,6 +28,7 @@ public class AccountLevelEntityProcessController implements EntityProcessControl
       accountStatus = accountService.getAccountStatus(accountId);
     } catch (AccountNotFoundException ex) {
       log.warn("Skipping processing account {}. It does not exist", accountId, ex);
+      accountService.handleNonExistentAccount(accountId);
       return false;
     }
     return AccountStatus.ACTIVE.equals(accountStatus);

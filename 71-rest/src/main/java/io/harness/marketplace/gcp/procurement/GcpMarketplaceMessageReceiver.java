@@ -105,7 +105,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       if (gcpMarketplaceCustomer != null) {
         log.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
             gcpMarketplaceCustomer.getHarnessAccountId(), gcpAccountId);
-        accountService.deleteAccount(gcpMarketplaceCustomer.getHarnessAccountId());
+        accountService.delete(gcpMarketplaceCustomer.getHarnessAccountId());
         wingsPersistence.delete(GCPMarketplaceCustomer.class, gcpMarketplaceCustomer.getUuid());
         return true;
       } else {
