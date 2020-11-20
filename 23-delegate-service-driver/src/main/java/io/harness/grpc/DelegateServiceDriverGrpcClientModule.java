@@ -22,6 +22,7 @@ import io.harness.security.ServiceTokenGenerator;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.net.ssl.SSLException;
 
@@ -30,11 +31,13 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   private final String serviceSecret;
   private final String target;
   private final String authority;
+  private final String protocol;
 
-  public DelegateServiceDriverGrpcClientModule(String serviceSecret, String target, String authority) {
+  public DelegateServiceDriverGrpcClientModule(String serviceSecret, String target, String authority, String protocol) {
     this.serviceSecret = serviceSecret;
     this.target = target;
     this.authority = authority;
+    this.protocol = protocol;
   }
 
   @Override
@@ -48,8 +51,13 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
     String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-    SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).sslContext(sslContext).build();
+
+    if (StringUtils.isBlank(protocol) || protocol.toLowerCase().startsWith("https")) {
+      SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+      return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).sslContext(sslContext).build();
+    }
+
+    return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).usePlaintext().build();
   }
 
   private String computeAuthority(VersionInfo versionInfo) {
