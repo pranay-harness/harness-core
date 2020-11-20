@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -409,7 +410,7 @@ public class AccountServiceImpl implements AccountService {
 
   private void createDefaultOrganization(String accountId) {
     OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
-    createOrganizationDTO.setIdentifier("default");
+    createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
     createOrganizationDTO.setColor("#05a660");
     createOrganizationDTO.setName("Default");
     createOrganizationDTO.setTags(emptyList());
