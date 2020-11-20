@@ -374,6 +374,20 @@ public class MongoPersistence implements HPersistence {
     return HPersistence.retry(() -> datastore.findAndModify(query, updateOperations, options));
   }
 
+  private <T extends PersistentEntity> void onEntityUpdate(
+      T entity, UpdateOperations<T> updateOperations, long currentTime) {
+    if (entity instanceof UpdatedByAware) {
+      MongoUtils.setUnset(updateOperations, SampleEntityKeys.lastUpdatedBy, userProvider.activeUser());
+    }
+    if (entity instanceof UpdatedAtAware) {
+      updateOperations.set(SampleEntityKeys.lastUpdatedAt, currentTime);
+    }
+
+    if (log.isDebugEnabled()) {
+      log.debug("Update {} with {}", entity.getClass(), ((UpdateOpsImpl) updateOperations).getOps().toString());
+    }
+  }
+
   private <T extends PersistentEntity> void onUpdate(
       Query<T> query, UpdateOperations<T> updateOperations, long currentTime) {
     if (UpdatedByAware.class.isAssignableFrom(query.getEntityClass())) {
@@ -394,7 +408,7 @@ public class MongoPersistence implements HPersistence {
   public <T extends PersistentEntity> UpdateResults update(T entity, UpdateOperations<T> ops) {
     // TODO: add encryption handling; right now no encrypted classes use update
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
-    onEntityUpdate(entity, currentTimeMillis());
+    onEntityUpdate(entity, ops, currentTimeMillis());
     AdvancedDatastore datastore = getDatastore(entity);
     return HPersistence.retry(() -> datastore.update(entity, ops));
   }
