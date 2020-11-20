@@ -31,12 +31,14 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.GenericType;
 
 @Singleton
 @Slf4j
 public class DelegateExecutor {
   private static boolean failedAlready;
+  private static AtomicBoolean startedAlready = new AtomicBoolean();
   private static Duration waiting = ofMinutes(5);
 
   @Inject private DelegateService delegateService;
@@ -56,12 +58,18 @@ public class DelegateExecutor {
     final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "delegate");
 
-    if (FileIo.acquireLock(lockfile, waiting)) {
+    if (FileIo.acquireLock(lockfile, waiting.plusSeconds(10))) {
       try {
         if (isHealthy(account.getUuid(), bearerToken)) {
+          log.info("Delegate is healthy. New one will not be started.");
           return;
         }
-        log.info("Execute the delegate from {}", directory);
+
+        if (startedAlready.get()) {
+          log.info("Delegate process is started already. New one will not be started.");
+          return;
+        }
+
         final Path jar = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
         final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");
 
@@ -85,10 +93,19 @@ public class DelegateExecutor {
         //        processExecutor.redirectOutput(null);
         //        processExecutor.redirectError(null);
 
+        log.info("Starting the delegate from {}", directory);
         processExecutor.start();
+
+        boolean flagUpdatedSuccessfuly = startedAlready.compareAndSet(false, true);
+        if (!flagUpdatedSuccessfuly) {
+          log.warn("Process startup control flag was not set to false as expected.");
+        }
 
         Poller.pollFor(waiting, ofSeconds(2), () -> isHealthy(account.getUuid(), bearerToken));
 
+      } catch (IOException ex) {
+        startedAlready.set(false);
+        log.error("Failed to start delegate process.", ex);
       } catch (RuntimeException exception) {
         failedAlready = true;
         throw exception;
@@ -113,6 +130,7 @@ public class DelegateExecutor {
         for (DelegateInner delegateInner : delegateStatus.getDelegates()) {
           long lastMinuteMillis = System.currentTimeMillis() - 60000;
           if (delegateInner.getStatus() == Status.ENABLED && delegateInner.getLastHeartBeat() > lastMinuteMillis) {
+            log.info("Delegate with IP {} is healthy.", delegateInner.getIp());
             return true;
           }
         }
