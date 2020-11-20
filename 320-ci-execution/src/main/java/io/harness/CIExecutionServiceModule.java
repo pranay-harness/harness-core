@@ -6,6 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -14,6 +15,7 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.states.CIDelegateTaskExecutor;
 import io.harness.tasks.TaskExecutor;
@@ -34,6 +36,12 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
+
+    MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
+    orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationExecutionEventHandlerRegistrar.class.getName())
+        .to(OrchestrationExecutionEventHandlerRegistrar.class);
+
     install(NGPipelineCommonsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
