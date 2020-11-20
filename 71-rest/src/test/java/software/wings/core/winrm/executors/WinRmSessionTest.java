@@ -56,13 +56,13 @@ public class WinRmSessionTest extends WingsBaseTest {
                              .build();
     winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
 
-    int status = winRmSession.executeCommandString("ls", writer, error);
+    int status = winRmSession.executeCommandString("ls", writer, error, false);
 
     PowerMockito.verifyStatic(SshHelperUtils.class);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     SshHelperUtils.generateTGT(captor.capture(), anyString(), anyString(), eq(logCallback));
     assertThat(captor.getValue()).isEqualTo("TestUser@KRB.LOCAL");
-    SshHelperUtils.executeLocalCommand(anyString(), eq(logCallback));
+    SshHelperUtils.executeLocalCommand(anyString(), eq(logCallback), eq(writer), eq(false));
   }
 
   @Test

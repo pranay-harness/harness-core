@@ -49,6 +49,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -225,7 +226,7 @@ public class SshHelperUtils {
     logCallback.saveExecutionLog("Generating Ticket Granting Ticket(TGT) for principal: " + userPrincipal);
     String commandString = !StringUtils.isEmpty(password) ? format("echo \"%s\" | kinit %s", password, userPrincipal)
                                                           : format("kinit -k -t %s %s", keyTabFilePath, userPrincipal);
-    boolean ticketGenerated = executeLocalCommand(commandString, logCallback);
+    boolean ticketGenerated = executeLocalCommand(commandString, logCallback, null, false);
     if (ticketGenerated) {
       logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
       log.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
@@ -247,7 +248,8 @@ public class SshHelperUtils {
     return true;
   }
 
-  public static boolean executeLocalCommand(String cmdString, LogCallback logCallback) {
+  public static boolean executeLocalCommand(
+      String cmdString, LogCallback logCallback, Writer output, boolean isOutputWriter) {
     String[] commandList = new String[] {"/bin/bash", "-c", cmdString};
     try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
          ByteArrayOutputStream byteArrayErrorStream = new ByteArrayOutputStream()) {
@@ -265,7 +267,15 @@ public class SshHelperUtils {
         log.error("Failed to execute command ", e);
       }
       if (byteArrayOutputStream.toByteArray().length != 0) {
-        logCallback.saveExecutionLog(byteArrayOutputStream.toString(), LogLevel.INFO);
+        if (isOutputWriter) {
+          try {
+            output.write(byteArrayOutputStream.toString());
+          } catch (IOException e) {
+            log.error("Failed to store the output to writer ", e);
+          }
+        } else {
+          logCallback.saveExecutionLog(byteArrayOutputStream.toString(), LogLevel.INFO);
+        }
       }
       if (byteArrayErrorStream.toByteArray().length != 0) {
         logCallback.saveExecutionLog(byteArrayErrorStream.toString(), ERROR);
