@@ -1,11 +1,13 @@
 package io.harness.ngtriggers.beans.entity;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
@@ -17,29 +19,46 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
 import javax.validation.constraints.Size;
 
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "NGTriggerEntityKeys")
-@NgUniqueIndex(
-    name = "unique_accountId_organizationIdentifier_projectIdentifier_targetIdentifier_triggerType_identifier",
-    fields =
-    {
-      @Field(NGTriggerEntity.NGTriggerEntityKeys.accountId)
-      , @Field(NGTriggerEntity.NGTriggerEntityKeys.orgIdentifier),
-          @Field(NGTriggerEntity.NGTriggerEntityKeys.projectIdentifier),
-          @Field(NGTriggerEntity.NGTriggerEntityKeys.targetIdentifier),
-          @Field(NGTriggerEntity.NGTriggerEntityKeys.type), @Field(NGTriggerEntity.NGTriggerEntityKeys.identifier)
-    })
-@CdIndex(name = "index_typeWebhook_repoUrl",
-    fields = { @Field(NGTriggerEntity.NGTriggerEntityKeys.type)
-               , @Field("metadata.webhook.repoURL") })
 @Entity(value = "triggersNG", noClassnameStored = true)
 @Document("triggersNG")
 @TypeAlias("triggersNG")
 @HarnessEntity(exportable = true)
 public class NGTriggerEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(
+            CompoundMongoIndex.builder()
+                .name(
+                    "unique_accountId_organizationIdentifier_projectIdentifier_targetIdentifier_triggerType_identifier")
+                .unique(true)
+                .field(NGTriggerEntityKeys.accountId)
+                .field(NGTriggerEntityKeys.orgIdentifier)
+                .field(NGTriggerEntityKeys.projectIdentifier)
+                .field(NGTriggerEntityKeys.targetIdentifier)
+                .field(NGTriggerEntityKeys.targetType)
+                .field(NGTriggerEntityKeys.identifier)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("unique_accountId_organizationIdentifier_projectIdentifier_identifier")
+                .unique(true)
+                .field(NGTriggerEntityKeys.accountId)
+                .field(NGTriggerEntityKeys.orgIdentifier)
+                .field(NGTriggerEntityKeys.projectIdentifier)
+                .field(NGTriggerEntityKeys.identifier)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("type_repoUrl")
+                .field(NGTriggerEntityKeys.type)
+                .field("metadata.webhook.repoURL")
+                .build())
+        .build();
+  }
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @EntityName String name;
   @EntityIdentifier @NotEmpty String identifier;

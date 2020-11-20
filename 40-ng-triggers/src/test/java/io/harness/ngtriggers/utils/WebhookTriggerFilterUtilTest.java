@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public class WebhookTriggerFilterUtilTest extends CategoryTest {
   private String payload = "    {\n"
@@ -32,17 +33,50 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
       + "\t\t}\n"
       + "    } ";
 
+  String t = "pipeline:\n"
+      + "    identifier: T1\n"
+      + "    stages:\n"
+      + "      - stage:\n"
+      + "          identifier: S1\n"
+      + "          type: Deployment\n"
+      + "          spec:\n"
+      + "            service:\n"
+      + "              serviceDefinition:\n"
+      + "                type: Kubernetes\n"
+      + "                spec:\n"
+      + "                  manifests:\n"
+      + "                    - manifest:\n"
+      + "                        identifier: manifestId\n"
+      + "                        type: K8sManifest\n"
+      + "                        spec:\n"
+      + "                          store:\n"
+      + "                            type: Git\n"
+      + "                            spec:\n"
+      + "                              branch: triggerTest\n"
+      + "            infrastructure:\n"
+      + "              infrastructureDefinition:\n"
+      + "                type: KubernetesDirect\n"
+      + "                spec:\n"
+      + "                  releaseName: adwait-1001009\n";
+
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void parseEventTest() {
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("event_type", payload)).isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("object_kind", payload)).isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("user.name", payload)).isEqualTo("charles grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("user.username", payload)).isEqualTo("charles.grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("user.avatar_url", payload))
+    int i = 0;
+    Map<String, Object> context = WebhookTriggerFilterUtil.generateContext(payload);
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.event_type}", context))
+        .isEqualTo("merge_request");
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.object_kind}", context))
+        .isEqualTo("merge_request");
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.name}", context))
+        .isEqualTo("charles grant");
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.username}", context))
+        .isEqualTo("charles.grant");
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.avatar_url}", context))
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("user.email", payload)).isEqualTo("cgrant@gmail.com");
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.email}", context))
+        .isEqualTo("cgrant@gmail.com");
   }
 
   @Test
@@ -58,15 +92,27 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
                 WebhookPayloadCondition.builder().key("sourceBranch").operator("not equals").value("qa").build(),
                 WebhookPayloadCondition.builder().key("targetBranch").operator("regex").value("^master$").build(),
                 WebhookPayloadCondition.builder()
-                    .key("event_type")
+                    .key("${eventPayload.event_type}")
                     .operator("in")
                     .value("pull_request, merge_request")
                     .build(),
-                WebhookPayloadCondition.builder().key("object_kind").operator("not in").value("push, package").build(),
-                WebhookPayloadCondition.builder().key("user.name").operator("starts with").value("charles").build(),
-                WebhookPayloadCondition.builder().key("user.username").operator("ends with").value("grant").build(),
                 WebhookPayloadCondition.builder()
-                    .key("user.avatar_url")
+                    .key("${eventPayload.object_kind}")
+                    .operator("not in")
+                    .value("push, package")
+                    .build(),
+                WebhookPayloadCondition.builder()
+                    .key("${eventPayload.user.name}")
+                    .operator("starts with")
+                    .value("charles")
+                    .build(),
+                WebhookPayloadCondition.builder()
+                    .key("${eventPayload.user.username}")
+                    .operator("ends with")
+                    .value("grant")
+                    .build(),
+                WebhookPayloadCondition.builder()
+                    .key("${eventPayload.user.avatar_url}")
                     .operator("contains")
                     .value("secure.gravatar.com")
                     .build()))
