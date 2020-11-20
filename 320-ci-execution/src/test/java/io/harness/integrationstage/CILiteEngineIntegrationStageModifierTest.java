@@ -52,11 +52,12 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
     assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPodSetupParams())
         .isEqualTo(
             ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0).getPodSetupParams());
-    assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPvcParams().getVolumeName())
+    assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPvcParamsList().get(0).getVolumeName())
         .isEqualTo(ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod()
                        .getPodSetupInfoList()
                        .get(0)
-                       .getPvcParams()
+                       .getPvcParamsList()
+                       .get(0)
                        .getVolumeName());
   }
 }

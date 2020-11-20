@@ -148,7 +148,6 @@ public class CIExecutionPlanTestHelper {
 
   private static final String SERVICE_ID = "db";
   private static final String SERVICE_CTR_NAME = "service-0";
-  private static final String SERVICE_VOLUME_NAME = "service-0";
   private static final Integer SERVICE_LIMIT_MEM = 60;
   private static final Integer SERVICE_LIMIT_CPU = 80;
   private static final String SERVICE_IMAGE = "redis";
@@ -278,18 +277,18 @@ public class CIExecutionPlanTestHelper {
 
   public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfoOnFirstPod() {
     List<PodSetupInfo> pods = new ArrayList<>();
-    List<String> serviceIds = new ArrayList<>();
-    List<Integer> serviceGrpcPortList = new ArrayList<>();
     Integer index = 1;
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     pods.add(PodSetupInfo.builder()
                  .name("")
-                 .pvcParams(PVCParams.builder()
-                                .volumeName("step-exec")
-                                .claimName("")
-                                .isPresent(false)
-                                .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
-                                .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
-                                .build())
+                 .pvcParamsList(Arrays.asList(PVCParams.builder()
+                                                  .volumeName("step-exec")
+                                                  .claimName("")
+                                                  .isPresent(false)
+                                                  .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                                                  .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                                                  .build()))
                  .podSetupParams(
                      PodSetupInfo.PodSetupParams.builder()
                          .containerDefinitionInfos(asList(getServiceContainer(), getGitPluginStepContainer(index),
@@ -299,6 +298,8 @@ public class CIExecutionPlanTestHelper {
                  .stageCpuRequest(300)
                  .serviceIdList(Collections.singletonList(SERVICE_ID))
                  .serviceGrpcPortList(Collections.singletonList(PORT_STARTING_RANGE))
+                 .volumeToMountPath(volumeToMountPath)
+                 .workDirPath(WORK_DIR)
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
@@ -307,17 +308,18 @@ public class CIExecutionPlanTestHelper {
     List<PodSetupInfo> pods = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<Integer> serviceGrpcPortList = new ArrayList<>();
-
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     Integer index = 1;
     pods.add(PodSetupInfo.builder()
                  .name("")
-                 .pvcParams(PVCParams.builder()
-                                .volumeName("step-exec")
-                                .claimName("buildnumber22850")
-                                .isPresent(true)
-                                .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
-                                .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
-                                .build())
+                 .pvcParamsList(Arrays.asList(PVCParams.builder()
+                                                  .volumeName("step-exec")
+                                                  .claimName("buildnumber22850-step-exec")
+                                                  .isPresent(true)
+                                                  .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                                                  .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                                                  .build()))
                  .podSetupParams(PodSetupInfo.PodSetupParams.builder()
                                      .containerDefinitionInfos(asList(getServiceContainer(), getRunStepContainer(index),
                                          getPluginStepContainer(index + 1)))
@@ -328,6 +330,8 @@ public class CIExecutionPlanTestHelper {
                  .serviceGrpcPortList(serviceGrpcPortList)
                  .serviceIdList(Collections.singletonList(SERVICE_ID))
                  .serviceGrpcPortList(Collections.singletonList(PORT_STARTING_RANGE))
+                 .volumeToMountPath(volumeToMountPath)
+                 .workDirPath(WORK_DIR)
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
@@ -395,7 +399,6 @@ public class CIExecutionPlanTestHelper {
     Integer port = PORT_STARTING_RANGE;
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
-    volumeToMountPath.put(SERVICE_VOLUME_NAME, "/" + SERVICE_VOLUME_NAME);
 
     List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
         ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
@@ -415,8 +418,6 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(SERVICE_LIMIT_CPU)
                                      .resourceLimitMemoryMiB(SERVICE_LIMIT_MEM)
                                      .build())
-        .volumeToMountPath(volumeToMountPath)
-        .workingDirectory("/" + SERVICE_VOLUME_NAME)
         .stepIdentifier(SERVICE_ID)
         .build();
   }
@@ -425,7 +426,6 @@ public class CIExecutionPlanTestHelper {
     Integer port = PORT_STARTING_RANGE;
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
-    volumeToMountPath.put(SERVICE_VOLUME_NAME, "/" + SERVICE_VOLUME_NAME);
 
     List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
         ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
@@ -445,7 +445,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(SERVICE_LIMIT_CPU)
                                      .resourceLimitMemoryMiB(SERVICE_LIMIT_MEM)
                                      .build())
-        .workingDir("/" + SERVICE_VOLUME_NAME)
+        .workingDir(WORK_DIR)
         .volumeToMountPath(volumeToMountPath)
         .build();
   }
@@ -468,10 +468,8 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(DEFAULT_LIMIT_MILLI_CPU)
                                      .resourceLimitMemoryMiB(DEFAULT_LIMIT_MEMORY_MIB)
                                      .build())
-        .envVars(getEnvVariables())
+        .envVars(getEnvVariables(false))
         .secretVariables(getCustomSecretVariable())
-        .workingDirectory(WORK_DIR)
-        .volumeToMountPath(volumeToMountPath)
         .stepIdentifier(RUN_STEP_ID)
         .stepName(RUN_STEP_NAME)
         .build();
@@ -495,7 +493,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMilliCpu(DEFAULT_LIMIT_MILLI_CPU)
                                      .resourceLimitMemoryMiB(DEFAULT_LIMIT_MEMORY_MIB)
                                      .build())
-        .envVars(getEnvVariables());
+        .envVars(getEnvVariables(true));
   }
 
   private StepElement getPluginStepElement(Integer index) {
@@ -527,7 +525,6 @@ public class CIExecutionPlanTestHelper {
     envVar.put(PLUGIN_ENV_PREFIX + PLUGIN_ENV_VAR.toUpperCase(), PLUGIN_ENV_VAL);
     envVar.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
     envVar.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
-    envVar.put("HARNESS_WORKSPACE", WORK_DIR);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
@@ -548,8 +545,6 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(PLUGIN_STEP_LIMIT_MEM)
                                      .build())
         .envVars(envVar)
-        .workingDirectory(WORK_DIR)
-        .volumeToMountPath(volumeToMountPath)
         .stepIdentifier(PLUGIN_STEP_ID)
         .stepName(PLUGIN_STEP_NAME)
         .build();
@@ -557,7 +552,6 @@ public class CIExecutionPlanTestHelper {
 
   private ContainerDefinitionInfo getGitPluginStepContainer(Integer index) {
     Map<String, String> envVar = new HashMap<>();
-    envVar.put(HARNESS_WORKSPACE, WORK_DIR);
     envVar.put(GIT_PLUGIN_DEPTH_ENV, GIT_CLONE_MANUAL_DEPTH.toString());
     envVar.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
     envVar.put(DRONE_BUILD_NUMBER, Long.toString(BUILD_NUMBER));
@@ -581,8 +575,6 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(GIT_STEP_LIMIT_MEM)
                                      .build())
         .envVars(envVar)
-        .workingDirectory(WORK_DIR)
-        .volumeToMountPath(volumeToMountPath)
         .stepName(GIT_CLONE_STEP_NAME)
         .stepIdentifier(GIT_CLONE_STEP_ID)
         .build();
@@ -861,13 +853,15 @@ public class CIExecutionPlanTestHelper {
     return asList(var1, var2, var3, var4);
   }
 
-  public Map<String, String> getEnvVariables() {
+  public Map<String, String> getEnvVariables(boolean includeWorkspace) {
     Map<String, String> envVars = new HashMap<>();
     envVars.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
     envVars.put("VAR3", "value3");
     envVars.put("VAR4", "value4");
-    envVars.put("HARNESS_WORKSPACE", WORK_DIR);
     envVars.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
+    if (includeWorkspace) {
+      envVars.put("HARNESS_WORKSPACE", WORK_DIR);
+    }
     return envVars;
   }
 

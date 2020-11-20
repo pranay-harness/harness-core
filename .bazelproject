@@ -39,6 +39,9 @@ directories:
   50-delegate-task-grpc-service
   57-command-library-common
   64-events-framework
+  310-ci-manager
+  320-ci-execution
+  330-ci-beans
   420-delegate-agent
   420-delegate-service
   430-cv-nextgen-commons

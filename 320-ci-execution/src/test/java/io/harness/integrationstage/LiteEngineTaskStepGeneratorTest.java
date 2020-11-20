@@ -27,8 +27,6 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
   public void shouldCreateLiteEngineTaskStepInfoFirstPod() {
     // input
     ExecutionElement executionElement = ciExecutionPlanTestHelper.getExpectedExecutionElement(false);
-    String branchName = "master";
-    String gitConnectorIdentifier = "testGitConnector";
     IntegrationStage integrationStage = ciExecutionPlanTestHelper.getIntegrationStage();
     String buildNumber = "buildnumber22850";
     Integer liteEngineCounter = 1;
@@ -46,7 +44,7 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     ((K8BuildJobEnvInfo) actual.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
-        .forEach(podSetupInfo -> podSetupInfo.getPvcParams().setClaimName(""));
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().get(0).setClaimName(""));
 
     LiteEngineTaskStepInfo expected = ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod();
     ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
@@ -56,7 +54,7 @@ public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
     ((K8BuildJobEnvInfo) expected.getBuildJobEnvInfo())
         .getPodsSetupInfo()
         .getPodSetupInfoList()
-        .forEach(podSetupInfo -> podSetupInfo.getPvcParams().setClaimName(""));
+        .forEach(podSetupInfo -> podSetupInfo.getPvcParamsList().get(0).setClaimName(""));
 
     assertThat(actual).isEqualTo(expected);
   }

@@ -169,11 +169,11 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private void createPVCs(
       KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    log.info("Creating pvc for pod name: {}", podParams.getName());
     if (podParams.getPvcParamList() == null) {
       return;
     }
 
+    log.info("Creating pvc for pod name: {}", podParams.getName());
     for (PVCParams pvcParams : podParams.getPvcParamList()) {
       if (!pvcParams.isPresent()) {
         kubeCtlHandler.createPVC(

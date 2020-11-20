@@ -8,6 +8,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -19,12 +20,14 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PodSetupInfo {
   private PodSetupParams podSetupParams;
-  private PVCParams pvcParams;
+  private List<PVCParams> pvcParamsList;
+  @NotNull private Map<String, String> volumeToMountPath;
   @NotEmpty private String name;
   @NotNull private Integer stageMemoryRequest;
   @NotNull private Integer stageCpuRequest;
   private List<String> serviceIdList;
   private List<Integer> serviceGrpcPortList;
+  @NotEmpty private String workDirPath;
 
   @Data
   @Builder
