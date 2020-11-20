@@ -2880,9 +2880,7 @@ public class WorkflowServiceHelper {
   private void generateNewWorkflowPhaseStepsForCustomDeploymentType(WorkflowPhase workflowPhase) {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.DEPLOY).build());
-    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.VERIFY_SERVICE).build());
-    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name())
@@ -2890,6 +2888,8 @@ public class WorkflowServiceHelper {
                                     .properties(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1))
                                     .build())
                        .build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.VERIFY_SERVICE).build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {

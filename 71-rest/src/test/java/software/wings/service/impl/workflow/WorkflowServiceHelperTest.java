@@ -159,7 +159,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private FeatureFlagService featureFlagService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Mock private ArtifactStreamService artifactStreamService;
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
 
@@ -1130,7 +1130,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(lambdaService);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
-    when(featureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(true);
 
     // basic deployment test
     workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(APP_ID, ACCOUNT_ID, workflowPhase, BASIC, true);
@@ -1174,7 +1174,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class);
 
     // feature flag test
-    when(featureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(false);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
                                APP_ID, ACCOUNT_ID, workflowPhase, BASIC, true))
@@ -1200,7 +1200,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
-    when(featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(true);
 
     // canary deployment test
     workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
@@ -1245,7 +1245,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class);
 
     // feature flag test
-    when(featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
                                APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY))
@@ -1709,11 +1709,11 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     WorkflowPhase workflowPhase = aWorkflowPhase().deploymentType(CUSTOM).build();
     workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, workflowPhase, false, BASIC, null);
 
-    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().size()).isNotEqualTo(0);
-    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getType())
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().size()).isNotEqualTo(0);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getType())
         .isEqualTo(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name());
-    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getProperties().size()).isEqualTo(1);
-    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getProperties())
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties().size()).isEqualTo(1);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties())
         .isEqualTo(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1));
   }
 }
