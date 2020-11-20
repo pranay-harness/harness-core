@@ -187,6 +187,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
         DelegateTask.builder()
             .accountId(ACCOUNT_ID)
             .description("Fetch Instances")
+            .waitId(ACTIVITY_ID)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)

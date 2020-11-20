@@ -544,7 +544,8 @@ public enum StepType {
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_DESTROY,
-      asList(INFRASTRUCTURE_PROVISIONER), asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP),
+      asList(INFRASTRUCTURE_PROVISIONER),
+      asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.KUBERNETES, DeploymentType.CUSTOM),
       asList(PhaseType.NON_ROLLBACK)),
@@ -554,7 +555,7 @@ public enum StepType {
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
       asList(PhaseType.ROLLBACK)),
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
-      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), asList(DeploymentType.values()),
+      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
 
   // APM
