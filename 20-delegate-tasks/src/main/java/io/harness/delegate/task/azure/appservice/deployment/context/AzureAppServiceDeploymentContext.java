@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.appservice.deployment.context;
+package io.harness.delegate.task.azure.appservice.deployment.context;
 
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
